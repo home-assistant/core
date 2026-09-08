@@ -66,7 +66,7 @@ async def test_cover_entity(
     """Test the cover entity is registered against the RYSE device."""
     entity_entry = entity_registry.async_get(ENTITY_ID)
     assert entity_entry
-    assert entity_entry.unique_id == f"{DEVICE_ADDRESS}_cover"
+    assert entity_entry.unique_id == DEVICE_ADDRESS
     assert entity_entry.device_id
 
     device_entry = device_registry.async_get(entity_entry.device_id)
@@ -112,6 +112,7 @@ async def test_cover_polls_connected_device_without_pairing(
 ) -> None:
     """Test an already connected device is not paired again."""
     mock_device.client = MagicMock(is_connected=True)
+    mock_device.pair.reset_mock()
 
     await async_poll_device(hass, freezer)
 
@@ -143,8 +144,9 @@ async def test_position_notification_out_of_range(
     caplog: pytest.LogCaptureFixture,
     polled_cover: MockConfigEntry,
 ) -> None:
-    """Test an out of range position is not exposed to the state machine."""
+    """Test an out of range position clears cached cover state."""
     caplog.set_level(logging.WARNING, logger=LOGGER_NAME)
+    mock_device.is_valid_position.side_effect = lambda position: 0 <= position <= 100
 
     await mock_device.update_callback(58)
     await hass.async_block_till_done()
@@ -152,15 +154,16 @@ async def test_position_notification_out_of_range(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.attributes[ATTR_CURRENT_POSITION] == 42
+    assert state.state == CoverState.OPEN
 
-    mock_device.is_valid_position.return_value = False
-    await mock_device.update_callback(58)
+    await mock_device.update_callback(150)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) is None
-    assert "Invalid position value detected: 42" in caplog.text
+    assert state.state == STATE_UNKNOWN
+    assert "Invalid position value detected: 150" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -313,12 +316,12 @@ async def test_notification_callback_lifecycle(
     setup_integration: MockConfigEntry,
 ) -> None:
     """Test the device notification callback is registered and removed again."""
-    assert mock_device.update_callback is not None
+    assert callable(mock_device.update_callback)
 
     await hass.config_entries.async_unload(setup_integration.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_device.update_callback is None
+    assert not hasattr(mock_device, "update_callback")
 
 
 async def test_notification_callback_replaced(

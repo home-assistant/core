@@ -33,6 +33,8 @@ def mock_device() -> MagicMock:
     device.get_real_position.side_effect = lambda x: 100 - x
     device.is_closed.side_effect = lambda x: x == 100
     device.pair = AsyncMock(return_value=True)
+    device.unpair = AsyncMock()
+    device.set_ble_device = MagicMock()
     device.send_open = AsyncMock()
     device.send_close = AsyncMock()
     device.send_set_position = AsyncMock()
@@ -43,11 +45,17 @@ def mock_device() -> MagicMock:
 @pytest.fixture(autouse=True)
 def mock_ryse_ble_device(mock_device: MagicMock) -> Generator[MagicMock]:
     """Patch RyseBLEDevice so tests never touch real BLE hardware."""
-    with patch(
-        "homeassistant.components.ryse.RyseBLEDevice",
-        return_value=mock_device,
+    with (
+        patch(
+            "homeassistant.components.ryse.RyseBLEDevice",
+            return_value=mock_device,
+        ) as mock_cls,
+        patch(
+            "homeassistant.components.ryse.config_flow.RyseBLEDevice",
+            return_value=mock_device,
+        ),
     ):
-        yield mock_device
+        yield mock_cls
 
 
 @pytest.fixture

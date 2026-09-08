@@ -1,47 +1,23 @@
 """Config flow for RYSE BLE integration."""
 
-import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak import BleakError
-from ryseble.bluetoothctl import is_pairing_ryse_device, pair_with_ble_device
+from ryseble.device import RyseBLEDevice
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
+    async_last_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
-from .const import DOMAIN, MANUFACTURER_ID, MANUFACTURER_NAME, SERVICE_UUID
+from .const import DOMAIN, is_pairing_mode
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def _async_check_pairing(
-    device_info: BluetoothServiceInfoBleak,
-) -> BluetoothServiceInfoBleak | None:
-    """Check if device is pairing."""
-    try:
-        async with asyncio.timeout(5.0):
-            if await is_pairing_ryse_device(device_info.address):
-                return device_info
-    except TimeoutError as ex:
-        _LOGGER.debug(
-            "Timeout checking pairing status for %s: %s",
-            device_info.address,
-            ex,
-        )
-        return None
-    except Exception:
-        _LOGGER.exception(
-            "Unexpected error checking pairing status for %s",
-            device_info.address,
-        )
-        return None
-    return None
 
 
 class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -50,8 +26,42 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow attributes."""
         self._discovery_info: BluetoothServiceInfoBleak | None = None
-        self._discovered_devices: dict[str, str] = {}
+        self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
+    def _latest_service_info(
+        self, service_info: BluetoothServiceInfoBleak
+    ) -> BluetoothServiceInfoBleak:
+        """Return the freshest advertisement for this address, if any."""
+        return (
+            async_last_service_info(self.hass, service_info.address, connectable=True)
+            or service_info
+        )
+
+    async def _async_pair(self, service_info: BluetoothServiceInfoBleak) -> str | None:
+        """Bond with the device via Bleak, then release the connection.
+
+        Returns an error key, or None on success. Pairing is refused unless the
+        latest advertisement still has the PAIR flag set.
+        """
+        latest = self._latest_service_info(service_info)
+        if not is_pairing_mode(latest.manufacturer_data):
+            return "not_in_pairing_mode"
+
+        device = RyseBLEDevice(latest.device)
+        try:
+            if await device.pair():
+                return None
+        except TimeoutError, OSError, EOFError, BleakError:
+            _LOGGER.error("Connection error during pairing")
+            return "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected error during pairing")
+            return "unexpected_error"
+        finally:
+            await device.unpair()
+        return "cannot_connect"
+
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -74,23 +84,13 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            success = False
-            try:
-                success = await pair_with_ble_device(name, discovery_info.address)
-            except TimeoutError, OSError, BleakError:
-                _LOGGER.error("Connection error during bluetooth confirm")
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected error during bluetooth confirm")
-                errors["base"] = "unexpected_error"
-
-            if success:
+            if error := await self._async_pair(discovery_info):
+                errors["base"] = error
+            else:
                 return self.async_create_entry(
                     title=name,
                     data={},
                 )
-            if not errors:
-                errors["base"] = "cannot_connect"
 
         self._set_confirm_only()
         self.context["title_placeholders"] = {"name": name}
@@ -100,6 +100,7 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -109,53 +110,27 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
-            name = self._discovered_devices[address]
+            service_info = self._discovered_devices[address]
 
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
 
-            success = False
-            try:
-                success = await pair_with_ble_device(name, address)
-            except TimeoutError, OSError, BleakError:
-                _LOGGER.error("Connection error during pairing")
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unexpected_error"
-
-            if success:
-                return self.async_create_entry(title=name, data={})
-            if not errors:
-                errors["base"] = "cannot_connect"
+            if error := await self._async_pair(service_info):
+                errors["base"] = error
+            else:
+                return self.async_create_entry(title=service_info.name, data={})
 
         current_ids = self._async_current_ids(include_ignore=False)
 
-        self._discovered_devices.clear()
-
-        candidates: list[BluetoothServiceInfoBleak] = []
-        for info in async_discovered_service_info(self.hass, connectable=True):
-            if info.address in current_ids:
-                continue
-            if not info.name:
-                continue
-
-            has_ryse_uuid = SERVICE_UUID in info.service_uuids
-            has_ryse_mfg = MANUFACTURER_ID in info.manufacturer_data
-            has_ryse_name = MANUFACTURER_NAME in info.name.upper()
-
-            if not (has_ryse_uuid or has_ryse_mfg or has_ryse_name):
-                continue
-
-            candidates.append(info)
-
-        if candidates:
-            results = await asyncio.gather(
-                *(_async_check_pairing(info) for info in candidates)
-            )
-            for device in results:
-                if device is not None:
-                    self._discovered_devices[device.address] = device.name
+        # A device only sets the pairing flag in its manufacturer data while the
+        # user holds its PAIR button.
+        self._discovered_devices = {
+            info.address: info
+            for info in async_discovered_service_info(self.hass, connectable=True)
+            if info.name
+            and info.address not in current_ids
+            and is_pairing_mode(info.manufacturer_data)
+        }
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
@@ -164,7 +139,12 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices),
+                    vol.Required(CONF_ADDRESS): vol.In(
+                        {
+                            address: info.name
+                            for address, info in self._discovered_devices.items()
+                        }
+                    ),
                 }
             ),
             errors=errors,

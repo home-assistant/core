@@ -12,7 +12,7 @@ from bleak.exc import BleakError
 import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.ryse.const import DOMAIN
+from homeassistant.components.ryse.const import DOMAIN, MANUFACTURER_ID
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -23,10 +23,12 @@ from tests.common import MockConfigEntry
 DEVICE_NAME = "RYSE Shade"
 DEVICE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 RSSI_VALUE = -40
+PAIRING_MANUFACTURER_DATA = {MANUFACTURER_ID: b"\xcc\x64\x62\x64"}
+IDLE_MANUFACTURER_DATA = {MANUFACTURER_ID: b"\x8c\x64\x62\x64"}
 
 ADVERTISEMENT_DATA = AdvertisementData(
     local_name=DEVICE_NAME,
-    manufacturer_data={},
+    manufacturer_data=PAIRING_MANUFACTURER_DATA,
     service_data={},
     service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
     rssi=RSSI_VALUE,
@@ -40,7 +42,7 @@ DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name=DEVICE_NAME,
     address=DEVICE_ADDRESS,
     rssi=-40,
-    manufacturer_data={},
+    manufacturer_data=PAIRING_MANUFACTURER_DATA,
     service_data={},
     service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
     source="local",
@@ -53,23 +55,23 @@ DISCOVERY_INFO = BluetoothServiceInfoBleak(
 
 USER_INPUT = {CONF_ADDRESS: DEVICE_ADDRESS}
 
+PAIRING_ERRORS = [
+    (Exception("boom"), "unexpected_error"),
+    (TimeoutError("timeout"), "cannot_connect"),
+    (OSError("os error"), "cannot_connect"),
+    (BleakError("bleak error"), "cannot_connect"),
+    (False, "cannot_connect"),
+]
 
-@pytest.fixture
-def mock_pairing() -> Generator[tuple[MagicMock, MagicMock]]:
-    """Mock pair_with_ble_device + is_pairing_ryse_device."""
-    with (
-        patch(
-            "homeassistant.components.ryse.config_flow.pair_with_ble_device",
-            autospec=True,
-        ) as mock_pair,
-        patch(
-            "homeassistant.components.ryse.config_flow.is_pairing_ryse_device",
-            autospec=True,
-        ) as mock_is_pair,
+
+@pytest.fixture(autouse=True)
+def mock_last_service_info() -> Generator[None]:
+    """Use the stored discovery advertisement when no scanner cache is present."""
+    with patch(
+        "homeassistant.components.ryse.config_flow.async_last_service_info",
+        return_value=None,
     ):
-        mock_pair.return_value = True
-        mock_is_pair.return_value = True
-        yield mock_pair, mock_is_pair
+        yield
 
 
 @pytest.fixture
@@ -83,10 +85,11 @@ def discovery() -> Generator[MagicMock]:
         yield mock_discovery
 
 
-@pytest.mark.usefixtures("discovery", "mock_pairing")
-async def test_async_step_user_success(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("discovery")
+async def test_async_step_user_success(
+    hass: HomeAssistant, mock_device: MagicMock
+) -> None:
     """Test user flow succeeds and creates entry."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -100,28 +103,20 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
     assert result["title"] == DEVICE_NAME
     assert result["data"] == {}
     assert result["result"].unique_id == DEVICE_ADDRESS
+    mock_device.pair.assert_awaited_once()
+    mock_device.unpair.assert_awaited_once()
 
 
-@pytest.mark.parametrize(
-    ("pair_result", "expected_error"),
-    [
-        (Exception("boom"), "unexpected_error"),
-        (TimeoutError("timeout"), "cannot_connect"),
-        (OSError("os error"), "cannot_connect"),
-        (BleakError("bleak error"), "cannot_connect"),
-        (False, "cannot_connect"),
-    ],
-)
+@pytest.mark.parametrize(("pair_result", "expected_error"), PAIRING_ERRORS)
 @pytest.mark.usefixtures("discovery")
 async def test_async_step_user_errors(
     hass: HomeAssistant,
-    mock_pairing: tuple[MagicMock, MagicMock],
+    mock_device: MagicMock,
     pair_result: Exception | bool,
     expected_error: str,
 ) -> None:
     """Test errors during user pairing can be recovered from."""
-    mock_pair, _ = mock_pairing
-    mock_pair.side_effect = [pair_result, True]
+    mock_device.pair.side_effect = [pair_result, True]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -145,7 +140,7 @@ async def test_async_step_user_errors(
     assert result["result"].unique_id == DEVICE_ADDRESS
 
 
-@pytest.mark.usefixtures("discovery", "mock_pairing")
+@pytest.mark.usefixtures("discovery")
 async def test_async_step_user_device_added_between_steps(
     hass: HomeAssistant,
 ) -> None:
@@ -170,12 +165,10 @@ async def test_async_step_user_device_added_between_steps(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_pairing")
 async def test_async_step_user_no_devices_found(
     hass: HomeAssistant, discovery: MagicMock
 ) -> None:
     """Test that we abort when no devices are discovered."""
-
     discovery.return_value = []
 
     result = await hass.config_entries.flow.async_init(
@@ -186,10 +179,10 @@ async def test_async_step_user_no_devices_found(
     assert result["reason"] == "no_devices_found"
 
 
-@pytest.mark.usefixtures("mock_pairing")
-async def test_async_step_bluetooth(hass: HomeAssistant) -> None:
+async def test_async_step_bluetooth(
+    hass: HomeAssistant, mock_device: MagicMock
+) -> None:
     """Test Bluetooth discovery flow."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
@@ -207,27 +200,19 @@ async def test_async_step_bluetooth(hass: HomeAssistant) -> None:
     assert result["title"] == DEVICE_NAME
     assert result["data"] == {}
     assert result["result"].unique_id == DEVICE_ADDRESS
+    mock_device.pair.assert_awaited_once()
+    mock_device.unpair.assert_awaited_once()
 
 
-@pytest.mark.parametrize(
-    ("pair_result", "error_text"),
-    [
-        (Exception("boom"), "unexpected_error"),
-        (TimeoutError("timeout"), "cannot_connect"),
-        (OSError("os error"), "cannot_connect"),
-        (BleakError("bleak error"), "cannot_connect"),
-        (False, "cannot_connect"),
-    ],
-)
+@pytest.mark.parametrize(("pair_result", "error_text"), PAIRING_ERRORS)
 async def test_async_step_bluetooth_errors(
     hass: HomeAssistant,
-    mock_pairing: tuple[MagicMock, MagicMock],
+    mock_device: MagicMock,
     pair_result: Exception | bool,
     error_text: str,
 ) -> None:
     """Test Bluetooth discovery confirm errors can be recovered from."""
-    mock_pair, _ = mock_pairing
-    mock_pair.side_effect = [pair_result, True]
+    mock_device.pair.side_effect = [pair_result, True]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -255,12 +240,10 @@ async def test_async_step_bluetooth_errors(
     assert result["result"].unique_id == DEVICE_ADDRESS
 
 
-@pytest.mark.usefixtures("mock_pairing")
 async def test_async_step_bluetooth_already_configured(
     hass: HomeAssistant,
 ) -> None:
     """Test abort if device already configured before bluetooth discovery."""
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=DEVICE_ADDRESS,
@@ -278,9 +261,9 @@ async def test_async_step_bluetooth_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_pairing")
+@pytest.mark.usefixtures("discovery")
 async def test_async_step_user_skips_already_configured(
-    hass: HomeAssistant, discovery: MagicMock
+    hass: HomeAssistant,
 ) -> None:
     """Test that we skip already configured devices in user flow discovery."""
     entry = MockConfigEntry(
@@ -298,7 +281,6 @@ async def test_async_step_user_skips_already_configured(
     assert result["reason"] == "no_devices_found"
 
 
-@pytest.mark.usefixtures("mock_pairing")
 async def test_async_step_user_skips_nameless_device(
     hass: HomeAssistant, discovery: MagicMock
 ) -> None:
@@ -308,7 +290,7 @@ async def test_async_step_user_skips_nameless_device(
         name=None,
         address=DEVICE_ADDRESS,
         rssi=-40,
-        manufacturer_data={},
+        manufacturer_data=PAIRING_MANUFACTURER_DATA,
         service_data={},
         service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
         source="local",
@@ -329,11 +311,33 @@ async def test_async_step_user_skips_nameless_device(
 
 
 async def test_async_step_user_skips_non_pairing_device(
-    hass: HomeAssistant, discovery: MagicMock, mock_pairing: tuple[MagicMock, MagicMock]
+    hass: HomeAssistant, discovery: MagicMock
 ) -> None:
-    """Test that we skip devices that are not in pairing mode."""
-    _, mock_is_pair = mock_pairing
-    mock_is_pair.return_value = False
+    """Test that we skip devices that are not advertising pairing mode."""
+    idle_device = BLEDevice(DEVICE_ADDRESS, DEVICE_NAME, {})
+    idle_discovery = BluetoothServiceInfoBleak(
+        name=DEVICE_NAME,
+        address=DEVICE_ADDRESS,
+        rssi=-40,
+        manufacturer_data=IDLE_MANUFACTURER_DATA,
+        service_data={},
+        service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
+        source="local",
+        device=idle_device,
+        advertisement=AdvertisementData(
+            local_name=DEVICE_NAME,
+            manufacturer_data=IDLE_MANUFACTURER_DATA,
+            service_data={},
+            service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
+            rssi=RSSI_VALUE,
+            tx_power=None,
+            platform_data=(),
+        ),
+        time=time.time(),
+        connectable=True,
+        tx_power=-127,
+    )
+    discovery.return_value = [idle_discovery]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -343,105 +347,11 @@ async def test_async_step_user_skips_non_pairing_device(
     assert result["reason"] == "no_devices_found"
 
 
-@pytest.mark.usefixtures("mock_pairing")
-async def test_async_step_user_filter_matching_manufacturer_id(
-    hass: HomeAssistant, discovery: MagicMock
-) -> None:
-    """Test that we discover devices matching the RYSE manufacturer ID."""
-    ble_device = BLEDevice(DEVICE_ADDRESS, "Generic Device", {})
-    matching_discovery = BluetoothServiceInfoBleak(
-        name="Generic Device",
-        address=DEVICE_ADDRESS,
-        rssi=-40,
-        manufacturer_data={1033: b"\x01\x02"},
-        service_data={},
-        service_uuids=[],
-        source="local",
-        device=ble_device,
-        advertisement=AdvertisementData(
-            local_name="Generic Device",
-            manufacturer_data={1033: b"\x01\x02"},
-            service_data={},
-            service_uuids=[],
-            rssi=-40,
-            tx_power=None,
-            platform_data=(),
-        ),
-        time=time.time(),
-        connectable=True,
-        tx_power=-127,
-    )
-    discovery.return_value = [matching_discovery]
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Generic Device"
-    assert result["data"] == {}
-    assert result["result"].unique_id == DEVICE_ADDRESS
-
-
-@pytest.mark.usefixtures("mock_pairing")
-async def test_async_step_user_filter_matching_service_uuid(
-    hass: HomeAssistant, discovery: MagicMock
-) -> None:
-    """Test that we discover devices matching the custom RYSE service UUID."""
-    ble_device = BLEDevice(DEVICE_ADDRESS, "Generic Device", {})
-    matching_discovery = BluetoothServiceInfoBleak(
-        name="Generic Device",
-        address=DEVICE_ADDRESS,
-        rssi=-40,
-        manufacturer_data={},
-        service_data={},
-        service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
-        source="local",
-        device=ble_device,
-        advertisement=AdvertisementData(
-            local_name="Generic Device",
-            manufacturer_data={},
-            service_data={},
-            service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
-            rssi=-40,
-            tx_power=None,
-            platform_data=(),
-        ),
-        time=time.time(),
-        connectable=True,
-        tx_power=-127,
-    )
-    discovery.return_value = [matching_discovery]
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Generic Device"
-    assert result["data"] == {}
-    assert result["result"].unique_id == DEVICE_ADDRESS
-
-
-@pytest.mark.usefixtures("mock_pairing")
+@pytest.mark.usefixtures("discovery")
 async def test_async_step_user_skips_unmatched_device(
     hass: HomeAssistant, discovery: MagicMock
 ) -> None:
-    """Test that we skip devices that do not match any RYSE BLE identifiers."""
+    """Test that we skip devices that do not match RYSE pairing advertisements."""
     ble_device = BLEDevice(DEVICE_ADDRESS, "Generic Device", {})
     unmatched_discovery = BluetoothServiceInfoBleak(
         name="Generic Device",
@@ -475,15 +385,62 @@ async def test_async_step_user_skips_unmatched_device(
     assert result["reason"] == "no_devices_found"
 
 
-@pytest.mark.usefixtures("mock_pairing")
-async def test_async_step_bluetooth_fallback_name(hass: HomeAssistant) -> None:
+async def test_async_step_bluetooth_not_in_pairing_mode(
+    hass: HomeAssistant, mock_device: MagicMock
+) -> None:
+    """Test we refuse to pair when the shade is not advertising pairing mode."""
+    idle_device = BLEDevice(DEVICE_ADDRESS, DEVICE_NAME, {})
+    idle_discovery = BluetoothServiceInfoBleak(
+        name=DEVICE_NAME,
+        address=DEVICE_ADDRESS,
+        rssi=-40,
+        manufacturer_data=IDLE_MANUFACTURER_DATA,
+        service_data={},
+        service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
+        source="local",
+        device=idle_device,
+        advertisement=AdvertisementData(
+            local_name=DEVICE_NAME,
+            manufacturer_data=IDLE_MANUFACTURER_DATA,
+            service_data={},
+            service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
+            rssi=RSSI_VALUE,
+            tx_power=None,
+            platform_data=(),
+        ),
+        time=time.time(),
+        connectable=True,
+        tx_power=-127,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=idle_discovery,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "not_in_pairing_mode"}
+    mock_device.pair.assert_not_called()
+
+
+async def test_async_step_bluetooth_fallback_name(
+    hass: HomeAssistant, mock_device: MagicMock
+) -> None:
     """Test Bluetooth discovery flow fallback name when service info name is empty."""
     nameless_device = BLEDevice(DEVICE_ADDRESS, "", {})
     nameless_discovery = BluetoothServiceInfoBleak(
         name="",
         address=DEVICE_ADDRESS,
         rssi=-40,
-        manufacturer_data={},
+        manufacturer_data=PAIRING_MANUFACTURER_DATA,
         service_data={},
         service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
         source="local",
@@ -512,33 +469,4 @@ async def test_async_step_bluetooth_fallback_name(hass: HomeAssistant) -> None:
     assert result["title"] == "RYSE device"
     assert result["data"] == {}
     assert result["result"].unique_id == DEVICE_ADDRESS
-
-
-async def test_async_step_user_pairing_check_timeout(
-    hass: HomeAssistant, discovery: MagicMock, mock_pairing: tuple[MagicMock, MagicMock]
-) -> None:
-    """Test handling a timeout when checking if a device is in pairing mode."""
-    _, mock_is_pair = mock_pairing
-    mock_is_pair.side_effect = TimeoutError("Connection timed out")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-
-async def test_async_step_user_pairing_check_unexpected_exception(
-    hass: HomeAssistant, discovery: MagicMock, mock_pairing: tuple[MagicMock, MagicMock]
-) -> None:
-    """Test handling an unexpected exception when checking pairing status."""
-    _, mock_is_pair = mock_pairing
-    mock_is_pair.side_effect = RuntimeError("Hardware failure")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    mock_device.pair.assert_awaited_once()

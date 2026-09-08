@@ -964,6 +964,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "manufacturer_id": 1033,
     },
     {
+        "connectable": True,
+        "domain": "ryse",
+        "service_uuid": "a72f2800-b0bd-498b-b4cd-4a3901388238",
+    },
+    {
         "connectable": False,
         "domain": "sensirion_ble",
         "manufacturer_id": 1749,

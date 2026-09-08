@@ -1604,8 +1604,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/ruuvitag_ble/ @akx
 /homeassistant/components/rympro/ @OnFreund @elad-bar @maorcc
 /tests/components/rympro/ @OnFreund @elad-bar @maorcc
-/homeassistant/components/ryse/ @mohamedkalel82
-/tests/components/ryse/ @mohamedkalel82
+/homeassistant/components/ryse/ @axis-labs-inc
+/tests/components/ryse/ @axis-labs-inc
 /homeassistant/components/sabnzbd/ @shaiu @jpbede
 /tests/components/sabnzbd/ @shaiu @jpbede
 /homeassistant/components/saj/ @fredericvl @edurenye

@@ -9,6 +9,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "device_not_selected": "No device selected. Please choose a RYSE device before pairing.",
       "no_devices_found": "No RYSE devices found.",
+      "not_in_pairing_mode": "The device is not in pairing mode. Press and hold the PAIR button, then try again.",
       "unexpected_error": "[%key:common::config_flow::error::unknown%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
