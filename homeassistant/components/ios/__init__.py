@@ -1,7 +1,7 @@
 """Native Home Assistant iOS app component."""
 
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import web
 import voluptuous as vol
@@ -233,14 +233,14 @@ def enabled_push_ids(hass: HomeAssistant) -> list[str]:
 
 def devices(hass: HomeAssistant) -> dict[str, dict[str, Any]]:
     """Return a dictionary of all identified devices."""
-    return hass.data[IOS_DATA][ATTR_DEVICES]  # type: ignore[no-any-return]
+    return hass.data[IOS_DATA][ATTR_DEVICES]
 
 
 def device_name_for_push_id(hass: HomeAssistant, push_id: str) -> str | None:
     """Return the device name for the push ID."""
     for device_name, device in hass.data[IOS_DATA][ATTR_DEVICES].items():
         if device.get(ATTR_PUSH_ID) is push_id:
-            return device_name  # type: ignore[no-any-return]
+            return device_name
     return None
 
 
@@ -260,7 +260,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     ios_config[CONF_USER] = conf_user
 
-    hass.data[IOS_DATA] = ios_config
+    hass.data[IOS_DATA] = cast(dict[str, dict[str, Any]], ios_config)
 
     # No entry support for notify component yet
     discovery.load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config)

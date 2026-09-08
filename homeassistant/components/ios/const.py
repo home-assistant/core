@@ -8,7 +8,7 @@ DOMAIN = "ios"
 
 # The iOS app's registration file, holding every registered device and the
 # push configuration. It is integration-wide, not per config entry.
-IOS_DATA: HassKey[dict[str, Any]] = HassKey(DOMAIN)
+IOS_DATA: HassKey[dict[str, dict[str, Any]]] = HassKey(DOMAIN)
 
 ATTR_BATTERY = "battery"
 ATTR_BATTERY_LEVEL = "level"
