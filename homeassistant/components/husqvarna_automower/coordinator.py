@@ -340,4 +340,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     cutting_height_disabled,
                 )
                 for callback_fn in self.work_area_cutting_height_callbacks:
-                    callback_fn(mower_id, cutting_height_enabled, cutting_height_disabled)
+                    callback_fn(
+                        mower_id, cutting_height_enabled, cutting_height_disabled
+                    )
