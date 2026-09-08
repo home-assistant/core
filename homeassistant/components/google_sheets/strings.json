@@ -7,8 +7,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "create_spreadsheet_failure": "Error while creating spreadsheet, see error log for details",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "open_spreadsheet_failure": "Error while opening spreadsheet, see error log for details",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "open_spreadsheet_failure": "Error while opening spreadsheet, see error log for details"
     },
     "create_entry": {
       "default": "Successfully authenticated and spreadsheet created at: {url}"
