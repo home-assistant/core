@@ -134,6 +134,14 @@ def _get_last_event_attrs(
     return None
 
 
+def _get_last_recording(history_data: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if (last_event := _get_last_event(history_data, None)) and last_event.get(
+        "recording", {}
+    ).get("status") == "ready":
+        return last_event
+    return None
+
+
 @dataclass(frozen=True, kw_only=True)
 class RingSensorEntityDescription(
     SensorEntityDescription,
@@ -179,6 +187,20 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
             else None
         ),
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
+    ),
+    RingSensorEntityDescription[RingDoorBell](
+        key="last_recording",
+        translation_key="last_recording",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: (
+            last_event["created_at"]
+            if (last_event := _get_last_recording(device.last_history))
+            else None
+        ),
+        exists_fn=lambda device: (
+            isinstance(device, RingDoorBell) and device.has_subscription
+        ),
     ),
     RingSensorEntityDescription[RingGeneric](
         key="last_ding",

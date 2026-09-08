@@ -118,6 +118,9 @@
       "last_motion": {
         "name": "Last motion"
       },
+      "last_recording": {
+        "name": "Last recording"
+      },
       "mic_volume": {
         "name": "Mic volume"
       },

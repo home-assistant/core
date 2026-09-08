@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, Generic, override
 
@@ -94,8 +94,6 @@ async def async_setup_entry(
 class RingCam(RingEntity[RingDoorBell], Camera):
     """An implementation of a Ring Door Bell camera."""
 
-    entity_description: RingCameraEntityDescription
-
     def __init__(
         self,
         device: RingDoorBell,
@@ -111,7 +109,6 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self._ffmpeg_manager = ffmpeg_manager
         self._last_event: dict[str, Any] | None = None
         self._last_video_id: int | None = None
-        self._last_recording_at: datetime | None = None
         self._video_url: str | None = None
         self._images: dict[tuple[int | None, int | None], bytes] = {}
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
@@ -140,7 +137,6 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         else:
             self._last_event = None
             self._last_video_id = None
-            self._last_recording_at = None
             self._video_url = None
             self._images = {}
             self._expires_at = dt_util.utcnow()
@@ -150,13 +146,10 @@ class RingCam(RingEntity[RingDoorBell], Camera):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attributes: dict[str, Any] = {
+        return {
             "video_url": self._video_url,
             "last_video_id": self._last_video_id,
         }
-        if not self.entity_description.live_stream:
-            attributes["last_recording_at"] = self._last_recording_at
-        return attributes
 
     @override
     async def async_camera_image(
@@ -283,7 +276,6 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self._video_url = await self._async_get_video()
 
         self._last_video_id = self._last_event["id"]
-        self._last_recording_at = self._last_event["created_at"]
         self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
 
     @exception_wrap

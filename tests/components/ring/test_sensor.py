@@ -69,6 +69,12 @@ def create_deprecated_and_disabled_sensor_entities(
         create_entry("ingress", desc, INGRESS_DEVICE_ID)
         create_entry("front_door", desc, FRONT_DOOR_DEVICE_ID)
         create_entry("internal", desc, INTERNAL_DEVICE_ID)
+    for device_name, device_id in (
+        ("front", FRONT_DEVICE_ID),
+        ("front_door", FRONT_DOOR_DEVICE_ID),
+        ("internal", INTERNAL_DEVICE_ID),
+    ):
+        create_entry(device_name, "last_recording", device_id)
 
 
 async def test_states(
@@ -161,6 +167,12 @@ async def test_health_sensor(
             "last_activity",
             "2018-03-05T15:03:40+00:00",
         ),
+        (
+            FRONT_DOOR_DEVICE_ID,
+            "front_door",
+            "last_recording",
+            "2018-03-05T15:03:40+00:00",
+        ),
         (FRONT_DEVICE_ID, "front", "last_motion", "2017-03-05T15:03:40+00:00"),
         (INGRESS_DEVICE_ID, "ingress", "last_activity", "2024-02-02T11:21:24+00:00"),
     ],
@@ -168,6 +180,7 @@ async def test_health_sensor(
         "doorbell-motion",
         "doorbell-ding",
         "doorbell-activity",
+        "doorbell-recording",
         "stickup_cam-motion",
         "other-activity",
     ],
