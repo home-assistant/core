@@ -1,14 +1,11 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_cert": "Invalid certificate",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -155,7 +152,7 @@
           "timeout": "Connection timeout"
         },
         "data_description": {
-          "timeout": "Maximum time to wait for a response from the SMTP server before the connection attempt is aborted."
+          "timeout": "Maximum time to wait for a response from the SMTP server before the connection attempt is aborted. Defaults to 60 seconds."
         }
       }
     }
@@ -183,6 +180,15 @@
         "starttls": "STARTTLS",
         "tls": "SSL/TLS"
       }
+    },
+    "priority": {
+      "options": {
+        "high": "High",
+        "highest": "Highest",
+        "low": "Low",
+        "lowest": "Lowest",
+        "normal": "Normal"
+      }
     }
   },
   "services": {
@@ -200,6 +206,10 @@
         "message": {
           "description": "The plain text message body of the email notification.",
           "name": "Message"
+        },
+        "priority": {
+          "description": "Priority of the email notification. Support for this setting varies between email clients.",
+          "name": "Priority"
         },
         "title": {
           "description": "Subject for your email notification.",

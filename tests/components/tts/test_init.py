@@ -1930,6 +1930,54 @@ async def test_async_convert_audio_probe_size(
     ]
 
 
+@pytest.mark.parametrize(
+    ("to_bitrate", "expected_encoder_args"),
+    [
+        pytest.param(None, ["-q:a", "0"], id="default_vbr"),
+        pytest.param(48, ["-b:a", "48k"], id="cbr_48k"),
+    ],
+)
+async def test_async_convert_audio_mp3_bitrate(
+    hass: HomeAssistant,
+    to_bitrate: int | None,
+    expected_encoder_args: list[str],
+) -> None:
+    """Test that a preferred bitrate produces a constant bitrate MP3."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    mock_process = MagicMock()
+    mock_process.stdin.drain = AsyncMock()
+    mock_process.stdout.read = AsyncMock(return_value=b"")
+    mock_process.wait = AsyncMock(return_value=0)
+
+    with patch(
+        "asyncio.create_subprocess_exec", return_value=mock_process
+    ) as mock_create_subprocess_exec:
+        async for _chunk in tts._async_convert_audio(
+            hass,
+            "wav",
+            _audio_data_gen(),
+            "mp3",
+            to_sample_rate=24000,
+            to_sample_channels=1,
+            to_bitrate=to_bitrate,
+        ):
+            pass
+
+    command = list(mock_create_subprocess_exec.call_args.args)
+    input_index = command.index("-i")
+    assert command[input_index + 2 :] == [
+        "-f",
+        "mp3",
+        "-ar",
+        "24000",
+        "-ac",
+        "1",
+        *expected_encoder_args,
+        "pipe:1",
+    ]
+
+
 async def test_default_engine_prefer_entity(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,

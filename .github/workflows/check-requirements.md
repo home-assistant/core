@@ -15,6 +15,8 @@ permissions:
 network:
   allowed:
     - python
+    - gitlab.com
+    - codeberg.org
 tools:
   web-fetch: {}
   github:
@@ -197,6 +199,10 @@ rubric:
      promising file by name, fetch its contents.
    - GitLab: fetch `.gitlab-ci.yml` from the default ref via
      `https://gitlab.com/api/v4/projects/{id}/repository/files/.gitlab-ci.yml/raw?ref=HEAD`.
+   - Codeberg (Forgejo): list `.forgejo/workflows/` (Forgejo Actions) — also
+     check `.gitea/workflows/` and `.woodpecker.yml` — via
+     `https://codeberg.org/api/v1/repos/{owner}/{repo}/contents/{path}?ref=HEAD`,
+     then fetch the promising file's `download_url`.
    - Other hosts: `web-fetch` an obvious CI config
      (`.circleci/config.yml`, `bitbucket-pipelines.yml`, etc.).
 2. Apply this rubric:
@@ -208,8 +214,10 @@ rubric:
    - **No bypass**: no ungated `twine upload` / `pip upload`.
 3. Verdict:
    - ✅ — OIDC + sane triggers + no bypass.
-   - ⚠️ — static token on a bump, details unclear, or
-     non-GitHub/GitLab host with limited CI visibility.
+   - ⚠️ — static token on a bump, details unclear, or a host with
+     limited CI visibility. Codeberg has no PyPI Trusted Publisher
+     support, so a static `PYPI_TOKEN` there is the expected best case
+     on a bump — ⚠️ rather than ❌.
    - ❌ — static token on a new package, or manual-only triggers
      without environment protection.
 
@@ -242,10 +250,13 @@ wrap calls in an executor.` (Same verdict for both modes.)
 - New package: grep public modules for `async def`, inspect each
   async body and transitive helpers.
 - Bump: fetch the compare diff
-  (`/repos/{owner}/{repo}/compare/{old}...{new}` on GitHub, equivalent
-  on GitLab/other hosts). Only flag patterns on **added** lines that
-  are inside or reachable from `async def`. If no tag format resolves,
-  fall back to a full review and note that the diff was unavailable.
+  (`/repos/{owner}/{repo}/compare/{old}...{new}` on GitHub,
+  `/api/v4/projects/{id}/repository/compare?from={old}&to={new}` on
+  GitLab, `/api/v1/repos/{owner}/{repo}/compare/{old}...{new}` on
+  Codeberg, equivalent on other hosts). Only flag patterns on **added**
+  lines that are inside or reachable from `async def`. If no tag format
+  resolves, fall back to a full review and note that the diff was
+  unavailable.
 
 **Blocking patterns to flag inside `async def`:**
 
@@ -296,7 +307,12 @@ Locate the source from `package.repo_url`.
 - GitHub: resolve the default branch (`GET /repos/{owner}/{repo}`), list
   the tree (`GET /repos/{owner}/{repo}/git/trees/{branch}?recursive=1`),
   find the module dir (`{name}/` or `src/{name}/`, normalising `-` ↔ `_`).
-- GitLab: equivalent REST calls. Other hosts: `web-fetch` raw file URLs.
+- GitLab: equivalent REST calls (`/api/v4/projects/{id}/repository/tree`).
+- Codeberg (Forgejo): `GET /api/v1/repos/{owner}/{repo}` for the default
+  branch, `GET /api/v1/repos/{owner}/{repo}/git/trees/{branch}?recursive=1`
+  for the tree, then `/api/v1/repos/{owner}/{repo}/contents/{path}?ref={branch}`
+  per file for its `download_url` — tree entries carry no `download_url`.
+- Other hosts: `web-fetch` raw file URLs.
 
 Fetch the **raw contents** of `setup.py` (install-time code runs on every
 consumer), `pyproject.toml` (`[build-system]` / custom backend), the
@@ -318,8 +334,10 @@ that did not exist when this was written) the same way.
 
 For every finding include the file path, line number, a snippet
 (≤ 120 chars), a permalink
-(`https://github.com/{owner}/{repo}/blob/{sha}/{path}#L{line}` or the
-GitLab equivalent), and one sentence on why it is out of scope.
+(`https://github.com/{owner}/{repo}/blob/{sha}/{path}#L{line}`, or the
+GitLab (`/-/blob/{sha}/{path}#L{line}`) / Codeberg
+(`/src/commit/{sha}/{path}#L{line}`) equivalent), and one sentence on why
+it is out of scope.
 
 1. **Reaches into Home Assistant internals.** A library should touch HA
    only through its documented Python API — never the `config_dir`

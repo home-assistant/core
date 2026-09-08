@@ -1,0 +1,13 @@
+{
+  "domain": "tonewinner",
+  "name": "Tonewinner",
+  "codeowners": ["@emma-sg"],
+  "config_flow": true,
+  "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/tonewinner",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["tonewinner_rs232"],
+  "quality_scale": "silver",
+  "requirements": ["tonewinner-rs232==1.1.0"]
+}

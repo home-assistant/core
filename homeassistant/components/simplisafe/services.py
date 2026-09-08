@@ -18,12 +18,12 @@ from simplipy.system.v3 import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.service import (
+    async_get_device_and_config_entry,
     async_register_admin_service,
     verify_domain_control,
 )
@@ -135,39 +135,18 @@ def _async_get_system_for_service_call(call: ServiceCall) -> SystemType:
     if TYPE_CHECKING:
         assert alarm_control_panel_device_entry.via_device_id
 
-    if (
-        base_station_device_entry := device_registry.async_get(
-            alarm_control_panel_device_entry.via_device_id
-        )
-    ) is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="no_base_station",
-            translation_placeholders={"device_id": device_id},
-        )
+    config_entry: SimpliSafeConfigEntry
+    base_station_device_entry, config_entry = async_get_device_and_config_entry(
+        call.hass, DOMAIN, alarm_control_panel_device_entry.via_device_id
+    )
 
     [system_id_str] = [
         identity[1]
         for identity in base_station_device_entry.identifiers
         if identity[0] == DOMAIN
     ]
-    system_id = int(system_id_str)
 
-    entry: SimpliSafeConfigEntry | None
-    for entry_id in base_station_device_entry.config_entries:
-        if (
-            (entry := call.hass.config_entries.async_get_entry(entry_id)) is None
-            or entry.domain != DOMAIN
-            or entry.state is not ConfigEntryState.LOADED
-        ):
-            continue
-        return entry.runtime_data.systems[system_id]
-
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="no_system_for_device",
-        translation_placeholders={"device_id": device_id},
-    )
+    return config_entry.runtime_data.systems[int(system_id_str)]
 
 
 @callback

@@ -8,6 +8,22 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import ModernFormsDataUpdateCoordinator
 
+_NAME_SEPARATORS = " -_"
+
+
+def strip_device_name_prefix(device_name: str, name: str) -> str | None:
+    """Strip a leading device-name prefix so has_entity_name doesn't duplicate it.
+
+    Returns None (rather than a name identical to the device name) when
+    the fixture name adds nothing beyond the device name.
+    """
+    if not device_name or not name.lower().startswith(device_name.lower()):
+        return name
+    rest = name[len(device_name) :]
+    if rest and rest[0] not in _NAME_SEPARATORS:
+        return name
+    return rest.lstrip(_NAME_SEPARATORS) or None
+
 
 class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
     """Defines a Modern Forms device entity."""

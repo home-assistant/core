@@ -49,7 +49,9 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.leds.power,
-        exists_fn=lambda device: bool(device.info.leds.max_power),
+        # The power budget is only reported for a global current limit, while
+        # the estimate itself is also reported when limiting per output.
+        exists_fn=lambda device: bool(device.info.leds.power),
     ),
     WLEDSensorEntityDescription(
         key="info_leds_count",

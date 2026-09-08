@@ -124,6 +124,7 @@ SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
 SERVICE_KNX_READ: Final = "read"
 
 REPAIR_ISSUE_DATA_SECURE_GROUP_KEY: Final = "data_secure_group_key_issue"
+REPAIR_ISSUE_ENTITY_VALIDATION_ERROR: Final = "entity_validation_error"
 REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR: Final = "telegram_backend_error"
 
 

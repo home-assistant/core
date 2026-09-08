@@ -1,0 +1,1382 @@
+{
+  "nodeId": 13,
+  "index": 0,
+  "installerIcon": 3078,
+  "userIcon": 3072,
+  "status": 1,
+  "ready": true,
+  "isListening": false,
+  "isRouting": true,
+  "isSecure": true,
+  "manufacturerId": 634,
+  "productId": 57347,
+  "productType": 28672,
+  "firmwareVersion": "1.20.1",
+  "zwavePlusVersion": 2,
+  "deviceConfig": {
+    "filename": "/usr/src/app/store/.config-db/devices/0x027a/zse43.json",
+    "isEmbedded": true,
+    "manufacturer": "Zooz",
+    "manufacturerId": 634,
+    "label": "ZSE43",
+    "description": "Tilt Shock XS Sensor",
+    "devices": [
+      {
+        "productType": 28672,
+        "productId": 57347
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "preferred": false,
+    "associations": {
+      "1": {
+        "groupId": 1,
+        "label": "Lifeline",
+        "maxNodes": 3,
+        "isLifeline": true,
+        "multiChannel": "auto"
+      },
+      "2": {
+        "groupId": 2,
+        "label": "Tilt On/Off",
+        "maxNodes": 5,
+        "isLifeline": false,
+        "multiChannel": "auto"
+      },
+      "3": {
+        "groupId": 3,
+        "label": "Shock On/Off",
+        "maxNodes": 5,
+        "isLifeline": false,
+        "multiChannel": "auto"
+      }
+    },
+    "paramInformation": {
+      "_map": {
+        "{\"parameter\":1}": {
+          "parameterNumber": 1,
+          "label": "LED Indicator",
+          "valueSize": 1,
+          "allowed": [
+            {
+              "from": 0,
+              "to": 3
+            }
+          ],
+          "minValue": 0,
+          "maxValue": 3,
+          "unsigned": false,
+          "defaultValue": 3,
+          "allowManualEntry": false,
+          "options": [
+            {
+              "value": 0,
+              "label": "Disable"
+            },
+            {
+              "value": 1,
+              "label": "LED on shock only"
+            },
+            {
+              "value": 2,
+              "label": "LED on tilt only"
+            },
+            {
+              "value": 3,
+              "label": "LED on shock and tilt"
+            }
+          ]
+        },
+        "{\"parameter\":2}": {
+          "parameterNumber": 2,
+          "label": "Battery Report Threshold",
+          "valueSize": 1,
+          "allowed": [
+            {
+              "from": 1,
+              "to": 50
+            }
+          ],
+          "minValue": 1,
+          "maxValue": 50,
+          "unsigned": true,
+          "defaultValue": 5,
+          "unit": "%",
+          "allowManualEntry": true,
+          "purpose": "reporting_threshold.battery",
+          "options": []
+        },
+        "{\"parameter\":3}": {
+          "parameterNumber": 3,
+          "label": "Low Battery Alarm Threshold",
+          "valueSize": 1,
+          "allowed": [
+            {
+              "from": 10,
+              "to": 50
+            }
+          ],
+          "minValue": 10,
+          "maxValue": 50,
+          "unsigned": true,
+          "defaultValue": 20,
+          "unit": "%",
+          "allowManualEntry": true,
+          "purpose": "reporting_threshold.low_battery",
+          "options": []
+        },
+        "{\"parameter\":4}": {
+          "parameterNumber": 4,
+          "label": "Shock Sensitivity",
+          "valueSize": 1,
+          "allowed": [
+            {
+              "from": 0,
+              "to": 2
+            }
+          ],
+          "minValue": 0,
+          "maxValue": 2,
+          "unsigned": false,
+          "defaultValue": 0,
+          "unit": "%",
+          "allowManualEntry": false,
+          "options": [
+            {
+              "value": 0,
+              "label": "High"
+            },
+            {
+              "value": 1,
+              "label": "Medium"
+            },
+            {
+              "value": 2,
+              "label": "Low"
+            }
+          ]
+        },
+        "{\"parameter\":5}": {
+          "parameterNumber": 5,
+          "label": "Group 2: On Delay",
+          "valueSize": 4,
+          "allowed": [
+            {
+              "from": 0,
+              "to": 3600
+            }
+          ],
+          "minValue": 0,
+          "maxValue": 3600,
+          "unsigned": true,
+          "defaultValue": 0,
+          "unit": "seconds",
+          "allowManualEntry": true,
+          "options": []
+        },
+        "{\"parameter\":6}": {
+          "parameterNumber": 6,
+          "label": "Group 2: Off Delay",
+          "valueSize": 4,
+          "allowed": [
+            {
+              "from": 0,
+              "to": 3600
+            }
+          ],
+          "minValue": 0,
+          "maxValue": 3600,
+          "unsigned": true,
+          "defaultValue": 0,
+          "unit": "seconds",
+          "allowManualEntry": true,
+          "options": []
+        },
+        "{\"parameter\":7}": {
+          "parameterNumber": 7,
+          "label": "Enable Sensors",
+          "valueSize": 1,
+          "allowed": [
+            {
+              "from": 0,
+              "to": 2
+            }
+          ],
+          "minValue": 0,
+          "maxValue": 2,
+          "unsigned": false,
+          "defaultValue": 2,
+          "allowManualEntry": false,
+          "options": [
+            {
+              "value": 0,
+              "label": "Only tilt sensor enabled"
+            },
+            {
+              "value": 1,
+              "label": "Only shock sensor enabled"
+            },
+            {
+              "value": 2,
+              "label": "Both sensors enabled"
+            }
+          ]
+        },
+        "{\"parameter\":8}": {
+          "parameterNumber": 8,
+          "label": "Group 2: Tilt Sensor Basic Reports",
+          "valueSize": 1,
+          "allowed": [
+            {
+              "from": 0,
+              "to": 3
+            }
+          ],
+          "minValue": 0,
+          "maxValue": 3,
+          "unsigned": false,
+          "defaultValue": 3,
+          "allowManualEntry": false,
+          "options": [
+            {
+              "value": 0,
+              "label": "Disable"
+            },
+            {
+              "value": 1,
+              "label": "0xff (On) when tilt detected"
+            },
+            {
+              "value": 2,
+              "label": "0x00 (Off) when tilt cleared"
+            },
+            {
+              "value": 3,
+              "label": "0xff (On) when tilt detected; 0x00 (Off) when tilt cleared"
+            }
+          ]
+        },
+        "{\"parameter\":9}": {
+          "parameterNumber": 9,
+          "label": "Group 3: Shock Sensor Basic Reports",
+          "valueSize": 1,
+          "allowed": [
+            {
+              "from": 0,
+              "to": 3
+            }
+          ],
+          "minValue": 0,
+          "maxValue": 3,
+          "unsigned": false,
+          "defaultValue": 3,
+          "allowManualEntry": false,
+          "options": [
+            {
+              "value": 0,
+              "label": "Disable"
+            },
+            {
+              "value": 1,
+              "label": "0xff (On) when shock detected"
+            },
+            {
+              "value": 2,
+              "label": "0x00 (Off) when shock cleared"
+            },
+            {
+              "value": 3,
+              "label": "0xff (On) when shock detected; 0x00 (Off) when shock cleared"
+            }
+          ]
+        }
+      }
+    },
+    "metadata": {
+      "wakeup": "Click the Z-Wave button 4 times quickly. The LED indicator will flash twice to confirm the device is awake.",
+      "inclusion": "Click the Z-Wave button 3 times as quickly as possible. The LED indicator will start flashing and turn off once inclusion is completed.",
+      "exclusion": "Click the Z-Wave button 3 times as quickly as possible. The LED indicator will start flashing and turn off when exclusion is complete.",
+      "reset": "1. Click the Z-Wave button twice and hold it the third time for 10 seconds\n2. The LED indicator will blink continuously\n3. Immediately click the Z-Wave button twice more to finalize the reset\n4. The LED indicator will flash 3 times to confirm a successful reset",
+      "manual": "https://cdn.shopify.com/s/files/1/0218/7704/files/zooz-700-series-tilt-shock-xs-sensor-zse43-manual.pdf"
+    }
+  },
+  "label": "ZSE43",
+  "interviewAttempts": 1,
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 6,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing End Node"
+    },
+    "generic": {
+      "key": 7,
+      "label": "Notification Sensor"
+    },
+    "specific": {
+      "key": 1,
+      "label": "Notification Sensor"
+    }
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x027a:0x7000:0xe003:1.20.1",
+  "statistics": {
+    "commandsTX": 122,
+    "commandsRX": 124,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 3,
+    "rtt": 21.1,
+    "lastSeen": "2026-09-01T08:31:34.188Z",
+    "rssi": -62,
+    "lwr": {
+      "protocolDataRate": 2,
+      "repeaters": [],
+      "rssi": -62,
+      "repeaterRSSI": []
+    }
+  },
+  "highestSecurityClass": 1,
+  "isControllerNode": false,
+  "keepAwake": false,
+  "lastSeen": "2026-09-01T08:25:06.085Z",
+  "protocol": 0,
+  "sdkVersion": "7.13.10",
+  "canSleep": true,
+  "hardwareVersion": 1,
+  "hasSUCReturnRoute": true,
+  "manufacturer": "Zooz",
+  "dsk": "**REDACTED**",
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 1,
+      "propertyName": "LED Indicator",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "LED Indicator",
+        "default": 3,
+        "min": 0,
+        "max": 3,
+        "states": {
+          "0": "Disable",
+          "1": "LED on shock only",
+          "2": "LED on tilt only",
+          "3": "LED on shock and tilt"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "allowed": [
+          {
+            "from": 0,
+            "to": 3
+          }
+        ]
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyName": "Low Battery Alarm Threshold",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Low Battery Alarm Threshold",
+        "default": 20,
+        "min": 10,
+        "max": 50,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "allowed": [
+          {
+            "from": 10,
+            "to": 50
+          }
+        ],
+        "purpose": "reporting_threshold.low_battery"
+      },
+      "value": 20
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 4,
+      "propertyName": "Shock Sensitivity",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Shock Sensitivity",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "High",
+          "1": "Medium",
+          "2": "Low"
+        },
+        "unit": "%",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "allowed": [
+          {
+            "from": 0,
+            "to": 2
+          }
+        ]
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 5,
+      "propertyName": "Group 2: On Delay",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Group 2: On Delay",
+        "default": 0,
+        "min": 0,
+        "max": 3600,
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "allowed": [
+          {
+            "from": 0,
+            "to": 3600
+          }
+        ]
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 6,
+      "propertyName": "Group 2: Off Delay",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Group 2: Off Delay",
+        "default": 0,
+        "min": 0,
+        "max": 3600,
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "allowed": [
+          {
+            "from": 0,
+            "to": 3600
+          }
+        ]
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 7,
+      "propertyName": "Enable Sensors",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Enable Sensors",
+        "default": 2,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Only tilt sensor enabled",
+          "1": "Only shock sensor enabled",
+          "2": "Both sensors enabled"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "allowed": [
+          {
+            "from": 0,
+            "to": 2
+          }
+        ]
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 8,
+      "propertyName": "Group 2: Tilt Sensor Basic Reports",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Group 2: Tilt Sensor Basic Reports",
+        "default": 3,
+        "min": 0,
+        "max": 3,
+        "states": {
+          "0": "Disable",
+          "1": "0xff (On) when tilt detected",
+          "2": "0x00 (Off) when tilt cleared",
+          "3": "0xff (On) when tilt detected; 0x00 (Off) when tilt cleared"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "allowed": [
+          {
+            "from": 0,
+            "to": 3
+          }
+        ]
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 9,
+      "propertyName": "Group 3: Shock Sensor Basic Reports",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Group 3: Shock Sensor Basic Reports",
+        "default": 3,
+        "min": 0,
+        "max": 3,
+        "states": {
+          "0": "Disable",
+          "1": "0xff (On) when shock detected",
+          "2": "0x00 (Off) when shock cleared",
+          "3": "0xff (On) when shock detected; 0x00 (Off) when shock cleared"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "allowed": [
+          {
+            "from": 0,
+            "to": 3
+          }
+        ]
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 10,
+      "propertyName": "Report for contact",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Select report type(Notification or binary sensor) when contact sensor triggered",
+        "label": "Report for contact",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 11,
+      "propertyName": "Report delay after tamper disarming",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Report will be issued after some seconds determined by this parameter",
+        "label": "Report delay after tamper disarming",
+        "default": 3,
+        "min": 0,
+        "max": 3600,
+        "valueSize": 2,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 2,
+      "propertyName": "Battery Report Threshold",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Battery Report Threshold",
+        "default": 5,
+        "min": 1,
+        "max": 50,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "allowed": [
+          {
+            "from": 1,
+            "to": 50
+          }
+        ],
+        "purpose": "reporting_threshold.battery"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Access Control",
+      "propertyKey": "Door state",
+      "propertyName": "Access Control",
+      "propertyKeyName": "Door state",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Door state",
+        "ccSpecific": {
+          "notificationType": 6
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "22": "Window/door is open",
+          "23": "Window/door is closed",
+          "5632": "Window/door is open in regular position",
+          "5633": "Window/door is open in tilt position"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 22
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Home Security",
+      "propertyKey": "Cover status",
+      "propertyName": "Home Security",
+      "propertyKeyName": "Cover status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Cover status",
+        "ccSpecific": {
+          "notificationType": 7
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "3": "Tampering, product cover removed"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmType",
+      "propertyName": "alarmType",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Type",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmLevel",
+      "propertyName": "alarmLevel",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Level",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Access Control",
+      "propertyKey": "Opening state",
+      "propertyName": "Access Control",
+      "propertyKeyName": "Opening state",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Opening state",
+        "ccSpecific": {
+          "notificationType": 6
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Closed",
+          "1": "Open"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Access Control",
+      "propertyKey": "Door state (simple)",
+      "propertyName": "Access Control",
+      "propertyKeyName": "Door state (simple)",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Door state (simple)",
+        "ccSpecific": {
+          "notificationType": 6
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "22": "Window/door is open",
+          "23": "Window/door is closed"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 22
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 57347
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 28672
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 634
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "level",
+      "propertyName": "level",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Battery level",
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 132,
+      "commandClassName": "Wake Up",
+      "property": "wakeUpInterval",
+      "propertyName": "wakeUpInterval",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "default": 21600,
+        "readable": false,
+        "writeable": true,
+        "min": 0,
+        "max": 86400,
+        "states": {
+          "0": "Disabled"
+        },
+        "stateful": true,
+        "secret": false,
+        "allowed": [
+          {
+            "value": 0
+          },
+          {
+            "from": 3600,
+            "to": 86400,
+            "step": 60
+          }
+        ]
+      },
+      "value": 21600
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 132,
+      "commandClassName": "Wake Up",
+      "property": "controllerNodeId",
+      "propertyName": "controllerNodeId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Node ID of the controller",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions",
+        "stateful": true,
+        "secret": false
+      },
+      "value": ["1.20"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "7.13"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationBuildNumber",
+      "propertyName": "applicationBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Application build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 43707
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationVersion",
+      "propertyName": "applicationVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Application version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "1.20.1"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "zWaveProtocolBuildNumber",
+      "propertyName": "zWaveProtocolBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 423
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "zWaveProtocolVersion",
+      "propertyName": "zWaveProtocolVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "7.13.10"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hostInterfaceBuildNumber",
+      "propertyName": "hostInterfaceBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Serial API build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hostInterfaceVersion",
+      "propertyName": "hostInterfaceVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Serial API version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "unused"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationFrameworkBuildNumber",
+      "propertyName": "applicationFrameworkBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave application framework API build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 423
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationFrameworkAPIVersion",
+      "propertyName": "applicationFrameworkAPIVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave application framework API version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "10.13.10"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "sdkVersion",
+      "propertyName": "sdkVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "SDK version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "7.13.10"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": "value",
+      "propertyName": "value",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Indicator value",
+        "ccSpecific": {
+          "indicatorId": 0
+        },
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": "identify",
+      "propertyName": "identify",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Identify",
+        "states": {
+          "true": "Identify"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    }
+  ],
+  "endpoints": [
+    {
+      "nodeId": 13,
+      "index": 0,
+      "installerIcon": 3078,
+      "userIcon": 3072,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing End Node"
+        },
+        "generic": {
+          "key": 7,
+          "label": "Notification Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Notification Sensor"
+        }
+      },
+      "commandClasses": [
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 85,
+          "name": "Transport Service",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": true
+        },
+        {
+          "id": 135,
+          "name": "Indicator",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 48,
+          "name": "Binary Sensor",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 132,
+          "name": "Wake Up",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 5,
+          "isSecure": true
+        }
+      ]
+    }
+  ]
+}
