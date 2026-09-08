@@ -24,10 +24,10 @@ from tests.common import MockConfigEntry
 USER_INPUT = {CONF_NAME: "Living room", CONF_HOST: HOST, CONF_PORT: PORT}
 
 
-def _discovery_info(port: int = PORT) -> ZeroconfServiceInfo:
+def _discovery_info(port: int = PORT, host: str = HOST) -> ZeroconfServiceInfo:
     return ZeroconfServiceInfo(
-        ip_address=HOST,
-        ip_addresses=[HOST],
+        ip_address=host,
+        ip_addresses=[host],
         hostname=f"{AIRCO_ID}.local.",
         name=f"{AIRCO_ID}._beaver._tcp.local.",
         port=port,
@@ -261,14 +261,24 @@ async def test_zeroconf_flow_already_configured(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """A rediscovered airco aborts and refreshes the stored address."""
+    """A rediscovered airco aborts and refreshes the stored address.
+
+    The address only: an announcement carrying 5353 - the mDNS port itself,
+    in the SRV record where the API port belongs (#290) - would otherwise be
+    written into a working entry and take it offline. The port a configured
+    entry has is the one setup established.
+    """
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info()
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_discovery_info(port=5353, host="192.168.1.9"),
     )
 
     assert result["type"] is FlowResultType.ABORT
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.9"
+    assert mock_config_entry.data[CONF_PORT] == PORT
 
 
 async def test_reconfigure_flow(

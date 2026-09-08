@@ -404,10 +404,14 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.port,
         )
 
-        info = {CONF_HOST: host, CONF_PORT: port}
-
         await self.async_set_unique_id(node_name)
-        self._abort_if_unique_id_configured(updates=info)
+        # The address only. A module that moved gets followed; its port is
+        # what setup was configured with, and modules have been seen
+        # announcing 5353 - the mDNS port itself - in the SRV record where the
+        # API port belongs, which would take a working entry offline.
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        info = {CONF_HOST: host, CONF_PORT: port}
 
         existing_entry = self._find_entry_matching(CONF_HOST, lambda h: h == host)
         if existing_entry:
