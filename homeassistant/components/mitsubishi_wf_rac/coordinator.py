@@ -149,10 +149,13 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         self._availability_failure_limit = max(
             AVAILABILITY_FAILURE_LIMIT_MIN, availability_failure_limit
         )
-        # Serializes set_airco() calls end-to-end (snapshot build through
-        # self._airco update) so a call can never build its diff from a
-        # snapshot that's stale because another set_airco() is still in
-        # flight - see set_airco() below.
+        # Serializes a poll and a command against each other, end to end. A
+        # command frame is a full state block built from self._airco, so it
+        # may not be encoded from a snapshot that a poll is about to replace:
+        # the module takes one connection at a time, so the write queues
+        # behind the poll already on the wire, and by the time it goes out it
+        # would put every field back the way it was before that poll - undoing
+        # whatever the app or the remote had just changed.
         self._send_lock = asyncio.Lock()
         self._consolidated_params: dict[AirconCommands, Any] = {}
         self._consolidation_task: asyncio.Task[None] | None = None
@@ -221,8 +224,19 @@ class Device(DataUpdateCoordinator[Aircon]):  # pylint: disable=too-many-instanc
         set_airco()'s fallback fetch is immediately followed by a command
         whose completion already triggers async_set_updated_data() (see
         Device.async_queue_command()).
+
+        Holds the send lock for the request and the state write together, so a
+        command cannot snapshot state this poll is about to replace. The cost
+        is that a command issued while a poll is on the wire waits for it -
+        which it did anyway, one connection at a time, only without the
+        snapshot being any good.
         """
 
+        async with self._send_lock:
+            return await self._async_fetch_state()
+
+    async def _async_fetch_state(self) -> bool:
+        """Fetch and apply one status block. Caller holds the send lock."""
         try:
             response = await self._api.get_aircon_stats(self._airco_id)
 

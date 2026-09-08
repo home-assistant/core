@@ -536,3 +536,67 @@ async def test_a_deadline_that_is_not_a_timestamp_falls_back_too(
     assert WRITE_LOCK_RETRY_DELAY.total_seconds() in [
         call.args[0] for call in sleep.await_args_list
     ]
+
+
+async def test_a_command_issued_during_a_poll_waits_for_what_it_brings(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """A poll on the wire is about to replace the state a command builds from.
+
+    The frame is a full state block and the module takes one connection at a
+    time, so a command encoded before that poll lands would queue behind it
+    and then put every field back the way it was - undoing whatever the app
+    or the remote had just changed. The same revert as on the refusal path,
+    on the path a poll opens.
+    """
+    original = mock_repository.get_aircon_stats.return_value
+    theirs = RacParser().translate_bytes(original["airconStat"])
+    theirs.PresetTemp = 27.0
+    fresh = {
+        **original,
+        "airconStat": RacParser().to_base64(AirconStat.from_aircon(theirs)),
+    }
+
+    polling = asyncio.Event()
+    let_the_poll_answer = asyncio.Event()
+
+    async def _poll_in_flight(*args: object, **kwargs: object) -> dict:
+        polling.set()
+        await let_the_poll_answer.wait()
+        return fresh
+
+    mock_repository.get_aircon_stats.side_effect = _poll_in_flight
+    mock_repository.send_airco_command.return_value = fresh["airconStat"]
+
+    poll = asyncio.create_task(init_integration.runtime_data.device.async_refresh())
+    await asyncio.wait_for(polling.wait(), timeout=5)
+
+    # Without the consolidation window the command reaches the point where it
+    # encodes right away, which is what has to happen while the poll is still
+    # on the wire for this to say anything.
+    with patch(
+        "homeassistant.components.mitsubishi_wf_rac.coordinator.UPDATE_CONSOLIDATION_PERIOD",
+        timedelta(0),
+    ):
+        command = asyncio.create_task(
+            hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_FAN_MODE,
+                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "auto"},
+                blocking=True,
+            )
+        )
+        for _ in range(10):
+            await asyncio.sleep(0)
+
+        let_the_poll_answer.set()
+        await poll
+        await command
+        await hass.async_block_till_done()
+
+    sent = RacParser().translate_bytes(
+        mock_repository.send_airco_command.await_args.args[1]
+    )
+    assert sent.PresetTemp == 27.0
