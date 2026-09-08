@@ -23,9 +23,13 @@ ALERT_TYPES = {
     ALERT_TYPE_CHEMICAL,
     ALERT_TYPE_NUCLEAR,
 }
-# The API reports danger levels for air alerts only.
+# The API attaches levels to all alert types, but they are only meaningful for AIR.
 AIR_ALERT_LEVELS = {
     "red": ALERT_TYPE_AIR_RED,
     "yellow": ALERT_TYPE_AIR_YELLOW,
 }
+
+ATTR_REASONS = "reasons"
+ATTR_CREATED_AT = "created_at"
+
 PLATFORMS = [Platform.BINARY_SENSOR]
