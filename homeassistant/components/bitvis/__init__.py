@@ -1,6 +1,6 @@
 """The Bitvis Power Hub integration."""
 
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import BitvisConfigEntry, BitvisDataUpdateCoordinator
@@ -15,7 +15,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BitvisConfigEntry) -> bo
     coordinator = BitvisDataUpdateCoordinator(
         hass,
         entry,
-        entry.data[CONF_HOST],
         entry.data[CONF_PORT],
         unique_id,
     )

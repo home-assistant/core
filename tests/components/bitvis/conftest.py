@@ -29,7 +29,6 @@ def patch_config_flow_connectivity(
     port_bind_side_effect: BaseException | None = None,
     discovery_timeout: bool = False,
     register_side_effect: BaseException | None = None,
-    use_real_listener_registry: bool = False,
     shared_listener: MagicMock | None = None,
 ) -> Iterator[AsyncMock]:
     """Patch library connectivity helpers used by the config flow."""
@@ -114,24 +113,12 @@ def patch_config_flow_connectivity(
                 return_value={resolved_host},
             )
         )
-        if not use_real_listener_registry:
-            mock_registry = stack.enter_context(
-                patch(
-                    "homeassistant.components.bitvis.config_flow.async_get_listener_registry",
-                )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.bitvis.coordinator.SharedListener",
+                return_value=mock_listener,
             )
-            mock_registry.return_value.has_listener.return_value = False
-            mock_registry.return_value.async_get_or_create = AsyncMock(
-                return_value=mock_listener
-            )
-            mock_registry.return_value.async_remove_if_unused = AsyncMock()
-        else:
-            stack.enter_context(
-                patch(
-                    "homeassistant.components.bitvis.coordinator.SharedListener",
-                    return_value=mock_listener,
-                )
-            )
+        )
         if discovery_timeout:
             stack.enter_context(
                 patch(

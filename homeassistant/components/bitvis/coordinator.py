@@ -96,7 +96,6 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
         self,
         hass: HomeAssistant,
         config_entry: BitvisConfigEntry,
-        host: str,
         port: int,
         mac_address: str,
     ) -> None:
@@ -107,7 +106,6 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
             name=DOMAIN,
             config_entry=config_entry,
         )
-        self.host = host
         self.port = port
         self.mac_address = mac_address
         self._filter = FilterMac(mac_address)

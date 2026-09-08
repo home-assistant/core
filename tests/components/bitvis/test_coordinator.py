@@ -76,7 +76,6 @@ async def test_user_form_skips_port_bind_when_listener_exists(
         patch_config_flow_connectivity(
             "192.168.1.101",
             mac_address=SECOND_DEVICE_MAC,
-            use_real_listener_registry=True,
             shared_listener=patch_shared_listener,
         ),
     ):

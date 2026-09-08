@@ -420,7 +420,6 @@ async def test_aborted_flow_removes_listener(
         USER_HOST,
         deliver_mac=False,
         discovery_timeout=True,
-        use_real_listener_registry=True,
         shared_listener=mock_shared_listener,
     ):
         result = await hass.config_entries.flow.async_init(
