@@ -11,6 +11,7 @@ from functools import partial
 from typing import TYPE_CHECKING, Any
 
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
+from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 
 from homeassistant.const import Platform
@@ -218,13 +219,13 @@ class UnifiEntityLoader:
         )
 
     @callback
-    def get_data_update_coordinator[HandlerT: APIHandler](
+    def get_data_update_coordinator[HandlerT: APIHandler[ApiItem]](
         self, handler: HandlerT
-    ) -> UnifiDataUpdateCoordinator[HandlerT] | None:
-        """Return the data coordinator for a handler, if available."""
+    ) -> UnifiDataUpdateCoordinator[HandlerT]:
+        """Return the data coordinator for a handler."""
         handler_id = id(handler)
         resolved_handler_id = self._data_coordinator_aliases.get(handler_id, handler_id)
-        return self._data_coordinators.get(resolved_handler_id)
+        return self._data_coordinators[resolved_handler_id]
 
     @callback
     def _load_entities(

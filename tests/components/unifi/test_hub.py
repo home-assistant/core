@@ -71,8 +71,6 @@ async def test_coordinators_preserve_handler_update_sources(
 
     clients_coordinator = loader.get_data_update_coordinator(api.clients)
     devices_coordinator = loader.get_data_update_coordinator(api.devices)
-    assert clients_coordinator is not None
-    assert devices_coordinator is not None
     assert clients_coordinator.update_interval is None
     assert devices_coordinator.update_interval is None
 
@@ -85,8 +83,18 @@ async def test_coordinators_preserve_handler_update_sources(
         api.traffic_routes,
     ):
         coordinator = loader.get_data_update_coordinator(handler)
-        assert coordinator is not None
         assert coordinator.update_interval == POLL_INTERVAL
+
+
+async def test_get_data_update_coordinator_requires_registered_handler(
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure a handler without a coordinator fails at lookup time."""
+    loader = config_entry_setup.runtime_data.entity_loader
+    api = config_entry_setup.runtime_data.api
+
+    with pytest.raises(KeyError):
+        loader.get_data_update_coordinator(api.sites)
 
 
 async def test_websocket_updates_notify_coordinator(

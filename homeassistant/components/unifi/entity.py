@@ -26,6 +26,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import ATTR_MANUFACTURER, DOMAIN
+from .coordinator import UnifiDataUpdateCoordinator
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -136,6 +137,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     """Representation of a UniFi entity."""
 
     entity_description: UnifiEntityDescription[HandlerT, ItemT]
+    coordinator: UnifiDataUpdateCoordinator[HandlerT]
     _attr_unique_id: str
 
     def __init__(
@@ -152,7 +154,6 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
         self.coordinator = hub.entity_loader.get_data_update_coordinator(
             description.api_handler_fn(self.api)
         )
-        assert self.coordinator is not None
 
         hub.entity_loader.known_objects.add((description.key, obj_id))
 
@@ -187,10 +188,8 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
         self.async_on_remove(unregister_object)
 
         # New data from coordinator
-        coordinator = self.coordinator
-        assert coordinator is not None
         self.async_on_remove(
-            coordinator.async_add_listener(self._async_coordinator_updated)
+            self.coordinator.async_add_listener(self._async_coordinator_updated)
         )
 
         # State change from hub or websocket
@@ -223,9 +222,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     @callback
     def _async_coordinator_updated(self) -> None:
         """Skip coordinator updates that changed a different object."""
-        coordinator = self.coordinator
-        assert coordinator is not None
-        changed_obj_id = coordinator.data
+        changed_obj_id = self.coordinator.data
         own_obj_id = self._obj_id.partition("_")[0]
         if changed_obj_id is not None and changed_obj_id not in (
             self._obj_id,
@@ -286,10 +283,8 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
     async def async_refresh_after_control(self) -> None:
         """Refresh handler data after a control call when polling."""
-        coordinator = self.coordinator
-        assert coordinator is not None
-        if coordinator.update_interval is not None:
-            await coordinator.async_request_refresh()
+        if self.coordinator.update_interval is not None:
+            await self.coordinator.async_request_refresh()
 
     @callback
     def async_initiate_state(self) -> None:
