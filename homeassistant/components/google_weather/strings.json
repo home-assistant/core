@@ -115,7 +115,7 @@
   "services": {
     "get_minute_forecast": {
       "name": "Get minute forecast",
-      "description": "Retrieves the minute-by-minute precipitation forecast (nowcast) for the next 6 hours."
+      "description": "Retrieves the precipitation forecast (nowcast) for the next 6 hours, in 2- or 15-minute segments depending on the location."
     }
   }
 }

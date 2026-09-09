@@ -197,7 +197,7 @@ class GoogleWeatherEntity(
         self._longitude: float = subentry.data[CONF_LONGITUDE]
 
     async def async_get_minute_forecast(self) -> dict[str, Any]:
-        """Return the minute-by-minute precipitation nowcast."""
+        """Return the precipitation nowcast for the next 6 hours."""
         try:
             response = await self._api.async_get_minute_forecast(
                 self._latitude, self._longitude
