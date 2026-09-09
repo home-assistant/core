@@ -8,7 +8,7 @@ import pytest
 from roborock import RoborockException
 from roborock.data import WorkStatusMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
-from roborock.map.b01_q10_map_parser import Q10Point
+from roborock.data.b01_q10.b01_q10_containers import Q10RoborockPoint
 from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
 from vacuum_map_parser_base.map_data import Point
@@ -938,7 +938,7 @@ async def test_q10_get_current_position(
     q10_vacuum_api: Mock,
 ) -> None:
     """Test returning the Q10 position in common Roborock coordinates."""
-    q10_vacuum_api.map.roborock_position = Q10Point(x=30020, y=28705)
+    q10_vacuum_api.map.robot_position = Q10RoborockPoint(x=30020, y=28705)
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -957,7 +957,7 @@ async def test_q10_get_current_position_not_available(
     q10_vacuum_api: Mock,
 ) -> None:
     """Test the Q10 position service before a trace has been received."""
-    q10_vacuum_api.map.roborock_position = None
+    q10_vacuum_api.map.robot_position = None
 
     with pytest.raises(HomeAssistantError, match="Robot position not found"):
         await hass.services.async_call(
@@ -980,20 +980,18 @@ async def test_q10_zoned_cleaning(
         SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
         {
             ATTR_ENTITY_ID: Q10_ENTITY_ID,
-            "x1": 28582,
-            "y1": 21363,
+            "x1": 28580,
+            "y1": 21365,
             "x2": 27425,
-            "y2": 22816,
+            "y2": 22815,
             "repeats": 1,
         },
         blocking=True,
     )
 
     assert q10_vacuum_api.vacuum.clean_zone.call_args == call(
-        28582,
-        21363,
-        27425,
-        22816,
+        Q10RoborockPoint(28580, 21365),
+        Q10RoborockPoint(27425, 22815),
         clean_count=2,
     )
 
@@ -1004,7 +1002,7 @@ async def test_q10_goto(
     q10_vacuum_api: Mock,
 ) -> None:
     """Test that Q10 goto delegates the complete operation to the library."""
-    q10_vacuum_api.map.roborock_position = Q10Point(x=25500, y=25500)
+    q10_vacuum_api.map.robot_position = Q10RoborockPoint(x=25500, y=25500)
 
     await hass.services.async_call(
         DOMAIN,
@@ -1013,7 +1011,9 @@ async def test_q10_goto(
         blocking=True,
     )
 
-    assert q10_vacuum_api.vacuum.goto_position.call_args == call(29900, 28650)
+    assert q10_vacuum_api.vacuum.goto_position.call_args == call(
+        Q10RoborockPoint(29900, 28650)
+    )
 
 
 @pytest.mark.parametrize(

@@ -9,6 +9,7 @@ from roborock.data.b01_q10.b01_q10_code_mappings import (
     YXDeviceState,
     YXFanLevel,
 )
+from roborock.data.b01_q10.b01_q10_containers import Q10RoborockPoint
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
@@ -780,7 +781,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
 
     async def get_vacuum_current_position(self) -> ServiceResponse:
         """Get the current position of the vacuum from the map."""
-        if (position := self.coordinator.api.map.roborock_position) is None:
+        if (position := self.coordinator.api.map.robot_position) is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="position_not_found",
@@ -790,7 +791,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
         """Move the Q10 to a position using the library goto operation."""
         try:
-            await self.coordinator.api.vacuum.goto_position(x, y)
+            await self.coordinator.api.vacuum.goto_position(Q10RoborockPoint(x, y))
         except ValueError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -812,10 +813,8 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
             # Home Assistant defines repeats as additional passes, while Q10
             # carries the total clean count.
             await self.coordinator.api.vacuum.clean_zone(
-                x1,
-                y1,
-                x2,
-                y2,
+                Q10RoborockPoint(x1, y1),
+                Q10RoborockPoint(x2, y2),
                 clean_count=repeats + 1,
             )
         except ValueError as err:
