@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
-from aioautomower.model import MowerActivities, MowerAttributes, RestrictedReasons
+from aioautomower.model import MowerActivities, MowerAttributes, MowerStates
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -32,7 +32,7 @@ def _get_charging_value(data: MowerAttributes) -> bool | None:
     If the mower is in a restricted state, the charging state is set to unknown.
     """
 
-    if data.planner.restricted_reason is not RestrictedReasons.NONE:
+    if data.mower.state == MowerStates.RESTRICTED:
         return None
     return data.mower.activity == MowerActivities.CHARGING
 
