@@ -364,6 +364,69 @@ async def test_charge_on_solar_switch_uses_lower_limit_number(
         )
 
 
+async def test_charge_on_solar_switch_turn_on_uses_restored_charge_limit(
+    hass: HomeAssistant,
+) -> None:
+    """Test turning on after a restart uses the restored charge limit, not a guess."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch("teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc") as (
+        listener
+    ):
+        listener.return_value = lambda: None
+        entry = await setup_platform(hass, [Platform.SWITCH])
+
+        for call in listener.call_args_list:
+            call.args[0](65)
+
+        await reload_platform(hass, entry, [Platform.SWITCH])
+
+        with patch(
+            "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+            return_value=COMMAND_OK,
+        ) as command:
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+                blocking=True,
+            )
+            command.assert_called_once_with(
+                enabled=True,
+                lower_charge_limit=20,
+                upper_charge_limit=65,
+            )
+
+
+async def test_charge_on_solar_switch_turn_on_omits_unknown_charge_limit(
+    hass: HomeAssistant,
+) -> None:
+    """Test turning on omits the upper limit rather than guessing when unknown."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch("teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc") as (
+        listener
+    ):
+        listener.return_value = lambda: None
+        await setup_platform(hass, [Platform.SWITCH])
+
+        with patch(
+            "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+            return_value=COMMAND_OK,
+        ) as command:
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+                blocking=True,
+            )
+            command.assert_called_once_with(
+                enabled=True,
+                lower_charge_limit=20,
+                upper_charge_limit=None,
+            )
+
+
 async def test_disable_charge_on_solar_preview_removes_registry_entries(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

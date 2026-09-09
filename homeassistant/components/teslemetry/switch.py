@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, override
+from typing import Any, Self, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import AutoSeat, Scope
@@ -19,7 +19,7 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import StateType
 
 from . import TeslemetryConfigEntry
@@ -409,6 +409,23 @@ class TeslemetryStormModeSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEntity):
         self.async_write_ha_state()
 
 
+@dataclass
+class TeslemetryChargeOnSolarSwitchExtraStoredData(ExtraStoredData):
+    """Extra data restored for the charge-on-solar switch."""
+
+    charge_limit_soc: int | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the stored data."""
+        return {"charge_limit_soc": self.charge_limit_soc}
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self:
+        """Initialize from a restored dict."""
+        return cls(charge_limit_soc=restored.get("charge_limit_soc"))
+
+
 class TeslemetryChargeOnSolarSwitchEntity(
     TeslemetryVehicleStreamEntity, SwitchEntity, RestoreEntity
 ):
@@ -435,6 +452,12 @@ class TeslemetryChargeOnSolarSwitchEntity(
             elif state.state == "off":
                 self._attr_is_on = False
 
+        if (extra_data := await self.async_get_last_extra_data()) is not None:
+            restored = TeslemetryChargeOnSolarSwitchExtraStoredData.from_dict(
+                extra_data.as_dict()
+            )
+            self._charge_limit_soc = restored.charge_limit_soc
+
         if self.vehicle.poll:
             charge_limit = self.vehicle.coordinator.data.get(
                 "charge_state_charge_limit_soc"
@@ -454,8 +477,14 @@ class TeslemetryChargeOnSolarSwitchEntity(
         """Store the latest streamed charge limit."""
         self._charge_limit_soc = None if value is None else int(value)
 
+    @property
+    @override
+    def extra_restore_state_data(self) -> TeslemetryChargeOnSolarSwitchExtraStoredData:
+        """Return the extra data to restore."""
+        return TeslemetryChargeOnSolarSwitchExtraStoredData(self._charge_limit_soc)
+
     async def _async_set_charge_on_solar(self, enabled: bool) -> None:
-        """Set charge-on-solar mode using the current charge limit as an upper bound."""
+        """Set charge-on-solar mode, omitting the upper bound if it isn't known yet."""
         charge_limit: int | None
         if self.vehicle.poll:
             value = self.vehicle.coordinator.data.get("charge_state_charge_limit_soc")
@@ -463,13 +492,11 @@ class TeslemetryChargeOnSolarSwitchEntity(
         else:
             charge_limit = self._charge_limit_soc
 
-        upper_charge_limit = (
-            int(charge_limit) if isinstance(charge_limit, int | float) else 80
-        )
-        upper_charge_limit = max(30, min(upper_charge_limit, 100))
-        lower_charge_limit = min(
-            self.vehicle.charge_on_solar_lower_limit, upper_charge_limit
-        )
+        upper_charge_limit: int | None = None
+        lower_charge_limit = self.vehicle.charge_on_solar_lower_limit
+        if charge_limit is not None:
+            upper_charge_limit = max(30, min(charge_limit, 100))
+            lower_charge_limit = min(lower_charge_limit, upper_charge_limit)
 
         self.raise_for_scope(Scope.VEHICLE_CMDS)
         await handle_vehicle_command(
