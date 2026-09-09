@@ -44,8 +44,9 @@ async def test_full_flow(hass: HomeAssistant, mock_madvr_client: AsyncMock) -> N
     }
     assert result["result"].unique_id == MOCK_MAC
     mock_madvr_client.open_connection.assert_called_once()
-    mock_madvr_client.async_add_tasks.assert_called_once()
-    mock_madvr_client.async_cancel_tasks.assert_called_once()
+    mock_madvr_client.async_add_tasks.assert_not_called()
+    mock_madvr_client.async_cancel_tasks.assert_not_called()
+    mock_madvr_client.close_connection.assert_called_once()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -98,9 +99,9 @@ async def test_flow_errors(hass: HomeAssistant, mock_madvr_client: AsyncMock) ->
 
     # Verify method calls
     assert mock_madvr_client.open_connection.call_count == 4
-    assert mock_madvr_client.async_add_tasks.call_count == 2
-    # the first call will not call this due to timeout as expected
-    assert mock_madvr_client.async_cancel_tasks.call_count == 2
+    assert mock_madvr_client.async_add_tasks.call_count == 0
+    assert mock_madvr_client.async_cancel_tasks.call_count == 0
+    assert mock_madvr_client.close_connection.call_count == 2
 
 
 async def test_duplicate(
@@ -155,8 +156,9 @@ async def test_reconfigure_flow(
 
     # Verify that the connection was tested
     mock_madvr_client.open_connection.assert_called()
-    mock_madvr_client.async_add_tasks.assert_called()
-    mock_madvr_client.async_cancel_tasks.assert_called()
+    mock_madvr_client.async_add_tasks.assert_not_called()
+    mock_madvr_client.async_cancel_tasks.assert_not_called()
+    mock_madvr_client.close_connection.assert_called()
 
 
 async def test_reconfigure_new_device(

@@ -4,8 +4,7 @@ import asyncio
 import logging
 from typing import Any, override
 
-import aiohttp
-from madvr.madvr import HeartBeatError, Madvr
+from pymadvr.madvr import Madvr
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -105,18 +104,13 @@ async def test_connection(hass: HomeAssistant, host: str, port: int) -> str:
     # try to connect
     try:
         await asyncio.wait_for(madvr_client.open_connection(), timeout=15)
-    # connection can raise HeartBeatError if the device is not
-    # available or connection does not work
-    except (TimeoutError, aiohttp.ClientError, OSError, HeartBeatError) as err:
+    except (TimeoutError, OSError) as err:
         _LOGGER.error("Error connecting to madVR: %s", err)
         raise CannotConnect from err
 
     # check if we are connected
     if not madvr_client.connected:
         raise CannotConnect("Connection failed")
-
-    # background tasks needed to capture realtime info
-    await madvr_client.async_add_tasks()
 
     # wait for client to capture device info
     retry_time = 15
@@ -137,5 +131,4 @@ async def close_test_connection(madvr_client: Madvr) -> None:
     """Close the test connection."""
     _LOGGER.debug("Closing test connection")
     madvr_client.stop()
-    await madvr_client.async_cancel_tasks()
     await madvr_client.close_connection()
