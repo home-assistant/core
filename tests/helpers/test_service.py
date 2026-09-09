@@ -3511,3 +3511,88 @@ async def test_get_service_device_and_config_entry(
     with pytest.raises(exceptions.ServiceValidationError) as err:
         service.async_get_device_and_config_entry(hass, domain, device.id)
     assert err.value.translation_key == "service_config_entry_not_loaded"
+
+
+@pytest.fixture
+def reauth_entries(hass: HomeAssistant) -> tuple[MockConfigEntry, MockConfigEntry]:
+    """Set up two config entries to test reauth is started for the right one."""
+    entry_1 = MockConfigEntry(domain="test_reauth", title="Entry 1")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test_reauth", title="Entry 2")
+    entry_2.add_to_hass(hass)
+    return entry_1, entry_2
+
+
+def _mock_entity_on_entry(
+    hass: HomeAssistant, entity_id: str, entry: MockConfigEntry | None
+) -> MockEntity:
+    """Return a mock entity attached to a platform owned by a config entry."""
+    platform = MockEntityPlatform(hass, platform_name=f"platform_{entity_id}")
+    platform.config_entry = entry
+    entity = MockEntity(entity_id=entity_id, available=True, should_poll=False)
+    entity.hass = hass
+    entity.platform = platform
+    return entity
+
+
+async def test_entity_service_call_starts_reauth(
+    hass: HomeAssistant, reauth_entries: tuple[MockConfigEntry, MockConfigEntry]
+) -> None:
+    """Test an entity action raising ConfigEntryAuthFailed starts a reauth flow."""
+    entry, _ = reauth_entries
+    entity = _mock_entity_on_entry(hass, "light.kitchen", entry)
+
+    with (
+        patch.object(entry, "async_start_reauth_if_available") as start_reauth,
+        pytest.raises(exceptions.ConfigEntryAuthFailed),
+    ):
+        await service.entity_service_call(
+            hass,
+            {entity.entity_id: entity},
+            HassJob(AsyncMock(side_effect=exceptions.ConfigEntryAuthFailed)),
+            ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
+        )
+
+    start_reauth.assert_called_once_with(hass)
+
+
+async def test_entity_service_call_starts_reauth_for_every_entry(
+    hass: HomeAssistant, reauth_entries: tuple[MockConfigEntry, MockConfigEntry]
+) -> None:
+    """Test each failing entity starts a reauth flow for its own config entry."""
+    entry_1, entry_2 = reauth_entries
+    entities = {
+        entity.entity_id: entity
+        for entity in (
+            _mock_entity_on_entry(hass, "light.kitchen", entry_1),
+            _mock_entity_on_entry(hass, "light.bedroom", entry_2),
+        )
+    }
+
+    with (
+        patch.object(entry_1, "async_start_reauth_if_available") as start_reauth_1,
+        patch.object(entry_2, "async_start_reauth_if_available") as start_reauth_2,
+        pytest.raises(exceptions.ConfigEntryAuthFailed),
+    ):
+        await service.entity_service_call(
+            hass,
+            entities,
+            HassJob(AsyncMock(side_effect=exceptions.ConfigEntryAuthFailed)),
+            ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
+        )
+
+    start_reauth_1.assert_called_once_with(hass)
+    start_reauth_2.assert_called_once_with(hass)
+
+
+async def test_entity_service_call_no_config_entry(hass: HomeAssistant) -> None:
+    """Test an entity without a config entry does not start a reauth flow."""
+    entity = _mock_entity_on_entry(hass, "light.kitchen", None)
+
+    with pytest.raises(exceptions.ConfigEntryAuthFailed):
+        await service.entity_service_call(
+            hass,
+            {entity.entity_id: entity},
+            HassJob(AsyncMock(side_effect=exceptions.ConfigEntryAuthFailed)),
+            ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
+        )
