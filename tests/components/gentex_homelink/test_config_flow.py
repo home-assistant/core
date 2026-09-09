@@ -11,7 +11,7 @@ from homeassistant.components.gentex_homelink.const import (
     OAUTH2_TOKEN_URL,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -153,6 +153,36 @@ async def test_auth_error(
     assert aioclient_mock.mock_calls[0][0] == "POST"
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "oauth_unauthorized"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_authorize_rejected(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test rejecting account authorization."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    resp = await client.get(
+        f"/auth/external/callback?error=access_denied&state={state}"
+    )
+    assert resp.status == HTTPStatus.OK
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "user_rejected_authorize"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
+    assert result["description_placeholders"] == {"error": "access_denied"}
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
