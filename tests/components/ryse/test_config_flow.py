@@ -81,6 +81,25 @@ def _idle_discovery() -> BluetoothServiceInfoBleak:
     )
 
 
+def _proxy_discovery() -> BluetoothServiceInfoBleak:
+    """Return a pairing advertisement seen only through a Bluetooth proxy."""
+    proxy_device = BLEDevice(DEVICE_ADDRESS, DEVICE_NAME, {})
+    return BluetoothServiceInfoBleak(
+        name=DEVICE_NAME,
+        address=DEVICE_ADDRESS,
+        rssi=-40,
+        manufacturer_data=PAIRING_MANUFACTURER_DATA,
+        service_data={},
+        service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
+        source="aa:bb:cc:dd:ee:00",
+        device=proxy_device,
+        advertisement=ADVERTISEMENT_DATA,
+        time=time.time(),
+        connectable=True,
+        tx_power=-127,
+    )
+
+
 USER_INPUT = {CONF_ADDRESS: DEVICE_ADDRESS}
 
 PAIRING_ERRORS = [
@@ -426,6 +445,20 @@ async def test_async_step_user_skips_unmatched_device(
     assert result["reason"] == "no_devices_found"
 
 
+async def test_async_step_user_skips_proxy_source(
+    hass: HomeAssistant, discovery: MagicMock
+) -> None:
+    """Test that we skip devices seen only through a Bluetooth proxy."""
+    discovery.return_value = [_proxy_discovery()]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
 async def test_async_step_bluetooth_not_in_pairing_mode(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
@@ -438,6 +471,40 @@ async def test_async_step_bluetooth_not_in_pairing_mode(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_in_pairing_mode"
+    mock_device.pair.assert_not_called()
+
+
+async def test_async_step_bluetooth_rejects_proxy_source(
+    hass: HomeAssistant, mock_device: MagicMock
+) -> None:
+    """Test proxy-only discoveries are aborted before the confirmation form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=_proxy_discovery(),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_local_source"
+    mock_device.pair.assert_not_called()
+
+
+async def test_async_step_bluetooth_pairing_overrides_stale_idle(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    mock_last_service_info: MagicMock,
+) -> None:
+    """Test a PAIR advertisement is shown even if the scanner cache is still idle."""
+    mock_last_service_info.return_value = _idle_discovery()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
     mock_device.pair.assert_not_called()
 
 

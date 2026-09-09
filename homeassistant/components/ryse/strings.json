@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "No RYSE BLE device found in pairing mode. Please press the PAIR button and retry.",
-      "not_in_pairing_mode": "The device is not in pairing mode. Press and hold the PAIR button, then try again."
+      "not_in_pairing_mode": "The device is not in pairing mode. Press and hold the PAIR button, then try again.",
+      "not_local_source": "RYSE pairing requires a local Bluetooth adapter. Devices seen only through a Bluetooth proxy cannot be paired."
     },
     "error": {
       "bluetooth_error": "Bluetooth error occurred during pairing. Please ensure the device is in range and try again.",
@@ -11,6 +12,7 @@
       "device_not_selected": "No device selected. Please choose a RYSE device before pairing.",
       "no_devices_found": "No RYSE devices found.",
       "not_in_pairing_mode": "The device is not in pairing mode. Press and hold the PAIR button, then try again.",
+      "not_local_source": "RYSE pairing requires a local Bluetooth adapter. Devices seen only through a Bluetooth proxy cannot be paired.",
       "unexpected_error": "[%key:common::config_flow::error::unknown%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

@@ -1,15 +1,18 @@
 """The RYSE integration."""
 
 from bleak import BleakError
+from bleak.backends.device import BLEDevice
 from ryseble.device import RyseBLEDevice
 
 from homeassistant.components.bluetooth import (
+    BaseHaRemoteScanner,
     BluetoothCallbackMatcher,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
-    async_ble_device_from_address,
     async_register_callback,
+    async_scanner_by_source,
+    async_scanner_devices_by_address,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -21,14 +24,32 @@ type RyseConfigEntry = ConfigEntry[RyseBLEDevice]
 PLATFORMS = [Platform.COVER]
 
 
+def _async_local_ble_device(hass: HomeAssistant, address: str) -> BLEDevice | None:
+    """Return the BLEDevice seen by a local adapter, ignoring Bluetooth proxies.
+
+    ``ryseble.pair()`` registers a BlueZ Agent1 on the Home Assistant host, which
+    cannot answer pairing for a device reached through an ESPHome/Shelly proxy.
+    """
+    for scanner_device in async_scanner_devices_by_address(
+        hass, address, connectable=True
+    ):
+        if isinstance(scanner_device.scanner, BaseHaRemoteScanner):
+            continue
+        return scanner_device.ble_device
+    return None
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool:
     """Set up RYSE."""
     address = entry.unique_id
     assert address is not None
 
-    ble_device = async_ble_device_from_address(hass, address, connectable=True)
+    ble_device = _async_local_ble_device(hass, address)
     if not ble_device:
-        raise ConfigEntryNotReady(f"Could not find RYSE device with address {address}")
+        raise ConfigEntryNotReady(
+            f"Could not find RYSE device with address {address} on a local "
+            "Bluetooth adapter"
+        )
 
     device = RyseBLEDevice(ble_device)
     try:
@@ -50,7 +71,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
         service_info: BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
-        """Follow the device as it moves between adapters and Bluetooth proxies."""
+        """Refresh the BLEDevice from the local adapter only."""
+        scanner = async_scanner_by_source(hass, service_info.source)
+        if isinstance(scanner, BaseHaRemoteScanner):
+            return
         device.set_ble_device(service_info.device)
 
     entry.async_on_unload(

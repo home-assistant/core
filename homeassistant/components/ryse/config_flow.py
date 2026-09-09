@@ -9,10 +9,12 @@ from ryseble.device import RyseBLEDevice
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
+    BaseHaRemoteScanner,
     BluetoothServiceInfoBleak,
     async_clear_address_from_match_history,
     async_discovered_service_info,
     async_last_service_info,
+    async_scanner_by_source,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
@@ -39,13 +41,44 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             or service_info
         )
 
+    def _local_service_info(
+        self,
+        service_info: BluetoothServiceInfoBleak,
+        *,
+        prefer_pairing: bool = False,
+    ) -> BluetoothServiceInfoBleak | None:
+        """Return a local-adapter advertisement, ignoring Bluetooth proxies.
+
+        ``async_last_service_info`` can still be an older idle advertisement
+        (higher RSSI or a race with the PAIR-flag update). When discovering,
+        prefer any local candidate that is in pairing mode so a PAIR press is
+        not discarded.
+        """
+        latest = self._latest_service_info(service_info)
+        local: list[BluetoothServiceInfoBleak] = []
+        for info in (latest, service_info):
+            if info not in local:
+                scanner = async_scanner_by_source(self.hass, info.source)
+                if not isinstance(scanner, BaseHaRemoteScanner):
+                    local.append(info)
+        if not local:
+            return None
+        if prefer_pairing:
+            for info in local:
+                if is_pairing_mode(info.manufacturer_data):
+                    return info
+        return local[0]
+
     async def _async_pair(self, service_info: BluetoothServiceInfoBleak) -> str | None:
         """Bond with the device via Bleak, then release the connection.
 
         Returns an error key, or None on success. Pairing is refused unless the
-        latest advertisement still has the PAIR flag set.
+        latest advertisement still has the PAIR flag set and came from a local
+        adapter; ryseble's BlueZ agent cannot pair through a Bluetooth proxy.
         """
-        latest = self._latest_service_info(service_info)
+        latest = self._local_service_info(service_info)
+        if latest is None:
+            return "not_local_source"
         if not is_pairing_mode(latest.manufacturer_data):
             return "not_in_pairing_mode"
 
@@ -71,11 +104,18 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
-        latest = self._latest_service_info(discovery_info)
+        latest = self._local_service_info(discovery_info, prefer_pairing=True)
+        if latest is None:
+            # Release the unique id so a later PAIR advertisement can start a
+            # new flow instead of aborting as already_in_progress.
+            await self.async_set_unique_id(None)
+            async_clear_address_from_match_history(self.hass, discovery_info.address)
+            return self.async_abort(reason="not_local_source")
         if not is_pairing_mode(latest.manufacturer_data):
             # Idle shades still match the manifest; drop them here so they are
             # not shown as unusable discoveries. Clear matcher history so a
             # later PAIR-flag advertisement can start a new flow.
+            await self.async_set_unique_id(None)
             async_clear_address_from_match_history(self.hass, discovery_info.address)
             return self.async_abort(reason="not_in_pairing_mode")
 
@@ -140,6 +180,9 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
                 for info in async_discovered_service_info(self.hass, connectable=True)
                 if info.name
                 and info.address not in current_ids
+                and not isinstance(
+                    async_scanner_by_source(self.hass, info.source), BaseHaRemoteScanner
+                )
                 and is_pairing_mode(info.manufacturer_data)
             }
 

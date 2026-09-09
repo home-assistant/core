@@ -97,10 +97,6 @@ class RyseCoverEntity(CoverEntity):
             await self._device.send_open()
         except (TimeoutError, OSError, EOFError, BleakError) as err:
             raise HomeAssistantError(f"Failed to open cover: {err}") from err
-        _LOGGER.debug("Change position to open")
-        self._current_position = 100
-        self._attr_is_closed = False
-        self.async_write_ha_state()
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -109,10 +105,6 @@ class RyseCoverEntity(CoverEntity):
             await self._device.send_close()
         except (TimeoutError, OSError, EOFError, BleakError) as err:
             raise HomeAssistantError(f"Failed to close cover: {err}") from err
-        _LOGGER.debug("Change position to close")
-        self._current_position = 0
-        self._attr_is_closed = True
-        self.async_write_ha_state()
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -123,10 +115,6 @@ class RyseCoverEntity(CoverEntity):
             await self._device.send_set_position(device_position)
         except (TimeoutError, OSError, EOFError, BleakError) as err:
             raise HomeAssistantError(f"Failed to set cover position: {err}") from err
-        _LOGGER.debug("Change position to a specific position")
-        self._attr_is_closed = self._device.is_closed(device_position)
-        self._current_position = ha_position
-        self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Fetch the current state and position from the device."""
