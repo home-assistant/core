@@ -192,11 +192,14 @@ async def async_remove_config_entry_device(
     on the bus, it may be recreated when the integration is reloaded or
     started again.
     """
-    if config_entry.entry_id not in device_entry.config_entries:
+    device, entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device_entry.id, domain=DOMAIN
+    )
+    if device is None or entry is None or entry.entry_id != config_entry.entry_id:
         return False
     dev_reg = dr.async_get(hass)
     for sub_device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
-        if sub_device.via_device_id == device_entry.id:
+        if sub_device.via_device_id == device.id:
             dev_reg.async_remove_device(sub_device.id)
     return True
 
