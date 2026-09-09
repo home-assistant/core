@@ -64,7 +64,10 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data_updates=data, title=entry_title
+                self._get_reauth_entry(),
+                data_updates=data,
+                title=entry_title,
+                reason="reauth_successful",
             )
         self._abort_if_unique_id_configured()
         return self.async_create_entry(data=data, title=entry_title)
