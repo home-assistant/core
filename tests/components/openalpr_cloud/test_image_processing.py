@@ -199,9 +199,9 @@ async def test_openalpr_process_image(
     assert "manufacturer" not in event_data[0]
 
 
+@pytest.mark.usefixtures("setup_openalpr_cloud_vehicle_details")
 async def test_openalpr_process_image_with_vehicle_details(
-    alpr_events,
-    setup_openalpr_cloud_vehicle_details,
+    alpr_events: list[Event],
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -248,9 +248,8 @@ async def test_openalpr_process_image_with_vehicle_details(
     assert event_data[0]["model"] == "Camry"
 
 
+@pytest.mark.usefixtures("setup_openalpr_cloud_vehicle_details", "alpr_events")
 async def test_openalpr_process_image_with_vehicle_details_low_confidence(
-    alpr_events,
-    setup_openalpr_cloud_vehicle_details,
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -291,9 +290,9 @@ async def test_openalpr_process_image_with_vehicle_details_low_confidence(
     ]
 
 
+@pytest.mark.usefixtures("setup_openalpr_cloud_vehicle_details")
 async def test_openalpr_process_image_vehicle_details_respect_threshold(
-    alpr_events,
-    setup_openalpr_cloud_vehicle_details,
+    alpr_events: list[Event],
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -333,9 +332,9 @@ async def test_openalpr_process_image_vehicle_details_respect_threshold(
     assert len(alpr_events) == 0
 
 
+@pytest.mark.usefixtures("setup_openalpr_cloud")
 async def test_openalpr_process_image_api_error(
-    alpr_events,
-    setup_openalpr_cloud,
+    alpr_events: list[Event],
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -358,13 +357,13 @@ async def test_openalpr_process_image_api_error(
     assert len(alpr_events) == 0
 
 
+@pytest.mark.usefixtures("setup_openalpr_cloud")
 async def test_openalpr_process_image_api_timeout(
-    alpr_events,
-    setup_openalpr_cloud,
+    alpr_events: list[Event],
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Set up and scan a picture and test api error."""
+    """Set up and scan a picture and test api timeout."""
     aioclient_mock.post(OPENALPR_API_URL, params=PARAMS, exc=TimeoutError())
 
     with patch(
