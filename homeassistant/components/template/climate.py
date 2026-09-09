@@ -179,7 +179,7 @@ _CLIMATE_INCLUSIVE_GROUPS = (
         "swing_mode", CONF_SWING_MODE, CONF_SWING_MODES, SET_SWING_MODE_ACTION
     ),
     tcv.inclusive_group(
-        "horizontal_swing_mode",
+        "swing_horizontal_mode",
         CONF_SWING_HORIZONTAL_MODE,
         CONF_SWING_HORIZONTAL_MODES,
         SET_SWING_HORIZONTAL_MODE_ACTION,
@@ -647,15 +647,18 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 * 10.0
             )
 
-    @override
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set the HVAC mode."""
+    async def _async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         if script := self._action_scripts.get(SET_HVAC_MODE_ACTION):
             await self.async_run_script(
                 script,
                 run_variables={"hvac_mode": hvac_mode},
                 context=self._context,
             )
+
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set the HVAC mode."""
+        await self._async_set_hvac_mode(hvac_mode)
 
         if self._attr_assumed_state:
             self._attr_hvac_mode = hvac_mode
@@ -771,18 +774,12 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         if (hvac_value := kwargs.get(ATTR_HVAC_MODE)) and (
             hvac_mode := tcv.strenum(self, breadcrumb, HVACMode)(hvac_value)
         ) is not None:
-            if hvac_mode in self._attr_hvac_modes:
-                common_params["hvac_mode"] = hvac_mode
-                if self._attr_assumed_state:
-                    self._attr_hvac_mode = hvac_mode
-                    write_state = True
-            else:
-                tcv.log_validation_result_error(
-                    self,
-                    breadcrumb,
-                    hvac_mode.value,
-                    tuple(str(mode) for mode in self._attr_hvac_modes),
-                )
+            self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
+            common_params["hvac_mode"] = hvac_mode
+            await self._async_set_hvac_mode(HVACMode(hvac_mode))
+            if self._attr_assumed_state:
+                self._attr_hvac_mode = hvac_mode
+                write_state = True
 
         if script := self._action_scripts.get(SET_TEMPERATURE_ACTION):
             await self.async_run_script(

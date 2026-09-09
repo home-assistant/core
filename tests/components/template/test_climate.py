@@ -460,39 +460,33 @@ async def test_target_temperature_template(hass: HomeAssistant, expected: Any) -
     assert state.attributes.get("temperature") == expected
 
 
-@pytest.mark.parametrize("config", [{**MINIMUM_REQUIREMENTS, **SET_TEMPERATURE_ACTION}])
+@pytest.mark.parametrize(
+    "config",
+    [{"hvac_mode": "{{ 'cool' }}", **MINIMUM_REQUIREMENTS, **SET_TEMPERATURE_ACTION}],
+)
 @pytest.mark.parametrize(
     (
         "extra_config",
         "action_variables",
         "expected_variables",
-        "expected_state",
         "expected_attributes",
     ),
     [
         (
-            {"target_temperature": "{{ 21 }}"},
+            {
+                "target_temperature": "{{ 21 }}",
+            },
             {"temperature": 18},
             {"temperature": 18},
-            STATE_UNKNOWN,
-            {"temperature": 21},
-        ),
-        (
-            {"target_temperature": "{{ 21 }}", "hvac_mode": "{{ 'heat' }}"},
-            {"temperature": 18, "hvac_mode": "cool"},
-            {"temperature": 18, "hvac_mode": "cool"},
-            HVACMode.HEAT,
             {"temperature": 21},
         ),
         (
             {
                 "target_temperature_low": "{{ 10 }}",
                 "target_temperature_high": "{{ 30 }}",
-                "hvac_mode": "{{ 'heat' }}",
             },
-            {"target_temp_low": 11, "target_temp_high": 29, "hvac_mode": "cool"},
-            {"target_temp_low": 11, "target_temp_high": 29, "hvac_mode": "cool"},
-            HVACMode.HEAT,
+            {"target_temp_low": 11, "target_temp_high": 29},
+            {"target_temp_low": 11, "target_temp_high": 29},
             {"target_temp_low": 10, "target_temp_high": 30},
         ),
         (
@@ -500,21 +494,9 @@ async def test_target_temperature_template(hass: HomeAssistant, expected: Any) -
                 "target_temperature": "{{ 20 }}",
                 "target_temperature_low": "{{ 10 }}",
                 "target_temperature_high": "{{ 30 }}",
-                "hvac_mode": "{{ 'heat' }}",
             },
-            {
-                "temperature": 21,
-                "target_temp_low": 11,
-                "target_temp_high": 29,
-                "hvac_mode": "cool",
-            },
-            {
-                "temperature": 21,
-                "target_temp_low": 11,
-                "target_temp_high": 29,
-                "hvac_mode": "cool",
-            },
-            HVACMode.HEAT,
+            {"temperature": 21, "target_temp_low": 11, "target_temp_high": 29},
+            {"temperature": 21, "target_temp_low": 11, "target_temp_high": 29},
             {"temperature": 20, "target_temp_low": 10, "target_temp_high": 30},
         ),
     ],
@@ -524,15 +506,104 @@ async def test_target_temperature_template(hass: HomeAssistant, expected: Any) -
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_climate")
-async def test_set_temperature_action(
+async def test_set_temperature_action_with_hvac_mode(
     hass: HomeAssistant,
     action_variables: ConfigType,
     expected_variables: ConfigType,
-    expected_state: str,
     expected_attributes: ConfigType,
     calls: list[ServiceCall],
 ) -> None:
     """Test set_temperature action."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state is not None
+
+    await hass.services.async_call(
+        climate.DOMAIN,
+        "set_temperature",
+        {
+            "hvac_mode": "heat",
+            **action_variables,
+            ATTR_ENTITY_ID: TEST_CLIMATE.entity_id,
+        },
+        blocking=True,
+    )
+    assert_action(TEST_CLIMATE, calls, 2, "set_hvac_mode", 0, hvac_mode="heat")
+    assert_action(
+        TEST_CLIMATE,
+        calls,
+        2,
+        "set_temperature",
+        hvac_mode="heat",
+        **expected_variables,
+    )
+
+    assert_state_and_attributes(hass, TEST_CLIMATE, HVACMode.COOL, expected_attributes)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            climate.DOMAIN,
+            "set_temperature",
+            {
+                "hvac_mode": "fan_only",
+                "temperature": 20,
+                ATTR_ENTITY_ID: TEST_CLIMATE.entity_id,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("config", [{**MINIMUM_REQUIREMENTS, **SET_TEMPERATURE_ACTION}])
+@pytest.mark.parametrize(
+    (
+        "extra_config",
+        "action_variables",
+        "expected_variables",
+        "expected_attributes",
+    ),
+    [
+        (
+            {"target_temperature": "{{ 21 }}"},
+            {"temperature": 18},
+            {"temperature": 18},
+            {"temperature": 21},
+        ),
+        (
+            {
+                "target_temperature_low": "{{ 10 }}",
+                "target_temperature_high": "{{ 30 }}",
+            },
+            {"target_temp_low": 11, "target_temp_high": 29},
+            {"target_temp_low": 11, "target_temp_high": 29},
+            {"target_temp_low": 10, "target_temp_high": 30},
+        ),
+        (
+            {
+                "target_temperature": "{{ 20 }}",
+                "target_temperature_low": "{{ 10 }}",
+                "target_temperature_high": "{{ 30 }}",
+            },
+            {"temperature": 21, "target_temp_low": 11, "target_temp_high": 29},
+            {"temperature": 21, "target_temp_low": 11, "target_temp_high": 29},
+            {"temperature": 20, "target_temp_low": 10, "target_temp_high": 30},
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_climate")
+async def test_set_temperature_action_without_hvac_mode(
+    hass: HomeAssistant,
+    action_variables: ConfigType,
+    expected_variables: ConfigType,
+    expected_attributes: ConfigType,
+    calls: list[ServiceCall],
+) -> None:
+    """Test set_temperature action does not call set_hvac_mode action without hvac_mode."""
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
 
@@ -548,7 +619,7 @@ async def test_set_temperature_action(
         "set_temperature",
     )
 
-    assert_state_and_attributes(hass, TEST_CLIMATE, expected_state, expected_attributes)
+    assert_state_and_attributes(hass, TEST_CLIMATE, STATE_UNKNOWN, expected_attributes)
 
 
 @pytest.mark.parametrize(
@@ -558,42 +629,22 @@ async def test_set_temperature_action(
     (
         "action_variables",
         "expected_variables",
-        "expected_state",
         "expected_attributes",
     ),
     [
         (
-            {"temperature": 21},
-            {"temperature": 21},
-            STATE_UNKNOWN,
-            {"temperature": 21},
-        ),
-        (
-            {"temperature": 22, "hvac_mode": "cool"},
-            {"temperature": 22, "hvac_mode": "cool"},
-            HVACMode.COOL,
+            {"temperature": 22},
+            {"temperature": 22},
             {"temperature": 22},
         ),
         (
-            {"target_temp_low": 11, "target_temp_high": 29, "hvac_mode": "cool"},
-            {"target_temp_low": 11, "target_temp_high": 29, "hvac_mode": "cool"},
-            HVACMode.COOL,
+            {"target_temp_low": 11, "target_temp_high": 29},
+            {"target_temp_low": 11, "target_temp_high": 29},
             {"target_temp_low": 11, "target_temp_high": 29},
         ),
         (
-            {
-                "temperature": 20,
-                "target_temp_low": 10,
-                "target_temp_high": 30,
-                "hvac_mode": "cool",
-            },
-            {
-                "temperature": 20,
-                "target_temp_low": 10,
-                "target_temp_high": 30,
-                "hvac_mode": "cool",
-            },
-            HVACMode.COOL,
+            {"temperature": 20, "target_temp_low": 10, "target_temp_high": 30},
+            {"temperature": 20, "target_temp_low": 10, "target_temp_high": 30},
             {"temperature": 20, "target_temp_low": 10, "target_temp_high": 30},
         ),
     ],
@@ -603,11 +654,83 @@ async def test_set_temperature_action(
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_climate")
-async def test_optimistic_set_temperature_action(
+async def test_optimistic_set_temperature_action_with_hvac_mode(
     hass: HomeAssistant,
     action_variables: ConfigType,
     expected_variables: ConfigType,
-    expected_state: str,
+    expected_attributes: ConfigType,
+    calls: list[ServiceCall],
+) -> None:
+    """Test optimistic set_temperature action with hvac_mode."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    assert_state_and_attributes(
+        hass,
+        TEST_CLIMATE,
+        STATE_UNKNOWN,
+        {"temperature": None, "target_temp_low": None, "target_temp_high": None},
+    )
+
+    await hass.services.async_call(
+        climate.DOMAIN,
+        "set_temperature",
+        {
+            "hvac_mode": "cool",
+            **action_variables,
+            ATTR_ENTITY_ID: TEST_CLIMATE.entity_id,
+        },
+        blocking=True,
+    )
+    assert_action(TEST_CLIMATE, calls, 2, "set_hvac_mode", 0, hvac_mode="cool")
+    assert_action(
+        TEST_CLIMATE,
+        calls,
+        2,
+        "set_temperature",
+        hvac_mode="cool",
+        **expected_variables,
+    )
+
+    assert_state_and_attributes(hass, TEST_CLIMATE, HVACMode.COOL, expected_attributes)
+
+
+@pytest.mark.parametrize(
+    ("config", "extra_config"), [(MINIMUM_REQUIREMENTS, SET_TEMPERATURE_ACTION)]
+)
+@pytest.mark.parametrize(
+    (
+        "action_variables",
+        "expected_variables",
+        "expected_attributes",
+    ),
+    [
+        (
+            {"temperature": 21},
+            {"temperature": 21},
+            {"temperature": 21},
+        ),
+        (
+            {"target_temp_low": 11, "target_temp_high": 29},
+            {"target_temp_low": 11, "target_temp_high": 29},
+            {"target_temp_low": 11, "target_temp_high": 29},
+        ),
+        (
+            {"temperature": 20, "target_temp_low": 10, "target_temp_high": 30},
+            {"temperature": 20, "target_temp_low": 10, "target_temp_high": 30},
+            {"temperature": 20, "target_temp_low": 10, "target_temp_high": 30},
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_climate")
+async def test_optimistic_set_temperature_action_without_hvac_mode(
+    hass: HomeAssistant,
+    action_variables: ConfigType,
+    expected_variables: ConfigType,
     expected_attributes: ConfigType,
     calls: list[ServiceCall],
 ) -> None:
@@ -630,8 +753,7 @@ async def test_optimistic_set_temperature_action(
         expected_variables,
         "set_temperature",
     )
-
-    assert_state_and_attributes(hass, TEST_CLIMATE, expected_state, expected_attributes)
+    assert_state_and_attributes(hass, TEST_CLIMATE, STATE_UNKNOWN, expected_attributes)
 
 
 @pytest.mark.parametrize(
@@ -1167,14 +1289,14 @@ async def test_group_mode_template(
         ),
         (
             {**SET_SWING_HORIZONTAL_MODE_ACTION, **MINIMUM_REQUIREMENTS},
-            "horizontal_swing_mode",
+            "swing_horizontal_mode",
         ),
         (
             {
                 "swing_horizontal_modes": "{{ ['off', 'low', 'medium', 'high'] }}",
                 **MINIMUM_REQUIREMENTS,
             },
-            "horizontal_swing_mode",
+            "swing_horizontal_mode",
         ),
         (
             {**SET_PRESET_MODE_ACTION, **MINIMUM_REQUIREMENTS},
