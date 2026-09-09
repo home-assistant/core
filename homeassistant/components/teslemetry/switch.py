@@ -9,17 +9,21 @@ from tesla_fleet_api.const import AutoSeat, Scope
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
+from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
 from . import TeslemetryConfigEntry
+from .const import DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
@@ -30,6 +34,7 @@ from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
+CHARGE_ON_SOLAR_SWITCH_KEY = "charge_on_solar"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -152,6 +157,21 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
 )
 
 
+def _async_remove_charge_on_solar_switch(
+    hass: HomeAssistant, entry: TeslemetryConfigEntry
+) -> None:
+    """Remove stale charge-on-solar switch entities."""
+    entity_registry = er.async_get(hass)
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if (
+            entity_entry.domain == SWITCH_DOMAIN
+            and entity_entry.translation_key == CHARGE_ON_SOLAR_SWITCH_KEY
+        ):
+            entity_registry.async_remove(entity_entry.entity_id)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
@@ -193,6 +213,15 @@ async def async_setup_entry(
         for energysite in entry.runtime_data.energysites
         if energysite.info_coordinator.data.get("components_storm_mode_capable")
     )
+
+    if async_is_preview_feature_enabled(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE):
+        entities.extend(
+            TeslemetryChargeOnSolarSwitchEntity(vehicle, entry.runtime_data.scopes)
+            for vehicle in entry.runtime_data.vehicles
+            if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
+        )
+    else:
+        _async_remove_charge_on_solar_switch(hass, entry)
 
     async_add_entities(entities)
 
@@ -376,3 +405,87 @@ class TeslemetryStormModeSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEntity):
         await handle_command(self.api.storm_mode(enabled=False))
         self._attr_is_on = False
         self.async_write_ha_state()
+
+
+class TeslemetryChargeOnSolarSwitchEntity(
+    TeslemetryVehicleStreamEntity, SwitchEntity, RestoreEntity
+):
+    """Switch entity for Tesla charge-on-solar mode."""
+
+    _attr_assumed_state = True
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    api: Vehicle
+
+    def __init__(self, data: TeslemetryVehicleData, scopes: list[Scope]) -> None:
+        """Initialize the charge-on-solar switch."""
+        self.scoped = Scope.VEHICLE_CMDS in scopes
+        self._charge_limit_soc: int | None = None
+        super().__init__(data, CHARGE_ON_SOLAR_SWITCH_KEY)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        if (state := await self.async_get_last_state()) is not None:
+            if state.state == "on":
+                self._attr_is_on = True
+            elif state.state == "off":
+                self._attr_is_on = False
+
+        if self.vehicle.poll:
+            charge_limit = self.vehicle.coordinator.data.get(
+                "charge_state_charge_limit_soc"
+            )
+            self._charge_limit_soc = (
+                int(charge_limit) if isinstance(charge_limit, int | float) else None
+            )
+            return
+
+        self.async_on_remove(
+            self.vehicle.stream_vehicle.listen_ChargeLimitSoc(
+                self._async_handle_charge_limit_soc
+            )
+        )
+
+    def _async_handle_charge_limit_soc(self, value: int | None) -> None:
+        """Store the latest streamed charge limit."""
+        self._charge_limit_soc = None if value is None else int(value)
+
+    async def _async_set_charge_on_solar(self, enabled: bool) -> None:
+        """Set charge-on-solar mode using the current charge limit as an upper bound."""
+        charge_limit: int | None
+        if self.vehicle.poll:
+            value = self.vehicle.coordinator.data.get("charge_state_charge_limit_soc")
+            charge_limit = int(value) if isinstance(value, int | float) else None
+        else:
+            charge_limit = self._charge_limit_soc
+
+        upper_charge_limit = (
+            int(charge_limit) if isinstance(charge_limit, int | float) else 80
+        )
+        upper_charge_limit = max(30, min(upper_charge_limit, 100))
+        lower_charge_limit = min(
+            self.vehicle.charge_on_solar_lower_limit, upper_charge_limit
+        )
+
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
+        await handle_vehicle_command(
+            self.api.charge_on_solar(
+                enabled=enabled,
+                lower_charge_limit=lower_charge_limit,
+                upper_charge_limit=upper_charge_limit,
+            )
+        )
+        self._attr_is_on = enabled
+        self.async_write_ha_state()
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on charge-on-solar mode."""
+        await self._async_set_charge_on_solar(enabled=True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off charge-on-solar mode."""
+        await self._async_set_charge_on_solar(enabled=False)

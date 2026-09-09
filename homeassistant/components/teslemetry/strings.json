@@ -390,6 +390,9 @@
       "backup_reserve_percent": {
         "name": "Backup reserve"
       },
+      "charge_on_solar_lower_limit": {
+        "name": "Charge on solar lower limit"
+      },
       "charge_state_charge_current_request": {
         "name": "Charge current"
       },
@@ -1134,6 +1137,9 @@
       }
     },
     "switch": {
+      "charge_on_solar": {
+        "name": "Charge on solar"
+      },
       "charge_state_charging_state": {
         "name": "Charge"
       },
@@ -1282,6 +1288,14 @@
         }
       },
       "title": "Enable data streaming for {vehicle}"
+    }
+  },
+  "preview_features": {
+    "charge_on_solar": {
+      "description": "Adds a vehicle switch to enable and disable Tesla's charge on solar mode, and a number entity to set its lower charge limit. The existing charge limit number entity is reused as the upper charge limit.\n\nThis feature does not currently expose a reliable state from the API, so the switch and lower limit use an assumed state.",
+      "disable_confirmation": "The charge-on-solar switch and lower limit will be removed from your Teslemetry vehicles.",
+      "enable_confirmation": "The charge-on-solar switch and lower limit will be added to your Teslemetry vehicles.",
+      "name": "Charge on solar"
     }
   },
   "selector": {

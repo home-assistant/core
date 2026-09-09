@@ -27,6 +27,7 @@ from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite
 from teslemetry_stream import TeslemetryStreamAuthenticationError
 
+from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.teslemetry import (
     STREAM_TOPICS,
     _async_get_rsa_key_pem,
@@ -36,6 +37,7 @@ from homeassistant.components.teslemetry.const import (
     CLIENT_ID,
     CONF_SITE_ID,
     DOMAIN,
+    LABS_CHARGE_ON_SOLAR_FEATURE,
     SUBENTRY_TYPE_ENERGY_SITE,
 )
 
@@ -72,6 +74,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.setup import async_setup_component
 
 from . import mock_config_entry, setup_platform
 from .const import (
@@ -1921,3 +1924,20 @@ async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
         for flow in hass.config_entries.flow.async_progress()
         if flow["handler"] == DOMAIN
     ]
+
+
+async def test_labs_charge_on_solar_toggle_triggers_reload(
+    hass: HomeAssistant,
+) -> None:
+    """Test labs charge-on-solar feature toggle schedules an integration reload."""
+    assert await async_setup_component(hass, "labs", {})
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        await async_update_preview_feature(
+            hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, True
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(entry.entry_id)

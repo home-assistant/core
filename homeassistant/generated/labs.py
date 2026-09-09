@@ -32,4 +32,11 @@ LABS_PREVIEW_FEATURES = {
             "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_link=https://www.home-assistant.io/integrations/kitchen_sink&integration_name=Kitchen%20Sink",
         },
     },
+    "teslemetry": {
+        "charge_on_solar": {
+            "feedback_url": "https://community.home-assistant.io",
+            "learn_more_url": "https://www.home-assistant.io/integrations/teslemetry",
+            "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_link=https://www.home-assistant.io/integrations/teslemetry&integration_name=Teslemetry",
+        },
+    },
 }

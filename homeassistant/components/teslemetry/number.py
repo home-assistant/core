@@ -11,7 +11,9 @@ from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
+from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
@@ -26,9 +28,11 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslemetryConfigEntry
+from .const import DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
@@ -39,6 +43,8 @@ from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
+CHARGE_ON_SOLAR_LOWER_LIMIT_KEY = "charge_on_solar_lower_limit"
+CHARGE_ON_SOLAR_LOWER_LIMIT_DEFAULT = 20
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -129,6 +135,21 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TeslemetryNumberBatteryEntityDescription, ...] =
 )
 
 
+def _async_remove_charge_on_solar_lower_limit(
+    hass: HomeAssistant, entry: TeslemetryConfigEntry
+) -> None:
+    """Remove stale charge-on-solar lower limit number entities."""
+    entity_registry = er.async_get(hass)
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if (
+            entity_entry.domain == NUMBER_DOMAIN
+            and entity_entry.translation_key == CHARGE_ON_SOLAR_LOWER_LIMIT_KEY
+        ):
+            entity_registry.async_remove(entity_entry.entity_id)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
@@ -136,7 +157,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry number platform from a config entry."""
 
-    async_add_entities(
+    entities: list[NumberEntity] = list(
         chain(
             (
                 TeslemetryVehiclePollingNumberEntity(
@@ -166,6 +187,19 @@ async def async_setup_entry(
             ),
         )
     )
+
+    if async_is_preview_feature_enabled(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE):
+        entities.extend(
+            TeslemetryChargeOnSolarLowerLimitNumberEntity(
+                vehicle, entry.runtime_data.scopes
+            )
+            for vehicle in entry.runtime_data.vehicles
+            if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
+        )
+    else:
+        _async_remove_charge_on_solar_lower_limit(hass, entry)
+
+    async_add_entities(entities)
 
 
 class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):
@@ -307,4 +341,88 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(self.entity_description.func(self.api, value))
         self._attr_native_value = value
+        self.async_write_ha_state()
+
+
+class TeslemetryChargeOnSolarLowerLimitNumberEntity(
+    TeslemetryVehicleStreamEntity, RestoreNumber
+):
+    """Number entity for the lower charge limit of Tesla's charge-on-solar mode."""
+
+    _attr_assumed_state = True
+    _attr_native_step = PRECISION_WHOLE
+    _attr_native_min_value = 0
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = NumberDeviceClass.BATTERY
+    _attr_mode = NumberMode.AUTO
+    api: Vehicle
+
+    def __init__(self, data: TeslemetryVehicleData, scopes: list[Scope]) -> None:
+        """Initialize the charge-on-solar lower limit number entity."""
+        self.scoped = Scope.VEHICLE_CMDS in scopes
+        self._attr_native_max_value = 100
+        super().__init__(data, CHARGE_ON_SOLAR_LOWER_LIMIT_KEY)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        value = CHARGE_ON_SOLAR_LOWER_LIMIT_DEFAULT
+        if (last_state := await self.async_get_last_state()) and (
+            last_number_data := await self.async_get_last_number_data()
+        ):
+            if (
+                last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                and last_number_data.native_value is not None
+            ):
+                value = int(last_number_data.native_value)
+        self._attr_native_value = value
+        self.vehicle.charge_on_solar_lower_limit = value
+
+        if self.vehicle.poll:
+            self.async_on_remove(
+                self.vehicle.coordinator.async_add_listener(
+                    self._async_handle_coordinator_update
+                )
+            )
+            self._async_handle_coordinator_update()
+            return
+
+        self.async_on_remove(
+            self.vehicle.stream_vehicle.listen_ChargeLimitSoc(
+                self._async_handle_charge_limit_soc
+            )
+        )
+
+    def _async_handle_coordinator_update(self) -> None:
+        """Update the upper bound from the latest polled charge limit."""
+        charge_limit = self.vehicle.coordinator.data.get(
+            "charge_state_charge_limit_soc"
+        )
+        self._async_handle_charge_limit_soc(
+            int(charge_limit) if isinstance(charge_limit, int | float) else None
+        )
+
+    def _async_handle_charge_limit_soc(self, value: int | None) -> None:
+        """Cap the lower limit at the current upper (charge limit SOC) value."""
+        upper_limit = value if value is not None else 100
+        self._attr_native_max_value = upper_limit
+        if (
+            self._attr_native_value is not None
+            and self._attr_native_value > upper_limit
+        ):
+            self._attr_native_value = upper_limit
+            self.vehicle.charge_on_solar_lower_limit = upper_limit
+        self.async_write_ha_state()
+
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Set new value."""
+        # charge_on_solar requires enabled/upper_charge_limit sent together;
+        # only the switch issues that command, using this stored value.
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
+        value = int(value)
+        self._attr_native_value = value
+        self.vehicle.charge_on_solar_lower_limit = value
         self.async_write_ha_state()

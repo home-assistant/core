@@ -7,18 +7,30 @@ from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream import Signal
 
+from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.components.teslemetry.const import (
+    DOMAIN,
+    LABS_CHARGE_ON_SOLAR_FEATURE,
+)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import assert_entities, reload_platform, setup_platform
 from .const import COMMAND_ERRORS, COMMAND_OK, VEHICLE_DATA_ALT
+
+
+async def _async_enable_charge_on_solar_preview_feature(hass: HomeAssistant) -> None:
+    """Enable the Teslemetry charge-on-solar preview feature."""
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, True)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -178,3 +190,98 @@ async def test_number_streaming(
     # Assert the entities restored their values with concrete assertions
     assert hass.states.get("number.test_charge_current").state == "24"
     assert hass.states.get("number.test_charge_limit").state == "99"
+
+
+async def test_charge_on_solar_lower_limit_disabled_by_default(
+    hass: HomeAssistant,
+) -> None:
+    """Test charge-on-solar lower limit is disabled by default."""
+    await setup_platform(hass, [Platform.NUMBER])
+
+    assert hass.states.get("number.test_charge_on_solar_lower_limit") is None
+
+
+async def test_charge_on_solar_lower_limit_enabled_by_labs(
+    hass: HomeAssistant,
+) -> None:
+    """Test charge-on-solar lower limit appears when Labs feature is enabled."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    await setup_platform(hass, [Platform.NUMBER])
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.state == "20"
+    assert state.attributes["assumed_state"] is True
+
+
+async def test_charge_on_solar_lower_limit_capped_by_charge_limit(
+    hass: HomeAssistant,
+) -> None:
+    """Test the lower limit's max value tracks the current charge limit SOC."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc"
+    ) as listener:
+        listener.return_value = lambda: None
+        await setup_platform(hass, [Platform.NUMBER])
+
+        for call in listener.call_args_list:
+            call.args[0](70)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.attributes["max"] == 70
+
+    # A subsequent drop below the stored value clamps it down too
+    for call in listener.call_args_list:
+        call.args[0](10)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.attributes["max"] == 10
+    assert state.state == "10"
+
+
+async def test_charge_on_solar_lower_limit_set_value(
+    hass: HomeAssistant,
+) -> None:
+    """Test setting a new charge-on-solar lower limit value."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    await setup_platform(hass, [Platform.NUMBER])
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
+        blocking=True,
+    )
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.state == "35"
+
+
+async def test_disable_charge_on_solar_preview_removes_lower_limit(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabling preview removes the lower limit from entity registry."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    entry = await setup_platform(hass, [Platform.NUMBER])
+
+    assert (
+        entity_registry.async_get("number.test_charge_on_solar_lower_limit") is not None
+    )
+
+    with patch.object(hass.config_entries, "async_schedule_reload"):
+        await async_update_preview_feature(
+            hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, False
+        )
+        await hass.async_block_till_done()
+
+    await reload_platform(hass, entry, [Platform.NUMBER])
+
+    assert entity_registry.async_get("number.test_charge_on_solar_lower_limit") is None

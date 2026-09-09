@@ -8,6 +8,13 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["aiopowerwall", "tesla_fleet_api", "teslemetry_stream"],
+  "preview_features": {
+    "charge_on_solar": {
+      "feedback_url": "https://community.home-assistant.io",
+      "learn_more_url": "https://www.home-assistant.io/integrations/teslemetry",
+      "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_link=https://www.home-assistant.io/integrations/teslemetry&integration_name=Teslemetry"
+    }
+  },
   "quality_scale": "platinum",
   "requirements": [
     "aiopowerwall==0.2.0",

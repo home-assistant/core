@@ -25,6 +25,10 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.labs import (
+    EventLabsUpdatedData,
+    async_subscribe_preview_feature,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -51,6 +55,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from .const import (
     CLIENT_ID,
     DOMAIN,
+    LABS_CHARGE_ON_SOLAR_FEATURE,
     LOGGER,
     POWERWALL_KEY_FILE,
     RSA_PARENT_KEY,
@@ -211,6 +216,26 @@ def _setup_dynamic_discovery(
 
     entry.async_on_unload(
         metadata_coordinator.async_add_listener(_handle_metadata_update)
+    )
+
+
+def _setup_labs_preview_feature_listener(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+) -> None:
+    """Set up dynamic reload when labs preview features are toggled."""
+
+    async def _async_handle_labs_update(_event_data: EventLabsUpdatedData) -> None:
+        """Handle labs feature toggle."""
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    entry.async_on_unload(
+        async_subscribe_preview_feature(
+            hass,
+            DOMAIN,
+            LABS_CHARGE_ON_SOLAR_FEATURE,
+            _async_handle_labs_update,
+        )
     )
 
 
@@ -669,6 +694,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         {vehicle.vin for vehicle in vehicles},
         vehicle_metadata,
     )
+    _setup_labs_preview_feature_listener(hass, entry)
 
     if stream:
         entry.async_on_unload(stream.close)
