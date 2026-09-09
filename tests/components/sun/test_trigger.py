@@ -51,6 +51,38 @@ _DAWN_DUSK = {
     ),
 }
 
+# One hour offsets in the offset selector shape and in the released
+# offset + offset_type pair, with the sign the trigger must apply.
+_OFFSET_OPTIONS = [
+    pytest.param(
+        {"offset": {"type": "before", "duration": {"hours": 1}}}, -1, id="before"
+    ),
+    pytest.param(
+        {"offset": {"type": "after", "duration": {"hours": 1}}}, 1, id="after"
+    ),
+    pytest.param(
+        {"offset": {"type": "before", "duration": "01:00:00"}}, -1, id="before_string"
+    ),
+    pytest.param(
+        {"offset": {"hours": 1}, "offset_type": "before"}, -1, id="legacy_before"
+    ),
+    pytest.param(
+        {"offset": {"hours": 1}, "offset_type": "after"}, 1, id="legacy_after"
+    ),
+    pytest.param({"offset": "01:00:00"}, -1, id="legacy_default_type"),
+    pytest.param(
+        {"offset": "-01:00:00", "offset_type": "before"}, 1, id="legacy_negative"
+    ),
+    pytest.param(
+        {
+            "offset": {"type": "before", "duration": {"hours": 1}},
+            "offset_type": "after",
+        },
+        -1,
+        id="stale_offset_type",
+    ),
+]
+
 
 @pytest.fixture(autouse=True)
 async def setup_comp(hass: HomeAssistant) -> None:
@@ -350,17 +382,13 @@ async def test_dawn_defaults_to_civil(
         ("sun.solar_midnight", "midnight"),
     ],
 )
-@pytest.mark.parametrize(
-    ("offset_type", "sign"),
-    [("before", -1), ("after", 1)],
-    ids=["before", "after"],
-)
+@pytest.mark.parametrize(("offset_options", "sign"), _OFFSET_OPTIONS)
 async def test_event_trigger_offset(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     trigger_key: str,
     astral_event: str,
-    offset_type: str,
+    offset_options: dict[str, Any],
     sign: int,
 ) -> None:
     """Test the solar event triggers apply a before/after time offset."""
@@ -370,7 +398,7 @@ async def test_event_trigger_offset(
             hass,
             {
                 "platform": trigger_key,
-                "options": {"offset": {"hours": 1}, "offset_type": offset_type},
+                "options": offset_options,
             },
             {},
         )
@@ -387,16 +415,12 @@ async def test_event_trigger_offset(
 
 
 @pytest.mark.parametrize("trigger_key", ["sun.dawn", "sun.dusk"])
-@pytest.mark.parametrize(
-    ("offset_type", "sign"),
-    [("before", -1), ("after", 1)],
-    ids=["before", "after"],
-)
+@pytest.mark.parametrize(("offset_options", "sign"), _OFFSET_OPTIONS)
 async def test_dawn_dusk_trigger_offset(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     trigger_key: str,
-    offset_type: str,
+    offset_options: dict[str, Any],
     sign: int,
 ) -> None:
     """Test the dawn and dusk triggers apply a before/after time offset."""
@@ -407,7 +431,7 @@ async def test_dawn_dusk_trigger_offset(
             hass,
             {
                 "platform": trigger_key,
-                "options": {"offset": {"hours": 1}, "offset_type": offset_type},
+                "options": offset_options,
             },
             {},
         )
@@ -731,11 +755,7 @@ async def test_golden_hour_defaults_to_any(
         ("sun.golden_hour_ended", "evening", "dusk", 4),
     ],
 )
-@pytest.mark.parametrize(
-    ("offset_type", "sign"),
-    [("before", -1), ("after", 1)],
-    ids=["before", "after"],
-)
+@pytest.mark.parametrize(("offset_options", "sign"), _OFFSET_OPTIONS)
 async def test_golden_blue_hour_trigger_offset(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -743,7 +763,7 @@ async def test_golden_blue_hour_trigger_offset(
     period: str,
     event: str,
     depression: int,
-    offset_type: str,
+    offset_options: dict[str, Any],
     sign: int,
 ) -> None:
     """Test the golden/blue hour triggers apply a before/after time offset."""
@@ -753,11 +773,7 @@ async def test_golden_blue_hour_trigger_offset(
             hass,
             {
                 "platform": trigger_key,
-                "options": {
-                    "period": period,
-                    "offset": {"hours": 1},
-                    "offset_type": offset_type,
-                },
+                "options": {"period": period, **offset_options},
             },
             {},
         )
@@ -866,7 +882,7 @@ async def test_midnight_sun_trigger_offset_catches_pending_crossing(
             hass,
             {
                 "platform": "sun.midnight_sun_started",
-                "options": {"offset": {"days": 3}, "offset_type": "after"},
+                "options": {"offset": {"type": "after", "duration": {"days": 3}}},
             },
             {},
         )

@@ -20,13 +20,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import automation, calendar
-from homeassistant.components.calendar.trigger import (
-    CONF_OFFSET_TYPE,
-    EVENT_END,
-    EVENT_START,
-    OFFSET_TYPE_AFTER,
-    OFFSET_TYPE_BEFORE,
-)
+from homeassistant.components.calendar.trigger import EVENT_END, EVENT_START
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -45,6 +39,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     label_registry as lr,
 )
+from homeassistant.helpers.trigger import CONF_OFFSET_TYPE
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -142,6 +137,7 @@ class TargetTriggerFormat(TriggerFormat):
     """Target trigger format using event_started/ended."""
 
     id: str = "target"
+    legacy_offset: bool = False
 
     def get_platform(self, event_type: str) -> str:
         """Get the platform string for trigger payload assertions."""
@@ -158,20 +154,23 @@ class TargetTriggerFormat(TriggerFormat):
             CONF_TARGET: {"entity_id": entity_id},
         }
         if offset:
-            options: dict[str, Any] = {}
-            # Convert signed offset to offset + offset_type
-            if offset < datetime.timedelta(0):
-                options[CONF_OFFSET] = -offset
-                options[CONF_OFFSET_TYPE] = OFFSET_TYPE_BEFORE
+            offset_type = "before" if offset < datetime.timedelta(0) else "after"
+            duration = {"seconds": abs(offset).total_seconds()}
+            if self.legacy_offset:
+                options = {CONF_OFFSET: duration, CONF_OFFSET_TYPE: offset_type}
             else:
-                options[CONF_OFFSET] = offset
-                options[CONF_OFFSET_TYPE] = OFFSET_TYPE_AFTER
+                options = {CONF_OFFSET: {"type": offset_type, "duration": duration}}
             trigger_data[CONF_OPTIONS] = options
         return trigger_data
 
 
 TRIGGER_FORMATS = [LegacyTriggerFormat(), TargetTriggerFormat()]
 TRIGGER_FORMAT_IDS = [fmt.id for fmt in TRIGGER_FORMATS]
+OFFSET_TRIGGER_FORMATS = [
+    *TRIGGER_FORMATS,
+    TargetTriggerFormat(id="target_legacy_offset", legacy_offset=True),
+]
+OFFSET_TRIGGER_FORMAT_IDS = [fmt.id for fmt in OFFSET_TRIGGER_FORMATS]
 
 
 @pytest.fixture(params=TRIGGER_FORMATS, ids=TRIGGER_FORMAT_IDS)
@@ -446,6 +445,9 @@ async def test_event_start_trigger(
 
 
 @pytest.mark.parametrize(
+    "trigger_format", OFFSET_TRIGGER_FORMATS, ids=OFFSET_TRIGGER_FORMAT_IDS
+)
+@pytest.mark.parametrize(
     ("offset_delta"),
     [
         datetime.timedelta(hours=-1),
@@ -515,6 +517,9 @@ async def test_event_end_trigger(
         ]
 
 
+@pytest.mark.parametrize(
+    "trigger_format", OFFSET_TRIGGER_FORMATS, ids=OFFSET_TRIGGER_FORMAT_IDS
+)
 @pytest.mark.parametrize(
     ("offset_delta"),
     [

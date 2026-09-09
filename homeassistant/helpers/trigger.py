@@ -34,6 +34,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_FOR,
     CONF_ID,
+    CONF_OFFSET,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_SELECTOR,
@@ -87,6 +88,7 @@ from .selector import (
     NumericThresholdSelector,
     NumericThresholdSelectorConfig,
     NumericThresholdType,
+    OffsetType,
     TargetSelector,
 )
 from .target import (
@@ -373,6 +375,47 @@ ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR = ENTITY_STATE_TRIGGER_SCHEMA.extend(
         },
     }
 )
+
+
+CONF_OFFSET_TYPE = "offset_type"
+
+
+def migrate_legacy_offset_options(options: Any) -> Any:
+    """Convert the released offset + offset_type pair to an offset selector value."""
+    if not isinstance(options, dict):
+        return options
+    offset = options.get(CONF_OFFSET)
+    if isinstance(offset, dict) and "type" in offset:
+        return {key: val for key, val in options.items() if key != CONF_OFFSET_TYPE}
+    if offset is None and CONF_OFFSET_TYPE not in options:
+        return options
+    options = dict(options)
+    offset_type = vol.Coerce(OffsetType)(
+        options.pop(CONF_OFFSET_TYPE, OffsetType.BEFORE)
+    )
+    signed_offset = cv.time_period(timedelta(0) if offset is None else offset)
+    if offset_type == OffsetType.BEFORE:
+        signed_offset = -signed_offset
+    if signed_offset == timedelta(0):
+        options[CONF_OFFSET] = {"type": OffsetType.NONE}
+    else:
+        options[CONF_OFFSET] = {
+            "type": OffsetType.BEFORE
+            if signed_offset < timedelta(0)
+            else OffsetType.AFTER,
+            "duration": {"seconds": abs(signed_offset).total_seconds()},
+        }
+    return options
+
+
+def offset_selector_to_timedelta(value: dict[str, Any]) -> timedelta:
+    """Convert an offset selector value to a signed timedelta, negative for before."""
+    if value["type"] == OffsetType.NONE:
+        return timedelta(0)
+    offset: timedelta = cv.time_period(value["duration"])
+    if value["type"] == OffsetType.BEFORE:
+        return -offset
+    return offset
 
 
 def _report_not_triggered_noop(reason: str, /, **data: Any) -> None:

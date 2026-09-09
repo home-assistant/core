@@ -91,6 +91,8 @@ from homeassistant.helpers.trigger import (
     make_entity_origin_state_trigger,
     make_entity_target_state_trigger,
     make_entity_transition_trigger,
+    migrate_legacy_offset_options,
+    offset_selector_to_timedelta,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
@@ -6275,3 +6277,90 @@ def test_entity_state_trigger_schema_behavior_invalid(behavior: str) -> None:
     }
     with pytest.raises(vol.Invalid):
         ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
+
+
+@pytest.mark.parametrize(
+    ("options", "expected"),
+    [
+        pytest.param({}, {}, id="empty"),
+        pytest.param("not a dict", "not a dict", id="not_a_dict"),
+        pytest.param(
+            {"offset": {"type": "none"}}, {"offset": {"type": "none"}}, id="none"
+        ),
+        pytest.param(
+            {
+                "offset": {"type": "before", "duration": {"hours": 1}},
+                "offset_type": "x",
+            },
+            {"offset": {"type": "before", "duration": {"hours": 1}}},
+            id="stale_offset_type",
+        ),
+        pytest.param(
+            {"offset": {"hours": 1}, "offset_type": "before"},
+            {"offset": {"type": "before", "duration": {"seconds": 3600.0}}},
+            id="legacy_before",
+        ),
+        pytest.param(
+            {"offset": "01:00:00", "offset_type": "after"},
+            {"offset": {"type": "after", "duration": {"seconds": 3600.0}}},
+            id="legacy_after",
+        ),
+        pytest.param(
+            {"offset": "-01:00:00"},
+            {"offset": {"type": "after", "duration": {"seconds": 3600.0}}},
+            id="legacy_negative_default_before",
+        ),
+        pytest.param(
+            {"offset": {"hours": 0}, "offset_type": "before"},
+            {"offset": {"type": "none"}},
+            id="legacy_zero",
+        ),
+        pytest.param(
+            {"offset_type": "after"},
+            {"offset": {"type": "none"}},
+            id="legacy_type_only",
+        ),
+    ],
+)
+def test_migrate_legacy_offset_options(options: Any, expected: Any) -> None:
+    """Test the legacy offset pair is converted to an offset selector value."""
+    assert migrate_legacy_offset_options(options) == expected
+
+
+def test_migrate_legacy_offset_options_invalid_type() -> None:
+    """Test an invalid legacy offset type is rejected."""
+    with pytest.raises(vol.Invalid):
+        migrate_legacy_offset_options({"offset": {"hours": 1}, "offset_type": "x"})
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param({"type": "none"}, datetime.timedelta(0), id="none"),
+        pytest.param(
+            {"type": "before", "duration": {"minutes": 5}},
+            datetime.timedelta(minutes=-5),
+            id="before",
+        ),
+        pytest.param(
+            {"type": "after", "duration": {"days": 1}},
+            datetime.timedelta(days=1),
+            id="after",
+        ),
+        pytest.param(
+            {"type": "before", "duration": "00:30:00"},
+            datetime.timedelta(minutes=-30),
+            id="before_string",
+        ),
+        pytest.param(
+            {"type": "after", "duration": 90},
+            datetime.timedelta(seconds=90),
+            id="after_seconds",
+        ),
+    ],
+)
+def test_offset_selector_to_timedelta(
+    value: dict[str, Any], expected: datetime.timedelta
+) -> None:
+    """Test an offset selector value is converted to a signed timedelta."""
+    assert offset_selector_to_timedelta(value) == expected

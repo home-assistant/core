@@ -26,12 +26,15 @@ from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_time_interval,
 )
+from homeassistant.helpers.selector import OffsetSelector, OffsetSelectorConfig
 from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelection
 from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
     TriggerNotTriggeredReporter,
+    migrate_legacy_offset_options,
+    offset_selector_to_timedelta,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -45,9 +48,7 @@ EVENT_START = "start"
 EVENT_END = "end"
 UPDATE_INTERVAL = datetime.timedelta(minutes=15)
 
-CONF_OFFSET_TYPE = "offset_type"
-OFFSET_TYPE_BEFORE = "before"
-OFFSET_TYPE_AFTER = "after"
+_OFFSET_SELECTOR = OffsetSelector(OffsetSelectorConfig(enable_day=True))
 
 
 _SINGLE_ENTITY_EVENT_OPTIONS_SCHEMA = {
@@ -64,12 +65,14 @@ _SINGLE_ENTITY_EVENT_TRIGGER_SCHEMA = vol.Schema(
 
 _EVENT_TRIGGER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
-            vol.Required(CONF_OFFSET_TYPE, default=OFFSET_TYPE_BEFORE): vol.In(
-                {OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}
-            ),
-        },
+        vol.Required(CONF_OPTIONS, default={}): vol.All(
+            migrate_legacy_offset_options,
+            {
+                vol.Optional(CONF_OFFSET): vol.All(
+                    _OFFSET_SELECTOR, offset_selector_to_timedelta
+                )
+            },
+        ),
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
@@ -465,11 +468,7 @@ class EventTrigger(Trigger):
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
 
-        offset = self._options[CONF_OFFSET]
-        offset_type = self._options[CONF_OFFSET_TYPE]
-
-        if offset_type == OFFSET_TYPE_BEFORE:
-            offset = -offset
+        offset = self._options.get(CONF_OFFSET, datetime.timedelta(0))
 
         target_selection = TargetSelection(self._target)
         if not target_selection.has_any_target:

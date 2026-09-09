@@ -29,6 +29,8 @@ from homeassistant.helpers.selector import (
     NumericThresholdMode,
     NumericThresholdSelector,
     NumericThresholdSelectorConfig,
+    OffsetSelector,
+    OffsetSelectorConfig,
 )
 from homeassistant.helpers.sun import (
     get_astral_event_next,
@@ -43,6 +45,8 @@ from homeassistant.helpers.trigger import (
     TriggerActionRunner,
     TriggerConfig,
     TriggerNotTriggeredReporter,
+    migrate_legacy_offset_options,
+    offset_selector_to_timedelta,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -76,17 +80,10 @@ _PERIOD_MORNING = "morning"
 _PERIOD_EVENING = "evening"
 _PERIODS = (_PERIOD_ANY, _PERIOD_MORNING, _PERIOD_EVENING)
 
-CONF_OFFSET_TYPE = "offset_type"
-OFFSET_TYPE_BEFORE = "before"
-OFFSET_TYPE_AFTER = "after"
+_OFFSET_SELECTOR = OffsetSelector(OffsetSelectorConfig(enable_day=True))
 
-# Offset options shared by the solar event triggers. A positive offset combined
-# with an offset type of "before" fires earlier than the event; "after" later.
 _OFFSET_OPTIONS: dict[vol.Marker, Any] = {
-    vol.Required(CONF_OFFSET, default=timedelta(0)): cv.time_period,
-    vol.Required(CONF_OFFSET_TYPE, default=OFFSET_TYPE_BEFORE): vol.In(
-        {OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}
-    ),
+    vol.Optional(CONF_OFFSET): vol.All(_OFFSET_SELECTOR, offset_selector_to_timedelta),
 }
 
 # Sun elevation at each twilight boundary.
@@ -160,7 +157,11 @@ class SunElevationCrossedTrigger(
 
 
 _EVENT_TRIGGER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_OPTIONS, default=dict): {**_OFFSET_OPTIONS}}
+    {
+        vol.Required(CONF_OPTIONS, default=dict): vol.All(
+            migrate_legacy_offset_options, {**_OFFSET_OPTIONS}
+        )
+    }
 )
 
 
@@ -188,10 +189,7 @@ class SunEventTrigger(Trigger):
         """Initialize the trigger."""
         super().__init__(hass, config)
         self._options = config.options or {}
-        offset = self._options.get(CONF_OFFSET) or timedelta(0)
-        if self._options.get(CONF_OFFSET_TYPE) == OFFSET_TYPE_BEFORE:
-            offset = -offset
-        self._offset = offset
+        self._offset: timedelta = self._options.get(CONF_OFFSET, timedelta(0))
 
     def _get_next_event(self, utc_point_in_time: datetime) -> datetime | None:
         """Return the next time this solar event occurs.
@@ -280,12 +278,15 @@ class SolarMidnightTrigger(SunEventTrigger):
 
 _DAWN_DUSK_TRIGGER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_OPTIONS, default=dict): {
-            vol.Optional(CONF_TYPE, default=_TWILIGHT_CIVIL): vol.In(
-                _TWILIGHT_ELEVATIONS
-            ),
-            **_OFFSET_OPTIONS,
-        }
+        vol.Required(CONF_OPTIONS, default=dict): vol.All(
+            migrate_legacy_offset_options,
+            {
+                vol.Optional(CONF_TYPE, default=_TWILIGHT_CIVIL): vol.In(
+                    _TWILIGHT_ELEVATIONS
+                ),
+                **_OFFSET_OPTIONS,
+            },
+        )
     }
 )
 
@@ -332,10 +333,13 @@ class DuskTrigger(SunDawnDuskTrigger):
 
 _GOLDEN_BLUE_HOUR_TRIGGER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_OPTIONS, default=dict): {
-            vol.Optional(CONF_PERIOD, default=_PERIOD_ANY): vol.In(_PERIODS),
-            **_OFFSET_OPTIONS,
-        }
+        vol.Required(CONF_OPTIONS, default=dict): vol.All(
+            migrate_legacy_offset_options,
+            {
+                vol.Optional(CONF_PERIOD, default=_PERIOD_ANY): vol.In(_PERIODS),
+                **_OFFSET_OPTIONS,
+            },
+        )
     }
 )
 

@@ -63,14 +63,6 @@
       "title": "Detected use of deprecated action calendar.list_events"
     }
   },
-  "selector": {
-    "trigger_offset_type": {
-      "options": {
-        "after": "After",
-        "before": "Before"
-      }
-    }
-  },
   "services": {
     "create_event": {
       "description": "Adds a new calendar event.",
@@ -137,10 +129,6 @@
         "offset": {
           "description": "Offset from the end of the event.",
           "name": "Offset"
-        },
-        "offset_type": {
-          "description": "Whether to trigger before or after the end of the event, if an offset is defined.",
-          "name": "Offset type"
         }
       },
       "name": "Calendar event ended"
@@ -151,10 +139,6 @@
         "offset": {
           "description": "Offset from the start of the event.",
           "name": "Offset"
-        },
-        "offset_type": {
-          "description": "Whether to trigger before or after the start of the event, if an offset is defined.",
-          "name": "Offset type"
         }
       },
       "name": "Calendar event started"
