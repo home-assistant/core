@@ -56,7 +56,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
 async def test_errors_then_recovers(
     hass: HomeAssistant,
     mock_foreca_client: MagicMock,
-    exception: Exception,
+    exception: type[Exception],
     error: str,
 ) -> None:
     """Test a bad key keeps the form open, then succeeds once it is fixed."""
@@ -125,7 +125,7 @@ async def test_subentry_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
-    exception: Exception,
+    exception: type[Exception],
     error: str,
 ) -> None:
     """Test a location the API cannot serve keeps the form open."""
