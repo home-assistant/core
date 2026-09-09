@@ -2,7 +2,6 @@
 
 import contextlib
 import logging
-import re
 import socket
 from typing import Any, override
 from urllib.parse import urlparse
@@ -23,17 +22,9 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_DEFAULT_HOST, DOMAIN
+from .const import CONF_DEFAULT_HOST, DOMAIN, normalised_mac
 
 _LOGGER = logging.getLogger(__name__)
-
-
-_MAC_RE = re.compile(r"[0-9a-f]{12}")
-
-
-def _normalised_mac(value: str) -> str:
-    """Return a MAC comparable across separators and casing."""
-    return value.replace(":", "").replace("-", "").casefold()
 
 
 async def _async_hub_mac(host: str) -> str | None:
@@ -57,15 +48,12 @@ async def _async_hub_mac(host: str) -> str | None:
         # A hub without an Ethernet interface reports the key as null, and
         # ``str(None)`` would normalise to the literal "none" -- an id every
         # such hub would share. Treat it as absent, like a missing key.
-        mac = _normalised_mac(str(info["hardware"]["network"]["lan mac"] or ""))
+        reported = str(info["hardware"]["network"]["lan mac"] or "")
     except (KeyError, TypeError) as err:
         _LOGGER.debug("Hub at %s reported no readable MAC: %s", host, err)
         return None
-    # Only a real address is an identity. A hub that sends something else -- an
-    # IP, a placeholder -- must not have it turned into a unique_id.
-    if not _MAC_RE.fullmatch(mac):
-        _LOGGER.debug("Hub at %s reported %r, which is no MAC", host, mac)
-        return None
+    if (mac := normalised_mac(reported)) is None:
+        _LOGGER.debug("Hub at %s reported %r, which is no MAC", host, reported)
     return mac
 
 
@@ -123,7 +111,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for habitron."""
 
-    VERSION = 3
+    VERSION = 2
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -210,17 +199,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_hub_identity(self, host: str) -> str | None:
         """Return the id this hub is keyed by: its MAC, or ``None``.
 
-        One identity for every path. The MAC is the only identifier both the
-        manual and the discovery flow can obtain, it survives every address
-        change, and the custom (HACS) integration already keys its entries by
-        it -- so an installation moving to core is recognised instead of being
-        offered a second time. Serial, UDN and host are fallbacks only, for the
-        hub that answers but reports no usable ``lan mac`` -- null on a platform
-        with no configured LAN interface, absent on firmware that predates the
-        key -- or for a read that fails on its own connection. An unreachable
-        hub produces no entry at all: ``validate_input`` gates the creation.
-        Once a MAC can be read, setup rewrites the entry onto it (see
-        ``async_setup_entry``).
+        The MAC is the only identity, on every path. It is the one identifier
+        both the manual and the discovery flow can obtain, it survives every
+        address change, and the custom (HACS) integration derives it the same
+        way -- so an installation moving over is recognised instead of being
+        offered a second time. There is no fallback: a hub that answers but
+        reports no usable ``lan mac`` yields ``None``, and both callers refuse
+        it rather than invent an id two hubs could share. A hub that cannot be
+        reached raises ``CannotConnect``, which is a different answer for the
+        user (see ``_async_hub_mac``).
         """
         return await _async_hub_mac(await self._async_probe_host(host))
 

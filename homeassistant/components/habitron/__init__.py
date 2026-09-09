@@ -25,24 +25,29 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -
     """Migrate an old config entry.
 
     Version 1 stored the host under the integration-specific ``habitron_host``
-    key; version 2 uses Home Assistant's shared ``CONF_HOST``. Version 3 exists
-    because the custom (HACS) integration also numbers its entries 2: Home
-    Assistant skips this function when the versions match, so a migrating
-    installation would keep the unused credential below. Bumping past it makes
-    the cleanup run once for every entry that predates core.
+    key; version 2 uses Home Assistant's shared ``CONF_HOST``.
+
+    The change below is a *minor* bump on purpose. The custom (HACS)
+    integration numbers its entries 2 as well, and Home Assistant refuses an
+    entry whose **major** version is higher than the handler's -- so raising
+    the major here would leave anyone who tries this integration unable to go
+    back to the custom one, with the entry refused outright. A higher minor
+    still triggers this migration but keeps that path open, which matters while
+    both exist side by side.
+
+    ``websock_token`` is deliberately kept. This integration does not implement
+    the SmartController Touch/Assist push path that consumes it, but the custom
+    integration does and reads it from this very entry -- dropping it here
+    would break that installation the moment someone switches back. It can go
+    once the custom integration is retired.
     """
-    # Only versions below 3 reach this: Home Assistant returns early when they
-    # match and refuses anything higher before calling us.
     data = {**entry.data}
     if entry.version == 1 and "habitron_host" in data:
         data[CONF_HOST] = data.pop("habitron_host")
-    # ``websock_token`` belonged to the SmartController Touch/Assist push path,
-    # which this integration does not implement; drop the credential rather
-    # than keep storing it unused. ``update_interval`` predates the move to a
-    # fixed ``SCAN_INTERVAL`` and has not been read since.
-    data.pop("websock_token", None)
+    # ``update_interval`` predates the move to a fixed ``SCAN_INTERVAL`` and is
+    # read by neither integration.
     data.pop("update_interval", None)
-    hass.config_entries.async_update_entry(entry, data=data, version=3)
+    hass.config_entries.async_update_entry(entry, data=data, version=2, minor_version=2)
     return True
 
 
@@ -152,12 +157,13 @@ def _async_adopt_hub_identity(
 ) -> None:
     """Move the entry onto the hub's MAC, the one identity every path derives.
 
-    An entry can carry an older id: both the custom (HACS) integration and this
-    config flow fall back to a serial or the host for a hub that answers but
-    reports no usable ``lan mac``. Such a hub keeps that id for as long as the
-    MAC stays unreadable; once it becomes readable we know the MAC here, so
-    rewrite the entry -- from here on the plain unique-id check recognises it,
-    whatever address it moves to, and no extra matcher is needed.
+    This config flow only ever keys an entry by the MAC. An entry can still
+    carry an older id, though: the custom (HACS) integration falls back to a
+    serial or the host when the hub answers without a usable ``lan mac``, and
+    such an entry keeps that id when it moves over. Now that the hub has given
+    us its MAC, rewrite the entry -- from here on the plain unique-id check
+    recognises it, whatever address it moves to, and no extra matcher is
+    needed.
     """
     if not smhub.has_mac_uid or entry.unique_id == smhub.uid:
         return
