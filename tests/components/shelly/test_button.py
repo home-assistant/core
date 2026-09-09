@@ -512,19 +512,17 @@ async def test_rpc_ircode_buttons(
         assert (entry := entity_registry.async_get(entity_id))
         assert entry == snapshot(name=f"{entity_id}-entry")
 
-    entity_id = "button.fan_speed_1"
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
+        assert (state := hass.states.get(entity_id))
+        assert state.state != STATE_UNKNOWN
 
-    assert mock_rpc_device.ircode_emit.assert_called_once_with(200)
-
-    assert (state := hass.states.get(entity_id))
-    assert state.state != STATE_UNKNOWN
+    assert mock_rpc_device.ircode_emit.call_count == 4
 
 
 async def test_rpc_ircode_button_no_custom_name(
