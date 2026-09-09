@@ -1,6 +1,6 @@
 """Test the my-PV water heater."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 import pytest
@@ -74,7 +74,7 @@ async def test_water_heater_unavailable_data_value_none(
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_client.get_data_value.return_value = None
+    mock_my_pv_client.get_data_value = Mock(return_value=None)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
