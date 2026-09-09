@@ -6847,6 +6847,304 @@
     'state': '0.12',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_apparent_power_channel_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_apparent_power_channel_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Apparent power channel 1',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kVA',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
+    'original_icon': None,
+    'original_name': 'Apparent power channel 1',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_apparent_power',
+    'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1apparentpower',
+    'unit_of_measurement': 'kVA',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_apparent_power_channel_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Apparent power channel 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_apparent_power_channel_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_current_channel_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_current_channel_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current channel 1',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'A',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current channel 1',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_current',
+    'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1electriccurrent',
+    'unit_of_measurement': 'A',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_current_channel_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Current channel 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_current_channel_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '53.86',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_power_channel_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_power_channel_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power channel 1',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kW',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power channel 1',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_power',
+    'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1power',
+    'unit_of_measurement': 'kW',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_power_channel_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Power channel 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_power_channel_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.548',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_power_factor_channel_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_power_factor_channel_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power factor channel 1',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': None,
+    'original_name': 'Power factor channel 1',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_power_factor',
+    'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_power_factor_channel_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Power factor channel 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_power_factor_channel_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.77',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_reactive_power_channel_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_reactive_power_channel_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reactive power channel 1',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kvar',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
+    'original_icon': None,
+    'original_name': 'Reactive power channel 1',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_reactive_power',
+    'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1reactivepower',
+    'unit_of_measurement': 'kvar',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_reactive_power_channel_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Reactive power channel 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_reactive_power_channel_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_supply_frequency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -6903,6 +7201,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_voltage_channel_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_voltage_channel_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage channel 1',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage channel 1',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_voltage',
+    'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1voltage',
+    'unit_of_measurement': 'V',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_voltage_channel_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Voltage channel 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_voltage_channel_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '230.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.eau_chaude_current-entry]
