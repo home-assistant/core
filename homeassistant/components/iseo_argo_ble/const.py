@@ -18,3 +18,7 @@ DEFAULT_USER_SUBTYPE: int = 17  # UserSubType.BT_GATEWAY
 def signal_access_log(entry_id: str) -> str:
     """Return the dispatcher signal carrying entries read from the access log."""
     return f"{DOMAIN}_{entry_id}_access_log"
+
+
+# How long unloading waits for a destructive access-log read to deliver.
+ACCESS_LOG_UNLOAD_TIMEOUT = 30

@@ -97,7 +97,7 @@ class IseoLockEntity(LockEntity):
         self._fw_version_set = False
         self._access_log_unsub: CALLBACK_TYPE | None = None
         self._access_log_task: asyncio.Task[None] | None = None
-        self.client: IseoClient = entry.runtime_data
+        self.client: IseoClient = entry.runtime_data.client
 
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
@@ -322,7 +322,22 @@ class IseoLockEntity(LockEntity):
         """
         if self._access_log_task is None or self._access_log_task.done():
             self._access_log_task = self.hass.async_create_task(self._async_read_log())
+            # Unloading waits on this: the entries are already marked read on
+            # the lock, so the event entity must still be listening when they
+            # are reported.
+            self._entry.runtime_data.access_log_read = self._access_log_task
         return self._access_log_task
+
+    async def _async_join_read(self) -> None:
+        """Wait for the shared read without being able to cancel it.
+
+        Waiters shield their own await: a caller that goes away must not
+        cancel the read itself. The lock marks entries read as each page is
+        fetched, so cancelling one would lose them, and the tracked task would
+        also look finished and let the next caller start a second BLE session
+        over an already-emptied log.
+        """
+        await asyncio.shield(self._async_shared_read())
 
     async def _async_background_read(self) -> None:
         """Read the log without troubling anyone if it fails.
@@ -331,7 +346,7 @@ class IseoLockEntity(LockEntity):
         next read picks them up.
         """
         try:
-            await self._async_shared_read()
+            await self._async_join_read()
         except HomeAssistantError as err:
             _LOGGER.debug("Could not read the access log: %s", err)
 
@@ -344,7 +359,7 @@ class IseoLockEntity(LockEntity):
         if self._access_log_unsub is not None:
             self._access_log_unsub()
             self._access_log_unsub = None
-        await self._async_shared_read()
+        await self._async_join_read()
 
     async def _async_read_log(self) -> None:
         """Drain the unread access log and report what it holds.
@@ -365,11 +380,7 @@ class IseoLockEntity(LockEntity):
             )
 
         try:
-            # The drain and the report are one unit: the lock marks entries
-            # read as each page is fetched, so a cancellation landing between
-            # them would drop those entries permanently. Shield them so an
-            # outside cancel cannot split them.
-            await asyncio.shield(self._async_drain_and_report(ble_device))
+            await self._async_drain_and_report(ble_device)
         except IseoAuthError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

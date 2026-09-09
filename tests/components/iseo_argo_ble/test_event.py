@@ -22,9 +22,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 
 from . import setup_integration
 
@@ -423,7 +424,6 @@ async def test_unloading_does_not_interrupt_a_read_in_flight(
     await setup_integration(hass, mock_config_entry)
 
     release = asyncio.Event()
-    reported: list[tuple[str, dict[str, object]]] = []
     opened_at = datetime(2026, 9, 2, 14, 3, 11, tzinfo=UTC)
 
     async def _blocked_read() -> list[LogEntry]:
@@ -441,19 +441,31 @@ async def test_unloading_does_not_interrupt_a_read_in_flight(
     while not mock_iseo_client.gw_read_unread_logs.called:
         await asyncio.sleep(0)
 
-    with patch(
-        "homeassistant.components.iseo_argo_ble.lock.async_dispatcher_send",
-        side_effect=lambda _hass, _signal, event_type, attributes: reported.append(
-            (event_type, attributes)
-        ),
-    ):
-        # The lock has already been drained; unloading now must not throw the
-        # entries away.
-        await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        release.set()
-        await hass.async_block_till_done()
+    # Watch what the event entity itself writes: after the unload it is gone
+    # from the state machine, so its final state is the only proof of delivery.
+    written: list[State] = []
+    unsub = async_track_state_change_event(
+        hass,
+        [ENTITY_ID],
+        lambda event: written.append(event.data["new_state"]),
+    )
 
-    assert [attributes["opened_by"] for _, attributes in reported] == ["Federico"]
+    # The lock has already been drained, so unloading has to wait for the read
+    # to deliver rather than tearing the event entity down underneath it.
+    unload = hass.async_create_task(
+        hass.config_entries.async_unload(mock_config_entry.entry_id)
+    )
+    await asyncio.sleep(0)
+    release.set()
+    assert await unload
+    await hass.async_block_till_done()
+    unsub()
+
+    assert [
+        state.attributes["opened_by"]
+        for state in written
+        if state is not None and "opened_by" in state.attributes
+    ] == ["Federico"]
 
 
 @pytest.mark.parametrize(
