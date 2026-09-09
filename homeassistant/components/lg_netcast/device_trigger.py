@@ -8,15 +8,16 @@ from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import trigger
 from .const import DOMAIN
-from .helpers import async_get_device_entry_by_device_id
 from .triggers.turn_on import (
     PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE,
     async_get_turn_on_trigger,
@@ -40,15 +41,14 @@ async def async_validate_trigger_config(
     if config[CONF_TYPE] == TURN_ON_PLATFORM_TYPE:
         device_id = config[CONF_DEVICE_ID]
 
-        try:
-            device = async_get_device_entry_by_device_id(hass, device_id)
-        except ValueError as err:
-            raise InvalidDeviceAutomationConfig(err) from err
-
-        if not any(
-            entry.entry_id in device.config_entries
-            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
-        ):
+        device, config_entry = dr.async_get_device_and_config_entry_for_domain(
+            hass, device_id, domain=DOMAIN
+        )
+        if device is None:
+            raise InvalidDeviceAutomationConfig(
+                f"Device {device_id} is not a valid {DOMAIN} device."
+            )
+        if config_entry is None or config_entry.state is not ConfigEntryState.LOADED:
             raise InvalidDeviceAutomationConfig(
                 f"Device {device.id} is not from an existing {DOMAIN} config entry"
             )
