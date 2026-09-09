@@ -755,7 +755,7 @@ buienradar==1.0.9
 cached-ipaddress==1.1.2
 
 # homeassistant.components.caldav
-caldav==2.1.0
+caldav==3.3.0a1
 
 # homeassistant.components.chef_iq
 chefiq-ble==1.0.1
@@ -1196,7 +1196,7 @@ gotailwind==0.4.0
 govee-ble==1.4.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==3.0.1
+govee-local-api==3.1.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1223,7 +1223,7 @@ gridnet==5.0.1
 growattServer==2.2.0
 
 # homeassistant.components.google_sheets
-gspread==5.5.0
+gspread==6.2.1
 
 # homeassistant.components.guntamatic
 guntamatic==1.12.0
@@ -2180,7 +2180,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2026.7.0
+pydrawise==2026.9.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -2591,7 +2591,7 @@ pysaj==0.0.16
 pysaunum==0.7.0
 
 # homeassistant.components.schlage
-pyschlage==2026.7.0
+pyschlage==2026.9.0
 
 # homeassistant.components.scorpiontrack
 pyscorpiontrack==0.1.2
@@ -3123,7 +3123,7 @@ snapcast==2.3.8
 soco==0.31.2
 
 # homeassistant.components.sofar
-sofar-modbus==0.10.0
+sofar-modbus==0.11.1
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
@@ -3431,7 +3431,7 @@ wallbox==0.9.0
 watchdog==6.0.0
 
 # homeassistant.components.waterfurnace
-waterfurnace==1.7.1
+waterfurnace==1.9.0
 
 # homeassistant.components.watergate
 watergate-local-api==2026.2.2
@@ -3479,7 +3479,7 @@ wsdot==0.0.1
 wyoming==1.10.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.16.0
+xiaomi-ble==1.16.1
 
 # homeassistant.components.knx
 xknx==3.20.0
