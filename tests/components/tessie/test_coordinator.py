@@ -5,7 +5,12 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from tesla_fleet_api.exceptions import Forbidden, InvalidToken, MissingToken
+from tesla_fleet_api.exceptions import (
+    Forbidden,
+    InvalidToken,
+    MissingToken,
+    RateLimited,
+)
 
 from homeassistant.components.tessie import PLATFORMS
 from homeassistant.components.tessie.const import DOMAIN
@@ -97,6 +102,38 @@ async def test_coordinator_connection(
     assert coordinator.last_exception.translation_key == "cannot_connect"
 
 
+async def test_coordinator_state_rate_limited(
+    hass: HomeAssistant, mock_get_state, freezer: FrozenDateTimeFactory
+) -> None:
+    """Tests that a 429 with Retry-After backs off the state coordinator."""
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    coordinator = entry.runtime_data.vehicles[0].data_coordinator
+
+    mock_get_state.reset_mock()
+    mock_get_state.side_effect = RateLimited({"after": "30"})
+    freezer.tick(WAIT)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.retry_after == 30
+
+    # The normal sync interval has not yet elapsed since the rate limit hit,
+    # so the coordinator should still be waiting on the Retry-After backoff.
+    mock_get_state.side_effect = None
+    freezer.tick(WAIT)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
+
+    # Once the Retry-After window elapses, the coordinator refreshes again.
+    freezer.tick(timedelta(seconds=30) - WAIT)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_get_state.call_count == 2
+
+
 async def test_coordinator_live_error(
     hass: HomeAssistant, mock_live_status, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -116,6 +153,39 @@ async def test_coordinator_live_error(
     assert isinstance(coordinator.last_exception, UpdateFailed)
     assert coordinator.last_exception.translation_domain == DOMAIN
     assert coordinator.last_exception.translation_key == "cannot_connect"
+
+
+async def test_coordinator_live_rate_limited(
+    hass: HomeAssistant, mock_live_status, freezer: FrozenDateTimeFactory
+) -> None:
+    """Tests that a 429 with Retry-After backs off the energy live coordinator."""
+
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    coordinator = entry.runtime_data.energysites[0].live_coordinator
+    assert coordinator is not None
+
+    mock_live_status.reset_mock()
+    mock_live_status.side_effect = RateLimited({"after": "45"})
+    freezer.tick(TESSIE_FLEET_API_SYNC_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_live_status.assert_called_once()
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.retry_after == 45
+
+    # The normal sync interval has not yet elapsed since the rate limit hit,
+    # so the coordinator should still be waiting on the Retry-After backoff.
+    mock_live_status.side_effect = None
+    freezer.tick(TESSIE_FLEET_API_SYNC_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_live_status.assert_called_once()
+
+    # Once the Retry-After window elapses, the coordinator refreshes again.
+    freezer.tick(timedelta(seconds=45) - TESSIE_FLEET_API_SYNC_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_live_status.call_count == 2
 
 
 async def test_coordinator_info_error(
