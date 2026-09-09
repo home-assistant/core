@@ -62,27 +62,18 @@ from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 from .util import get_device_temp_unit_convert
 
-CURRENT_WRAPPER = (
-    ElectricityCurrentRawWrapper,
-    ElectricityCurrentJsonWrapper,
-)
-POWER_WRAPPER = (
-    ElectricityPowerRawWrapper,
-    ElectricityPowerJsonWrapper,
-)
-VOLTAGE_WRAPPER = (
-    ElectricityVoltageRawWrapper,
-    ElectricityVoltageJsonWrapper,
-)
-ZNDB_REACTIVE_POWER_WRAPPER = (
+CURRENT_WRAPPER = (ElectricityCurrentRawWrapper, ElectricityCurrentJsonWrapper)
+POWER_WRAPPER = (ElectricityPowerRawWrapper, ElectricityPowerJsonWrapper)
+VOLTAGE_WRAPPER = (ElectricityVoltageRawWrapper, ElectricityVoltageJsonWrapper)
+REACTIVE_POWER_WRAPPER = (
     ElectricityReactivePowerRawWrapper,
     ElectricityReactivePowerJsonWrapper,
 )
-ZNDB_APPARENT_POWER_WRAPPER = (
+APPARENT_POWER_WRAPPER = (
     ElectricityApparentPowerRawWrapper,
     ElectricityApparentPowerJsonWrapper,
 )
-ZNDB_POWER_FACTOR_WRAPPER = (
+POWER_FACTOR_WRAPPER = (
     ElectricityPowerFactorRawWrapper,
     ElectricityPowerFactorJsonWrapper,
 )
@@ -94,7 +85,6 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
 
     dpcode: DPCode | None = None
     wrapper_class: tuple[type[DPCodeTypeInformationWrapper], ...] | None = None
-    requires_initial_value: bool = False
 
 
 def _zndb_additional_phase_sensors(
@@ -108,8 +98,7 @@ def _zndb_additional_phase_sensors(
             translation_key=f"phase_{phase}_reactive_power",
             device_class=SensorDeviceClass.REACTIVE_POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=ZNDB_REACTIVE_POWER_WRAPPER,
-            requires_initial_value=True,
+            wrapper_class=REACTIVE_POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{dpcode}apparentpower",
@@ -117,8 +106,7 @@ def _zndb_additional_phase_sensors(
             translation_key=f"phase_{phase}_apparent_power",
             device_class=SensorDeviceClass.APPARENT_POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=ZNDB_APPARENT_POWER_WRAPPER,
-            requires_initial_value=True,
+            wrapper_class=APPARENT_POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{dpcode}powerfactor",
@@ -126,8 +114,7 @@ def _zndb_additional_phase_sensors(
             translation_key=f"phase_{phase}_power_factor",
             device_class=SensorDeviceClass.POWER_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=ZNDB_POWER_FACTOR_WRAPPER,
-            requires_initial_value=True,
+            wrapper_class=POWER_FACTOR_WRAPPER,
         ),
     )
 
@@ -1932,11 +1919,6 @@ async def async_setup_entry(
                             description.dpcode or description.key,
                             description.wrapper_class,
                         )
-                    )
-                    and (
-                        not description.requires_initial_value
-                        or definition.sensor_wrapper.read_device_status(device)
-                        is not None
                     )
                 )
 
