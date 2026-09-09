@@ -30,6 +30,11 @@ from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite
 from teslemetry_stream import TeslemetryStreamAuthenticationError
 
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.components.teslemetry import (
     STREAM_TOPICS,
     _async_get_rsa_key_pem,
@@ -59,6 +64,7 @@ from homeassistant.config_entries import (
     ConfigSubentryData,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PASSWORD,
     STATE_OFF,
@@ -80,6 +86,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import mock_config_entry, setup_platform
 from .const import (
+    COMMAND_OK,
     CONFIG_V1,
     ENERGY_HISTORY,
     LIVE_STATUS,
@@ -1979,6 +1986,71 @@ async def test_paired_site_config_reads_merge_over_cloud(
     assert hass.states.get("select.energy_site_operation_mode").state == "autonomous"
     # A cloud-only config key (not locally owned) keeps its cloud value.
     assert hass.states.get("select.energy_site_allow_export").state == "pv_only"
+
+
+async def test_local_command_survives_site_info_push_before_next_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_powerwall_local_config: AsyncMock,
+    mock_energy_info_stream: MagicMock,
+) -> None:
+    """A locally-owned command value must survive a site-info push before the next poll.
+
+    Regression test: ``_local_config`` is only refreshed by the LAN poll on its
+    own 30-second cadence, so a site-info (or tariff) push arriving in that
+    window used to re-merge the pre-command value still cached there over the
+    command that just succeeded, visibly reverting it.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_local_config.return_value = {
+        "backup_reserve_percent": 20.0,
+        "default_real_mode": "self_consumption",
+    }
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.PLATFORMS",
+            [Platform.NUMBER, Platform.SELECT],
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Seed `_local_config` with the pre-command value via a real LAN poll.
+        freezer.tick(ENERGY_CONFIG_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert hass.states.get("number.energy_site_backup_reserve").state == "20.0"
+
+        with patch(
+            "aiopowerwall.energysite.PowerwallEnergySite.backup",
+            return_value=COMMAND_OK,
+        ):
+            await hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+                blocking=True,
+            )
+        assert hass.states.get("number.energy_site_backup_reserve").state == "80"
+
+        # A site-info push arrives before the next 30-second LAN poll.
+        slim_site_info = {
+            key: value
+            for key, value in deepcopy(SITE_INFO["response"]).items()
+            if key != "tariff_content_v2"
+        }
+        mock_energy_info_stream.send(slim_site_info)
+        await hass.async_block_till_done()
+
+    # The command's value must survive the push, not revert to the stale
+    # pre-command value still cached in `_local_config`.
+    assert hass.states.get("number.energy_site_backup_reserve").state == "80"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

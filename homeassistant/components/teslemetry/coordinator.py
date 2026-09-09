@@ -416,6 +416,25 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         finally:
             self._local_poll_in_progress = False
 
+    def async_set_local_value(self, key: str, value: Any) -> None:
+        """Update the cached local config after a successful local command.
+
+        A locally-owned key (see ``LOCAL_SITE_INFO_KEYS``) is only refreshed by
+        :meth:`_async_local_poll` on its own cadence, so without this a
+        site-info or tariff push arriving before the next poll would re-merge
+        the pre-command value still cached in ``_local_config`` over the
+        command that just succeeded, visibly reverting it. The command's own
+        value is the freshest known state for that key until the next poll
+        confirms (or corrects) it, which is sooner than falling back to the
+        composed cloud view: the cloud side never saw a command that was
+        routed straight to the LAN gateway.
+        """
+        if self._local is None:
+            return
+        self._local_config = {**(self._local_config or {}), key: value}
+        self.data = self._merged()
+        self.async_update_listeners()
+
     def _compose(self) -> dict[str, Any]:
         """Flatten the two partitions into the coordinator view."""
         result = flatten(self._site_info, skip_keys=TARIFF_SKIP_KEYS)
