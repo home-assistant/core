@@ -26,10 +26,7 @@ class NeoPoolEntity(CoordinatorEntity[NeoPoolCoordinator]):
         entities report unavailable. Entities are gated by default; a subclass
         can opt out by setting _unavailable_in_winter_mode to False.
         """
-        if (
-            self._unavailable_in_winter_mode
-            and self.coordinator.config_entry.pref_disable_polling
-        ):
+        if self._unavailable_in_winter_mode and self.coordinator.winter_mode:
             return False
         return super().available
 
