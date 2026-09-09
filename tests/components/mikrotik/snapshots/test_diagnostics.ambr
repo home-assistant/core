@@ -7,26 +7,16 @@
       'last_update success': True,
       'model': 'RB5009',
       'sensors': dict({
-        'health': list([
-          dict({
-            'name': 'voltage',
-            'value': 24.2,
-          }),
-          dict({
-            'name': 'temperature',
-            'value': 50.0,
-          }),
-        ]),
-        'resource': list([
-          dict({
-            'cpu-load': 15,
-            'free-hdd-space': 25,
-            'free-memory': 200,
-            'total-hdd-space': 100,
-            'total-memory': 1000,
-            'uptime': '1w2d3h4m5s',
-          }),
-        ]),
+        'health': dict({
+          'temperature': 50.0,
+          'voltage': 24.2,
+        }),
+        'resource': dict({
+          'cpu-load': 15,
+          'disk-usage': 75.0,
+          'memory-usage': 80.0,
+          'uptime': '2025-12-23T08:55:55+00:00',
+        }),
       }),
       'support_capman': False,
       'support_wifi': False,

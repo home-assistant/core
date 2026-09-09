@@ -135,7 +135,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         hass.config_entries.async_add_subentry(parent_entry, subentry)
 
         entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-        device = device_registry.async_get_device(identifiers={(DOMAIN, profile_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, profile_id), entry.entry_id
+        )
 
         for entity_entry in entities:
             entity_disabled_by = entity_entry.disabled_by
@@ -172,20 +174,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 device.id,
                 disabled_by=device_disabled_by,
                 new_identifiers={(DOMAIN, profile_id)},
-                add_config_subentry_id=subentry.subentry_id,
-                add_config_entry_id=parent_entry.entry_id,
+                new_config_entry_id=parent_entry.entry_id,
+                new_config_subentry_id=subentry.subentry_id,
             )
-            if parent_entry.entry_id != entry.entry_id:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
-            else:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                    remove_config_subentry_id=None,
-                )
 
         if parent_entry.entry_id != entry.entry_id:
             await hass.config_entries.async_remove(entry.entry_id)

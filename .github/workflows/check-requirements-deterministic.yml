@@ -10,6 +10,8 @@ name: Check requirements (deterministic)
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    branches-ignore:
+      - master
     paths:
       - "requirements*.txt"
       - "**/requirements*.txt"

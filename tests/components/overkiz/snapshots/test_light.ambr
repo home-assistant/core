@@ -176,6 +176,66 @@
     'state': 'off',
   })
 # ---
+# name: test_light_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][light.palm_court_led_strip-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.palm_court_led_strip',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16752757',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_light_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][light.palm_court_led_strip-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Strip',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.palm_court_led_strip',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_light_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][light.dining_room_wall_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

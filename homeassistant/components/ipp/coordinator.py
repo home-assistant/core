@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_BASE_PATH, DOMAIN
+from .const import CONF_BASE_PATH, DOMAIN, REQUEST_TIMEOUT
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -61,6 +61,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
             tls=config_entry.data[CONF_SSL],
             verify_ssl=config_entry.data[CONF_VERIFY_SSL],
             session=async_get_clientsession(hass, config_entry.data[CONF_VERIFY_SSL]),
+            request_timeout=REQUEST_TIMEOUT,
         )
 
         super().__init__(

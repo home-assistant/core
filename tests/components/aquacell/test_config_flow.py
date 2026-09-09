@@ -1,6 +1,6 @@
 """Test the Aquacell config flow."""
 
-from datetime import datetime
+import time
 from unittest.mock import AsyncMock
 
 from aioaquacell import ApiException, AuthenticationFailed
@@ -151,10 +151,7 @@ async def test_reauth_flow(
 
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
     assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "refresh-token"
-    assert (
-        mock_config_entry.data[CONF_REFRESH_TOKEN_CREATION_TIME]
-        == datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
-    )
+    assert mock_config_entry.data[CONF_REFRESH_TOKEN_CREATION_TIME] == time.time()
 
 
 @pytest.mark.parametrize(

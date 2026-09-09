@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_URL, ComponentSetup
 
@@ -124,6 +125,84 @@ async def test_rest_command_auth(
     await hass.services.async_call(DOMAIN, "auth_test", {}, blocking=True)
 
     assert len(aioclient_mock.mock_calls) == 1
+    _method, _url, _data, headers = aioclient_mock.mock_calls[0]
+    encoded = base64.b64encode("tøst:123456".encode("latin-1")).decode()
+    assert CIMultiDict(headers).getall("Authorization") == [f"Basic {encoded}"]
+
+
+async def test_rest_command_auth_username_with_colon(hass: HomeAssistant) -> None:
+    """Call a rest command configured with a colon in the username."""
+    config = {
+        "auth_test": {
+            "url": TEST_URL,
+            "method": "get",
+            "username": "user:name",
+            "password": "123456",
+        }
+    }
+    # RFC 7617 forbids the colon, and it must be rejected while setting up
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+
+    assert not hass.services.has_service(DOMAIN, "auth_test")
+
+
+async def test_rest_command_auth_outside_latin_1(
+    hass: HomeAssistant,
+    setup_component: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Call a rest command with a credential latin-1 cannot encode."""
+    config = {
+        "auth_test": {
+            "url": TEST_URL,
+            "method": "get",
+            "username": "用户",
+            "password": "123456",
+        }
+    }
+    # Setting up must not fail, only the call that needs the credential
+    await setup_component(config)
+
+    aioclient_mock.get(TEST_URL, content=b"success")
+
+    with pytest.raises(UnicodeEncodeError):
+        await hass.services.async_call(DOMAIN, "auth_test", {}, blocking=True)
+
+
+@pytest.mark.parametrize(
+    "header_name",
+    [
+        pytest.param("Authorization", id="canonical_casing"),
+        pytest.param("authorization", id="lowercase"),
+    ],
+)
+async def test_rest_command_configured_authorization_header_wins(
+    hass: HomeAssistant,
+    setup_component: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+    header_name: str,
+) -> None:
+    """Call a rest command that configures its own Authorization header."""
+    config = {
+        "auth_header_test": {
+            "url": TEST_URL,
+            "method": "get",
+            "username": "test",
+            "password": "123456",
+            "headers": {header_name: "Bearer configured"},
+        }
+    }
+    await setup_component(config)
+
+    aioclient_mock.get(TEST_URL, content=b"success")
+
+    await hass.services.async_call(DOMAIN, "auth_header_test", {}, blocking=True)
+
+    assert len(aioclient_mock.mock_calls) == 1
+    _method, _url, _data, headers = aioclient_mock.mock_calls[0]
+
+    # The generated basic auth must not be sent as a second Authorization header
+    assert CIMultiDict(headers).getall("Authorization") == ["Bearer configured"]
 
 
 @pytest.mark.usefixtures("aioclient_mock")

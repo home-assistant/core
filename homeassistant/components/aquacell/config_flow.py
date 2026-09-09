@@ -1,8 +1,8 @@
 """Config flow for Aquacell integration."""
 
 from collections.abc import Mapping
-from datetime import datetime
 import logging
+import time
 from typing import Any, override
 
 from aioaquacell import ApiException, AquacellApi, AuthenticationFailed
@@ -76,7 +76,7 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
                         **user_input,
                         CONF_BRAND: user_input[CONF_BRAND],
                         CONF_REFRESH_TOKEN: refresh_token,
-                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
+                        CONF_REFRESH_TOKEN_CREATION_TIME: time.time(),
                     },
                 )
 
@@ -120,7 +120,7 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates={
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_REFRESH_TOKEN: refresh_token,
-                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
+                        CONF_REFRESH_TOKEN_CREATION_TIME: time.time(),
                     },
                 )
 

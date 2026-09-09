@@ -1,8 +1,6 @@
 """Test Mikrotik setup process."""
 
-from unittest.mock import patch
-
-import librouteros
+from librouteros.exceptions import ConnectionClosed, TrapError
 import pytest
 
 from homeassistant import config_entries
@@ -23,6 +21,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import MockConfigEntryFactory
+
 DEMO_USER_INPUT = {
     CONF_HOST: "0.0.0.0",
     CONF_USERNAME: "username",
@@ -42,34 +42,11 @@ DEMO_CONFIG_ENTRY = {
     CONF_DETECTION_TIME: 30,
 }
 
-
-@pytest.fixture(name="api")
-def mock_mikrotik_api():
-    """Mock an api."""
-    with patch("librouteros.connect"):
-        yield
+AUTH_ERROR = TrapError("invalid user name or password")
+CONN_ERROR = ConnectionClosed()
 
 
-@pytest.fixture(name="auth_error")
-def mock_api_authentication_error():
-    """Mock an api."""
-    with patch(
-        "librouteros.connect",
-        side_effect=librouteros.exceptions.TrapError("invalid user name or password"),
-    ):
-        yield
-
-
-@pytest.fixture(name="conn_error")
-def mock_api_connection_error():
-    """Mock an api."""
-    with patch(
-        "librouteros.connect", side_effect=librouteros.exceptions.ConnectionClosed
-    ):
-        yield
-
-
-async def test_flow_works(hass: HomeAssistant, api) -> None:
+async def test_flow_works(hass: HomeAssistant) -> None:
     """Test config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -90,7 +67,10 @@ async def test_flow_works(hass: HomeAssistant, api) -> None:
     assert result["data"][CONF_PORT] == 8278
 
 
-async def test_options(hass: HomeAssistant, api, mock_config_entry) -> None:
+async def test_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+) -> None:
     """Test updating options."""
     entry = mock_config_entry(data=DEMO_CONFIG_ENTRY)
     entry.add_to_hass(hass)
@@ -120,8 +100,11 @@ async def test_options(hass: HomeAssistant, api, mock_config_entry) -> None:
     }
 
 
+@pytest.mark.parametrize("mock_api_error", [AUTH_ERROR], indirect=True)
+@pytest.mark.usefixtures("mock_api_error")
 async def test_host_already_configured(
-    hass: HomeAssistant, auth_error, mock_config_entry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
 ) -> None:
     """Test host already configured."""
 
@@ -138,7 +121,9 @@ async def test_host_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_connection_error(hass: HomeAssistant, conn_error) -> None:
+@pytest.mark.parametrize("mock_api_error", [CONN_ERROR], indirect=True)
+@pytest.mark.usefixtures("mock_api_error")
+async def test_connection_error(hass: HomeAssistant) -> None:
     """Test error when connection is unsuccessful."""
 
     result = await hass.config_entries.flow.async_init(
@@ -151,7 +136,9 @@ async def test_connection_error(hass: HomeAssistant, conn_error) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_wrong_credentials(hass: HomeAssistant, auth_error) -> None:
+@pytest.mark.parametrize("mock_api_error", [AUTH_ERROR], indirect=True)
+@pytest.mark.usefixtures("mock_api_error")
+async def test_wrong_credentials(hass: HomeAssistant) -> None:
     """Test error when credentials are wrong."""
 
     result = await hass.config_entries.flow.async_init(
@@ -168,7 +155,10 @@ async def test_wrong_credentials(hass: HomeAssistant, auth_error) -> None:
     }
 
 
-async def test_reauth_success(hass: HomeAssistant, api, mock_config_entry) -> None:
+async def test_reauth_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+) -> None:
     """Test we can reauth."""
     entry = mock_config_entry(data=DEMO_USER_INPUT)
     entry.add_to_hass(hass)
@@ -193,8 +183,11 @@ async def test_reauth_success(hass: HomeAssistant, api, mock_config_entry) -> No
     assert result2["reason"] == "reauth_successful"
 
 
+@pytest.mark.parametrize("mock_api_error", [AUTH_ERROR], indirect=True)
+@pytest.mark.usefixtures("mock_api_error")
 async def test_reauth_failed(
-    hass: HomeAssistant, auth_error, mock_config_entry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
 ) -> None:
     """Test reauth fails due to wrong password."""
     entry = mock_config_entry(data=DEMO_USER_INPUT)
@@ -218,8 +211,11 @@ async def test_reauth_failed(
     }
 
 
+@pytest.mark.parametrize("mock_api_error", [CONN_ERROR], indirect=True)
+@pytest.mark.usefixtures("mock_api_error")
 async def test_reauth_failed_conn_error(
-    hass: HomeAssistant, conn_error, mock_config_entry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
 ) -> None:
     """Test reauth failed due to connection error."""
     entry = mock_config_entry(data=DEMO_USER_INPUT)

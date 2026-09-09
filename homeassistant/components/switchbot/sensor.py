@@ -154,6 +154,21 @@ SENSOR_TYPES: dict[str, SwitchBotSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
     ),
+    "pir_triggered_level": SwitchBotSensorEntityDescription(
+        key="pir_triggered_level",
+        translation_key="pir_triggered_level",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "radar_triggered_distance": SwitchBotSensorEntityDescription(
+        key="radar_triggered_distance",
+        translation_key="radar_triggered_distance",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "radar_triggered_level": SwitchBotSensorEntityDescription(
+        key="radar_triggered_level",
+        translation_key="radar_triggered_level",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 }
 
 

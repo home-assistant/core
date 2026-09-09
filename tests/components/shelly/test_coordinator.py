@@ -25,7 +25,12 @@ from homeassistant.components.shelly.const import (
     BLEScannerMode,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceRegistry
@@ -511,6 +516,21 @@ async def test_rpc_connection_error_during_unload(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_block_shutdown_on_ha_stop(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the device is shut down when Home Assistant stops."""
+    await init_integration(hass, 1)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert "Stopping RPC device coordinator for Test name" in caplog.text
+    mock_block_device.shutdown.assert_called()
+
+
 async def test_rpc_click_event(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -892,9 +912,8 @@ async def test_rpc_update_entry_fw_ver(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.unique_id
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
     )
     assert device
     assert device.sw_version == "some fw string"
@@ -904,9 +923,8 @@ async def test_rpc_update_entry_fw_ver(
     mock_rpc_device.mock_update()
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
     )
     assert device
     assert device.sw_version == "99.0.0"
@@ -1145,9 +1163,8 @@ async def test_xmod_model_lookup(
     monkeypatch.setattr(mock_rpc_device, "xmod_info", {"n": xmod_model})
     entry = await init_integration(hass, 2)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
     )
     assert device
     assert device.model == xmod_model

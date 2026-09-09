@@ -148,8 +148,8 @@ def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[s
 @pytest.mark.parametrize(
     ("source_entity_id", "expected_helper_device_id", "expected_events"),
     [
-        ("switch.test_unique", None, ["update"]),
-        ("sensor.test_unique", "switch_device_id", []),
+        ("switch.mock_title", None, ["update"]),
+        ("sensor.mock_title", "switch_device_id", []),
     ],
     indirect=["expected_helper_device_id"],
 )
@@ -172,7 +172,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     await hass.async_block_till_done()
 
     generic_hygrostat_entity_entry = entity_registry.async_get(
-        "humidifier.my_generic_hygrostat"
+        "humidifier.mock_title_my_generic_hygrostat"
     )
     assert generic_hygrostat_entity_entry.device_id == switch_entity_entry.device_id
 
@@ -183,22 +183,19 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
         hass, generic_hygrostat_entity_entry.entity_id
     )
 
-    # Remove the source entity's config entry from the device, this removes the
-    # source entity
+    # Remove the source device, this removes the source entity
     with patch(
         "homeassistant.components.generic_hygrostat.async_unload_entry",
         wraps=generic_hygrostat.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            source_device.id, remove_config_entry_id=source_entity_entry.config_entry_id
-        )
+        device_registry.async_remove_device(source_device.id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_not_called()
 
     # Check that the helper entity is linked to the expected source device
     generic_hygrostat_entity_entry = entity_registry.async_get(
-        "humidifier.my_generic_hygrostat"
+        "humidifier.mock_title_my_generic_hygrostat"
     )
     assert generic_hygrostat_entity_entry.device_id == expected_helper_device_id
 
@@ -224,8 +221,8 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
 @pytest.mark.parametrize(
     ("source_entity_id", "expected_helper_device_id", "expected_events"),
     [
-        ("switch.test_unique", None, ["update"]),
-        ("sensor.test_unique", "switch_device_id", []),
+        ("switch.mock_title", None, ["update"]),
+        ("sensor.mock_title", "switch_device_id", []),
     ],
     indirect=["expected_helper_device_id"],
 )
@@ -248,7 +245,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     await hass.async_block_till_done()
 
     generic_hygrostat_entity_entry = entity_registry.async_get(
-        "humidifier.my_generic_hygrostat"
+        "humidifier.mock_title_my_generic_hygrostat"
     )
     assert generic_hygrostat_entity_entry.device_id == switch_entity_entry.device_id
 
@@ -271,7 +268,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
 
     # Check that the helper entity is linked to the expected source device
     generic_hygrostat_entity_entry = entity_registry.async_get(
-        "humidifier.my_generic_hygrostat"
+        "humidifier.mock_title_my_generic_hygrostat"
     )
     assert generic_hygrostat_entity_entry.device_id == expected_helper_device_id
 
@@ -305,8 +302,8 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
         "expected_events",
     ),
     [
-        ("switch.test_unique", 1, None, ["update"]),
-        ("sensor.test_unique", 0, "switch_device_id", []),
+        ("switch.mock_title", 1, None, ["update"]),
+        ("sensor.mock_title", 0, "switch_device_id", []),
     ],
     indirect=["expected_helper_device_id"],
 )
@@ -330,7 +327,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     await hass.async_block_till_done()
 
     generic_hygrostat_entity_entry = entity_registry.async_get(
-        "humidifier.my_generic_hygrostat"
+        "humidifier.mock_title_my_generic_hygrostat"
     )
     assert generic_hygrostat_entity_entry.device_id == switch_entity_entry.device_id
 
@@ -354,7 +351,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
 
     # Check that the helper entity is linked to the expected source device
     generic_hygrostat_entity_entry = entity_registry.async_get(
-        "humidifier.my_generic_hygrostat"
+        "humidifier.mock_title_my_generic_hygrostat"
     )
     assert generic_hygrostat_entity_entry.device_id == expected_helper_device_id
 
@@ -380,7 +377,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
 )
 @pytest.mark.parametrize(
     ("source_entity_id", "unload_entry_calls", "expected_events"),
-    [("switch.test_unique", 1, ["update"]), ("sensor.test_unique", 0, [])],
+    [("switch.mock_title", 1, ["update"]), ("sensor.mock_title", 0, [])],
 )
 async def test_async_handle_source_entity_changes_source_entity_moved_other_device(
     hass: HomeAssistant,
@@ -406,7 +403,7 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     await hass.async_block_till_done()
 
     generic_hygrostat_entity_entry = entity_registry.async_get(
-        "humidifier.my_generic_hygrostat"
+        "humidifier.mock_title_my_generic_hygrostat"
     )
     assert generic_hygrostat_entity_entry.device_id == switch_entity_entry.device_id
 
@@ -433,7 +430,7 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     # Check that the helper entity is linked to the expected source device
     switch_entity_entry = entity_registry.async_get(switch_entity_entry.entity_id)
     generic_hygrostat_entity_entry = entity_registry.async_get(
-        "humidifier.my_generic_hygrostat"
+        "humidifier.mock_title_my_generic_hygrostat"
     )
     assert generic_hygrostat_entity_entry.device_id == switch_entity_entry.device_id
 
@@ -462,8 +459,8 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
 @pytest.mark.parametrize(
     ("source_entity_id", "new_entity_id", "config_key"),
     [
-        ("switch.test_unique", "switch.new_entity_id", "humidifier"),
-        ("sensor.test_unique", "sensor.new_entity_id", "target_sensor"),
+        ("switch.mock_title", "switch.new_entity_id", "humidifier"),
+        ("sensor.mock_title", "sensor.new_entity_id", "target_sensor"),
     ],
 )
 async def test_async_handle_source_entity_new_entity_id(
@@ -485,7 +482,7 @@ async def test_async_handle_source_entity_new_entity_id(
     await hass.async_block_till_done()
 
     generic_hygrostat_entity_entry = entity_registry.async_get(
-        "humidifier.my_generic_hygrostat"
+        "humidifier.mock_title_my_generic_hygrostat"
     )
     assert generic_hygrostat_entity_entry.device_id == switch_entity_entry.device_id
 
@@ -561,7 +558,7 @@ async def test_migration_1_1(
     switch_device = device_registry.async_get(switch_device.id)
     assert generic_hygrostat_config_entry.entry_id not in switch_device.config_entries
     generic_hygrostat_entity_entry = entity_registry.async_get(
-        "humidifier.my_generic_hygrostat"
+        "humidifier.mock_title_my_generic_hygrostat"
     )
     assert generic_hygrostat_entity_entry.device_id == switch_entity_entry.device_id
 

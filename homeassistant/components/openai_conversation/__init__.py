@@ -418,17 +418,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
     LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
     if entry.version == 2 and entry.minor_version == 1:
-        # Correct broken device migration in Home Assistant Core 2025.7.0b0-2025.7.0b1
-        device_registry = dr.async_get(hass)
-        for device in dr.async_entries_for_config_entry(
-            device_registry, entry.entry_id
-        ):
-            device_registry.async_update_device(
-                device.id,
-                remove_config_entry_id=entry.entry_id,
-                remove_config_subentry_id=None,
-            )
-
+        # Devices left in both the config entry and its subentry by Home Assistant Core
+        # 2025.7.0b0-2025.7.0b1 are collapsed onto the subentry by the device registry
+        # migration, so there's nothing to correct here.
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     if entry.version == 2 and entry.minor_version == 2:

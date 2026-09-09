@@ -9,6 +9,17 @@
         - nautical
         - astronomical
 
+.period: &period_type
+  required: true
+  default: any
+  selector:
+    select:
+      translation_key: period
+      options:
+        - any
+        - morning
+        - evening
+
 .for: &trigger_for
   required: true
   default: "00:00:00"
@@ -74,6 +85,42 @@ dawn:
 dusk:
   fields:
     type: *twilight_type
+    <<: *trigger_offset
+
+golden_hour_started:
+  fields:
+    period: *period_type
+    <<: *trigger_offset
+
+golden_hour_ended:
+  fields:
+    period: *period_type
+    <<: *trigger_offset
+
+blue_hour_started:
+  fields:
+    period: *period_type
+    <<: *trigger_offset
+
+blue_hour_ended:
+  fields:
+    period: *period_type
+    <<: *trigger_offset
+
+midnight_sun_started:
+  fields:
+    <<: *trigger_offset
+
+midnight_sun_ended:
+  fields:
+    <<: *trigger_offset
+
+polar_night_started:
+  fields:
+    <<: *trigger_offset
+
+polar_night_ended:
+  fields:
     <<: *trigger_offset
 
 elevation_changed:

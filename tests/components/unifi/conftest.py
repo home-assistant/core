@@ -179,6 +179,7 @@ def fixture_request(
     dpi_app_payload: list[dict[str, Any]],
     dpi_group_payload: list[dict[str, Any]],
     firewall_policy_payload: list[dict[str, Any]],
+    object_oriented_network_config_payload: list[dict[str, Any]],
     port_forward_payload: list[dict[str, Any]],
     traffic_rule_payload: list[dict[str, Any]],
     traffic_route_payload: list[dict[str, Any]],
@@ -220,6 +221,10 @@ def fixture_request(
         mock_get_request(f"/api/s/{site_id}/rest/dpigroup", dpi_group_payload)
         mock_get_request(
             f"/v2/api/site/{site_id}/firewall-policies", firewall_policy_payload
+        )
+        mock_get_request(
+            f"/v2/api/site/{site_id}/object-oriented-network-configs",
+            object_oriented_network_config_payload,
         )
         mock_get_request(f"/api/s/{site_id}/rest/portforward", port_forward_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
@@ -266,6 +271,12 @@ def fixture_dpi_group_data() -> list[dict[str, Any]]:
 @pytest.fixture(name="firewall_policy_payload")
 def firewall_policy_payload_data() -> list[dict[str, Any]]:
     """Firewall policy data."""
+    return []
+
+
+@pytest.fixture(name="object_oriented_network_config_payload")
+def object_oriented_network_config_payload_data() -> list[dict[str, Any]]:
+    """Object-oriented network config data."""
     return []
 
 

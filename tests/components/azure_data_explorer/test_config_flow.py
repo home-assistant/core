@@ -24,7 +24,15 @@ from .const import BASE_CONFIG
 async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=None,
     )
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
@@ -57,9 +65,15 @@ async def test_config_flow_errors(
 ) -> None:
     """Test we handle connection KustoServiceError."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=None,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=None,
     )
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}

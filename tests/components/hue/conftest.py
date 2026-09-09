@@ -128,6 +128,8 @@ def create_mock_api_v1() -> Mock:
         software_version="1935144040",
     )
     api.config.name = "Home"
+    # aiohue exposes the bridge id as both `bridge_id` and `bridgeid`
+    api.config.bridgeid = api.config.bridge_id
 
     api.lights = aiohue_v1.Lights(logger, {}, mock_request)
     api.groups = aiohue_v1.Groups(logger, {}, mock_request)

@@ -7,10 +7,12 @@ from opendisplay import (
     BinaryInputs,
     BoardManufacturer,
     ColorScheme,
+    DataExtended,
     DisplayConfig,
     GlobalConfig,
     ManufacturerData,
     PowerOption,
+    SecurityConfig,
     SystemConfig,
 )
 
@@ -28,8 +30,8 @@ TEST_ADDRESS = "AA:BB:CC:DD:EE:FF"
 TEST_TITLE = "OpenDisplay 1234"
 ENCRYPTION_KEY = "aabbccddee112233aabbccddee112233"  # 32 hex chars = 16 bytes
 
-# Firmware version response: major=1, minor=2, sha="abc123"
-FIRMWARE_VERSION = {"major": 1, "minor": 2, "sha": "abc123"}
+# Firmware version response: major=1, minor=2, patch=3, sha="abc123"
+FIRMWARE_VERSION = {"major": 1, "minor": 2, "patch": 3, "sha": "abc123"}
 
 DEVICE_CONFIG = GlobalConfig(
     system=SystemConfig(
@@ -43,7 +45,7 @@ DEVICE_CONFIG = GlobalConfig(
         manufacturer_id=BoardManufacturer.SEEED,
         board_type=1,
         board_revision=0,
-        reserved=b"\x00" * 18,
+        reserved=b"\x00" * 6,
     ),
     power=PowerOption(
         power_mode=0,
@@ -58,7 +60,12 @@ DEVICE_CONFIG = GlobalConfig(
         voltage_scaling_factor=0,
         deep_sleep_current_ua=0,
         deep_sleep_time_seconds=0,
-        reserved=b"\x00" * 12,
+        charge_enable_pin=0xFF,
+        charge_state_pin=0xFF,
+        charger_flags=0,
+        min_wake_time_seconds=0,
+        screen_timeout_seconds=0,
+        reserved=b"\x00" * 4,
     ),
     displays=[
         DisplayConfig(
@@ -85,6 +92,25 @@ DEVICE_CONFIG = GlobalConfig(
             reserved=b"\x00" * 33,
         )
     ],
+    security_config=SecurityConfig(
+        encryption_enabled=1,
+        encryption_key=bytes.fromhex(ENCRYPTION_KEY),
+        session_timeout_seconds=0,
+        flags=0,
+        reset_pin=0xFF,
+        reserved=b"\x00" * 43,
+    ),
+    data_extended=DataExtended.from_strings(
+        manufacturer_name="Seeed Studio",
+        model_name="XIAO EN04(NRF52840)",
+        serial_number="SN-0123456789",
+        friendly_name="Living Room Tag",
+        device_location="Living Room",
+        device_id="device-1234",
+        custom_string_1="custom one",
+        custom_string_2="custom two",
+        custom_string_3="custom three",
+    ),
 )
 
 

@@ -153,10 +153,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
 
 def _is_device_disabled(
     device_registry: dr.DeviceRegistry,
+    entry: RoborockConfigEntry,
     device: RoborockDevice,
 ) -> bool:
     """Check if a device is disabled in the device registry."""
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, device.duid)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.duid), entry.entry_id
+    )
     return device_entry is not None and device_entry.disabled
 
 
@@ -222,7 +225,7 @@ async def async_setup_device(
         config_entry_id=entry.entry_id,
         **get_device_info(device),
     )
-    if _is_device_disabled(device_registry, device):
+    if _is_device_disabled(device_registry, entry, device):
         _LOGGER.debug("Device %s is disabled, skipping setup", device.duid)
         try:
             await device.close()

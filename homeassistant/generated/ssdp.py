@@ -221,6 +221,10 @@ SSDP = {
             "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
             "manufacturer": "Lyngdorf",
         },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Steinway Lyngdorf",
+        },
     ],
     "nanoleaf": [
         {
@@ -387,6 +391,10 @@ SSDP = {
     "victron_gx": [
         {
             "X_MqttOnLan": "1",
+            "manufacturer": "Victron Energy",
+        },
+        {
+            "X_MqttTokenPairing": "1",
             "manufacturer": "Victron Energy",
         },
     ],

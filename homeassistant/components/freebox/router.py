@@ -8,6 +8,7 @@ import logging
 import os
 from pathlib import Path
 import re
+import time
 from typing import Any
 
 from freebox_api import Freepybox
@@ -108,6 +109,7 @@ class FreeboxRouter:
     ) -> None:
         """Initialize a Freebox router."""
         self.hass = hass
+        self.config_entry = entry
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
 
@@ -208,7 +210,7 @@ class FreeboxRouter:
             "IPv6": connection_datas.get("ipv6"),
             "connection_type": connection_datas["media"],
             "uptime": datetime.fromtimestamp(
-                round(datetime.now().timestamp()) - syst_datas["uptime_val"]  # pylint: disable=home-assistant-enforce-naive-now
+                round(time.time()) - syst_datas["uptime_val"]
             ),
             "firmware_version": self._sw_v,
             "serial": syst_datas["serial"],

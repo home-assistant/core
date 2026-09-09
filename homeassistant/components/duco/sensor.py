@@ -34,6 +34,12 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
+_CONTINUOUS_VENTILATION_STATES = {
+    VentilationState.CNT1,
+    VentilationState.CNT2,
+    VentilationState.CNT3,
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class DucoSensorEntityDescription(SensorEntityDescription):
@@ -85,7 +91,9 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda node: (
             dt_util.utc_from_timestamp(node.ventilation.time_state_end)
-            if node.ventilation and node.ventilation.time_state_end != 0
+            if node.ventilation
+            and node.ventilation.state not in _CONTINUOUS_VENTILATION_STATES
+            and node.ventilation.time_state_end != 0
             else None
         ),
         node_types=VENTILATION_CAPABLE_NODE_TYPES,
@@ -262,10 +270,7 @@ async def async_setup_entry(
                     (DOMAIN, f"{mac}_{node_id}"), entry.entry_id
                 )
                 if device:
-                    device_reg.async_update_device(
-                        device.id,
-                        remove_config_entry_id=entry.entry_id,
-                    )
+                    device_reg.async_remove_device(device.id)
             known_nodes.difference_update(stale_node_ids)
             known_box_sensors.difference_update(
                 {

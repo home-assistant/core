@@ -58,6 +58,8 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
         if self._lock.state in (
             TedeeLockState.HALF_OPEN,
             TedeeLockState.UNKNOWN,
+            TedeeLockState.CALIBRATING,
+            TedeeLockState.UPDATING,
         ):
             return None
         return self._lock.state == TedeeLockState.LOCKED

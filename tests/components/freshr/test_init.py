@@ -84,14 +84,21 @@ async def test_stale_device_removed(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a device absent from a successful poll is removed from the registry."""
-    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
+    )
 
     mock_freshr_client.fetch_devices.return_value = []
     freezer.tick(DEVICES_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
+        )
+        is None
+    )
 
     call_count = mock_freshr_client.fetch_device_current.call_count
     freezer.tick(READINGS_SCAN_INTERVAL)
@@ -109,14 +116,18 @@ async def test_stale_device_not_removed_on_poll_error(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a device is not removed when the devices poll fails."""
-    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
 
     mock_freshr_client.fetch_devices.side_effect = ApiResponseError("cloud error")
     freezer.tick(DEVICES_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
