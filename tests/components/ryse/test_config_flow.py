@@ -11,7 +11,10 @@ from bleak.backends.scanner import AdvertisementData
 from bleak.exc import BleakError
 import pytest
 
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth import (
+    BaseHaRemoteScanner,
+    BluetoothServiceInfoBleak,
+)
 from homeassistant.components.ryse.const import DOMAIN, MANUFACTURER_ID
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS
@@ -459,6 +462,28 @@ async def test_async_step_user_skips_proxy_source(
     assert result["reason"] == "no_devices_found"
 
 
+async def test_async_step_user_keeps_proxy_selected_when_also_local(
+    hass: HomeAssistant,
+    discovery: MagicMock,
+    mock_scanner_devices_by_address: MagicMock,
+) -> None:
+    """Test a proxy-selected advertisement is kept if a local adapter also sees it."""
+    discovery.return_value = [_proxy_discovery()]
+    local_device = BLEDevice(DEVICE_ADDRESS, DEVICE_NAME, {})
+    scanner_device = MagicMock()
+    scanner_device.scanner = MagicMock()
+    scanner_device.scanner.source = "local"
+    scanner_device.ble_device = local_device
+    mock_scanner_devices_by_address.return_value = [scanner_device]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
 async def test_async_step_bluetooth_not_in_pairing_mode(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
@@ -489,6 +514,30 @@ async def test_async_step_bluetooth_rejects_proxy_source(
     mock_device.pair.assert_not_called()
 
 
+async def test_async_step_bluetooth_proxy_selected_when_also_local(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    mock_scanner_devices_by_address: MagicMock,
+) -> None:
+    """Test bluetooth discovery proceeds when a proxy wins but a local adapter sees it."""
+    local_device = BLEDevice(DEVICE_ADDRESS, DEVICE_NAME, {})
+    scanner_device = MagicMock()
+    scanner_device.scanner = MagicMock()
+    scanner_device.scanner.source = "local"
+    scanner_device.ble_device = local_device
+    mock_scanner_devices_by_address.return_value = [scanner_device]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=_proxy_discovery(),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    mock_device.pair.assert_not_called()
+
+
 async def test_async_step_bluetooth_pairing_overrides_stale_idle(
     hass: HomeAssistant,
     mock_device: MagicMock,
@@ -506,6 +555,44 @@ async def test_async_step_bluetooth_pairing_overrides_stale_idle(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     mock_device.pair.assert_not_called()
+
+
+async def test_async_step_bluetooth_lost_local_source(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    mock_scanner_by_source: MagicMock,
+) -> None:
+    """Test pairing is refused if the local adapter is gone, then can recover."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    mock_scanner_by_source.side_effect = lambda hass, source: MagicMock(
+        spec=BaseHaRemoteScanner
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "not_local_source"}
+    mock_device.pair.assert_not_called()
+
+    mock_scanner_by_source.side_effect = lambda hass, source: None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
+    mock_device.pair.assert_awaited_once()
 
 
 async def test_async_step_bluetooth_left_pairing_mode(

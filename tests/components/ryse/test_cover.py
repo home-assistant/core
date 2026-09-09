@@ -138,6 +138,28 @@ async def test_position_notification(
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
 
+async def test_cached_position_rejected_when_invalid(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a cached position is not reported once it is no longer valid."""
+    caplog.set_level(logging.WARNING, logger=LOGGER_NAME)
+    await mock_device.update_callback(50)
+    await hass.async_block_till_done()
+
+    mock_device.client = MagicMock(is_connected=True)
+    mock_device.is_valid_position.return_value = False
+    await async_poll_device(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    assert "Invalid position value detected: 50" in caplog.text
+
+
 async def test_position_notification_out_of_range(
     hass: HomeAssistant,
     mock_device: MagicMock,

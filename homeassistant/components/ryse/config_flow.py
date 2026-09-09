@@ -10,11 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BaseHaRemoteScanner,
+    BluetoothScannerDevice,
     BluetoothServiceInfoBleak,
     async_clear_address_from_match_history,
     async_discovered_service_info,
     async_last_service_info,
     async_scanner_by_source,
+    async_scanner_devices_by_address,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
@@ -41,6 +43,42 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             or service_info
         )
 
+    def _is_remote_source(self, source: str) -> bool:
+        """Return True if *source* is a Bluetooth proxy scanner."""
+        return isinstance(
+            async_scanner_by_source(self.hass, source), BaseHaRemoteScanner
+        )
+
+    def _local_scanner_device(self, address: str) -> BluetoothScannerDevice | None:
+        """Return a local-adapter scanner device for *address*, if any."""
+        for scanner_device in async_scanner_devices_by_address(
+            self.hass, address, connectable=True
+        ):
+            if not isinstance(scanner_device.scanner, BaseHaRemoteScanner):
+                return scanner_device
+        return None
+
+    def _with_local_device(
+        self,
+        service_info: BluetoothServiceInfoBleak,
+        scanner_device: BluetoothScannerDevice,
+    ) -> BluetoothServiceInfoBleak:
+        """Copy *service_info* onto the local adapter's BLEDevice."""
+        return BluetoothServiceInfoBleak(
+            name=service_info.name,
+            address=service_info.address,
+            rssi=service_info.rssi,
+            manufacturer_data=service_info.manufacturer_data,
+            service_data=service_info.service_data,
+            service_uuids=service_info.service_uuids,
+            source=scanner_device.scanner.source,
+            device=scanner_device.ble_device,
+            advertisement=service_info.advertisement,
+            time=service_info.time,
+            connectable=True,
+            tx_power=service_info.tx_power,
+        )
+
     def _local_service_info(
         self,
         service_info: BluetoothServiceInfoBleak,
@@ -49,20 +87,31 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> BluetoothServiceInfoBleak | None:
         """Return a local-adapter advertisement, ignoring Bluetooth proxies.
 
-        ``async_last_service_info`` can still be an older idle advertisement
-        (higher RSSI or a race with the PAIR-flag update). When discovering,
-        prefer any local candidate that is in pairing mode so a PAIR press is
-        not discarded.
+        ``async_last_service_info`` / ``async_discovered_service_info`` expose
+        only the Bluetooth manager's selected route. A stronger proxy can win
+        that selection even when a local adapter also sees the shade. Check
+        every scanner before treating the device as proxy-only.
         """
         latest = self._latest_service_info(service_info)
-        local: list[BluetoothServiceInfoBleak] = []
+        candidates: list[BluetoothServiceInfoBleak] = []
         for info in (latest, service_info):
-            if info not in local:
-                scanner = async_scanner_by_source(self.hass, info.source)
-                if not isinstance(scanner, BaseHaRemoteScanner):
-                    local.append(info)
+            if info not in candidates:
+                candidates.append(info)
+
+        local = [info for info in candidates if not self._is_remote_source(info.source)]
         if not local:
-            return None
+            scanner_device = self._local_scanner_device(service_info.address)
+            if scanner_device is None:
+                return None
+            pairing_info = next(
+                (
+                    info
+                    for info in candidates
+                    if is_pairing_mode(info.manufacturer_data)
+                ),
+                candidates[0],
+            )
+            local = [self._with_local_device(pairing_info, scanner_device)]
         if prefer_pairing:
             for info in local:
                 if is_pairing_mode(info.manufacturer_data):
@@ -174,17 +223,23 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             current_ids = self._async_current_ids(include_ignore=False)
 
             # A device only sets the pairing flag in its manufacturer data while
-            # the user holds its PAIR button.
-            self._discovered_devices = {
-                info.address: info
-                for info in async_discovered_service_info(self.hass, connectable=True)
-                if info.name
-                and info.address not in current_ids
-                and not isinstance(
-                    async_scanner_by_source(self.hass, info.source), BaseHaRemoteScanner
-                )
-                and is_pairing_mode(info.manufacturer_data)
-            }
+            # the user holds its PAIR button. Use every scanner route, not just
+            # the selected advertisement, so a stronger proxy does not hide a
+            # shade that is also reachable on the local adapter.
+            discovered: dict[str, BluetoothServiceInfoBleak] = {}
+            for info in async_discovered_service_info(self.hass, connectable=True):
+                if not info.name or info.address in current_ids:
+                    continue
+                local = self._local_service_info(info, prefer_pairing=True)
+                if local is None:
+                    continue
+                if not (
+                    is_pairing_mode(local.manufacturer_data)
+                    or is_pairing_mode(info.manufacturer_data)
+                ):
+                    continue
+                discovered[info.address] = local
+            self._discovered_devices = discovered
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")

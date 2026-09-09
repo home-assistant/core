@@ -36,6 +36,17 @@ def mock_scanner_by_source() -> Generator[MagicMock]:
         yield mock_flow
 
 
+@pytest.fixture(autouse=True)
+def mock_scanner_devices_by_address() -> Generator[MagicMock]:
+    """Default to no extra scanner routes so existing tests stay local-only."""
+    with patch(
+        "homeassistant.components.ryse.config_flow.async_scanner_devices_by_address",
+        create=True,
+        return_value=[],
+    ) as mock:
+        yield mock
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
