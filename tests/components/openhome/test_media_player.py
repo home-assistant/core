@@ -55,9 +55,10 @@ from .conftest import TRACK_INFO
 from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "media_player.friendly_name"
+MEDIA_ID = "http://localhost/track.flac"
 
-# Each action, the coroutine it drives, and a source type that exposes the
-# supported feature it is gated behind.
+# Each action, the coroutine it drives, a source type that exposes the supported
+# feature it is gated behind, and the arguments the device must be called with.
 ACTIONS = [
     pytest.param(
         MEDIA_PLAYER_DOMAIN,
@@ -65,6 +66,7 @@ ACTIONS = [
         {},
         Device.set_standby,
         "Playlist",
+        (False,),
         id="turn_on",
     ),
     pytest.param(
@@ -73,6 +75,7 @@ ACTIONS = [
         {},
         Device.set_standby,
         "Playlist",
+        (True,),
         id="turn_off",
     ),
     pytest.param(
@@ -81,6 +84,7 @@ ACTIONS = [
         {},
         Device.play,
         "Playlist",
+        (),
         id="media_play",
     ),
     pytest.param(
@@ -89,6 +93,7 @@ ACTIONS = [
         {},
         Device.pause,
         "Playlist",
+        (),
         id="media_pause",
     ),
     pytest.param(
@@ -97,6 +102,7 @@ ACTIONS = [
         {},
         Device.stop,
         "Radio",
+        (),
         id="media_stop",
     ),
     pytest.param(
@@ -105,6 +111,7 @@ ACTIONS = [
         {},
         Device.skip,
         "Playlist",
+        (1,),
         id="media_next_track",
     ),
     pytest.param(
@@ -113,6 +120,7 @@ ACTIONS = [
         {},
         Device.skip,
         "Playlist",
+        (-1,),
         id="media_previous_track",
     ),
     pytest.param(
@@ -121,6 +129,7 @@ ACTIONS = [
         {},
         Device.increase_volume,
         "Playlist",
+        (),
         id="volume_up",
     ),
     pytest.param(
@@ -129,6 +138,7 @@ ACTIONS = [
         {},
         Device.decrease_volume,
         "Playlist",
+        (),
         id="volume_down",
     ),
     pytest.param(
@@ -137,6 +147,7 @@ ACTIONS = [
         {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
         Device.set_volume,
         "Playlist",
+        (50,),
         id="volume_set",
     ),
     pytest.param(
@@ -145,14 +156,25 @@ ACTIONS = [
         {ATTR_MEDIA_VOLUME_MUTED: True},
         Device.set_mute,
         "Playlist",
+        (True,),
         id="volume_mute",
     ),
     pytest.param(
         MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_MEDIA_VOLUME_MUTED: False},
+        Device.set_mute,
+        "Playlist",
+        (False,),
+        id="volume_unmute",
+    ),
+    pytest.param(
+        MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
-        {ATTR_INPUT_SOURCE: "Playlist"},
+        {ATTR_INPUT_SOURCE: "Radio"},
         Device.set_source,
         "Playlist",
+        (1,),
         id="select_source",
     ),
     pytest.param(
@@ -160,10 +182,11 @@ ACTIONS = [
         SERVICE_PLAY_MEDIA,
         {
             ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            ATTR_MEDIA_CONTENT_ID: "http://localhost/track.flac",
+            ATTR_MEDIA_CONTENT_ID: MEDIA_ID,
         },
         Device.play_media,
         "Playlist",
+        ({"title": "Home Assistant", "uri": MEDIA_ID},),
         id="play_media",
     ),
 ]
@@ -193,7 +216,37 @@ async def setup_media_player(
 
 
 @pytest.mark.parametrize(
-    ("domain", "service", "data", "method", "source_type"), ACTIONS
+    ("domain", "service", "data", "method", "source_type", "expected_args"), ACTIONS
+)
+async def test_action_calls_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+    domain: str,
+    service: str,
+    data: dict[str, Any],
+    method: Callable[..., Any],
+    source_type: str,
+    expected_args: tuple[Any, ...],
+) -> None:
+    """Test every action calls the device with the arguments it expects."""
+    mock_device.source.return_value = {
+        "index": 0,
+        "name": source_type,
+        "type": source_type,
+    }
+
+    await setup_media_player(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        domain, service, {ATTR_ENTITY_ID: ENTITY_ID, **data}, blocking=True
+    )
+
+    getattr(mock_device, method.__name__).assert_awaited_once_with(*expected_args)
+
+
+@pytest.mark.parametrize(
+    ("domain", "service", "data", "method", "source_type", "expected_args"), ACTIONS
 )
 async def test_action_error_is_raised(
     hass: HomeAssistant,
@@ -204,6 +257,7 @@ async def test_action_error_is_raised(
     data: dict[str, Any],
     method: Callable[..., Any],
     source_type: str,
+    expected_args: tuple[Any, ...],
 ) -> None:
     """Test every action raises when the device rejects the request."""
     # The feature each action is gated behind depends on the selected source.
@@ -227,6 +281,22 @@ async def test_action_error_is_raised(
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == service
     mocked.assert_awaited()
+
+
+async def test_invoke_pin_calls_device(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_device: MagicMock
+) -> None:
+    """Test the invoke_pin action passes the requested pin to the device."""
+    await setup_media_player(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_INVOKE_PIN,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PIN_INDEX: 3},
+        blocking=True,
+    )
+
+    mock_device.invoke_pin.assert_awaited_once_with(3)
 
 
 @pytest.mark.parametrize(
