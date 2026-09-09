@@ -159,7 +159,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                 except (InvalidToken, Forbidden, SubscriptionRequired) as e:
                     raise ConfigEntryAuthFailed from e
                 except TeslaFleetError as e:
-                    raise ConfigEntryNotReady(getattr(e, "message", str(e))) from e
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN,
+                        translation_key="cannot_connect",
+                    ) from e
                 except ClientError as e:
                     raise ConfigEntryNotReady from e
 
