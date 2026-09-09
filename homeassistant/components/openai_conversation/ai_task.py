@@ -140,7 +140,7 @@ class OpenAITaskEntity(
         else:
             mime_type = "image/png"
 
-        if hasattr(image_call, "size") and (size := image_call.size):
+        if size := image_call.size:
             width, height = tuple(size.split("x"))
         else:
             width, height = None, None
