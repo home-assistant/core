@@ -71,12 +71,16 @@ async def test_coordinator_auth(
     """Tests that the coordinator handles auth errors."""
 
     mock_get_state.side_effect = ERROR_AUTH
-    await setup_platform(hass, [Platform.BINARY_SENSOR])
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    coordinator = entry.runtime_data.vehicles[0].data_coordinator
 
     freezer.tick(WAIT)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_get_state.assert_called_once()
+    assert coordinator.last_exception is not None
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == "auth_failed"
 
 
 async def test_coordinator_connection(
@@ -163,6 +167,8 @@ async def test_coordinator_reauth(
     mock.side_effect = side_effect
     entry = await setup_platform(hass, [Platform.SENSOR])
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.error_reason_translation_domain == DOMAIN
+    assert entry.error_reason_translation_key == "auth_failed"
 
 
 async def test_coordinator_energy_history_error(
