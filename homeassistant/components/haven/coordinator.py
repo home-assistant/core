@@ -15,7 +15,7 @@ from haveniaq import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -28,6 +28,8 @@ type HavenConfigEntry = ConfigEntry[HavenDataUpdateCoordinator]
 
 class HavenDataUpdateCoordinator(DataUpdateCoordinator[SensorData]):
     """Coordinate sequential polling of a HAVEN device."""
+
+    config_entry: HavenConfigEntry
 
     def __init__(self, hass: HomeAssistant, entry: HavenConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -62,6 +64,18 @@ class HavenDataUpdateCoordinator(DataUpdateCoordinator[SensorData]):
                 translation_domain=DOMAIN,
                 translation_key="update_error",
             ) from err
+
+        if self.info.serial_number != self.config_entry.unique_id:
+            # Wait for rediscovery if DHCP assigned the address to another device.
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="unexpected_device",
+                translation_placeholders={
+                    "host": self.config_entry.data[CONF_HOST],
+                    "expected_serial": str(self.config_entry.unique_id),
+                    "actual_serial": self.info.serial_number,
+                },
+            )
 
     @override
     async def _async_update_data(self) -> SensorData:

@@ -1,7 +1,7 @@
 """Fixtures for HAVEN IAQ tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from haveniaq import DeviceInfo, SensorData
 import pytest
@@ -24,8 +24,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_haven_client_class() -> Generator[MagicMock]:
-    """Mock the HAVEN client class used by setup and config flows."""
+def mock_haven_client() -> Generator[AsyncMock]:
+    """Mock the HAVEN client used by setup and config flows."""
     with (
         patch(
             "homeassistant.components.haven.coordinator.HavenClient",
@@ -36,16 +36,10 @@ def mock_haven_client_class() -> Generator[MagicMock]:
             new=mock_client_class,
         ),
     ):
-        yield mock_client_class
-
-
-@pytest.fixture
-def mock_haven_client(mock_haven_client_class: MagicMock) -> AsyncMock:
-    """Return a configured HAVEN client mock."""
-    client = mock_haven_client_class.return_value
-    client.get_info.return_value = DeviceInfo.from_dict(TEST_INFO)
-    client.get_sensors.return_value = SensorData.from_dict(TEST_SENSORS)
-    return client
+        client = mock_client_class.return_value
+        client.get_info.return_value = DeviceInfo.from_dict(TEST_INFO)
+        client.get_sensors.return_value = SensorData.from_dict(TEST_SENSORS)
+        yield client
 
 
 @pytest.fixture

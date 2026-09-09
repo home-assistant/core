@@ -54,9 +54,7 @@ class HavenConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovered HAVEN device."""
-        if (title_placeholders := self.context.get("title_placeholders")) is None:
-            return self.async_abort(reason="unknown")
-
+        title_placeholders = self.context["title_placeholders"]
         title = title_placeholders["name"]
 
         if user_input is not None:

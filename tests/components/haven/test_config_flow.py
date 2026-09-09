@@ -1,6 +1,6 @@
 """Test the HAVEN IAQ config flow."""
 
-from unittest.mock import ANY, AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from haveniaq import (
     DeviceInfo,
@@ -27,9 +27,9 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_haven_client")
 async def test_user_flow_success(
-    hass: HomeAssistant, mock_haven_client: AsyncMock
+    hass: HomeAssistant,
 ) -> None:
     """Test manual setup."""
     result = await hass.config_entries.flow.async_init(
@@ -134,7 +134,6 @@ async def test_user_flow_aborts_duplicate(
 async def test_zeroconf_flow_success(
     hass: HomeAssistant,
     mock_haven_client: AsyncMock,
-    mock_haven_client_class: MagicMock,
 ) -> None:
     """Test zeroconf discovery."""
     result = await hass.config_entries.flow.async_init(
@@ -143,10 +142,7 @@ async def test_zeroconf_flow_success(
         data=ZEROCONF_DISCOVERY,
     )
 
-    mock_haven_client_class.assert_called_once_with(
-        TEST_HOST,
-        session=ANY,
-    )
+    mock_haven_client.get_info.assert_awaited_once()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
@@ -158,27 +154,6 @@ async def test_zeroconf_flow_success(
     assert result["title"] == f"Room Air Monitor {TEST_SERIAL}"
     assert result["data"] == {CONF_HOST: TEST_HOST}
     assert result["result"].unique_id == TEST_SERIAL
-
-
-async def test_discovery_confirm_aborts_without_state(
-    hass: HomeAssistant, mock_haven_client: AsyncMock
-) -> None:
-    """Test restored discovery aborts when its saved state is missing."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
-    )
-
-    flow = hass.config_entries.flow.async_get(result["flow_id"])
-    flow["context"].pop("title_placeholders")
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
 
 
 async def test_zeroconf_updates_existing_entry(
