@@ -27,6 +27,16 @@ from .const import (
 from .coordinator import MikrotikConfigEntry, get_api
 from .errors import CannotConnect, LoginError
 
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_PORT, default=DEFAULT_API_PORT): int,
+        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+    }
+)
+
 
 class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Mikrotik config flow."""
@@ -65,14 +75,36 @@ class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_API_PORT): int,
-                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
-                }
+            data_schema=DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
+            try:
+                await self.hass.async_add_executor_job(get_api, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except LoginError:
+                errors[CONF_USERNAME] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, reconfigure_entry.data
             ),
             errors=errors,
         )
