@@ -99,10 +99,12 @@ async def test_number_workarea_commands(
     assert mock_automower_client.commands.workarea_settings.call_count == 2
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "mock_automower_client",
+)
 async def test_number_workarea_cutting_height_legacy_registry_entry_removed(
     hass: HomeAssistant,
-    mock_automower_client: AsyncMock,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -123,10 +125,12 @@ async def test_number_workarea_cutting_height_legacy_registry_entry_removed(
     assert entity_registry.async_get(registry_entry.entity_id) is None
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "mock_automower_client",
+)
 async def test_number_workarea_cutting_height_transition(
     hass: HomeAssistant,
-    mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     values: dict[str, MowerAttributes],
 ) -> None:
@@ -147,3 +151,22 @@ async def test_number_workarea_cutting_height_transition(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id) is not None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_number_snapshot(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot tests of the number entities."""
+    with patch(
+        "homeassistant.components.husqvarna_automower.PLATFORMS",
+        [Platform.NUMBER],
+    ):
+        await setup_integration(hass, mock_config_entry)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
