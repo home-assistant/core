@@ -39,7 +39,7 @@ def log_bound_addresses(controller: GoveeController) -> None:
     )
 
     for address, error in controller.bind_failures:
-        _LOGGER.warning("Not listening on %s: %s", address, error.strerror or error)
+        _LOGGER.debug("Not listening on %s: %s", address, error.strerror or error)
 
 
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
