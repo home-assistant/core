@@ -46,6 +46,7 @@ class TeslemetryVehicleData:
     device: DeviceInfo
     wakelock: asyncio.Lock = field(default_factory=asyncio.Lock)
     charge_on_solar_lower_limit: int = 20
+    charge_on_solar_enabled: bool = False
 
 
 @dataclass

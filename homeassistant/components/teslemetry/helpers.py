@@ -4,6 +4,7 @@ from collections.abc import Awaitable
 from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -77,6 +78,31 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
         )
     # Response with result of true
     return result
+
+
+async def async_set_charge_on_solar(
+    api: Vehicle,
+    *,
+    enabled: bool,
+    lower_charge_limit: int,
+    charge_limit_soc: int | None,
+) -> int:
+    """Send a charge-on-solar command, omitting the upper bound if it isn't known yet.
+
+    Returns the lower limit actually sent, clamped to the upper bound if it is known.
+    """
+    upper_charge_limit: int | None = None
+    if charge_limit_soc is not None:
+        upper_charge_limit = max(30, min(charge_limit_soc, 100))
+        lower_charge_limit = min(lower_charge_limit, upper_charge_limit)
+    await handle_vehicle_command(
+        api.charge_on_solar(
+            enabled=enabled,
+            lower_charge_limit=lower_charge_limit,
+            upper_charge_limit=upper_charge_limit,
+        )
+    )
+    return lower_charge_limit
 
 
 @callback

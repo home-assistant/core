@@ -39,7 +39,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import handle_command, handle_vehicle_command
+from .helpers import async_set_charge_on_solar, handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -363,6 +363,7 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
         """Initialize the charge-on-solar lower limit number entity."""
         self.scoped = Scope.VEHICLE_CMDS in scopes
         self._attr_native_max_value = 100
+        self._charge_limit_soc: int | None = None
         super().__init__(data, CHARGE_ON_SOLAR_LOWER_LIMIT_KEY)
 
     @override
@@ -408,6 +409,7 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
 
     def _async_handle_charge_limit_soc(self, value: int | None) -> None:
         """Cap the lower limit at the current upper (charge limit SOC) value."""
+        self._charge_limit_soc = value
         upper_limit = value if value is not None else 100
         self._attr_native_max_value = upper_limit
         if (
@@ -421,10 +423,21 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        # charge_on_solar requires enabled/upper_charge_limit sent together;
-        # only the switch issues that command, using this stored value.
         self.raise_for_scope(Scope.VEHICLE_CMDS)
         value = int(value)
-        self._attr_native_value = value
-        self.vehicle.charge_on_solar_lower_limit = value
+
+        if not self.vehicle.charge_on_solar_enabled:
+            self._attr_native_value = value
+            self.vehicle.charge_on_solar_lower_limit = value
+            self.async_write_ha_state()
+            return
+
+        sent_value = await async_set_charge_on_solar(
+            self.api,
+            enabled=True,
+            lower_charge_limit=value,
+            charge_limit_soc=self._charge_limit_soc,
+        )
+        self._attr_native_value = sent_value
+        self.vehicle.charge_on_solar_lower_limit = sent_value
         self.async_write_ha_state()

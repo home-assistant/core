@@ -30,7 +30,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import handle_command, handle_vehicle_command
+from .helpers import async_set_charge_on_solar, handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -451,6 +451,8 @@ class TeslemetryChargeOnSolarSwitchEntity(
                 self._attr_is_on = True
             elif state.state == "off":
                 self._attr_is_on = False
+            if self._attr_is_on is not None:
+                self.vehicle.charge_on_solar_enabled = self._attr_is_on
 
         if (extra_data := await self.async_get_last_extra_data()) is not None:
             restored = TeslemetryChargeOnSolarSwitchExtraStoredData.from_dict(
@@ -492,20 +494,14 @@ class TeslemetryChargeOnSolarSwitchEntity(
         else:
             charge_limit = self._charge_limit_soc
 
-        upper_charge_limit: int | None = None
-        lower_charge_limit = self.vehicle.charge_on_solar_lower_limit
-        if charge_limit is not None:
-            upper_charge_limit = max(30, min(charge_limit, 100))
-            lower_charge_limit = min(lower_charge_limit, upper_charge_limit)
-
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await handle_vehicle_command(
-            self.api.charge_on_solar(
-                enabled=enabled,
-                lower_charge_limit=lower_charge_limit,
-                upper_charge_limit=upper_charge_limit,
-            )
+        await async_set_charge_on_solar(
+            self.api,
+            enabled=enabled,
+            lower_charge_limit=self.vehicle.charge_on_solar_lower_limit,
+            charge_limit_soc=charge_limit,
         )
+        self.vehicle.charge_on_solar_enabled = enabled
         self._attr_is_on = enabled
         self.async_write_ha_state()
 

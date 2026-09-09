@@ -15,6 +15,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
 from homeassistant.components.teslemetry.const import (
     DOMAIN,
     LABS_CHARGE_ON_SOLAR_FEATURE,
@@ -277,23 +278,122 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit_polling(
     assert state.state == "10"
 
 
-async def test_charge_on_solar_lower_limit_set_value(
+async def test_charge_on_solar_lower_limit_set_value_while_disabled(
     hass: HomeAssistant,
 ) -> None:
-    """Test setting a new charge-on-solar lower limit value."""
+    """Test setting the lower limit while charge-on-solar is off updates state only."""
     await _async_enable_charge_on_solar_preview_feature(hass)
     await setup_platform(hass, [Platform.NUMBER])
 
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
-        blocking=True,
-    )
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
+            blocking=True,
+        )
+        command.assert_not_called()
 
     state = hass.states.get("number.test_charge_on_solar_lower_limit")
     assert state is not None
     assert state.state == "35"
+
+
+async def test_charge_on_solar_lower_limit_set_value_while_enabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test setting the lower limit while charge-on-solar is on sends the command."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc"
+    ) as listener:
+        listener.return_value = lambda: None
+        await setup_platform(hass, [Platform.SWITCH, Platform.NUMBER])
+
+        for call in listener.call_args_list:
+            call.args[0](91)
+        await hass.async_block_till_done()
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            blocking=True,
+        )
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=35,
+            upper_charge_limit=91,
+        )
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.state == "35"
+
+
+async def test_charge_on_solar_lower_limit_set_value_command_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Test a failed command leaves the previous value intact, not the optimistic one."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc"
+    ) as listener:
+        listener.return_value = lambda: None
+        await setup_platform(hass, [Platform.SWITCH, Platform.NUMBER])
+
+        for call in listener.call_args_list:
+            call.args[0](91)
+        await hass.async_block_till_done()
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            blocking=True,
+        )
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+            side_effect=InvalidCommand,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
+            blocking=True,
+        )
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.state == "20"
 
 
 async def test_disable_charge_on_solar_preview_removes_lower_limit(
