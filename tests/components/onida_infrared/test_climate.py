@@ -70,10 +70,9 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_integration", "mock_infrared_emitter_entity")
 async def test_availability_follows_emitter(
     hass: HomeAssistant,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
 ) -> None:
     """Test climate entity availability follows the infrared emitter."""
     await assert_availability_follows_source_entity(
@@ -105,6 +104,45 @@ async def test_set_hvac_mode_off(
         == OnidaAcCommand(
             power=False,
             mode=OnidaAcMode.COOL,
+            temperature=MIN_TEMP,
+            fan=OnidaAcFanSpeed.AUTO,
+        ).get_raw_timings()
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_hvac_mode_off_keeps_the_last_active_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test a power-off frame carries the mode that was last active.
+
+    The mode field is part of every frame and the entity's own mode is off by then, so
+    the last active mode has to be tracked separately; dry here is deliberately not the
+    first configured mode, which is what an untracked implementation would fall back to.
+    """
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == OnidaAcCommand(
+            power=False,
+            mode=OnidaAcMode.DRY,
             temperature=MIN_TEMP,
             fan=OnidaAcFanSpeed.AUTO,
         ).get_raw_timings()
@@ -452,6 +490,43 @@ async def test_receiver_updates_state_on_off_signal(
 
 @pytest.mark.parametrize("has_receiver", [True])
 @pytest.mark.usefixtures("init_integration")
+async def test_set_hvac_mode_off_keeps_the_mode_seen_by_the_receiver(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test a power-off frame carries the last mode the physical remote selected."""
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=OnidaAcCommand(
+                mode=OnidaAcMode.DRY, temperature=24, fan=OnidaAcFanSpeed.MEDIUM
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == OnidaAcCommand(
+            power=False,
+            mode=OnidaAcMode.DRY,
+            temperature=24,
+            fan=OnidaAcFanSpeed.MEDIUM,
+        ).get_raw_timings()
+    )
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_ignores_unconfigured_hvac_mode(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -524,10 +599,10 @@ async def test_supported_features_always_include_target_temperature(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_state_restored_on_restart(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     platforms: list[Platform],
     restored_state: str,
     restored_attributes: dict[str, Any],

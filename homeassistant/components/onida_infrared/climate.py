@@ -40,7 +40,7 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CONF_HVAC_MODES,
-    CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
 )
 from .entity import OnidaIrEntity
@@ -75,7 +75,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Onida AC climate entity from config entry."""
-    emitter_entity_id = entry.data[CONF_INFRARED_ENTITY_ID]
+    emitter_entity_id = entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
     if receiver_entity_id := entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID):
         async_add_entities(
             [OnidaAcClimateWithReceiver(entry, emitter_entity_id, receiver_entity_id)]
@@ -117,7 +117,7 @@ class OnidaAcClimateEntity(
         self._attr_fan_mode = FAN_AUTO
         # Power-off frames still need a mode field; this tracks the mode to send it
         # with, since the protocol has no dedicated OFF mode.
-        self._last_active_lib_mode = _HA_MODE_TO_LIB[self._attr_hvac_modes[1]]
+        self._last_active_hvac_mode = self._attr_hvac_modes[1]
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -134,7 +134,7 @@ class OnidaAcClimateEntity(
         if last_state.state in self._attr_hvac_modes:
             self._attr_hvac_mode = HVACMode(last_state.state)
             if self._attr_hvac_mode is not HVACMode.OFF:
-                self._last_active_lib_mode = _HA_MODE_TO_LIB[self._attr_hvac_mode]
+                self._last_active_hvac_mode = self._attr_hvac_mode
         if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
             self._attr_fan_mode = fan_mode
         if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
@@ -148,22 +148,25 @@ class OnidaAcClimateEntity(
                 )
             )
 
+    async def _async_send_state(
+        self, hvac_mode: HVACMode, temp: int, fan_mode: str
+    ) -> None:
+        """Send a full-state frame for the given target state."""
+        power = hvac_mode is not HVACMode.OFF
+        if power:
+            self._last_active_hvac_mode = hvac_mode
+        await self._send_command(
+            self._build_command(self._last_active_hvac_mode, power, temp, fan_mode)
+        )
+
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        temp = int(self._attr_target_temperature or MIN_TEMP)
-        fan_mode = self._attr_fan_mode or FAN_AUTO
-        if hvac_mode is HVACMode.OFF:
-            await self._send_command(
-                self._build_command(self._last_active_lib_mode, False, temp, fan_mode)
-            )
-        else:
-            lib_mode = _HA_MODE_TO_LIB[hvac_mode]
-            await self._send_command(
-                self._build_command(lib_mode, True, temp, fan_mode)
-            )
-            self._last_active_lib_mode = lib_mode
-
+        await self._async_send_state(
+            hvac_mode,
+            int(self._attr_target_temperature or MIN_TEMP),
+            self._attr_fan_mode or FAN_AUTO,
+        )
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
@@ -176,16 +179,10 @@ class OnidaAcClimateEntity(
             self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
 
         effective_mode = hvac_mode or self._attr_hvac_mode or HVACMode.OFF
-        fan_mode = self._attr_fan_mode or FAN_AUTO
-        if effective_mode is not HVACMode.OFF:
-            lib_mode = _HA_MODE_TO_LIB[effective_mode]
-            await self._send_command(
-                self._build_command(lib_mode, True, temp, fan_mode)
-            )
-            self._last_active_lib_mode = lib_mode
-        elif hvac_mode is HVACMode.OFF:
-            await self._send_command(
-                self._build_command(self._last_active_lib_mode, False, temp, fan_mode)
+        # A temperature change on its own has nothing to send while the unit is off.
+        if effective_mode is not HVACMode.OFF or hvac_mode is HVACMode.OFF:
+            await self._async_send_state(
+                effective_mode, temp, self._attr_fan_mode or FAN_AUTO
             )
 
         if hvac_mode is not None:
@@ -197,21 +194,21 @@ class OnidaAcClimateEntity(
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
-        if self._attr_hvac_mode is not HVACMode.OFF:
-            temp = int(self._attr_target_temperature or MIN_TEMP)
-            await self._send_command(
-                self._build_command(self._last_active_lib_mode, True, temp, fan_mode)
+        hvac_mode = self._attr_hvac_mode
+        if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
+            await self._async_send_state(
+                hvac_mode, int(self._attr_target_temperature or MIN_TEMP), fan_mode
             )
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
 
     def _build_command(
-        self, mode: OnidaAcMode, power: bool, temp: int, fan_mode: str
+        self, hvac_mode: HVACMode, power: bool, temp: int, fan_mode: str
     ) -> OnidaAcCommand:
         """Build a command from a mode, power state, a temperature and a fan mode."""
         return OnidaAcCommand(
             power=power,
-            mode=mode,
+            mode=_HA_MODE_TO_LIB[hvac_mode],
             temperature=temp,
             fan=_HA_FAN_TO_LIB[fan_mode],
             swing_v=False,
@@ -244,7 +241,7 @@ class OnidaAcClimateWithReceiver(OnidaAcClimateEntity, InfraredReceiverConsumerE
             hvac_mode = _LIB_MODE_TO_HA[command.mode]
             if hvac_mode not in self._attr_hvac_modes:
                 return
-            self._last_active_lib_mode = command.mode
+            self._last_active_hvac_mode = hvac_mode
         else:
             hvac_mode = HVACMode.OFF
 

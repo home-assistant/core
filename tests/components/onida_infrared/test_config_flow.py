@@ -5,7 +5,7 @@ import pytest
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.onida_infrared.const import (
     CONF_HVAC_MODES,
-    CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
 )
@@ -34,7 +34,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
+            CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
             CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
         },
     )
@@ -42,7 +42,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Onida AC via Test IR emitter"
     assert result["data"] == {
-        CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
+        CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
         CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
     }
     assert result["result"].unique_id is None
@@ -59,7 +59,7 @@ async def test_user_flow_with_heat_and_receiver(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
+            CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
             CONF_INFRARED_RECEIVER_ENTITY_ID: mock_infrared_receiver_entity_id,
             CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY],
         },
@@ -87,7 +87,7 @@ async def test_user_flow_requires_hvac_mode(hass: HomeAssistant) -> None:
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
+                CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
                 CONF_HVAC_MODES: [],
             },
         )
@@ -108,7 +108,7 @@ async def test_user_flow_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
+            CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
             CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
         },
     )
@@ -164,7 +164,7 @@ async def test_user_flow_title_from_entity_name(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
+            CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
             CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
         },
     )

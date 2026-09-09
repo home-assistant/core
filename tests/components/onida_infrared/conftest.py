@@ -9,7 +9,7 @@ from homeassistant.components.climate import HVACMode
 from homeassistant.components.onida_infrared import PLATFORMS
 from homeassistant.components.onida_infrared.const import (
     CONF_HVAC_MODES,
-    CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
 )
@@ -54,7 +54,7 @@ def mock_config_entry(
 ) -> MockConfigEntry:
     """Return a mock config entry for the Onida AC."""
     data: dict[str, Any] = {
-        CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+        CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
         **extra_entry_data,
     }
     if has_receiver:

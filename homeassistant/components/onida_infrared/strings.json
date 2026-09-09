@@ -11,12 +11,12 @@
       "user": {
         "data": {
           "hvac_modes": "Supported modes",
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_emitter_entity_id": "Infrared emitter",
           "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
         },
         "data_description": {
           "hvac_modes": "Select the operating modes your AC unit supports. Heat is not available on all models.",
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_emitter_entity_id": "The infrared emitter entity to use for sending commands.",
           "infrared_receiver_entity_id": "Optional — allows the integration to update state when the physical remote is used."
         },
         "description": "Select an infrared emitter and the modes your Onida AC supports.",

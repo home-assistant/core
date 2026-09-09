@@ -23,7 +23,7 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_HVAC_MODES,
-    CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
 )
@@ -43,7 +43,7 @@ def _user_schema(hass: HomeAssistant) -> vol.Schema:
     """Return the emitter/receiver/mode selection schema."""
     return vol.Schema(
         {
-            vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
+            vol.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
                 EntitySelectorConfig(
                     domain=INFRARED_DOMAIN,
                     include_entities=async_get_emitters(hass),
@@ -89,8 +89,10 @@ class OnidaIrConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_infrared_entities")
 
         if user_input is not None:
-            emitter_id = user_input[CONF_INFRARED_ENTITY_ID]
-            self._async_abort_entries_match({CONF_INFRARED_ENTITY_ID: emitter_id})
+            emitter_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
+            self._async_abort_entries_match(
+                {CONF_INFRARED_EMITTER_ENTITY_ID: emitter_id}
+            )
             if receiver_id := user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID):
                 self._async_abort_entries_match(
                     {CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id}
