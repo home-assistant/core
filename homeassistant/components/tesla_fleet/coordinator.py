@@ -1,6 +1,6 @@
 """Tesla Fleet Data Coordinator."""
 
-from asyncio import Task
+from asyncio import Task, shield
 from datetime import datetime, timedelta
 from time import time
 from typing import TYPE_CHECKING, Any, override
@@ -46,6 +46,7 @@ from .const import (
     TeslaFleetState,
     build_statistic_id,
 )
+from .storage import EnergyHistoryStore
 
 VEHICLE_INTERVAL_SECONDS = 600
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
@@ -391,6 +392,9 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self.updated_once = False
         self._statistics_task: Task[None] | None = None
         self._statistics_failed = False
+        self._history_store = EnergyHistoryStore(
+            hass, config_entry.entry_id, api.energy_site_id
+        )
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
@@ -517,6 +521,10 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             (stat["start"] for stat in last_stats.values()),
             default=dt_util.as_utc(today),
         )
+        if last_stats and (
+            checkpoint := await self._history_store.async_get_start(last_stats)
+        ):
+            start = max(start, checkpoint)
         day = start.astimezone(site_time_zone).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
@@ -538,7 +546,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 )
             else:
                 history, window_end = data, None
-            self._add_statistics(
+            last_hour = self._add_statistics(
                 [*previous_day, *history["time_series"]],
                 last_stats,
                 window_start,
@@ -546,6 +554,20 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 first_run_start,
             )
             await recorder.async_block_till_done()
+            if last_stats:
+                # Finish the write before unload can remove the checkpoint.
+                await shield(
+                    self.config_entry.async_create_task(
+                        self.hass,
+                        self._history_store.async_set_start(
+                            window_end - timedelta(hours=1)
+                            if window_end
+                            else last_hour,
+                            last_stats,
+                        ),
+                        f"{self.name} checkpoint",
+                    )
+                )
             previous_day = history["time_series"]
             window_start = dt_util.as_utc(day)
             day = next_day
@@ -558,7 +580,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         window_start: datetime,
         window_end: datetime | None,
         first_run_start: datetime,
-    ) -> None:
+    ) -> datetime:
         """Write complete windows and carry their totals into the next day."""
         hourly_periods = _aggregate_energy_history_by_hour(time_series)
         for key in ENERGY_HISTORY_FIELDS:
@@ -598,6 +620,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 )
                 async_add_external_statistics(self.hass, metadata, statistics)
                 last_stats[statistic_id] = statistics[-1]
+        return hourly_periods[-1][0]
 
 
 class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):

@@ -27,6 +27,10 @@ from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     TeslaFleetEnergySiteHistoryCoordinator,
 )
+from homeassistant.components.tesla_fleet.storage import (
+    EnergyHistoryCheckpoint,
+    EnergyHistoryStore,
+)
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -45,6 +49,8 @@ GRID = "grid_energy_imported"
 SOLAR = "solar_energy_exported"
 GRID_STATISTIC_ID = f"tesla_fleet:{SITE_ID}_{GRID}"
 SOLAR_STATISTIC_ID = f"tesla_fleet:{SITE_ID}_{SOLAR}"
+DISCHARGE = "total_battery_discharge"
+DISCHARGE_STATISTIC_ID = f"tesla_fleet:{SITE_ID}_{DISCHARGE}"
 BEFORE = "2023-06-01T23:45:00-07:00"
 LAST = "2023-06-01T23:55:00-07:00"
 AFTER = "2023-06-02T00:05:00-07:00"
@@ -404,21 +410,32 @@ async def test_multi_day_recovery(
     assert state.state == "0.08"
 
 
+@pytest.mark.parametrize(
+    "first_values", [{GRID: 20}, {}], ids=["new-hour", "same-hour"]
+)
 async def test_repeated_import_with_delayed_recorder(
     coordinator: TeslaFleetEnergySiteHistoryCoordinator,
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_energy_site: AsyncMock,
     history_responses: dict[str | None, dict[str, Any]],
+    first_values: dict[str, float],
 ) -> None:
-    """Keep sums correct when a second import sees the previous recorder baseline."""
+    """Reject persisted progress when its recorder writes are still missing."""
     history_responses[None] = _history((BEFORE, {GRID: 100}))
     await _refresh(hass, coordinator)
-    history_responses[None] = _history((AFTER, {GRID: 20}))
+    history_responses[None] = _history((AFTER, first_values))
     history_responses[END_DATE] = _history((BEFORE, {GRID: 100}), (LAST, {GRID: 50}))
     with patch.object(recorder_mock, "queue_task") as queue:
-        for _ in range(2):
-            await coordinator._async_update_data()
-            await hass.async_block_till_done(wait_background_tasks=True)
+        await coordinator._async_update_data()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        history_responses[None] = _history((AFTER, {GRID: 20}))
+        coordinator = TeslaFleetEnergySiteHistoryCoordinator(
+            hass, mock_config_entry, mock_energy_site, SITE_NAME
+        )
+        await coordinator._async_update_data()
+        await hass.async_block_till_done(wait_background_tasks=True)
     for queued in queue.call_args_list:
         recorder_mock.queue_task(queued.args[0])
     await async_wait_recording_done(hass)
@@ -427,6 +444,85 @@ async def test_repeated_import_with_delayed_recorder(
         ("2023-06-02T06:00:00+00:00", 150, 150),
         ("2023-06-02T07:00:00+00:00", 20, 170),
     ]
+
+
+@pytest.mark.parametrize(
+    ("past_values", "current_values", "expected"),
+    [
+        pytest.param(
+            {},
+            {},
+            [("2023-06-02T06:00:00+00:00", 10, 10)],
+            id="stays-absent",
+        ),
+        pytest.param(
+            {DISCHARGE: 15},
+            {DISCHARGE: 5},
+            [
+                ("2023-06-02T06:00:00+00:00", 10, 10),
+                ("2023-06-03T06:00:00+00:00", 15, 25),
+                ("2023-06-03T07:00:00+00:00", 5, 30),
+            ],
+            id="returns",
+        ),
+    ],
+)
+async def test_source_progress_survives_absent_fields_and_restart(
+    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_energy_site: AsyncMock,
+    history_responses: dict[str | None, dict[str, Any]],
+    past_values: dict[str, float],
+    current_values: dict[str, float],
+    expected: list[tuple[str, float, float]],
+) -> None:
+    """An inactive field cannot make already imported days a permanent dependency."""
+    old = _history((BEFORE, {GRID: 100, DISCHARGE: 10}))
+    history_responses[None] = old
+    await _refresh(hass, coordinator)
+    history_responses[END_DATE] = old
+    history_responses[None] = _history((AFTER, {GRID: 20}))
+    await _refresh(hass, coordinator)
+
+    coordinator = TeslaFleetEnergySiteHistoryCoordinator(
+        hass, mock_config_entry, mock_energy_site, SITE_NAME
+    )
+    history_responses[END_DATE] = _history()
+    history_responses[None] = _history(
+        (AFTER, {GRID: 20}),
+        ("2023-06-02T01:05:00-07:00", {GRID: 30}),
+    )
+    mock_energy_site.energy_history.reset_mock()
+    assert (await _refresh(hass, coordinator))[GRID] == 50
+    mock_energy_site.energy_history.assert_called_once_with(TeslaEnergyPeriod.DAY)
+    stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID, DISCHARGE_STATISTIC_ID})
+    assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
+        ("2023-06-02T06:00:00+00:00", 100, 100),
+        ("2023-06-02T07:00:00+00:00", 20, 120),
+        ("2023-06-02T08:00:00+00:00", 30, 150),
+    ]
+    assert _hourly_rows(stats[DISCHARGE_STATISTIC_ID]) == [
+        ("2023-06-02T06:00:00+00:00", 10, 10)
+    ]
+
+    history_responses["2023-06-02T23:59:59-07:00"] = _history(
+        (AFTER, {GRID: 20}),
+        ("2023-06-02T01:05:00-07:00", {GRID: 30}),
+        ("2023-06-02T23:55:00-07:00", {GRID: 10, **past_values}),
+    )
+    history_responses[None] = _history(
+        ("2023-06-03T00:05:00-07:00", {GRID: 40, **current_values})
+    )
+    mock_energy_site.energy_history.reset_mock()
+    await _refresh(hass, coordinator)
+    assert mock_energy_site.energy_history.call_args_list == [
+        call(TeslaEnergyPeriod.DAY),
+        call(TeslaEnergyPeriod.DAY, end_date="2023-06-02T23:59:59-07:00"),
+    ]
+    stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID, DISCHARGE_STATISTIC_ID})
+    assert stats[GRID_STATISTIC_ID][-1]["sum"] == 200
+    assert _hourly_rows(stats[DISCHARGE_STATISTIC_ID]) == expected
 
 
 async def test_independent_baselines_and_new_fields(
@@ -536,7 +632,7 @@ async def test_resume_valid_prefix_after_failure(
     mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
 ) -> None:
-    """A restart resumes committed days without skipping a later failed request."""
+    """Resume recorder's committed prefix when no source checkpoint is available."""
     day_one = _history(("2023-06-01T23:55:00Z", {GRID: 10}), time_zone="UTC")
     current = _history(("2023-06-04T00:05:00Z", {GRID: 40}), time_zone="UTC")
     mock_energy_site.energy_history.side_effect = [
@@ -552,6 +648,7 @@ async def test_resume_valid_prefix_after_failure(
         ("2023-06-01T23:00:00+00:00", 10, 10)
     ]
 
+    await EnergyHistoryStore(hass, mock_config_entry.entry_id, SITE_ID).async_remove()
     coordinator = TeslaFleetEnergySiteHistoryCoordinator(
         hass, mock_config_entry, mock_energy_site, SITE_NAME
     )
@@ -647,3 +744,41 @@ async def test_one_import_job_and_unload(
     await wait_for(cancelled.wait(), 5)
     await async_wait_recording_done(hass)
     assert await _get_hourly_stats(hass, {GRID_STATISTIC_ID}) == previous
+
+
+async def test_removal_waits_for_checkpoint_write(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+) -> None:
+    """A checkpoint write must finish before entry removal deletes its file."""
+    started, release, finished = Event(), Event(), Event()
+    original_save = EnergyHistoryStore.async_save
+
+    async def slow_save(
+        store: EnergyHistoryStore, data: EnergyHistoryCheckpoint
+    ) -> None:
+        started.set()
+        await release.wait()
+        await original_save(store, data)
+        finished.set()
+
+    def release_during_unload() -> None:
+        hass.loop.call_soon(release.set)
+
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+    with patch.object(
+        EnergyHistoryStore, "async_save", autospec=True, side_effect=slow_save
+    ):
+        freezer.tick(ENERGY_HISTORY_INTERVAL)
+        async_fire_time_changed(hass)
+        await wait_for(started.wait(), 5)
+        # Allow the write to finish only after unload requests task cancellation.
+        normal_config_entry.async_on_unload(release_during_unload)
+        await hass.config_entries.async_remove(normal_config_entry.entry_id)
+
+    assert finished.is_set()
+    store = EnergyHistoryStore(hass, normal_config_entry.entry_id, SITE_ID)
+    assert store.key not in hass_storage

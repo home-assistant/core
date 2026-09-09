@@ -16,6 +16,7 @@ from tesla_fleet_api.exceptions import (
 from tesla_fleet_api.tesla import VehicleFleet
 
 from homeassistant.components.recorder import get_instance as get_recorder_instance
+from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -42,6 +43,7 @@ from .coordinator import (
     _stale_site_info_error,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
+from .storage import EnergyHistoryStore
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -281,12 +283,21 @@ async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) 
     # Only energy sites have all-numeric identifiers (the energy_site_id).
     # Do not match on serial_number: a wall connector's serial is derived
     # from its DIN and can also be all-numeric.
-    statistic_ids = [
-        build_statistic_id(site_id, key)
+    site_ids = {
+        site_id
         for device in devices
         for domain, site_id in device.identifiers
         if domain == DOMAIN and site_id.isdigit()
-        if len(device_registry.async_get_devices(identifiers={(domain, site_id)})) == 1
+    }
+    for site_id in site_ids:
+        await EnergyHistoryStore(hass, entry.entry_id, site_id).async_remove()
+    if RECORDER_DOMAIN not in hass.config.components:
+        LOGGER.debug("Skipping statistics cleanup because recorder is not loaded")
+        return
+    statistic_ids = [
+        build_statistic_id(site_id, key)
+        for site_id in site_ids
+        if len(device_registry.async_get_devices(identifiers={(DOMAIN, site_id)})) == 1
         for key in ENERGY_HISTORY_FIELDS
     ]
 

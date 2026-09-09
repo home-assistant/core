@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -36,6 +37,7 @@ from homeassistant.components.tesla_fleet.coordinator import (
     _invalidate_access_token,
 )
 from homeassistant.components.tesla_fleet.models import TeslaFleetData
+from homeassistant.components.tesla_fleet.storage import EnergyHistoryStore
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -108,6 +110,7 @@ async def test_remove_entry_preserves_statistics_for_shared_site(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test removing one entry preserves statistics owned by another entry."""
     await setup_platform(hass, normal_config_entry)
@@ -127,17 +130,26 @@ async def test_remove_entry_preserves_statistics_for_shared_site(
         identifiers=site_device.identifiers,
     )
     assert site_device.id != shared_site_device.id
+    store = EnergyHistoryStore(hass, normal_config_entry.entry_id, ENERGY_SITE_ID)
+    shared_store = EnergyHistoryStore(
+        hass, shared_config_entry.entry_id, ENERGY_SITE_ID
+    )
+    for history_store in (store, shared_store):
+        await history_store.async_save({"start": 0, "statistics": {}})
 
     with patch(
         "homeassistant.components.tesla_fleet.get_recorder_instance"
     ) as mock_get_recorder:
         await hass.config_entries.async_remove(normal_config_entry.entry_id)
         mock_get_recorder.assert_not_called()
+        assert store.key not in hass_storage
+        assert shared_store.key in hass_storage
 
         await hass.config_entries.async_remove(shared_config_entry.entry_id)
         mock_get_recorder.return_value.async_clear_statistics.assert_called_once_with(
             [f"{DOMAIN}:{ENERGY_SITE_ID}_{key}" for key in ENERGY_HISTORY_FIELDS]
         )
+        assert shared_store.key not in hass_storage
 
 
 @pytest.mark.parametrize(("side_effect", "state"), SETUP_ERRORS)
