@@ -84,7 +84,8 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         # A completed setup is keyed by the account UUID, not the UDN, so also
         # abort when a configured entry already tracks this Thermomix.
         if any(
-            entry.data.get(CONF_UDN) == udn for entry in self._async_current_entries()
+            udn in entry.data.get(CONF_UDN, [])
+            for entry in self._async_current_entries()
         ):
             return self.async_abort(reason="already_configured")
 
@@ -107,15 +108,28 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self.user_uuid)
             if self.source in (SOURCE_USER, SOURCE_SSDP):
                 # When a discovered Thermomix turns out to belong to an already
-                # configured account, record its UDN on that entry so future
-                # SSDP announcements are deduplicated instead of re-prompting.
-                self._abort_if_unique_id_configured(
-                    updates=(
-                        {CONF_UDN: self._discovered_udn}
-                        if self._discovered_udn is not None
-                        else None
+                # configured account, append its UDN to that entry's collection
+                # (an account can pair multiple Thermomixes) so future SSDP
+                # announcements are deduplicated instead of re-prompting.
+                updates: dict[str, Any] | None = None
+                if self._discovered_udn is not None:
+                    existing_entry = next(
+                        (
+                            entry
+                            for entry in self._async_current_entries()
+                            if entry.unique_id == self.user_uuid
+                        ),
+                        None,
                     )
-                )
+                    known_udns = (
+                        list(existing_entry.data.get(CONF_UDN, []))
+                        if existing_entry
+                        else []
+                    )
+                    if self._discovered_udn not in known_udns:
+                        known_udns.append(self._discovered_udn)
+                    updates = {CONF_UDN: known_udns}
+                self._abort_if_unique_id_configured(updates=updates)
             if self.source == SOURCE_RECONFIGURE:
                 self._abort_if_unique_id_mismatch()
             self.user_input = user_input
@@ -154,7 +168,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             if self.source in (SOURCE_USER, SOURCE_SSDP):
                 data = {**self.user_input, **language_input}
                 if self._discovered_udn is not None:
-                    data[CONF_UDN] = self._discovered_udn
+                    data[CONF_UDN] = [self._discovered_udn]
                 return self.async_create_entry(title="Cookidoo", data=data)
             reconfigure_entry = self._get_reconfigure_entry()
             return self.async_update_reload_and_abort(

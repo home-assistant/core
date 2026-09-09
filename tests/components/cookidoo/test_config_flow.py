@@ -50,6 +50,20 @@ TEST_SSDP_SERVICE_INFO = SsdpServiceInfo(
     },
 )
 
+TEST_SSDP_UDN_2 = "uuid:112233445566"
+
+TEST_SSDP_SERVICE_INFO_2 = SsdpServiceInfo(
+    ssdp_usn=f"{TEST_SSDP_UDN_2}::urn:device:vorwerk:nwotdevice:1",
+    ssdp_st="urn:device:vorwerk:nwotdevice:1",
+    ssdp_udn=TEST_SSDP_UDN_2,
+    ssdp_location="http://192.0.2.8:49152/description.xml",
+    upnp={
+        ATTR_UPNP_DEVICE_TYPE: "urn:device:vorwerk:nwotdevice:1",
+        ATTR_UPNP_SERIAL: "25145556024103938",
+        ATTR_UPNP_UDN: TEST_SSDP_UDN_2,
+    },
+)
+
 
 async def test_flow_user_success(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cookidoo_client: AsyncMock
@@ -531,7 +545,7 @@ async def test_flow_ssdp_discovery(
     assert result["data"] == {
         **MOCK_DATA_USER_STEP,
         **MOCK_DATA_LANGUAGE_STEP,
-        CONF_UDN: TEST_SSDP_UDN,
+        CONF_UDN: [TEST_SSDP_UDN],
     }
     assert result["result"].unique_id == "sub_uuid"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -550,7 +564,7 @@ async def test_flow_ssdp_discovery_device_already_configured(
     cookidoo_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         cookidoo_config_entry,
-        data={**cookidoo_config_entry.data, CONF_UDN: TEST_SSDP_UDN},
+        data={**cookidoo_config_entry.data, CONF_UDN: [TEST_SSDP_UDN]},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -589,4 +603,52 @@ async def test_flow_ssdp_discovery_account_already_configured(
     assert result["reason"] == "already_configured"
     # The discovered UDN is recorded on the existing account entry so later
     # announcements are deduplicated in the SSDP step.
-    assert cookidoo_config_entry.data[CONF_UDN] == TEST_SSDP_UDN
+    assert cookidoo_config_entry.data[CONF_UDN] == [TEST_SSDP_UDN]
+
+
+async def test_flow_ssdp_discovery_second_device_same_account(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+) -> None:
+    """Test a second Thermomix on an already-configured account is tracked.
+
+    The account entry stores a collection of device UDNs, so discovering
+    another device appends its UDN instead of overwriting; both devices are
+    then deduplicated on later announcements.
+    """
+    cookidoo_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        cookidoo_config_entry,
+        data={**cookidoo_config_entry.data, CONF_UDN: [TEST_SSDP_UDN_2]},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=TEST_SSDP_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_USER_STEP,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # Both devices are tracked on the single account entry.
+    assert set(cookidoo_config_entry.data[CONF_UDN]) == {
+        TEST_SSDP_UDN,
+        TEST_SSDP_UDN_2,
+    }
+
+    # A later announcement from the pre-existing device is deduplicated in the
+    # SSDP step.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=TEST_SSDP_SERVICE_INFO_2,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
