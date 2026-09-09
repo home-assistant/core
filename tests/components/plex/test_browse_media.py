@@ -121,6 +121,7 @@ async def test_browse_media(
     requests_mock: requests_mock.Mocker,
     hubs,
     hubs_music_library,
+    media_1,
 ) -> None:
     """Test getting Plex clients from plex.tv."""
     websocket_client = await hass_ws_client(hass)
@@ -159,6 +160,10 @@ async def test_browse_media(
     requests_mock.get(
         f"{mock_plex_server.url_in_use}/hubs",
         text=hubs,
+    )
+    requests_mock.get(
+        f"{mock_plex_server.url_in_use}/hubs/home/continueWatching?includeGuids=1",
+        text=media_1,
     )
 
     # Browse into a special folder (server)
