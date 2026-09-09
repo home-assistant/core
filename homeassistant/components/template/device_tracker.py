@@ -10,7 +10,10 @@ from homeassistant.components import zone
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ENTITY_ID_FORMAT,
+    DeviceTrackerEntityCapabilityAttribute,
+    DeviceTrackerEntityStateAttribute,
     TrackerEntity,
+    TrackerEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
@@ -23,7 +26,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -32,7 +35,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -69,11 +72,11 @@ def validate_in_zones(
     """
 
     def convert(result: Any) -> list[str] | None:
-        if template_validators.check_result_for_none(result):
+        if tcv.check_result_for_none(result):
             return None
 
         if not isinstance(result, list):
-            template_validators.log_validation_result_error(
+            tcv.log_validation_result_error(
                 entity,
                 CONF_IN_ZONES,
                 result,
@@ -92,7 +95,7 @@ def validate_in_zones(
                 failed.append(v)
 
         if failed:
-            template_validators.log_validation_result_error(
+            tcv.log_validation_result_error(
                 entity,
                 CONF_IN_ZONES,
                 failed,
@@ -113,12 +116,21 @@ TRACKER_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(
+        DeviceTrackerEntityCapabilityAttribute,
+        DeviceTrackerEntityStateAttribute,
+        TrackerEntityStateAttribute,
+    )
+)
 
 TRACKER_YAML_SCHEMA = vol.All(
     _validate_in_zones_or_lat_and_lon,
     TRACKER_COMMON_SCHEMA.extend(
-        make_template_entity_common_modern_schema(
-            DEVICE_TRACKER_DOMAIN, DEFAULT_NAME
+        make_template_entity_common_schema(
+            DEVICE_TRACKER_DOMAIN,
+            DEFAULT_NAME,
+            _BLOCKED_ATTRIBUTES,
         ).schema
     ),
 )
@@ -191,14 +203,17 @@ class TrackerExtraStoredData(ExtraStoredData):
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> Self:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored tracker state from a dict."""
-        return cls(
-            in_zones=restored["in_zones"],
-            latitude=restored["latitude"],
-            longitude=restored["longitude"],
-            location_accuracy=restored["location_accuracy"],
-        )
+        try:
+            return cls(
+                in_zones=restored["in_zones"],
+                latitude=restored["latitude"],
+                longitude=restored["longitude"],
+                location_accuracy=restored["location_accuracy"],
+            )
+        except KeyError:
+            return None
 
 
 class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity, RestoreEntity):
@@ -207,6 +222,7 @@ class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity, RestoreEnti
     _entity_id_format = ENTITY_ID_FORMAT
     _restore_state_extra_data = TrackerExtraStoredData
     _restore_state_properties = ("_attr_in_zones",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -224,12 +240,12 @@ class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity, RestoreEnti
         self.setup_template(
             CONF_LATITUDE,
             "_attr_latitude",
-            template_validators.number(self, CONF_LATITUDE, -90.0, 90.0),
+            tcv.number(self, CONF_LATITUDE, -90.0, 90.0),
         )
         self.setup_template(
             CONF_LONGITUDE,
             "_attr_longitude",
-            template_validators.number(self, CONF_LONGITUDE, -180.0, 180.0),
+            tcv.number(self, CONF_LONGITUDE, -180.0, 180.0),
         )
         self.setup_template(
             CONF_LOCATION_ACCURACY,
@@ -238,7 +254,7 @@ class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity, RestoreEnti
             none_on_template_error=False,
         )
 
-        self._location_accuracy_validator = template_validators.number(
+        self._location_accuracy_validator = tcv.number(
             self, CONF_LOCATION_ACCURACY, 0.0
         )
 

@@ -1,5 +1,6 @@
 """Base entity for Telegram bot integration."""
 
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from . import TelegramBotConfigEntry, bot_device_info
@@ -9,6 +10,7 @@ class TelegramBotEntity(Entity):
     """Base entity."""
 
     _attr_has_entity_name = True
+    _attr_device_info: DeviceInfo | None = None
 
     def __init__(
         self,

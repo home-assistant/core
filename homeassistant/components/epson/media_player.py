@@ -106,7 +106,9 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             if old_entity_id is not None:
                 ent_reg.async_update_entity(old_entity_id, new_unique_id=uid)
             dev_reg = dr.async_get(self.hass)
-            device = dev_reg.async_get_device({(DOMAIN, self._entry.entry_id)})
+            device = dev_reg.async_get_device_by_identifier(
+                (DOMAIN, self._entry.entry_id), self._entry.entry_id
+            )
             if device is not None:
                 dev_reg.async_update_device(device.id, new_identifiers={(DOMAIN, uid)})
             self.hass.async_create_task(

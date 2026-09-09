@@ -1,6 +1,6 @@
 {
   "domain": "media_extractor",
-  "name": "Media Extractor",
+  "name": "Media extractor",
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "dependencies": ["media_player"],
@@ -8,6 +8,6 @@
   "iot_class": "calculated",
   "loggers": ["yt_dlp"],
   "quality_scale": "internal",
-  "requirements": ["yt-dlp[default]==2026.03.17"],
+  "requirements": ["yt-dlp[default]==2026.07.04"],
   "single_config_entry": true
 }

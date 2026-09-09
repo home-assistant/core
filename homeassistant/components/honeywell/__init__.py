@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import _LOGGER, CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE
+from .const import CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE, LOGGER
 
 UPDATE_LOOP_SLEEP_TIME = 5
 PLATFORMS = [Platform.CLIMATE, Platform.HUMIDIFIER, Platform.SENSOR, Platform.SWITCH]
@@ -78,7 +78,7 @@ async def async_setup_entry(
             devices[device.deviceid] = device
 
     if len(devices) == 0:
-        _LOGGER.debug("No devices found")
+        LOGGER.debug("No devices found")
         return False
     config_entry.runtime_data = HoneywellData(config_entry.entry_id, client, devices)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

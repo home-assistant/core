@@ -1,10 +1,10 @@
 """Config flow for the sma integration."""
 
 from collections.abc import Mapping
+import dataclasses
 import logging
 from typing import Any, override
 
-import attrs
 from pysma import (
     SmaAuthenticationException,
     SmaConnectionException,
@@ -96,7 +96,7 @@ async def validate_input(
     device_info = await sma.device_info()
     await sma.close_session()
 
-    return attrs.asdict(device_info)
+    return dataclasses.asdict(device_info)
 
 
 class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -205,6 +205,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(

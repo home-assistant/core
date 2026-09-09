@@ -58,7 +58,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "isy994"
 

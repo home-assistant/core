@@ -53,6 +53,12 @@ SENSORS_TYPE_COUNT = "sensors_count"
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def get_device_identifier(entry: ConfigEntry) -> tuple[str, str]:
+    """Return the device registry identifier of the router."""
+    return (DOMAIN, entry.unique_id or "AsusWRT")
+
+
 _ENTITY_MIGRATION_ID = {
     "sensor_connected_device": "Devices Connected",
     "sensor_rx_bytes": "Download",
@@ -389,7 +395,7 @@ class AsusWrtRouter:
         """Return the device information."""
         info = DeviceInfo(
             configuration_url=self._api.configuration_url,
-            identifiers={(DOMAIN, self._entry.unique_id or "AsusWRT")},
+            identifiers={get_device_identifier(self._entry)},
             name=self.host,
             model=self._api.model or "Asus Router",
             model_id=self._api.model_id,

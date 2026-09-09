@@ -485,14 +485,14 @@ class MockMusicServiceItem:
         item_id: str,
         parent_id: str,
         item_class: str,
-        album_art_uri: None | str = None,
+        album_art_uri: str | None = None,
     ) -> None:
         """Initialize the mock item."""
         self.title = title
         self.item_id = item_id
         self.item_class = item_class
         self.parent_id = parent_id
-        self.album_art_uri: None | str = album_art_uri
+        self.album_art_uri: str | None = album_art_uri
 
     def get_uri(self) -> str:
         """Return URI."""

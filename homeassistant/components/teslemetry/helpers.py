@@ -7,7 +7,7 @@ from tesla_fleet_api.exceptions import TeslaFleetError
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN, LOGGER
 
@@ -80,11 +80,32 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
 
 
 @callback
+def async_remove_stale_vehicle_entities(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    domain: str,
+    vins: set[str],
+    valid_unique_ids: set[str],
+) -> None:
+    """Remove registry entries for vehicle entities that are no longer created."""
+    entity_registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(entity_registry, config_entry_id):
+        if (
+            entity.domain == domain
+            and entity.unique_id not in valid_unique_ids
+            and any(entity.unique_id.startswith(f"{vin}-") for vin in vins)
+        ):
+            entity_registry.async_remove(entity.entity_id)
+
+
+@callback
 def async_update_device_sw_version(
-    hass: HomeAssistant, identifier: str, sw_version: str
+    hass: HomeAssistant, identifier: str, config_entry_id: str, sw_version: str
 ) -> None:
     """Update the software version in the device registry."""
     dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get_device(identifiers={(DOMAIN, identifier)}):
+    if device := dev_reg.async_get_device_by_identifier(
+        (DOMAIN, identifier), config_entry_id
+    ):
         if device.sw_version != sw_version:
             dev_reg.async_update_device(device.id, sw_version=sw_version)

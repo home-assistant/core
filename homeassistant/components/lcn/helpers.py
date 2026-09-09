@@ -159,7 +159,9 @@ def purge_device_registry(
 
     # Find device that references the host.
     references_host = set()
-    host_device = device_registry.async_get_device(identifiers={(DOMAIN, entry_id)})
+    host_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry_id), entry_id
+    )
     if host_device is not None:
         references_host.add(host_device.id)
 
@@ -167,8 +169,8 @@ def purge_device_registry(
     references_entry_data = set()
     for device_data in imported_entry_data[CONF_DEVICES]:
         device_unique_id = generate_unique_id(entry_id, device_data[CONF_ADDRESS])
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_unique_id)}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_unique_id), entry_id
         )
         if device is not None:
             references_entry_data.add(device.id)
@@ -209,7 +211,9 @@ def register_lcn_address_devices(
     """
     device_registry = dr.async_get(hass)
 
-    host_identifiers = (DOMAIN, config_entry.entry_id)
+    host_device_id = dr.async_get_device_id_by_identifier(
+        hass, (DOMAIN, config_entry.entry_id), config_entry_id=config_entry.entry_id
+    )
 
     for device_config in config_entry.data[CONF_DEVICES]:
         address = device_config[CONF_ADDRESS]
@@ -231,7 +235,7 @@ def register_lcn_address_devices(
         device_entry = device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers=identifiers,
-            via_device=host_identifiers,
+            via_device_id=host_device_id,
             manufacturer="Issendorff",
             sw_version=sw_version,
             name=device_name,

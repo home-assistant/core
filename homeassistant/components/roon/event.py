@@ -5,6 +5,7 @@ from typing import cast, override
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -70,7 +71,11 @@ class RoonEventEntity(EventEntity):
             name=cast(str | None, self.name),
             manufacturer="RoonLabs",
             model=dev_model,
-            via_device=(DOMAIN, self._entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self._server.hass,
+                (DOMAIN, self._entry_id),
+                config_entry_id=self._entry_id,
+            ),
         )
 
     def _roonapi_volume_callback(

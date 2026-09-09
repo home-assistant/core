@@ -36,7 +36,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import (
     async_create_platform_config_not_supported_issue,
 )
@@ -226,6 +230,21 @@ async def async_setup_integration(
                 SERVICE_SEE,
             )
             warned_called_see = True
+        # Recreate the issue on every call so it reappears if the user
+        # confirmed (deleted) it while still using the deprecated action.
+        docs_url = "https://www.home-assistant.io/integrations/template/#device-tracker"
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_see_action",
+            breaks_in_ha_version="2027.5.0",
+            is_fixable=True,
+            is_persistent=True,
+            learn_more_url=docs_url,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_see_action",
+            translation_placeholders={"docs_url": docs_url},
+        )
         # Temp workaround for iOS, introduced in 0.65
         data = dict(call.data)
         data.pop("hostname", None)

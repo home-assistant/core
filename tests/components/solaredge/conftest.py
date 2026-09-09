@@ -1,12 +1,15 @@
 """Common fixtures for the SolarEdge tests."""
 
 from collections.abc import Generator
+from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from solaredge_web import EnergyData
 
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -102,7 +105,13 @@ def mock_solaredge_web_api_fixture() -> Generator[AsyncMock]:
         api = mock_web_api_flow.return_value
         mock_web_api_coord.return_value = api
         api.async_get_equipment.return_value = {
-            1001: {"displayName": "1.1"},
-            1002: {"displayName": "1.2"},
+            "7A012345-CA": {"name": "Optimizer 1.1"},
+            "7A012346-CA": {"name": "Optimizer 1.2"},
         }
+        api.async_get_energy_data.return_value = [
+            EnergyData(
+                start_time=dt_util.as_utc(datetime(2025, 1, 1, 10, 0)),
+                values={"7A012345-CA": 10.0, "7A012346-CA": 20.0},
+            ),
+        ]
         yield api

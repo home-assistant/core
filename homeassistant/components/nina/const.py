@@ -4,7 +4,7 @@ from datetime import timedelta
 from logging import Logger, getLogger
 from typing import Final
 
-_LOGGER: Logger = getLogger(__package__)
+LOGGER: Logger = getLogger(__package__)
 
 SCAN_INTERVAL: timedelta = timedelta(minutes=5)
 

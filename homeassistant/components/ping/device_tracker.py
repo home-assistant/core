@@ -50,8 +50,8 @@ class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity)
         )
 
         if (
-            device := dr.async_get(hass).async_get_device(
-                identifiers={(DOMAIN, config_entry.entry_id)}
+            device := dr.async_get(hass).async_get_device_by_identifier(
+                (DOMAIN, config_entry.entry_id), config_entry.entry_id
             )
         ) is not None:
             self.device_entry = device

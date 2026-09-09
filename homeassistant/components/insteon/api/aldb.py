@@ -12,6 +12,7 @@ from homeassistant.helpers import device_registry as dr
 
 from ..const import DEVICE_ADDRESS, ID, INSTEON_DEVICE_NOT_FOUND, TYPE
 from ..utils import async_device_name
+from .config import get_insteon_config_entry
 from .device import notify_device_not_found
 
 ALDB_RECORD = "record"
@@ -32,7 +33,7 @@ ALDB_RECORD_SCHEMA = vol.Schema(
 )
 
 
-async def async_aldb_record_to_dict(dev_registry, record, dirty=False):
+async def async_aldb_record_to_dict(dev_registry, record, config_entry_id, dirty=False):
     """Convert an ALDB record to a dict."""
     return ALDB_RECORD_SCHEMA(
         {
@@ -42,7 +43,9 @@ async def async_aldb_record_to_dict(dev_registry, record, dirty=False):
             "highwater": record.is_high_water_mark,
             "group": record.group,
             "target": str(record.target),
-            "target_name": await async_device_name(dev_registry, record.target),
+            "target_name": await async_device_name(
+                dev_registry, record.target, config_entry_id
+            ),
             "data1": record.data1,
             "data2": record.data2,
             "data3": record.data3,
@@ -88,10 +91,11 @@ async def websocket_get_aldb(
     changed_records = list(device.aldb.pending_changes.keys())
 
     dev_registry = dr.async_get(hass)
+    config_entry_id = get_insteon_config_entry(hass).entry_id
 
     records = [
         await async_aldb_record_to_dict(
-            dev_registry, aldb[mem_addr], mem_addr in changed_records
+            dev_registry, aldb[mem_addr], config_entry_id, mem_addr in changed_records
         )
         for mem_addr in aldb
     ]

@@ -61,6 +61,10 @@ def entity_selector_compatible(
         if current
         else None
     )
+    if unit_of_measurement is None:
+        return selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=ALLOWED_DOMAINS)
+        )
 
     entities = [
         ent.entity_id

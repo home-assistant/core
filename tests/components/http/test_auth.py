@@ -7,7 +7,7 @@ import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
-from aiohttp import BasicAuth, web
+from aiohttp import encode_basic_auth, web
 from aiohttp.web_exceptions import HTTPUnauthorized
 import jwt
 import pytest
@@ -111,7 +111,7 @@ def trusted_networks_auth(
 
 async def test_auth_middleware_loaded_by_default(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.async_setup_auth") as mock_setup:
+    with patch("homeassistant.components.http.server.async_setup_auth") as mock_setup:
         await async_setup_component(hass, DOMAIN, {"http": {}})
 
     assert len(mock_setup.mock_calls) == 1
@@ -164,13 +164,21 @@ async def test_basic_auth_does_not_work(
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
-    req = await client.get("/", auth=BasicAuth("homeassistant", API_PASSWORD))
+    req = await client.get(
+        "/", headers={"Authorization": encode_basic_auth("homeassistant", API_PASSWORD)}
+    )
     assert req.status == HTTPStatus.UNAUTHORIZED
 
-    req = await client.get("/", auth=BasicAuth("wrong_username", API_PASSWORD))
+    req = await client.get(
+        "/",
+        headers={"Authorization": encode_basic_auth("wrong_username", API_PASSWORD)},
+    )
     assert req.status == HTTPStatus.UNAUTHORIZED
 
-    req = await client.get("/", auth=BasicAuth("homeassistant", "wrong password"))
+    req = await client.get(
+        "/",
+        headers={"Authorization": encode_basic_auth("homeassistant", "wrong password")},
+    )
     assert req.status == HTTPStatus.UNAUTHORIZED
 
     req = await client.get("/", headers={"authorization": "NotBasic abcdefg"})
@@ -285,7 +293,9 @@ async def test_auth_legacy_support_api_password_cannot_access(
     resp = await client.get("/", params={"api_password": API_PASSWORD})
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
-    req = await client.get("/", auth=BasicAuth("homeassistant", API_PASSWORD))
+    req = await client.get(
+        "/", headers={"Authorization": encode_basic_auth("homeassistant", API_PASSWORD)}
+    )
     assert req.status == HTTPStatus.UNAUTHORIZED
 
 

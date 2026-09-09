@@ -78,6 +78,7 @@ def get_events_response(start: dict[str, str], end: dict[str, str]) -> dict[str,
         "uid": None,
         "recurrence_id": None,
         "rrule": None,
+        "status": None,
     }
 
 
@@ -297,7 +298,7 @@ async def test_create_task_service_call_raises(
 ) -> None:
     """Test adding an item to an invalid project raises an error."""
 
-    with pytest.raises(ServiceValidationError, match="project_invalid"):
+    with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_NEW_TASK,
@@ -309,6 +310,7 @@ async def test_create_task_service_call_raises(
             },
             blocking=True,
         )
+    assert exc.value.translation_key == "project_invalid"
 
 
 async def test_create_task_service_call_with_section(

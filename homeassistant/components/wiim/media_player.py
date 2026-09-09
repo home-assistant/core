@@ -2,8 +2,15 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
+from hashlib import sha256
+from http import HTTPStatus
+from ipaddress import ip_address
+import json
 from typing import Any, Concatenate, override
+from urllib.parse import urlparse
 
+import aiohttp
+from aiohttp.hdrs import CONTENT_TYPE
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from wiim.consts import PlayingStatus as SDKPlayingStatus
 from wiim.exceptions import WiimDeviceException, WiimException, WiimRequestException
@@ -31,6 +38,7 @@ from homeassistant.components.media_player import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -38,7 +46,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_WIIM, LOGGER, WiimConfigEntry
+from .const import DATA_WIIM, DOMAIN, LOGGER, WiimConfigEntry
 from .entity import WiimBaseEntity
 from .models import WiimData
 
@@ -50,6 +58,9 @@ MEDIA_CONTENT_ID_FAVORITES = (
 MEDIA_CONTENT_ID_PLAYLISTS = (
     f"{MEDIA_TYPE_WIIM_LIBRARY}/{MEDIA_CONTENT_ID_ROOT}/playlists"
 )
+PARALLEL_UPDATES = 1
+
+MEDIA_IMAGE_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
 
 SDK_TO_HA_STATE: dict[SDKPlayingStatus, MediaPlayerState] = {
     SDKPlayingStatus.PLAYING: MediaPlayerState.PLAYING,
@@ -84,6 +95,8 @@ def media_player_exception_wrap[
     _R,
 ](
     func: Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Awaitable[_R]],
+    *,
+    update_ha_state: bool = True,
 ) -> Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Coroutine[Any, Any, _R]]:
     """Wrap media player commands to handle SDK exceptions consistently."""
 
@@ -96,18 +109,40 @@ def media_player_exception_wrap[
         except (WiimDeviceException, WiimRequestException, WiimException) as err:
             await self._async_handle_critical_error(err)
             raise HomeAssistantError(
-                f"{func.__name__} failed for {self.entity_id}"
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": func.__name__,
+                    "entity_id": self.entity_id or self._device.name,
+                },
             ) from err
         except RuntimeError as err:
             raise HomeAssistantError(
-                f"{func.__name__} failed for {self.entity_id}"
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": func.__name__,
+                    "entity_id": self.entity_id or self._device.name,
+                },
             ) from err
 
-        self._update_ha_state_from_sdk_cache()
+        if update_ha_state:
+            self._update_ha_state_from_sdk_cache()
 
         return result
 
     return _wrap
+
+
+def browse_media_exception_wrap[
+    _WiimMediaPlayerEntityT: WiimMediaPlayerEntity,
+    **_P,
+    _R,
+](
+    func: Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Awaitable[_R]],
+) -> Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Coroutine[Any, Any, _R]]:
+    """Wrap browse media calls without refreshing entity state after success."""
+    return media_player_exception_wrap(func, update_ha_state=False)
 
 
 async def async_setup_entry(
@@ -193,11 +228,104 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_media_artist = None
         self._attr_media_album_name = None
         self._attr_media_image_url = None
+        self._attr_media_image_hash = None
         self._attr_media_content_id = None
         self._attr_media_content_type = None
         self._attr_media_duration = None
         self._attr_media_position = None
         self._attr_media_position_updated_at = None
+
+    @callback
+    def _set_media_image_hash(
+        self,
+        *,
+        image_url: str | None,
+        media_uri: str | None,
+        title: str | None,
+        artist: str | None,
+        album: str | None,
+    ) -> None:
+        """Set a cache-busting media image hash for Home Assistant.
+
+        Some WiiM sources reuse the same artwork URL across tracks, so the
+        default HA URL-based hash is not sufficient to invalidate the image cache.
+        """
+        if not image_url:
+            self._attr_media_image_hash = None
+            return
+
+        digest_source = json.dumps(
+            [image_url, media_uri, title, artist, album],
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        self._attr_media_image_hash = sha256(
+            digest_source.encode("utf-8"), usedforsecurity=False
+        ).hexdigest()
+
+    @override
+    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
+        """Fetch the media image using a track-aware cache key."""
+        if (url := self.media_image_url) is None:
+            return None, None
+
+        if (image_hash := self.media_image_hash) is not None:
+            url = f"{url.partition('#')[0]}#{image_hash}"
+
+        return await self._async_fetch_image_from_cache(url)
+
+    @override
+    async def _async_fetch_image(self, url: str) -> tuple[bytes | None, str | None]:
+        """Fetch local WiiM HTTPS artwork without certificate verification."""
+        parsed_url = urlparse(url)
+        image_host = parsed_url.hostname
+        device_host = self._metadata_device.ip_address
+        if parsed_url.scheme != "https" or image_host is None or device_host is None:
+            return await super()._async_fetch_image(url)
+
+        try:
+            image_address = ip_address(image_host)
+            device_address = ip_address(device_host)
+        except ValueError:
+            return await super()._async_fetch_image(url)
+
+        if image_address != device_address or not (
+            image_address.is_private or image_address.is_link_local
+        ):
+            return await super()._async_fetch_image(url)
+
+        websession = async_get_clientsession(self.hass)
+        try:
+            async with websession.get(
+                url,
+                allow_redirects=False,
+                ssl=False,
+                timeout=MEDIA_IMAGE_FETCH_TIMEOUT,
+            ) as response:
+                if response.status != HTTPStatus.OK:
+                    LOGGER.debug(
+                        "Error retrieving local WiiM artwork for %s: HTTP status %s",
+                        self.entity_id,
+                        response.status,
+                    )
+                    return None, None
+
+                content = await response.read()
+                content_type = response.headers.get(CONTENT_TYPE)
+                mime_type = (
+                    content_type.partition(";")[0].strip() if content_type else None
+                )
+                return content, mime_type
+        except (
+            TimeoutError,
+            aiohttp.ClientError,
+        ):
+            LOGGER.debug(
+                "Error retrieving local WiiM artwork for %s",
+                self.entity_id,
+                exc_info=True,
+            )
+            return None, None
 
     @callback
     def _get_command_target_device(self, action_name: str) -> WiimDevice:
@@ -266,8 +394,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Update HA state from SDK's cache/HTTP poll attributes.
 
         This is the main method for updating this entity's HA attributes.
-        Crucially, it also handles propagating metadata to
-        followers if this is a leader.
+        Crucially, it also handles propagating metadata to followers if this is a leader.
         """
         LOGGER.debug(
             "Device %s: Updating HA state from SDK cache/HTTP poll",
@@ -317,6 +444,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_artist = media.artist
             self._attr_media_album_name = media.album
             self._attr_media_image_url = media.image_url
+            self._set_media_image_hash(
+                image_url=media.image_url,
+                media_uri=media.uri,
+                title=media.title,
+                artist=media.artist,
+                album=media.album,
+            )
             self._attr_media_content_id = media.uri
             self._attr_media_content_type = MediaType.MUSIC
             self._attr_media_duration = media.duration
@@ -650,7 +784,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             await self._async_play_url(target_device, play_item.url)
         elif media_type == MEDIA_TYPE_WIIM_LIBRARY:
             if not media_id.isdigit():
-                raise ServiceValidationError(f"Invalid preset ID: {media_id}")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_preset_id",
+                    translation_placeholders={"media_id": media_id},
+                )
 
             preset_number = int(media_id)
             await target_device.play_preset(preset_number)
@@ -671,7 +809,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         elif media_type == MediaType.TRACK:
             if not media_id.isdigit():
                 raise ServiceValidationError(
-                    f"Invalid media_id: {media_id}. Expected a valid track index."
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_track_id",
+                    translation_placeholders={"media_id": media_id},
                 )
 
             track_index = int(media_id)
@@ -680,13 +820,18 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_content_type = MediaType.TRACK
             self._attr_state = MediaPlayerState.PLAYING
         else:
-            raise ServiceValidationError(f"Unsupported media type: {media_type}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_media_type",
+                translation_placeholders={"media_type": str(media_type)},
+            )
 
     async def _async_play_url(self, target_device: WiimDevice, media_id: str) -> None:
         """Play a direct media URL on the target device."""
         if not target_device.supports_http_api:
             raise ServiceValidationError(
-                "Direct URL playback is not supported on this device"
+                translation_domain=DOMAIN,
+                translation_key="direct_url_playback_unsupported",
             )
 
         url = async_process_play_media_url(self.hass, media_id)
@@ -721,6 +866,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             source
         )
 
+    @browse_media_exception_wrap
     @override
     async def async_browse_media(
         self,
@@ -738,7 +884,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             media_content_id
         ):
             if not self._device.supports_http_api:
-                raise BrowseError("Media sources are not supported on this device")
+                raise BrowseError(
+                    translation_domain=DOMAIN,
+                    translation_key="media_sources_unsupported",
+                )
 
             return await media_source.async_browse_media(
                 self.hass,
@@ -861,7 +1010,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             media_content_type,
             media_content_id,
         )
-        raise BrowseError(f"Invalid browse path: {media_content_id}")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_browse_path",
+            translation_placeholders={"media_content_id": str(media_content_id)},
+        )
 
     @media_player_exception_wrap
     @override
@@ -876,11 +1029,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
             follower_udn = self._wiim_data.entity_id_to_udn_map.get(member_entity_id)
             if follower_udn is None:
-                LOGGER.warning(
-                    "Unable to resolve group member entity_id %s to a UDN",
-                    member_entity_id,
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_grouping_entity",
+                    translation_placeholders={"entity_id": member_entity_id},
                 )
-                continue
 
             if follower_udn == target_device.udn:
                 LOGGER.debug(

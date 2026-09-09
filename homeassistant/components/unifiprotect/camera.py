@@ -186,6 +186,15 @@ def _async_camera_entities(
             or (camera is not None and camera.is_third_party_camera)
         ):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
+        elif streams is None:
+            # None means the best-effort read failed, not that streams are absent.
+            _LOGGER.warning(
+                (
+                    "Could not read RTSPS streams for camera %s;"
+                    " live streaming stays disabled until streams can be read again"
+                ),
+                public.display_name,
+            )
         else:
             _create_rtsp_repair(hass, entry, public)
     return entities
@@ -300,17 +309,18 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         if self._private is not None:
             super()._async_set_device_info()
             return
-        # public-only: no market_name/firmware_version/protect_url, and
-        # ``type`` only on newer firmware, so device identity is limited. The
-        # NVR link is omitted — an API-key-only client has no private
-        # bootstrap to read the NVR mac from, and resolving it publicly is
-        # async; the public-only config mode wires it at setup instead.
+        # public-only: no market_name/firmware_version/protect_url, so device
+        # identity is limited. The NVR link uses the device id registered at
+        # setup — an API-key-only client has no private bootstrap to read the
+        # NVR mac from.
         public = self._public
         self._attr_device_info = DeviceInfo(
             name=public.display_name,
             model=public.type,
+            model_id=public.type,
             manufacturer=DEFAULT_BRAND,
             connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
+            via_device_id=self.data.nvr_device_id,
         )
 
     @callback

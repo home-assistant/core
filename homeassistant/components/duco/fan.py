@@ -122,11 +122,9 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         await self._async_set_state(state)
 
     async def _async_set_state(self, state: VentilationState) -> None:
-        """Send the ventilation state to the device and refresh coordinator."""
+        """Set the ventilation state."""
         try:
-            await self.coordinator.client.async_set_ventilation_state(
-                self._node_id, state
-            )
+            await self.coordinator.async_set_ventilation_state(self._node_id, state)
         except DucoRateLimitError as err:
             _LOGGER.warning("Duco write rate limit exceeded for node %s", self._node_id)
             raise HomeAssistantError(
@@ -138,4 +136,3 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_state",
             ) from err
-        await self.coordinator.async_refresh()

@@ -62,8 +62,20 @@ play_announcement:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
         - media_player.MediaPlayerEntityFeature.MEDIA_ANNOUNCE
   fields:
+    message:
+      required: false
+      example: "Dinner is ready!"
+      selector:
+        text:
+          multiline: true
+    tts_entity_id:
+      required: false
+      example: "tts.piper"
+      selector:
+        entity:
+          domain: tts
     url:
-      required: true
+      required: false
       example: "http://someremotesite.com/doorbell.mp3"
       selector:
         text:
@@ -156,6 +168,10 @@ search:
           default: false
           selector:
             boolean:
+    username:
+      example: "john"
+      selector:
+        text:
 
 get_library:
   fields:
@@ -246,3 +262,7 @@ get_library:
       default: false
       selector:
         boolean:
+    username:
+      example: "john"
+      selector:
+        text:

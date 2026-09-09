@@ -1,6 +1,6 @@
 """Tests for the enum_identity_compare mypy plugin.
 
-Each test snippet is run through mypy's API with the plugin enabled.
+Each test snippet is run through mypy in a subprocess with the plugin enabled.
 Tests assert the number of ``home-assistant-enum-identity-compare`` errors emitted
 and the relevant message content (operator pair and enum class name).
 
@@ -12,10 +12,10 @@ deliberately skipped — see the plugin module docstring.
 
 import os
 from pathlib import Path
+import subprocess
 import sys
 import textwrap
 
-from mypy import api as mypy_api
 import pytest
 
 _IS_EQ = ("`is`", "`==`")
@@ -46,24 +46,29 @@ def _run_mypy(code: str, tmp_path: Path, mypy_path: str | None = None) -> list[s
         config_body += f"mypy_path = {mypy_path}\n"
     config.write_text(config_body)
 
-    env_pythonpath = os.environ.get("PYTHONPATH", "")
-    os.environ["PYTHONPATH"] = f"{_PLUGINS_ROOT}{os.pathsep}{env_pythonpath}"
-    # Make sure mypy can import the plugin from the current process.
-    sys.path.insert(0, str(_PLUGINS_ROOT))
-    try:
-        # mypy ships as a compiled extension; pylint can't introspect it.
-        stdout, _stderr, _rc = mypy_api.run(  # pylint: disable=c-extension-no-member
-            [
-                "--no-incremental",
-                f"--cache-dir={cache}",
-                "--config-file",
-                str(config),
-                str(src),
-            ]
-        )
-    finally:
-        os.environ["PYTHONPATH"] = env_pythonpath
-        sys.path.pop(0)
+    # Run mypy in a subprocess: type checking a snippet in process leaves
+    # hundreds of thousands of objects behind, which the next test module pays
+    # for in its garbage collection.
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join(
+        filter(None, (str(_PLUGINS_ROOT), env.get("PYTHONPATH")))
+    )
+    stdout = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mypy",
+            "--no-incremental",
+            f"--cache-dir={cache}",
+            "--config-file",
+            str(config),
+            str(src),
+        ],
+        capture_output=True,
+        check=False,
+        encoding="utf-8",
+        env=env,
+    ).stdout
 
     errors: list[str] = []
     for line in stdout.splitlines():

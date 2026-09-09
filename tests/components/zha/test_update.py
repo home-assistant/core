@@ -715,13 +715,15 @@ async def test_update_version_sync_device_registry(
     zha_device, _, _, _ = await setup_test_data(hass, zigpy_device_mock)
 
     zha_device.device.async_update_firmware_version("0x12345678")
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
     assert reg_device.sw_version == "0x12345678"
 
     zha_device.device.async_update_firmware_version("0xabcd1234")
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
     assert reg_device.sw_version == "0xabcd1234"

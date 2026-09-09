@@ -62,8 +62,8 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.json import (
     JSON_DUMP,
     ExtendedJSONEncoder,
+    cached_json_bytes,
     find_paths_unserializable_data,
-    json_bytes,
     json_fragment,
 )
 from homeassistant.helpers.service import (
@@ -86,6 +86,7 @@ from homeassistant.setup import (
     async_get_setup_timings,
     async_wait_component,
 )
+from homeassistant.util import slugify
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
@@ -126,6 +127,7 @@ def async_register_commands(
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
+    async_reg(hass, handle_slugify)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
     async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
@@ -539,7 +541,7 @@ async def _async_get_all_condition_descriptions_json(hass: HomeAssistant) -> byt
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
             return cast(bytes, cached_json_payload)
-    json_payload = json_bytes(
+    json_payload = cached_json_bytes(
         {
             condition: description
             for condition, description in descriptions.items()
@@ -586,7 +588,7 @@ async def _async_get_all_service_descriptions_json(hass: HomeAssistant) -> bytes
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
             return cast(bytes, cached_json_payload)
-    json_payload = json_bytes(descriptions)
+    json_payload = cached_json_bytes(descriptions)
     hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
     return json_payload
 
@@ -611,7 +613,7 @@ async def _async_get_all_trigger_descriptions_json(hass: HomeAssistant) -> bytes
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
             return cast(bytes, cached_json_payload)
-    json_payload = json_bytes(
+    json_payload = cached_json_bytes(
         {
             trigger: description
             for trigger, description in descriptions.items()
@@ -724,6 +726,17 @@ def handle_ping(
 ) -> None:
     """Handle ping command."""
     connection.send_message(pong_message(msg["id"]))
+
+
+@callback
+@decorators.websocket_command(
+    {vol.Required("type"): "slugify", vol.Required("text"): str}
+)
+def handle_slugify(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle slugify command."""
+    connection.send_result(msg["id"], {"slug": slugify(msg["text"])})
 
 
 @lru_cache
@@ -1101,7 +1114,6 @@ async def handle_test_condition(
         vol.Required("condition"): cv.CONDITION_SCHEMA,
     }
 )
-@decorators.require_admin
 @decorators.async_response
 async def handle_subscribe_condition(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]

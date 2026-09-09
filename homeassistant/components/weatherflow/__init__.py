@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 
@@ -83,7 +83,7 @@ async def async_unload_entry(
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: WeatherFlowConfigEntry,
-    device_entry: DeviceEntry,
+    device_entry: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     client = config_entry.runtime_data

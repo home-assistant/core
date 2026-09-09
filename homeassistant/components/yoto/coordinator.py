@@ -22,7 +22,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL, STATUS_PUSH_INTERVAL
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL, STATUS_PUSH_INTERVAL
 
 type YotoConfigEntry = ConfigEntry[YotoDataUpdateCoordinator]
 
@@ -41,7 +41,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         """Initialize the coordinator."""
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
@@ -147,7 +147,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             for device_id in self._subscribed_players - current:
                 await self.client.unsubscribe_player_events(device_id)
         except YotoError as err:
-            _LOGGER.warning("Could not update Yoto event subscriptions: %s", err)
+            LOGGER.warning("Could not update Yoto event subscriptions: %s", err)
             return
         self._subscribed_players = current
 
@@ -168,11 +168,11 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         try:
             await self.client.update_library()
         except YotoError as err:
-            _LOGGER.warning("Could not load Yoto card library: %s", err)
+            LOGGER.warning("Could not load Yoto card library: %s", err)
         try:
             await self.client.update_groups()
         except YotoError as err:
-            _LOGGER.warning("Could not load Yoto card groups: %s", err)
+            LOGGER.warning("Could not load Yoto card groups: %s", err)
 
     async def _async_status_push_tick(self, _now: datetime) -> None:
         """Ask each player to push a fresh status snapshot over MQTT."""

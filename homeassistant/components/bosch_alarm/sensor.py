@@ -82,7 +82,9 @@ async def async_setup_entry(
     unique_id = config_entry.unique_id or config_entry.entry_id
 
     async_add_entities(
-        BoschAreaSensor(panel, area_id, unique_id, template)
+        BoschAreaSensor(
+            hass, panel, area_id, unique_id, config_entry.entry_id, template
+        )
         for area_id in panel.areas
         for template in SENSOR_TYPES
     )
@@ -98,16 +100,20 @@ class BoschAreaSensor(BoschAlarmAreaEntity, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         panel: Panel,
         area_id: int,
         unique_id: str,
+        config_entry_id: str,
         entity_description: BoschAlarmSensorEntityDescription,
     ) -> None:
         """Set up an area sensor entity for a bosch alarm panel."""
         super().__init__(
+            hass,
             panel,
             area_id,
             unique_id,
+            config_entry_id,
             entity_description.observe_alarms,
             entity_description.observe_ready,
             entity_description.observe_status,

@@ -150,7 +150,9 @@ async def test_if_fires_on_event(
         },
     )
 
-    device = device_registry.async_get_device(connections={connection})
+    device = device_registry.async_get_device_by_connection(
+        connection, config_entry.entry_id
+    )
     assert device is not None
     # Fake remote button long press.
     hass.bus.async_fire(

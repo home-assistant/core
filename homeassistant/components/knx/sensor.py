@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -44,6 +43,7 @@ from .entity import (
     KnxUiEntityPlatformController,
     KnxYamlEntity,
     _KnxEntityBase,
+    build_yaml_unique_id,
 )
 from .knx_module import KNXModule
 from .schema import SensorSchema
@@ -156,7 +156,7 @@ async def async_setup_entry(
             KnxYamlSensor(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.SENSOR):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.SENSOR):
         entities.extend(
             KnxUiSensor(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -181,7 +181,9 @@ class _KnxSensor(RestoreSensor, _KnxEntityBase):
             )
         ):
             self._attr_native_value = last_sensor_data.native_value
-            self._attr_extra_state_attributes.update(last_state.attributes)
+            # only restore KNX specific attributes - others may have changed
+            if (source := last_state.attributes.get(ATTR_SOURCE)) is not None:
+                self._attr_extra_state_attributes[ATTR_SOURCE] = source
         await super().async_added_to_hass()
 
     @override
@@ -212,9 +214,10 @@ class KnxYamlSensor(_KnxSensor, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.sensor_value.group_address_state),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            unique_id=build_yaml_unique_id(
+                self._device.sensor_value.group_address_state
+            ),
+            entity_config=config,
         )
         dpt_string = self._device.sensor_value.dpt_class.dpt_number_str()
         dpt_info = get_supported_dpts()[dpt_string]

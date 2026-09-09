@@ -37,6 +37,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
     Platform.NUMBER,
+    Platform.REMOTE,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
@@ -52,6 +53,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
 ]
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
+    Platform.GEO_LOCATION,
     Platform.TTS,
     Platform.IMAGE_PROCESSING,
     Platform.DEVICE_TRACKER,

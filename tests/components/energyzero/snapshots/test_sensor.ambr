@@ -1,4 +1,282 @@
 # serializer version: 1
+# name: test_sensor[sensor.energyzero_today_energy_all_in_average_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energyzero_today_energy_all_in_average_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Average all-in price',
+    'platform': 'energyzero',
+    'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_all_in_average_price',
+    'supported_features': 0,
+    'translation_key': 'all_in_average_price',
+    'unique_id': '12345_today_energy_all_in_average_price',
+    'unit_of_measurement': '€/kWh',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_today_energy_all_in_average_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Average all-in price',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energyzero_today_energy_all_in_average_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.252829121875',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_today_energy_all_in_current_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energyzero_today_energy_all_in_current_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current all-in price',
+    'platform': 'energyzero',
+    'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_all_in_current_price',
+    'supported_features': 0,
+    'translation_key': 'all_in_current_price',
+    'unique_id': '12345_today_energy_all_in_current_price',
+    'unit_of_measurement': '€/kWh',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_today_energy_all_in_current_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Current all-in price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energyzero_today_energy_all_in_current_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.28275885',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_today_energy_all_in_max_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energyzero_today_energy_all_in_max_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Maximum all-in price',
+    'platform': 'energyzero',
+    'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_all_in_max_price',
+    'supported_features': 0,
+    'translation_key': 'all_in_max_price',
+    'unique_id': '12345_today_energy_all_in_max_price',
+    'unit_of_measurement': '€/kWh',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_today_energy_all_in_max_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Maximum all-in price',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energyzero_today_energy_all_in_max_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.399000525',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_today_energy_all_in_min_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energyzero_today_energy_all_in_min_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Minimum all-in price',
+    'platform': 'energyzero',
+    'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_all_in_min_price',
+    'supported_features': 0,
+    'translation_key': 'all_in_min_price',
+    'unique_id': '12345_today_energy_all_in_min_price',
+    'unit_of_measurement': '€/kWh',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_today_energy_all_in_min_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Minimum all-in price',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energyzero_today_energy_all_in_min_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.19798625',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_today_energy_all_in_next_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energyzero_today_energy_all_in_next_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Next all-in price',
+    'platform': 'energyzero',
+    'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_all_in_next_price',
+    'supported_features': 0,
+    'translation_key': 'all_in_next_price',
+    'unique_id': '12345_today_energy_all_in_next_price',
+    'unit_of_measurement': '€/kWh',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_today_energy_all_in_next_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Next all-in price',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energyzero_today_energy_all_in_next_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2629693',
+  })
+# ---
 # name: test_sensor[sensor.energyzero_today_energy_average_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -23,10 +301,13 @@
     'name': None,
     'object_id_base': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Average - today',
+    'original_name': 'Average market price',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_average_price',
@@ -40,7 +321,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Average - today',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Average market price',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
@@ -48,7 +329,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.37',
+    'state': '0.141981021875',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_current_hour_price-entry]
@@ -77,15 +358,18 @@
     'name': None,
     'object_id_base': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current hour',
+    'original_name': 'Current market price',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_current_hour_price',
     'supported_features': 0,
-    'translation_key': 'current_hour_price',
+    'translation_key': 'current_price',
     'unique_id': '12345_today_energy_current_hour_price',
     'unit_of_measurement': '€/kWh',
   })
@@ -94,7 +378,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Current hour',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Current market price',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
@@ -103,7 +387,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.49',
+    'state': '0.17191075',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_highest_price_time-entry]
@@ -133,7 +417,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Time of highest price - today',
+    'original_name': 'Highest market price time',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_highest_price_time',
@@ -148,14 +432,14 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Time of highest price - today',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Highest market price time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_highest_price_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2022-12-07T16:00:00+00:00',
+    'state': '2026-04-10T18:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_hours_priced_equal_or_lower-entry]
@@ -185,29 +469,28 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Hours priced equal or lower than current - today',
+    'original_name': 'Market periods priced equal or lower',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_hours_priced_equal_or_lower',
     'supported_features': 0,
     'translation_key': 'hours_priced_equal_or_lower',
     'unique_id': '12345_today_energy_hours_priced_equal_or_lower',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_hours_priced_equal_or_lower-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Hours priced equal or lower than current - today',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Market periods priced equal or lower',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_hours_priced_equal_or_lower',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '23',
+    'state': '20',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_lowest_price_time-entry]
@@ -237,7 +520,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Time of lowest price - today',
+    'original_name': 'Lowest market price time',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_lowest_price_time',
@@ -252,14 +535,14 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Time of lowest price - today',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Lowest market price time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_lowest_price_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2022-12-07T02:00:00+00:00',
+    'state': '2026-04-10T01:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_max_price-entry]
@@ -286,10 +569,13 @@
     'name': None,
     'object_id_base': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Highest price - today',
+    'original_name': 'Maximum market price',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_max_price',
@@ -303,7 +589,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Highest price - today',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Maximum market price',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
@@ -311,7 +597,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.55',
+    'state': '0.288152425',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_min_price-entry]
@@ -338,10 +624,13 @@
     'name': None,
     'object_id_base': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Lowest price - today',
+    'original_name': 'Minimum market price',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_min_price',
@@ -355,7 +644,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Lowest price - today',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Minimum market price',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
@@ -363,7 +652,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.26',
+    'state': '0.08713815',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_next_hour_price-entry]
@@ -390,15 +679,18 @@
     'name': None,
     'object_id_base': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Next hour',
+    'original_name': 'Next market price',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_next_hour_price',
     'supported_features': 0,
-    'translation_key': 'next_hour_price',
+    'translation_key': 'next_price',
     'unique_id': '12345_today_energy_next_hour_price',
     'unit_of_measurement': '€/kWh',
   })
@@ -407,7 +699,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Next hour',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Next market price',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
@@ -415,7 +707,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.55',
+    'state': '0.1521212',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_percentage_of_max-entry]
@@ -445,7 +737,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current percentage of highest price - today',
+    'original_name': 'Market percentage of maximum',
     'platform': 'energyzero',
     'previous_unique_id': None,
     'suggested_object_id': 'energyzero_today_energy_percentage_of_max',
@@ -459,7 +751,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Current percentage of highest price - today',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity price Market percentage of maximum',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
@@ -467,7 +759,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '89.09',
+    'state': '59.66',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_gas_current_hour_price-entry]
@@ -496,6 +788,9 @@
     'name': None,
     'object_id_base': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -522,7 +817,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.47',
+    'state': '0.5468407201224',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_gas_next_hour_price-entry]
@@ -549,6 +844,9 @@
     'name': None,
     'object_id_base': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -574,6 +872,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.47',
+    'state': '0.5468407201224',
   })
 # ---

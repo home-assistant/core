@@ -143,8 +143,12 @@ async def test_shared_device_mac(
     )
 
     await init_integration(hass, gen, sleep_period=1000)
-    assert "Detected first time setup for device" in caplog.text
     assert "will resume when device is online" in caplog.text
+
+    other_device = device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, MOCK_MAC), other_entry.entry_id
+    )
+    assert other_device is not None
 
 
 async def test_setup_entry_not_shelly(

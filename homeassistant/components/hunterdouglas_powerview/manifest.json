@@ -19,6 +19,6 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aiopvapi"],
-  "requirements": ["aiopvapi==3.3.0"],
+  "requirements": ["aiopvapi==3.4.1"],
   "zeroconf": ["_powerview._tcp.local.", "_PowerView-G3._tcp.local."]
 }

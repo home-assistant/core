@@ -8,6 +8,7 @@
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'TestSystem - documents',
   })
@@ -21,6 +22,7 @@
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'TestSystem',
   })
@@ -48,6 +50,7 @@
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'System Bridge',
   })
@@ -61,6 +64,7 @@
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'TestSystem - documents/testsubdirectory',
   })

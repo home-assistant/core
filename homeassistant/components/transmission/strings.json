@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -64,6 +63,9 @@
       "completed_torrents": {
         "name": "Completed torrents",
         "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
+      },
+      "download_dir_free_space": {
+        "name": "Available disk space"
       },
       "download_speed": {
         "name": "Download speed"
