@@ -106,6 +106,9 @@ async def test_number_workarea_cutting_height_legacy_registry_entry_removed(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test removal of a legacy global cutting height registry entry."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    mock_config_entry.add_to_hass(hass)
+
     unique_id = f"{TEST_MOWER_ID}_0_cutting_height_work_area"
     registry_entry = entity_registry.async_get_or_create(
         Platform.NUMBER,
@@ -114,7 +117,7 @@ async def test_number_workarea_cutting_height_legacy_registry_entry_removed(
         config_entry=mock_config_entry,
     )
 
-    await setup_integration(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert entity_registry.async_get(registry_entry.entity_id) is None
 
@@ -122,6 +125,7 @@ async def test_number_workarea_cutting_height_legacy_registry_entry_removed(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_workarea_cutting_height_transition(
     hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     values: dict[str, MowerAttributes],
 ) -> None:
