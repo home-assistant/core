@@ -69,8 +69,10 @@ rules:
   entity-disabled-by-default:
     status: done
     comment: >-
-      All entities are useful by default; the diagnostic sensors change only on
-      source or content changes.
+      The maximum volume sensor is disabled by default: most owners set no
+      ceiling and it would read the same value forever. Everything else is
+      useful by default; the diagnostic sensors change only on source or
+      content changes.
   entity-translations: done
   exception-translations: done
   icon-translations: done
