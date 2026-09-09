@@ -89,6 +89,9 @@
       "audio_input": {
         "name": "Audio input"
       },
+      "maximum_volume": {
+        "name": "Maximum volume"
+      },
       "streaming_source": {
         "name": "Streaming source"
       },

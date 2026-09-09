@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from lyngdorf import NumericRange
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -9,7 +10,7 @@ from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import notify_receiver_update
+from .conftest import _steppable, notify_receiver_update
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -131,3 +132,42 @@ async def test_enum_options_follow_the_device(
 
     state = hass.states.get("sensor.mock_lyngdorf_audio_input")
     assert state.attributes["options"] == ["HDMI", "optical", "ARC"]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_maximum_volume_follows_the_device(
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test the ceiling sensor reports what the device says, and keeps up."""
+    assert hass.states.get("sensor.mock_lyngdorf_maximum_volume").state == STATE_UNKNOWN
+
+    mock_receiver.volume.maximum_volume = 0.0
+    notify_receiver_update(mock_receiver)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.mock_lyngdorf_maximum_volume").state == "0.0"
+
+    # The ceiling changes from the device's front panel, so it must not be
+    # read once and cached.
+    mock_receiver.volume.maximum_volume = -20.0
+    notify_receiver_update(mock_receiver)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.mock_lyngdorf_maximum_volume").state == "-20.0"
+
+
+async def test_no_maximum_volume_sensor_without_a_volume_control(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test a model that reports no ceiling does not get the sensor."""
+    mock_config_entry.add_to_hass(hass)
+    mock_receiver.volume = _steppable(-40.0, NumericRange(-99.9, 24.0, 0.1))
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.mock_lyngdorf_maximum_volume") is None
+    assert hass.states.get("sensor.mock_lyngdorf_audio_information") is not None
