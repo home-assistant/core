@@ -1546,14 +1546,13 @@ async def test_bad_min_max_options(
     ("extra_config", "set_attribute", "expected"),
     [
         ({"target_temperature_step": 0.1}, 7.54, 7.5),
-        ({"target_temperature_step": 0.01}, 7.54, 7.5),  # Precision overrides
         ({"target_temperature_step": 1.0}, 7.54, 8),
         ({"target_temperature_step": 5.0}, 7.54, 10),
     ],
 )
 @pytest.mark.usefixtures("setup_climate")
 async def test_target_temperature_step(
-    hass: HomeAssistant, set_attribute: str, expected: float
+    hass: HomeAssistant, set_attribute: float, expected: float
 ) -> None:
     """Test target temperature step."""
     await async_trigger(
@@ -1605,19 +1604,20 @@ async def test_target_humidity_step(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.parametrize(
-    ("option", "option_type"),
+    ("option", "option_type", "minimum"),
     [
-        ("target_humidity_step", "int"),
-        ("target_temperature_step", "float"),
+        ("target_humidity_step", "int", 1),
+        ("target_temperature_step", "float", 0.1),
     ],
 )
-@pytest.mark.parametrize("value", [-1, "not a number", None])
+@pytest.mark.parametrize("value", [-1, 0, "not a number", None])
 async def test_bad_step_options(
     hass: HomeAssistant,
     style: ConfigurationStyle,
     option: str,
     option_type: str,
     value: Any,
+    minimum: float,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a bad step options in configuration."""
@@ -1630,7 +1630,7 @@ async def test_bad_step_options(
         f"Invalid config for 'template': expected {option_type} for dictionary value 'climate->0->{option}'"
         in caplog.text
     ) or (
-        f"Invalid config for 'template': value must be at least 0 for dictionary value 'climate->0->{option}'"
+        f"Invalid config for 'template': value must be at least {minimum} for dictionary value 'climate->0->{option}'"
         in caplog.text
     )
 
@@ -1759,13 +1759,11 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
 
     assert hass.states.get(TEST_CLIMATE.entity_id).state != STATE_UNAVAILABLE
 
-    # When Availability template returns false
     hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_OFF)
     await hass.async_block_till_done()
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, HVACMode.COOL)
 
-    # device state should be unavailable
     assert hass.states.get(TEST_CLIMATE.entity_id).state == STATE_UNAVAILABLE
 
 
@@ -2327,7 +2325,7 @@ async def test_extra_template_attributes(
 async def test_blocked_template_attributes(
     hass: HomeAssistant,
     style: ConfigurationStyle,
-    attribute,
+    attribute: StrEnum,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test blocked extra attributes."""

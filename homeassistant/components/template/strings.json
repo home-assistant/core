@@ -109,7 +109,7 @@
           "hvac_mode": "HVAC mode",
           "hvac_modes": "[%key:component::climate::entity_component::_::state_attributes::hvac_modes::name%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "set_hvac_mode": "Actions on set hvac mode",
+          "set_hvac_mode": "Actions on set HVAC mode",
           "set_temperature": "Actions on set temperature",
           "target_temperature": "[%key:component::climate::entity_component::_::state_attributes::temperature::name%]"
         },
@@ -120,7 +120,7 @@
           "hvac_modes": "Defines a template for a list of available HVAC modes. Valid HVAC modes for the list are `auto`, `cool`, `dry`, `fan_only`, `heat`, `heat_cool` and `off`.",
           "set_hvac_mode": "Defines actions to run when the climate is given a `set_hvac_mode` command. Receives variable `hvac_mode`.",
           "set_temperature": "Defines actions to run when the climate is given a `set_temperature` command. Receives variable `hvac_mode`, `temperature`, `target_temp_high`, and `target_temp_low`. If `hvac_mode` is received, the `set_hvac_mode` actions are executed before the actions in `set_temperature`.",
-          "target_temperature": "Defines a template for the target temperature"
+          "target_temperature": "Defines a template for the target temperature."
         },
 
         "sections": {

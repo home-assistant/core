@@ -43,7 +43,6 @@ class AbstractTemplateEntity(Entity):
 
     _entity_id_format: str
     _optimistic_entity: bool = False
-    _extra_optimistic_options: tuple[str, ...] | None = None
     _state_option: str | None = None
     _restore_state_extra_data: Any | None = None
     _blocked_attributes: BlockedTemplateAttributes | None = None
@@ -64,6 +63,7 @@ class AbstractTemplateEntity(Entity):
         self._templates: dict[str, EntityTemplate] = {}
         self._action_scripts: dict[str, Script] = {}
         self._attr_extra_state_attributes = {}
+        self._assumed_attributes: dict[str, str] = {}
 
         self._attribute_templates: dict[str, Template] | None = None
         self._attributes_template: Template | None = None
@@ -77,15 +77,8 @@ class AbstractTemplateEntity(Entity):
             optimistic = config.get(CONF_OPTIMISTIC)
 
             if self._state_option is not None:
-                assumed_optimistic = config.get(self._state_option) is None
-                if self._extra_optimistic_options:
-                    assumed_optimistic = assumed_optimistic and all(
-                        config.get(option) is None
-                        for option in self._extra_optimistic_options
-                    )
-
                 self._attr_assumed_state = optimistic or (
-                    optimistic is None and assumed_optimistic
+                    optimistic is None and config.get(self._state_option) is None
                 )
 
         if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
@@ -200,6 +193,24 @@ class AbstractTemplateEntity(Entity):
             f"{name} {script_id}",
             domain,
         )
+
+    def add_assumed_attribute(self, attr: str, option: str, action_option: str):
+        """Add an optimistic option."""
+        if option not in self._config and action_option in self._config:
+            self._assumed_attributes[option] = attr
+
+    def update_assumed_attribute(self, option: str, value: Any) -> bool:
+        """If the attribute is assumed, update attribute with the new value."""
+        attr = self._assumed_attributes.get(option)
+        if assumed_attribute := attr is not None:
+            setattr(self, attr, value)
+
+        return assumed_attribute
+
+    def write_assumed_attribute(self, option: str, value: Any) -> None:
+        """If the attribute is assumed, write the value to the attribute and update the ha state."""
+        if self.update_assumed_attribute(option, value):
+            self.async_write_ha_state()
 
     @override
     async def async_will_remove_from_hass(self) -> None:

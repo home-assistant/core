@@ -102,20 +102,6 @@ SCRIPT_FIELDS = (
     SET_TEMPERATURE_ACTION,
 )
 
-_EXTRA_OPTIMISTIC_OPTIONS = (
-    CONF_CURRENT_HUMIDITY,
-    CONF_CURRENT_TEMPERATURE,
-    CONF_FAN_MODE,
-    CONF_HVAC_ACTION,
-    CONF_PRESET_MODE,
-    CONF_SWING_HORIZONTAL_MODE,
-    CONF_SWING_MODE,
-    CONF_TARGET_HUMIDITY,
-    CONF_TARGET_TEMPERATURE_HIGH,
-    CONF_TARGET_TEMPERATURE_LOW,
-    CONF_TARGET_TEMPERATURE,
-)
-
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
     attributes=(ClimateEntityCapabilityAttribute, ClimateEntityStateAttribute)
@@ -154,10 +140,14 @@ CLIMATE_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_SWING_HORIZONTAL_MODE): cv.template,
         vol.Optional(CONF_SWING_HORIZONTAL_MODES): cv.template,
         vol.Optional(CONF_TARGET_HUMIDITY): cv.template,
-        vol.Optional(CONF_TARGET_HUMIDITY_STEP): cv.positive_int,
+        vol.Optional(CONF_TARGET_HUMIDITY_STEP): vol.All(
+            vol.Coerce(int), vol.Range(min=1)
+        ),
         vol.Inclusive(CONF_TARGET_TEMPERATURE_HIGH, "temperature_limits"): cv.template,
         vol.Inclusive(CONF_TARGET_TEMPERATURE_LOW, "temperature_limits"): cv.template,
-        vol.Optional(CONF_TARGET_TEMPERATURE_STEP): cv.positive_float,
+        vol.Optional(CONF_TARGET_TEMPERATURE_STEP): vol.All(
+            vol.Coerce(float), vol.Range(min=PRECISION_TENTHS)
+        ),
         vol.Optional(CONF_TARGET_TEMPERATURE): cv.template,
         vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
         vol.Optional(SET_FAN_MODE_ACTION): cv.SCRIPT_SCHEMA,
@@ -391,7 +381,6 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_HVAC_MODE
-    _extra_optimistic_options = _EXTRA_OPTIMISTIC_OPTIONS
     _restore_state_extra_data = ClimateExtraStoredData
     _restore_state_properties = ("_attr_hvac_mode",)
     _blocked_attributes = _BLOCKED_ATTRIBUTES
@@ -447,15 +436,16 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         )
         self.setup_state_template(
             "_attr_hvac_mode",
-            tcv.item_in_list(
-                self, "_attr_hvac_mode", "_attr_hvac_modes", CONF_HVAC_MODES
-            ),
+            tcv.item_in_list(self, CONF_HVAC_MODE, "_attr_hvac_modes", CONF_HVAC_MODES),
             self._update_hvac_mode,
         )
         self.setup_template(
             CONF_HVAC_ACTION,
             "_attr_hvac_action",
             tcv.strenum(self, CONF_HVAC_ACTION, HVACAction),
+        )
+        self.add_assumed_attribute(
+            "_attr_hvac_action", CONF_HVAC_ACTION, SET_HVAC_MODE_ACTION
         )
 
         # Temperatures
@@ -465,21 +455,21 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             tcv.number(self, CONF_CURRENT_TEMPERATURE),
         )
 
-        for option, attr, on_update in (
+        for option, attr in (
             (
                 CONF_TARGET_TEMPERATURE,
                 "_attr_target_temperature",
-                self._update_target_temperature,
             ),
-            (CONF_TARGET_TEMPERATURE_LOW, "_attr_target_temperature_low", None),
-            (CONF_TARGET_TEMPERATURE_HIGH, "_attr_target_temperature_high", None),
+            (CONF_TARGET_TEMPERATURE_LOW, "_attr_target_temperature_low"),
+            (CONF_TARGET_TEMPERATURE_HIGH, "_attr_target_temperature_high"),
         ):
             self.setup_template(
                 option,
                 attr,
                 tcv.number(self, option, self.min_temp, self.max_temp),
-                on_update=on_update,
+                on_update=self._update_target_temperature(attr),
             )
+            self.add_assumed_attribute(attr, option, SET_TEMPERATURE_ACTION)
 
         # Humidities
         self.setup_template(
@@ -493,6 +483,9 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 int,
             ),
             self._update_target_humidity,
+        )
+        self.add_assumed_attribute(
+            "_attr_target_humidity", CONF_TARGET_HUMIDITY, SET_HUMIDITY_ACTION
         )
         self.setup_template(
             CONF_CURRENT_HUMIDITY,
@@ -510,8 +503,9 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self.setup_template(
             CONF_FAN_MODE,
             "_attr_fan_mode",
-            tcv.item_in_list(self, "_attr_fan_mode", "_attr_fan_modes", CONF_FAN_MODES),
+            tcv.item_in_list(self, CONF_FAN_MODE, "_attr_fan_modes", CONF_FAN_MODES),
         )
+        self.add_assumed_attribute("_attr_fan_mode", CONF_FAN_MODE, SET_FAN_MODE_ACTION)
 
         # Swing Mode
         self.setup_template(
@@ -523,8 +517,11 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             CONF_SWING_MODE,
             "_attr_swing_mode",
             tcv.item_in_list(
-                self, "_attr_swing_mode", "_attr_swing_modes", CONF_SWING_MODES
+                self, CONF_SWING_MODE, "_attr_swing_modes", CONF_SWING_MODES
             ),
+        )
+        self.add_assumed_attribute(
+            "_attr_swing_mode", CONF_SWING_MODE, SET_SWING_MODE_ACTION
         )
 
         # Swing Horizontal Mode
@@ -538,10 +535,15 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             "_attr_swing_horizontal_mode",
             tcv.item_in_list(
                 self,
-                "_attr_swing_horizontal_mode",
+                CONF_SWING_HORIZONTAL_MODE,
                 "_attr_swing_horizontal_modes",
                 CONF_SWING_HORIZONTAL_MODES,
             ),
+        )
+        self.add_assumed_attribute(
+            "_attr_swing_horizontal_mode",
+            CONF_SWING_HORIZONTAL_MODE,
+            SET_SWING_HORIZONTAL_MODE_ACTION,
         )
 
         # Preset Mode
@@ -555,10 +557,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             "_attr_preset_mode",
             tcv.item_in_list(
                 self,
-                "_attr_preset_mode",
+                CONF_PRESET_MODE,
                 "_attr_preset_modes",
                 CONF_PRESET_MODES,
             ),
+        )
+        self.add_assumed_attribute(
+            "_attr_preset_mode", CONF_PRESET_MODE, SET_PRESET_MODE_ACTION
         )
 
         self._attr_supported_features = ClimateEntityFeature(0)
@@ -583,7 +588,10 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 CONF_TARGET_TEMPERATURE_HIGH in self._templates
                 and CONF_TARGET_TEMPERATURE_LOW in self._templates
             )
-            or self._attr_assumed_state
+            or (
+                CONF_TARGET_TEMPERATURE_HIGH in self._assumed_attributes
+                and CONF_TARGET_TEMPERATURE_LOW in self._assumed_attributes
+            )
         ) and SET_TEMPERATURE_ACTION in self._action_scripts:
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -607,27 +615,37 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         else:
             self._attr_supported_features &= ~ClimateEntityFeature.TURN_OFF
 
-        if (set(HVACMode) - {HVACMode.OFF}).intersection(set(render)):
+        if any(
+            mode in render
+            for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL)
+        ) or (
+            len(render) == 2
+            and HVACMode.OFF in render
+            and any(mode != HVACMode.OFF for mode in render)
+        ):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
         else:
             self._attr_supported_features &= ~ClimateEntityFeature.TURN_ON
 
         self._attr_hvac_modes = render
 
-    def _update_target_temperature(
-        self,
-        result,
-    ) -> None:
-        if result is None:
-            self._attr_target_temperature = None
-            return
+    def _round_temperature_value(self, value: Any) -> float:
+        return (
+            value
+            if self._attr_target_temperature_step is None
+            else _round_to_step(float(value), self._attr_target_temperature_step)
+        )
 
-        if self._attr_target_temperature_step is None:
-            self._attr_target_temperature = result
-        else:
-            self._attr_target_temperature = _round_to_step(
-                float(result), self._attr_target_temperature_step
-            )
+    def _update_target_temperature(self, attr: str) -> Callable[[Any], None]:
+        def update(result: Any) -> None:
+            if result is None:
+                setattr(self, attr, None)
+                return
+
+            value = self._round_temperature_value(result)
+            setattr(self, attr, value)
+
+        return update
 
     def _update_target_humidity(
         self,
@@ -674,9 +692,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 context=self._context,
             )
 
-        if self._attr_assumed_state:
-            self._attr_preset_mode = preset_mode
-            self.async_write_ha_state()
+        self.write_assumed_attribute(CONF_PRESET_MODE, preset_mode)
 
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -688,9 +704,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 context=self._context,
             )
 
-        if self._attr_assumed_state:
-            self._attr_fan_mode = fan_mode
-            self.async_write_ha_state()
+        self.write_assumed_attribute(CONF_FAN_MODE, fan_mode)
 
     @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
@@ -702,9 +716,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 context=self._context,
             )
 
-        if self._attr_assumed_state:
-            self._attr_swing_mode = swing_mode
-            self.async_write_ha_state()
+        self.write_assumed_attribute(CONF_SWING_MODE, swing_mode)
 
     @override
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
@@ -716,9 +728,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 context=self._context,
             )
 
-        if self._attr_assumed_state:
-            self._attr_swing_horizontal_mode = swing_horizontal_mode
-            self.async_write_ha_state()
+        self.write_assumed_attribute(CONF_SWING_HORIZONTAL_MODE, swing_horizontal_mode)
 
     @override
     async def async_set_humidity(self, humidity: int) -> None:
@@ -730,9 +740,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 context=self._context,
             )
 
-        if self._attr_assumed_state:
-            self._attr_target_humidity = humidity
-            self.async_write_ha_state()
+        self.write_assumed_attribute(CONF_TARGET_HUMIDITY, humidity)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -740,21 +748,21 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         common_params: dict[str, Any] = {}
         write_state = False
 
-        for attr, param, prop in (
+        for option, attr, param in (
             (
+                CONF_TARGET_TEMPERATURE,
                 ATTR_TEMPERATURE,
                 "temperature",
-                "_attr_target_temperature",
             ),
             (
+                CONF_TARGET_TEMPERATURE_HIGH,
                 ATTR_TARGET_TEMP_HIGH,
                 "target_temp_high",
-                "_attr_target_temperature_high",
             ),
             (
+                CONF_TARGET_TEMPERATURE_LOW,
                 ATTR_TARGET_TEMP_LOW,
                 "target_temp_low",
-                "_attr_target_temperature_low",
             ),
         ):
             if (value := kwargs.get(attr)) is not None and (
@@ -765,9 +773,9 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                     self.max_temp,
                 )(value)
             ) is not None:
-                common_params[param] = validated
-                if self._attr_assumed_state:
-                    setattr(self, prop, validated)
+                rounded = self._round_temperature_value(validated)
+                common_params[param] = rounded
+                if self.update_assumed_attribute(option, rounded):
                     write_state = True
 
         breadcrumb = f"{SET_TEMPERATURE_ACTION} {ATTR_HVAC_MODE}"
