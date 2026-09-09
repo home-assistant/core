@@ -104,10 +104,16 @@ class LivisiWindowDoorSensor(LivisiBinarySensor):
     async def async_added_to_hass(self) -> None:
         """Get current state."""
         await super().async_added_to_hass()
+        await self.async_update_value()
+
+    @override
+    async def async_update_value(self) -> bool:
+        """Get the current state."""
         response = await self.coordinator.async_get_device_state(
             self._capability_id, IS_OPEN
         )
         if response is None:
             self._attr_available = False
-        else:
-            self._attr_is_on = response
+            return False
+        self._attr_is_on = response
+        return True

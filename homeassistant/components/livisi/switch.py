@@ -86,14 +86,7 @@ class LivisiSwitch(LivisiEntity, SwitchEntity):
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        response = await self.coordinator.async_get_device_state(
-            self._capability_id, ON_STATE
-        )
-        if response is None:
-            self._attr_is_on = False
-            self._attr_available = False
-        else:
-            self._attr_is_on = response
+        await self.async_update_value()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -101,6 +94,19 @@ class LivisiSwitch(LivisiEntity, SwitchEntity):
                 self.update_states,
             )
         )
+
+    @override
+    async def async_update_value(self) -> bool:
+        """Get the current switch state."""
+        response = await self.coordinator.async_get_device_state(
+            self._capability_id, ON_STATE
+        )
+        if response is None:
+            self._attr_is_on = False
+            self._attr_available = False
+            return False
+        self._attr_is_on = response
+        return True
 
     @callback
     def update_states(self, state: bool) -> None:

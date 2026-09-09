@@ -107,25 +107,11 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
 
         await super().async_added_to_hass()
 
+        await self.async_update_value()
+
         target_temperature_property = (
             SETPOINT_TEMPERATURE if self.coordinator.is_avatar else POINT_TEMPERATURE
         )
-        target_temperature = await self.coordinator.async_get_device_state(
-            self._target_temperature_capability, target_temperature_property
-        )
-        temperature = await self.coordinator.async_get_device_state(
-            self._temperature_capability, TEMPERATURE
-        )
-        humidity = await self.coordinator.async_get_device_state(
-            self._humidity_capability, HUMIDITY
-        )
-        if temperature is None:
-            self._attr_current_temperature = None
-            self._attr_available = False
-        else:
-            self._attr_target_temperature = target_temperature
-            self._attr_current_temperature = temperature
-            self._attr_current_humidity = humidity
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -147,6 +133,31 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
                 self.update_humidity,
             )
         )
+
+    @override
+    async def async_update_value(self) -> bool:
+        """Get the current climate state."""
+
+        target_temperature_property = (
+            SETPOINT_TEMPERATURE if self.coordinator.is_avatar else POINT_TEMPERATURE
+        )
+        target_temperature = await self.coordinator.async_get_device_state(
+            self._target_temperature_capability, target_temperature_property
+        )
+        temperature = await self.coordinator.async_get_device_state(
+            self._temperature_capability, TEMPERATURE
+        )
+        humidity = await self.coordinator.async_get_device_state(
+            self._humidity_capability, HUMIDITY
+        )
+        if temperature is None:
+            self._attr_current_temperature = None
+            self._attr_available = False
+            return False
+        self._attr_target_temperature = target_temperature
+        self._attr_current_temperature = temperature
+        self._attr_current_humidity = humidity
+        return True
 
     @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:

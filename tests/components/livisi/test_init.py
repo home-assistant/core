@@ -200,9 +200,19 @@ async def test_setup_entities_and_unload(
     connection.async_get_devices.return_value = [
         replace(device, unreachable=device.id == "switch-device") for device in DEVICES
     ]
-    await config_entry.runtime_data.async_request_refresh()
+    await config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
     assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
+
+    connection.async_get_devices.return_value = []
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
+
+    connection.async_get_devices.return_value = DEVICES
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.is_state(switch_id, STATE_ON)
 
     on_data(
         LivisiWebsocketEvent(
@@ -266,11 +276,11 @@ async def test_setup_entities_and_unload(
 async def test_state_read_failure_keeps_entity_unavailable(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test a failed initial state read does not prevent entity creation."""
+    """Test a failed recovery state read keeps the entity unavailable."""
     connection = MagicMock(spec=LivisiConnection)
     connection.controller = CONTROLLER
     connection.async_get_devices.return_value = [DEVICES[1]]
-    connection.async_get_value.side_effect = LivisiException
+    connection.async_get_value.return_value = True
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
     config_entry.add_to_hass(hass)
@@ -286,6 +296,83 @@ async def test_state_read_failure_keeps_entity_unavailable(
         Platform.SWITCH, DOMAIN, "switch-device"
     )
     assert switch_id is not None
+    assert hass.states.is_state(switch_id, STATE_ON)
+
+    connection.async_get_devices.return_value = [replace(DEVICES[1], unreachable=True)]
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
+
+    connection.async_get_devices.return_value = [DEVICES[1]]
+    connection.async_get_value.side_effect = LivisiException
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
+
+    connection.async_get_value.side_effect = None
+    connection.async_get_value.return_value = True
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.is_state(switch_id, STATE_ON)
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_new_unreachable_event_wins_over_recovery(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a stale recovery cannot override a newer unreachable event."""
+    recovery_started = asyncio.Event()
+    finish_recovery = asyncio.Event()
+
+    connection = MagicMock(spec=LivisiConnection)
+    connection.controller = CONTROLLER
+    connection.async_get_devices.return_value = [DEVICES[1]]
+    connection.async_get_value.return_value = True
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.livisi.coordinator.livisi_connect",
+        return_value=connection,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    switch_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, "switch-device"
+    )
+    assert switch_id is not None
+
+    connection.async_get_devices.return_value = [replace(DEVICES[1], unreachable=True)]
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
+
+    async def delayed_get_value(capability: str, property_name: str) -> bool:
+        recovery_started.set()
+        await finish_recovery.wait()
+        return True
+
+    connection.async_get_value.side_effect = delayed_get_value
+    connection.async_get_devices.return_value = [DEVICES[1]]
+    await config_entry.runtime_data.async_refresh()
+    await recovery_started.wait()
+
+    config_entry.runtime_data.on_data(
+        LivisiWebsocketEvent(
+            namespace="core.RWE",
+            type=LIVISI_EVENT_STATE_CHANGED,
+            source="switch-device",
+            timestamp=None,
+            properties={"isReachable": False},
+        )
+    )
+    await asyncio.sleep(0)
+    finish_recovery.set()
+    await hass.async_block_till_done()
     assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
