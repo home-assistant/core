@@ -7,6 +7,7 @@ from pyipp import IPPError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -70,6 +71,16 @@ async def test_missing_entry_unique_id(
         {"printers": [{}]},  # Empty printer dict
         {"printers": []},  # Empty printers list
         {},  # Missing printers key
+        {
+            "printers": [
+                {
+                    "printer-pages-completed": "",
+                    "printer-impressions-completed": "",
+                    "printer-media-sheets-completed": "",
+                    "printer-impressions-completed-col": "",
+                }
+            ]
+        },  # Out-of-band values (unknown / no-value) decoded by pyipp
     ],
 )
 async def test_no_page_count_sensors_when_unsupported(
@@ -86,6 +97,8 @@ async def test_no_page_count_sensors_when_unsupported(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
     unique_id = mock_config_entry.unique_id
     for key in (
         "pages_completed",
@@ -97,6 +110,55 @@ async def test_no_page_count_sensors_when_unsupported(
         assert not entity_registry.async_get_entity_id(
             "sensor", "ipp", f"{unique_id}_{key}"
         )
+
+
+async def test_page_count_sensors_with_partial_attributes(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_ipp: MagicMock,
+) -> None:
+    """Test only the reported page counts get sensors.
+
+    Attributes and collection members the printer reports as out-of-band
+    values are decoded as empty strings by pyipp and must be skipped.
+    """
+    mock_ipp.execute.return_value = {
+        "printers": [
+            {
+                "printer-pages-completed": "",
+                "printer-impressions-completed": 2468,
+                "printer-impressions-completed-col": {
+                    "monochrome": 1500,
+                    "full-color": "",
+                },
+            }
+        ],
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    unique_id = mock_config_entry.unique_id
+    for key in (
+        "pages_completed",
+        "media_sheets_completed",
+        "impressions_completed_full_color",
+    ):
+        assert not entity_registry.async_get_entity_id(
+            "sensor", "ipp", f"{unique_id}_{key}"
+        )
+
+    state = hass.states.get("sensor.test_ha_1000_series_impressions_completed")
+    assert state
+    assert state.state == "2468"
+
+    state = hass.states.get(
+        "sensor.test_ha_1000_series_monochrome_impressions_completed"
+    )
+    assert state
+    assert state.state == "1500"
 
 
 @pytest.mark.parametrize(

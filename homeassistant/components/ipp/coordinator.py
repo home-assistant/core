@@ -117,13 +117,18 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
         parsed: dict[str, Any] = next(iter(response.get("printers") or []), {})
         page_counts: dict[str, int] = {}
 
+        # pyipp decodes IPP out-of-band values such as unknown or no-value as an
+        # empty string, so only integers are accepted as counters
         for attr in PAGE_COUNT_INT_ATTRIBUTES:
-            if (value := parsed.get(attr)) is not None:
+            if isinstance(value := parsed.get(attr), int):
                 page_counts[attr] = value
 
         # pyipp parses collection attributes into dicts of member name to value
         for attr in PAGE_COUNT_COLLECTION_ATTRIBUTES:
-            for sub_key, sub_value in parsed.get(attr, {}).items():
-                page_counts[f"{attr}/{sub_key}"] = sub_value
+            if not isinstance(collection := parsed.get(attr), dict):
+                continue
+            for sub_key, sub_value in collection.items():
+                if isinstance(sub_value, int):
+                    page_counts[f"{attr}/{sub_key}"] = sub_value
 
         return page_counts
