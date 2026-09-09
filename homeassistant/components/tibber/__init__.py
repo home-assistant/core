@@ -58,7 +58,7 @@ def _migrate_data_api_registry_entries(
     legacy_device_name = legacy_device.name if legacy_device else None
 
     migrations: dict[str, tuple[str, str]] = {}
-    device_migrations: dict[str, str] = {}
+    device_migrations: dict[str, set[str]] = {}
     device_id_by_identifier = {home_id: home_id for home_id in home_ids}
     for device in sorted(
         coordinator.data.values(),
@@ -69,7 +69,7 @@ def _migrate_data_api_registry_entries(
             and not device.external_id
             and device.name == legacy_device_name
         ):
-            device_migrations.setdefault(legacy_device.id, device.id)
+            device_id_by_identifier.setdefault("", device.id)
         device_id_by_identifier[device.id] = device.id
         if device.external_id:
             device_id_by_identifier[device.external_id] = device.id
@@ -89,7 +89,7 @@ def _migrate_data_api_registry_entries(
         new_unique_id, device_id = registry_migration
         if entity_entry.device_id:
             # Empty external IDs may have grouped multiple Tibber devices.
-            device_migrations.setdefault(entity_entry.device_id, device_id)
+            device_migrations.setdefault(entity_entry.device_id, set()).add(device_id)
         if entity_entry.unique_id != new_unique_id:
             entity_registry.async_update_entity(
                 entity_entry.entity_id, new_unique_id=new_unique_id
@@ -98,7 +98,15 @@ def _migrate_data_api_registry_entries(
     for registry_device in dr.async_entries_for_config_entry(
         device_registry, entry.entry_id
     ):
-        if not (tibber_device_id := device_migrations.get(registry_device.id)):
+        if tibber_device_ids := device_migrations.get(registry_device.id):
+            tibber_device_id = min(
+                (
+                    coordinator.data[device_id].name != registry_device.name,
+                    device_id,
+                )
+                for device_id in tibber_device_ids
+            )[1]
+        else:
             expected_device_ids = {
                 device_id_by_identifier[identifier]
                 for domain, identifier in registry_device.identifiers

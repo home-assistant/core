@@ -154,6 +154,9 @@ async def test_data_api_sensors_migrate_to_device_id(
 
 
 @pytest.mark.usefixtures("recorder_mock", "setup_credentials")
+@pytest.mark.parametrize(
+    "unsupported_device_name", ["Unsupported device", "Charger left"]
+)
 async def test_data_api_sensors_with_empty_external_ids(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -161,6 +164,7 @@ async def test_data_api_sensors_with_empty_external_ids(
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    unsupported_device_name: str,
 ) -> None:
     """Test Data API sensors migrate empty external ID registry entries."""
     area = area_registry.async_get_or_create("Outside")
@@ -189,10 +193,10 @@ async def test_data_api_sensors_with_empty_external_ids(
         )
     }
     devices = {
-        "unsupported-device": create_tibber_device(
-            device_id="unsupported-device",
+        "a-unsupported-device": create_tibber_device(
+            device_id="a-unsupported-device",
             external_id="",
-            name="Unsupported device",
+            name=unsupported_device_name,
             sensor_values={"unknown.sensor.id": None},
         ),
         **{
