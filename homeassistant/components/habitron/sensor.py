@@ -157,7 +157,7 @@ async def async_setup_entry(
             # differs is a real deviation, and only stamp it on first creation
             # (unique_id not yet registered) so a later user area choice
             # survives reloads.
-            analog_uid = f"Mod_{hbt_module.uid}_snsr{ain.nmbr}_{ANALOG_DESCRIPTION.key}"
+            analog_uid = f"{hbt_module.uid}_{ANALOG_DESCRIPTION.key}_{ain.nmbr}"
             deviating_area = (
                 bus_area_id(ain.area)
                 if ain.area not in (0, hbt_module.area)
@@ -209,7 +209,6 @@ class HbtnSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
         self.idx = idx
         self._module: Module = module
         self._sensor_idx = sensor.nmbr
-        self._attr_unique_id = f"Mod_{self._module.uid}_snsr{sensor.nmbr}"
         self._attr_name = sensor.name
 
     # To link this entity to its device, this property must return an
@@ -248,20 +247,18 @@ class HbtnSensorEntityDescription(SensorEntityDescription):
     ``translated_name`` drops the bus name so the display name comes from the
     ``translation_key`` (+ per-instance ``translation_placeholders``) instead.
 
-    ``disambiguate`` appends the description ``key`` to the unique_id. It is
-    needed wherever ``Mod_{uid}_snsr{nmbr}`` is not unique on its own: the
-    router streams (timeout/current/voltage), the ekey members that produce two
-    entities each, and members numbered in their own list (analogue inputs,
-    diagnostics, hub telemetry). A per-module sensor has a distinct ``nmbr`` and
-    MUST keep the bare id, or Home Assistant registers a fresh entity and
-    rewrites its entity_id.
+    ``numbered`` appends the member number to the unique_id. Set it where one
+    device carries several members of the same kind -- the router's current,
+    voltage and timeout channels, a module's analogue inputs -- because there
+    the key alone does not tell them apart. Everything else is one per device
+    and keeps the plain ``{uid}_{key}``.
     """
 
     value_fn: Callable[[Any, int], Any]
     subscribe_fn: Callable[[Any, int], Any] | None = None
     diag_check: bool = False
     translated_name: bool = False
-    disambiguate: bool = False
+    numbered: bool = False
 
 
 class HbtnDescribedSensor(HbtnSensor):
@@ -285,14 +282,13 @@ class HbtnDescribedSensor(HbtnSensor):
         # is registered (see ``async_added_to_hass``). HA has no per-entity
         # ``suggested_area``, so it has to go through the entity registry.
         self._initial_area_id = initial_area_id
-        # The base unique_id is ``Mod_{uid}_snsr{nmbr}``. Members that share a
-        # number -- the router streams, the paired ekey entities, and anything
-        # numbered in its own list -- opt in to a key suffix via
-        # ``disambiguate``. Per-module sensors keep the bare id, so an
-        # installation moving over from the custom integration keeps its
-        # entity_ids instead of getting a second set.
-        if description.disambiguate:
-            self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
+        # ``{device uid}_{key}``: the uid already identifies the device, and the
+        # key says what the entity is. A description that several members of one
+        # device carry -- the router's channels, the analogue inputs -- adds the
+        # member number, which is what tells those apart.
+        self._attr_unique_id = f"{module.uid}_{description.key}"
+        if description.numbered:
+            self._attr_unique_id = f"{self._attr_unique_id}_{sensor.nmbr}"
         # State class comes from the description; text/enum sensors carry None.
         # Unlike ``options``, which SensorEntity reads off the description on
         # its own, this needs an explicit assignment: the class-level default
@@ -368,7 +364,7 @@ class LogicSensor(HbtnDescribedSensor):
         super().__init__(module, logic, coord, idx, LOGIC_DESCRIPTION)
         # Value/subscription index is the logic's list position, not its nmbr.
         self._sensor_idx = logic.idx
-        self._attr_unique_id = f"Mod_{self._module.uid}_logic{logic.nmbr}"
+        self._attr_unique_id = f"{self._module.uid}_logic_{logic.nmbr}"
         self._attr_translation_placeholders = {
             "number": str(logic.nmbr + 1),
             "name": logic.name,
@@ -398,6 +394,15 @@ WIND_DESCRIPTION = HbtnSensorEntityDescription(
     suggested_display_precision=1,
     value_fn=lambda module, idx: module.sensors[idx].value,
 )
+WIND_PEAK_DESCRIPTION = HbtnSensorEntityDescription(
+    key="wind_peak",
+    translation_key="wind_peak",
+    device_class=SensorDeviceClass.WIND_SPEED,
+    native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+    state_class=SensorStateClass.MEASUREMENT,
+    suggested_display_precision=1,
+    value_fn=lambda module, idx: module.sensors[idx].value,
+)
 AIRQUALITY_DESCRIPTION = HbtnSensorEntityDescription(
     key="airquality",
     translation_key="airquality",
@@ -413,7 +418,7 @@ TEMP_DESCRIPTION = HbtnSensorEntityDescription(
     value_fn=lambda module, idx: module.sensors[idx].value,
 )
 TEMP_EXT_DESCRIPTION = HbtnSensorEntityDescription(
-    key="temperature",
+    key="temperature_external",
     device_class=SensorDeviceClass.TEMPERATURE,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     state_class=SensorStateClass.MEASUREMENT,
@@ -426,12 +431,12 @@ TEMP_EXT_DESCRIPTION = HbtnSensorEntityDescription(
 # therefore always moves the status CRC and reaches the entity through the
 # coordinator; subscribing as well would only write the state a second time.
 ANALOG_DESCRIPTION = HbtnSensorEntityDescription(
-    key="analog",
+    key="analog_in",
     translation_key="analog_sensor",
     native_unit_of_measurement=PERCENTAGE,
     state_class=SensorStateClass.MEASUREMENT,
     value_fn=lambda module, idx: module.analogins[idx].value,
-    disambiguate=True,
+    numbered=True,
 )
 CURRENT_DESCRIPTION = HbtnSensorEntityDescription(
     key="current",
@@ -441,7 +446,7 @@ CURRENT_DESCRIPTION = HbtnSensorEntityDescription(
     value_fn=lambda module, idx: module.chan_currents[idx].value,
     subscribe_fn=lambda module, idx: module.chan_currents[idx],
     diag_check=True,
-    disambiguate=True,
+    numbered=True,
 )
 VOLTAGE_DESCRIPTION = HbtnSensorEntityDescription(
     key="voltage",
@@ -451,7 +456,7 @@ VOLTAGE_DESCRIPTION = HbtnSensorEntityDescription(
     value_fn=lambda module, idx: module.voltages[idx].value,
     subscribe_fn=lambda module, idx: module.voltages[idx],
     diag_check=True,
-    disambiguate=True,
+    numbered=True,
 )
 TIMEOUT_DESCRIPTION = HbtnSensorEntityDescription(
     key="timeout",
@@ -460,15 +465,14 @@ TIMEOUT_DESCRIPTION = HbtnSensorEntityDescription(
     value_fn=lambda module, idx: module.chan_timeouts[idx].value,
     subscribe_fn=lambda module, idx: module.chan_timeouts[idx],
     diag_check=True,
-    disambiguate=True,
+    numbered=True,
 )
 EKEY_ID_DESCRIPTION = HbtnSensorEntityDescription(
-    key="ekey_id",
+    key="ekey_identifier",
     translation_key="ekey_id",
     translated_name=True,
     value_fn=lambda module, idx: module.sensors[idx].value,
     subscribe_fn=lambda module, idx: module.sensors[idx],
-    disambiguate=True,
 )
 # The finger sensors bind to ``module.sensors[idx]`` -- the canonical member for
 # the finger number, which both the 10-second poll parser (``_status_ekey``) and
@@ -481,7 +485,6 @@ EKEY_FINGER_DESCRIPTION = HbtnSensorEntityDescription(
     translated_name=True,
     value_fn=lambda module, idx: module.sensors[idx].value,
     subscribe_fn=lambda module, idx: module.sensors[idx],
-    disambiguate=True,
 )
 EKEY_USER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_user_name",
@@ -489,7 +492,6 @@ EKEY_USER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     translated_name=True,
     value_fn=_ekey_user_value,
     subscribe_fn=lambda module, idx: module.sensors[idx],
-    disambiguate=True,
 )
 EKEY_FINGER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_finger_name",
@@ -499,7 +501,6 @@ EKEY_FINGER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     translated_name=True,
     value_fn=_ekey_finger_value,
     subscribe_fn=lambda module, idx: module.sensors[idx],
-    disambiguate=True,
 )
 STATUS_DESCRIPTION = HbtnSensorEntityDescription(
     key="module_status",
@@ -508,10 +509,9 @@ STATUS_DESCRIPTION = HbtnSensorEntityDescription(
     entity_registry_enabled_default=False,
     translated_name=True,
     value_fn=lambda module, idx: module.diags[idx].value,
-    disambiguate=True,
 )
 POWER_TEMP_DESCRIPTION = HbtnSensorEntityDescription(
-    key="power_temp",
+    key="power_temperature",
     translation_key="power_temp",
     device_class=SensorDeviceClass.TEMPERATURE,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -520,7 +520,6 @@ POWER_TEMP_DESCRIPTION = HbtnSensorEntityDescription(
     entity_registry_enabled_default=False,
     translated_name=True,
     value_fn=lambda module, idx: module.diags[idx].value,
-    disambiguate=True,
 )
 MEMORY_DESCRIPTION = HbtnSensorEntityDescription(
     key="memory_usage",
@@ -535,7 +534,6 @@ MEMORY_DESCRIPTION = HbtnSensorEntityDescription(
     translated_name=True,
     value_fn=lambda hub, idx: hub.sensors[idx].value if hub.host_diags_valid else None,
     subscribe_fn=lambda module, idx: module.sensors[idx],
-    disambiguate=True,
 )
 DISK_DESCRIPTION = HbtnSensorEntityDescription(
     key="disk_usage",
@@ -548,7 +546,6 @@ DISK_DESCRIPTION = HbtnSensorEntityDescription(
     translated_name=True,
     value_fn=lambda hub, idx: hub.sensors[idx].value if hub.host_diags_valid else None,
     subscribe_fn=lambda module, idx: module.sensors[idx],
-    disambiguate=True,
 )
 CPU_LOAD_DESCRIPTION = HbtnSensorEntityDescription(
     key="cpu_load",
@@ -561,7 +558,6 @@ CPU_LOAD_DESCRIPTION = HbtnSensorEntityDescription(
     translated_name=True,
     value_fn=lambda hub, idx: hub.diags[idx].value if hub.host_diags_valid else None,
     subscribe_fn=lambda module, idx: module.diags[idx],
-    disambiguate=True,
 )
 CPU_FREQUENCY_DESCRIPTION = HbtnSensorEntityDescription(
     key="cpu_frequency",
@@ -575,7 +571,6 @@ CPU_FREQUENCY_DESCRIPTION = HbtnSensorEntityDescription(
     translated_name=True,
     value_fn=lambda hub, idx: hub.diags[idx].value if hub.host_diags_valid else None,
     subscribe_fn=lambda module, idx: module.diags[idx],
-    disambiguate=True,
 )
 CPU_TEMPERATURE_DESCRIPTION = HbtnSensorEntityDescription(
     key="cpu_temperature",
@@ -588,10 +583,9 @@ CPU_TEMPERATURE_DESCRIPTION = HbtnSensorEntityDescription(
     translated_name=True,
     value_fn=lambda hub, idx: hub.diags[idx].value if hub.host_diags_valid else None,
     subscribe_fn=lambda module, idx: module.diags[idx],
-    disambiguate=True,
 )
 LOGIC_DESCRIPTION = HbtnSensorEntityDescription(
-    key="logic_state",
+    key="logic",
     translation_key="logic_state",
     state_class=SensorStateClass.MEASUREMENT,
     translated_name=True,
@@ -625,7 +619,7 @@ MODULE_SENSORS: dict[str, tuple[HbtnSensorEntityDescription, ...]] = {
     "Humidity": (HUMIDITY_DESCRIPTION,),
     "Illuminance": (ILLUMINANCE_DESCRIPTION,),
     "Wind": (WIND_DESCRIPTION,),
-    "Windpeak": (WIND_DESCRIPTION,),
+    "Windpeak": (WIND_PEAK_DESCRIPTION,),
     "Airquality": (AIRQUALITY_DESCRIPTION,),
     "Identifier": (EKEY_ID_DESCRIPTION, EKEY_USER_NAME_DESCRIPTION),
     "Finger": (EKEY_FINGER_DESCRIPTION, EKEY_FINGER_NAME_DESCRIPTION),
