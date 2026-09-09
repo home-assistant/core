@@ -256,7 +256,8 @@ async def test_migrate_entry(
         },
     )
 
-    await entry.async_migrate(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert dict(entry.data) == {
         "device": "abcd",

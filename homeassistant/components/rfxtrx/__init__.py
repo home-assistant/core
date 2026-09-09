@@ -5,7 +5,7 @@ import binascii
 from collections.abc import Callable, Mapping
 import copy
 import logging
-from typing import Any, NamedTuple, cast
+from typing import Any, NamedTuple, Self, cast
 
 import RFXtrx as rfxtrxmod
 
@@ -58,13 +58,13 @@ class DeviceTuple(NamedTuple):
     subtype: str
     id_string: str
 
-    @staticmethod
-    def from_unique_id(unique_id: str) -> DeviceTuple:
+    @classmethod
+    def from_unique_id(cls, unique_id: str) -> Self:
         """Construct a device tuple from a unique id."""
         data = unique_id.split("_")
         if len(data) != 3:
             raise ValueError(f"Invalid device unique id: {unique_id}")
-        return DeviceTuple(data[0], data[1], data[2])
+        return cls(data[0], data[1], data[2])
 
     @property
     def unique_id(self) -> str:
@@ -356,7 +356,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate an old config entry."""
     version = entry.version
 
-    _LOGGER.debug("Migrating from version %s", version)
+    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
     if version == 1:
         # Convert from old tuple based device identifiers to standard string
@@ -384,7 +384,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         version = 2
         hass.config_entries.async_update_entry(entry, version=version)
 
-    _LOGGER.debug("Migration to version %s successful", version)
+    _LOGGER.debug(
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
+    )
     return True
 
 
