@@ -20,7 +20,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import async_load_fixture
+from tests.common import async_load_fixture, async_load_json_object_fixture
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -239,8 +239,9 @@ async def test_service_get_charge_schedule_formats_local_time(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    payload = json.loads(
-        await async_load_fixture(hass, "charging_settings.json", DOMAIN)
+    payload = cast(
+        dict[str, Any],
+        await async_load_json_object_fixture(hass, "charging_settings.json", DOMAIN),
     )
     payload["data"]["attributes"]["schedules"][0]["monday"]["startTime"] = None
     data = {
