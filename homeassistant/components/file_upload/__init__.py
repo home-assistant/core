@@ -118,6 +118,7 @@ async def _receive_file_field(
     queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = SimpleQueue()
 
     def _sync_queue_consumer() -> None:
+        file_path.parent.mkdir()
         with file_path.open("wb") as file_handle:
             while True:
                 if (_chunk_future := queue.get()) is None:
@@ -149,17 +150,21 @@ async def _receive_file_field(
         queue.put_nowait(None)
         if fut is not None:
             # The executor thread can't be cancelled and is guaranteed to finish once
-            # it reads the sentinel queued above. Await it even if this task is
-            # cancelled: awaiting only through a shield keeps the executor future
-            # itself uncancelled, so the thread is fully done (file written and closed)
-            # before the caller cleans up. Re-raise any cancellation after.
+            # it reads the sentinel queued above. Wait for it even if this task is
+            # cancelled: asyncio.wait neither cancels the future nor raises its
+            # exception, so the thread is fully done (file written and closed) before
+            # the caller cleans up. The loop re-waits through repeated cancellations.
             cancelled: asyncio.CancelledError | None = None
             while not fut.done():
                 try:
-                    await asyncio.shield(fut)
+                    await asyncio.wait({fut})
                 except asyncio.CancelledError as err:
                     cancelled = err
             if cancelled is not None:
+                # A cancellation takes precedence over a writer error; retrieve the
+                # writer result so its exception isn't flagged as never-retrieved.
+                if not fut.cancelled():
+                    fut.exception()
                 raise cancelled
             fut.result()
 
@@ -216,12 +221,12 @@ class FileUploadView(HomeAssistantView):
         file_dir = file_upload_data.file_dir(file_id)
 
         try:
-            await hass.async_add_executor_job(file_dir.mkdir)
             await _receive_file_field(hass, file_field_reader, file_dir / filename)
         except Exception, asyncio.CancelledError:
-            # Upload failed: _receive_file_field has joined the writer and closed the
-            # file, so removing the directory now cannot race the writer. ignore_errors
-            # covers a failure that happened before the directory was created.
+            # Upload failed: _receive_file_field has joined the writer, which created
+            # the directory and closed the file, so removing the directory now cannot
+            # race the writer. ignore_errors covers a failure that happened before the
+            # directory was created.
             await hass.async_add_executor_job(
                 lambda: shutil.rmtree(file_dir, ignore_errors=True)
             )

@@ -284,6 +284,10 @@ async def test_upload_cancelled_releases_consumer(hass: HomeAssistant) -> None:
     with pytest.raises(asyncio.CancelledError):
         task.result()
 
+    # The cancelled upload must not orphan its file directory on disk.
+    file_upload_data = hass.data[file_upload.DOMAIN]
+    assert list(file_upload_data.temp_dir.iterdir()) == []
+
 
 async def test_receive_file_field_cancelled_while_joining_writer(
     hass: HomeAssistant, tmp_path: Path
@@ -294,7 +298,8 @@ async def test_receive_file_field_cancelled_while_joining_writer(
     writer (the whole field already streamed, sentinel queued) must not return
     until the writer thread has finished, so the caller's cleanup cannot race it.
     """
-    file_path = tmp_path / "uploaded.bin"
+    # Nested under a directory that does not exist yet, so the writer's mkdir runs.
+    file_path = tmp_path / "upload_dir" / "uploaded.bin"
     writing_started = asyncio.Event()
     release_writer = threading.Event()  # blocks the writer thread mid-write
     writes: list[bytes] = []
@@ -347,8 +352,8 @@ async def test_receive_file_field_cancelled_while_joining_writer(
             task.cancel()
             for _ in range(10):
                 await asyncio.sleep(0)
-            # Without the cancellation-safe join the task would finish here (returning
-            # while the writer thread runs on); the fix keeps it waiting for the writer.
+            # The task must still be waiting for the writer thread to finish before it
+            # returns, so the caller's cleanup cannot race the writer.
             assert not task.done()
         finally:
             # Always release the writer so a failed assertion can't leak the blocked
@@ -361,3 +366,74 @@ async def test_receive_file_field_cancelled_while_joining_writer(
         task.result()
     # The writer finished writing both chunks before the cancellation propagated.
     assert b"".join(writes) == b"chunk1chunk2"
+    # The writer created the parent directory as part of the joined job, so cleanup
+    # cannot race an in-flight mkdir.
+    assert file_path.parent.is_dir()
+
+
+async def test_receive_file_field_cancel_wins_over_writer_error(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test a writer error during the join does not mask the cancellation.
+
+    When the task is cancelled while joining the writer and the writer then fails,
+    the caller must still observe CancelledError, not the writer's exception.
+    """
+    file_path = tmp_path / "upload_dir" / "uploaded.bin"
+    writing_started = asyncio.Event()
+    release_writer = threading.Event()  # blocks the writer thread mid-write
+
+    class _FailingHandle:
+        """A file handle whose first write parks the writer, then fails."""
+
+        def __enter__(self) -> Self:
+            return self
+
+        def __exit__(self, *exc: object) -> bool:
+            return False
+
+        def write(self, data: bytes) -> int:
+            hass.loop.call_soon_threadsafe(writing_started.set)
+            release_writer.wait()
+            raise OSError("write failed")
+
+    real_open = Path.open
+
+    def _failing_open(self: Path, *args: object, **kwargs: object) -> object:
+        if self != file_path:
+            return real_open(self, *args, **kwargs)
+        return _FailingHandle()
+
+    chunks = iter([b"chunk1", b"chunk2"])
+
+    class _Part:
+        """Fake BodyPartReader yielding two chunks then EOF."""
+
+        async def read_chunk(self, size: int) -> bytes:
+            return next(chunks, b"")
+
+    with patch.object(Path, "open", _failing_open):
+        task = asyncio.create_task(
+            file_upload._receive_file_field(hass, _Part(), file_path)
+        )
+        try:
+            # Let the task settle at the join with the writer blocked mid-write, so
+            # the cancel lands on the join and the writer fails afterwards.
+            await writing_started.wait()
+            for _ in range(3):
+                await asyncio.sleep(0)
+            task.cancel()
+            for _ in range(10):
+                await asyncio.sleep(0)
+            assert not task.done()
+        finally:
+            # Always release the writer so a failed assertion can't leak the blocked
+            # thread and hang teardown.
+            release_writer.set()
+        _done, pending = await asyncio.wait({task}, timeout=10)
+
+    assert not pending
+    # The cancellation wins over the writer's OSError.
+    assert task.cancelled()
+    with pytest.raises(asyncio.CancelledError):
+        task.result()
