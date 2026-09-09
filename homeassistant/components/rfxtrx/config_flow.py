@@ -385,7 +385,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
 class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for RFXCOM RFXtrx."""
 
-    VERSION = 2
+    VERSION = 3
 
     @override
     async def async_step_user(
