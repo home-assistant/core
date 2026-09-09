@@ -689,9 +689,9 @@ async def test_winter_mode_turn_on_off(
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
 async def test_io_switch_unavailable_in_winter_mode(
     hass: HomeAssistant,
-    mock_neopool_client: MagicMock,
 ) -> None:
     """Device switches become unavailable while winter mode is active.
 

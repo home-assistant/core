@@ -249,10 +249,10 @@ async def test_setup_when_modules_absent(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
 async def test_sensor_unavailable_in_winter_mode(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_neopool_client: MagicMock,
 ) -> None:
     """Sensors are unavailable while winter mode is active.
 

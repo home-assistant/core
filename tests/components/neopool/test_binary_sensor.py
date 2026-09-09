@@ -268,9 +268,9 @@ async def test_opt_in_entities_absent_without_options(
     )
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
 async def test_binary_sensor_unavailable_in_winter_mode(
     hass: HomeAssistant,
-    mock_neopool_client: MagicMock,
 ) -> None:
     """Binary sensors are unavailable while winter mode is active.
 

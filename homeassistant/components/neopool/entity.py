@@ -22,8 +22,9 @@ class NeoPoolEntity(CoordinatorEntity[NeoPoolCoordinator]):
     def available(self) -> bool:
         """Return False while winter mode gates this entity.
 
-        Winter mode disables polling, so any entity opting into the gate via
-        _winter_mode_active reports unavailable rather than a stale state.
+        Winter mode disables polling. Entities are gated by default; a
+        subclass can opt out by setting _winter_mode_active to False (the
+        winter mode switch does this so it stays togglable).
         """
         if (
             self._winter_mode_active
