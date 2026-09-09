@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import timedelta
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -104,7 +105,7 @@ async def test_coordinator_connection(
 
 
 async def test_coordinator_state_rate_limited(
-    hass: HomeAssistant, mock_get_state, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_get_state: AsyncMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Tests that a 429 with Retry-After backs off the state coordinator."""
 
@@ -175,7 +176,7 @@ async def test_coordinator_live_error(
 
 
 async def test_coordinator_live_rate_limited(
-    hass: HomeAssistant, mock_live_status, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_live_status: AsyncMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Tests that a 429 with Retry-After backs off the energy live coordinator."""
 
