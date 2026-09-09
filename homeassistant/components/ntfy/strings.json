@@ -7,9 +7,7 @@
   "config": {
     "abort": {
       "account_mismatch": "The provided access token corresponds to the account {wrong_username}. Please re-authenticate with the account **{username}**",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -85,8 +83,7 @@
   "config_subentries": {
     "topic": {
       "abort": {
-        "already_configured": "Topic is already configured",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "already_configured": "Topic is already configured"
       },
       "entry_type": "[%key:component::ntfy::common::topic%]",
       "error": {

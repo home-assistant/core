@@ -5,7 +5,6 @@
       "connection_error": "Could not fetch account information. Is the user registered in the Spotify Developer Dashboard?",
       "missing_configuration": "The Spotify integration is not configured. Please follow the documentation.",
       "reauth_account_mismatch": "The Spotify account authenticated with does not match the account that needed re-authentication.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "user_not_premium": "The Spotify API has been changed and Developer applications created with a free account can no longer access the API. To continue using the Spotify integration, you should use an Spotify Developer application created with a Spotify Premium account, or upgrade to Spotify Premium."
     },
     "create_entry": {

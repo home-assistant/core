@@ -456,7 +456,7 @@ async def test_refresh_error_starts_reauth(
 
     with (
         patch(
-            "homeassistant.components.google_sheets.services.Client.request",
+            "homeassistant.components.google_sheets.services.Client.open_by_key",
             side_effect=RefreshError,
         ),
         pytest.raises(RefreshError),
@@ -547,26 +547,23 @@ async def test_get_sheet_api_error_while_reading(
             )
 
 
-async def test_append_sheet_api_error(
+async def test_append_sheet_permission_error(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test append to sheet service call API error."""
+    """Test append to sheet service call permission error."""
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
-    response = Response()
-    response.status_code = 503
-
     with (
         pytest.raises(HomeAssistantError),
         patch(
-            "homeassistant.components.google_sheets.services.Client.request",
-            side_effect=APIError(response),
+            "homeassistant.components.google_sheets.services.Client.open_by_key",
+            side_effect=PermissionError,
         ),
     ):
         await hass.services.async_call(
