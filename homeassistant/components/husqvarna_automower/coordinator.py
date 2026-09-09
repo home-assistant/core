@@ -238,6 +238,13 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 )
                 if dev is not None:
                     device_registry.async_remove_device(dev.id)
+                stale_state_keys = {
+                    state_key
+                    for state_key in self._work_area_cutting_height_states
+                    if state_key[0] == mower_id
+                }
+                for state_key in stale_state_keys:
+                    self._work_area_cutting_height_states.pop(state_key)
 
         new_devices = current_devices - registered_devices
         if new_devices:
