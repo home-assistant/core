@@ -34,7 +34,7 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: done
@@ -42,9 +42,9 @@ rules:
   test-coverage: done
 
   # Gold
-  devices: todo
-  diagnostics: todo
-  discovery-update-info: todo
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
   discovery: todo
   docs-data-update: done
   docs-examples: todo
@@ -53,16 +53,20 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: One config entry per physical device, no hub
   entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues: todo
-  stale-devices: todo
+  stale-devices:
+    status: exempt
+    comment: One config entry per physical device, no hub
 
   # Platinum
   async-dependency: todo
