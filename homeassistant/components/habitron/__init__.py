@@ -6,7 +6,7 @@ from habitron_client import HabitronError, HabitronTimeoutError
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .communicate import HbtnComm
@@ -169,17 +169,6 @@ def _async_adopt_hub_identity(
     """
     if not smhub.has_mac_uid or entry.unique_id == smhub.uid:
         return
-    if hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, smhub.uid):
-        # Another entry already owns this hub. Both would build their model from
-        # the same MAC-derived uid, and entity unique ids are keyed per domain
-        # and platform, so the second entry's entities collide with the first
-        # one's instead of standing beside them. Stop here and name the entry to
-        # remove rather than load a duplicate that cannot work.
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="duplicate_hub",
-            translation_placeholders={"host": smhub.host, "uid": smhub.uid},
-        )
     _LOGGER.debug(
         "Adopting hub identity for %s: %s -> %s",
         entry.title,

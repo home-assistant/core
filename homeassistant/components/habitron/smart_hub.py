@@ -12,6 +12,7 @@ from habitron_client import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 
 from .communicate import HbtnComm
@@ -120,6 +121,22 @@ class SmartHub:
             mac_uid = self.config.unique_id or self.config.entry_id
             _LOGGER.debug("Hub reported no usable MAC; using %s as uid", mac_uid)
         self.uid = mac_uid
+        # Before the first registry write: if another entry already owns this
+        # hub, its devices and entities are keyed by this very uid, so going on
+        # would attach a second, unusable entry to them. Failing here leaves
+        # the registry untouched.
+        if (
+            self._uid_from_mac
+            and self.config.unique_id != self.uid
+            and self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, self.uid
+            )
+        ):
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="duplicate_hub",
+                translation_placeholders={"host": self.comm.com_ip, "uid": self.uid},
+            )
         self._version = self.comm.com_version
         self._type = self.comm.com_hwtype
         self.host = self.comm.com_ip
