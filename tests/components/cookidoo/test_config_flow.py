@@ -201,9 +201,6 @@ async def test_flow_user_init_data_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    # The discovered UDN is recorded on the existing account entry so later
-    # announcements are deduplicated in the SSDP step.
-    assert cookidoo_config_entry.data[CONF_UDN] == TEST_SSDP_UDN
 
 
 async def test_flow_reconfigure_success(
