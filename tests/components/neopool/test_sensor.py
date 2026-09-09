@@ -251,6 +251,7 @@ async def test_setup_when_modules_absent(
 
 async def test_sensor_unavailable_in_winter_mode(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_neopool_client: MagicMock,
 ) -> None:
     """Sensors are unavailable while winter mode is active.
@@ -278,8 +279,7 @@ async def test_sensor_unavailable_in_winter_mode(
     )
     await setup_integration(hass, entry)
 
-    registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(registry, entry.entry_id)
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     sensors = [e for e in entries if e.domain == SENSOR_DOMAIN]
     assert sensors
     for sensor in sensors:

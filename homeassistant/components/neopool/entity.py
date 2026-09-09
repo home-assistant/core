@@ -20,7 +20,11 @@ class NeoPoolEntity(CoordinatorEntity[NeoPoolCoordinator]):
     @property
     @override
     def available(self) -> bool:
-        """Return False for control entities while winter mode is active."""
+        """Return False while winter mode gates this entity.
+
+        Winter mode disables polling, so any entity opting into the gate via
+        _winter_mode_active reports unavailable rather than a stale state.
+        """
         if (
             self._winter_mode_active
             and self.coordinator.config_entry.pref_disable_polling
