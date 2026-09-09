@@ -146,9 +146,10 @@ def _async_adopt_hub_identity(
 ) -> None:
     """Move the entry onto the hub's MAC, the one identity every path derives.
 
-    An entry can carry an older id: the custom (HACS) integration falls back to
-    a serial or the host when the hub is unreachable while it is set up, and so
-    does this config flow. Now that the hub has answered we know its MAC, so
+    An entry can carry an older id: both the custom (HACS) integration and this
+    config flow fall back to a serial or the host for a hub that answers but
+    reports no usable ``lan mac``. Such a hub keeps that id for as long as the
+    MAC stays unreadable; once it becomes readable we know the MAC here, so
     rewrite the entry -- from here on the plain unique-id check recognises it,
     whatever address it moves to, and no extra matcher is needed.
     """
