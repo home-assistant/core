@@ -61,15 +61,19 @@ class ESPHomeDashboardManager:
         if not (data := self._data) or not (info := data.get("info")):
             return
         if is_hassio(self._hass):
-            from homeassistant.components.hassio import get_addons_info  # noqa: PLC0415
+            from homeassistant.components.hassio import (  # noqa: PLC0415
+                HassioNotReadyError,
+                get_addons_info,
+            )
 
-            # This may raise HassioNotReadyError if Supervisor was unreachable
-            # during setup of the Supervisor integration. That will fail setup
-            # of this integration. However there is no better option at this time
-            # since we need to know if the addon is installed from Supervisor to
-            # correctly setup this integration and we can't raise ConfigEntryNotReady
-            # to trigger a retry from async_setup.
-            addons = get_addons_info(self._hass)
+            try:
+                addons = get_addons_info(self._hass)
+            except HassioNotReadyError:
+                # Supervisor was unreachable during its own setup, so we cannot
+                # tell if the addon is installed. Supervisor discovery sets the
+                # dashboard up again once it recovers.
+                _LOGGER.debug("Supervisor is not ready, skipping dashboard restore")
+                return
             if info["addon_slug"] not in addons:
                 # The addon is not installed anymore, but it make come back
                 # so we don't want to remove the dashboard, but for now
