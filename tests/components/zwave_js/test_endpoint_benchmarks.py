@@ -12,14 +12,12 @@ from syrupy.assertion import SnapshotAssertion
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
 
 def _snapshot_device_tree(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     node_device: dr.DeviceEntry,
@@ -138,7 +136,6 @@ def node(request: pytest.FixtureRequest) -> Node:
     indirect=True,
 )
 async def test_device_tree(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     client: MagicMock,
@@ -152,6 +149,5 @@ async def test_device_tree(
     )
     assert node_device
     assert (
-        _snapshot_device_tree(hass, device_registry, entity_registry, node_device)
-        == snapshot
+        _snapshot_device_tree(device_registry, entity_registry, node_device) == snapshot
     )
