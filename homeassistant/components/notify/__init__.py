@@ -86,6 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {
             vol.Required(ATTR_MESSAGE): cv.string,
             vol.Optional(ATTR_TITLE): cv.string,
+            vol.Optional(ATTR_DATA): dict[str, Any],
         },
         "_async_send_message",
     )
