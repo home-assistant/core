@@ -1784,6 +1784,59 @@ async def test_wan_monitor_latency(
                 "uptime_stats": {
                     "WAN": {
                         "monitors": [
+                            # A monitor that got no response omits
+                            # "latency_average" rather than reporting a value.
+                            {
+                                "availability": 0.0,
+                                "target": "www.microsoft.com",
+                                "type": "icmp",
+                            },
+                        ],
+                    },
+                },
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_monitor_latency_unresponsive_monitor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Verify an unresponsive monitor reports unknown rather than 0 ms."""
+    entity_id = "sensor.mock_name_microsoft_wan_latency"
+
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                "uptime_stats": {
+                    "WAN": {
+                        "monitors": [
                             {
                                 "availability": 100.0,
                                 "latency_average": 30,
