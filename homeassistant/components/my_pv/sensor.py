@@ -56,12 +56,6 @@ SENSOR_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {
         "translation_key": "power_solar",
     },
     "screen_mode_flag": {"translation_key": "screen_mode_flag"},
-    "temp_ps": {
-        "device_class": SensorDeviceClass.TEMPERATURE,
-        "enabled": False,
-        "entity_category": EntityCategory.DIAGNOSTIC,
-        "translation_key": "temp_ps",
-    },
     "temp1": {
         "device_class": SensorDeviceClass.TEMPERATURE,
         "translation_key": "temp1",
@@ -77,6 +71,12 @@ SENSOR_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {
     "temp4": {
         "device_class": SensorDeviceClass.TEMPERATURE,
         "translation_key": "temp4",
+    },
+    "temp_ps": {
+        "device_class": SensorDeviceClass.TEMPERATURE,
+        "enabled": False,
+        "entity_category": EntityCategory.DIAGNOSTIC,
+        "translation_key": "temp_ps",
     },
     "uptime": {
         "device_class": SensorDeviceClass.DURATION,
