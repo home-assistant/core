@@ -53,25 +53,59 @@ DISCOVERY_INFO = BluetoothServiceInfoBleak(
     tx_power=-127,
 )
 
+
+def _idle_discovery() -> BluetoothServiceInfoBleak:
+    """Return a RYSE advertisement without the PAIR flag."""
+    idle_device = BLEDevice(DEVICE_ADDRESS, DEVICE_NAME, {})
+    return BluetoothServiceInfoBleak(
+        name=DEVICE_NAME,
+        address=DEVICE_ADDRESS,
+        rssi=-40,
+        manufacturer_data=IDLE_MANUFACTURER_DATA,
+        service_data={},
+        service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
+        source="local",
+        device=idle_device,
+        advertisement=AdvertisementData(
+            local_name=DEVICE_NAME,
+            manufacturer_data=IDLE_MANUFACTURER_DATA,
+            service_data={},
+            service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
+            rssi=RSSI_VALUE,
+            tx_power=None,
+            platform_data=(),
+        ),
+        time=time.time(),
+        connectable=True,
+        tx_power=-127,
+    )
+
+
 USER_INPUT = {CONF_ADDRESS: DEVICE_ADDRESS}
 
 PAIRING_ERRORS = [
     (Exception("boom"), "unexpected_error"),
     (TimeoutError("timeout"), "cannot_connect"),
     (OSError("os error"), "cannot_connect"),
+    (EOFError("eof"), "cannot_connect"),
     (BleakError("bleak error"), "cannot_connect"),
     (False, "cannot_connect"),
 ]
 
 
 @pytest.fixture(autouse=True)
-def mock_last_service_info() -> Generator[None]:
+def mock_last_service_info() -> Generator[MagicMock]:
     """Use the stored discovery advertisement when no scanner cache is present."""
-    with patch(
-        "homeassistant.components.ryse.config_flow.async_last_service_info",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.ryse.config_flow.async_last_service_info",
+            return_value=None,
+        ) as mock,
+        patch(
+            "homeassistant.components.ryse.config_flow.async_clear_address_from_match_history",
+        ),
     ):
-        yield
+        yield mock
 
 
 @pytest.fixture
@@ -137,6 +171,36 @@ async def test_async_step_user_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEVICE_NAME
     assert result["data"] == {}
+    assert result["result"].unique_id == DEVICE_ADDRESS
+
+
+async def test_async_step_user_keeps_device_after_pairing_error(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    discovery: MagicMock,
+) -> None:
+    """Test a pairing error keeps the selected device even if it leaves pairing mode."""
+    mock_device.pair.side_effect = [False, True]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    discovery.return_value = [_idle_discovery()]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DEVICE_ADDRESS
 
 
@@ -314,30 +378,7 @@ async def test_async_step_user_skips_non_pairing_device(
     hass: HomeAssistant, discovery: MagicMock
 ) -> None:
     """Test that we skip devices that are not advertising pairing mode."""
-    idle_device = BLEDevice(DEVICE_ADDRESS, DEVICE_NAME, {})
-    idle_discovery = BluetoothServiceInfoBleak(
-        name=DEVICE_NAME,
-        address=DEVICE_ADDRESS,
-        rssi=-40,
-        manufacturer_data=IDLE_MANUFACTURER_DATA,
-        service_data={},
-        service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
-        source="local",
-        device=idle_device,
-        advertisement=AdvertisementData(
-            local_name=DEVICE_NAME,
-            manufacturer_data=IDLE_MANUFACTURER_DATA,
-            service_data={},
-            service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
-            rssi=RSSI_VALUE,
-            tx_power=None,
-            platform_data=(),
-        ),
-        time=time.time(),
-        connectable=True,
-        tx_power=-127,
-    )
-    discovery.return_value = [idle_discovery]
+    discovery.return_value = [_idle_discovery()]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -388,39 +429,34 @@ async def test_async_step_user_skips_unmatched_device(
 async def test_async_step_bluetooth_not_in_pairing_mode(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
-    """Test we refuse to pair when the shade is not advertising pairing mode."""
-    idle_device = BLEDevice(DEVICE_ADDRESS, DEVICE_NAME, {})
-    idle_discovery = BluetoothServiceInfoBleak(
-        name=DEVICE_NAME,
-        address=DEVICE_ADDRESS,
-        rssi=-40,
-        manufacturer_data=IDLE_MANUFACTURER_DATA,
-        service_data={},
-        service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
-        source="local",
-        device=idle_device,
-        advertisement=AdvertisementData(
-            local_name=DEVICE_NAME,
-            manufacturer_data=IDLE_MANUFACTURER_DATA,
-            service_data={},
-            service_uuids=["a72f2800-b0bd-498b-b4cd-4a3901388238"],
-            rssi=RSSI_VALUE,
-            tx_power=None,
-            platform_data=(),
-        ),
-        time=time.time(),
-        connectable=True,
-        tx_power=-127,
-    )
-
+    """Test idle advertisements are not shown as discoveries."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=idle_discovery,
+        data=_idle_discovery(),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_in_pairing_mode"
+    mock_device.pair.assert_not_called()
+
+
+async def test_async_step_bluetooth_left_pairing_mode(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    mock_last_service_info: MagicMock,
+) -> None:
+    """Test we refuse to pair if the shade leaves pairing mode before confirm."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=DISCOVERY_INFO,
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
+
+    mock_last_service_info.return_value = _idle_discovery()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}

@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
             raise ConfigEntryNotReady(
                 f"Could not connect to RYSE device with address {address}"
             )
-    except (TimeoutError, OSError, BleakError) as err:
+    except (TimeoutError, OSError, EOFError, BleakError) as err:
         await device.unpair()
         raise ConfigEntryNotReady(
             f"Could not connect to RYSE device with address {address}"

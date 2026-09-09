@@ -94,7 +94,7 @@ class RyseCoverEntity(CoverEntity):
         """Open the shade."""
         try:
             await self._device.send_open()
-        except (TimeoutError, OSError, BleakError) as err:
+        except (TimeoutError, OSError, EOFError, BleakError) as err:
             raise HomeAssistantError(f"Failed to open cover: {err}") from err
         _LOGGER.debug("Change position to open")
         self._current_position = 100
@@ -106,7 +106,7 @@ class RyseCoverEntity(CoverEntity):
         """Close the shade."""
         try:
             await self._device.send_close()
-        except (TimeoutError, OSError, BleakError) as err:
+        except (TimeoutError, OSError, EOFError, BleakError) as err:
             raise HomeAssistantError(f"Failed to close cover: {err}") from err
         _LOGGER.debug("Change position to close")
         self._current_position = 0
@@ -120,7 +120,7 @@ class RyseCoverEntity(CoverEntity):
         device_position = self._device.get_real_position(ha_position)
         try:
             await self._device.send_set_position(device_position)
-        except (TimeoutError, OSError, BleakError) as err:
+        except (TimeoutError, OSError, EOFError, BleakError) as err:
             raise HomeAssistantError(f"Failed to set cover position: {err}") from err
         _LOGGER.debug("Change position to a specific position")
         self._attr_is_closed = self._device.is_closed(device_position)
@@ -144,7 +144,7 @@ class RyseCoverEntity(CoverEntity):
             if paired or self._current_position is None:
                 await self._device.send_get_position()
 
-        except (TimeoutError, OSError, BleakError) as err:
+        except (TimeoutError, OSError, EOFError, BleakError) as err:
             _LOGGER.warning(
                 "BLE communication error while reading device data: %s", err
             )

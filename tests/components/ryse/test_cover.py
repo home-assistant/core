@@ -216,8 +216,8 @@ async def test_cover_services(
 
 @pytest.mark.parametrize(
     "exception",
-    [TimeoutError("t/o"), OSError("io err"), BleakError("ble err")],
-    ids=["timeout", "oserror", "bleak"],
+    [TimeoutError("t/o"), OSError("io err"), EOFError("eof"), BleakError("ble err")],
+    ids=["timeout", "oserror", "eof", "bleak"],
 )
 @pytest.mark.parametrize(
     ("service", "service_data", "method", "error"),
@@ -287,8 +287,8 @@ async def test_pairing_failure_marks_unavailable(
 
 @pytest.mark.parametrize(
     "exception",
-    [TimeoutError("t/o"), OSError("io err"), BleakError("ble err")],
-    ids=["timeout", "oserror", "bleak"],
+    [TimeoutError("t/o"), OSError("io err"), EOFError("eof"), BleakError("ble err")],
+    ids=["timeout", "oserror", "eof", "bleak"],
 )
 async def test_ble_error_while_polling_marks_unavailable(
     hass: HomeAssistant,
