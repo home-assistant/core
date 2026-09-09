@@ -1815,6 +1815,65 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         return data
 
 
+class OffsetType(StrEnum):
+    """Possible directions for an offset selector value."""
+
+    NONE = "none"
+    BEFORE = "before"
+    AFTER = "after"
+
+
+class OffsetSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent an offset selector config."""
+
+    enable_day: bool
+    enable_millisecond: bool
+
+
+def _validate_offset_duration(value: Any) -> Any:
+    cv.positive_time_period(value)
+    return value
+
+
+def _validate_offset_type_duration(value: dict[str, Any]) -> dict[str, Any]:
+    if value["type"] == OffsetType.NONE:
+        return {"type": value["type"]}
+    if "duration" not in value:
+        raise vol.Invalid("required key not provided", ["duration"])
+    return value
+
+
+_OFFSET_VALUE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("type"): vol.All(
+                vol.Coerce(OffsetType), lambda val: val.value
+            ),
+            vol.Optional("duration"): _validate_offset_duration,
+        }
+    ),
+    _validate_offset_type_duration,
+)
+
+
+@SELECTORS.register("offset")
+class OffsetSelector(Selector[OffsetSelectorConfig]):
+    """Selector for a duration before or after a reference point in time."""
+
+    selector_type = "offset"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Optional("enable_day"): cv.boolean,
+            vol.Optional("enable_millisecond"): cv.boolean,
+        }
+    )
+
+    def __call__(self, data: Any) -> dict[str, Any]:
+        """Validate the passed selection."""
+        return cast(dict[str, Any], _OFFSET_VALUE_SCHEMA(data))
+
+
 class QrErrorCorrectionLevel(StrEnum):
     """Possible error correction levels for QR code selector."""
 

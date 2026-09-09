@@ -1844,6 +1844,46 @@ def test_duration_selector_schema(schema, valid_selections, invalid_selections) 
 
 
 @pytest.mark.parametrize(
+    "schema",
+    [{}, {"enable_day": True, "enable_millisecond": True}],
+)
+def test_offset_selector_schema(schema: dict[str, Any]) -> None:
+    """Test offset selector."""
+    _test_selector(
+        "offset",
+        schema,
+        (
+            {"type": "none"},
+            {"type": "before", "duration": {"hours": 1}},
+            {"type": "after", "duration": {"days": 1, "minutes": 30}},
+            {"type": "after", "duration": {"milliseconds": 500}},
+            {"type": "before", "duration": "00:30:00"},
+            {"type": "after", "duration": 90},
+        ),
+        (
+            None,
+            {},
+            {"type": "before"},
+            {"type": "after"},
+            {"duration": {"hours": 1}},
+            {"type": "during", "duration": {"hours": 1}},
+            {"type": "before", "duration": {}},
+            {"type": "before", "duration": {"seconds": -1}},
+            {"type": "before", "duration": "-00:30:00"},
+            {"type": "before", "duration": "later"},
+        ),
+    )
+
+
+def test_offset_selector_none_drops_duration() -> None:
+    """Test a duration is dropped when the offset type is none."""
+    offset_selector = selector.OffsetSelector()
+    assert offset_selector({"type": "none", "duration": {"hours": 1}}) == {
+        "type": "none"
+    }
+
+
+@pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
     [
         (
