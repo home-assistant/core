@@ -1,6 +1,6 @@
 """Test Govee light local."""
 
-from errno import EADDRINUSE, EADDRNOTAVAIL, ENETDOWN
+from errno import EACCES, EADDRINUSE, EADDRNOTAVAIL, EAFNOSUPPORT, ENETDOWN
 from ipaddress import IPv4Network
 import logging
 import os
@@ -163,6 +163,39 @@ async def test_light_setup_retry_when_no_address_binds(
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.reason == expected_error
+
+
+@pytest.mark.parametrize(
+    ("bind_errno", "expected_error"),
+    [
+        pytest.param(
+            EACCES,
+            "Could not listen for Govee devices: Permission denied",
+            id="permission_denied",
+        ),
+        pytest.param(
+            EAFNOSUPPORT,
+            "Could not listen for Govee devices: Address family not supported by protocol",
+            id="address_family_unsupported",
+        ),
+    ],
+)
+async def test_light_setup_error_when_bind_fails_permanently(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    bind_errno: int,
+    expected_error: str,
+) -> None:
+    """Test setup fails without retrying when the bind error cannot clear on its own."""
+
+    mock_govee_api.start.side_effect = OSError(bind_errno, os.strerror(bind_errno))
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
     assert entry.reason == expected_error
 
 

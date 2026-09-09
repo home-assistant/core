@@ -2,7 +2,7 @@
 
 import asyncio
 from contextlib import suppress
-from errno import EADDRINUSE
+from errno import EADDRINUSE, EADDRNOTAVAIL, EMFILE, ENETDOWN, ENETUNREACH, ENOBUFS
 import logging
 
 from govee_local_api.controller import LISTENING_PORT
@@ -10,12 +10,18 @@ from govee_local_api.controller import LISTENING_PORT
 from homeassistant.components import network
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import DISCOVERY_TIMEOUT, DOMAIN
 from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
+
+# Bind errors that clear up on their own (port freed, adapter back, resources
+# released); anything else needs user intervention and must not retry.
+TRANSIENT_BIND_ERRNOS = frozenset(
+    {EADDRINUSE, EADDRNOTAVAIL, EMFILE, ENETDOWN, ENETUNREACH, ENOBUFS}
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +59,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
                 translation_key="port_in_use",
                 translation_placeholders={"port": LISTENING_PORT},
             ) from ex
-        raise ConfigEntryNotReady(
+        if ex.errno in TRANSIENT_BIND_ERRNOS:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="bind_failed",
+                translation_placeholders={"error": ex.strerror or str(ex)},
+            ) from ex
+        raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="bind_failed",
             translation_placeholders={"error": ex.strerror or str(ex)},
