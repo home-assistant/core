@@ -472,7 +472,11 @@ EKEY_ID_DESCRIPTION = HbtnSensorEntityDescription(
     translation_key="ekey_id",
     translated_name=True,
     value_fn=lambda module, idx: module.sensors[idx].value,
-    subscribe_fn=lambda module, idx: module.sensors[idx],
+    # No ``subscribe_fn``: the poll parser (``_status_ekey``) writes this member
+    # and the same read moves the module CRC, so the coordinator already updates
+    # the entity -- subscribing would write the state twice. The FINGER bus event
+    # writes it too, but nothing receives events yet; the subscription belongs
+    # with the push receiver in a later PR.
 )
 # The finger sensors bind to ``module.sensors[idx]`` -- the canonical member for
 # the finger number, which both the 10-second poll parser (``_status_ekey``) and
@@ -484,14 +488,22 @@ EKEY_FINGER_DESCRIPTION = HbtnSensorEntityDescription(
     translation_key="ekey_finger",
     translated_name=True,
     value_fn=lambda module, idx: module.sensors[idx].value,
-    subscribe_fn=lambda module, idx: module.sensors[idx],
+    # No ``subscribe_fn``: the poll parser (``_status_ekey``) writes this member
+    # and the same read moves the module CRC, so the coordinator already updates
+    # the entity -- subscribing would write the state twice. The FINGER bus event
+    # writes it too, but nothing receives events yet; the subscription belongs
+    # with the push receiver in a later PR.
 )
 EKEY_USER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_user_name",
     translation_key="ekey_user_name",
     translated_name=True,
     value_fn=_ekey_user_value,
-    subscribe_fn=lambda module, idx: module.sensors[idx],
+    # No ``subscribe_fn``: the poll parser (``_status_ekey``) writes this member
+    # and the same read moves the module CRC, so the coordinator already updates
+    # the entity -- subscribing would write the state twice. The FINGER bus event
+    # writes it too, but nothing receives events yet; the subscription belongs
+    # with the push receiver in a later PR.
 )
 EKEY_FINGER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_finger_name",
@@ -500,7 +512,11 @@ EKEY_FINGER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     options=list(_FINGER_KEYS),
     translated_name=True,
     value_fn=_ekey_finger_value,
-    subscribe_fn=lambda module, idx: module.sensors[idx],
+    # No ``subscribe_fn``: the poll parser (``_status_ekey``) writes this member
+    # and the same read moves the module CRC, so the coordinator already updates
+    # the entity -- subscribing would write the state twice. The FINGER bus event
+    # writes it too, but nothing receives events yet; the subscription belongs
+    # with the push receiver in a later PR.
 )
 STATUS_DESCRIPTION = HbtnSensorEntityDescription(
     key="module_status",

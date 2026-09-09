@@ -411,10 +411,6 @@ def test_logic_sensor_value_uses_idx_not_nmbr() -> None:
 @pytest.mark.parametrize(
     ("description", "source", "name"),
     [
-        (EKEY_ID_DESCRIPTION, "sensors", "Identifier"),
-        (EKEY_FINGER_DESCRIPTION, "sensors", "Finger"),
-        (EKEY_USER_NAME_DESCRIPTION, "sensors", "Identifier"),
-        (EKEY_FINGER_NAME_DESCRIPTION, "sensors", "Finger"),
         # Router telemetry pushes via subscribe_fn: the library refreshes it on
         # every poll independently of the compact-status CRC, so a coordinator
         # that only fires on a CRC change would otherwise leave these stale.
@@ -454,8 +450,11 @@ async def test_described_sensor_add_listener(
 @pytest.mark.parametrize(
     ("description", "source", "name"),
     [
-        (EKEY_ID_DESCRIPTION, "sensors", "Identifier"),
-        (EKEY_FINGER_DESCRIPTION, "sensors", "Finger"),
+        # The members that genuinely need a subscription: they change
+        # independently of the module CRC, so the coordinator alone would
+        # leave them stale.
+        (CURRENT_DESCRIPTION, "chan_currents", "Current 1"),
+        (CPU_LOAD_DESCRIPTION, "diags", "CPU load"),
     ],
 )
 async def test_described_sensor_remove_listener(
