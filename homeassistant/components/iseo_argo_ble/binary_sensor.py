@@ -225,6 +225,15 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                 translation_placeholders={"name": self._credential_name},
             )
 
+        if not enabled:
+            # Persist before the write, not after: the write overwrites the
+            # window on the lock, and only this entity instance held a copy.
+            # Shutting down in between — the settling delay alone is seconds —
+            # would leave the credential suspended with nothing to restore
+            # from. Writing this first is harmless if the write then fails;
+            # the entry is dropped again on the next successful restore.
+            self._remember_validity(suspended=True)
+
         async with self._admin_session() as client:
             await client.set_user_disabled(
                 uuid_hex=self._uuid_hex,
@@ -235,10 +244,10 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                 validity=self._validity if enabled else None,
             )
 
-        # Only this entity instance knew the window, and suspending has just
-        # overwritten it on the lock. Persist it, or a restart would leave the
-        # credential permanently unrestorable.
-        self._remember_validity(suspended=not enabled)
+        if enabled:
+            # Only now is the lock known to hold the window again, so the
+            # stored copy is safe to drop.
+            self._remember_validity(suspended=False)
         self._apply_to_cached_users(disabled=not enabled)
 
     def _remember_validity(self, suspended: bool) -> None:

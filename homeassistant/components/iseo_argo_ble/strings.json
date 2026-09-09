@@ -72,7 +72,7 @@
       "message": "Could not connect to the lock."
     },
     "credential_not_on_lock": {
-      "message": "The lock no longer has the credential {name}. It was likely removed in the Argo app; reload the integration to refresh the list."
+      "message": "The lock no longer has the credential {name}. It was likely removed in the Argo app."
     },
     "device_not_found": {
       "message": "Could not find ISEO lock {address}. Make sure it is powered on and within Bluetooth range."
