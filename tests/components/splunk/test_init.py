@@ -304,6 +304,55 @@ async def test_event_listener_unauthorized_repeated_failures_log_once(
     assert len(recovery_records) == 1
 
 
+async def test_event_listener_category_change_logs_again(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test switching from one failure category to another logs the new one too."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_hass_splunk.queue.side_effect = ClientConnectionError("Connection failed")
+
+    with caplog.at_level(logging.DEBUG):
+        for i in range(3):
+            hass.states.async_set("sensor.test", str(i))
+            await hass.async_block_till_done()
+
+        mock_hass_splunk.queue.side_effect = SplunkPayloadError(
+            0, "Unauthorized", HTTPStatus.UNAUTHORIZED
+        )
+
+        for i in range(3):
+            hass.states.async_set("sensor.test", f"unauthorized-{i}")
+            await hass.async_block_till_done()
+
+    connection_records = [
+        record
+        for record in caplog.records
+        if record.levelno == logging.DEBUG
+        and "Connection error sending to Splunk" in record.message
+    ]
+    assert len(connection_records) == 1
+
+    unauthorized_records = [
+        record
+        for record in caplog.records
+        if record.levelno == logging.ERROR
+        and "Splunk token unauthorized" in record.message
+    ]
+    assert len(unauthorized_records) == 1
+
+    # Reauth still fires on every failure regardless of log suppression.
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+
+
 @pytest.mark.parametrize(
     ("error", "expected_log_level", "expected_message"),
     [
