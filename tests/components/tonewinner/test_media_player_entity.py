@@ -374,6 +374,26 @@ async def test_media_player_power_off_from_callback_clears_source(
     assert state.attributes["source"] == "HDMI 1"
 
 
+async def test_media_player_already_disconnected_at_load(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test a receiver lost before entity load schedules a reload."""
+    mock_config_entry.add_to_hass(hass)
+    mock_receiver.connected = False
+
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        await _setup_integration(hass, mock_config_entry, mock_receiver)
+
+        state = hass.states.get(ENTITY_ID)
+        assert state is not None
+        assert state.state == "unavailable"
+        mock_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
+
+
 async def test_media_player_unavailable_on_disconnect_and_recovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

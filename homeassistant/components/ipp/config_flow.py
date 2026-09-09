@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN
+from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +45,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
         tls=data[CONF_SSL],
         verify_ssl=data[CONF_VERIFY_SSL],
         session=session,
+        request_timeout=REQUEST_TIMEOUT,
     )
 
     printer = await ipp.printer()

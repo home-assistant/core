@@ -72,9 +72,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.78.0
-grpcio-status==1.78.0
-grpcio-reflection==1.78.0
+grpcio==1.83.1
+grpcio-status==1.83.1
+grpcio-reflection==1.83.1
 
 # boto3 and botocore are shared requirements of multiple integrations,
 # with botocore also being a transitive dependency of aiobotocore, which
@@ -114,7 +114,7 @@ httpcore==1.0.9
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.5.2
+numpy==2.3.2
 pandas==2.3.3
 
 # Constrain multidict to avoid typing issues
@@ -140,7 +140,7 @@ iso4217!=1.10.20220401
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==6.32.0
+protobuf==7.36.0
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder

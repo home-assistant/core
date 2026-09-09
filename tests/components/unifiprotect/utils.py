@@ -38,8 +38,10 @@ from uiprotect.data.public_devices import (
     PublicLightModeSettings,
     PublicOsdSettings,
     PublicSensor,
+    PublicSensorAlarmSettingsRead,
     PublicSensorLeakSettings,
     PublicSensorMotionSettingsRead,
+    PublicSensorThresholdSettings,
     PublicSmartDetectSettings,
     PublicWirelessBatteryStatus,
     PublicWirelessConnectionState,
@@ -267,6 +269,10 @@ def make_public_sensor(
     is_motion_detected: bool | None = None,
     motion_enabled: bool | None = None,
     motion_sensitivity: int | None = None,
+    temperature_enabled: bool | None = None,
+    humidity_enabled: bool | None = None,
+    light_enabled: bool | None = None,
+    alarm_enabled: bool | None = None,
     mount_type: MountType | None = None,
     is_opened: bool | None = None,
     is_leak_detected: bool | None = None,
@@ -331,6 +337,30 @@ def make_public_sensor(
             if motion_sensitivity is None
             else motion_sensitivity
         ),
+    )
+    public.temperature_settings = PublicSensorThresholdSettings(
+        is_enabled=(
+            sensor.temperature_settings.is_enabled
+            if temperature_enabled is None
+            else temperature_enabled
+        )
+    )
+    public.humidity_settings = PublicSensorThresholdSettings(
+        is_enabled=(
+            sensor.humidity_settings.is_enabled
+            if humidity_enabled is None
+            else humidity_enabled
+        )
+    )
+    public.light_settings = PublicSensorThresholdSettings(
+        is_enabled=(
+            sensor.light_settings.is_enabled if light_enabled is None else light_enabled
+        )
+    )
+    public.alarm_settings = PublicSensorAlarmSettingsRead(
+        is_enabled=(
+            sensor.alarm_settings.is_enabled if alarm_enabled is None else alarm_enabled
+        )
     )
     public.wireless_connection_state = PublicWirelessConnectionState(
         battery_status=PublicWirelessBatteryStatus(
@@ -558,6 +588,7 @@ def setup_public_sensor(
     pb.sensors = public_bootstrap.sensors
     pb.relays = {}
     pb.sirens = {}
+    pb.fobs = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
 
@@ -588,6 +619,7 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
     pb.lights = public_bootstrap.lights
     pb.relays = {}
     pb.sirens = {}
+    pb.fobs = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
 
@@ -618,6 +650,7 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
     pb.cameras = public_bootstrap.cameras
     pb.relays = {}
     pb.sirens = {}
+    pb.fobs = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
 

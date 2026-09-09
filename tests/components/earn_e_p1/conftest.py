@@ -10,11 +10,16 @@ import pytest
 from homeassistant.components.earn_e_p1.const import CONF_SERIAL, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.1.100"
+MOCK_NEW_HOST = "192.168.1.200"
 MOCK_SERIAL = "E0012345678901234"
+MOCK_MAC = "aabbcc112233"
+# Devices announce themselves as "Energiemonitor-<4 hex>"; DHCP lowercases it.
+MOCK_HOSTNAME = "energiemonitor-d674"
 
 MOCK_DEVICE_DATA: dict[str, Any] = {
     "power_delivered": 2.5,
@@ -28,6 +33,12 @@ MOCK_DEVICE_DATA: dict[str, Any] = {
     "gas_delivered": 1234.567,
     "wifiRSSI": -65,
 }
+
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip=MOCK_HOST,
+    hostname=MOCK_HOSTNAME,
+    macaddress=MOCK_MAC,
+)
 
 
 def trigger_callback(
@@ -64,12 +75,15 @@ def mock_listener() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Create a mock config entry."""
+def mock_config_entry(
+    hass: HomeAssistant, request: pytest.FixtureRequest
+) -> MockConfigEntry:
+    """Create a mock config entry, optionally extended with indirect data."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=f"EARN-E P1 ({MOCK_HOST})",
-        data={CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL},
+        data={CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL}
+        | getattr(request, "param", {}),
         unique_id=MOCK_SERIAL,
     )
     entry.add_to_hass(hass)

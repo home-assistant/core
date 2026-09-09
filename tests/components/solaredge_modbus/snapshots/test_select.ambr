@@ -1,0 +1,389 @@
+# serializer version: 1
+# name: test_selects[select.solaredge_se10000h_export_limit_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'total',
+        'per_phase',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.solaredge_se10000h_export_limit_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Export limit type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Export limit type',
+    'platform': 'solaredge_modbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'export_control_limit_type',
+    'unique_id': '7E123ABC_export_control_limit_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.solaredge_se10000h_export_limit_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge SE10000H Export limit type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'total',
+        'per_phase',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.solaredge_se10000h_export_limit_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'total',
+  })
+# ---
+# name: test_selects[select.solaredge_se10000h_export_limitation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'export_control_export_import_meter',
+        'export_control_consumption_meter',
+        'production_control',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.solaredge_se10000h_export_limitation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Export limitation',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Export limitation',
+    'platform': 'solaredge_modbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'export_control_mode',
+    'unique_id': '7E123ABC_export_control_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.solaredge_se10000h_export_limitation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge SE10000H Export limitation',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'export_control_export_import_meter',
+        'export_control_consumption_meter',
+        'production_control',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.solaredge_se10000h_export_limitation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_selects[select.solaredge_se10000h_storage_ac_charge_policy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'always',
+        'fixed_energy_limit',
+        'percent_of_production',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.solaredge_se10000h_storage_ac_charge_policy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Storage AC charge policy',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Storage AC charge policy',
+    'platform': 'solaredge_modbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ac_charge_policy',
+    'unique_id': '7E123ABC_storage_ac_charge_policy',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.solaredge_se10000h_storage_ac_charge_policy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge SE10000H Storage AC charge policy',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'always',
+        'fixed_energy_limit',
+        'percent_of_production',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.solaredge_se10000h_storage_ac_charge_policy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_selects[select.solaredge_se10000h_storage_command_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'solar_only',
+        'charge_from_clipped_solar',
+        'charge_from_solar',
+        'charge_from_solar_and_grid',
+        'discharge_to_maximize_export',
+        'discharge_to_minimize_import',
+        'maximize_self_consumption',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.solaredge_se10000h_storage_command_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Storage command mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Storage command mode',
+    'platform': 'solaredge_modbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_command_mode',
+    'unique_id': '7E123ABC_storage_command_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.solaredge_se10000h_storage_command_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge SE10000H Storage command mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'solar_only',
+        'charge_from_clipped_solar',
+        'charge_from_solar',
+        'charge_from_solar_and_grid',
+        'discharge_to_maximize_export',
+        'discharge_to_minimize_import',
+        'maximize_self_consumption',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.solaredge_se10000h_storage_command_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_selects[select.solaredge_se10000h_storage_control_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'maximize_self_consumption',
+        'time_of_use',
+        'backup_only',
+        'remote_control',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.solaredge_se10000h_storage_control_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Storage control mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Storage control mode',
+    'platform': 'solaredge_modbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_control_mode',
+    'unique_id': '7E123ABC_storage_control_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.solaredge_se10000h_storage_control_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge SE10000H Storage control mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'maximize_self_consumption',
+        'time_of_use',
+        'backup_only',
+        'remote_control',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.solaredge_se10000h_storage_control_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'maximize_self_consumption',
+  })
+# ---
+# name: test_selects[select.solaredge_se10000h_storage_default_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'solar_only',
+        'charge_from_clipped_solar',
+        'charge_from_solar',
+        'charge_from_solar_and_grid',
+        'discharge_to_maximize_export',
+        'discharge_to_minimize_import',
+        'maximize_self_consumption',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.solaredge_se10000h_storage_default_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Storage default mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Storage default mode',
+    'platform': 'solaredge_modbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_default_mode',
+    'unique_id': '7E123ABC_storage_default_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.solaredge_se10000h_storage_default_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge SE10000H Storage default mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'solar_only',
+        'charge_from_clipped_solar',
+        'charge_from_solar',
+        'charge_from_solar_and_grid',
+        'discharge_to_maximize_export',
+        'discharge_to_minimize_import',
+        'maximize_self_consumption',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.solaredge_se10000h_storage_default_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'solar_only',
+  })
+# ---

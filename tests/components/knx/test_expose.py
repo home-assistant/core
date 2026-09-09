@@ -85,6 +85,65 @@ async def test_binary_expose_does_not_send_initial_state(
     await knx.assert_write("1/1/8", False)
 
 
+async def test_binary_expose_send_on_init(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test the initial expose value is sent when configured."""
+    entity_id = "binary_sensor.fake"
+
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "binary",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_SEND_ON_INIT: True,
+            }
+        },
+    )
+
+    # First known value is sent when send_on_init is enabled.
+    hass.states.async_set(entity_id, "on", {})
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", True)
+
+    # An unchanged exposed value is still skipped afterwards.
+    hass.states.async_set(entity_id, "on", {"other": 1})
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
+
+    # Subsequent value changes are sent normally.
+    hass.states.async_set(entity_id, "off", {})
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", False)
+
+
+async def test_binary_expose_send_on_init_existing_state(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test an existing entity value is sent when configured."""
+    entity_id = "binary_sensor.fake"
+
+    hass.states.async_set(entity_id, "on", {})
+    await hass.async_block_till_done()
+
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "binary",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_SEND_ON_INIT: True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await knx.assert_write("1/1/8", True)
+
+
 async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test an expose to only send telegrams on attribute change."""
     entity_id = "fake.entity"
@@ -499,6 +558,52 @@ async def test_ui_expose_create_and_update(
     hass.states.async_set(ENTITY_ID, "off", {"brightness": 50})
     await hass.async_block_till_done()
     await knx.assert_write(GROUP_ADDRESS_1, False)
+
+
+async def test_ui_expose_send_on_init(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test send_on_init for an expose configured from the UI."""
+    entity_id = "binary_sensor.fake"
+    group_address = "1/1/1"
+
+    await knx.setup_integration()
+    ws_client = await hass_ws_client(hass)
+
+    hass.states.async_set(entity_id, "on", {})
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "knx/update_expose",
+            "entity_id": entity_id,
+            "data": {
+                "options": [
+                    {
+                        "ga": {
+                            "write": group_address,
+                            "dpt": "1.001",
+                        },
+                        "send_on_init": True,
+                    }
+                ],
+            },
+        }
+    )
+    res = await ws_client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is True, res["result"]
+
+    await hass.async_block_till_done()
+    await knx.assert_write(group_address, True)
+
+    stored_options = hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["expose"][entity_id][
+        "options"
+    ]
+    assert stored_options[0]["send_on_init"] is True
 
 
 async def test_ui_expose_with_options(

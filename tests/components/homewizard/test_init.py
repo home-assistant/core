@@ -131,6 +131,7 @@ async def test_load_detect_invalid_token(
 @pytest.mark.usefixtures("mock_homewizardenergy")
 async def test_load_creates_repair_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
 ) -> None:
@@ -142,8 +143,6 @@ async def test_load_creates_repair_issue(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await hass.async_block_till_done()
-
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     issue = issue_registry.async_get_issue(
         domain=DOMAIN, issue_id=f"migrate_to_v2_api_{mock_config_entry.entry_id}"
@@ -157,6 +156,8 @@ async def test_load_creates_repair_issue(
 @pytest.mark.usefixtures("mock_homewizardenergy")
 async def test_load_creates_repair_issue_when_name_is_updated(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
 ) -> None:
@@ -169,7 +170,6 @@ async def test_load_creates_repair_issue_when_name_is_updated(
 
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue_id = f"migrate_to_v2_api_{mock_config_entry.entry_id}"
 
     issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
@@ -179,7 +179,6 @@ async def test_load_creates_repair_issue_when_name_is_updated(
     assert issue.translation_placeholders["title"] == "Device"
 
     # Update the device name
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     device = get_main_device(hass, mock_config_entry)
 
     # Update device name
@@ -307,6 +306,7 @@ async def test_battery_cloud_issue_updates_only_on_state_transition(
 @pytest.mark.usefixtures("mock_homewizardenergy")
 async def test_battery_cloud_issue_stale_issue_cleared_on_reload(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
 ) -> None:
@@ -319,12 +319,12 @@ async def test_battery_cloud_issue_stale_issue_cleared_on_reload(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None  # pylint: disable=home-assistant-tests-registry-fixtures
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     combined_data.system.cloud_enabled = True
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None  # pylint: disable=home-assistant-tests-registry-fixtures
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_main_device_registered_before_platform_forwarding(
