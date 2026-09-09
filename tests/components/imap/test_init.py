@@ -1032,7 +1032,8 @@ async def test_services(
     }
     for translation_key, attrs in exceptions.items():
         with patch(
-            "homeassistant.components.imap.connect_to_server", side_effect=attrs["exc"]
+            "homeassistant.components.imap.services.connect_to_server",
+            side_effect=attrs["exc"],
         ):
             data = {"entry": config_entry.entry_id, "uid": "1"}
             with pytest.raises(ServiceValidationError) as exc:
