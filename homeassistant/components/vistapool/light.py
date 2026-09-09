@@ -75,14 +75,16 @@ class VistapoolLight(VistapoolEntity, LightEntity):
 
     async def _async_set_value(self, value: int) -> None:
         """Send a value update via the Vistapool cloud API."""
-        try:
-            await self.coordinator.api.set_value(
-                self.coordinator.pool_id, _VALUE_PATH, value
-            )
-        except AquariteError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_failed",
-                translation_placeholders={"entity": self.entity_id},
-            ) from err
-        self.coordinator.apply_optimistic(_VALUE_PATH, value)
+        # Serialized with the LED pulse button, which writes the same path.
+        async with self.coordinator.write_lock(_VALUE_PATH):
+            try:
+                await self.coordinator.api.set_value(
+                    self.coordinator.pool_id, _VALUE_PATH, value
+                )
+            except AquariteError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="set_failed",
+                    translation_placeholders={"entity": self.entity_id},
+                ) from err
+            self.coordinator.apply_optimistic(_VALUE_PATH, value)

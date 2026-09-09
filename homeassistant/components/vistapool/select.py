@@ -232,12 +232,16 @@ class VistapoolLightModeSelect(VistapoolEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Send the option's field set to the controller as one command."""
         updates = _LIGHT_MODE_UPDATES[option]
-        try:
-            await self.coordinator.api.set_values(self.coordinator.pool_id, updates)
-        except AquariteError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_failed",
-                translation_placeholders={"entity": self.entity_id},
-            ) from err
-        self.coordinator.apply_optimistic_values(updates)
+        # Serialized with the light entity and the LED pulse, which write the
+        # same light.status path: the pending-write order must match the wire
+        # order, or a mid-pulse selection would be undone by the trailing on.
+        async with self.coordinator.write_lock(_LIGHT_STATUS_PATH):
+            try:
+                await self.coordinator.api.set_values(self.coordinator.pool_id, updates)
+            except AquariteError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="set_failed",
+                    translation_placeholders={"entity": self.entity_id},
+                ) from err
+            self.coordinator.apply_optimistic_values(updates)
