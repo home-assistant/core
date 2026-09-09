@@ -101,7 +101,7 @@ async def test_flow_errors(hass: HomeAssistant, mock_madvr_client: AsyncMock) ->
     assert mock_madvr_client.open_connection.call_count == 4
     assert mock_madvr_client.async_add_tasks.call_count == 0
     assert mock_madvr_client.async_cancel_tasks.call_count == 0
-    assert mock_madvr_client.close_connection.call_count == 2
+    assert mock_madvr_client.close_connection.call_count == 4
 
 
 async def test_duplicate(
@@ -127,6 +127,7 @@ async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_madvr_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
@@ -145,6 +146,7 @@ async def test_reconfigure_flow(
         result["flow_id"],
         {CONF_HOST: new_host, CONF_PORT: new_port},
     )
+    await hass.async_block_till_done()
 
     # should get the abort with success result
     assert result["type"] is FlowResultType.ABORT
@@ -159,6 +161,7 @@ async def test_reconfigure_flow(
     mock_madvr_client.async_add_tasks.assert_not_called()
     mock_madvr_client.async_cancel_tasks.assert_not_called()
     mock_madvr_client.close_connection.assert_called()
+    mock_setup_entry.assert_awaited_once()
 
 
 async def test_reconfigure_new_device(
@@ -193,6 +196,7 @@ async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
     mock_madvr_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test error handling in reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
@@ -228,5 +232,11 @@ async def test_reconfigure_flow_errors(
         result["flow_id"],
         {CONF_HOST: "192.168.1.100", CONF_PORT: 44077},
     )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert mock_madvr_client.open_connection.call_count == 3
+    assert mock_madvr_client.async_add_tasks.call_count == 0
+    assert mock_madvr_client.async_cancel_tasks.call_count == 0
+    assert mock_madvr_client.close_connection.call_count == 3
+    mock_setup_entry.assert_awaited_once()

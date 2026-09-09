@@ -101,30 +101,32 @@ async def test_connection(hass: HomeAssistant, host: str, port: int) -> str:
     """Test if we can connect to the device and grab the mac."""
     madvr_client = Madvr(host=host, port=port, loop=hass.loop)
     _LOGGER.debug("Testing connection to madVR at %s:%s", host, port)
-    # try to connect
     try:
-        await asyncio.wait_for(madvr_client.open_connection(), timeout=15)
-    except (TimeoutError, OSError) as err:
-        _LOGGER.error("Error connecting to madVR: %s", err)
-        raise CannotConnect from err
+        # try to connect
+        try:
+            await asyncio.wait_for(madvr_client.open_connection(), timeout=15)
+        except (TimeoutError, OSError) as err:
+            _LOGGER.error("Error connecting to madVR: %s", err)
+            raise CannotConnect from err
 
-    # check if we are connected
-    if not madvr_client.connected:
-        raise CannotConnect("Connection failed")
+        # check if we are connected
+        if not madvr_client.connected:
+            raise CannotConnect("Connection failed")
 
-    # wait for client to capture device info
-    retry_time = 15
-    while not madvr_client.mac_address and retry_time > 0:
-        await asyncio.sleep(RETRY_INTERVAL)
-        retry_time -= 1
+        # wait for client to capture device info
+        retry_time = 15
+        while not madvr_client.mac_address and retry_time > 0:
+            await asyncio.sleep(RETRY_INTERVAL)
+            retry_time -= 1
 
-    mac_address = madvr_client.mac_address
-    if mac_address:
-        _LOGGER.debug("Connected to madVR with MAC: %s", mac_address)
-    # close this connection because this client object will not be reused
-    await close_test_connection(madvr_client)
-    _LOGGER.debug("Connection test successful")
-    return mac_address
+        mac_address = madvr_client.mac_address
+        if mac_address:
+            _LOGGER.debug("Connected to madVR with MAC: %s", mac_address)
+        _LOGGER.debug("Connection test successful")
+        return mac_address
+    finally:
+        # close this connection because this client object will not be reused
+        await close_test_connection(madvr_client)
 
 
 async def close_test_connection(madvr_client: Madvr) -> None:
