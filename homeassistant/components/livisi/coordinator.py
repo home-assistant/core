@@ -52,6 +52,8 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[LivisiDevice]]):
         self.controller_type: str = ""
         self.is_avatar: bool = False
         self._shutdown = False
+        self._unreachable_devices: set[str] = set()
+        self._reachability_generations: dict[str, int] = {}
 
     @override
     async def _async_update_data(self) -> list[LivisiDevice]:
@@ -74,6 +76,30 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[LivisiDevice]]):
                 topic = f"{topic}_{property_name}"
             async_dispatcher_send(self.hass, topic, data)
 
+    def _async_dispatch_reachability(self, device_id: str, is_reachable: bool) -> None:
+        """Dispatch a reachability update with its current generation."""
+        if not is_reachable or device_id not in self._unreachable_devices:
+            self._reachability_generations[device_id] = (
+                self._reachability_generations.get(device_id, 0) + 1
+            )
+            self._unreachable_devices.add(device_id)
+        async_dispatcher_send(
+            self.hass,
+            f"{LIVISI_REACHABILITY_CHANGE}_{device_id}",
+            is_reachable,
+            self._reachability_generations[device_id],
+        )
+
+    def confirm_device_reachable(self, device_id: str, generation: int) -> bool:
+        """Confirm recovery unless a newer unreachable update arrived."""
+        if (
+            device_id not in self._unreachable_devices
+            or self._reachability_generations[device_id] != generation
+        ):
+            return False
+        self._unreachable_devices.remove(device_id)
+        return True
+
     async def async_setup(self) -> None:
         """Set up the Livisi Smart Home Controller."""
         self.aiolivisi = await livisi_connect(
@@ -87,11 +113,12 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[LivisiDevice]]):
     async def async_get_devices(self) -> list[LivisiDevice]:
         """Set the discovered devices list."""
         devices = await self.aiolivisi.async_get_devices()
-        for device in devices:
-            if device.unreachable:
-                self._async_dispatcher_send(
-                    LIVISI_REACHABILITY_CHANGE, device.id, False
-                )
+        device_ids = {device.id for device in devices}
+        unreachable_devices = {device.id for device in devices if device.unreachable}
+        for device_id in unreachable_devices:
+            self._async_dispatch_reachability(device_id, False)
+        for device_id in (self._unreachable_devices - unreachable_devices) & device_ids:
+            self._async_dispatch_reachability(device_id, True)
         return devices
 
     async def async_get_device_state(self, capability: str, key: str) -> Any | None:
@@ -109,11 +136,8 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[LivisiDevice]]):
         ):
             return
 
-        self._async_dispatcher_send(
-            LIVISI_REACHABILITY_CHANGE,
-            event_data.source,
-            event_data.properties.get(IS_REACHABLE),
-        )
+        if (is_reachable := event_data.properties.get(IS_REACHABLE)) is not None:
+            self._async_dispatch_reachability(event_data.source, is_reachable)
         for property_name in STATE_PROPERTIES:
             self._async_dispatcher_send(
                 LIVISI_STATE_CHANGE,
