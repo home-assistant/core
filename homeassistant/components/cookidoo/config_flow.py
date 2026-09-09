@@ -71,6 +71,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         """Perform reconfigure upon an user action."""
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -105,7 +106,16 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             await self.async_set_unique_id(self.user_uuid)
             if self.source in (SOURCE_USER, SOURCE_SSDP):
-                self._abort_if_unique_id_configured()
+                # When a discovered Thermomix turns out to belong to an already
+                # configured account, record its UDN on that entry so future
+                # SSDP announcements are deduplicated instead of re-prompting.
+                self._abort_if_unique_id_configured(
+                    updates=(
+                        {CONF_UDN: self._discovered_udn}
+                        if self._discovered_udn is not None
+                        else None
+                    )
+                )
             if self.source == SOURCE_RECONFIGURE:
                 self._abort_if_unique_id_mismatch()
             self.user_input = user_input
