@@ -1,5 +1,6 @@
 """Tests for SpaceXAI setup."""
 
+from copy import deepcopy
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
@@ -24,13 +25,22 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.parametrize(
+    "models",
+    [
+        pytest.param(("grok-4.6",), id="only_selected_model"),
+        pytest.param(("other-model", "grok-4.6"), id="selected_model_not_first"),
+    ],
+)
 async def test_setup_and_unload(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_spacexai_subscription_client: MagicMock,
+    models: tuple[str, ...],
 ) -> None:
     """Set up and unload the Conversation platform."""
+    mock_spacexai_subscription_client.async_list_models.return_value = models
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -100,6 +110,43 @@ async def test_setup_without_models(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_with_unavailable_model_and_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_spacexai_subscription_client: MagicMock,
+) -> None:
+    """Reject a missing selected model and recover when it becomes available."""
+    mock_spacexai_subscription_client.async_list_models.return_value = ("other-model",)
+    original_data = deepcopy(dict(mock_config_entry.data))
+    subentry = mock_config_entry.subentries["conversation-subentry"]
+    original_subentry_data = dict(subentry.data)
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_domain == DOMAIN
+    assert mock_config_entry.error_reason_translation_key == "model_unavailable"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "model": "grok-4.6"
+    }
+    assert hass.states.get("conversation.grok") is None
+    assert mock_config_entry.data == original_data
+    assert subentry.data == original_subentry_data
+    mock_spacexai_subscription_client.async_create_response.assert_not_awaited()
+
+    mock_spacexai_subscription_client.async_list_models.return_value = ("grok-4.6",)
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("conversation.grok") is not None
+    assert mock_config_entry.data == original_data
+    assert subentry.data == original_subentry_data
 
 
 async def test_setup_uses_shared_sessions(

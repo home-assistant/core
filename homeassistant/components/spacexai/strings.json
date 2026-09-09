@@ -48,6 +48,9 @@
     "invalid_response": {
       "message": "SpaceXAI returned an invalid response."
     },
+    "model_unavailable": {
+      "message": "The selected Grok model {model} is no longer available to your account. Remove and add the SpaceXAI integration again to select an available model."
+    },
     "no_models_available": {
       "message": "No Grok models are available for the signed-in account."
     },

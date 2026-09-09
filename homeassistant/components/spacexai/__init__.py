@@ -15,7 +15,7 @@ from spacexai_subscription_client.const import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -73,11 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpaceXAIConfigEntry) -> 
     try:
         await oauth_session.async_ensure_token_valid()
         client = create_client(hass)
-        if not await client.async_list_models(oauth_session.token["access_token"]):
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="no_models_available",
-            )
+        models = await client.async_list_models(oauth_session.token["access_token"])
     except (AuthenticationError, OAuth2TokenRequestReauthError, KeyError) as err:
         raise ConfigEntryAuthFailed from err
     except PermissionDeniedError as err:
@@ -87,6 +83,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpaceXAIConfigEntry) -> 
         ) from err
     except (SpaceXAISubscriptionError, OAuth2TokenRequestError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
+
+    if not models:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="no_models_available",
+        )
+    for subentry in entry.subentries.values():
+        if subentry.subentry_type != "conversation":
+            continue
+        if (model := subentry.data[CONF_MODEL]) not in models:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="model_unavailable",
+                translation_placeholders={"model": model},
+            )
 
     entry.runtime_data = SpaceXAIData(oauth_session, client)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

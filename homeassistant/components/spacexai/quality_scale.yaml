@@ -87,9 +87,7 @@ rules:
     status: exempt
     comment: The integration does not use custom entity icons.
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: The integration has no actionable repair issues.
+  repair-issues: todo
   stale-devices:
     status: exempt
     comment: The integration represents a cloud service, not physical devices.
