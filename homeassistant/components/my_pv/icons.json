@@ -1,9 +1,6 @@
 {
   "entity": {
     "sensor": {
-      "ctrlstate": {
-        "default": "mdi:check-circle"
-      },
       "cur_eth_mode": {
         "default": "mdi:network"
       },
