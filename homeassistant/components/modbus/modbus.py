@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
+    CONF_SLAVE,
     CONF_TIMEOUT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
@@ -31,6 +32,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
+from .connection import ModbusEndpoint
 from .const import (
     ATTR_ADDRESS,
     ATTR_HUB,
@@ -47,6 +49,7 @@ from .const import (
     CALL_TYPE_WRITE_REGISTERS,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
+    CONF_DEVICE_ADDRESS,
     CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_STOPBITS,
@@ -121,6 +124,26 @@ PB_CALL = [
         "values",
     ),
 ]
+
+
+def entity_unit_id(entity_config: dict[str, Any]) -> int:
+    """Return the unit an entity config addresses, defaulting to 1."""
+    if (conf_slave := entity_config.get(CONF_SLAVE)) is not None:
+        return int(conf_slave)
+    return int(entity_config.get(CONF_DEVICE_ADDRESS, 1))
+
+
+def _hub_endpoint(client_config: dict[str, Any]) -> ModbusEndpoint:
+    """Return the device a hub config addresses, keyed as a connection endpoint.
+
+    Keyed like `ModbusParams.endpoint`, so a hub and a shared connection to
+    one device can be told apart from two devices, even though the two links
+    are separate.
+    """
+    if client_config[CONF_TYPE] == SERIAL:
+        return ("serial", client_config[CONF_PORT])
+    transport = "udp" if client_config[CONF_TYPE] == UDP else "tcp"
+    return (transport, client_config[CONF_HOST].lower(), client_config[CONF_PORT])
 
 
 async def async_modbus_setup(
@@ -253,6 +276,7 @@ class ModbusHub:
         self.event_connected = asyncio.Event()
         self.hass = hass
         self.name = client_config[CONF_NAME]
+        self.endpoint = _hub_endpoint(client_config)
         self._config_type = client_config[CONF_TYPE]
         self.config_delay = client_config[CONF_DELAY]
         self._pb_request: dict[str, RunEntry] = {}
@@ -297,6 +321,19 @@ class ModbusHub:
             self._msg_wait = 30 / 1000
         else:
             self._msg_wait = 0
+
+        self.units = sorted(
+            {
+                entity_unit_id(entity_config)
+                for _, conf_key in PLATFORMS
+                for entity_config in client_config.get(conf_key, [])
+            }
+        )
+
+    @property
+    def connected(self) -> bool:
+        """Return whether the client currently holds a link to the device."""
+        return self._client is not None and self._client.connected
 
     def _log_error(self, text: str) -> None:
         if text == self._last_log_error:
