@@ -19,7 +19,7 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
     """Mock a repairs integration."""
     hass.config.components.add("fake_integration")
 
-    def async_create_fix_flow(
+    async def async_create_fix_flow(
         hass: HomeAssistant,
         issue_id: str,
         data: dict[str, str | int | float | None] | None,
@@ -38,6 +38,7 @@ class MockFixFlowContext(RepairsFlow):
 
     def __init__(self) -> None:
         """Initialize a MockFlowFixContext."""
+        # Test issue_id setter
         self.issue_id = "fake_issue"
         assert self.issue_id == "fake_issue"
 
@@ -89,7 +90,7 @@ async def test_flow_fix_missing_context(hass: HomeAssistant) -> None:
 
     assert (repairs := repairs_flow_manager(hass))
 
-    with pytest.raises(KeyError) as exi:
+    with pytest.raises(KeyError) as exc:
         await repairs.async_init("fake_integration")
 
-    assert "issue_id was not set in context" in str(exi.value)
+    assert "issue_id was not set in context" in str(exc.value)
