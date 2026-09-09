@@ -49,7 +49,7 @@
     "step": {
       "init": {
         "data": {
-          "enable_polling": "Connect to the lock to read door status"
+          "enable_polling": "Connect to the lock to read door state"
         },
         "data_description": {
           "enable_polling": "Also connect to the lock every 30 seconds to read the door state."
