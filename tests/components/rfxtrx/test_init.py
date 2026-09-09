@@ -426,7 +426,8 @@ async def test_migrate_entry(
         translation_key="command",
     )
 
-    await entry.async_migrate(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert dict(entry.data) == {
         "device": "abcd",
@@ -435,7 +436,7 @@ async def test_migrate_entry(
         "automatic_add": True,
         "protocols": [],
     }
-    assert entry.version == 2
+    assert entry.version == 3
 
     subentries = {
         subentry.unique_id: subentry for subentry in entry.subentries.values()

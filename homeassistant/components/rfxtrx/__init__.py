@@ -398,11 +398,36 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate an old config entry."""
     version = entry.version
 
-    _LOGGER.debug("Migrating from version %s", version)
+    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
     if version == 1:
-        # Convert per-device config stored on the config entry into subentries,
-        # and legacy tuple based device identifiers to the subentry id.
+        # Convert from old tuple based device identifiers to standard string
+
+        device_registry = dr.async_get(hass)
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            identifiers = set()
+            for identifier in device_entry.identifiers:
+                if identifier[0] == DOMAIN and len(cast(tuple, identifier)) == 4:
+                    legacy_identifier = cast(tuple[str, str, str, str], identifier)
+                    identifier = (
+                        DOMAIN,
+                        DeviceTuple(
+                            packettype=legacy_identifier[1],
+                            subtype=legacy_identifier[2],
+                            id_string=legacy_identifier[3],
+                        ).unique_id,
+                    )
+                identifiers.add(identifier)
+            device_registry.async_update_device(
+                device_entry.id, new_identifiers=identifiers
+            )
+        version = 2
+        hass.config_entries.async_update_entry(entry, version=version)
+
+    if version == 2:
+        # Convert per-device config stored on the config entry into subentries
 
         device_registry = dr.async_get(hass)
         entity_registry = er.async_get(hass)
@@ -445,15 +470,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for identifier in device_entry.identifiers:
                 if identifier[0] != DOMAIN:
                     continue
-                if len(cast(tuple, identifier)) == 4:
-                    legacy_identifier = cast(tuple[str, str, str, str], identifier)
-                    unique_id = DeviceTuple(
-                        packettype=legacy_identifier[1],
-                        subtype=legacy_identifier[2],
-                        id_string=legacy_identifier[3],
-                    ).unique_id
-                else:
-                    unique_id = identifier[1]
+                unique_id = identifier[1]
                 if unique_id not in subentry_by_unique_id:
                     continue
 
@@ -497,10 +514,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_data = {
             key: value for key, value in entry.data.items() if key != CONF_DEVICES
         }
-        version = 2
+        version = 3
         hass.config_entries.async_update_entry(entry, data=new_data, version=version)
 
-    _LOGGER.debug("Migration to version %s successful", version)
+    _LOGGER.debug(
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
+    )
     return True
 
 
