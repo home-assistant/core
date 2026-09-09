@@ -37,7 +37,7 @@
         "description": "[%key:component::my_pv::common::discovery_description%]",
         "title": "{name}"
       },
-      "reauth": {
+      "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
