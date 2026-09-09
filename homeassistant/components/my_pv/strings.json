@@ -50,7 +50,7 @@
   "entity": {
     "sensor": {
       "cur_eth_mode": {
-        "name": "Network Mode",
+        "name": "Network mode",
         "state": {
           "0": "LAN",
           "1": "WLAN",
@@ -67,15 +67,15 @@
         "name": "Current phase L3"
       },
       "freq": {
-        "name": "Mains Frequency"
+        "name": "Mains frequency"
       },
       "power_solar": {
-        "name": "PV Power"
+        "name": "PV power"
       },
       "screen_mode_flag": {
-        "name": "Device Status",
+        "name": "Device status",
         "state": {
-          "0": "Standby",
+          "0": "[%key:common::state::standby%]",
           "1": "Heat",
           "2": "Boost",
           "3": "Heating finished",
@@ -112,10 +112,10 @@
         "name": "Voltage phase L3"
       },
       "volt_solar": {
-        "name": "PV Voltage"
+        "name": "PV voltage"
       },
       "wifi_signal": {
-        "name": "Wi-Fi Signal Strength",
+        "name": "Wi-Fi signal strength",
         "state": {
           "0": "Poor",
           "1": "Low",
@@ -125,7 +125,7 @@
         }
       },
       "wifi_signal_strength": {
-        "name": "Wi-Fi Signal Strength"
+        "name": "Wi-Fi signal strength"
       }
     }
   },
