@@ -32,7 +32,7 @@ async def async_setup_entry(
     tracker = bridge.scene_activity_tracker
     assert tracker is not None
 
-    # Pre-index scenes by group to avoid an O(groups x scenes) startup scan.
+    # Prepare initial options before entity registration reads capabilities.
     scenes_by_group: dict[str, list[HueScene | HueSmartScene]] = {}
     for scene in api.scenes:
         scenes_by_group.setdefault(scene.group.rid, []).append(scene)
