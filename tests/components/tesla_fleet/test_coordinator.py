@@ -9,7 +9,6 @@ from unittest.mock import AsyncMock, call, patch
 from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import TeslaEnergyPeriod
 from tesla_fleet_api.exceptions import (
     InvalidToken,
@@ -154,38 +153,6 @@ def history_responses(
     return responses
 
 
-async def test_coordinator_first_run(
-    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
-    hass: HomeAssistant,
-    mock_energy_site: AsyncMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Initialize from today's readings without requesting older history."""
-    mock_energy_site.energy_history.return_value = _history(
-        (
-            "2023-06-01T08:00:00-07:00",
-            {SOLAR: 1000, GRID: 500, "battery_energy_exported": 200},
-        ),
-        (
-            "2023-06-01T09:00:00-07:00",
-            {SOLAR: 1500, GRID: 300, "battery_energy_exported": 100},
-        ),
-    )
-    await _refresh(hass, coordinator)
-    mock_energy_site.energy_history.assert_called_once_with(TeslaEnergyPeriod.DAY)
-    assert (
-        await _get_hourly_stats(
-            hass,
-            {
-                GRID_STATISTIC_ID,
-                SOLAR_STATISTIC_ID,
-                f"tesla_fleet:{SITE_ID}_battery_energy_exported",
-            },
-        )
-        == snapshot
-    )
-
-
 @pytest.mark.parametrize(
     "response",
     [
@@ -216,29 +183,35 @@ async def test_hourly_aggregation_and_repeated_refresh(
         ("2023-06-01T08:12:34-07:00", {GRID: 100, SOLAR: 200}),
         ("2023-06-01T15:12:34Z", {GRID: 150}),
         ("2023-06-01T08:45:00-07:00", {GRID: 50}),
+        ("2023-06-01T09:00:00-07:00", {GRID: 75, SOLAR: 100}),
         (None, {GRID: 1000}),
     )
     output = await _refresh(hass, coordinator)
-    assert output[GRID] == 1300
+    assert output[GRID] == 1375
     ids = {GRID_STATISTIC_ID, SOLAR_STATISTIC_ID}
     stats = await _get_hourly_stats(hass, ids)
-    assert stats[GRID_STATISTIC_ID][0]["state"] == 200
-    assert (
-        stats[GRID_STATISTIC_ID][0]["start"]
-        == datetime.fromisoformat("2023-06-01T15:00:00+00:00").timestamp()
-    )
-    assert stats[SOLAR_STATISTIC_ID][0]["sum"] == 200
+    assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
+        ("2023-06-01T15:00:00+00:00", 200, 200),
+        ("2023-06-01T16:00:00+00:00", 75, 275),
+    ]
+    assert _hourly_rows(stats[SOLAR_STATISTIC_ID]) == [
+        ("2023-06-01T15:00:00+00:00", 200, 200),
+        ("2023-06-01T16:00:00+00:00", 100, 300),
+    ]
 
     mock_energy_site.energy_history.return_value["response"]["time_series"].extend(
         [
-            {"timestamp": "2023-06-01T08:55:00-07:00", GRID: 25},
-            {"timestamp": "2023-06-01T09:00:00-07:00", GRID: 75},
+            {"timestamp": "2023-06-01T09:05:00-07:00", GRID: 25},
+            {"timestamp": "2023-06-01T10:00:00-07:00", GRID: 75},
         ]
     )
     await _refresh(hass, coordinator)
     stats = await _get_hourly_stats(hass, ids)
-    assert [row["state"] for row in stats[GRID_STATISTIC_ID]] == [225, 75]
-    assert stats[GRID_STATISTIC_ID][-1]["sum"] == 300
+    assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
+        ("2023-06-01T15:00:00+00:00", 200, 200),
+        ("2023-06-01T16:00:00+00:00", 100, 300),
+        ("2023-06-01T17:00:00+00:00", 75, 375),
+    ]
     await _refresh(hass, coordinator)
     assert await _get_hourly_stats(hass, ids) == stats
 
@@ -385,6 +358,7 @@ async def test_multi_day_recovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     await async_wait_recording_done(hass)
+    mock_energy_history.assert_called_once_with(TeslaEnergyPeriod.DAY)
     assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
 
     freezer.move_to(day + timedelta(days=2))
