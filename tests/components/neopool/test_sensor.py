@@ -8,8 +8,15 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sensor import ATTR_OPTIONS
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, Platform
+from homeassistant.components.neopool.const import (
+    CONF_CAPABILITIES,
+    CONF_MODBUS_FRAMER,
+    CONF_UNIT_ID,
+    CURRENT_VERSION,
+    DOMAIN,
+)
+from homeassistant.components.sensor import ATTR_OPTIONS, DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -240,3 +247,42 @@ async def test_setup_when_modules_absent(
     with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_sensor_unavailable_in_winter_mode(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """Sensors are unavailable while winter mode is active.
+
+    The device is offline, so read-only entities report unavailable rather
+    than unknown, matching the device control entities.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Winter Pool",
+        unique_id="neopool_winter_sensor",
+        version=CURRENT_VERSION,
+        pref_disable_polling=True,
+        data={
+            "host": "192.0.2.9",
+            "port": 502,
+            "name": "Winter Pool",
+            CONF_UNIT_ID: 1,
+            CONF_MODBUS_FRAMER: "tcp",
+        },
+        options={
+            CONF_MODBUS_FRAMER: "tcp",
+            CONF_CAPABILITIES: {"MBF_PAR_FILT_GPIO": 1},
+        },
+    )
+    await setup_integration(hass, entry)
+
+    registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(registry, entry.entry_id)
+    sensors = [e for e in entries if e.domain == SENSOR_DOMAIN]
+    assert sensors
+    for sensor in sensors:
+        state = hass.states.get(sensor.entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE

@@ -362,7 +362,6 @@ async def async_setup_entry(
 class NeoPoolBinarySensor(NeoPoolEntity, BinarySensorEntity):
     """Representation of a NeoPool binary sensor."""
 
-    _winter_mode_active = False
     entity_description: NeoPoolBinarySensorEntityDescription
 
     def __init__(

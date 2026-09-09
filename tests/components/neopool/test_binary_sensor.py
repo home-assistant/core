@@ -9,7 +9,20 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.components.neopool.const import (
+    CONF_CAPABILITIES,
+    CONF_MODBUS_FRAMER,
+    CONF_UNIT_ID,
+    CURRENT_VERSION,
+    DOMAIN,
+)
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -253,3 +266,36 @@ async def test_opt_in_entities_absent_without_options(
         )
         is not None
     )
+
+
+async def test_binary_sensor_unavailable_in_winter_mode(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """Binary sensors are unavailable while winter mode is active.
+
+    The device is offline, so read-only entities report unavailable rather
+    than unknown, matching the device control entities.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Winter Pool",
+        unique_id="neopool_winter_binary",
+        version=CURRENT_VERSION,
+        pref_disable_polling=True,
+        data={
+            "host": "192.0.2.8",
+            "port": 502,
+            "name": "Winter Pool",
+            CONF_UNIT_ID: 1,
+            CONF_MODBUS_FRAMER: "tcp",
+        },
+        options={
+            CONF_MODBUS_FRAMER: "tcp",
+            CONF_CAPABILITIES: {"MBF_PAR_FILT_GPIO": 1},
+        },
+    )
+    await setup_integration(hass, entry)
+    state = _binary_state(hass, entry, "Filtration Pump")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

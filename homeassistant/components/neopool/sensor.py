@@ -310,7 +310,6 @@ _MEASURE_KEYS_REQUIRING_FILTRATION = frozenset(
 class NeoPoolSensor(NeoPoolEntity, SensorEntity):
     """Representation of a NeoPool sensor."""
 
-    _winter_mode_active = False
     entity_description: NeoPoolSensorEntityDescription
 
     def __init__(
