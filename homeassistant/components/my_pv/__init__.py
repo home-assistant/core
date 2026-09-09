@@ -11,6 +11,7 @@ from .const import DOMAIN
 from .coordinator import MyPVConfigEntry, MyPVCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 
