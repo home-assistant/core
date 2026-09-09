@@ -44,6 +44,7 @@ class MockFixFlowContext(RepairsFlow):
 
     async def async_step_init(self, user_input: dict | None) -> RepairsFlowResult:
         """Initial step of a repairs flow."""
+        assert user_input and user_input["issue_id"] == self.issue_id
         return self.async_show_form()
 
 
