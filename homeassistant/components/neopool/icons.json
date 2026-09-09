@@ -122,12 +122,6 @@
         "state": {
           "on": "mdi:lightbulb-fluorescent-tube"
         }
-      },
-      "winter_mode": {
-        "default": "mdi:weather-sunny",
-        "state": {
-          "on": "mdi:snowflake"
-        }
       }
     }
   }

@@ -669,35 +669,12 @@ async def test_all_entities(
 
 
 @pytest.mark.usefixtures("mock_neopool_client")
-async def test_winter_mode_turn_on_off(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Toggling the winter_mode switch flips pref_disable_polling."""
-    await setup_integration(hass, mock_config_entry)
-    entity_id = "switch.neopool_winter_mode"
-    assert hass.states.get(entity_id).state == STATE_OFF
-    assert mock_config_entry.pref_disable_polling is False
-
-    await _turn_on(hass, entity_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.pref_disable_polling is True
-    assert hass.states.get(entity_id).state == STATE_ON
-
-    await _turn_off(hass, entity_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.pref_disable_polling is False
-    assert hass.states.get(entity_id).state == STATE_OFF
-
-
-@pytest.mark.usefixtures("mock_neopool_client")
 async def test_io_switch_unavailable_in_winter_mode(
     hass: HomeAssistant,
 ) -> None:
     """Device switches become unavailable while winter mode is active.
 
-    The device is offline, so device switches report unavailable, while the
-    winter_mode switch itself stays available so users can toggle it.
+    The device is offline, so device switches report unavailable.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -723,8 +700,3 @@ async def test_io_switch_unavailable_in_winter_mode(
     io_state = hass.states.get(io_id)
     assert io_state is not None
     assert io_state.state == STATE_UNAVAILABLE
-
-    winter_id = _entity_id_by_suffix(hass, entry, "_winter_mode")
-    winter_state = hass.states.get(winter_id)
-    assert winter_state is not None
-    assert winter_state.state != STATE_UNAVAILABLE

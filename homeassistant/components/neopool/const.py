@@ -30,9 +30,7 @@ CONF_USE_AUX2 = "use_aux2"
 CONF_USE_AUX3 = "use_aux3"
 CONF_USE_AUX4 = "use_aux4"
 
-# Winter mode is backed by the native config_entry.pref_disable_polling flag;
-# this constant survives only as the winter-mode switch translation_key.
-CONF_WINTER_MODE = "winter_mode"
+# Winter mode is backed by the native config_entry.pref_disable_polling flag.
 CONF_CAPABILITIES = "_capabilities"
 
 CURRENT_VERSION = 6

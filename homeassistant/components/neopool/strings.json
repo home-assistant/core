@@ -281,9 +281,6 @@
       },
       "uv_mode": {
         "name": "UV mode"
-      },
-      "winter_mode": {
-        "name": "Winter mode"
       }
     }
   },

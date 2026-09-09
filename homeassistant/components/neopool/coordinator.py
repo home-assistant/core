@@ -210,23 +210,3 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         options = dict(self.config_entry.options)
         options[CONF_CAPABILITIES] = new_snapshot
         self.hass.config_entries.async_update_entry(self.config_entry, options=options)
-
-    async def set_winter_mode(self, enabled: bool) -> None:
-        """Toggle winter mode via the native disable-polling flag.
-
-        Winter mode is backed by ``config_entry.pref_disable_polling`` so the
-        base coordinator stops scheduling refreshes entirely (no no-op polls,
-        no reconnect attempts). When enabling, the capability snapshot is
-        persisted first so the reload can set entities up offline, then the
-        entry is reloaded to rebuild the coordinator with the new flag.
-        """
-        updates: dict[str, Any] = {"pref_disable_polling": enabled}
-        if enabled and self.data:
-            self._capability_snapshot = {
-                k: self.data[k] for k in CAPABILITY_KEYS if k in self.data
-            }
-            options = dict(self.config_entry.options)
-            options[CONF_CAPABILITIES] = dict(self._capability_snapshot)
-            updates["options"] = options
-        self.hass.config_entries.async_update_entry(self.config_entry, **updates)
-        self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
