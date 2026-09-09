@@ -13,9 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from . import RainMachineConfigEntry, RainMachineData
 from .const import (
@@ -174,15 +172,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RainMachine switches based on a config entry."""
-    platform = entity_platform.async_get_current_platform()
-
-    services: tuple[tuple[str, VolDictType | None, str], ...] = (
-        ("start_program", None, "async_start_program"),
-        ("stop_program", None, "async_stop_program"),
-    )
-    for service_name, schema, method in services:
-        platform.async_register_entity_service(service_name, schema, method)
-
     data = entry.runtime_data
     entities: list[RainMachineBaseSwitch] = []
 
