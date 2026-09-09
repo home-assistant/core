@@ -630,7 +630,7 @@ class OpenAIBaseLLMEntity(Entity):
                 model=image_model,
                 output_format="png",
             )
-            if image_model not in ("gpt-image-1-mini", "gpt-image-2"):
+            if image_model in ("gpt-image-1", "gpt-image-1.5"):
                 image_tool["input_fidelity"] = "high"
             tools.append(image_tool)
             # Keep image state on OpenAI so follow-up prompts can continue by
