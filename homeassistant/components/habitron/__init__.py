@@ -6,7 +6,7 @@ from habitron_client import HabitronError, HabitronTimeoutError
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .communicate import HbtnComm
@@ -25,21 +25,24 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -
     """Migrate an old config entry.
 
     Version 1 stored the host under the integration-specific ``habitron_host``
-    key; version 2 uses Home Assistant's shared ``CONF_HOST``. Entries created
-    before this integration moved to core carry the old key, so rename it in
-    place instead of forcing the user to set the hub up again.
+    key; version 2 uses Home Assistant's shared ``CONF_HOST``. Version 3 exists
+    because the custom (HACS) integration also numbers its entries 2: Home
+    Assistant skips this function when the versions match, so a migrating
+    installation would keep the unused credential below. Bumping past it makes
+    the cleanup run once for every entry that predates core.
     """
-    if entry.version == 1:
-        data = {**entry.data}
-        if "habitron_host" in data:
-            data[CONF_HOST] = data.pop("habitron_host")
-        # ``websock_token`` belonged to the SmartController Touch/Assist push
-        # path, which this integration does not implement; drop the credential
-        # rather than keep storing it unused. ``update_interval`` predates the
-        # move to a fixed ``SCAN_INTERVAL`` and has not been read since.
-        data.pop("websock_token", None)
-        data.pop("update_interval", None)
-        hass.config_entries.async_update_entry(entry, data=data, version=2)
+    # Only versions below 3 reach this: Home Assistant returns early when they
+    # match and refuses anything higher before calling us.
+    data = {**entry.data}
+    if entry.version == 1 and "habitron_host" in data:
+        data[CONF_HOST] = data.pop("habitron_host")
+    # ``websock_token`` belonged to the SmartController Touch/Assist push path,
+    # which this integration does not implement; drop the credential rather
+    # than keep storing it unused. ``update_interval`` predates the move to a
+    # fixed ``SCAN_INTERVAL`` and has not been read since.
+    data.pop("websock_token", None)
+    data.pop("update_interval", None)
+    hass.config_entries.async_update_entry(entry, data=data, version=3)
     return True
 
 
@@ -52,18 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> 
         # First refresh runs the SmartHub setup (connect + build model + register
         # devices) via the coordinator, then the first bus poll.
         await coordinator.async_config_entry_first_refresh()
-
-        # Before the update listener exists: adopting rewrites the entry, and
-        # ``async_update_entry`` fires the listeners -- which would schedule a
-        # reload while this very setup is still running.
-        _async_adopt_hub_identity(hass, entry, coordinator.smart_hub)
-
-        entry.async_on_unload(entry.add_update_listener(update_listener))
-
-        _async_cleanup_stale_devices(hass, entry, coordinator.smart_hub)
-
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     except (TimeoutError, HabitronTimeoutError) as ex:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -97,8 +88,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> 
             translation_key="connect_error",
             translation_placeholders={"error": str(ex)},
         ) from ex
-    else:
-        return True
+
+    # Past the connection: everything below is local bookkeeping, so it stays
+    # outside the handlers above. An unexpected failure here is a defect and
+    # must surface as one, not disappear into an indefinite setup retry.
+
+    # Before the update listener exists: adopting rewrites the entry, and
+    # ``async_update_entry`` fires the listeners -- which would schedule a
+    # reload while this very setup is still running.
+    _async_adopt_hub_identity(hass, entry, coordinator.smart_hub)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    _async_cleanup_stale_devices(hass, entry, coordinator.smart_hub)
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
 
 
 async def async_remove_config_entry_device(
@@ -156,17 +162,16 @@ def _async_adopt_hub_identity(
     if not smhub.has_mac_uid or entry.unique_id == smhub.uid:
         return
     if hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, smhub.uid):
-        # Another entry already owns this hub. Rewriting would not merge the
-        # two -- Home Assistant reindexes onto the used id anyway and only logs
-        # the collision -- so leave this entry on its own id and say which one
-        # to remove.
-        _LOGGER.warning(
-            "The hub at %s is already configured as %s; remove the duplicate entry %s",
-            smhub.host,
-            smhub.uid,
-            entry.title,
+        # Another entry already owns this hub. Both would build their model from
+        # the same MAC-derived uid, and entity unique ids are keyed per domain
+        # and platform, so the second entry's entities collide with the first
+        # one's instead of standing beside them. Stop here and name the entry to
+        # remove rather than load a duplicate that cannot work.
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="duplicate_hub",
+            translation_placeholders={"host": smhub.host, "uid": smhub.uid},
         )
-        return
     _LOGGER.debug(
         "Adopting hub identity for %s: %s -> %s",
         entry.title,

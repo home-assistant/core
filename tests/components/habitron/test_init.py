@@ -14,6 +14,7 @@ from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 
 from .const import MOCK_HOST, MOCK_NAME, MOCK_UDN, MOCK_UID
@@ -193,7 +194,7 @@ async def test_unload_entry_returns_false_when_platform_unload_fails(
         HabitronError("protocol glitch"),
     ],
 )
-async def test_setup_entry_post_refresh_errors_mark_retry(
+async def test_setup_entry_post_refresh_errors_are_not_masked(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_config_entry: MockConfigEntry,
@@ -202,11 +203,11 @@ async def test_setup_entry_post_refresh_errors_mark_retry(
     mock_coordinator_refresh: AsyncMock,
     side_effect: Exception,
 ) -> None:
-    """Connection errors raised after the first refresh surface as SETUP_RETRY.
+    """An error after the first refresh is a defect, not a reason to retry.
 
-    The first refresh succeeds (stubbed); an error raised by the stale-device
-    cleanup that follows exercises ``async_setup_entry``'s own except handlers,
-    which translate each error class into ``ConfigEntryNotReady``.
+    The connection handlers cover the first refresh only. Everything after it
+    is local bookkeeping, so a failure there must surface as a setup error
+    instead of disappearing into an indefinite retry loop.
     """
     mock_config_entry.add_to_hass(hass)
     with patch(
@@ -215,7 +216,7 @@ async def test_setup_entry_post_refresh_errors_mark_retry(
     ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_entry_removes_stale_device(
@@ -267,7 +268,7 @@ async def test_migrate_v1_entry_renames_host_and_drops_the_token(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 2
+    assert entry.version == 3
     assert entry.data == {CONF_HOST: MOCK_HOST}
     assert entry.state is ConfigEntryState.LOADED
 
@@ -292,7 +293,7 @@ async def test_migrate_v1_entry_without_the_old_key_is_a_no_op(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 2
+    assert entry.version == 3
     assert entry.data == {CONF_HOST: MOCK_HOST}
 
 
@@ -340,11 +341,12 @@ async def test_setup_does_not_adopt_an_id_another_entry_owns(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """A hub configured twice keeps the two entries apart.
+    """A hub configured twice stops the second entry instead of loading it.
 
-    Home Assistant reindexes onto an id already in use and only logs the
-    collision, so rewriting here would leave two entries sharing one unique id
-    -- and tell the user to file a bug report about it.
+    Both entries would build their model from the same MAC-derived uid, and
+    entity unique ids are keyed per domain and platform -- so the second
+    entry's entities collide with the first one's rather than standing beside
+    them.
     """
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -356,7 +358,8 @@ async def test_setup_does_not_adopt_an_id_another_entry_owns(
     smhub.uid = MOCK_UID
     smhub.has_mac_uid = True
 
-    _async_adopt_hub_identity(hass, mock_config_entry, smhub)
+    with pytest.raises(ConfigEntryError):
+        _async_adopt_hub_identity(hass, mock_config_entry, smhub)
 
     assert mock_config_entry.unique_id == "habitron_192.168.1.50"
 
@@ -439,3 +442,70 @@ async def test_cleanup_keeps_a_device_with_one_live_identifier(
 
     assert device_registry.async_get(survivor.id) is not None
     assert device_registry.async_get(stale.id) is None
+
+
+async def test_migrate_v2_entry_drops_the_token(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+) -> None:
+    """A v2 entry from the custom integration still gets cleaned up.
+
+    The custom (HACS) integration numbers its entries 2 as well, and Home
+    Assistant skips the migration when the versions match -- so without the
+    bump past it, a migrating installation would keep storing the unused
+    credential for good.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_UID,
+        version=2,
+        data={CONF_HOST: MOCK_HOST, "websock_token": "rotated-token"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 3
+    assert entry.data == {CONF_HOST: MOCK_HOST}
+    assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        TimeoutError("silent"),
+        HabitronTimeoutError("silent"),
+        ConnectionRefusedError("refused"),
+        OSError("network down"),
+        HabitronError("protocol glitch"),
+    ],
+)
+async def test_setup_entry_connection_errors_mark_retry(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_config_entry: MockConfigEntry,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    side_effect: Exception,
+) -> None:
+    """Every connection error from the first refresh becomes a retry.
+
+    The refresh is where the hub is actually spoken to, so a failure there is
+    transient by nature and Home Assistant should come back with backoff
+    instead of giving up on the entry.
+    """
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.helpers.update_coordinator."
+        "DataUpdateCoordinator.async_config_entry_first_refresh",
+        side_effect=side_effect,
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
