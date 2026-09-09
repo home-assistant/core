@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "This stop is already configured.",
       "cannot_connect": "Failed to connect to Bizkaibus.",
+      "invalid_line_id": "The line identifier is not valid.",
       "invalid_stop_id": "The stop identifier is not valid.",
       "reconfigure_successful": "Reconfiguration was successful."
     },
