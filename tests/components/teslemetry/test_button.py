@@ -1,6 +1,7 @@
 """Test the Teslemetry button platform."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -30,19 +31,40 @@ async def test_button(
 
 
 @pytest.mark.parametrize(
-    ("name", "func"),
+    ("name", "func", "args", "kwargs"),
     [
-        ("wake", "wake_up"),
-        ("flash_lights", "flash_lights"),
-        ("honk_horn", "honk_horn"),
-        ("keyless_driving", "remote_start_drive"),
-        ("play_fart", "remote_boombox"),
-        ("homelink", "trigger_homelink"),
-        ("enable_keep_accessory_power", "set_keep_accessory_power_mode"),
-        ("disable_keep_accessory_power", "set_keep_accessory_power_mode"),
+        ("wake", "wake_up", (), {}),
+        ("flash_lights", "flash_lights", (), {}),
+        ("honk_horn", "honk_horn", (), {}),
+        ("keyless_driving", "remote_start_drive", (), {}),
+        ("play_fart", "remote_boombox", (0,), {}),
+        (
+            "homelink",
+            "trigger_homelink",
+            (),
+            {"lat": 32.87336, "lon": -117.22743},
+        ),
+        (
+            "enable_keep_accessory_power",
+            "set_keep_accessory_power_mode",
+            (True,),
+            {},
+        ),
+        (
+            "disable_keep_accessory_power",
+            "set_keep_accessory_power_mode",
+            (False,),
+            {},
+        ),
     ],
 )
-async def test_press(hass: HomeAssistant, name: str, func: str) -> None:
+async def test_press(
+    hass: HomeAssistant,
+    name: str,
+    func: str,
+    args: tuple[Any, ...],
+    kwargs: dict[str, Any],
+) -> None:
     """Test pressing the API buttons."""
     await setup_platform(hass, [Platform.BUTTON])
 
@@ -56,7 +78,7 @@ async def test_press(hass: HomeAssistant, name: str, func: str) -> None:
             {ATTR_ENTITY_ID: [f"button.test_{name}"]},
             blocking=True,
         )
-        command.assert_called_once()
+        command.assert_called_once_with(*args, **kwargs)
 
 
 @pytest.mark.parametrize(
