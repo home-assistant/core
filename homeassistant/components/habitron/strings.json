@@ -90,6 +90,9 @@
       },
       "wind": {
         "name": "Wind"
+      },
+      "wind_peak": {
+        "name": "Wind peak"
       }
     }
   },

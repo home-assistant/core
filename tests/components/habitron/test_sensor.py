@@ -30,6 +30,7 @@ from homeassistant.components.habitron.sensor import (
     TIMEOUT_DESCRIPTION,
     VOLTAGE_DESCRIPTION,
     WIND_DESCRIPTION,
+    WIND_PEAK_DESCRIPTION,
     HbtnDescribedSensor,
     HbtnSensor,
     HbtnSensorEntityDescription,
@@ -210,24 +211,21 @@ def test_described_sensor_not_diagnostic_for_normal_type() -> None:
 @pytest.mark.parametrize(
     ("description", "expected"),
     [
-        # Per-module sensors: one description per member, so the bare id is
-        # unique and must stay as it is -- an installation coming over from the
-        # custom integration keeps these entity_ids.
-        (HUMIDITY_DESCRIPTION, "Mod_MOD-1_snsr0"),
-        (ILLUMINANCE_DESCRIPTION, "Mod_MOD-1_snsr0"),
-        (WIND_DESCRIPTION, "Mod_MOD-1_snsr0"),
-        (AIRQUALITY_DESCRIPTION, "Mod_MOD-1_snsr0"),
-        (TEMP_DESCRIPTION, "Mod_MOD-1_snsr0"),
-        (TEMP_EXT_DESCRIPTION, "Mod_MOD-1_snsr0"),
-        # Router streams share a number across three lists.
-        (CURRENT_DESCRIPTION, "Mod_MOD-1_snsr0_current"),
-        (VOLTAGE_DESCRIPTION, "Mod_MOD-1_snsr0_voltage"),
-        (TIMEOUT_DESCRIPTION, "Mod_MOD-1_snsr0_timeout"),
-        # The ekey members produce two entities each.
-        (EKEY_ID_DESCRIPTION, "Mod_MOD-1_snsr0_ekey_id"),
-        (EKEY_USER_NAME_DESCRIPTION, "Mod_MOD-1_snsr0_ekey_user_name"),
-        # Numbered in its own list.
-        (ANALOG_DESCRIPTION, "Mod_MOD-1_snsr0_analog"),
+        # One member of its kind per device: the key alone identifies it.
+        (HUMIDITY_DESCRIPTION, "MOD-1_humidity"),
+        (ILLUMINANCE_DESCRIPTION, "MOD-1_illuminance"),
+        (WIND_DESCRIPTION, "MOD-1_wind"),
+        (WIND_PEAK_DESCRIPTION, "MOD-1_wind_peak"),
+        (AIRQUALITY_DESCRIPTION, "MOD-1_airquality"),
+        (TEMP_DESCRIPTION, "MOD-1_temperature"),
+        (TEMP_EXT_DESCRIPTION, "MOD-1_temperature_external"),
+        (EKEY_ID_DESCRIPTION, "MOD-1_ekey_identifier"),
+        (EKEY_USER_NAME_DESCRIPTION, "MOD-1_ekey_user_name"),
+        # Several per device, so the member number tells them apart.
+        (CURRENT_DESCRIPTION, "MOD-1_current_0"),
+        (VOLTAGE_DESCRIPTION, "MOD-1_voltage_0"),
+        (TIMEOUT_DESCRIPTION, "MOD-1_timeout_0"),
+        (ANALOG_DESCRIPTION, "MOD-1_analog_in_0"),
     ],
 )
 def test_described_sensor_unique_id(
@@ -241,28 +239,24 @@ def test_described_sensor_unique_id(
     assert entity.unique_id == expected
 
 
-def test_only_per_module_sensors_keep_the_bare_unique_id() -> None:
-    """Pin which descriptions may go without the key suffix.
+def test_only_multi_member_descriptions_are_numbered() -> None:
+    """Pin which descriptions append the member number.
 
-    Adding a description that shares a member number with another one, without
-    setting ``disambiguate``, would silently drop an entity (duplicate
-    unique_id). Dropping the flag from a per-module sensor would re-register it
-    under a new id and rewrite its entity_id. Both are caught here.
+    Forgetting it where a device carries several members of that kind gives
+    them one id and silently drops all but one; adding it where there is only
+    one changes that entity's id for no reason. Both belong in a test rather
+    than in someone's memory.
     """
-    bare = {
+    numbered = {
         name
         for name, obj in vars(habitron_sensor).items()
-        if isinstance(obj, HbtnSensorEntityDescription) and not obj.disambiguate
+        if isinstance(obj, HbtnSensorEntityDescription) and obj.numbered
     }
-    assert bare == {
-        "HUMIDITY_DESCRIPTION",
-        "ILLUMINANCE_DESCRIPTION",
-        "WIND_DESCRIPTION",
-        "AIRQUALITY_DESCRIPTION",
-        "TEMP_DESCRIPTION",
-        "TEMP_EXT_DESCRIPTION",
-        # LogicSensor overwrites the unique_id with ``Mod_{uid}_logic{nmbr}``.
-        "LOGIC_DESCRIPTION",
+    assert numbered == {
+        "CURRENT_DESCRIPTION",
+        "VOLTAGE_DESCRIPTION",
+        "TIMEOUT_DESCRIPTION",
+        "ANALOG_DESCRIPTION",
     }
 
 
@@ -355,7 +349,8 @@ def test_hbtnsensor_base_init_and_update() -> None:
     coord = MagicMock(spec=DataUpdateCoordinator)
     entity = HbtnSensor(mod, desc, coord, 5)
     entity.async_write_ha_state = MagicMock()
-    assert entity.unique_id == "Mod_MOD-1_snsr0"
+    # The base class no longer names anything; the description does.
+    assert entity.unique_id is None
     assert entity._attr_name == "Temperature"
     assert entity._attr_state_class is SensorStateClass.MEASUREMENT
     entity._handle_coordinator_update()
@@ -389,7 +384,7 @@ def test_logic_sensor_unique_id_name_and_update() -> None:
     coord = MagicMock(spec=DataUpdateCoordinator)
     entity = LogicSensor(mod, logic, coord, 0)
     entity.async_write_ha_state = MagicMock()
-    assert entity.unique_id == "Mod_MOD-1_logic0"
+    assert entity.unique_id == "MOD-1_logic_0"
     assert not hasattr(entity, "_attr_name")
     assert entity._attr_translation_placeholders == {"number": "1", "name": "Counter"}
     entity._handle_coordinator_update()
@@ -408,7 +403,7 @@ def test_logic_sensor_value_uses_idx_not_nmbr() -> None:
     coord = MagicMock(spec=DataUpdateCoordinator)
     entity = LogicSensor(mod, logic, coord, 0)
     entity.async_write_ha_state = MagicMock()
-    assert entity.unique_id == "Mod_MOD-1_logic1"
+    assert entity.unique_id == "MOD-1_logic_1"
     entity._handle_coordinator_update()
     assert entity._attr_native_value == 7
 
@@ -710,26 +705,26 @@ async def test_async_setup_entry_emits_all_sensor_types(hass: HomeAssistant) -> 
         "cpu_frequency",
         "cpu_load",
         "cpu_temperature",
-        "analog",
+        "analog_in",
         "temperature",
         "humidity",
         "illuminance",
         "wind",
         "airquality",
-        "ekey_id",
+        "ekey_identifier",
         "ekey_user_name",
         "ekey_finger",
         "ekey_finger_name",
-        "logic_state",
+        "logic",
         "module_status",
-        "power_temp",
+        "power_temperature",
         "timeout",
         "current",
         "voltage",
     }
 
 
-_ANALOG_UNIQUE_ID = "Mod_MOD-1_snsr0_analog"
+_ANALOG_UNIQUE_ID = "MOD-1_analog_in_0"
 
 
 def _analog_coordinator(ain_area: int, module_area: int = 1) -> MagicMock:
