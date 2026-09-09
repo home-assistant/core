@@ -91,6 +91,7 @@ _DEFAULT_NAMES = {
     Platform.BINARY_SENSOR: binary_sensor_platform.DEFAULT_NAME,
     Platform.BUTTON: button_platform.DEFAULT_NAME,
     Platform.COVER: cover_platform.DEFAULT_NAME,
+    Platform.CLIMATE: climate_platform.DEFAULT_NAME,
     Platform.DEVICE_TRACKER: device_tracker_platform.DEFAULT_NAME,
     Platform.EVENT: event_platform.DEFAULT_NAME,
     Platform.FAN: fan_platform.DEFAULT_NAME,
