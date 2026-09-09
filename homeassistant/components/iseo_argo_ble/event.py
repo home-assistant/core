@@ -8,7 +8,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IseoConfigEntry
+from . import PENDING_LOG_ENTRIES, IseoConfigEntry
 from .const import DOMAIN, signal_access_log
 
 PARALLEL_UPDATES = 0
@@ -62,6 +62,24 @@ class IseoAccessLogEvent(EventEntity):
                 self._async_handle_entry,
             )
         )
+        # Reading the log destroys it on the lock, so the lock entity only
+        # reads while this entity is here to report to.
+        self._entry.runtime_data.access_log_consumer = True
+        self.async_on_remove(self._forget_consumer)
+
+        # Anything drained after this entity last went away — an unload that
+        # outran the wait for a long read — is reported now rather than lost.
+        pending = self.hass.data.get(PENDING_LOG_ENTRIES, {}).pop(
+            self._entry.entry_id, None
+        )
+        if pending:
+            for event_type, attributes in pending:
+                self._async_handle_entry(event_type, attributes)
+
+    @callback
+    def _forget_consumer(self) -> None:
+        """Stop the lock reading a log this entity can no longer report."""
+        self._entry.runtime_data.access_log_consumer = False
 
     @callback
     def _async_handle_entry(self, event_type: str, attributes: dict[str, Any]) -> None:

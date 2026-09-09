@@ -3,6 +3,7 @@
 import asyncio
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from cryptography.hazmat.primitives.asymmetric.ec import SECP224R1, derive_private_key
 from iseo_argo_ble import IseoClient
@@ -16,6 +17,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_platform_entity_service
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ACCESS_LOG_UNLOAD_TIMEOUT,
@@ -40,9 +42,21 @@ class IseoData:
     # the lock has already marked those entries read, so tearing the event
     # entity down first would lose them.
     access_log_read: asyncio.Task[None] | None = None
+    # Whether the access-log event entity is listening. Reading the log
+    # destroys it on the lock, so it must not be read with nobody to report
+    # to — a user can disable the event entity and leave the lock enabled.
+    access_log_consumer: bool = False
 
 
 type IseoConfigEntry = ConfigEntry[IseoData]
+
+# Entries drained from a lock but not yet reported, by entry id. Survives the
+# entry so a read that finished after the event entity went away — an unload
+# that outran the wait, for one — is replayed instead of lost: the lock has
+# already marked those entries read and will never offer them again.
+PENDING_LOG_ENTRIES: HassKey[dict[str, list[tuple[str, dict[str, Any]]]]] = HassKey(
+    f"{DOMAIN}_pending_log_entries"
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

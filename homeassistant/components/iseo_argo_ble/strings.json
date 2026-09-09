@@ -48,6 +48,9 @@
     }
   },
   "exceptions": {
+    "access_log_entity_disabled": {
+      "message": "Enable the access log entity before reading the log. Reading empties the log on the lock, so there would be nothing left to report."
+    },
     "cannot_connect": {
       "message": "Could not connect to the lock."
     },

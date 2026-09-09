@@ -19,7 +19,7 @@ from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.util import dt as dt_util
 
-from . import IseoConfigEntry
+from . import PENDING_LOG_ENTRIES, IseoConfigEntry
 from .const import DOMAIN, signal_access_log
 from .event import EVENT_TYPE_ACCESS_DENIED, EVENT_TYPE_FAULT, EVENT_TYPE_OPENED
 
@@ -311,6 +311,12 @@ class IseoLockEntity(LockEntity):
     def _start_access_log_read(self, _now: datetime) -> None:
         """Debounce elapsed — read the log in the background."""
         self._access_log_unsub = None
+        if not self._entry.runtime_data.access_log_consumer:
+            # Reading empties the lock's log. With the event entity disabled
+            # there is nobody to report to, so the entries would be destroyed
+            # and never seen.
+            _LOGGER.debug("Access log entity is not enabled; skipping the read")
+            return
         self.hass.async_create_task(self._async_background_read())
 
     def _async_shared_read(self) -> asyncio.Task[None]:
@@ -359,6 +365,11 @@ class IseoLockEntity(LockEntity):
         if self._access_log_unsub is not None:
             self._access_log_unsub()
             self._access_log_unsub = None
+        if not self._entry.runtime_data.access_log_consumer:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="access_log_entity_disabled",
+            )
         await self._async_join_read()
 
     async def _async_read_log(self) -> None:
@@ -436,22 +447,31 @@ class IseoLockEntity(LockEntity):
                 entry.event_code,
                 entry.timestamp,
             )
-            async_dispatcher_send(
-                self.hass,
-                signal_access_log(self._entry.entry_id),
-                event_type,
-                {
-                    "event_code": entry.event_code,
-                    "description": describe_event(entry.event_code),
-                    # The lock puts the opener's name in extra_description and
-                    # their credential's UUID in user_info. Falling back to the
-                    # UUID would put a 32-character hex string where a name
-                    # belongs, so the two are reported separately.
-                    "opened_by": entry.extra_description.strip() or None,
-                    "credential_id": entry.user_info.strip() or None,
-                    "occurred_at": entry.timestamp.isoformat(),
-                },
-            )
+            attributes = {
+                "event_code": entry.event_code,
+                "description": describe_event(entry.event_code),
+                # The lock puts the opener's name in extra_description and
+                # their credential's UUID in user_info. Falling back to the
+                # UUID would put a 32-character hex string where a name
+                # belongs, so the two are reported separately.
+                "opened_by": entry.extra_description.strip() or None,
+                "credential_id": entry.user_info.strip() or None,
+                "occurred_at": entry.timestamp.isoformat(),
+            }
+            if self._entry.runtime_data.access_log_consumer:
+                async_dispatcher_send(
+                    self.hass,
+                    signal_access_log(self._entry.entry_id),
+                    event_type,
+                    attributes,
+                )
+            else:
+                # The entity went away while the lock was being drained. These
+                # entries are already marked read there, so hold them until it
+                # comes back rather than dropping them.
+                self.hass.data.setdefault(PENDING_LOG_ENTRIES, {}).setdefault(
+                    self._entry.entry_id, []
+                ).append((event_type, attributes))
 
     @override
     async def async_lock(self, **kwargs: Any) -> None:

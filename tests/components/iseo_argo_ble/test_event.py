@@ -23,7 +23,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -445,6 +445,79 @@ async def test_entries_sharing_a_second_keep_the_log_order(
     # its kind and the entity's final state.
     assert reported == ["access_denied", "opened"]
     assert hass.states.get(ENTITY_ID).attributes["opened_by"] == "Bob"
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_no_read_without_an_event_entity_to_report_to(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the log is not drained when its entity is disabled.
+
+    Reading empties the log on the lock. With nobody to report to, draining
+    it would destroy the entries and show them to no one.
+    """
+    await setup_integration(hass, mock_config_entry)
+    entity_registry.async_update_entity(
+        ENTITY_ID, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _open_the_door(hass, freezer, mock_iseo_client)
+
+    mock_iseo_client.gw_read_unread_logs.assert_not_called()
+
+    with pytest.raises(ServiceValidationError):
+        await _call_read_action(hass)
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_entries_drained_after_the_entity_went_away_are_replayed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a report with nobody listening is held until the entity returns.
+
+    The lock has already marked those entries read, so dropping them because
+    the entity happened to be gone would lose them for good.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    release = asyncio.Event()
+    opened_at = datetime(2026, 9, 2, 14, 3, 11, tzinfo=UTC)
+
+    async def _blocked_read() -> list[LogEntry]:
+        await release.wait()
+        return [_log_entry(CODE_OPENED, opened_at, extra_description="Federico")]
+
+    mock_iseo_client.gw_read_unread_logs.side_effect = _blocked_read
+
+    mock_iseo_client.read_state.return_value = _lock_state(door_closed=False)
+    freezer.tick(_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=_ACCESS_LOG_DEBOUNCE))
+    async_fire_time_changed(hass)
+    while not mock_iseo_client.gw_read_unread_logs.called:
+        await asyncio.sleep(0)
+
+    # Take the consumer away mid-drain, as an unload that outran the wait for
+    # a long read would.
+    mock_config_entry.runtime_data.access_log_consumer = False
+    release.set()
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes.get("opened_by") is None
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes["opened_by"] == "Federico"
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
