@@ -249,11 +249,12 @@ class IseoOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            # Reload explicitly rather than with an update listener: the
-            # bluetooth discovery flow refreshes this entry on every
-            # advertisement, so a listener would restart the integration
-            # continuously once it is following the lock passively.
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            # No reload: the entity reads this option when its poll timer
+            # fires, so the change takes effect on the next tick. Reloading
+            # would have to resolve the device through
+            # async_ble_device_from_address(), which following the lock
+            # passively keeps empty, and would sit in setup retry until the
+            # next advertisement — the signal this fallback replaces.
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(

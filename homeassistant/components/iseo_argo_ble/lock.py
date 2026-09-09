@@ -113,6 +113,7 @@ class IseoLockEntity(LockEntity):
         self._last_ble_device: BLEDevice | None = None
         self._initial_read: asyncio.Task[None] | None = None
         self._probed = False
+        self._opened_while_unlocking = False
         self._identity_rejected = False
 
     @override
@@ -137,18 +138,26 @@ class IseoLockEntity(LockEntity):
                 self.hass, self._check_availability, _AVAILABILITY_CHECK_INTERVAL
             )
         )
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass, self._async_poll_interval, _POLL_INTERVAL
+            )
+        )
         self.async_on_remove(self._cancel_relock_task)
         self.async_on_remove(self._cancel_initial_read)
 
-        if self._entry.options.get(CONF_ENABLE_POLLING, False):
-            self.async_on_remove(
-                async_track_time_interval(
-                    self.hass, self._async_poll_interval, _POLL_INTERVAL
-                )
-            )
-
     async def _async_poll_interval(self, _now: datetime) -> None:
-        """Poll the lock on the configured interval."""
+        """Poll the lock on the configured interval, if the fallback is on.
+
+        The option is read here rather than deciding at setup whether to
+        register this timer, so turning the fallback on takes effect without
+        reloading the entry. A reload would have to resolve the device through
+        ``async_ble_device_from_address()``, which following the lock passively
+        keeps empty, and would therefore sit in setup retry until the next
+        advertisement — the very signal this fallback exists to replace.
+        """
+        if not self._entry.options.get(CONF_ENABLE_POLLING, False):
+            return
         await self._poll_state()
 
     @callback
@@ -189,7 +198,14 @@ class IseoLockEntity(LockEntity):
     def _apply_door_state(self, door_closed: bool) -> None:
         """Apply a door reading, respecting the window after an unlock."""
         if self._attr_is_unlocking:
-            return
+            if door_closed:
+                # The latch has not released yet; that is not news.
+                return
+            # The latch released while gw_open() was still awaiting its
+            # response. Dropping this would leave the relock timer to report
+            # "locked" a few seconds later with the door standing open, and the
+            # correcting reading can be minutes away.
+            self._opened_while_unlocking = True
         if (
             door_closed
             and self._poll_suppress_until
@@ -417,6 +433,10 @@ class IseoLockEntity(LockEntity):
         door was actually left open.
         """
         await asyncio.sleep(_RELOCK_DELAY)
+        if self._opened_while_unlocking:
+            # The door was seen opening during the unlock; leave it that way
+            # until an advertisement reports it closed again.
+            return
         self._set_locked(available=self._attr_available)
 
     @override
@@ -432,6 +452,7 @@ class IseoLockEntity(LockEntity):
         """Open the lock (momentary actuator — always re-latches automatically)."""
         self._cancel_relock_task()
 
+        self._opened_while_unlocking = False
         self._set_unlocking()
 
         if not (ble_device := self._async_get_ble_device()):

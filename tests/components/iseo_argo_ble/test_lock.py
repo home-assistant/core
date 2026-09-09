@@ -508,6 +508,35 @@ async def test_door_opening_during_the_relock_window_is_kept(
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_door_opening_while_the_unlock_is_in_flight_is_kept(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the latch releasing during gw_open() is not discarded.
+
+    The entity is "unlocking" for the whole awaited BLE operation, and the lock
+    advertises the open door as the latch releases — often before the command
+    returns. Dropping that reading would let the relock timer report locked a
+    few seconds later with the door standing open, and the correcting reading
+    can be minutes away.
+    """
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+
+    async def _release_the_latch(*args: object, **kwargs: object) -> None:
+        inject_bluetooth_service_info_bleak(hass, iseo_advertisement(False))
+
+    mock_iseo_client.gw_open.side_effect = _release_the_latch
+
+    with patch("homeassistant.components.iseo_argo_ble.lock._RELOCK_DELAY", 0):
+        await _unlock(hass)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
 async def test_probe_retries_when_the_first_read_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
