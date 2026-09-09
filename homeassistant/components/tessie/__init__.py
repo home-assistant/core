@@ -76,16 +76,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
     try:
         state_of_all_vehicles = await tessie.list_vehicles(only_active=True)
     except (InvalidToken, MissingToken) as e:
-        raise ConfigEntryAuthFailed from e
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
+        ) from e
     except RETRY_EXCEPTIONS as e:
-        raise ConfigEntryNotReady from e
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from e
     except TeslaFleetError as e:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from e
     except ClientError as e:
-        raise ConfigEntryNotReady from e
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from e
 
     vehicles: list[TessieVehicleData] = []
     for vehicle in state_of_all_vehicles["results"]:
@@ -130,13 +139,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
     try:
         scopes = await tessie.scopes()
     except (TeslaFleetError, ClientError) as e:
-        raise ConfigEntryNotReady from e
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from e
 
     if Scope.ENERGY_DEVICE_DATA in scopes:
         try:
             products = (await tessie.products())["response"]
         except (TeslaFleetError, ClientError) as e:
-            raise ConfigEntryNotReady from e
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
 
         for product in products:
             if "energy_site_id" in product:
@@ -157,14 +172,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                 try:
                     live_status = (await api.live_status())["response"]
                 except (InvalidToken, Forbidden, SubscriptionRequired) as e:
-                    raise ConfigEntryAuthFailed from e
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="auth_failed",
+                    ) from e
                 except TeslaFleetError as e:
                     raise ConfigEntryNotReady(
                         translation_domain=DOMAIN,
                         translation_key="cannot_connect",
                     ) from e
                 except ClientError as e:
-                    raise ConfigEntryNotReady from e
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN,
+                        translation_key="cannot_connect",
+                    ) from e
 
                 powerwall = (
                     product["components"]["battery"] or product["components"]["solar"]
