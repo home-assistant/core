@@ -1729,6 +1729,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
     assert data == {
         "handler": ["test1", "test"],
         "reason": "reconfigure_successful",
+        "translation_domain": "homeassistant",
         "type": "abort",
         "description_placeholders": None,
     }
