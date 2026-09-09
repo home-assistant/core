@@ -3,6 +3,7 @@
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+import math
 from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError, ClientResponseError
@@ -38,9 +39,12 @@ def _get_retry_after(err: RateLimited) -> float | None:
     """Return the Retry-After hint in seconds, if the server provided one."""
     if isinstance(err.data, dict) and (after := err.data.get("after")) is not None:
         try:
-            return float(after)
-        except TypeError, ValueError:
+            value = float(after)
+        except (TypeError, ValueError):
             return None
+        if math.isfinite(value) and value >= 0:
+            return value
+        return None
     return None
 
 

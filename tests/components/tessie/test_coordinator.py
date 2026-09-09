@@ -18,6 +18,7 @@ from homeassistant.components.tessie.coordinator import (
     TESSIE_ENERGY_HISTORY_INTERVAL,
     TESSIE_FLEET_API_SYNC_INTERVAL,
     TESSIE_SYNC_INTERVAL,
+    _get_retry_after,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -132,6 +133,24 @@ async def test_coordinator_state_rate_limited(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_get_state.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("after", "expected"),
+    [
+        ("30", 30.0),
+        ("-5", None),
+        ("nan", None),
+        ("inf", None),
+        ("-inf", None),
+        ("not-a-number", None),
+    ],
+    ids=["valid", "negative", "nan", "inf", "neg-inf", "unparsable"],
+)
+def test_get_retry_after(after: str, expected: float | None) -> None:
+    """Tests that _get_retry_after rejects negative and non-finite values."""
+
+    assert _get_retry_after(RateLimited({"after": after})) == expected
 
 
 async def test_coordinator_live_error(
