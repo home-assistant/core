@@ -43,6 +43,7 @@ class AbstractTemplateEntity(Entity):
 
     _entity_id_format: str
     _optimistic_entity: bool = False
+    _extra_optimistic_options: tuple[str, ...] | None = None
     _state_option: str | None = None
     _restore_state_extra_data: Any | None = None
     _blocked_attributes: BlockedTemplateAttributes | None = None
@@ -77,8 +78,15 @@ class AbstractTemplateEntity(Entity):
             optimistic = config.get(CONF_OPTIMISTIC)
 
             if self._state_option is not None:
+                assumed_optimistic = config.get(self._state_option) is None
+                if self._extra_optimistic_options:
+                    assumed_optimistic = assumed_optimistic and all(
+                        config.get(option) is None
+                        for option in self._extra_optimistic_options
+                    )
+
                 self._attr_assumed_state = optimistic or (
-                    optimistic is None and config.get(self._state_option) is None
+                    optimistic is None and assumed_optimistic
                 )
 
         if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
