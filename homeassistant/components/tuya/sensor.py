@@ -87,7 +87,7 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
     wrapper_class: tuple[type[DPCodeTypeInformationWrapper], ...] | None = None
 
 
-def _zndb_additional_phase_sensors(
+def _additional_phase_sensors(
     dpcode: DPCode, phase: str
 ) -> tuple[TuyaSensorEntityDescription, ...]:
     """Build additional per-phase sensors for an electricity meter."""
@@ -588,6 +588,9 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        *_additional_phase_sensors(DPCode.PHASE_A, "a"),
+        *_additional_phase_sensors(DPCode.PHASE_B, "b"),
+        *_additional_phase_sensors(DPCode.PHASE_C, "c"),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_A}electriccurrent",
             dpcode=DPCode.PHASE_A,
@@ -1735,9 +1738,9 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        *_zndb_additional_phase_sensors(DPCode.PHASE_A, "a"),
-        *_zndb_additional_phase_sensors(DPCode.PHASE_B, "b"),
-        *_zndb_additional_phase_sensors(DPCode.PHASE_C, "c"),
+        *_additional_phase_sensors(DPCode.PHASE_A, "a"),
+        *_additional_phase_sensors(DPCode.PHASE_B, "b"),
+        *_additional_phase_sensors(DPCode.PHASE_C, "c"),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_A}electriccurrent",
             dpcode=DPCode.PHASE_A,
