@@ -34,6 +34,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+def _get_friendly_name(name: str | None) -> str:
+    """Return a user-friendly name derived from the zeroconf name."""
+    if not name:
+        return DEFAULT_NAME
+    instance = name.split(".", 1)[0]
+    return instance or DEFAULT_NAME
+
+
 async def _async_test_port(hass: HomeAssistant, port: int) -> None:
     """Verify the UDP port can be bound."""
 
@@ -59,17 +67,13 @@ async def _async_discover_mac_address(hass: HomeAssistant, host: str, port: int)
         if not future.done():
             future.set_result(payload.mac_address)
 
+    @callback
+    def _on_error(err: Exception, _addr: tuple[str, int]) -> None:
+        if not future.done() and isinstance(err, InvalidMacAddressError):
+            future.set_exception(err)
+
     filters: list[FilterIp] = []
-    original_dispatch = listener.dispatch
-
-    def dispatch(data: bytes, addr: tuple[str, int]) -> None:
-        try:
-            original_dispatch(data, addr)
-        except InvalidMacAddressError as err:
-            if not future.done():
-                future.set_exception(err)
-
-    listener.dispatch = dispatch  # type: ignore[method-assign]
+    listener.register_error_callback(_on_error)
     try:
         for ip in resolved_ips:
             filt = FilterIp(ip)
@@ -81,7 +85,7 @@ async def _async_discover_mac_address(hass: HomeAssistant, host: str, port: int)
 
         return await asyncio.wait_for(future, timeout=DISCOVERY_TIMEOUT)
     finally:
-        listener.dispatch = original_dispatch  # type: ignore[method-assign]
+        listener.unregister_error_callback(_on_error)
         for filt in filters:
             listener.unregister(filt)
         await listener_registry.async_remove_if_unused(port)
@@ -99,18 +103,7 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
-        return (
-            self._host is not None
-            and other_flow._host is not None
-            and normalize_host(self._host) == normalize_host(other_flow._host)
-        )
-
-    def _get_friendly_name(self, name: str | None) -> str:
-        """Return a user-friendly name derived from the zeroconf name."""
-        if not name:
-            return DEFAULT_NAME
-        instance = name.split(".", 1)[0]
-        return instance or DEFAULT_NAME
+        return self._host is not None and self._host == other_flow._host
 
     async def _async_validate_host(self, host: str) -> str:
         """Verify port availability and discover the device MAC address."""
@@ -175,9 +168,7 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
-            ),
+            data_schema=STEP_USER_DATA_SCHEMA,
         )
 
     @override
@@ -205,13 +196,13 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(format_mac(mac_address))
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         self._discovery_info = discovery_info
         self._validated_host = host
 
         self.context["title_placeholders"] = {
-            "name": self._get_friendly_name(discovery_info.name),
+            "name": _get_friendly_name(discovery_info.name),
             "host": host,
         }
 
@@ -221,12 +212,13 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
+        assert self._discovery_info is not None
+
         if user_input is not None:
-            assert self._discovery_info is not None
             assert self._validated_host is not None
 
             return self.async_create_entry(
-                title=self._get_friendly_name(self._discovery_info.name),
+                title=_get_friendly_name(self._discovery_info.name),
                 data={
                     CONF_HOST: self._validated_host,
                     CONF_PORT: DEFAULT_PORT,
@@ -236,9 +228,7 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                "name": self._get_friendly_name(
-                    self._discovery_info.name if self._discovery_info else None
-                ),
-                "host": self._discovery_info.host if self._discovery_info else "",
+                "name": _get_friendly_name(self._discovery_info.name),
+                "host": self._discovery_info.host,
             },
         )

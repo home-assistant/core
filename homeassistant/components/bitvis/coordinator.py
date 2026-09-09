@@ -129,7 +129,8 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
             ) from err
         except RuntimeError as err:
             raise ConfigEntryError(
-                f"Failed to start UDP listener on port {self.port}"
+                f"Failed to register MAC filter for {self.mac_address} "
+                f"on port {self.port}"
             ) from err
 
     async def async_stop(self) -> None:
@@ -137,10 +138,10 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
         if not self._registered:
             return
 
-        if listener_registry := self.hass.data.get(DATA_LISTENER_REGISTRY):
-            if listener := listener_registry.get(self.port):
-                listener.unregister(self._filter)
-                await listener_registry.async_remove_if_unused(self.port)
+        listener_registry = async_get_listener_registry(self.hass)
+        if listener := listener_registry.get(self.port):
+            listener.unregister(self._filter)
+            await listener_registry.async_remove_if_unused(self.port)
 
         self._registered = False
         _LOGGER.debug(
@@ -187,13 +188,12 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
         ):
             return
 
-        if diagnostic.HasField("device_info"):
-            device_info = diagnostic.device_info
-            model = device_info.model_name or MODEL_NAME
-            sw_version = device_info.sw_version or None
-        else:
-            model = MODEL_NAME
-            sw_version = None
+        if not diagnostic.HasField("device_info"):
+            return
+
+        device_info = diagnostic.device_info
+        model = device_info.model_name or MODEL_NAME
+        sw_version = device_info.sw_version or None
 
         if device.model != model or device.sw_version != sw_version:
             device_reg.async_update_device(

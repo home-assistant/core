@@ -1,22 +1,87 @@
 """Common fixtures for Bitvis Power Hub tests."""
 
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator
 from contextlib import ExitStack, contextmanager
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from bitvis_protobuf.listener import FilterIp, FilterMac
-from bitvis_protobuf.parse import PayloadSample, parse_payload
+from bitvis_protobuf.listener import Filter, FilterIp
+from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample, parse_payload
 from bitvis_protobuf.powerhub_pb2 import Payload
+from bitvis_protobuf.utils import InvalidMacAddressError
 import pytest
 
 from homeassistant.components.bitvis.const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
 
 TEST_DEVICE_MAC = "aa:bb:cc:dd:ee:ff"
 SECOND_DEVICE_MAC = "11:22:33:44:55:66"
+
+type ListenerCallback = Callable[
+    [PayloadSample | PayloadDiagnostic, tuple[str, int]], None
+]
+type ErrorCallback = Callable[[Exception, tuple[str, int]], None]
+
+
+class FakeListener:
+    """In-memory SharedListener stand-in for config-flow and coordinator tests."""
+
+    def __init__(self) -> None:
+        """Initialize callback storage and async start/stop mocks."""
+        self._callbacks: dict[Filter, ListenerCallback] = {}
+        self._error_callbacks: list[ErrorCallback] = []
+        self.start = AsyncMock()
+        self.stop = AsyncMock()
+        self.register = MagicMock(side_effect=self._register)
+        self.unregister = MagicMock(side_effect=self._unregister)
+        self.register_error_callback = MagicMock(
+            side_effect=self._error_callbacks.append
+        )
+        self.unregister_error_callback = MagicMock(side_effect=self._unregister_error)
+        self.dispatch = MagicMock(side_effect=self._dispatch)
+
+    @property
+    def is_empty(self) -> bool:
+        """Return True when no payload callbacks are registered."""
+        return not self._callbacks
+
+    def _register(self, filt: Filter, callback: ListenerCallback) -> None:
+        if filt in self._callbacks:
+            raise RuntimeError(f"Filter already registered: {filt}")
+        self._callbacks[filt] = callback
+
+    def _unregister(self, filt: Filter) -> None:
+        self._callbacks.pop(filt, None)
+
+    def _unregister_error(self, callback: ErrorCallback) -> None:
+        if callback in self._error_callbacks:
+            self._error_callbacks.remove(callback)
+
+    def _dispatch(self, data: bytes, addr: tuple[str, int]) -> None:
+        try:
+            payload = parse_payload(data)
+        except InvalidMacAddressError as err:
+            for callback in self._error_callbacks:
+                callback(err, addr)
+            return
+        if payload is None:
+            return
+        self.deliver(payload, addr)
+
+    def deliver(
+        self,
+        payload: PayloadSample | PayloadDiagnostic,
+        addr: tuple[str, int],
+    ) -> None:
+        """Deliver an already-parsed payload to matching callbacks."""
+        host = addr[0]
+        for filt, callback in self._callbacks.items():
+            if filt.match(payload, host):
+                callback(payload, addr)
 
 
 @contextmanager
@@ -29,74 +94,31 @@ def patch_config_flow_connectivity(
     port_bind_side_effect: BaseException | None = None,
     discovery_timeout: bool = False,
     register_side_effect: BaseException | None = None,
-    shared_listener: MagicMock | None = None,
+    shared_listener: FakeListener | None = None,
 ) -> Iterator[AsyncMock]:
     """Patch library connectivity helpers used by the config flow."""
-    mock_listener = shared_listener or MagicMock()
-    mock_listener.start = AsyncMock()
-    mock_listener.stop = AsyncMock()
+    listener = shared_listener or FakeListener()
 
-    if shared_listener is None:
-        if register_side_effect is not None:
-            mock_listener.register = MagicMock(side_effect=register_side_effect)
-        elif invalid_mac:
+    if register_side_effect is not None:
+        listener.register.side_effect = register_side_effect
+    else:
+        original_register = listener.register.side_effect
 
-            def _dispatch(data: bytes, addr: tuple[str, int]) -> None:
-                parse_payload(data)
-
-            mock_listener.dispatch = MagicMock(side_effect=_dispatch)
-
-            def _on_register(_filt: MagicMock, _callback: MagicMock) -> None:
+        def _on_register(filt: Filter, callback: ListenerCallback) -> None:
+            original_register(filt, callback)
+            if not isinstance(filt, FilterIp):
+                return
+            if invalid_mac:
                 payload = Payload()
                 payload.sample.SetInParent()
-                mock_listener.dispatch(
-                    payload.SerializeToString(), (resolved_host, 1234)
+                listener.dispatch(payload.SerializeToString(), (resolved_host, 1234))
+            elif deliver_mac and not discovery_timeout:
+                callback(
+                    PayloadSample(mac_address=mac_address, sample=MagicMock()),
+                    (resolved_host, 1234),
                 )
 
-            mock_listener.register = MagicMock(side_effect=_on_register)
-        elif deliver_mac and not discovery_timeout:
-
-            def _on_register(_filt: MagicMock, callback: MagicMock) -> None:
-                payload = PayloadSample(mac_address=mac_address, sample=MagicMock())
-                callback(payload, (resolved_host, 1234))
-
-            mock_listener.register = MagicMock(side_effect=_on_register)
-        else:
-            mock_listener.register = MagicMock()
-        mock_listener.unregister = MagicMock()
-        type(mock_listener).is_empty = PropertyMock(return_value=True)
-    elif invalid_mac:
-
-        def _dispatch(data: bytes, addr: tuple[str, int]) -> None:
-            parse_payload(data)
-
-        mock_listener.dispatch = MagicMock(side_effect=_dispatch)
-        original_register = mock_listener.register.side_effect
-
-        def _on_register(filt: FilterIp | FilterMac, callback: MagicMock) -> None:
-            if isinstance(filt, FilterIp):
-                payload = Payload()
-                payload.sample.SetInParent()
-                mock_listener.dispatch(
-                    payload.SerializeToString(), (resolved_host, 1234)
-                )
-                return
-            if original_register is not None:
-                original_register(filt, callback)
-
-        mock_listener.register = MagicMock(side_effect=_on_register)
-    elif deliver_mac and not discovery_timeout:
-        original_register = mock_listener.register.side_effect
-
-        def _on_register(filt: FilterIp | FilterMac, callback: MagicMock) -> None:
-            if isinstance(filt, FilterIp):
-                payload = PayloadSample(mac_address=mac_address, sample=MagicMock())
-                callback(payload, (resolved_host, 1234))
-                return
-            if original_register is not None:
-                original_register(filt, callback)
-
-        mock_listener.register = MagicMock(side_effect=_on_register)
+        listener.register.side_effect = _on_register
 
     with ExitStack() as stack:
         mock_verify = stack.enter_context(
@@ -116,7 +138,7 @@ def patch_config_flow_connectivity(
         stack.enter_context(
             patch(
                 "homeassistant.components.bitvis.coordinator.SharedListener",
-                return_value=mock_listener,
+                return_value=listener,
             )
         )
         if discovery_timeout:
@@ -157,7 +179,7 @@ def mock_ipv6_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "2001:db8::10", CONF_PORT: DEFAULT_PORT},
-        unique_id="11:22:33:44:55:66",
+        unique_id=SECOND_DEVICE_MAC,
         title=DEFAULT_NAME,
     )
 
@@ -174,27 +196,15 @@ def mock_second_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_shared_listener() -> MagicMock:
-    """Return a mocked bitvis_protobuf SharedListener."""
-    listener = MagicMock()
-    listener._callbacks: dict[FilterMac, MagicMock] = {}
-    listener.start = AsyncMock()
-    listener.stop = AsyncMock()
-
-    def register(filt: FilterMac, callback: MagicMock) -> None:
-        listener._callbacks[filt] = callback
-
-    def unregister(filt: FilterMac) -> None:
-        listener._callbacks.pop(filt, None)
-
-    listener.register = MagicMock(side_effect=register)
-    listener.unregister = MagicMock(side_effect=unregister)
-    type(listener).is_empty = PropertyMock(side_effect=lambda: not listener._callbacks)
-    return listener
+def mock_shared_listener() -> FakeListener:
+    """Return a fake bitvis_protobuf SharedListener."""
+    return FakeListener()
 
 
 @pytest.fixture
-def patch_shared_listener(mock_shared_listener: MagicMock) -> Generator[MagicMock]:
+def patch_shared_listener(
+    mock_shared_listener: FakeListener,
+) -> Generator[FakeListener]:
     """Patch SharedListener to return a mocked instance."""
     with patch(
         "homeassistant.components.bitvis.coordinator.SharedListener",
@@ -216,10 +226,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    patch_shared_listener: MagicMock,
+    patch_shared_listener: FakeListener,
 ) -> MockConfigEntry:
     """Set up the integration with a mocked UDP listener."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
     return mock_config_entry

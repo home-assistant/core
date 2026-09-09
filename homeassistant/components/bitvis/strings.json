@@ -20,7 +20,7 @@
         "data_description": {
           "host": "Hostname or IP address of your Bitvis Power Hub device."
         },
-        "description": "Enter the network details for your Bitvis Power Hub device",
+        "description": "Enter the hostname or IP address of your Bitvis Power Hub. Setup waits for a UDP packet from the device.",
         "title": "Set up Bitvis Power Hub"
       },
       "zeroconf_confirm": {

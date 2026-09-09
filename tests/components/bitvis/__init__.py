@@ -1,7 +1,6 @@
 """Tests for the Bitvis Power Hub integration."""
 
 from collections.abc import Callable
-from unittest.mock import MagicMock
 
 from bitvis_protobuf.listener import FilterMac
 from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
@@ -21,11 +20,12 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
 
 
 def find_listener_callback(
-    mock: MagicMock,
+    listener: object,
     mac_address: str,
 ) -> Callable[[PayloadSample | PayloadDiagnostic, tuple[str, int]], None]:
     """Find the listener callback registered for a MAC address."""
-    for call in mock.register.call_args_list:
+    register = listener.register
+    for call in register.call_args_list:
         filt = call[0][0]
         if (
             isinstance(filt, FilterMac)

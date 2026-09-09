@@ -2,7 +2,7 @@
 
 import asyncio
 from ipaddress import ip_address
-from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -14,7 +14,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .conftest import TEST_DEVICE_MAC, patch_config_flow_connectivity
+from .conftest import (
+    SECOND_DEVICE_MAC,
+    TEST_DEVICE_MAC,
+    FakeListener,
+    patch_config_flow_connectivity,
+)
 
 from tests.common import MockConfigEntry
 
@@ -23,18 +28,45 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 ZEROCONF_HOST = "192.168.1.200"
 USER_HOST = "192.168.1.100"
 
-ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
-    ip_address=ip_address(ZEROCONF_HOST),
-    ip_addresses=[ip_address(ZEROCONF_HOST)],
-    hostname="powerhub.local.",
-    name="Bitvis Power Hub._powerhub._udp.local.",
-    port=DEFAULT_PORT,
-    properties={},
-    type="_powerhub._udp.local.",
+
+def _zeroconf_discovery(
+    host: str = ZEROCONF_HOST,
+    name: str = "Bitvis Power Hub._powerhub._udp.local.",
+    port: int | None = DEFAULT_PORT,
+) -> ZeroconfServiceInfo:
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        hostname="powerhub.local.",
+        name=name,
+        port=port,
+        properties={},
+        type="_powerhub._udp.local.",
+    )
+
+
+ZEROCONF_DISCOVERY = _zeroconf_discovery()
+
+
+@pytest.mark.parametrize(
+    ("input_host", "resolved_ip", "expected_host"),
+    [
+        pytest.param(USER_HOST, USER_HOST, USER_HOST, id="ipv4"),
+        pytest.param("2001:db8::10", "2001:db8::10", "2001:db8::10", id="ipv6"),
+        pytest.param(
+            "my-powerhub.local", "10.0.0.5", "my-powerhub.local", id="hostname"
+        ),
+        pytest.param(
+            "[2001:db8::10]", "2001:db8::10", "2001:db8::10", id="bracketed-ipv6"
+        ),
+    ],
 )
-
-
-async def test_user_form_create_entry(hass: HomeAssistant) -> None:
+async def test_user_form_create_entry(
+    hass: HomeAssistant,
+    input_host: str,
+    resolved_ip: str,
+    expected_host: str,
+) -> None:
     """Test creating an entry via user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -43,32 +75,50 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch_config_flow_connectivity(USER_HOST):
+    with patch_config_flow_connectivity(resolved_ip):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: USER_HOST,
+                CONF_HOST: input_host,
             },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
-        CONF_HOST: USER_HOST,
+        CONF_HOST: expected_host,
         CONF_PORT: DEFAULT_PORT,
     }
     assert result["result"].unique_id == TEST_DEVICE_MAC
 
 
-async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test user form error on port bind failure and recovery."""
+@pytest.mark.parametrize(
+    ("connectivity_kwargs", "error_key"),
+    [
+        pytest.param(
+            {"port_bind_side_effect": OSError("UDP port is unavailable")},
+            "cannot_connect",
+            id="cannot-connect",
+        ),
+        pytest.param({"invalid_mac": True}, "invalid_mac", id="invalid-mac"),
+        pytest.param(
+            {"deliver_mac": False, "discovery_timeout": True},
+            "timeout_connect",
+            id="timeout",
+        ),
+    ],
+)
+async def test_user_form_error_and_recovery(
+    hass: HomeAssistant,
+    connectivity_kwargs: dict[str, object],
+    error_key: str,
+) -> None:
+    """Test user form error then successful recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch_config_flow_connectivity(
-        USER_HOST, port_bind_side_effect=OSError("UDP port is unavailable")
-    ):
+    with patch_config_flow_connectivity(USER_HOST, **connectivity_kwargs):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -77,72 +127,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    with patch_config_flow_connectivity(USER_HOST):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: USER_HOST,
-            },
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["data"] == {
-        CONF_HOST: USER_HOST,
-        CONF_PORT: DEFAULT_PORT,
-    }
-    assert result["result"].unique_id == TEST_DEVICE_MAC
-
-
-async def test_user_form_invalid_mac(hass: HomeAssistant) -> None:
-    """Test user form error when device sends payload without MAC and recovery."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch_config_flow_connectivity(USER_HOST, invalid_mac=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: USER_HOST,
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_mac"}
-
-    with patch_config_flow_connectivity(USER_HOST):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: USER_HOST,
-            },
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == TEST_DEVICE_MAC
-
-
-async def test_user_form_discovery_timeout(hass: HomeAssistant) -> None:
-    """Test user form error when no UDP message is received in time and recovery."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch_config_flow_connectivity(
-        USER_HOST, deliver_mac=False, discovery_timeout=True
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: USER_HOST,
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "timeout_connect"}
+    assert result["errors"] == {"base": error_key}
 
     with patch_config_flow_connectivity(USER_HOST):
         result = await hass.config_entries.flow.async_configure(
@@ -183,116 +168,6 @@ async def test_user_form_duplicate(
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_confirm_cannot_connect(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery abort on port bind failure."""
-    with patch_config_flow_connectivity(
-        ZEROCONF_HOST, port_bind_side_effect=OSError("UDP port is unavailable")
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=ZEROCONF_DISCOVERY,
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_zeroconf_confirm_invalid_mac(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery abort when device sends payload without MAC."""
-    with patch_config_flow_connectivity(ZEROCONF_HOST, invalid_mac=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=ZEROCONF_DISCOVERY,
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_mac"
-
-
-async def test_zeroconf_confirm_discovery_timeout(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery abort when no UDP message is received in time."""
-    with patch_config_flow_connectivity(
-        ZEROCONF_HOST, deliver_mac=False, discovery_timeout=True
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=ZEROCONF_DISCOVERY,
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "timeout_connect"
-
-
-async def test_zeroconf_duplicate(
-    hass: HomeAssistant, mock_zeroconf_config_entry: MockConfigEntry
-) -> None:
-    """Test that a duplicate zeroconf discovery is aborted."""
-    mock_zeroconf_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_zeroconf_none_port_uses_default(hass: HomeAssistant) -> None:
-    """Test that a zeroconf discovery with port=None falls back to DEFAULT_PORT."""
-    discovery = ZeroconfServiceInfo(
-        ip_address=ip_address(ZEROCONF_HOST),
-        ip_addresses=[ip_address(ZEROCONF_HOST)],
-        hostname="powerhub.local.",
-        name="Bitvis Power Hub._powerhub._udp.local.",
-        port=None,
-        properties={},
-        type="_powerhub._udp.local.",
-    )
-
-    with patch_config_flow_connectivity(ZEROCONF_HOST):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=discovery,
-        )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_PORT] == DEFAULT_PORT
-
-
-async def test_user_form_create_entry_ipv6_host(hass: HomeAssistant) -> None:
-    """Test creating an entry with an IPv6 host via user flow."""
-    ipv6_host = "2001:db8::10"
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch_config_flow_connectivity(ipv6_host):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: ipv6_host,
-            },
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["data"] == {
-        CONF_HOST: ipv6_host,
-        CONF_PORT: DEFAULT_PORT,
-    }
-    assert result["result"].unique_id == TEST_DEVICE_MAC
-
-
 async def test_user_form_duplicate_host(
     hass: HomeAssistant, mock_ipv6_config_entry: MockConfigEntry
 ) -> None:
@@ -316,58 +191,90 @@ async def test_user_form_duplicate_host(
     assert result["reason"] == "already_configured"
 
 
-async def test_user_form_keeps_hostname(hass: HomeAssistant) -> None:
-    """Test that user flow keeps the configured hostname."""
-    hostname = "my-powerhub.local"
-    resolved_ip = "10.0.0.5"
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch_config_flow_connectivity(resolved_ip):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: hostname,
-            },
+@pytest.mark.parametrize(
+    ("connectivity_kwargs", "reason"),
+    [
+        pytest.param(
+            {"port_bind_side_effect": OSError("UDP port is unavailable")},
+            "cannot_connect",
+            id="cannot-connect",
+        ),
+        pytest.param({"invalid_mac": True}, "invalid_mac", id="invalid-mac"),
+        pytest.param(
+            {"deliver_mac": False, "discovery_timeout": True},
+            "timeout_connect",
+            id="timeout",
+        ),
+    ],
+)
+async def test_zeroconf_abort(
+    hass: HomeAssistant,
+    connectivity_kwargs: dict[str, object],
+    reason: str,
+) -> None:
+    """Test zeroconf discovery abort reasons."""
+    with patch_config_flow_connectivity(ZEROCONF_HOST, **connectivity_kwargs):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["data"][CONF_HOST] == hostname
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
 
 
-async def test_user_form_normalize_bracketed_ipv6(hass: HomeAssistant) -> None:
-    """Test that bracketed IPv6 host is normalized (brackets stripped)."""
-    ipv6_host = "2001:db8::10"
+async def test_zeroconf_duplicate(
+    hass: HomeAssistant, mock_zeroconf_config_entry: MockConfigEntry
+) -> None:
+    """Test that a duplicate zeroconf discovery is aborted."""
+    mock_zeroconf_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
     )
 
-    with patch_config_flow_connectivity(ipv6_host):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: f"[{ipv6_host}]",
-            },
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["data"][CONF_HOST] == ipv6_host
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_confirm_uses_friendly_name(hass: HomeAssistant) -> None:
-    """Test that zeroconf confirm creates entry with friendly name from discovery."""
-    discovery = ZeroconfServiceInfo(
-        ip_address=ip_address(ZEROCONF_HOST),
-        ip_addresses=[ip_address(ZEROCONF_HOST)],
-        hostname="powerhub.local.",
-        name="My Custom Hub._powerhub._udp.local.",
-        port=DEFAULT_PORT,
-        properties={},
-        type="_powerhub._udp.local.",
-    )
+@pytest.mark.parametrize(
+    ("name", "port", "expected_title"),
+    [
+        pytest.param(
+            "Bitvis Power Hub._powerhub._udp.local.",
+            DEFAULT_PORT,
+            "Bitvis Power Hub",
+            id="happy-path",
+        ),
+        pytest.param(
+            "Bitvis Power Hub._powerhub._udp.local.",
+            None,
+            "Bitvis Power Hub",
+            id="none-port",
+        ),
+        pytest.param(
+            "My Custom Hub._powerhub._udp.local.",
+            DEFAULT_PORT,
+            "My Custom Hub",
+            id="friendly-name",
+        ),
+        pytest.param("", DEFAULT_PORT, DEFAULT_NAME, id="empty-name"),
+        pytest.param(
+            "._powerhub._udp.local.", DEFAULT_PORT, DEFAULT_NAME, id="dot-prefixed"
+        ),
+    ],
+)
+async def test_zeroconf_create_entry(
+    hass: HomeAssistant,
+    name: str,
+    port: int | None,
+    expected_title: str,
+) -> None:
+    """Test zeroconf confirm creates an entry with title, data, and unique_id."""
+    discovery = _zeroconf_discovery(name=name, port=port)
 
     with patch_config_flow_connectivity(ZEROCONF_HOST):
         result = await hass.config_entries.flow.async_init(
@@ -376,44 +283,44 @@ async def test_zeroconf_confirm_uses_friendly_name(hass: HomeAssistant) -> None:
             data=discovery,
         )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "My Custom Hub"
+    assert result["title"] == expected_title
+    assert result["data"] == {
+        CONF_HOST: ZEROCONF_HOST,
+        CONF_PORT: DEFAULT_PORT,
+    }
+    assert result["result"].unique_id == TEST_DEVICE_MAC
 
 
-async def test_zeroconf_empty_name_uses_default(hass: HomeAssistant) -> None:
-    """Test that zeroconf with empty name falls back to DEFAULT_NAME."""
-    discovery = ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.1.201"),
-        ip_addresses=[ip_address("192.168.1.201")],
-        hostname="powerhub.local.",
-        name="",
-        port=DEFAULT_PORT,
-        properties={},
-        type="_powerhub._udp.local.",
-    )
+async def test_zeroconf_updates_host_on_new_ip(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test rediscovery on a new IP updates the stored host and aborts."""
+    mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.data[CONF_HOST] != ZEROCONF_HOST
 
-    with patch_config_flow_connectivity("192.168.1.201"):
+    with patch_config_flow_connectivity(ZEROCONF_HOST):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=discovery,
+            data=ZEROCONF_DISCOVERY,
         )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == ZEROCONF_HOST
 
 
 async def test_aborted_flow_removes_listener(
     hass: HomeAssistant,
-    mock_shared_listener: MagicMock,
+    mock_shared_listener: FakeListener,
 ) -> None:
     """Test listener is stopped after an aborted config flow."""
     with patch_config_flow_connectivity(
@@ -494,33 +401,6 @@ async def test_discovery_register_runtime_error_aborts(hass: HomeAssistant) -> N
     assert result["reason"] == "already_in_progress"
 
 
-async def test_zeroconf_dot_prefixed_name_uses_default(hass: HomeAssistant) -> None:
-    """Test zeroconf with empty instance name falls back to DEFAULT_NAME."""
-    discovery = ZeroconfServiceInfo(
-        ip_address=ip_address(ZEROCONF_HOST),
-        ip_addresses=[ip_address(ZEROCONF_HOST)],
-        hostname="powerhub.local.",
-        name="._powerhub._udp.local.",
-        port=DEFAULT_PORT,
-        properties={},
-        type="_powerhub._udp.local.",
-    )
-
-    with patch_config_flow_connectivity(ZEROCONF_HOST):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=discovery,
-        )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-
-
 async def test_zeroconf_concurrent_flow_same_host_aborts(hass: HomeAssistant) -> None:
     """Test concurrent zeroconf flows for the same host abort."""
     with patch_config_flow_connectivity(ZEROCONF_HOST, deliver_mac=False):
@@ -545,3 +425,48 @@ async def test_zeroconf_concurrent_flow_same_host_aborts(hass: HomeAssistant) ->
 
     assert second_result["type"] is FlowResultType.ABORT
     assert second_result["reason"] == "already_in_progress"
+
+
+@pytest.mark.parametrize(
+    ("listener_already_running", "expected_awaits"),
+    [
+        pytest.param(True, 0, id="listener-exists"),
+        pytest.param(False, 1, id="no-listener"),
+    ],
+)
+async def test_user_form_port_bind_check(
+    hass: HomeAssistant,
+    mock_shared_listener: FakeListener,
+    listener_already_running: bool,
+    expected_awaits: int,
+) -> None:
+    """Test user flow skips the port bind check only when a listener exists."""
+    if listener_already_running:
+        with patch(
+            "homeassistant.components.bitvis.coordinator.SharedListener",
+            return_value=mock_shared_listener,
+        ):
+            await async_get_listener_registry(hass).async_get_or_create(DEFAULT_PORT)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    kwargs: dict[str, object] = {
+        "mac_address": SECOND_DEVICE_MAC
+        if listener_already_running
+        else TEST_DEVICE_MAC
+    }
+    if listener_already_running:
+        kwargs["shared_listener"] = mock_shared_listener
+
+    with patch_config_flow_connectivity("192.168.1.101", **kwargs) as mock_verify:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.101",
+            },
+        )
+
+    assert mock_verify.await_count == expected_awaits
+    assert result["type"] is FlowResultType.CREATE_ENTRY

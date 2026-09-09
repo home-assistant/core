@@ -1,20 +1,20 @@
 """Tests for the Bitvis Power Hub sensor platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from bitvis_protobuf import powerhub_pb2
 from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bitvis.const import DOMAIN, MODEL_NAME
+from homeassistant.components.bitvis.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from . import find_listener_callback, setup_integration
-from .conftest import TEST_DEVICE_MAC
+from .conftest import TEST_DEVICE_MAC, FakeListener
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -61,7 +61,6 @@ def sample_payload() -> PayloadSample:
     payload.sample.energy_active_delivered_by_client_kwh = 789.12
     payload.sample.energy_reactive_delivered_to_client_kvarh = 45.67
     payload.sample.energy_reactive_delivered_by_client_kvarh = 23.45
-    payload.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
     return PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample)
 
 
@@ -76,7 +75,6 @@ def diagnostic_payload() -> PayloadDiagnostic:
     payload.diagnostic.device_info.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
     payload.diagnostic.han_msg_successfully_parsed = 1000
     payload.diagnostic.han_msg_buffer_overflow = 5
-    payload.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
     return PayloadDiagnostic(mac_address=TEST_DEVICE_MAC, diagnostic=payload.diagnostic)
 
 
@@ -88,7 +86,7 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
     sample_payload: PayloadSample,
     diagnostic_payload: PayloadDiagnostic,
-    patch_shared_listener: MagicMock,
+    patch_shared_listener: FakeListener,
 ) -> None:
     """Test all entities with snapshot."""
     with patch("homeassistant.components.bitvis._PLATFORMS", [Platform.SENSOR]):
@@ -107,7 +105,7 @@ async def test_entities_added_when_fields_become_available(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    patch_shared_listener: MagicMock,
+    patch_shared_listener: FakeListener,
 ) -> None:
     """Test that HAN sensors are created when their fields first appear."""
     base_unique_id = mock_config_entry.unique_id
@@ -154,28 +152,24 @@ async def test_sensors_become_available_with_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    patch_shared_listener: MagicMock,
+    patch_shared_listener: FakeListener,
 ) -> None:
     """Test that sensors become available when data arrives."""
     payload = powerhub_pb2.Payload()
     payload.sample.power_active_delivered_to_client_kw = 2.0
-    payload.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
     find_listener_callback(patch_shared_listener, TEST_DEVICE_MAC)(
         PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample),
         ("192.168.1.100", 1234),
     )
     await hass.async_block_till_done()
 
-    base_unique_id = mock_config_entry.unique_id
-    expected_unique_id = f"{base_unique_id}_power_active_delivered_to_client"
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        f"{mock_config_entry.unique_id}_power_active_delivered_to_client",
     )
-    matching = next(
-        (e for e in entity_entries if e.unique_id == expected_unique_id), None
-    )
-    assert matching is not None
-    state = hass.states.get(matching.entity_id)
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state != "unavailable"
     assert float(state.state) == pytest.approx(2.0)
@@ -185,7 +179,7 @@ async def test_sensors_become_available_with_data(
 async def test_diagnostic_sensors_update_with_data(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    patch_shared_listener: MagicMock,
+    patch_shared_listener: FakeListener,
 ) -> None:
     """Test that diagnostic sensors update when a diagnostic payload arrives."""
     payload = powerhub_pb2.Payload()
@@ -224,14 +218,14 @@ async def test_device_info_updated_from_diagnostic(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    patch_shared_listener: MagicMock,
+    patch_shared_listener: FakeListener,
 ) -> None:
     """Test that device info is updated from a diagnostic payload."""
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, TEST_DEVICE_MAC), init_integration.entry_id
     )
     assert device is not None
-    assert device.model == MODEL_NAME
+    assert device.model is None
     assert device.sw_version is None
     assert (CONNECTION_NETWORK_MAC, TEST_DEVICE_MAC) in device.connections
 
@@ -255,19 +249,21 @@ async def test_device_info_updated_from_diagnostic(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_device_info_cleared_when_absent_in_diagnostic(
+async def test_device_info_kept_when_absent_in_later_payload(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    patch_shared_listener: MagicMock,
+    sample_payload: PayloadSample,
+    patch_shared_listener: FakeListener,
 ) -> None:
-    """Test that device info is cleared when absent in a later diagnostic."""
+    """Test that known model/sw_version are kept when later payloads omit them."""
     payload = powerhub_pb2.Payload()
     payload.diagnostic.uptime_s = 10
     payload.diagnostic.device_info.model_name = "PowerHub"
     payload.diagnostic.device_info.sw_version = "1.0"
     payload.diagnostic.device_info.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
-    find_listener_callback(patch_shared_listener, TEST_DEVICE_MAC)(
+    callback = find_listener_callback(patch_shared_listener, TEST_DEVICE_MAC)
+    callback(
         PayloadDiagnostic(mac_address=TEST_DEVICE_MAC, diagnostic=payload.diagnostic),
         ("192.168.1.100", 1234),
     )
@@ -282,15 +278,16 @@ async def test_device_info_cleared_when_absent_in_diagnostic(
 
     payload2 = powerhub_pb2.Payload()
     payload2.diagnostic.uptime_s = 20
-    find_listener_callback(patch_shared_listener, TEST_DEVICE_MAC)(
+    callback(
         PayloadDiagnostic(mac_address=TEST_DEVICE_MAC, diagnostic=payload2.diagnostic),
         ("192.168.1.100", 1234),
     )
+    callback(sample_payload, ("192.168.1.100", 1234))
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, TEST_DEVICE_MAC), init_integration.entry_id
     )
     assert device is not None
-    assert device.model == MODEL_NAME
-    assert device.sw_version is None
+    assert device.model == "PowerHub"
+    assert device.sw_version == "1.0"
