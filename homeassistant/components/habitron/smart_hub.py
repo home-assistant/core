@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .communicate import HbtnComm
-from .const import DOMAIN
+from .const import DOMAIN, normalised_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,18 +105,20 @@ class SmartHub:
         # The hub reports its MAC with either separator and in either case, and
         # the uid becomes the device identifier plus every entity's unique id
         # prefix -- so normalise it, or the same hub can end up with two sets.
-        # Lower case on purpose: the custom (HACS) integration derives the same
-        # uid and writes it lower case, and both share this domain's registry.
-        # Upper-casing here would give every migrating installation a fresh set
-        # of devices and entities, orphaning their history.
-        mac_uid = self._mac.replace(":", "").replace("-", "").lower()
-        self._uid_from_mac = bool(mac_uid)
-        if not mac_uid:
-            # A hub that reports no MAC is accepted by the config flow, which
-            # then keys the entry by its host. Carrying an empty uid from here
-            # would give every device the same blank identifier.
+        # Validated, not just non-empty: this runs at setup time, so an entry
+        # that never went through the config flow reaches it too, and a value
+        # like a redaction or the firmware's placeholder must not become an
+        # identity. Lower case on purpose -- the custom (HACS) integration
+        # derives the same uid and writes it lower case, and both share this
+        # domain's registry, so upper-casing would give every migrating
+        # installation a fresh set of devices and entities.
+        mac_uid = normalised_mac(self._mac)
+        self._uid_from_mac = mac_uid is not None
+        if mac_uid is None:
+            # Keep whatever the entry is already keyed by. Carrying an empty
+            # uid from here would give every device the same blank identifier.
             mac_uid = self.config.unique_id or self.config.entry_id
-            _LOGGER.debug("Hub reported no MAC; using %s as uid", mac_uid)
+            _LOGGER.debug("Hub reported no usable MAC; using %s as uid", mac_uid)
         self.uid = mac_uid
         self._version = self.comm.com_version
         self._type = self.comm.com_hwtype
@@ -135,10 +137,14 @@ class SmartHub:
             configuration_url=conf_url,
             # Every interface, not just the identifying one: the hub answers
             # over whichever is up, so a discovery that saw the other one must
-            # still match this device. An empty MAC is not a connection --
-            # registering one would collide with every device reporting none.
+            # still match this device. Validated like the uid: a value that is
+            # not an address -- empty, redacted, a placeholder -- is not a
+            # connection, and registering it would match every other device
+            # reporting the same thing.
             connections={
-                (dr.CONNECTION_NETWORK_MAC, mac) for mac in self.comm.com_macs if mac
+                (dr.CONNECTION_NETWORK_MAC, mac)
+                for mac in self.comm.com_macs
+                if normalised_mac(mac)
             },
             identifiers={(DOMAIN, self.uid)},
             manufacturer="Habitron GmbH",

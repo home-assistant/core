@@ -212,15 +212,25 @@ async def test_update_swallows_habitron_error(smart_hub_stub: SmartHub) -> None:
     assert smart_hub_stub.host_diags_valid is False
 
 
-async def test_setup_without_a_mac_keeps_the_entry_id(
+@pytest.mark.parametrize(
+    "reported_mac",
+    # Empty is the hub without an Ethernet interface; the rest are values a
+    # firmware may send in its place. None of them identifies a machine, so
+    # none may become the uid.
+    ["", "redacted", "not-a-mac", "192.168.1.50"],
+)
+async def test_setup_without_a_usable_mac_keeps_the_entry_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    reported_mac: str,
 ) -> None:
-    """A hub reporting no MAC does not get an empty identifier.
+    """A hub reporting no usable MAC does not get an identifier from it.
 
-    The config flow accepts that case and keys the entry by its host, so setup
-    has to carry that id instead of prefixing every device and entity with an
-    empty string -- and it must not register a blank MAC connection.
+    Setup runs for entries that never went through the config flow, so it
+    validates the value itself instead of trusting any non-empty string. It
+    then carries the id the entry already has, rather than prefixing every
+    device and entity with something two hubs could share -- and it must not
+    register a blank MAC connection.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -233,7 +243,7 @@ async def test_setup_without_a_mac_keeps_the_entry_id(
 
     client = AsyncMock(spec=HabitronClient)
     client.host = MOCK_HOST
-    client.get_smhub_info = AsyncMock(return_value=_smhub_info("none", ""))
+    client.get_smhub_info = AsyncMock(return_value=_smhub_info("none", reported_mac))
     router = Router(uid="rt_1")
     with (
         patch(

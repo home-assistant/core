@@ -243,18 +243,19 @@ async def test_setup_entry_removes_stale_device(
     assert device_registry.async_get(stale.id) is None
 
 
-async def test_migrate_v1_entry_renames_host_and_drops_the_token(
+async def test_migrate_v1_entry_renames_the_host(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
     mock_coordinator_refresh: AsyncMock,
 ) -> None:
-    """A v1 entry keeps working: the host is renamed, the token dropped.
+    """A v1 entry keeps working: the host key is renamed in place.
 
     Entries created before this integration moved to core carry the
-    integration-specific ``habitron_host`` key and a websocket token that
-    nothing consumes any more; re-adding the hub by hand must not be needed.
+    integration-specific ``habitron_host`` key; re-adding the hub by hand must
+    not be needed. The websocket token stays -- the custom integration reads it
+    from this same entry.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -268,8 +269,8 @@ async def test_migrate_v1_entry_renames_host_and_drops_the_token(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 3
-    assert entry.data == {CONF_HOST: MOCK_HOST}
+    assert (entry.version, entry.minor_version) == (2, 2)
+    assert entry.data == {CONF_HOST: MOCK_HOST, "websock_token": "rotated-token"}
     assert entry.state is ConfigEntryState.LOADED
 
 
@@ -293,7 +294,7 @@ async def test_migrate_v1_entry_without_the_old_key_is_a_no_op(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 3
+    assert (entry.version, entry.minor_version) == (2, 2)
     assert entry.data == {CONF_HOST: MOCK_HOST}
 
 
@@ -444,19 +445,20 @@ async def test_cleanup_keeps_a_device_with_one_live_identifier(
     assert device_registry.async_get(stale.id) is None
 
 
-async def test_migrate_v2_entry_drops_the_token(
+async def test_migrate_v2_entry_is_bumped_and_keeps_the_token(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
     mock_coordinator_refresh: AsyncMock,
 ) -> None:
-    """A v2 entry from the custom integration still gets cleaned up.
+    """A v2 entry from the custom integration is bumped, not stripped.
 
-    The custom (HACS) integration numbers its entries 2 as well, and Home
-    Assistant skips the migration when the versions match -- so without the
-    bump past it, a migrating installation would keep storing the unused
-    credential for good.
+    The bump is minor on purpose: raising the major version would make Home
+    Assistant refuse this entry if the user ever went back to the custom
+    integration, which numbers its entries 2. The websocket token is kept for
+    the same reason -- that integration reads it from this very entry, with a
+    plain subscript, so dropping it would break the fallback outright.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -470,8 +472,8 @@ async def test_migrate_v2_entry_drops_the_token(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 3
-    assert entry.data == {CONF_HOST: MOCK_HOST}
+    assert (entry.version, entry.minor_version) == (2, 2)
+    assert entry.data == {CONF_HOST: MOCK_HOST, "websock_token": "rotated-token"}
     assert entry.state is ConfigEntryState.LOADED
 
 
