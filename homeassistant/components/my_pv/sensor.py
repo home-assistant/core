@@ -177,7 +177,7 @@ async def async_setup_entry(
                     and not coordinator.device.supports_data("curr_l2")
                 )
                 or (
-                    key in ("volt_mains", "volt_l1")
+                    key in ("volt_mains", "volt_mains_l1", "volt_l1")
                     and not coordinator.device.supports_data("volt_l2")
                     and not coordinator.device.supports_data("volt_mains_l2")
                 )
