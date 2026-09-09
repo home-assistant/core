@@ -278,6 +278,37 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit_polling(
     assert state.state == "10"
 
 
+async def test_charge_on_solar_lower_limit_restores_max_value(
+    hass: HomeAssistant,
+) -> None:
+    """Test the lower limit's max value survives a reload without new telemetry."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc"
+    ) as listener:
+        listener.return_value = lambda: None
+        entry = await setup_platform(hass, [Platform.NUMBER])
+
+        for call in listener.call_args_list:
+            call.args[0](70)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.attributes["max"] == 70
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc",
+        return_value=lambda: None,
+    ):
+        await reload_platform(hass, entry, [Platform.NUMBER])
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.attributes["max"] == 70
+
+
 async def test_charge_on_solar_lower_limit_set_value_while_disabled(
     hass: HomeAssistant,
 ) -> None:

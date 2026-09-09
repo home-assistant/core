@@ -380,6 +380,8 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
                 and last_number_data.native_value is not None
             ):
                 value = int(last_number_data.native_value)
+            if last_number_data.native_max_value:
+                self._attr_native_max_value = last_number_data.native_max_value
         self._attr_native_value = value
         self.vehicle.charge_on_solar_lower_limit = value
 
