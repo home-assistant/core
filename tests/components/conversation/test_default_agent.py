@@ -1882,6 +1882,13 @@ async def test_no_states_matched_default_error(
         )
 
 
+@pytest.mark.parametrize(
+    "empty_alias",
+    [
+        pytest.param(" ", id="whitespace"),
+        pytest.param("!!!", id="punctuation"),
+    ],
+)
 @pytest.mark.usefixtures("init_components")
 async def test_empty_aliases(
     hass: HomeAssistant,
@@ -1889,6 +1896,7 @@ async def test_empty_aliases(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     floor_registry: fr.FloorRegistry,
+    empty_alias: str,
 ) -> None:
     """Test that empty aliases are not added to slot lists."""
     floor_1 = floor_registry.async_create("first floor", aliases={" "})
@@ -1913,7 +1921,9 @@ async def test_empty_aliases(
         kitchen_light.entity_id,
         device_id=kitchen_device.id,
         name="kitchen light",
-        aliases=[er.COMPUTED_NAME, " "],
+        # Area and floor aliases are only guarded against whitespace, so the
+        # punctuation case is exercised on the entity.
+        aliases=[er.COMPUTED_NAME, empty_alias],
     )
     hass.states.async_set(
         kitchen_light.entity_id,
