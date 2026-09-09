@@ -291,11 +291,51 @@ async def test_hub_mac_is_normalised(
         assert await _async_hub_mac(MOCK_HOST) == expected
 
 
-async def test_hub_mac_unreachable_returns_none() -> None:
-    """A hub that cannot be read yields no MAC instead of raising."""
+async def test_hub_mac_unreachable_raises_cannot_connect() -> None:
+    """An unreachable hub is a connection problem, not a missing MAC.
+
+    The two need different answers: telling someone to update the hub software
+    helps nobody whose address is simply wrong.
+    """
+    with (
+        patch(
+            "homeassistant.components.habitron.config_flow.HabitronClient",
+            side_effect=OSError("no route"),
+        ),
+        pytest.raises(CannotConnect),
+    ):
+        await _async_hub_mac(MOCK_HOST)
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected_id"),
+    [
+        ({"hardware": {"network": {"lan mac": None}}}, "null"),
+        ({"hardware": {"network": {"lan mac": ""}}}, "empty"),
+        ({"hardware": {"network": {"lan mac": "192.168.1.50"}}}, "an IP"),
+        ({"hardware": {"network": {"lan mac": "not-a-mac"}}}, "junk"),
+        # An answer that does not carry the field at all.
+        ({"hardware": {}}, "key missing"),
+        ({"hardware": {"network": None}}, "network null"),
+    ],
+    ids=["null", "empty", "an IP", "junk", "key missing", "network null"],
+)
+async def test_hub_mac_without_a_usable_address_is_none(
+    payload: dict, expected_id: str
+) -> None:
+    """Only a real address becomes an identity.
+
+    A hub that answers but sends something else -- a null ``lan mac``, or a
+    value that is not an address at all -- must not have it turned into a
+    unique_id that two machines could share.
+    """
+    client = MagicMock()
+    client.get_smhub_info = AsyncMock(return_value=payload)
+    client.__aenter__ = AsyncMock(return_value=client)
+    client.__aexit__ = AsyncMock(return_value=False)
     with patch(
         "homeassistant.components.habitron.config_flow.HabitronClient",
-        side_effect=OSError("no route"),
+        return_value=client,
     ):
         assert await _async_hub_mac(MOCK_HOST) is None
 
@@ -1356,4 +1396,59 @@ async def test_ssdp_flow_without_a_mac_is_aborted(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_mac_address"
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
+async def test_probe_host_dials_a_name_that_does_not_resolve(
+    hass: HomeAssistant,
+) -> None:
+    """An unresolvable name is passed on as typed rather than dropped.
+
+    Resolving is only there so the hub's reply can be matched to what was
+    dialled; when it fails, the name may still be reachable (a hosts entry, a
+    resolver the executor cannot see), so the probe gets it unchanged.
+    """
+    flow = ConfigFlow()
+    flow.hass = hass
+    with (
+        patch(
+            "homeassistant.components.habitron.config_flow.socket.gethostbyname",
+            side_effect=OSError("no such host"),
+        ),
+        patch(
+            "homeassistant.components.habitron.config_flow._async_hub_mac",
+            new=AsyncMock(return_value=None),
+        ) as hub_mac,
+    ):
+        assert await flow._async_hub_identity("nosuchhub") is None
+
+    hub_mac.assert_awaited_once_with("nosuchhub")
+
+
+async def test_ssdp_flow_aborts_when_the_hub_is_unreachable(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_hub_mac: AsyncMock,
+) -> None:
+    """An advertised but unreachable hub is dropped, not offered.
+
+    Without a reachable hub there is no identity, and SSDP re-announces, so the
+    flow comes back on its own once the hub answers again.
+    """
+    mock_hub_mac.side_effect = CannotConnect
+    discovery = SsdpServiceInfo(
+        ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+        ssdp_st="urn:habitron-com:device:SmartHub:1",
+        ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+        upnp={ATTR_UPNP_UDN: MOCK_UDN},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=discovery
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
     assert not hass.config_entries.async_entries(DOMAIN)

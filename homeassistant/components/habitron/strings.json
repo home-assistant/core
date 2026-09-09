@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_host_in_ssdp": "The discovered device did not report a host address.",
       "no_mac_address": "The SmartHub did not report a MAC address, which Home Assistant needs to tell one hub from another. Please update the SmartHub software.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -101,6 +102,9 @@
     },
     "connect_timeout": {
       "message": "Timeout while connecting to SmartHub."
+    },
+    "duplicate_hub": {
+      "message": "The hub at {host} is already configured as {uid}. Remove the duplicate entry."
     },
     "update_network_error": {
       "message": "Network error fetching status from SmartHub: {error}"

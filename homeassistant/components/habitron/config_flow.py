@@ -2,6 +2,7 @@
 
 import contextlib
 import logging
+import re
 import socket
 from typing import Any, override
 from urllib.parse import urlparse
@@ -27,30 +28,45 @@ from .const import CONF_DEFAULT_HOST, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+_MAC_RE = re.compile(r"[0-9a-f]{12}")
+
+
 def _normalised_mac(value: str) -> str:
     """Return a MAC comparable across separators and casing."""
     return value.replace(":", "").replace("-", "").casefold()
 
 
 async def _async_hub_mac(host: str) -> str | None:
-    """Return the hub's MAC, or ``None`` when it cannot be read.
+    """Return the hub's MAC, or ``None`` when it reports none.
 
     This is the identity every path keys on: it is the same whichever interface
     the hub currently uses, and the custom (HACS) integration derives it the
     same way, so an installation moving to core is recognised rather than
     offered a second time.
+
+    A hub that cannot be reached raises ``CannotConnect`` instead of returning
+    ``None``: the two need different answers -- "update the hub software" helps
+    nobody whose address is simply wrong.
     """
     try:
         async with HabitronClient(host) as client:
             info = await client.get_smhub_info()
-        # A hub without a configured LAN interface reports the key as null, and
+    except (HabitronError, OSError) as err:
+        raise CannotConnect from err
+    try:
+        # A hub without an Ethernet interface reports the key as null, and
         # ``str(None)`` would normalise to the literal "none" -- an id every
         # such hub would share. Treat it as absent, like a missing key.
-        mac = str(info["hardware"]["network"]["lan mac"] or "")
-    except (HabitronError, OSError, KeyError, TypeError) as err:
-        _LOGGER.debug("Could not read the MAC from the hub at %s: %s", host, err)
+        mac = _normalised_mac(str(info["hardware"]["network"]["lan mac"] or ""))
+    except (KeyError, TypeError) as err:
+        _LOGGER.debug("Hub at %s reported no readable MAC: %s", host, err)
         return None
-    return _normalised_mac(mac) or None
+    # Only a real address is an identity. A hub that sends something else -- an
+    # IP, a placeholder -- must not have it turned into a unique_id.
+    if not _MAC_RE.fullmatch(mac):
+        _LOGGER.debug("Hub at %s reported %r, which is no MAC", host, mac)
+        return None
+    return mac
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -107,7 +123,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for habitron."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -268,11 +284,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_host_in_ssdp")
         host_str = str(host)
 
-        devices = await self._cached_discover()
-        target_device = next((d for d in devices if d.get("ip") == host_str), None)
-        self._discovered_device = target_device or {"ip": host_str}
+        # No UDP scan here: the only field taken from it was the address, and
+        # that is ``host_str`` by construction -- scanning would just delay the
+        # flow.
+        self._discovered_device = {"ip": host_str}
 
-        unique_id = await self._async_hub_identity(host_str)
+        try:
+            unique_id = await self._async_hub_identity(host_str)
+        except CannotConnect:
+            # Advertised but not reachable right now. Dropping the flow is the
+            # honest answer: SSDP re-announces, so it comes back on its own.
+            return self.async_abort(reason="cannot_connect")
         if unique_id is None:
             # No MAC, no identity: a hub that cannot be told apart from another
             # must not be offered, or two of them would share an entry.
@@ -344,35 +366,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host_input = user_input[CONF_HOST]
-            stored_host = await self._async_stored_host(host_input)
 
-            unique_id = await self._async_hub_identity(host_input)
-            if unique_id is None:
-                # Without a MAC the hub has no identity, so it cannot be told
-                # apart from another one. Reported on the form rather than
-                # aborted: updating the hub's software makes the retry work.
-                errors["base"] = "no_mac_address"
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=vol.Schema(
-                        {vol.Required(CONF_HOST, default=host_input): str}
-                    ),
-                    errors=errors,
-                )
-
-            await self.async_set_unique_id(unique_id)
-            # Re-entering a known hub at a new address updates the stored host,
-            # so a DHCP change does not leave the entry on the old one. The
-            # entry's update listener handles the reload. An ignored entry is
-            # deliberately let through here: adding it by hand is how
-            # un-ignoring works, and the new entry replaces it.
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: stored_host}, reload_on_update=False
-            )
-
+            # Reachability first: it separates a wrong address from a hub that
+            # answers but reports no MAC, and it is what tells an unresolvable
+            # name ("try an IP") from a refused connection. Asking for the
+            # identity first would report every one of them as a missing MAC.
             try:
                 info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
+                unique_id = await self._async_hub_identity(host_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except HostNotFound:
@@ -380,6 +381,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                if unique_id is None:
+                    # The hub answers but has no MAC, so it cannot be told apart
+                    # from another one. Shown on the form rather than aborted:
+                    # updating the hub's software makes the retry work.
+                    errors["base"] = "no_mac_address"
+                else:
+                    await self.async_set_unique_id(unique_id)
+                    # Re-entering a known hub at a new address updates the
+                    # stored host, so a DHCP change does not leave the entry on
+                    # the old one. The entry's update listener handles the
+                    # reload. An ignored entry is deliberately let through:
+                    # adding it by hand is how un-ignoring works, and the new
+                    # entry replaces it.
+                    self._abort_if_unique_id_configured(
+                        updates={CONF_HOST: await self._async_stored_host(host_input)},
+                        reload_on_update=False,
+                    )
+                    return self.async_create_entry(title=info["title"], data=user_input)
 
             default_host = user_input[CONF_HOST]
 
