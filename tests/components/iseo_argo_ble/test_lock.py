@@ -311,13 +311,9 @@ async def test_unlock_uses_the_last_advertised_device(
     await setup_integration(hass, mock_config_entry)
     await _advertise(hass, door_closed=True)
 
-    with (
-        patch(
-            "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
-            return_value=None,
-        ),
-        # No advertisement will arrive during the test; don't sit out the wait.
-        patch("homeassistant.components.iseo_argo_ble.lock._ADVERTISEMENT_WAIT", 0),
+    with patch(
+        "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
+        return_value=None,
     ):
         await _unlock(hass)
         await hass.async_block_till_done()
