@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -45,22 +46,19 @@ async def async_validate_trigger_config(
                 translation_placeholders={"device_id": device_id},
             ) from err
 
-        for config_entry_id in device.config_entries:
-            if (
-                entry := hass.config_entries.async_get_entry(config_entry_id)
-            ) and entry.domain == DOMAIN:
-                if entry.state is ConfigEntryState.LOADED:
-                    break
-
-                raise InvalidDeviceAutomationConfig(
-                    translation_domain=DOMAIN,
-                    translation_key="device_config_entry_not_loaded",
-                    translation_placeholders={"device_id": device.id},
-                )
-        else:
+        _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+            hass, device.id, domain=DOMAIN
+        )
+        if config_entry is None:
             raise InvalidDeviceAutomationConfig(
                 translation_domain=DOMAIN,
                 translation_key="device_not_valid",
+                translation_placeholders={"device_id": device.id},
+            )
+        if config_entry.state is not ConfigEntryState.LOADED:
+            raise InvalidDeviceAutomationConfig(
+                translation_domain=DOMAIN,
+                translation_key="device_config_entry_not_loaded",
                 translation_placeholders={"device_id": device.id},
             )
 

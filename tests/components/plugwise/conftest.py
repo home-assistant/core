@@ -362,6 +362,7 @@ def mock_smile_legacy_anna() -> Generator[MagicMock]:
 
         api.async_update.return_value = data
         api.connect.return_value = Version("1.8.22")
+        api.cooling_present = False
         api.gateway_id = "0000aaaa0000aaaa0000aaaa0000aa00"
         api.heater_id = "04e4cbfe7f4340f090f85ec3b9e6a950"
         api.reboot = False

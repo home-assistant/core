@@ -2,12 +2,13 @@
 
 import logging
 
-from lyngdorf.device import async_create_receiver, lookup_receiver_model
+from lyngdorf import LyngdorfReceiver, create_receiver, lookup_model
 
 from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -37,14 +38,16 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: LyngdorfConfigEntry
 ) -> bool:
     """Set up Lyngdorf from a config entry."""
-    lyngdorf_model = lookup_receiver_model(config_entry.data[CONF_MODEL])
+    lyngdorf_model = lookup_model(config_entry.data[CONF_MODEL])
     assert lyngdorf_model is not None
 
     try:
-        receiver = await async_create_receiver(
-            config_entry.data[CONF_HOST], lyngdorf_model
+        receiver: LyngdorfReceiver = await create_receiver(
+            config_entry.data[CONF_HOST],
+            lyngdorf_model,
+            session=async_get_clientsession(hass),
         )
-        await receiver.async_connect()
+        await receiver.connect()
     except TimeoutError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -72,7 +75,7 @@ async def async_setup_entry(
     )
 
     zone_b_device_info: DeviceInfo | None = None
-    if lyngdorf_model.has_zone_b_feature():
+    if receiver.zone_b is not None:
         # Register the main device up front so Zone B can resolve its via_device_id.
         device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
@@ -113,16 +116,13 @@ async def async_setup_entry(
         else:
             _LOGGER.info("Lyngdorf %s is unavailable", host)
 
-    receiver.register_notification_callback(_log_availability_change)
-    config_entry.async_on_unload(
-        lambda: receiver.un_register_notification_callback(_log_availability_change)
-    )
+    config_entry.async_on_unload(receiver.on_change(_log_availability_change))
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     async def _async_disconnect(event: Event) -> None:
         """Disconnect from receiver."""
-        await receiver.async_disconnect()
+        await receiver.disconnect()
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect)
@@ -139,5 +139,5 @@ async def async_unload_entry(
         config_entry, PLATFORMS
     )
     if unload_ok:
-        await config_entry.runtime_data.receiver.async_disconnect()
+        await config_entry.runtime_data.receiver.disconnect()
     return unload_ok

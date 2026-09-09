@@ -243,15 +243,7 @@ def _async_register_bridge_device(
     if area != UNASSIGNED_AREA:
         device_args["suggested_area"] = area
 
-    device = device_registry.async_get_or_create(
-        **device_args, config_entry_id=config_entry_id
-    )
-    if device.via_device_id is not None:
-        # Existing installations may still have the bridge device linked to
-        # itself via via_device_id, from when it was (incorrectly) registered
-        # as its own via device. Clear it explicitly since async_get_or_create
-        # above leaves via_device_id untouched when it's not passed.
-        device_registry.async_update_device(device.id, via_device_id=None)
+    device_registry.async_get_or_create(**device_args, config_entry_id=config_entry_id)
 
 
 @callback

@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from datetime import timedelta
 from functools import partial
 from itertools import pairwise
+import logging
 from time import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -18,6 +19,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud, webhook
 from homeassistant.components.netatmo import DOMAIN, coordinator
+from homeassistant.components.netatmo.coordinator import ACCOUNT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
@@ -902,6 +904,143 @@ async def test_device_hierarchy(
     assert dict(sorted(hierarchy.items())) == snapshot
 
 
+async def test_disabled_home_is_not_polled(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a home whose device is disabled is not set up or polled."""
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, HOME_ID)},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    data_handler = config_entry.runtime_data
+    assert HOME_ID not in data_handler.account.homes
+    assert f"home-{HOME_ID}" not in data_handler.publisher
+    assert hass.states.get("climate.livingroom_livingroom") is None
+
+
+async def test_disabled_home_keeps_its_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a disabled home keeps a device so it can be re-enabled."""
+    assert await async_setup_component(hass, "config", {})
+
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, HOME_ID)},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    home_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, HOME_ID), config_entry.entry_id
+    )
+    assert home_device is not None
+    assert home_device.name == "MYHOME"
+    assert home_device.model == "Home"
+    assert home_device.disabled_by is dr.DeviceEntryDisabler.USER
+
+    # A disabled home is still live, so its device must not be removable
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(home_device.id)
+    assert not response["success"]
+
+
+async def test_disabled_home_disables_its_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a disabled home disables its devices without touching manual choices."""
+    with selected_platforms([Platform.CLIMATE, Platform.COVER]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+        blinds = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "0009999992"), config_entry.entry_id
+        )
+        assert blinds is not None
+        # A device the user disabled by hand, which must survive a home toggle
+        device_registry.async_update_device(
+            blinds.id, disabled_by=dr.DeviceEntryDisabler.USER
+        )
+
+        livingroom = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "2746182631"), config_entry.entry_id
+        )
+        assert livingroom is not None
+        assert livingroom.disabled_by is None
+
+        # A grandchild, as a gateway will produce once bridge nesting lands.
+        # Without this the recursive walk is never exercised and would regress
+        # silently.
+        grandchild = device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, "grandchild-module-id")},
+            via_device_id=livingroom.id,
+        )
+
+        home_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, HOME_ID), config_entry.entry_id
+        )
+        assert home_device is not None
+        device_registry.async_update_device(
+            home_device.id, disabled_by=dr.DeviceEntryDisabler.USER
+        )
+        await hass.async_block_till_done()
+
+        livingroom = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "2746182631"), config_entry.entry_id
+        )
+        assert livingroom.disabled_by is dr.DeviceEntryDisabler.INTEGRATION
+        entity = entity_registry.async_get("climate.livingroom_livingroom")
+        assert entity.disabled_by is er.RegistryEntryDisabler.DEVICE
+
+        # The walk reaches a grandchild, not just direct children
+        assert (
+            device_registry.async_get(grandchild.id).disabled_by
+            is dr.DeviceEntryDisabler.INTEGRATION
+        )
+
+        # Re-enabling restores what we disabled, and only what we disabled
+        device_registry.async_update_device(home_device.id, disabled_by=None)
+        await hass.async_block_till_done()
+
+        livingroom = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "2746182631"), config_entry.entry_id
+        )
+        assert livingroom.disabled_by is None
+        entity = entity_registry.async_get("climate.livingroom_livingroom")
+        assert entity.disabled_by is None
+
+        blinds = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "0009999992"), config_entry.entry_id
+        )
+        assert blinds.disabled_by is dr.DeviceEntryDisabler.USER
+
+        assert device_registry.async_get(grandchild.id).disabled_by is None
+
+
 async def test_device_remove_devices(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -914,7 +1053,8 @@ async def test_device_remove_devices(
 
     assert await async_setup_component(hass, "config", {})
 
-    with selected_platforms([Platform.CLIMATE]):
+    # The sensor platform is what gives account-owned air care modules a device
+    with selected_platforms([Platform.CLIMATE, Platform.SENSOR]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -934,12 +1074,62 @@ async def test_device_remove_devices(
     response = await client.remove_device(home_device.id)
     assert not response["success"]
 
+    # Air care modules belong to the account rather than to a home
+    air_care_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:25:cf:a8"), config_entry.entry_id
+    )
+    assert air_care_device is not None
+    response = await client.remove_device(air_care_device.id)
+    assert not response["success"]
+
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "remove-device-id")},
     )
     response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
+
+
+async def test_disabled_home_keeps_its_descendants(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a disabled home's rooms and modules cannot be removed."""
+    assert await async_setup_component(hass, "config", {})
+
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+        livingroom = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "2746182631"), config_entry.entry_id
+        )
+        assert livingroom is not None
+
+        home_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, HOME_ID), config_entry.entry_id
+        )
+        assert home_device is not None
+        device_registry.async_update_device(
+            home_device.id, disabled_by=dr.DeviceEntryDisabler.USER
+        )
+        await hass.async_block_till_done()
+
+    # The room is absent from the account now, but its device is still live
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(livingroom.id)
+    assert not response["success"]
+
+    # A hand-disabled device keeps USER, so only the walk up to the home finds it
+    device_registry.async_update_device(
+        livingroom.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    response = await client.remove_device(livingroom.id)
+    assert not response["success"]
 
 
 async def test_oauth_implementation_not_available(
@@ -1197,3 +1387,44 @@ async def test_failed_updates_are_retried_with_escalating_backoff(
     # scheduled update), the delay then doubles per consecutive error until the
     # patched cap of 600s is reached
     assert gaps == [180, 300, 600, 600]
+
+
+async def test_log_when_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that unavailability and recovery are each logged exactly once."""
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch("homeassistant.components.netatmo.webhook.webhook_generate_url"),
+    ):
+        post_request = mock_auth.return_value.async_post_api_request
+        post_request.side_effect = partial(fake_post_request, hass)
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    data_handler = config_entry.runtime_data
+
+    with caplog.at_level(
+        logging.INFO, logger="homeassistant.components.netatmo.coordinator"
+    ):
+        post_request.side_effect = pyatmo.ApiError("boom")
+        await data_handler.async_fetch_data(ACCOUNT)
+        await data_handler.async_fetch_data(ACCOUNT)
+
+        assert caplog.text.count("Error while fetching") == 1
+
+        post_request.side_effect = partial(fake_post_request, hass)
+        await data_handler.async_fetch_data(ACCOUNT)
+        await data_handler.async_fetch_data(ACCOUNT)
+
+        assert caplog.text.count("recovered") == 1

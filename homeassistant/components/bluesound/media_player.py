@@ -9,6 +9,7 @@ from pyblu import Input, Player, Preset, Status, SyncStatus
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -537,8 +538,9 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         if self.sync_status.leader is None and self.sync_status.followers is None:
             return []
 
+        # An entry that is not loaded has no runtime data to read a status from
         config_entries: list[BluesoundConfigEntry] = (
-            self.hass.config_entries.async_entries(DOMAIN)
+            self.hass.config_entries.async_loaded_entries(DOMAIN)
         )
         sync_status_list = [
             x.runtime_data.coordinator.data.sync_status for x in config_entries
@@ -608,15 +610,16 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         entity_registry = er.async_get(self.hass)
 
+        # An entry that is not loaded has no runtime data to read a status from
         config_entries: list[BluesoundConfigEntry] = (
-            self.hass.config_entries.async_entries(DOMAIN)
+            self.hass.config_entries.async_loaded_entries(DOMAIN)
         )
         for config_entry in config_entries:
             entity_entries = er.async_entries_for_config_entry(
                 entity_registry, config_entry.entry_id
             )
             for entity_entry in entity_entries:
-                if entity_entry.domain == "media_player":
+                if entity_entry.domain == MEDIA_PLAYER_DOMAIN:
                     result[entity_entry.entity_id] = (
                         config_entry.runtime_data.coordinator.data.sync_status
                     )
