@@ -109,8 +109,7 @@ MAXIMUM_VOLUME_SENSOR = LyngdorfSensorEntityDescription(
         volume.maximum_volume if isinstance(volume := r.volume, VolumeControl) else None
     ),
     entity_category=EntityCategory.DIAGNOSTIC,
-    # Most owners never set a ceiling, and for them this reads the same value
-    # forever. It earns its place only once someone has one.
+    # Most owners set no ceiling, so this would read the same value forever.
     entity_registry_enabled_default=False,
 )
 
