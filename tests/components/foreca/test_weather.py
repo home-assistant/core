@@ -1,5 +1,6 @@
 """Test the Foreca weather platform."""
 
+from datetime import date
 from unittest.mock import MagicMock, patch
 
 from pyforeca import DailyForecast, HourlyForecast
@@ -13,6 +14,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import init_integration
 
@@ -84,3 +86,31 @@ async def test_forecast_without_a_time_is_dropped(
         return_response=True,
     )
     assert response == {ENTITY_ID: {"forecast": []}}
+
+
+@pytest.mark.usefixtures("mock_foreca_client")
+async def test_daily_forecast_lands_on_the_right_local_day(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a daily forecast keeps its date in a timezone west of UTC.
+
+    Anchoring to midnight UTC would put the forecast on the previous day for
+    anyone west of it.
+    """
+    await hass.config.async_set_time_zone("America/Los_Angeles")
+    with patch("homeassistant.components.foreca.PLATFORMS", [Platform.WEATHER]):
+        await init_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {ATTR_ENTITY_ID: ENTITY_ID, "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    first = response[ENTITY_ID]["forecast"][0]
+    timestamp = dt_util.parse_datetime(first["datetime"])
+    assert timestamp is not None
+    # The date has to survive being rendered where Home Assistant is, which is
+    # what midnight UTC would break.
+    assert dt_util.as_local(timestamp).date() == date(2026, 9, 2)

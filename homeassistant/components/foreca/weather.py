@@ -1,6 +1,5 @@
 """Weather platform for the Foreca integration."""
 
-from datetime import UTC, datetime, time
 from typing import override
 
 from pyforeca import DailyForecast, HourlyForecast
@@ -43,11 +42,13 @@ async def async_setup_entry(
 
 def _daily_to_forecast(day: DailyForecast) -> Forecast | None:
     """Convert a Foreca daily forecast to a Home Assistant forecast."""
-    # The API dates a day rather than timing it, so anchor it to midnight UTC.
+    # The API dates a day rather than timing it, so anchor it to the start of
+    # that day where Home Assistant is: midnight UTC lands on the day before
+    # for anyone west of it.
     if (date := dt_util.parse_date(day.date or "")) is None:
         return None
     return Forecast(
-        datetime=datetime.combine(date, time.min, tzinfo=UTC).isoformat(),
+        datetime=dt_util.start_of_local_day(date).isoformat(),
         condition=symbol_to_condition(day.symbol),
         native_temperature=day.max_temp,
         native_templow=day.min_temp,
