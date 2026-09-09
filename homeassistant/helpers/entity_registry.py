@@ -116,6 +116,7 @@ def _deserialize_aliases(aliases: list[str | None]) -> list[AliasEntry]:
 # Attributes relevant to describing entity
 # to external services.
 ENTITY_DESCRIBING_ATTRIBUTES = {
+    "area_id",
     "capabilities",
     "device_class",
     "entity_id",
