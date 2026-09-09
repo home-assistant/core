@@ -1,9 +1,10 @@
 """Support for Netatmo/Bubendorff button."""
 
 import logging
-from typing import override
+from typing import cast, override
 
 from pyatmo import modules as NaModules
+from pyatmo.modules.module import ShutterMixin
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant, callback
@@ -29,6 +30,13 @@ async def async_setup_entry(
 
     @callback
     def _create_entity(netatmo_device: NetatmoDevice) -> None:
+        if not isinstance(netatmo_device.device, ShutterMixin):
+            return
+
+        shutter = cast(ShutterMixin, netatmo_device.device)
+        if not shutter.can_move_to_preferred_position:
+            return
+
         entity = NetatmoCoverPreferredPositionButton(netatmo_device)
         _LOGGER.debug("Adding button %s", entity)
         async_add_entities([entity])
