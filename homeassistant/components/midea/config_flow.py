@@ -90,8 +90,6 @@ def _select_and_connect(
         subtype,
         "",
     )
-    if dm is None:
-        return None
     return _connect_and_close(dm)
 
 
