@@ -2349,3 +2349,99 @@ dumper.add_representer(
         dumper, "tag:yaml.org,2002:map", value.serialize()
     ),
 )
+
+
+@cache
+def _units_set(dict_name: str, key_filter: str | None) -> set[str | None]:
+    """Return a cached lookup of a sensor units dictionary.
+
+    This will import a module from disk and is run from an executor when
+    loading the services schema files.
+    """
+    module = importlib.import_module("homeassistant.components.sensor")
+    units_dict: dict[str, set[str | None]] = getattr(module, dict_name)
+
+    return {
+        unit
+        for key, units in units_dict.items()
+        if key_filter is None or key == key_filter
+        for unit in units
+    }
+
+
+class UnitOfMeasurementSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a unit of measurement selector config."""
+
+    device_class: str | None
+    state_class: str | None
+
+
+@SELECTORS.register("unit_of_measurement")
+class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
+    """Selector for unit of measurement."""
+
+    selector_type = "unit_of_measurement"
+
+    @staticmethod
+    def _valid_state_class(option: str) -> str:
+        """Validate state class and raise if invalid."""
+        vol.In(_enum_options(Platform.SENSOR, "SensorStateClass"))(option)
+        return option
+
+    @staticmethod
+    def _valid_device_class(option: str) -> str:
+        """Validate device class and raise if invalid."""
+        vol.In(_enum_options(Platform.SENSOR, "SensorDeviceClass"))(option)
+        return option
+
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                vol.Optional("device_class"): vol.Any(None, _valid_device_class),
+                vol.Optional("state_class"): vol.Any(None, _valid_state_class),
+            },
+        ),
+    )
+
+    def __init__(self, config: UnitOfMeasurementSelectorConfig | None = None) -> None:
+        """Instantiate a unit of measurement selector."""
+        super().__init__(config)
+        self.allowed_context_keys = {}
+        if config is not None:
+            if "device_class" not in config:
+                self.allowed_context_keys["filter_device_class"] = {
+                    DeviceClassSelector.selector_type
+                }
+            elif "state_class" not in config:
+                self.allowed_context_keys["filter_state_class"] = {
+                    StateClassSelector.selector_type
+                }
+
+    def __call__(self, data: Any) -> str | None:
+        """Validate the passed selection."""
+
+        valid_units_set: set[str | None] | None = None
+        device_class_units: set[str | None] | None = None
+        if device_class := self.config.get("device_class"):
+            device_class_units = _units_set("DEVICE_CLASS_UNITS", device_class)
+            valid_units_set = device_class_units
+        if (state_class := self.config.get("state_class")) and (
+            state_class_units := _units_set("STATE_CLASS_UNITS", state_class)
+        ):
+            # limit valid units to state_class units
+            valid_units_set = (
+                device_class_units & state_class_units
+                if device_class_units is not None
+                else state_class_units
+            )
+
+        unit: str | None
+        if valid_units_set is None:
+            # If there is no device class or state class units limitation,
+            # any (custom) unit is accepted
+            unit = vol.Any(None, str)(data)
+            return unit
+
+        units_schema = vol.In(valid_units_set)
+        unit = units_schema(data)
+        return unit

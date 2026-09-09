@@ -9,6 +9,7 @@ import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import DEGREE, UnitOfTemperature
 from homeassistant.helpers import selector
 from homeassistant.util import yaml as yaml_util
 
@@ -1825,6 +1826,150 @@ def test_state_class_selector_schema(
 ) -> None:
     """Test state class selector."""
     _test_selector("state_class", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "raises"),
+    [
+        (None, does_not_raise()),
+        ({}, does_not_raise()),
+        ({"state_class": "total"}, does_not_raise()),
+        ({"state_class": None}, does_not_raise()),
+        ({"state_class": "invalid"}, pytest.raises(vol.Invalid)),
+        ({"state_class": ["total"]}, pytest.raises(vol.Invalid)),
+        ({"device_class": None}, does_not_raise()),
+        ({"device_class": "date"}, does_not_raise()),
+        ({"device_class": "enum"}, does_not_raise()),
+        ({"device_class": "temperature"}, does_not_raise()),
+        ({"device_class": "invalid"}, pytest.raises(vol.Invalid)),
+        ({"device_class": ["temperature"]}, pytest.raises(vol.Invalid)),
+    ],
+)
+def test_uom_selector_validate_schema(
+    schema: dict, raises: AbstractContextManager
+) -> None:
+    """Test unit of measurement class selector schemas."""
+    # Validate selector configuration
+
+    with raises:
+        selector.validate_selector({"unit_of_measurement": schema})
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {},
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+            ),
+            (),
+        ),
+        (
+            None,
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+            ),
+            (),
+        ),
+        (
+            {"device_class": "temperature"},
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+            ("cats", "dogs", DEGREE),
+        ),
+        (
+            {"device_class": "enum"},
+            (),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+        (
+            {"device_class": "date"},
+            (),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+        (
+            {"state_class": "measurement"},
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                "dogs",
+            ),
+            (),
+        ),
+        (
+            {"state_class": "measurement_angle"},
+            (DEGREE),
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                "dogs",
+            ),
+        ),
+        (
+            {"device_class": "wind_direction", "state_class": "measurement_angle"},
+            (DEGREE),
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                "dogs",
+            ),
+        ),
+        (
+            {"device_class": "temperature", "state_class": "measurement"},
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+            ("cats", "dogs", DEGREE),
+        ),
+        (
+            {"device_class": "temperature", "state_class": "measurement_angle"},
+            (),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+    ],
+)
+def test_uom_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test uom class selector."""
+    _test_selector("unit_of_measurement", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
