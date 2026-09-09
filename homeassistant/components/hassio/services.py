@@ -469,7 +469,7 @@ def async_register_network_storage_services(
             device.name is None
             or device.model != SupervisorEntityModel.MOUNT
             or (coordinator := hass.data.get(MAIN_COORDINATOR)) is None
-            or coordinator.entry_id not in device.config_entries
+            or coordinator.entry_id != device.config_entry_id
         ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
