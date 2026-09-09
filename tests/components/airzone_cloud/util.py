@@ -110,11 +110,16 @@ from aioairzone_cloud.const import (
     API_WS_IDS,
     API_WS_TYPE,
     API_ZONE_NUMBER,
+    RAW_DEVICES_CONFIG,
 )
 from aioairzone_cloud.device import Device
 from aioairzone_cloud.webserver import WebServer
 
-from homeassistant.components.airzone_cloud.const import DOMAIN
+from homeassistant.components.airzone_cloud.const import (
+    API_SLATS_V_CONF,
+    API_SLATS_V_VALUES,
+    DOMAIN,
+)
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -297,7 +302,14 @@ def mock_get_device_config(device: Device) -> dict[str, Any]:
             API_PC_UE: 0.15,
             API_PE_UE: 0.02,
             API_RETURN_TEMP: {API_CELSIUS: 26, API_FAH: 79},
+            API_SLATS_V_CONF: "swing",
+            API_SLATS_V_VALUES: ["swing", "fixed"],
             API_WORK_TEMP: {API_CELSIUS: 25, API_FAH: 77},
+        }
+    if device.get_id() == "aidoo1":
+        return {
+            API_SLATS_V_CONF: "fixed",
+            API_SLATS_V_VALUES: ["swing", "fixed"],
         }
     if device.get_id() == "system1":
         return {
@@ -529,6 +541,7 @@ def mock_get_webserver(webserver: WebServer, devices: bool) -> dict[str, Any]:
 
 async def async_init_integration(
     hass: HomeAssistant,
+    aidoo1_slats_supported: bool = True,
 ) -> None:
     """Set up the Airzone integration in Home Assistant."""
 
@@ -539,6 +552,23 @@ async def async_init_integration(
         unique_id=CONFIG[CONF_ID],
     )
     config_entry.add_to_hass(hass)
+
+    raw_data = {
+        RAW_DEVICES_CONFIG: {
+            "aidoo1": {
+                API_SLATS_V_CONF: "fixed",
+            },
+            "aidoo_pro": {
+                API_SLATS_V_CONF: "swing",
+                API_SLATS_V_VALUES: ["swing", "fixed"],
+            },
+        },
+    }
+    if aidoo1_slats_supported:
+        raw_data[RAW_DEVICES_CONFIG]["aidoo1"][API_SLATS_V_VALUES] = [
+            "swing",
+            "fixed",
+        ]
 
     with (
         patch(
@@ -564,6 +594,10 @@ async def async_init_integration(
         patch(
             "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
             return_value=None,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.raw_data",
+            return_value=raw_data,
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

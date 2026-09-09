@@ -46,6 +46,8 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    SWING_OFF,
+    SWING_VERTICAL,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -56,6 +58,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import API_SLATS_V_CONF, AZD_SLATS_V_CONF, AZD_SLATS_V_VALUES
 from .coordinator import AirzoneCloudConfigEntry, AirzoneUpdateCoordinator
 from .entity import (
     AirzoneAidooEntity,
@@ -111,6 +114,13 @@ HVAC_MODE_HASS_TO_LIB: Final[dict[HVACMode, OperationMode]] = {
     HVACMode.FAN_ONLY: OperationMode.VENTILATION,
     HVACMode.DRY: OperationMode.DRY,
     HVACMode.HEAT_COOL: OperationMode.AUTO,
+}
+SLATS_AIRZONE_TO_HASS: Final[dict[str, str]] = {
+    "fixed": SWING_OFF,
+    "swing": SWING_VERTICAL,
+}
+SLATS_HASS_TO_AIRZONE: Final[dict[str, str]] = {
+    value: key for key, value in SLATS_AIRZONE_TO_HASS.items()
 }
 
 
@@ -426,6 +436,41 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
         self._init_attributes()
 
         self._async_update_attrs()
+
+    @override
+    def _init_attributes(self) -> None:
+        """Init Aidoo climate attributes."""
+        super()._init_attributes()
+
+        if slat_values := self.get_airzone_value(AZD_SLATS_V_VALUES):
+            swing_modes = [
+                SLATS_AIRZONE_TO_HASS[value]
+                for value in slat_values
+                if value in SLATS_AIRZONE_TO_HASS
+            ]
+            if swing_modes:
+                self._attr_swing_modes = swing_modes
+                self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
+
+    @callback
+    @override
+    def _async_update_attrs(self) -> None:
+        """Update Aidoo climate attributes."""
+        super()._async_update_attrs()
+        if self.supported_features & ClimateEntityFeature.SWING_MODE:
+            self._attr_swing_mode = SLATS_AIRZONE_TO_HASS.get(
+                self.get_airzone_value(AZD_SLATS_V_CONF)
+            )
+
+    @override
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set Aidoo vertical swing mode."""
+        params: dict[str, Any] = {
+            API_SLATS_V_CONF: {
+                API_VALUE: SLATS_HASS_TO_AIRZONE[swing_mode],
+            }
+        }
+        await self._async_update_params(params)
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
