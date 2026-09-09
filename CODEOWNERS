@@ -1772,6 +1772,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
 /tests/components/spaceapi/ @fabaff
+/homeassistant/components/spacexai/ @jeffglousher
+/tests/components/spacexai/ @jeffglousher
 /homeassistant/components/specialized_turbo/ @JamieMagee
 /tests/components/specialized_turbo/ @JamieMagee
 /homeassistant/components/speedtestdotnet/ @rohankapoorcom @engrbm87

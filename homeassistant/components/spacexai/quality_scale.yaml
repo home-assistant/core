@@ -1,0 +1,102 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not provide actions.
+  appropriate-polling:
+    status: exempt
+    comment: The integration does not periodically poll for state updates.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not provide actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide triggers.
+  entity-event-setup:
+    status: exempt
+    comment: The conversation entity does not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: exempt
+    comment: The integration provides a stateless conversation entity.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: The integration provides a stateless conversation entity.
+  parallel-updates: done
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: The cloud service cannot be discovered.
+  discovery:
+    status: exempt
+    comment: The cloud service cannot be discovered.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: The integration represents a cloud service, not physical devices.
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: The integration represents a cloud service, not physical devices.
+  entity-category:
+    status: exempt
+    comment: The conversation entity is the primary feature.
+  entity-device-class:
+    status: exempt
+    comment: Conversation entities do not have a device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: User-created conversation agents are enabled by default.
+  entity-translations:
+    status: exempt
+    comment: The entity uses its device name and has no entity-specific name to translate.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The integration does not use custom entity icons.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: The integration has no actionable repair issues.
+  stale-devices:
+    status: exempt
+    comment: The integration represents a cloud service, not physical devices.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: done
+    comment: The client receives Home Assistant's shared aiohttp and httpx sessions.
+  strict-typing: done

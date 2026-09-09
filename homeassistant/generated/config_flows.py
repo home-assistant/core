@@ -749,6 +749,7 @@ FLOWS = {
         "songpal",
         "sonos",
         "soundtouch",
+        "spacexai",
         "specialized_turbo",
         "speedtestdotnet",
         "splunk",

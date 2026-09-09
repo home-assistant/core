@@ -1,0 +1,61 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "not_entitled": "The signed-in account cannot access the SpaceXAI subscription API. Confirm that the account has an eligible subscription."
+    },
+    "progress": {
+      "wait_for_device": "To sign in, open the [Grok sign-in page]({verification_uri}). If the code is not filled in automatically, enter:\n\n```\n{user_code}\n```\n\nHome Assistant will continue automatically after you finish signing in."
+    },
+    "step": {
+      "conversation": {
+        "data": {
+          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+          "model": "[%key:common::generic::model%]",
+          "prompt": "[%key:common::config_flow::data::prompt%]"
+        },
+        "data_description": {
+          "llm_hass_api": "Select which tools the model can use to interact with Home Assistant.",
+          "model": "The Grok model used by this conversation agent.",
+          "prompt": "Instructions for how the agent should respond. This can be a template."
+        }
+      },
+      "device_connection_error": {
+        "description": "SpaceXAI could not be reached. Select Submit to try again."
+      },
+      "device_denied": {
+        "description": "Sign-in was denied. Select Submit to try again."
+      },
+      "device_timeout": {
+        "description": "The sign-in code expired. Select Submit to try again."
+      },
+      "device_validation_error": {
+        "description": "The signed-in account could not be validated. Select Submit to try again."
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "SpaceXAI returned an error while generating a response."
+    },
+    "attachments_not_supported": {
+      "message": "Attachments are not supported by this version of the SpaceXAI integration."
+    },
+    "invalid_auth": {
+      "message": "SpaceXAI rejected the current sign-in. Remove and add the integration again to sign in."
+    },
+    "invalid_response": {
+      "message": "SpaceXAI returned an invalid response."
+    },
+    "no_models_available": {
+      "message": "No Grok models are available for the signed-in account."
+    },
+    "not_entitled": {
+      "message": "The signed-in account cannot access the SpaceXAI subscription API. Confirm that the account has an eligible subscription."
+    },
+    "tool_iteration_limit": {
+      "message": "The SpaceXAI conversation exceeded the tool-call limit."
+    }
+  }
+}
