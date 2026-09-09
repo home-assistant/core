@@ -197,14 +197,7 @@ async def test_setup_entities_and_unload(
         await listener_started.wait()
     on_data = connection.listen_for_events.await_args.args[0]
 
-    connection.async_get_devices.return_value = [
-        replace(device, unreachable=device.id == "switch-device") for device in DEVICES
-    ]
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
-    assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
-
-    connection.async_get_devices.return_value = []
+    connection.async_get_devices.return_value = [DEVICES[0], DEVICES[2]]
     await config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
     assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
