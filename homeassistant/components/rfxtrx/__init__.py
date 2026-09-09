@@ -486,6 +486,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for entity_entry in er.async_entries_for_device(
                     entity_registry, device_entry.id, include_disabled_entities=True
                 ):
+                    if entity_entry.config_entry_id != entry.entry_id:
+                        continue
+                    if entity_entry.config_subentry_id == subentry_id:
+                        continue
                     suffix = entity_entry.unique_id.removeprefix(unique_id)
                     new_unique_id = f"{subentry_id}{suffix}"
                     if (

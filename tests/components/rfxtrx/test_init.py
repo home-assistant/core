@@ -12,8 +12,11 @@ from homeassistant.components.rfxtrx import (
     get_pt2262_deviceid,
     get_rfx_object,
 )
-from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.rfxtrx.const import (
+    EVENT_RFXTRX_EVENT,
+    SUBENTRY_TYPE_DEVICE,
+)
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryDataWithId
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -510,3 +513,87 @@ async def test_migrate_entry(
     assert entity_3
     assert entity_3.unique_id == f"{subentry_1.subentry_id}_command"
     assert entity_3.config_subentry_id == subentry_1.subentry_id
+
+
+async def test_migrate_entry_skips_foreign_and_migrated_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration leaves foreign and already-migrated entities alone.
+
+    `async_entries_for_device` returns every entity attached to the device,
+    including ones added by other integrations (e.g. a helper entity a user
+    attached via the device page) and, on a retry after a partially
+    completed migration, ones whose unique_id was already rewritten.
+    """
+    legacy_config = {
+        "device": "abcd",
+        "host": None,
+        "port": None,
+        "automatic_add": True,
+        "protocols": [],
+        "devices": {
+            "0b1100cd0213c7f210010f51": {},
+        },
+    }
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data=legacy_config,
+        subentries_data=(
+            ConfigSubentryDataWithId(
+                data={"event_code": "0b1100cd0213c7f210010f51"},
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="AC 213c7f2:16",
+                unique_id="11_0_213c7f2:16",
+                subentry_id="existing_subentry_id",
+            ),
+        ),
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "11", "0", "213c7f2:16")},
+    )
+
+    # Already migrated in an earlier, interrupted attempt.
+    migrated_entity = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "existing_subentry_id_signal_strength",
+        config_entry=entry,
+        config_subentry_id="existing_subentry_id",
+        device_id=device_1.id,
+    )
+
+    # A helper entity attached to the device by the user, owned by another
+    # config entry.
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    helper_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "other",
+        "helper_unique_id",
+        config_entry=other_entry,
+        device_id=device_1.id,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 3
+
+    migrated_entity = entity_registry.async_get(migrated_entity.entity_id)
+    assert migrated_entity
+    assert migrated_entity.unique_id == "existing_subentry_id_signal_strength"
+    assert migrated_entity.config_subentry_id == "existing_subentry_id"
+
+    helper_entity = entity_registry.async_get(helper_entity.entity_id)
+    assert helper_entity
+    assert helper_entity.unique_id == "helper_unique_id"
+    assert helper_entity.config_entry_id == other_entry.entry_id
+    assert helper_entity.config_subentry_id is None
