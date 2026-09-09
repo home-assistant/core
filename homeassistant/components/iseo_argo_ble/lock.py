@@ -458,7 +458,11 @@ class IseoLockEntity(LockEntity):
                 "credential_id": entry.user_info.strip() or None,
                 "occurred_at": entry.timestamp.isoformat(),
             }
-            if self._entry.runtime_data.access_log_consumer:
+            # runtime_data is deleted once the entry has unloaded, which is
+            # precisely when the buffer below is needed, so this cannot assume
+            # it is still there.
+            data = getattr(self._entry, "runtime_data", None)
+            if data is not None and data.access_log_consumer:
                 async_dispatcher_send(
                     self.hass,
                     signal_access_log(self._entry.entry_id),

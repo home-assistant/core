@@ -10,6 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.iseo_argo_ble import PENDING_LOG_ENTRIES
 from homeassistant.components.iseo_argo_ble.const import DOMAIN, SERVICE_READ_ACCESS_LOG
 from homeassistant.components.iseo_argo_ble.lock import (
     _ACCESS_LOG_DEBOUNCE,
@@ -507,17 +508,17 @@ async def test_entries_drained_after_the_entity_went_away_are_replayed(
     while not mock_iseo_client.gw_read_unread_logs.called:
         await asyncio.sleep(0)
 
-    # Take the consumer away mid-drain, as an unload that outran the wait for
-    # a long read would.
-    mock_config_entry.runtime_data.access_log_consumer = False
+    # Leave the read with no entry data at all, which is how core leaves a
+    # read that outran the unload wait: runtime_data is deleted once the
+    # platforms are gone.
+    object.__delattr__(mock_config_entry, "runtime_data")
     release.set()
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).attributes.get("opened_by") is None
 
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(ENTITY_ID).attributes["opened_by"] == "Federico"
+    # Held for the entity to replay, rather than dropped after the lock has
+    # already marked the entries read.
+    held = hass.data[PENDING_LOG_ENTRIES][mock_config_entry.entry_id]
+    assert [attributes["opened_by"] for _, attributes in held] == ["Federico"]
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
