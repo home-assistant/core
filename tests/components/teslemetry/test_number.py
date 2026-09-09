@@ -1,7 +1,9 @@
 """Test the Teslemetry number platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import InvalidCommand
@@ -17,6 +19,7 @@ from homeassistant.components.teslemetry.const import (
     DOMAIN,
     LABS_CHARGE_ON_SOLAR_FEATURE,
 )
+from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -24,7 +27,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import assert_entities, reload_platform, setup_platform
-from .const import COMMAND_ERRORS, COMMAND_OK, VEHICLE_DATA_ALT
+from .const import COMMAND_ERRORS, COMMAND_OK, VEHICLE_DATA, VEHICLE_DATA_ALT
+
+from tests.common import async_fire_time_changed
 
 
 async def _async_enable_charge_on_solar_preview_feature(hass: HomeAssistant) -> None:
@@ -237,6 +242,33 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit(
     # A subsequent drop below the stored value clamps it down too
     for call in listener.call_args_list:
         call.args[0](10)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.attributes["max"] == 10
+    assert state.state == "10"
+
+
+async def test_charge_on_solar_lower_limit_capped_by_charge_limit_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test the polling lower limit's max value tracks the coordinator charge limit."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    await setup_platform(hass, [Platform.NUMBER])
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.attributes["max"] == 80
+
+    lowered_data = deepcopy(VEHICLE_DATA)
+    lowered_data["response"]["charge_state"]["charge_limit_soc"] = 10
+    mock_vehicle_data.return_value = lowered_data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("number.test_charge_on_solar_lower_limit")

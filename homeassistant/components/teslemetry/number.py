@@ -188,13 +188,15 @@ async def async_setup_entry(
         )
     )
 
-    if async_is_preview_feature_enabled(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE):
+    if (
+        async_is_preview_feature_enabled(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE)
+        and Scope.VEHICLE_CMDS in entry.runtime_data.scopes
+    ):
         entities.extend(
             TeslemetryChargeOnSolarLowerLimitNumberEntity(
                 vehicle, entry.runtime_data.scopes
             )
             for vehicle in entry.runtime_data.vehicles
-            if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
         )
     else:
         _async_remove_charge_on_solar_lower_limit(hass, entry)

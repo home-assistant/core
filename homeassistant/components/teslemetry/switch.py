@@ -214,11 +214,13 @@ async def async_setup_entry(
         if energysite.info_coordinator.data.get("components_storm_mode_capable")
     )
 
-    if async_is_preview_feature_enabled(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE):
+    if (
+        async_is_preview_feature_enabled(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE)
+        and Scope.VEHICLE_CMDS in entry.runtime_data.scopes
+    ):
         entities.extend(
             TeslemetryChargeOnSolarSwitchEntity(vehicle, entry.runtime_data.scopes)
             for vehicle in entry.runtime_data.vehicles
-            if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
         )
     else:
         _async_remove_charge_on_solar_switch(hass, entry)
