@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import DOMAIN
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -352,6 +352,27 @@ async def test_coordinator_update_fails_when_all_devices_fail(
 
     assert mock_config_entry.runtime_data.last_update_success is False
     assert hass.states.get(mute_entry.entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_status_refresh_invalid_auth(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """Rejected credentials during status refresh start reauthentication."""
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
+        InvalidAppIdOrSecretException("bad credentials")
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 @pytest.mark.parametrize(

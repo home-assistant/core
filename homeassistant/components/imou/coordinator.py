@@ -118,6 +118,11 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 # Propagate CancelledError and other BaseExceptions instead of
                 # swallowing them as a regular device failure.
                 raise result
+            if isinstance(result, InvalidAppIdOrSecretException):
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_auth",
+                ) from result
             if not isinstance(result, Exception):
                 continue
             device_key = imou_device_identifier(device)
