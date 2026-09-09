@@ -6,8 +6,10 @@ from typing import Any, override
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.scenes import ScenesController
+from aiohue.v2.models.room import Room
 from aiohue.v2.models.scene import Scene as HueScene, ScenePut as HueScenePut
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartSceneState
+from aiohue.v2.models.zone import Zone
 import voluptuous as vol
 
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
@@ -50,13 +52,21 @@ async def async_setup_entry(
         event_type: EventType, resource: HueScene | HueSmartScene
     ) -> None:
         """Add entity from Hue resource."""
+        if (group := api.scenes.get_group(resource.id)) is None:
+            LOGGER.warning(
+                "Skipping Hue scene %s: group %s could not be resolved",
+                resource.id,
+                resource.group.rid,
+            )
+            return
+
         # Catch creation errors to continue adding other scenes even if one fails
         try:
             entity: HueSceneEntityBase
             if isinstance(resource, HueSmartScene):
-                entity = HueSmartSceneEntity(bridge, api.scenes, resource)
+                entity = HueSmartSceneEntity(bridge, api.scenes, resource, group)
             else:
-                entity = HueSceneEntity(bridge, api.scenes, resource)
+                entity = HueSceneEntity(bridge, api.scenes, resource, group)
         except KeyError, StopIteration:
             LOGGER.exception("Unable to create Hue scene entity for %s", resource.id)
             return
@@ -102,14 +112,13 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
         bridge: HueBridge,
         controller: ScenesController,
         resource: HueScene | HueSmartScene,
+        group: Room | Zone,
     ) -> None:
         """Initialize the entity."""
         super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
-        if (hue_group := self.controller.get_group(self.resource.id)) is None:
-            raise KeyError(self.resource.group.rid)
-        self.hue_group = hue_group
+        self.hue_group = group
         # we create a virtual service/device for Hue zones/rooms
         # so we have a parent for grouped lights and scenes
         self._attr_device_info = DeviceInfo(
