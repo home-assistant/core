@@ -4,6 +4,7 @@ import logging
 from typing import Any, override
 
 from bleak import BleakError
+from ryseble import is_pairing_mode
 from ryseble.device import RyseBLEDevice
 import voluptuous as vol
 
@@ -16,7 +17,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
-from .const import DOMAIN, is_pairing_mode
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -310,6 +310,29 @@ async def test_ble_error_while_polling_marks_unavailable(
     assert "BLE communication error while reading device data" in caplog.text
 
 
+async def test_valid_notification_restores_availability(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a valid notification marks the cover available after a failed poll."""
+    mock_device.send_get_position.side_effect = BleakError("ble err")
+    await async_poll_device(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    await mock_device.update_callback(100)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+
 async def test_notification_callback_lifecycle(
     hass: HomeAssistant,
     mock_device: MagicMock,

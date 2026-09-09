@@ -80,6 +80,7 @@ class RyseCoverEntity(CoverEntity):
             real_position = self._device.get_real_position(position)
             self._current_position = real_position
             self._attr_is_closed = self._device.is_closed(position)
+            self._attr_available = True
             _LOGGER.debug(
                 "Updated cover position: raw=%d mapped=%d", position, real_position
             )

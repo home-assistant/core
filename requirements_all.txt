@@ -3004,7 +3004,7 @@ ruuvitag-ble==0.4.0
 rxv==0.7.0
 
 # homeassistant.components.ryse
-ryseble==1.12.1
+ryseble==1.13.0
 
 # homeassistant.components.samsung_exlink
 samsung-exlink==1.1.0
