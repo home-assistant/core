@@ -1,4 +1,4 @@
-"""Test the my-PV water heater."""
+"""Test the my-PV sensor platform."""
 
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -20,7 +20,7 @@ async def test_sensor(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test successful setup of a water heater."""
+    """Test successful setup of a sensor platform."""
 
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SENSOR]):
         mock_config_entry.add_to_hass(hass)
