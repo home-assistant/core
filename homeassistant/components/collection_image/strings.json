@@ -23,6 +23,34 @@
     }
   },
   "services": {
+    "select_first": {
+      "description": "Update the image entity to the first image in the configured media.",
+      "name": "Select first"
+    },
+    "select_last": {
+      "description": "Update the image entity to the last image in the configured media.",
+      "name": "Select last"
+    },
+    "select_next": {
+      "description": "Update the image entity to the next image in the configured media.",
+      "fields": {
+        "wrap": {
+          "description": "Advances to the first image after reaching the end of the list.",
+          "name": "Wrap"
+        }
+      },
+      "name": "Select next"
+    },
+    "select_previous": {
+      "description": "Update the image entity to the previous image in the configured media.",
+      "fields": {
+        "wrap": {
+          "description": "Advances to the last image after reaching the beginning of the list.",
+          "name": "Wrap"
+        }
+      },
+      "name": "Select previous"
+    },
     "shuffle": {
       "description": "Update the image entity to a random image from the configured media.",
       "name": "Shuffle"
