@@ -68,7 +68,7 @@ async def async_setup_entry(
     """Set up a sensor per lock credential from a config entry."""
     if (coordinator := entry.runtime_data.user_coordinator) is None:
         return
-    if coordinator.data is None:
+    if not coordinator.last_update_success:
         # The first credential read failed. The lock is deliberately set up
         # anyway, so there is simply nothing to add until a later read works.
         return
@@ -103,6 +103,7 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
         # Suspending overwrites it, so this is the only copy to restore from —
         # and if the credential was already suspended when the list was first
         # read, what we hold is the expired sentinel, not the real window.
+        self._validity: bytes | None
         saved = entry.data.get(CONF_SAVED_VALIDITY, {}).get(user.uuid_hex)
         if user.disabled and saved is not None:
             # Home Assistant suspended this one and kept its window; the lock
