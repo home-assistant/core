@@ -1,17 +1,25 @@
 """Tests for OpenGarage opener lights."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from aiohttp import ClientError
 import pytest
 
 from homeassistant.components import light
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_OPEN,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "light.garage_abcdef_light"
 
@@ -50,7 +58,6 @@ async def test_light_entity(
 async def test_light_controls_refresh_device_state(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
-    mock_config_entry: MockConfigEntry,
     service: str,
     requested: bool,
     reported: int,
@@ -71,7 +78,8 @@ async def test_light_controls_refresh_device_state(
 
     mock_opengarage.set_light.assert_awaited_once_with(requested)
     mock_opengarage.update_state.assert_awaited_once()
-    assert mock_config_entry.runtime_data.data["door"] == 1
+    assert (cover_state := hass.states.get("cover.garage_abcdef"))
+    assert cover_state.state == STATE_OPEN
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == expected
 
@@ -151,13 +159,13 @@ async def test_light_network_error(
 @pytest.mark.usefixtures("init_integration")
 async def test_light_state_missing_after_refresh(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_opengarage: MagicMock,
 ) -> None:
     """A missing light state on later polls is unknown rather than off."""
     mock_opengarage.update_state.return_value.pop("light")
 
-    await mock_config_entry.runtime_data.async_request_refresh()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNKNOWN
