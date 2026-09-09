@@ -172,9 +172,13 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         elif self.state.get(cmd.Signal) != cmd.Signal.NONE:
             new_state[cmd.Signal] = cmd.Signal.NONE
 
-        # Fetch software version once and use the cached value for device info.
-        if cmd.Version not in self.state:
-            await self._update_command_state(cmd.Version, new_state)
+        # Fetch software version once while the projector is on and use the
+        # cached value for device info. A timeout must not prevent setup.
+        if power == cmd.Power.ON and cmd.Version not in self.state:
+            try:
+                await self._update_command_state(cmd.Version, new_state)
+            except JvcProjectorTimeoutError:
+                _LOGGER.debug("Command %s timed out; will retry", cmd.Version.name)
 
         return new_state
 
