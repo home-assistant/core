@@ -1,11 +1,10 @@
 """Tests for the Openhome update platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 from openhomedevice.exceptions import OpenhomeConnectionError
 import pytest
 
-from homeassistant.components.openhome.const import DOMAIN
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
@@ -18,13 +17,14 @@ from homeassistant.components.update import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    CONF_HOST,
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -61,42 +61,24 @@ FIRMWARE_UPDATE_AVAILABLE = {
 }
 
 
-async def setup_integration(
-    hass: HomeAssistant,
-    software_status: dict,
-    update_firmware: AsyncMock,
+ENTITY_ID = "update.friendly_name"
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Only load the update platform."""
+    return [Platform.UPDATE]
+
+
+async def test_not_supported(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_device: MagicMock
 ) -> None:
-    """Load an openhome platform with mocked device."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "http://localhost"},
-    )
-    entry.add_to_hass(hass)
-
-    with (
-        patch("homeassistant.components.openhome.PLATFORMS", [Platform.UPDATE]),
-        patch("homeassistant.components.openhome.Device", MagicMock()) as mock_device,
-    ):
-        mock_device.return_value.init = AsyncMock()
-        mock_device.return_value.uuid = MagicMock(return_value="uuid")
-        mock_device.return_value.manufacturer = MagicMock(return_value="manufacturer")
-        mock_device.return_value.model_name = MagicMock(return_value="model_name")
-        mock_device.return_value.friendly_name = MagicMock(return_value="friendly_name")
-        mock_device.return_value.software_status = AsyncMock(
-            return_value=software_status
-        )
-        mock_device.return_value.update_firmware = update_firmware
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-
-async def test_not_supported(hass: HomeAssistant) -> None:
     """Ensure update entity works if service not supported."""
+    mock_device.software_status.return_value = None
 
-    update_firmware = AsyncMock()
-    await setup_integration(hass, None, update_firmware)
+    await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("update.friendly_name")
+    state = hass.states.get(ENTITY_ID)
 
     assert state
     assert state.state == STATE_UNKNOWN
@@ -105,16 +87,19 @@ async def test_not_supported(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_LATEST_VERSION] is None
     assert state.attributes[ATTR_RELEASE_URL] is None
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
-    update_firmware.assert_not_called()
+    mock_device.update_firmware.assert_not_called()
 
 
-async def test_on_latest_firmware(hass: HomeAssistant) -> None:
+async def test_on_latest_firmware(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_device: MagicMock
+) -> None:
     """Test device on latest firmware."""
 
-    update_firmware = AsyncMock()
-    await setup_integration(hass, LATEST_FIRMWARE_INSTALLED, update_firmware)
+    mock_device.software_status.return_value = LATEST_FIRMWARE_INSTALLED
 
-    state = hass.states.get("update.friendly_name")
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
 
     assert state
     assert state.state == STATE_UNKNOWN
@@ -123,16 +108,19 @@ async def test_on_latest_firmware(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_LATEST_VERSION] is None
     assert state.attributes[ATTR_RELEASE_URL] is None
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
-    update_firmware.assert_not_called()
+    mock_device.update_firmware.assert_not_called()
 
 
-async def test_update_available(hass: HomeAssistant) -> None:
+async def test_update_available(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_device: MagicMock
+) -> None:
     """Test device has firmware update available."""
 
-    update_firmware = AsyncMock()
-    await setup_integration(hass, FIRMWARE_UPDATE_AVAILABLE, update_firmware)
+    mock_device.software_status.return_value = FIRMWARE_UPDATE_AVAILABLE
 
-    state = hass.states.get("update.friendly_name")
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
 
     assert state
     assert state.state == STATE_ON
@@ -151,41 +139,49 @@ async def test_update_available(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.friendly_name"},
+        {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    update_firmware.assert_called_once()
+    mock_device.update_firmware.assert_awaited_once()
 
 
-async def test_firmware_update_error(hass: HomeAssistant) -> None:
+async def test_firmware_update_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_device: MagicMock
+) -> None:
     """Ensure a failed firmware install is raised to the user."""
+    mock_device.software_status.return_value = FIRMWARE_UPDATE_AVAILABLE
+    mock_device.update_firmware.side_effect = OpenhomeConnectionError(
+        "no route to host"
+    )
 
-    update_firmware = AsyncMock(side_effect=OpenhomeConnectionError("no route to host"))
-    await setup_integration(hass, FIRMWARE_UPDATE_AVAILABLE, update_firmware)
+    await setup_integration(hass, mock_config_entry)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.friendly_name"},
+            {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
-    update_firmware.assert_awaited_once()
+    mock_device.update_firmware.assert_awaited_once()
 
 
-async def test_firmware_update_not_required(hass: HomeAssistant) -> None:
+async def test_firmware_update_not_required(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_device: MagicMock
+) -> None:
     """Ensure firmware install does nothing if up to date."""
 
-    update_firmware = AsyncMock()
-    await setup_integration(hass, LATEST_FIRMWARE_INSTALLED, update_firmware)
+    mock_device.software_status.return_value = LATEST_FIRMWARE_INSTALLED
+
+    await setup_integration(hass, mock_config_entry)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.friendly_name"},
+            {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
-    update_firmware.assert_not_called()
+    mock_device.update_firmware.assert_not_called()
