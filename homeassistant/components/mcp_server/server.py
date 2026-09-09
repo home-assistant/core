@@ -150,7 +150,7 @@ async def create_server(
         return [_format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools]
 
     @server.call_tool()  # type: ignore[untyped-decorator]
-    async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
+    async def call_tool(name: str, arguments: dict) -> types.CallToolResult:
         """Handle calling tools."""
         llm_api = await get_api_instance()
         tool_input = llm.ToolInput(tool_name=name, tool_args=arguments)
@@ -160,11 +160,16 @@ async def create_server(
             tool_response = await llm_api.async_call_tool(tool_input)
         except (HomeAssistantError, vol.Invalid) as e:
             raise HomeAssistantError(f"Error calling tool: {e}") from e
-        return [
-            types.TextContent(
-                type="text",
-                text=json.dumps(tool_response, ensure_ascii=False),
-            )
-        ]
+        return types.CallToolResult(
+            content=[
+                types.TextContent(
+                    type="text",
+                    text=json.dumps(tool_response, ensure_ascii=False),
+                )
+            ],
+            # A tool may describe its own failure rather than raising, so that
+            # the caller can correct the call. Report it as an error either way.
+            isError="error" in tool_response,
+        )
 
     return server

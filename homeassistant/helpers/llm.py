@@ -220,6 +220,33 @@ class API(ABC):
         raise NotImplementedError
 
 
+def _match_failed_result(err: intent.MatchFailedError) -> JsonObjectType:
+    """Describe a failed target match so the model can correct its own call."""
+    constraints = err.constraints
+    # Keyed by actual slot name, so the model has a chance to repair the call.
+    provided: dict[str, Any] = {}
+    for slot, value in (
+        ("name", constraints.name),
+        ("area", constraints.area_name),
+        ("floor", constraints.floor_name),
+        ("domain", constraints.domains),
+        ("device_class", constraints.device_classes),
+        ("state", constraints.states),
+    ):
+        if not value:
+            continue
+        provided[slot] = value if isinstance(value, str) else sorted(value)
+
+    result: JsonObjectType = {"error": "MatchFailedError", "constraints": provided}
+    if reason := err.result.no_match_reason:
+        # The members are auto(), so the name is the stable identifier.
+        result["reason"] = reason.name.lower()
+    if err.result.no_match_name:
+        result["no_match_name"] = err.result.no_match_name
+
+    return result
+
+
 class IntentTool(Tool):
     """LLM Tool representing an Intent."""
 
@@ -280,17 +307,23 @@ class IntentTool(Tool):
                 if slot_value and slot_name in self.extra_slots:
                     slots[slot_name] = {"value": slot_value}
 
-        intent_response = await intent.async_handle(
-            hass=hass,
-            platform=llm_context.platform,
-            intent_type=self.intent_type,
-            slots=slots,
-            text_input=None,
-            context=llm_context.context,
-            language=llm_context.language,
-            assistant=llm_context.assistant,
-            device_id=llm_context.device_id,
-        )
+        try:
+            intent_response = await intent.async_handle(
+                hass=hass,
+                platform=llm_context.platform,
+                intent_type=self.intent_type,
+                slots=slots,
+                text_input=None,
+                context=llm_context.context,
+                language=llm_context.language,
+                assistant=llm_context.assistant,
+                device_id=llm_context.device_id,
+            )
+        except intent.MatchFailedError as err:
+            # Returned rather than raised: an over-constrained call is something
+            # the model can fix on the next iteration, unlike an internal error.
+            return _match_failed_result(err)
+
         return IntentResponseDict(intent_response)
 
 
