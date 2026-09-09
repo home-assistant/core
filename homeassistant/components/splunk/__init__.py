@@ -220,10 +220,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=False)
 
     last_failure_category: str | None = None
+    last_failure_level = logging.INFO
 
     async def splunk_event_listener(event: Event[EventStateChangedData]) -> None:
         """Listen for new messages on the bus and sends them to Splunk."""
-        nonlocal last_failure_category
+        nonlocal last_failure_category, last_failure_level
 
         state = event.data.get("new_state")
         if state is None or not entity_filter(state.entity_id):
@@ -253,30 +254,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if last_failure_category != "unauthorized":
                     _LOGGER.error("Splunk token unauthorized: %s", err)
                 last_failure_category = "unauthorized"
+                last_failure_level = logging.ERROR
                 entry.async_start_reauth(hass)
             else:
                 if last_failure_category != "payload_error":
                     _LOGGER.warning("Splunk payload error: %s", err)
                 last_failure_category = "payload_error"
+                last_failure_level = logging.WARNING
         except ClientConnectionError as err:
             if last_failure_category != "connection_error":
                 _LOGGER.debug("Connection error sending to Splunk: %s", err)
             last_failure_category = "connection_error"
+            last_failure_level = logging.DEBUG
         except TimeoutError:
             if last_failure_category != "timeout":
                 _LOGGER.debug("Timeout sending to Splunk at %s:%s", host, port)
             last_failure_category = "timeout"
+            last_failure_level = logging.DEBUG
         except ClientResponseError as err:
             if last_failure_category != "response_error":
                 _LOGGER.warning("Splunk response error: %s", err.message)
             last_failure_category = "response_error"
+            last_failure_level = logging.WARNING
         except Exception:
             if last_failure_category != "unexpected_error":
                 _LOGGER.exception("Unexpected error sending event to Splunk")
             last_failure_category = "unexpected_error"
+            last_failure_level = logging.ERROR
         else:
             if last_failure_category is not None:
-                _LOGGER.info("Sending events to Splunk has recovered")
+                _LOGGER.log(
+                    last_failure_level, "Sending events to Splunk has recovered"
+                )
             last_failure_category = None
 
     # Store the event listener cancellation callback

@@ -295,10 +295,12 @@ async def test_event_listener_unauthorized_repeated_failures_log_once(
         hass.states.async_set("sensor.test", "recovered")
         await hass.async_block_till_done()
 
+    # Unauthorized failures are user-visible at ERROR, so the recovery that
+    # closes them out must be equally visible, not silently downgraded.
     recovery_records = [
         record
         for record in caplog.records
-        if record.levelno == logging.INFO
+        if record.levelno == logging.ERROR
         and "Sending events to Splunk has recovered" in record.message
     ]
     assert len(recovery_records) == 1
@@ -491,13 +493,48 @@ async def test_event_listener_recovery_logs_once(
             hass.states.async_set("sensor.test", f"recovered-{i}")
             await hass.async_block_till_done()
 
+    # The suppressed failure (a 500 response) was logged at WARNING, so the
+    # recovery must be visible at WARNING too, not silently downgraded.
     recovery_records = [
         record
         for record in caplog.records
-        if record.levelno == logging.INFO
+        if record.levelno == logging.WARNING
         and "Sending events to Splunk has recovered" in record.message
     ]
     assert len(recovery_records) == 1
+
+
+async def test_event_listener_recovery_from_debug_only_outage_stays_at_debug(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test recovery from a debug-only outage logs at debug, not at a normal level."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_hass_splunk.queue.side_effect = ClientConnectionError("Connection failed")
+
+    with caplog.at_level(logging.DEBUG):
+        for i in range(3):
+            hass.states.async_set("sensor.test", str(i))
+            await hass.async_block_till_done()
+
+        mock_hass_splunk.queue.side_effect = None
+
+        hass.states.async_set("sensor.test", "recovered")
+        await hass.async_block_till_done()
+
+    recovery_records = [
+        record
+        for record in caplog.records
+        if "Sending events to Splunk has recovered" in record.message
+    ]
+    assert len(recovery_records) == 1
+    assert recovery_records[0].levelno == logging.DEBUG
 
 
 async def test_event_listener_no_recovery_message_without_prior_failure(
