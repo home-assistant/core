@@ -89,54 +89,18 @@ async def test_load_unload(
 async def test_remove_entry_clears_statistics(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test remove entry clears external statistics for energy sites only."""
     await setup_platform(hass, normal_config_entry)
     assert normal_config_entry.state is ConfigEntryState.LOADED
-
-    # Only energy sites have all-numeric identifiers, but a wall connector's
-    # serial_number can also be all-numeric.
-    devices = dr.async_entries_for_config_entry(
-        device_registry, normal_config_entry.entry_id
-    )
-    energy_site_ids = {
-        identifier
-        for device in devices
-        for domain, identifier in device.identifiers
-        if domain == DOMAIN and identifier.isdigit()
-    }
-    wall_connector_serials = {
-        device.serial_number
-        for device in devices
-        if device.serial_number
-        and device.serial_number.isdigit()
-        and (DOMAIN, device.serial_number) not in device.identifiers
-    }
-    # The fixtures must include both, otherwise the bug can't be detected
-    assert energy_site_ids
-    assert wall_connector_serials
 
     with patch(
         "homeassistant.components.tesla_fleet.get_recorder_instance"
     ) as mock_get_recorder:
         await hass.config_entries.async_remove(normal_config_entry.entry_id)
 
-    mock_get_recorder.return_value.async_clear_statistics.assert_called_once()
-    cleared_ids = set(
-        mock_get_recorder.return_value.async_clear_statistics.call_args.args[0]
-    )
-    expected_ids = {
-        f"tesla_fleet:{site_id}_{field}"
-        for site_id in energy_site_ids
-        for field in ENERGY_HISTORY_FIELDS
-    }
-    assert cleared_ids == expected_ids
-    # Wall connector serials must never be turned into statistic IDs.
-    assert not any(
-        cleared_id.startswith(f"tesla_fleet:{serial}_")
-        for serial in wall_connector_serials
-        for cleared_id in cleared_ids
+    mock_get_recorder.return_value.async_clear_statistics.assert_called_once_with(
+        [f"{DOMAIN}:{ENERGY_SITE_ID}_{key}" for key in ENERGY_HISTORY_FIELDS]
     )
 
 
@@ -148,13 +112,10 @@ async def test_remove_entry_preserves_statistics_for_shared_site(
     """Test removing one entry preserves statistics owned by another entry."""
     await setup_platform(hass, normal_config_entry)
 
-    site_device = next(
-        device
-        for device in dr.async_entries_for_config_entry(
-            device_registry, normal_config_entry.entry_id
-        )
-        if (DOMAIN, ENERGY_SITE_ID) in device.identifiers
+    site_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ENERGY_SITE_ID), normal_config_entry.entry_id
     )
+    assert site_device is not None
     shared_config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Shared account",
