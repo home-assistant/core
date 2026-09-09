@@ -83,15 +83,17 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
         # (https://github.com/ctalkington/python-ipp/pull/715) is merged, page
         # counters will be included in printer.counters by default and this extra
         # request can be removed.
-        previous_page_counts = self.data.page_counts if self.data else {}
-        page_counts = await self._async_fetch_page_counts(previous_page_counts)
+        page_counts = await self._async_fetch_page_counts()
 
         return IPPData(printer=printer, page_counts=page_counts)
 
-    async def _async_fetch_page_counts(
-        self, previous_page_counts: dict[str, int]
-    ) -> dict[str, int]:
-        """Fetch page count attributes from the printer."""
+    async def _async_fetch_page_counts(self) -> dict[str, int]:
+        """Fetch page count attributes from the printer.
+
+        Page count entities are only created for attributes present during the
+        first refresh, so a failure at that point is treated as a failed update
+        to make setup retry. Later failures keep the previous values.
+        """
         try:
             response = await self.ipp.execute(
                 IppOperation.GET_PRINTER_ATTRIBUTES,
@@ -101,11 +103,15 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
                     },
                 },
             )
-        except IPPError, TimeoutError:
+        except (IPPError, TimeoutError) as error:
+            if self.data is None:
+                raise UpdateFailed(
+                    f"Failed to fetch page counts from printer: {error}"
+                ) from error
             _LOGGER.debug(
                 "Failed to fetch page count attributes from printer", exc_info=True
             )
-            return previous_page_counts
+            return self.data.page_counts
 
         parsed: dict[str, Any] = next(iter(response.get("printers") or []), {})
         page_counts: dict[str, int] = {}

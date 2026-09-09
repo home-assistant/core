@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyipp import IPPConnectionError
+from pyipp import IPPConnectionError, IPPError
 
 from homeassistant.components.ipp.coordinator import IPPDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
@@ -24,6 +24,20 @@ async def test_config_entry_not_ready(
     await hass.async_block_till_done()
 
     assert mock_request.call_count == 1
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_not_ready_page_count_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ipp: MagicMock,
+) -> None:
+    """Test setup is retried when fetching page counts fails on the first refresh."""
+    mock_ipp.execute.side_effect = IPPError("boom")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
