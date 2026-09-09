@@ -32,6 +32,22 @@ get_energy_prices:
       default: true
       selector:
         boolean:
+    price_type:
+      default: market
+      selector:
+        select:
+          translation_key: price_type
+          options:
+            - market
+            - all_in
+    interval:
+      default: hour
+      selector:
+        select:
+          translation_key: interval
+          options:
+            - hour
+            - quarter
     start:
       required: false
       example: "2023-01-01 00:00:00"
