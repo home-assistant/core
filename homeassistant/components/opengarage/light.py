@@ -2,6 +2,8 @@
 
 from typing import Any, cast, override
 
+from aiohttp import ClientError
+
 from homeassistant.components.light import (
     ColorMode,
     LightEntity,
@@ -11,6 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
 from .entity import OpenGarageEntity
 
@@ -58,7 +61,8 @@ class OpenGarageLight(OpenGarageEntity, LightEntity):
     @override
     def _update_attr(self) -> None:
         """Update the light state from the coordinator."""
-        self._attr_is_on = bool(self.coordinator.data[LIGHT_DESCRIPTION.key])
+        state = self.coordinator.data.get(LIGHT_DESCRIPTION.key)
+        self._attr_is_on = bool(state) if state in (0, 1) else None
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -71,28 +75,32 @@ class OpenGarageLight(OpenGarageEntity, LightEntity):
         await self._async_set_light(False)
 
     async def _async_set_light(self, turn_on: bool) -> None:
-        """Set and optimistically update the opener light state."""
-        result = await self.coordinator.open_garage_connection.set_light(turn_on)
+        """Set the opener light and request fresh device state."""
+        try:
+            result = await self.coordinator.open_garage_connection.set_light(turn_on)
+        except (ClientError, TimeoutError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="light_control_unavailable",
+            ) from err
         if result == 1:
-            self.coordinator.async_set_updated_data(
-                {**self.coordinator.data, LIGHT_DESCRIPTION.key: int(turn_on)}
-            )
+            await self.coordinator.async_request_refresh()
             return
 
         if result == 2:
             raise HomeAssistantError(
-                translation_domain="opengarage",
+                translation_domain=DOMAIN,
                 translation_key="light_control_invalid_auth",
             )
 
         if result is None:
             raise HomeAssistantError(
-                translation_domain="opengarage",
+                translation_domain=DOMAIN,
                 translation_key="light_control_unavailable",
             )
 
         raise HomeAssistantError(
-            translation_domain="opengarage",
+            translation_domain=DOMAIN,
             translation_key="light_control_failed",
             translation_placeholders={"result": str(result)},
         )

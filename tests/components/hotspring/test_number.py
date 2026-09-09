@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError, HotSpringError
+from hotspring import HotSpringConnectionError, HotSpringError, Spa
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -39,8 +39,17 @@ async def test_set_target_temperature(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_hotspring: MagicMock,
+    device_fixture: Spa,
 ) -> None:
     """Test setting target temperature."""
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == "40.0"
+
+    def set_temp_mock(value: int) -> None:
+        device_fixture.heater.set_temperature = float(value)
+
+    mock_hotspring.set_temperature.side_effect = set_temp_mock
+
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -52,6 +61,9 @@ async def test_set_target_temperature(
     )
 
     mock_hotspring.set_temperature.assert_called_once_with(100)
+    mock_hotspring.update.assert_called_once()
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == "37.8"
 
 
 @pytest.mark.parametrize(

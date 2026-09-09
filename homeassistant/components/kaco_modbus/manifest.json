@@ -1,0 +1,12 @@
+{
+  "domain": "kaco_modbus",
+  "name": "KACO Modbus",
+  "codeowners": ["@g4bri3lDev"],
+  "config_flow": true,
+  "dependencies": ["modbus"],
+  "documentation": "https://www.home-assistant.io/integrations/kaco_modbus",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["kaco-modbus==1.1.0"]
+}

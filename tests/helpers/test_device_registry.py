@@ -396,8 +396,6 @@ async def test_loading_from_storage(
             "devices": [
                 {
                     "area_id": "12345A",
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -428,8 +426,6 @@ async def test_loading_from_storage(
             "deleted_devices": [
                 {
                     "area_id": "12345A",
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "has_composite_identifiers": False,
@@ -1754,7 +1750,7 @@ async def test_migration_from_1_11(
     """Test migration from version 1.11."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
-        "minor_version": 10,
+        "minor_version": 11,
         "key": dr.STORAGE_KEY,
         "data": {
             "devices": [
@@ -1763,7 +1759,7 @@ async def test_migration_from_1_11(
                     "config_entries": [mock_config_entry.entry_id],
                     "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
-                    "connections": [["mac", "123456ABCDEF"]],
+                    "connections": [["mac", "12:34:56:ab:cd:ef"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
@@ -1788,7 +1784,7 @@ async def test_migration_from_1_11(
                     "area_id": None,
                     "config_entries": ["234567"],
                     "config_entries_subentries": {"234567": [None]},
-                    "connections": [["mac", "123456ABCDAB"]],
+                    "connections": [["mac", "12:34:56:ab:cd:ab"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "id": "abcdefghijklm2",
@@ -4365,6 +4361,34 @@ async def test_devices_collection_operations(
     assert entry in device_registry.devices
 
 
+async def test_child_devices_collection_operations(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the supported `Collection[ChildDeviceEntry]` surface of `child_devices`.
+
+    Iteration yields the entries (not the ids), `len()` returns the count, and
+    `ChildDeviceEntry` membership works. Unlike `DeviceRegistry.devices`, the child
+    collection is a plain read-only view, so mapping-style access, `.values()`, and
+    mutation are unavailable.
+    """
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    assert list(device_registry.child_devices) == [child_device]
+    assert [device.id for device in device_registry.child_devices] == [child_device.id]
+    assert len(device_registry.child_devices) == 1
+    assert child_device in device_registry.child_devices
+
+    with pytest.raises(TypeError):
+        _ = device_registry.child_devices[child_device.id]  # type: ignore[index]
+    with pytest.raises(AttributeError):
+        device_registry.child_devices.values()  # type: ignore[attr-defined]
+    with pytest.raises(TypeError):
+        device_registry.child_devices[child_device.id] = child_device  # type: ignore[index]
+
+
 @pytest.mark.parametrize(
     ("integration_frame_path", "expectation", "expected_log"),
     [
@@ -4527,12 +4551,14 @@ async def test_async_get_device_deprecated(
 
 
 @pytest.mark.parametrize(
-    ("parameter", "value", "replacement"),
+    ("parameter", "value", "advice"),
     [
-        ("default_manufacturer", "manufacturer", "manufacturer"),
-        ("default_model", "model", "model"),
-        ("default_name", "name", "name"),
-        ("via_device", ("some_domain", "via_id"), "via_device_id"),
+        ("created_at", "2024-01-01T00:00:00+00:00", ", which is ignored"),
+        ("default_manufacturer", "manufacturer", "; use `manufacturer` instead"),
+        ("default_model", "model", "; use `model` instead"),
+        ("default_name", "name", "; use `name` instead"),
+        ("modified_at", "2024-01-01T00:00:00+00:00", ", which is ignored"),
+        ("via_device", ("some_domain", "via_id"), "; use `via_device_id` instead"),
     ],
 )
 @pytest.mark.parametrize(
@@ -4562,7 +4588,7 @@ async def test_async_get_or_create_deprecated_parameters(
     caplog: pytest.LogCaptureFixture,
     parameter: str,
     value: Any,
-    replacement: str,
+    advice: str,
     expectation: AbstractContextManager,
     expected_log: int,
 ) -> None:
@@ -4578,7 +4604,7 @@ async def test_async_get_or_create_deprecated_parameters(
 
     what = (
         "calls `device_registry.async_get_or_create` with a deprecated "
-        f"`{parameter}` parameter; use `{replacement}` instead"
+        f"`{parameter}` parameter{advice}"
     )
     with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
         device_registry.async_get_or_create(
@@ -4593,9 +4619,11 @@ async def test_async_get_or_create_deprecated_parameters(
 @pytest.mark.parametrize(
     ("parameter", "value"),
     [
+        ("created_at", "2024-01-01T00:00:00+00:00"),
         ("default_manufacturer", "manufacturer"),
         ("default_model", "model"),
         ("default_name", "name"),
+        ("modified_at", "2024-01-01T00:00:00+00:00"),
         ("via_device", ("some_domain", "via_id")),
     ],
 )
@@ -7730,8 +7758,6 @@ async def test_loading_invalid_configuration_url_from_storage(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -8358,23 +8384,128 @@ async def test_device_registry_deleted_device_collision(
     assert len(device_registry._deleted_devices) == 0
 
 
+@pytest.mark.parametrize(
+    ("initial", "update"),
+    [
+        pytest.param(
+            {
+                "connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+                "identifiers": {("bridgeid", "0123")},
+            },
+            {"new_connections": set(), "new_identifiers": set()},
+            id="clear_both",
+        ),
+        pytest.param(
+            {"identifiers": {("bridgeid", "0123")}},
+            {"new_identifiers": set()},
+            id="clear_only_identifiers_of_identifier_only_device",
+        ),
+        pytest.param(
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}},
+            {"new_connections": set()},
+            id="clear_only_connections_of_connection_only_device",
+        ),
+    ],
+)
 async def test_update_device_no_connections_or_identifiers(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    initial: dict[str, set[tuple[str, str]]],
+    update: dict[str, set[tuple[str, str]]],
+) -> None:
+    """Test an update leaving a device with no identity is rejected.
+
+    Clearing the last identity side would leave a device that can never be restored
+    once deleted, so it must be rejected whether both sides are cleared at once or one
+    side is cleared while the other is already empty.
+    """
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, **initial
+    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="A device must have at least one of identifiers or connections",
+    ):
+        device_registry.async_update_device(device.id, **update)
+
+    assert device_registry.async_get(device.id) == device
+    assert len(device_registry._deleted_devices) == 0
+
+
+async def test_update_device_can_clear_one_identity_side(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test clearing one identity side is allowed while the other remains."""
+    # Stored MAC connections are normalized to lowercase
+    connection = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+    identifier = ("bridgeid", "0123")
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={connection},
+        identifiers={identifier},
+    )
+
+    updated = device_registry.async_update_device(device.id, new_identifiers=set())
+    assert updated.identifiers == set()
+    assert updated.connections == {connection}
+
+    # Dropping all connections is allowed while an identifier remains
+    updated = device_registry.async_update_device(
+        device.id, new_identifiers={identifier}, new_connections=set()
+    )
+    assert updated.connections == set()
+    assert updated.identifiers == {identifier}
+
+
+async def test_update_device_empty_identity_rejected_before_mutation(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test updating a device clearing connections and identifiers."""
-    mock_config_entry = MockConfigEntry(domain="mqtt", title=None)
-    mock_config_entry.add_to_hass(hass)
+    """Test the empty-identity rejection runs before any sibling state is mutated.
 
-    device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        identifiers={("bridgeid", "0123")},
+    Completing a composite split's move clears its siblings' pending moves. An update
+    combining that move with an identity-emptying replacement must reject before that
+    mutation, so the rejected update leaves no partial state behind.
+    """
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry(domain="test")
+    entry_3.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
     )
-    with pytest.raises(HomeAssistantError):
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate two migration splits of one composite, each with a pending move to entry_3
+    pending_move = dr._PendingMove(entry_3.entry_id, None, None)
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id, pending_move=pending_move
+    )
+    device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id, pending_move=pending_move
+    )
+
+    # Removing device_1's owning entry completes its pending move (which would clear the
+    # sibling's pending move) while new_identifiers=set() empties its identity
+    with pytest.raises(
+        HomeAssistantError,
+        match="A device must have at least one of identifiers or connections",
+    ):
         device_registry.async_update_device(
-            device.id, new_connections=set(), new_identifiers=set()
+            device_1.id,
+            remove_config_entry_id=entry_1.entry_id,
+            new_identifiers=set(),
         )
+
+    # device_1 is untouched, and the sibling's pending move survives the rejected update
+    assert device_registry._devices[device_1.id].config_entry_id == entry_1.entry_id
+    assert device_registry._devices[device_1.id].identifiers == {("test", "1")}
+    assert device_registry._devices[device_2.id]._pending_move == pending_move
 
 
 async def test_connections_validator() -> None:
@@ -10561,6 +10692,35 @@ async def test_child_device_update(
 
 
 @pytest.mark.usefixtures("hass")
+async def test_update_device_wrong_kind_of_device_id_raises(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the split update API points at the correct method for the other kind."""
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Device {child_device.id} is a child device; "
+        "use async_update_child_device",
+    ):
+        device_registry.async_update_device(child_device.id, name_by_user="Nope")
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Device {parent.id} is a main device; use async_update_device",
+    ):
+        device_registry.async_update_child_device(parent.id, name_by_user="Nope")
+
+    with pytest.raises(KeyError):
+        device_registry.async_update_device("unknown-device-id")
+    with pytest.raises(KeyError):
+        device_registry.async_update_child_device("unknown-child-id")
+
+
+@pytest.mark.usefixtures("hass")
 async def test_update_main_device_rejects_disabled_by_device(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -10594,6 +10754,42 @@ async def test_update_main_device_rejects_disabled_by_device(
             device.id, disabled_by=dr.DeviceEntryDisabler.DEVICE
         )
     assert device_registry.async_get(device.id).disabled_by is None
+
+
+@pytest.mark.usefixtures("hass")
+async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test disabled_by=DEVICE matching a deleted device restores nothing.
+
+    A legacy deleted device (its stored disabled_by is UNDEFINED) restores with the
+    caller's disabled_by verbatim, so without an early guard a caller-passed DEVICE
+    would restore a main device disabled by DEVICE. The rejection must run before the
+    restore.
+    """
+    match = "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child device"
+    identifiers = {("test", "restore")}
+    device_id = "restore-device-id"
+    # A legacy deleted device carries no recorded disabled_by (UNDEFINED), so restore
+    # returns the caller's disabled_by verbatim - no config-entry reconciliation clears
+    # a DEVICE value.
+    device_registry._deleted_devices[device_id] = attr.evolve(
+        _mock_deleted_device(device_id, mock_config_entry.entry_id, identifiers),
+        disabled_by=UNDEFINED,
+    )
+
+    with pytest.raises(HomeAssistantError, match=match):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers=identifiers,
+            disabled_by=dr.DeviceEntryDisabler.DEVICE,
+        )
+
+    # Nothing was restored: no main device exists and the deleted entry is untouched
+    assert len(device_registry.devices) == 0
+    assert device_id in device_registry._deleted_devices
+    assert device_registry._deleted_devices[device_id].disabled_by is UNDEFINED
 
 
 @pytest.mark.usefixtures("hass")
@@ -10746,6 +10942,50 @@ async def test_remove_child_device_and_restore(
     assert restored.labels == {"outdoor"}
     assert restored.name_by_user == "Lamp"
     assert restored.parent_device_id == parent.id
+
+
+@pytest.mark.usefixtures("hass")
+async def test_restore_child_deleted_via_parent_cascade(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test restoring a child that was cascade-deleted with its parent.
+
+    Removing the parent cascade-deletes the child; re-registering the parent and then
+    the child restores the child with its id and user-provided data intact.
+    """
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+    device_registry.async_update_child_device(
+        child_device.id, area_id="garden", labels={"outdoor"}, name_by_user="Lamp"
+    )
+
+    device_registry.async_remove_device(parent.id)
+    assert device_registry.async_get(child_device.id) is None
+    assert child_device.id in device_registry._deleted_devices
+    assert parent.id in device_registry._deleted_devices
+
+    restored_parent = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    assert restored_parent.id == parent.id
+
+    restored_child = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=restored_parent.id,
+        name="Outlet 1",
+    )
+    assert restored_child.id == child_device.id
+    assert restored_child.area_id == "garden"
+    assert restored_child.labels == {"outdoor"}
+    assert restored_child.name_by_user == "Lamp"
+    assert restored_child.parent_device_id == restored_parent.id
+    assert device_registry.async_get(child_device.id) is restored_child
+    assert child_device.id not in device_registry._deleted_devices
 
 
 @pytest.mark.usefixtures("hass")
@@ -11123,7 +11363,10 @@ async def test_link_device_info_matching_child_raises(
     # The child device is left untouched: not converted, no new device created
     assert len(device_registry.devices) == 1
     assert len(device_registry.child_devices) == 1
-    assert device_registry._child_devices[child_device.id] == child_device
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False)
+        == child_device
+    )
     assert child_device.identifiers == {("test", "strip_outlet_1")}
 
 
@@ -11414,6 +11657,49 @@ async def test_child_device_load_and_save(
     assert hass_storage[dr.STORAGE_KEY]["data"] == first_save
 
 
+async def test_child_device_stored_fragment(
+    hass_storage: dict[str, Any],
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry_with_subentries: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the exact serialized payload of a non-empty stored child device.
+
+    Pins the full key set so an extra serialized key can't slip in unnoticed.
+    """
+    freezer.move_to("2024-01-01T00:00:00+00:00")
+    entry_id = mock_config_entry_with_subentries.entry_id
+    parent, child_device = _create_parent_and_child(
+        device_registry, entry_id, config_subentry_id="mock-subentry-id-1-1"
+    )
+    device_registry.async_update_child_device(
+        child_device.id,
+        area_id="garden",
+        disabled_by=dr.DeviceEntryDisabler.USER,
+        labels={"outdoor"},
+        name_by_user="Lamp",
+    )
+
+    await flush_store(device_registry._store)
+
+    assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == [
+        {
+            "area_id": "garden",
+            "config_entry_id": entry_id,
+            "config_subentry_id": "mock-subentry-id-1-1",
+            "created_at": "2024-01-01T00:00:00+00:00",
+            "disabled_by": "user",
+            "id": child_device.id,
+            "identifiers": [["test", "strip_outlet_1"]],
+            "labels": ["outdoor"],
+            "modified_at": "2024-01-01T00:00:00+00:00",
+            "name_by_user": "Lamp",
+            "name": "Outlet 1",
+            "parent_device_id": parent.id,
+        }
+    ]
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_migration_3_3_to_3_4(
     hass: HomeAssistant,
@@ -11517,6 +11803,70 @@ async def test_loading_child_device_with_missing_parent(
     # until an unrelated write
     await flush_store(registry._store)
     assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == []
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_loading_drops_empty_deleted_devices(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test stored deleted devices with no identifiers or connections are dropped."""
+
+    def _deleted_device(
+        device_id: str,
+        identifiers: list[list[str]],
+        connections: list[list[str]],
+    ) -> dict[str, Any]:
+        return {
+            "area_id": None,
+            "config_entry_id": mock_config_entry.entry_id,
+            "config_subentry_id": None,
+            "connections": connections,
+            "created_at": "2024-01-01T00:00:00+00:00",
+            "disabled_by": None,
+            "disabled_by_undefined": False,
+            "id": device_id,
+            "identifiers": identifiers,
+            "labels": [],
+            "modified_at": "2024-01-01T00:00:00+00:00",
+            "name_by_user": None,
+            "orphaned_timestamp": None,
+            "domain": None,
+        }
+
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [],
+            "child_devices": [],
+            "deleted_devices": [
+                _deleted_device("with_identifiers", [["test", "1"]], []),
+                _deleted_device("with_connections", [], [["mac", "12:34:56:78:90:ab"]]),
+                _deleted_device("empty_1", [], []),
+                _deleted_device("empty_2", [], []),
+            ],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    assert set(registry._deleted_devices) == {"with_identifiers", "with_connections"}
+    assert "Dropped 2 deleted devices with no identifiers or connections" in caplog.text
+
+    # The drop scheduled a save, so it persists instead of leaving the store dirty
+    # until an unrelated write
+    await flush_store(registry._store)
+    stored_ids = {
+        device["id"]
+        for device in hass_storage[dr.STORAGE_KEY]["data"]["deleted_devices"]
+    }
+    assert stored_ids == {"with_identifiers", "with_connections"}
 
 
 async def test_effective_area_id(

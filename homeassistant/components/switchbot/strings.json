@@ -159,6 +159,22 @@
             }
           }
         }
+      },
+      "roller_shade": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]",
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]"
+            }
+          },
+          "speed": {
+            "state": {
+              "performance": "Performance",
+              "quiet": "Quiet"
+            }
+          }
+        }
       }
     },
     "fan": {
@@ -431,20 +447,11 @@
     "advertising_state_error": {
       "message": "{address} is not advertising state"
     },
-    "device_entry_not_loaded": {
-      "message": "The device ID {device_id} is not loaded."
-    },
-    "device_not_belonging": {
-      "message": "The device ID {device_id} does not belong to SwitchBot integration."
-    },
     "device_not_found_error": {
       "message": "Could not find Switchbot {sensor_type} with address {address}: {reason}"
     },
     "device_without_config_entry": {
       "message": "The device ID {device_id} is not associated with a config entry."
-    },
-    "invalid_device_id": {
-      "message": "The device ID {device_id} is not a valid device ID."
     },
     "not_keypad_vision_device": {
       "message": "This service is only supported for SwitchBot Keypad Vision devices."

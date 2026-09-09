@@ -8,11 +8,11 @@ from typing import Any
 
 import attr
 import attrs
+from probatio import to_field_list
 from syrupy.extensions.amber import AmberDataSerializer, AmberSnapshotExtension
 from syrupy.location import PyTestLocation
 from syrupy.types import PropertyFilter, PropertyMatcher, PropertyPath, SerializableData
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import State
@@ -119,7 +119,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         }:
             serializable_data = cls._serializable_conversation_result(data)
         elif isinstance(data, vol.Schema):
-            serializable_data = voluptuous_serialize.convert(data)
+            serializable_data = to_field_list(data)
         elif isinstance(data, ConfigEntry):
             serializable_data = cls._serializable_config_entry(data)
         elif dataclasses.is_dataclass(type(data)):

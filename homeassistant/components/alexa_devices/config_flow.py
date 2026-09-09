@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any, override
 
 from aioamazondevices.api import AmazonEchoApi
@@ -10,6 +11,7 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
+from aioamazondevices.structures import AmazonSaveDataConfig
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -49,6 +51,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         session,
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
+        save_data=AmazonSaveDataConfig(
+            path=Path(hass.config.path(DOMAIN)),
+        ),
     )
 
     return await api.login.login_mode_interactive(data[CONF_CODE])

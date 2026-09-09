@@ -284,9 +284,8 @@ def validate_sqlite_database(dbpath: str) -> bool:
     import sqlite3  # noqa: PLC0415
 
     try:
-        conn = sqlite3.connect(dbpath)
-        run_checks_on_open_db(dbpath, conn.cursor())
-        conn.close()
+        with contextlib.closing(sqlite3.connect(dbpath)) as conn:
+            run_checks_on_open_db(dbpath, conn.cursor())
     except sqlite3.DatabaseError:
         _LOGGER.exception("The database at %s is corrupt or malformed", dbpath)
         return False

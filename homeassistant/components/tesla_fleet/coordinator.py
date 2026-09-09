@@ -36,6 +36,11 @@ VEHICLE_WAIT_SECONDS = 900
 VEHICLE_WAIT = timedelta(seconds=VEHICLE_WAIT_SECONDS)
 VEHICLE_STUCK_SECONDS = 1200
 
+# Kept well under Home Assistant's stage-2 setup budget (SLOW_SETUP_MAX_WAIT, 300s)
+# so a sleeping vehicle raises ConfigEntryNotReady and the entry retries instead of
+# being cancelled into a non-retried setup error.
+VEHICLE_FIRST_REFRESH_TIMEOUT = 60
+
 ENERGY_INTERVAL_SECONDS = 60
 ENERGY_INTERVAL = timedelta(seconds=ENERGY_INTERVAL_SECONDS)
 ENERGY_HISTORY_INTERVAL = timedelta(minutes=5)
