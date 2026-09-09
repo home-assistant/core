@@ -7,8 +7,7 @@ from unittest.mock import patch
 from aiohttp.client_exceptions import ClientError
 import pytest
 
-from homeassistant.components.youtube import DOMAIN
-from homeassistant.components.youtube.const import CONF_CHANNELS
+from homeassistant.components.youtube.const import CONF_CHANNELS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr

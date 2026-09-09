@@ -1,5 +1,7 @@
 """Test the RAPT Pill BLE sensors."""
 
+import pytest
+
 from homeassistant.components.rapt_ble.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
@@ -9,8 +11,14 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from . import COMPLETE_SERVICE_INFO, RAPT_MAC
+from . import (
+    COMPLETE_SERVICE_INFO,
+    RAPT_MAC,
+    V2_NO_VELOCITY_SERVICE_INFO,
+    V2_SERVICE_INFO,
+)
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -59,6 +67,35 @@ async def test_sensors(hass: HomeAssistant) -> None:
         temp_sensor_attributes[ATTR_FRIENDLY_NAME] == "RAPT Pill 0666 Specific Gravity"
     )
     assert temp_sensor_attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "service_info",
+    [
+        pytest.param(V2_SERVICE_INFO, id="valid_velocity"),
+        pytest.param(V2_NO_VELOCITY_SERVICE_INFO, id="invalid_velocity"),
+    ],
+)
+async def test_sensors_v2_payload(
+    hass: HomeAssistant, service_info: BluetoothServiceInfo
+) -> None:
+    """Test a version 2 advertisement sets up the known sensors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=RAPT_MAC,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, service_info)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 3
+    assert hass.states.get("sensor.rapt_pill_0666_specific_gravity") is not None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

@@ -79,6 +79,9 @@
       "aux_heating": {
         "default": "mdi:radiator"
       },
+      "child_lock": {
+        "default": "mdi:lock"
+      },
       "disinfect": {
         "default": "mdi:bacteria"
       },

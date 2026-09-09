@@ -34,13 +34,10 @@ def _normalize_address(address: str) -> str:
     return address.strip().upper()
 
 
-PIN_SCHEMA = vol.All(
-    selector.TextSelector(
-        selector.TextSelectorConfig(
-            type=selector.TextSelectorType.PASSWORD,
-        )
-    ),
-    vol.Match(r"^\d{6}$"),
+PIN_SCHEMA = selector.TextSelector(
+    selector.TextSelectorConfig(
+        type=selector.TextSelectorType.PASSWORD,
+    )
 )
 
 PIN_ONLY_SCHEMA = vol.Schema(
@@ -76,6 +73,9 @@ async def _async_validate_input(
     name: str | None,
 ) -> str:
     """Validate setup by logging into the charger."""
+
+    if len(pin) != 6 or not pin.isdecimal():
+        raise InvalidAuth("PIN must be exactly 6 digits")
 
     def _ble_device_provider() -> BLEDevice | None:
         return bluetooth.async_ble_device_from_address(

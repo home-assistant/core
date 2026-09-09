@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -45,13 +44,7 @@ PLATFORMS = [
 async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
     """Set up xbox from a config entry."""
 
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as e:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from e
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     session = OAuth2Session(hass, entry, implementation)
     async_session = get_async_client(hass)
@@ -113,13 +106,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bo
     """Migrate config entry."""
 
     if entry.version == 1 and entry.minor_version < 3:
-        try:
-            implementation = await async_get_config_entry_implementation(hass, entry)
-        except ImplementationUnavailableError as e:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="oauth2_implementation_unavailable",
-            ) from e
+        implementation = await async_get_config_entry_implementation(hass, entry)
         session = OAuth2Session(hass, entry, implementation)
         async_session = get_async_client(hass)
         auth = AsyncConfigEntryAuth(async_session, session)

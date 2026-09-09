@@ -37,7 +37,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
@@ -381,6 +381,80 @@ async def test_user_with_filestation(
     assert result["result"].unique_id == SERIAL
     assert result["title"] == HOST
     assert result["data"] == snapshot
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_backup_share_form_reopened(
+    hass: HomeAssistant,
+    service_with_filestation: MagicMock,
+) -> None:
+    """Test the backup location form can be shown again without losing the input."""
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_with_filestation,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_VERIFY_SSL: VERIFY_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "backup_share"
+
+        # The dialog is closed and reopened before a location is picked
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "backup_share"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_BACKUP_SHARE: "/ha_backup", CONF_BACKUP_PATH: "automatic_ha_backups"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_backup_share_requires_a_path(
+    hass: HomeAssistant,
+    service_with_filestation: MagicMock,
+) -> None:
+    """Test an empty backup path is rejected instead of looping the flow."""
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_with_filestation,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_VERIFY_SSL: VERIFY_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "backup_share"
+
+        with pytest.raises(InvalidData):
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {CONF_BACKUP_SHARE: "/ha_backup", CONF_BACKUP_PATH: ""},
+            )
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

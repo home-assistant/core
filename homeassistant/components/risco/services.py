@@ -3,7 +3,7 @@
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_TIME
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.util import dt as dt_util
@@ -12,7 +12,8 @@ from .const import DOMAIN, SERVICE_SET_TIME
 from .models import RiscoConfigEntry
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Create the Risco Services/Actions."""
 
     async def _set_time(service_call: ServiceCall) -> None:

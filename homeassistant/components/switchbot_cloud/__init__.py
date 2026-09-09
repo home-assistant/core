@@ -28,7 +28,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_CLOUDHOOK_URL, DEVICE_SUPPORT_MAP, DOMAIN, ENTRY_TITLE
 from .coordinator import SwitchBotCoordinator
-from .service import async_register_services
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema("switchbot_cloud")
 
@@ -280,7 +280,7 @@ async def make_new_device_data(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Switchbot Cloud."""
-    async_register_services(hass)
+    async_setup_services(hass)
     return True
 
 

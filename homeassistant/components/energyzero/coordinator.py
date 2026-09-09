@@ -10,6 +10,7 @@ from energyzero import (
     EnergyZeroConnectionError,
     EnergyZeroNoDataError,
     Interval,
+    PriceType,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -61,12 +62,14 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
                 start_date=today,
                 end_date=today,
                 interval=Interval.HOUR,
+                price_type=PriceType.MARKET_WITH_VAT,
                 local_tz=local_tz,
             )
             try:
                 gas_today = await self.energyzero.get_gas_prices(
                     start_date=today,
                     end_date=today,
+                    price_type=PriceType.MARKET_WITH_VAT,
                     local_tz=local_tz,
                 )
             except EnergyZeroNoDataError:
@@ -79,6 +82,7 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
                         start_date=tomorrow,
                         end_date=tomorrow,
                         interval=Interval.HOUR,
+                        price_type=PriceType.MARKET_WITH_VAT,
                         local_tz=local_tz,
                     )
                 except EnergyZeroNoDataError:

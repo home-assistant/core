@@ -1,0 +1,9 @@
+{
+  "deviceId": "MW2-5E747ABC-6542-4DEF-AA89-4EC4353B2E90",
+  "deviceInfo": {
+    "deviceType": "DEVICE_AIR_PURIFIER",
+    "modelName": "AIR_910604_WW",
+    "alias": "Test air purifier",
+    "reportable": true
+  }
+}

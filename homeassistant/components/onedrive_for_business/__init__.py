@@ -21,7 +21,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -96,13 +95,7 @@ async def _get_onedrive_client(
 ) -> tuple[OneDriveClient, Callable[[], Awaitable[str]]]:
     """Get OneDrive client."""
     with tenant_id_context(entry.data[CONF_TENANT_ID]):
-        try:
-            implementation = await async_get_config_entry_implementation(hass, entry)
-        except ImplementationUnavailableError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="oauth2_implementation_unavailable",
-            ) from err
+        implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
 
     # Refresh up front, so a failure surfaces here instead of from inside the client

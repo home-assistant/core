@@ -147,6 +147,7 @@ homeassistant.components.clicksend.*
 homeassistant.components.climate.*
 homeassistant.components.cloud.*
 homeassistant.components.co2signal.*
+homeassistant.components.collection_image.*
 homeassistant.components.comelit.*
 homeassistant.components.command_line.*
 homeassistant.components.compit.*

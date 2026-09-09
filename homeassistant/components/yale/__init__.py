@@ -21,7 +21,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -37,10 +36,7 @@ type YaleConfigEntry = ConfigEntry[YaleData]
 async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
     """Set up Yale from a config entry."""
     session = async_create_yale_clientsession(hass)
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady("OAuth implementation not available") from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
     yale_gateway = YaleGateway(Path(hass.config.config_dir), session, oauth_session)
     try:

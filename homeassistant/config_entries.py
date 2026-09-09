@@ -3210,7 +3210,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
                     include_uninitialized=True, match_context={"unique_id": unique_id}
                 )
             ):
-                raise data_entry_flow.AbortFlow("already_in_progress")
+                raise data_entry_flow.AbortFlow(
+                    "already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+                )
 
         self.context["unique_id"] = unique_id
 
@@ -3308,8 +3310,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
         It ensures that the discovery can be ignored by the user.
 
-        Requires `already_configured` and `already_in_progress` in strings.json
-        in user visible flows.
+        Requires `already_configured` in strings.json in user visible flows.
         """
         if self.unique_id is not None:
             return
@@ -3324,7 +3325,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
         # Abort if any other flow for this handler is already in progress
         if self._async_in_progress(include_uninitialized=True):
-            raise data_entry_flow.AbortFlow("already_in_progress")
+            raise data_entry_flow.AbortFlow(
+                "already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
     async def _async_step_discovery_without_unique_id(
         self,

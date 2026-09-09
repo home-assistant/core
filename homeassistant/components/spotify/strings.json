@@ -30,11 +30,6 @@
       }
     }
   },
-  "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    }
-  },
   "issues": {
     "user_not_premium": {
       "description": "[%key:component::spotify::config::abort::user_not_premium%]",

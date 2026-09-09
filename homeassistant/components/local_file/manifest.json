@@ -1,6 +1,6 @@
 {
   "domain": "local_file",
-  "name": "Local File",
+  "name": "Local file",
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/local_file",

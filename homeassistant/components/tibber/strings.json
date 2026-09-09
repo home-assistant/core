@@ -249,9 +249,6 @@
     "no_config_entry": {
       "message": "No Tibber integration configured"
     },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
     "send_message_timeout": {
       "message": "Timeout sending message with Tibber"
     }

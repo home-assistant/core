@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "auth_error": "Authentication error, please try again",
       "auth_failed": "Authentication failed, please try again",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

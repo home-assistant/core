@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "device_auth_failed": "Could not connect with the provided configuration",
@@ -77,6 +78,15 @@
           "type": "The type of your Midea appliance"
         },
         "title": "Configure manually"
+      },
+      "reconfigure": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "[%key:component::midea::config::step::manually::data_description::ip_address%]"
+        },
+        "title": "Set your device's new IP address"
       },
       "search": {
         "data": {
@@ -661,6 +671,9 @@
       "aux_heating": {
         "name": "Auxiliary heating"
       },
+      "child_lock": {
+        "name": "Child lock"
+      },
       "disinfect": {
         "name": "Disinfect"
       },
@@ -707,6 +720,12 @@
     },
     "e1_device_off": {
       "message": "Turn on the dishwasher before starting a wash cycle."
+    },
+    "unable_connect_device": {
+      "message": "Unable to connect to device {device_id}"
+    },
+    "unable_initialize_device": {
+      "message": "Unable to initialize device"
     },
     "unsupported_hvac_mode": {
       "message": "HVAC mode {hvac_mode} is not supported by this device."
