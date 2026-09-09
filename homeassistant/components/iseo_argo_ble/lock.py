@@ -149,14 +149,16 @@ class IseoLockEntity(LockEntity):
     async def _async_poll_interval(self, _now: datetime) -> None:
         """Poll the lock on the configured interval, if the fallback is on.
 
-        The option is read here rather than deciding at setup whether to
-        register this timer, so turning the fallback on takes effect without
-        reloading the entry. A reload would have to resolve the device through
+        The option is read here rather than at setup because applying it by
+        reloading the entry would stall: setup resolves the device through
         ``async_ble_device_from_address()``, which following the lock passively
-        keeps empty, and would therefore sit in setup retry until the next
-        advertisement — the very signal this fallback exists to replace.
+        keeps empty.
         """
-        if not self._entry.options.get(CONF_ENABLE_POLLING, False):
+        if self._identity_rejected or not self._entry.options.get(
+            CONF_ENABLE_POLLING, False
+        ):
+            # A rejected identity never recovers on its own, so polling on
+            # would only wake the lock every 30s for a read that cannot work.
             return
         await self._poll_state()
 
@@ -198,14 +200,16 @@ class IseoLockEntity(LockEntity):
     def _apply_door_state(self, door_closed: bool) -> None:
         """Apply a door reading, respecting the window after an unlock."""
         if self._attr_is_unlocking:
-            if door_closed:
+            if door_closed and not self._opened_while_unlocking:
                 # The latch has not released yet; that is not news.
                 return
             # The latch released while gw_open() was still awaiting its
-            # response. Dropping this would leave the relock timer to report
+            # response. Dropping that would leave the relock timer to report
             # "locked" a few seconds later with the door standing open, and the
-            # correcting reading can be minutes away.
-            self._opened_while_unlocking = True
+            # correcting reading can be minutes away. Track what the door did
+            # last rather than only that it opened, so a close arriving before
+            # the command returns is not lost either.
+            self._opened_while_unlocking = not door_closed
         if (
             door_closed
             and self._poll_suppress_until

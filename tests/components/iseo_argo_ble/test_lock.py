@@ -537,6 +537,64 @@ async def test_door_opening_while_the_unlock_is_in_flight_is_kept(
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_door_closing_again_during_the_unlock_is_not_lost(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the last reading wins when the door opens and shuts mid-unlock.
+
+    Someone can pull the door shut again before gw_open() returns. Keeping only
+    "it opened" would leave the relock timer suppressed and the entity stuck
+    unlocked, although the newest report said closed.
+    """
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+
+    async def _open_then_shut(*args: object, **kwargs: object) -> None:
+        inject_bluetooth_service_info_bleak(hass, iseo_advertisement(False))
+        inject_bluetooth_service_info_bleak(hass, iseo_advertisement(True))
+
+    mock_iseo_client.gw_open.side_effect = _open_then_shut
+
+    with patch("homeassistant.components.iseo_argo_ble.lock._RELOCK_DELAY", 0):
+        await _unlock(hass)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_polling_stops_after_the_identity_is_rejected(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the fallback timer gives up on a permanently rejected identity.
+
+    Enrolment cannot recover on its own, so continuing to poll would wake the
+    lock every 30 seconds for a read that can never succeed.
+    """
+    mock_iseo_client.read_state.side_effect = IseoAuthError("rejected")
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ENABLE_POLLING: True}
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await _advertise(hass, door_closed=True)
+    mock_iseo_client.read_state.assert_awaited()
+
+    mock_iseo_client.read_state.reset_mock()
+    freezer.tick(_POLL_INTERVAL * 4)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_iseo_client.read_state.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
 async def test_probe_retries_when_the_first_read_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
