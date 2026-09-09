@@ -96,14 +96,16 @@ async def test_sensor_availability_when_device_offline(
 ) -> None:
     """Status stays available offline; other sensors become unavailable."""
 
-    async def set_device_offline(device: ImouHaDevice) -> None:
-        device._sensors[PARAM_STATUS] = {
-            PARAM_STATE: DeviceStatus.OFFLINE.value,
-            PARAM_STATE_VARIANT: STATE_VARIANT_ENUM,
-        }
+    async def set_devices_offline(devices: list[ImouHaDevice]) -> set[str]:
+        for device in devices:
+            device._sensors[PARAM_STATUS] = {
+                PARAM_STATE: DeviceStatus.OFFLINE.value,
+                PARAM_STATE_VARIANT: STATE_VARIANT_ENUM,
+            }
+        return set()
 
-    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
-        set_device_offline
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = (
+        set_devices_offline
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

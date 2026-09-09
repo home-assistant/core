@@ -312,11 +312,13 @@ async def test_offline_device_marked_unavailable_after_refresh(
     )
     assert hass.states.get(mute_entry.entity_id).state != STATE_UNAVAILABLE
 
-    async def set_device_offline(device: ImouHaDevice) -> None:
-        device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.OFFLINE.value}
+    async def set_devices_offline(devices: list[ImouHaDevice]) -> set[str]:
+        for device in devices:
+            device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.OFFLINE.value}
+        return set()
 
-    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
-        set_device_offline
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = (
+        set_devices_offline
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -343,7 +345,7 @@ async def test_coordinator_update_fails_when_all_devices_fail(
     )
     assert hass.states.get(mute_entry.entity_id).state != STATE_UNAVAILABLE
 
-    mock_imou_ha_device_manager.async_update_device_status.side_effect = ImouException(
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = ImouException(
         "cloud failure"
     )
     freezer.tick(SCAN_INTERVAL)
@@ -364,7 +366,7 @@ async def test_coordinator_status_refresh_invalid_auth(
     """Rejected credentials during status refresh start reauthentication."""
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = (
         InvalidAppIdOrSecretException("bad credentials")
     )
     freezer.tick(SCAN_INTERVAL)
