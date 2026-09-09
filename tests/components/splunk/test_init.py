@@ -311,6 +311,117 @@ async def test_event_listener_error_handling(
     )
 
 
+@pytest.mark.parametrize(
+    ("error", "expected_log_level", "expected_message"),
+    [
+        (
+            ClientResponseError(
+                request_info=MagicMock(),
+                history=(),
+                status=500,
+                message="Internal Server Error",
+            ),
+            logging.WARNING,
+            "Splunk response error: Internal Server Error",
+        ),
+        (
+            ValueError("boom"),
+            logging.ERROR,
+            "Unexpected error sending event to Splunk",
+        ),
+    ],
+)
+async def test_event_listener_repeated_failures_log_once(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+    expected_log_level: int,
+    expected_message: str,
+) -> None:
+    """Test that a sustained run of send failures logs only the first one."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_hass_splunk.queue.side_effect = error
+
+    with caplog.at_level(logging.DEBUG):
+        for i in range(5):
+            hass.states.async_set("sensor.test", str(i))
+            await hass.async_block_till_done()
+
+    matching_records = [
+        record
+        for record in caplog.records
+        if record.levelno == expected_log_level and expected_message in record.message
+    ]
+    assert len(matching_records) == 1
+
+
+async def test_event_listener_recovery_logs_once(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that recovery after failures logs exactly one recovery message."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_hass_splunk.queue.side_effect = ClientResponseError(
+        request_info=MagicMock(),
+        history=(),
+        status=500,
+        message="Internal Server Error",
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        for i in range(3):
+            hass.states.async_set("sensor.test", str(i))
+            await hass.async_block_till_done()
+
+        mock_hass_splunk.queue.side_effect = None
+
+        for i in range(3):
+            hass.states.async_set("sensor.test", f"recovered-{i}")
+            await hass.async_block_till_done()
+
+    recovery_records = [
+        record
+        for record in caplog.records
+        if record.levelno == logging.INFO
+        and "Sending events to Splunk has recovered" in record.message
+    ]
+    assert len(recovery_records) == 1
+
+
+async def test_event_listener_no_recovery_message_without_prior_failure(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a successful send without prior failures logs no recovery message."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with caplog.at_level(logging.DEBUG):
+        hass.states.async_set("sensor.test", "123")
+        await hass.async_block_till_done()
+
+    assert not any(
+        "Sending events to Splunk has recovered" in record.message
+        for record in caplog.records
+    )
+
+
 async def test_yaml_filter_only_no_deprecation_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,

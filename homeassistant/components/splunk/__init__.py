@@ -219,8 +219,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=False)
 
+    send_failing = False
+
     async def splunk_event_listener(event: Event[EventStateChangedData]) -> None:
         """Listen for new messages on the bus and sends them to Splunk."""
+        nonlocal send_failing
+
         state = event.data.get("new_state")
         if state is None or not entity_filter(state.entity_id):
             return
@@ -250,15 +254,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 # Trigger reauth flow
                 entry.async_start_reauth(hass)
             else:
-                _LOGGER.warning("Splunk payload error: %s", err)
+                if not send_failing:
+                    _LOGGER.warning("Splunk payload error: %s", err)
+                send_failing = True
         except ClientConnectionError as err:
-            _LOGGER.debug("Connection error sending to Splunk: %s", err)
+            if not send_failing:
+                _LOGGER.debug("Connection error sending to Splunk: %s", err)
+            send_failing = True
         except TimeoutError:
-            _LOGGER.debug("Timeout sending to Splunk at %s:%s", host, port)
+            if not send_failing:
+                _LOGGER.debug("Timeout sending to Splunk at %s:%s", host, port)
+            send_failing = True
         except ClientResponseError as err:
-            _LOGGER.warning("Splunk response error: %s", err.message)
+            if not send_failing:
+                _LOGGER.warning("Splunk response error: %s", err.message)
+            send_failing = True
         except Exception:
-            _LOGGER.exception("Unexpected error sending event to Splunk")
+            if not send_failing:
+                _LOGGER.exception("Unexpected error sending event to Splunk")
+            send_failing = True
+        else:
+            if send_failing:
+                _LOGGER.info("Sending events to Splunk has recovered")
+            send_failing = False
 
     # Store the event listener cancellation callback
     entry.async_on_unload(
