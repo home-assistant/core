@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, cast, override
 
+from bleak.backends.device import BLEDevice
 from iseo_argo_ble import (
     IseoAuthError,
     IseoClient,
@@ -136,12 +137,15 @@ class IseoLockEntity(LockEntity):
             self._relock_task.cancel()
 
     def _cancel_access_log_read(self) -> None:
-        """Cancel a pending or running access log read."""
+        """Drop a read that has not started touching the lock yet.
+
+        Only the debounce is cancelled. A read already in flight is left to
+        finish: fetching a page marks those entries read on the lock, so
+        cancelling between the drain and the report would lose them for good.
+        """
         if self._access_log_unsub is not None:
             self._access_log_unsub()
             self._access_log_unsub = None
-        if self._access_log_task and not self._access_log_task.done():
-            self._access_log_task.cancel()
 
     def _set_available(self, available: bool, reason: object = None) -> None:
         """Update availability, logging only when it actually changes."""
@@ -361,9 +365,11 @@ class IseoLockEntity(LockEntity):
             )
 
         try:
-            async with self._ble_lock:
-                self.client.update_ble_device(ble_device)
-                entries = await self.client.gw_read_unread_logs()
+            # The drain and the report are one unit: the lock marks entries
+            # read as each page is fetched, so a cancellation landing between
+            # them would drop those entries permanently. Shield them so an
+            # outside cancel cannot split them.
+            await asyncio.shield(self._async_drain_and_report(ble_device))
         except IseoAuthError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -375,6 +381,11 @@ class IseoLockEntity(LockEntity):
                 translation_key="cannot_connect",
             ) from err
 
+    async def _async_drain_and_report(self, ble_device: BLEDevice) -> None:
+        """Read the unread entries and report them, without interruption."""
+        async with self._ble_lock:
+            self.client.update_ble_device(ble_device)
+            entries = await self.client.gw_read_unread_logs()
         self._report_log_entries(entries)
 
     @callback

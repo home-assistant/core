@@ -407,6 +407,55 @@ async def test_action_joins_a_read_already_running(
     assert hass.states.get(ENTITY_ID).attributes["opened_by"] == "Federico"
 
 
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_unloading_does_not_interrupt_a_read_in_flight(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a drain already touching the lock is allowed to finish.
+
+    The lock marks entries read as each page is fetched, so cancelling between
+    the drain and the report would lose them for good — they are gone from the
+    lock and were never handed to anyone.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    release = asyncio.Event()
+    reported: list[tuple[str, dict[str, object]]] = []
+    opened_at = datetime(2026, 9, 2, 14, 3, 11, tzinfo=UTC)
+
+    async def _blocked_read() -> list[LogEntry]:
+        await release.wait()
+        return [_log_entry(CODE_OPENED, opened_at, extra_description="Federico")]
+
+    mock_iseo_client.gw_read_unread_logs.side_effect = _blocked_read
+
+    mock_iseo_client.read_state.return_value = _lock_state(door_closed=False)
+    freezer.tick(_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=_ACCESS_LOG_DEBOUNCE))
+    async_fire_time_changed(hass)
+    while not mock_iseo_client.gw_read_unread_logs.called:
+        await asyncio.sleep(0)
+
+    with patch(
+        "homeassistant.components.iseo_argo_ble.lock.async_dispatcher_send",
+        side_effect=lambda _hass, _signal, event_type, attributes: reported.append(
+            (event_type, attributes)
+        ),
+    ):
+        # The lock has already been drained; unloading now must not throw the
+        # entries away.
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        release.set()
+        await hass.async_block_till_done()
+
+    assert [attributes["opened_by"] for _, attributes in reported] == ["Federico"]
+
+
 @pytest.mark.parametrize(
     "error",
     [IseoAuthError("rejected"), IseoConnectionError("no link"), TimeoutError],
