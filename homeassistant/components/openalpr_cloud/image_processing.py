@@ -261,9 +261,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         self.plates = plates
         self.vehicles = vehicles
         self.vehicle_details = [
-            vehicle
-            for vehicle in vehicle_details
-            if vehicle[ATTR_PLATE] in plates
+            vehicle for vehicle in vehicle_details if vehicle[ATTR_PLATE] in plates
         ]
 
 
