@@ -32,11 +32,12 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_platform as ep, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
@@ -695,10 +696,8 @@ async def test_io_switch_unavailable_in_winter_mode(
 ) -> None:
     """Device switches become unavailable while winter mode is active.
 
-    HA's service layer refuses to dispatch to unavailable entities, so the
-    availability gate on NeoPoolEntity is what actually blocks device writes.
-    Assert that gate directly on the entity instance, and confirm the
-    winter_mode switch itself stays available.
+    The device is offline, so device switches report unavailable, while the
+    winter_mode switch itself stays available so users can toggle it.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -719,20 +718,13 @@ async def test_io_switch_unavailable_in_winter_mode(
         },
     )
     await setup_integration(hass, entry)
-    platform = next(
-        p for p in ep.async_get_platforms(hass, DOMAIN) if p.domain == "switch"
-    )
-    io_entity = next(
-        e
-        for e in platform.entities.values()
-        if getattr(e.entity_description, "key", None) == "MBF_PAR_FILT_MANUAL_STATE"
-    )
-    winter_entity = next(
-        e
-        for e in platform.entities.values()
-        if getattr(e.entity_description, "key", None) == "WINTER_MODE"
-    )
-    # Device switch inherits the winter-mode availability gate.
-    assert io_entity.available is False
-    # The winter_mode switch itself must stay available so users can toggle it.
-    assert winter_entity.available is True
+
+    io_id = _entity_id_by_suffix(hass, entry, "_mbf_par_filt_manual_state")
+    io_state = hass.states.get(io_id)
+    assert io_state is not None
+    assert io_state.state == STATE_UNAVAILABLE
+
+    winter_id = _entity_id_by_suffix(hass, entry, "_winter_mode")
+    winter_state = hass.states.get(winter_id)
+    assert winter_state is not None
+    assert winter_state.state != STATE_UNAVAILABLE

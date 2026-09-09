@@ -349,7 +349,7 @@ class NeoPoolSwitch(NeoPoolEntity, SwitchEntity):
 
         # The winter_mode switch itself must remain available while winter mode is on.
         if description.ha_setting == _HA_SETTING_WINTER_MODE:
-            self._winter_mode_active = False
+            self._unavailable_in_winter_mode = False
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -367,9 +367,6 @@ class NeoPoolSwitch(NeoPoolEntity, SwitchEntity):
 
         # HA-side settings live entirely outside the Modbus client.
         if desc.ha_setting == _HA_SETTING_WINTER_MODE:
-            # set_winter_mode flips pref_disable_polling and schedules an entry
-            # reload, which rebuilds the coordinator and re-renders this entity,
-            # so there's nothing more to write here.
             await self.coordinator.set_winter_mode(state)
             return
 
