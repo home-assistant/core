@@ -24,8 +24,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> bo
         coordinators[subentry.subentry_id] = coordinator
 
     entry.runtime_data = coordinators
+    entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def _async_reload_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> None:
+    """Reload so an added or removed location gets its own coordinator."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> bool:

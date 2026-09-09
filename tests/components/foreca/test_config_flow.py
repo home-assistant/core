@@ -37,6 +37,11 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Foreca"
     assert result["data"] == {CONF_API_KEY: "test-key"}
+    # A new entry starts with the Home Assistant home location, so setting the
+    # integration up produces a weather entity without a second step.
+    assert [subentry["data"] for subentry in result["subentries"]] == [
+        {CONF_LATITUDE: hass.config.latitude, CONF_LONGITUDE: hass.config.longitude}
+    ]
 
 
 @pytest.mark.parametrize(

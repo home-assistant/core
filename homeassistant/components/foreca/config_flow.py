@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentryData,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
@@ -25,7 +26,7 @@ from homeassistant.const import (
     CONF_LOCATION,
     CONF_LONGITUDE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector
 
@@ -35,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_check_location(
-    hass: Any, api_key: str, latitude: float, longitude: float
+    hass: HomeAssistant, api_key: str, latitude: float, longitude: float
 ) -> tuple[dict[str, str], Location | None]:
     """Check a key against a location, returning form errors if any."""
     client = ForecaApiClient(api_key, session=async_get_clientsession(hass))
@@ -64,7 +65,7 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
-            errors, _ = await _async_check_location(
+            errors, info = await _async_check_location(
                 self.hass,
                 user_input[CONF_API_KEY],
                 self.hass.config.latitude,
@@ -72,7 +73,22 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if not errors:
                 return self.async_create_entry(
-                    title="Foreca", data={CONF_API_KEY: user_input[CONF_API_KEY]}
+                    title="Foreca",
+                    data={CONF_API_KEY: user_input[CONF_API_KEY]},
+                    subentries=[
+                        ConfigSubentryData(
+                            data={
+                                CONF_LATITUDE: self.hass.config.latitude,
+                                CONF_LONGITUDE: self.hass.config.longitude,
+                            },
+                            subentry_type="location",
+                            title=(info.name if info else None) or "Foreca",
+                            unique_id=(
+                                f"{self.hass.config.latitude}-"
+                                f"{self.hass.config.longitude}"
+                            ),
+                        )
+                    ],
                 )
 
         return self.async_show_form(

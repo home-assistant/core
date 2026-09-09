@@ -5,7 +5,8 @@ from unittest.mock import AsyncMock, MagicMock
 from pyforeca import ForecaAuthError, ForecaConnectionError
 import pytest
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -74,3 +75,24 @@ async def test_documented_request_budget(
     }
     assert awaited == {"current": 1, "forecast_daily": 1, "forecast_hourly": 1}
     assert sum(awaited.values()) == 3
+
+
+@pytest.mark.usefixtures("mock_foreca_client")
+async def test_added_location_gets_an_entity(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a location added after setup gets its own weather entity."""
+    await init_integration(hass, mock_config_entry)
+    assert len(hass.states.async_all("weather")) == 1
+
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            data={CONF_LATITUDE: 48.86, CONF_LONGITUDE: 2.35},
+            subentry_type="location",
+            title="Paris",
+            unique_id="48.86-2.35",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("weather")) == 2
