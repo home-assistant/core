@@ -9,7 +9,7 @@ from cookidoo_api.exceptions import (
 )
 import pytest
 
-from homeassistant.components.cookidoo.const import DOMAIN
+from homeassistant.components.cookidoo.const import CONF_UDN, DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -528,7 +528,11 @@ async def test_flow_ssdp_discovery(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Cookidoo"
-    assert result["data"] == {**MOCK_DATA_USER_STEP, **MOCK_DATA_LANGUAGE_STEP}
+    assert result["data"] == {
+        **MOCK_DATA_USER_STEP,
+        **MOCK_DATA_LANGUAGE_STEP,
+        CONF_UDN: TEST_SSDP_UDN,
+    }
     assert result["result"].unique_id == "sub_uuid"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -538,10 +542,15 @@ async def test_flow_ssdp_discovery_device_already_configured(
     mock_cookidoo_client: AsyncMock,
     cookidoo_config_entry: MockConfigEntry,
 ) -> None:
-    """Test SSDP discovery aborts when the device UDN is already configured."""
+    """Test SSDP discovery aborts when this Thermomix was already set up.
+
+    A completed entry is keyed by the account UUID and stores the device UDN in
+    its data, so rediscovery must be deduplicated against that stored UDN.
+    """
     cookidoo_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
-        cookidoo_config_entry, unique_id=TEST_SSDP_UDN
+        cookidoo_config_entry,
+        data={**cookidoo_config_entry.data, CONF_UDN: TEST_SSDP_UDN},
     )
 
     result = await hass.config_entries.flow.async_init(

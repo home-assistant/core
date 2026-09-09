@@ -31,7 +31,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import DOMAIN
+from .const import CONF_UDN, DOMAIN
 from .helpers import cookidoo_from_config_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,6 +63,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
 
     user_input: dict[str, Any]
     user_uuid: str
+    _discovered_udn: str | None = None
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any]
@@ -73,17 +74,20 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by SSDP discovery of a Thermomix.
-
-        The Thermomix only exposes a minimal UPnP description without any
-        account information, so a discovery cannot set up the cloud connection
-        on its own. The device UDN is used to deduplicate discoveries, and the
-        flow then hands over to the regular user step to collect the Cookidoo
-        credentials.
-        """
-        await self.async_set_unique_id(discovery_info.ssdp_udn)
+        """Handle a flow initialized by SSDP discovery of a Thermomix."""
+        udn = discovery_info.ssdp_udn
+        await self.async_set_unique_id(udn)
+        # Abort concurrent discoveries and rediscovery of a device that is still
+        # keyed by its UDN.
         self._abort_if_unique_id_configured()
+        # A completed setup is keyed by the account UUID, not the UDN, so also
+        # abort when a configured entry already tracks this Thermomix.
+        if any(
+            entry.data.get(CONF_UDN) == udn for entry in self._async_current_entries()
+        ):
+            return self.async_abort(reason="already_configured")
 
+        self._discovered_udn = udn
         self.context["title_placeholders"] = {"name": "Thermomix"}
 
         return await self.async_step_user()
@@ -138,9 +142,10 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             errors := await self.validate_input(self.user_input, language_input)
         ):
             if self.source in (SOURCE_USER, SOURCE_SSDP):
-                return self.async_create_entry(
-                    title="Cookidoo", data={**self.user_input, **language_input}
-                )
+                data = {**self.user_input, **language_input}
+                if self._discovered_udn is not None:
+                    data[CONF_UDN] = self._discovered_udn
+                return self.async_create_entry(title="Cookidoo", data=data)
             reconfigure_entry = self._get_reconfigure_entry()
             return self.async_update_reload_and_abort(
                 reconfigure_entry,
