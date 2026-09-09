@@ -73,6 +73,17 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "clean_filter": False,
         "swing": None,
     },
+    "L1.105": {
+        "is_on": True,
+        "thermostat": 25,
+        "temperature": 25,
+        "temperature_unit": "celsius",
+        "fan_speed": "top",
+        "mode": "cool",
+        "error_code": None,
+        "clean_filter": False,
+        "swing": None,
+    },
 }
 
 
