@@ -517,12 +517,13 @@ class OpenAIBaseLLMEntity(Entity):
             input=messages,
             max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
             user=chat_log.conversation_id,
+            prompt_cache_key=self.subentry.subentry_id,
             service_tier=options.get(CONF_SERVICE_TIER, RECOMMENDED_SERVICE_TIER),
             store=options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),
             stream=True,
         )
 
-        if model_args["model"].startswith(("o", "gpt-5")):
+        if model_args["model"].startswith(("o", "gpt-5", "gpt-6")):
             reasoning: Reasoning = {
                 "effort": options.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
@@ -544,7 +545,7 @@ class OpenAIBaseLLMEntity(Entity):
             model_args["include"] = ["reasoning.encrypted_content"]
 
         if (
-            not model_args["model"].startswith("gpt-5")
+            not model_args["model"].startswith(("gpt-5", "gpt-6"))
             or model_args["reasoning"]["effort"] == "none"  # type: ignore[index]
         ):
             model_args["top_p"] = options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
@@ -552,7 +553,7 @@ class OpenAIBaseLLMEntity(Entity):
                 CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
             )
 
-        if model_args["model"].startswith("gpt-5"):
+        if model_args["model"].startswith(("gpt-5", "gpt-6")):
             model_args["text"] = {
                 "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
             }
@@ -560,7 +561,10 @@ class OpenAIBaseLLMEntity(Entity):
         if not model_args["model"].startswith(
             tuple(UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS)
         ):
-            model_args["prompt_cache_retention"] = "24h"
+            if model_args["model"].startswith(("gpt-5.6", "gpt-6")):
+                model_args["prompt_cache_options"] = {"ttl": "30m"}
+            else:
+                model_args["prompt_cache_retention"] = "24h"
 
         tools: list[ToolParam] = []
         if chat_log.llm_api:
@@ -626,7 +630,7 @@ class OpenAIBaseLLMEntity(Entity):
                 model=image_model,
                 output_format="png",
             )
-            if image_model not in ("gpt-image-1-mini", "gpt-image-2"):
+            if image_model in ("gpt-image-1", "gpt-image-1.5"):
                 image_tool["input_fidelity"] = "high"
             tools.append(image_tool)
             # Keep image state on OpenAI so follow-up prompts can continue by

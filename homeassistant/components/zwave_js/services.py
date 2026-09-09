@@ -606,6 +606,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_GET_LOCK_USERCODE,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Optional(ATTR_CODE_SLOT): vol.Coerce(int),
@@ -618,6 +619,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_SET_LOCK_USERCODE,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
@@ -630,6 +632,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_CLEAR_LOCK_USERCODE,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
@@ -641,6 +644,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_SET_LOCK_CONFIGURATION,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Required(const.ATTR_OPERATION_TYPE): vol.All(
@@ -970,9 +974,7 @@ class ZWaveServices:
 
         for device_id in service.data.get(ATTR_DEVICE_ID, []):
             try:
-                node = async_get_node_from_device_id(
-                    self._hass, device_id, self._dev_reg
-                )
+                node = async_get_node_from_device_id(self._hass, device_id)
             except ValueError as err:
                 _LOGGER.warning(err.args[0])
                 continue
@@ -989,9 +991,7 @@ class ZWaveServices:
                     const.DOMAIN,
                 )
                 continue
-            node = async_get_node_from_entity_id(
-                self._hass, entity_id, self._ent_reg, self._dev_reg
-            )
+            node = async_get_node_from_entity_id(self._hass, entity_id, self._ent_reg)
             if (
                 value_id := get_value_id_from_unique_id(entity_entry.unique_id)
             ) is None:

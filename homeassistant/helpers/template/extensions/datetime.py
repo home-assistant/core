@@ -118,6 +118,14 @@ class DateTimeExtension(BaseTemplateExtension):
                     limited_ok=False,
                 ),
                 TemplateFunction(
+                    "timedelta_string",
+                    self.timedelta_string,
+                    as_global=True,
+                    as_filter=True,
+                    requires_hass=True,
+                    limited_ok=False,
+                ),
+                TemplateFunction(
                     "today_at",
                     self.today_at,
                     as_global=True,
@@ -226,21 +234,21 @@ class DateTimeExtension(BaseTemplateExtension):
 
     def now(self) -> datetime:
         """Record fetching now."""
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.has_time = True
 
         return dt_util.now()
 
     def utcnow(self) -> datetime:
         """Record fetching utcnow."""
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.has_time = True
 
         return dt_util.utcnow()
 
     def today_at(self, time_str: str = "") -> datetime:
         """Record fetching now where the time has been replaced with value."""
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.has_time = True
 
         today = dt_util.start_of_local_day()
@@ -263,7 +271,7 @@ class DateTimeExtension(BaseTemplateExtension):
         wrong direction are returned as-is, except naive datetimes are first
         converted to local time.
         """
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.has_time = True
 
         if not isinstance(value, datetime):
@@ -319,3 +327,19 @@ class DateTimeExtension(BaseTemplateExtension):
         If the value not a datetime object the input will be returned unmodified.
         """
         return self._datetime_as_string(value, precision=precision, future=True)
+
+    def timedelta_string(self, value: Any, precision: int = 1) -> Any:
+        """Take a timedelta and return a human-readable string representation.
+
+        The result can be in seconds, minutes, hours, days, months and years.
+
+        precision is the number of units to return, with the last unit rounded.
+        precision=0 returns all units (no early rounding, except for sub-second values).
+
+        Negative timedeltas are formatted using their absolute value.
+
+        If the value is not a timedelta object the input will be returned unmodified.
+        """
+        if not isinstance(value, timedelta):
+            return value
+        return dt_util.timedelta_string(value, precision)

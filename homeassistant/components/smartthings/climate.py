@@ -29,6 +29,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import (
+    TemperatureConverter,
+    TemperatureDeltaConverter,
+)
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import DOMAIN, MAIN, UNIT_MAP
@@ -111,6 +115,7 @@ PRESET_MODE_TO_HA = {
     "smart": "smart",
     "motionIndirect": "motion_indirect",
     "motionDirect": "motion_direct",
+    "dryComfort": "dry_comfort",
 }
 
 HA_MODE_TO_PRESET_MODE = {v: k for k, v in PRESET_MODE_TO_HA.items()}
@@ -411,6 +416,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 Capability.THERMOSTAT_COOLING_SETPOINT,
                 Capability.TEMPERATURE_MEASUREMENT,
                 Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+                Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL,
                 Capability.DEMAND_RESPONSE_LOAD_CONTROL,
             },
         )
@@ -609,26 +615,76 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         return setpoint_range.get(key)
 
     @property
+    def _setpoint_range_unit(self) -> str:
+        """Return the unit the cooling setpoint range is reported in."""
+        if (
+            unit := self._internal_state[Capability.THERMOSTAT_COOLING_SETPOINT][
+                Attribute.COOLING_SETPOINT_RANGE
+            ].unit
+        ) is None:
+            return self.temperature_unit
+        return UNIT_MAP[unit]
+
+    @property
     @override
     def target_temperature_step(self) -> float | None:
         """Return the supported step of target temperature."""
-        return self._get_setpoint_range_value("step")
+        if (step := self._get_setpoint_range_value("step")) is None:
+            return None
+        return TemperatureDeltaConverter.convert(
+            step, self._setpoint_range_unit, self.temperature_unit
+        )
+
+    def _get_custom_setpoint(self, attribute: Attribute) -> float | None:
+        """Return a setpoint bound from the custom setpoint control capability."""
+        if not self.supports_capability(Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL):
+            return None
+        setpoint = self.get_attribute_value(
+            Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, attribute
+        )
+        # Devices report -1000 when the bound is not available
+        if setpoint is None or setpoint == -1000:
+            return None
+        unit = self._internal_state[Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL][
+            attribute
+        ].unit
+        return TemperatureConverter.convert(
+            setpoint,
+            UNIT_MAP[unit] if unit else self.temperature_unit,
+            self.temperature_unit,
+        )
 
     @property
     @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        if (minimum := self._get_setpoint_range_value("minimum")) is None:
-            return DEFAULT_MIN_TEMP
-        return minimum
+        if (minimum := self._get_setpoint_range_value("minimum")) is not None:
+            return TemperatureConverter.convert(
+                minimum, self._setpoint_range_unit, self.temperature_unit
+            )
+        if (
+            minimum := self._get_custom_setpoint(Attribute.MINIMUM_SETPOINT)
+        ) is not None:
+            return minimum
+        return TemperatureConverter.convert(
+            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+        )
 
     @property
     @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        if (maximum := self._get_setpoint_range_value("maximum")) is None:
-            return DEFAULT_MAX_TEMP
-        return maximum
+        if (maximum := self._get_setpoint_range_value("maximum")) is not None:
+            return TemperatureConverter.convert(
+                maximum, self._setpoint_range_unit, self.temperature_unit
+            )
+        if (
+            maximum := self._get_custom_setpoint(Attribute.MAXIMUM_SETPOINT)
+        ) is not None:
+            return maximum
+        return TemperatureConverter.convert(
+            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+        )
 
     @property
     @override

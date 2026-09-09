@@ -1191,6 +1191,15 @@ class ESPHomeManager:
 
 
 @callback
+def async_get_manufacturer_model(device_info: EsphomeDeviceInfo) -> tuple[str, str]:
+    """Return the manufacturer and model to use for a device."""
+    if device_info.project_name:
+        project_name = device_info.project_name.split(".")
+        return project_name[0], project_name[1]
+    return device_info.manufacturer or "espressif", device_info.model
+
+
+@callback
 def _async_setup_device_registry(
     hass: HomeAssistant, entry: ESPHomeConfigEntry, entry_data: RuntimeEntryData
 ) -> str:
@@ -1236,14 +1245,8 @@ def _async_setup_device_registry(
     ):
         configuration_url = f"homeassistant://app/{dashboard.addon_slug}"
 
-    manufacturer = "espressif"
-    if device_info.manufacturer:
-        manufacturer = device_info.manufacturer
-    model = device_info.model
+    manufacturer, model = async_get_manufacturer_model(device_info)
     if device_info.project_name:
-        project_name = device_info.project_name.split(".")
-        manufacturer = project_name[0]
-        model = project_name[1]
         sw_version = (
             f"{device_info.project_version} (ESPHome {device_info.esphome_version})"
         )
