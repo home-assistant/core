@@ -46,6 +46,7 @@ from .const import (
     ELEVATION_BLUE_HOUR_HIGH,
     ELEVATION_BLUE_HOUR_LOW,
     ELEVATION_CIVIL,
+    ELEVATION_GEOMETRIC_HORIZON,
     ELEVATION_GOLDEN_HOUR_HIGH,
     ELEVATION_GOLDEN_HOUR_LOW,
     ELEVATION_HORIZON,
@@ -217,6 +218,9 @@ def _solar_position(hass: HomeAssistant) -> tuple[float, bool]:
     """Return the sun's current elevation in degrees and whether it is rising."""
     observer = get_astral_observer(hass)
     now = dt_util.utcnow()
+    # Apparent (refraction-included) elevation: the twilight/golden/blue bands are
+    # scheduled via astral dawn/dusk, which resolve on apparent elevation, so the
+    # conditions must use it too to stay in step with their triggers.
     elevation = astral.sun.elevation(observer, now)
     rising = astral.sun.elevation(observer, now + timedelta(minutes=1)) > elevation
     return elevation, rising
@@ -409,10 +413,14 @@ class _BlueHourCondition(_GoldenBlueHourCondition):
     _high = ELEVATION_BLUE_HOUR_HIGH
 
 
-def _elevation_at_last_solar_extreme(
+def _geometric_elevation_at_last_solar_extreme(
     hass: HomeAssistant, event: Literal["noon", "midnight"]
 ) -> float:
-    """Return the sun's elevation at the most recent solar noon or midnight.
+    """Return the sun's geometric elevation at the most recent solar noon/midnight.
+
+    Geometric (refraction-free) because the callers compare it against
+    ``ELEVATION_GEOMETRIC_HORIZON``, astral's geometric sunrise/sunset horizon;
+    using the apparent elevation there would double-count refraction.
 
     Evaluating the current cycle's extreme (the one at or before now), rather than
     the next one, keeps ``is_midnight_sun``/``is_polar_night`` in step with their
@@ -436,7 +444,7 @@ def _elevation_at_last_solar_extreme(
         else:
             # Candidates only move later, so the first one past now ends the scan.
             break
-    elevation: float = astral.sun.elevation(observer, latest)
+    elevation: float = astral.sun.elevation(observer, latest, with_refraction=False)
     return elevation
 
 
@@ -448,10 +456,10 @@ class _MidnightSunCondition(_SunStateCondition):
         """Check the condition."""
         # The sun's daily low is at solar midnight; if even that is above the
         # horizon the sun never sets during this cycle.
-        elevation = _elevation_at_last_solar_extreme(
+        elevation = _geometric_elevation_at_last_solar_extreme(
             self._hass, _SUN_EVENT_SOLAR_MIDNIGHT
         )
-        return elevation > ELEVATION_HORIZON
+        return elevation > ELEVATION_GEOMETRIC_HORIZON
 
 
 class _PolarNightCondition(_SunStateCondition):
@@ -462,8 +470,10 @@ class _PolarNightCondition(_SunStateCondition):
         """Check the condition."""
         # The sun's daily high is at solar noon; if even that is below the
         # horizon the sun never rises during this cycle.
-        elevation = _elevation_at_last_solar_extreme(self._hass, _SUN_EVENT_SOLAR_NOON)
-        return elevation < ELEVATION_HORIZON
+        elevation = _geometric_elevation_at_last_solar_extreme(
+            self._hass, _SUN_EVENT_SOLAR_NOON
+        )
+        return elevation < ELEVATION_GEOMETRIC_HORIZON
 
 
 _ELEVATION_CONDITION_SCHEMA = vol.Schema(
