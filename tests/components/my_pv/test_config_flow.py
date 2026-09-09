@@ -515,7 +515,7 @@ async def test_step_reauth_cannot_connect(
     mock_my_pv_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test for reauth with an incorrect password."""
+    """Test for reauth if we can not connect to device."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
