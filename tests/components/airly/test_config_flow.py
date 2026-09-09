@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from http import HTTPStatus
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientConnectorError
 from airly.exceptions import AirlyError
@@ -235,7 +235,7 @@ async def test_create_entry_with_nearest_method(
     ("exception", "error"),
     [
         (TimeoutError(), "cannot_connect"),
-        (ClientConnectorError(MagicMock(), OSError("test")), "cannot_connect"),
+        (ClientConnectorError(Mock(), OSError("test")), "cannot_connect"),
     ],
 )
 async def test_cannot_connect(

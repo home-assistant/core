@@ -15,7 +15,13 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_USE_NEAREST, DEFAULT_NAME, DOMAIN, NO_AIRLY_SENSORS
+from .const import (
+    CONF_USE_NEAREST,
+    DEFAULT_NAME,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+    NO_AIRLY_SENSORS,
+)
 
 DESCRIPTION_PLACEHOLDERS = {
     "developer_registration_url": "https://developer.airly.eu/register",
@@ -115,7 +121,7 @@ async def check_location(
         measurements = airly.create_measurements_session_point(
             latitude=latitude, longitude=longitude
         )
-    async with timeout(10):
+    async with timeout(DEFAULT_TIMEOUT):
         await measurements.update()
 
     current = measurements.current

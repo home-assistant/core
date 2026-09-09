@@ -37,3 +37,4 @@ NO_AIRLY_SENSORS: Final = "There are no Airly sensors in this area yet."
 URL = "https://airly.org/map/#{latitude},{longitude}"
 
 DEFAULT_NAME: Final = "Airly"
+DEFAULT_TIMEOUT = 10

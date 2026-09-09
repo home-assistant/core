@@ -21,6 +21,7 @@ from .const import (
     ATTR_API_CAQI,
     ATTR_API_CAQI_DESCRIPTION,
     ATTR_API_CAQI_LEVEL,
+    DEFAULT_TIMEOUT,
     DOMAIN,
     MAX_UPDATE_INTERVAL,
     MIN_UPDATE_INTERVAL,
@@ -104,7 +105,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float | i
                 self.latitude, self.longitude
             )
         try:
-            async with timeout(20):
+            async with timeout(DEFAULT_TIMEOUT):
                 await measurements.update()
         except (AirlyError, ClientConnectorError, TimeoutError) as error:
             raise UpdateFailed(
