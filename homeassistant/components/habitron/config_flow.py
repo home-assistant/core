@@ -1,6 +1,5 @@
 """Config flow for Habitron integration."""
 
-from collections.abc import Mapping
 import contextlib
 import logging
 import socket
@@ -21,11 +20,7 @@ from homeassistant import config_entries, exceptions
 from homeassistant.components import network
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.service_info.ssdp import (
-    ATTR_UPNP_SERIAL,
-    ATTR_UPNP_UDN,
-    SsdpServiceInfo,
-)
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import CONF_DEFAULT_HOST, DOMAIN
 
@@ -213,39 +208,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         return await _async_hub_mac(await self._async_probe_host(host))
 
-    async def _async_identity_or_fallback(
-        self,
-        host: str,
-        *,
-        upnp: Mapping[str, Any] | None = None,
-        probed: Mapping[str, str] | None = None,
-    ) -> str:
-        """Return the hub's identity, or the best fallback available.
-
-        The MAC is what every path keys on. The rest applies only when the hub
-        answered but gave no usable ``lan mac`` (see ``_async_hub_mac``): an
-        advertised serial, a probed one, a UDN, and finally the host, which
-        changes with the DHCP lease and is therefore the last resort. A hub
-        that stays without a MAC keeps its fallback id and is still matched by
-        it, because the same ladder yields the same value next time.
-        """
-        if identity := await self._async_hub_identity(host):
-            return identity
-        upnp = upnp or {}
-        fallback = (
-            upnp.get(ATTR_UPNP_SERIAL)
-            or (probed or {}).get("serial")
-            or upnp.get(ATTR_UPNP_UDN)
-        )
-        if fallback:
-            _LOGGER.debug("Hub at %s gave no MAC; keying on %s", host, fallback)
-            return str(fallback)
-        _LOGGER.warning(
-            "Habitron at %s exposed no MAC, serial or UDN; using the host as id",
-            host,
-        )
-        return f"habitron_{await self._async_stored_host(host)}"
-
     async def _async_matching_entry(
         self,
         entries: list[config_entries.ConfigEntry],
@@ -310,11 +272,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         target_device = next((d for d in devices if d.get("ip") == host_str), None)
         self._discovered_device = target_device or {"ip": host_str}
 
-        unique_id = await self._async_identity_or_fallback(
-            host_str,
-            upnp=discovery_info.upnp or {},
-            probed=target_device,
-        )
+        unique_id = await self._async_hub_identity(host_str)
+        if unique_id is None:
+            # No MAC, no identity: a hub that cannot be told apart from another
+            # must not be offered, or two of them would share an entry.
+            return self.async_abort(reason="no_mac_address")
 
         await self.async_set_unique_id(unique_id)
         # The entry registers an update listener that reloads on a data change,
@@ -326,31 +288,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: await self._async_stored_host(host_str)},
             reload_on_update=False,
         )
-
-        # The id did not match, but a hub added while it was unreachable is
-        # keyed by its host, so fall back to matching on the address.
-        # ``_async_matching_entry`` canonicalises both sides, which is what
-        # makes a stored host name -- or the ``local`` sentinel, resolving to
-        # Home Assistant's own address -- match the IP a discovery reports.
-        if entry := await self._async_matching_entry(
-            # Ignored entries count: a host-fallback entry the user ignored must
-            # not be offered again just because this discovery has a stable UDN.
-            list(self._async_current_entries(include_ignore=True)),
-            host_str,
-            self._discovered_device.get("ip"),
-        ):
-            # Adopt the discovered id only over a host-based fallback, and only
-            # when this run produced a stable one. Rewriting an existing stable
-            # id would flip a serial-keyed entry to a UDN whenever a discovery
-            # omits the serial -- and back again when it returns; keeping the
-            # fallback would leave the entry unmatched after a DHCP change,
-            # letting the same hub be offered as a duplicate.
-            fallback_id = f"habitron_{host_str}"
-            if unique_id != fallback_id and str(entry.unique_id).startswith(
-                "habitron_"
-            ):
-                self.hass.config_entries.async_update_entry(entry, unique_id=unique_id)
-            return self.async_abort(reason="already_configured")
 
         self.context["title_placeholders"] = {"name": host_str}
         return await self.async_step_discovery_confirm()
@@ -408,21 +345,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host_input = user_input[CONF_HOST]
             stored_host = await self._async_stored_host(host_input)
-            # The probe answers with the address it was reached at, so compare
-            # against the dialled form as well as what the user typed.
-            probe_hosts = {host_input, await self._async_probe_host(host_input)}
-            probed = next(
-                (
-                    d
-                    for d in await self._cached_discover()
-                    if d.get("ip") in probe_hosts
-                ),
-                None,
-            )
 
-            unique_id = await self._async_identity_or_fallback(
-                host_input, probed=probed
-            )
+            unique_id = await self._async_hub_identity(host_input)
+            if unique_id is None:
+                # Without a MAC the hub has no identity, so it cannot be told
+                # apart from another one. Reported on the form rather than
+                # aborted: updating the hub's software makes the retry work.
+                errors["base"] = "no_mac_address"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema(
+                        {vol.Required(CONF_HOST, default=host_input): str}
+                    ),
+                    errors=errors,
+                )
+
             await self.async_set_unique_id(unique_id)
             # Re-entering a known hub at a new address updates the stored host,
             # so a DHCP change does not leave the entry on the old one. The
@@ -432,14 +369,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: stored_host}, reload_on_update=False
             )
-
-            # The id did not match. An entry created while the hub reported no
-            # usable MAC carries a serial-, UDN- or host-based id, so fall back
-            # to comparing the address.
-            if await self._is_device_already_configured(
-                host_input, probed.get("ip") if probed else None
-            ):
-                return self.async_abort(reason="already_configured")
 
             try:
                 info = await validate_input(self.hass, user_input)

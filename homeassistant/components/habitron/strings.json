@@ -3,12 +3,14 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_host_in_ssdp": "The discovered device did not report a host address.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_mac_address": "The SmartHub did not report a MAC address, which Home Assistant needs to tell one hub from another. Please update the SmartHub software."
     },
     "error": {
       "cannot_connect": "Cannot connect to SmartHub",
       "host_not_found": "Host name not found, try with IP",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_mac_address": "The SmartHub did not report a MAC address, which Home Assistant needs to tell one hub from another. Please update the SmartHub software."
     },
     "step": {
       "discovery_confirm": {
