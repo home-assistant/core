@@ -195,8 +195,16 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
 
         return {
             CONF_NAME: None,
-            CONF_USERNAME: self._surveillance_username if auth is not None else None,
-            CONF_PASSWORD: self._surveillance_password if auth is not None else "",
+            CONF_USERNAME: (
+                camera.get("streaming_username", self._surveillance_username)
+                if auth is not None
+                else None
+            ),
+            CONF_PASSWORD: (
+                camera.get("streaming_password", self._surveillance_password)
+                if auth is not None
+                else ""
+            ),
             CONF_MJPEG_URL: streaming_url or "",
             CONF_STILL_IMAGE_URL: self._client.get_camera_snapshot_url(camera),
             CONF_AUTHENTICATION: auth,
