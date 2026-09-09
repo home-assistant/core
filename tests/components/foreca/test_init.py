@@ -37,20 +37,20 @@ async def test_setup_retries_on_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_fails_auth_on_rejected_key(
+async def test_setup_retries_on_rejected_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
 ) -> None:
-    """Test a rejected API key puts the entry into an auth-failed state."""
+    """Test a rejected API key retries rather than starting a flow.
+
+    There is no reauthentication step yet, and raising ConfigEntryAuthFailed
+    without one makes Home Assistant start a flow that cannot be handled.
+    """
     mock_foreca_client.current.side_effect = ForecaAuthError
     await init_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    # Raising ConfigEntryAuthFailed starts a reauth flow, so the flow has to
-    # have the step: without it the started flow raises in the background.
-    flows = hass.config_entries.flow.async_progress()
-    assert [flow["step_id"] for flow in flows] == ["reauth_confirm"]
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass.config_entries.flow.async_progress() == []
 
 
 async def test_documented_request_budget(

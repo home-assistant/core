@@ -8,17 +8,14 @@ from pyforeca import (
     CurrentWeather,
     DailyForecast,
     ForecaApiClient,
-    ForecaAuthError,
     ForecaError,
     HourlyForecast,
     format_location,
 )
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -26,7 +23,7 @@ from .const import DAILY_PERIODS, DOMAIN, HOURLY_PERIODS, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-type ForecaConfigEntry = ConfigEntry[ForecaUpdateCoordinator]
+type ForecaConfigEntry = ConfigEntry[dict[str, ForecaUpdateCoordinator]]
 
 
 @dataclass(slots=True)
@@ -39,28 +36,32 @@ class ForecaWeatherData:
 
 
 class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
-    """Class to manage fetching Foreca data."""
+    """Class to manage fetching Foreca data for one location."""
 
     config_entry: ForecaConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ForecaConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ForecaConfigEntry,
+        subentry: ConfigSubentry,
+        client: ForecaApiClient,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f"{DOMAIN} {subentry.title}",
             update_interval=UPDATE_INTERVAL,
             config_entry=entry,
         )
-        self.client = ForecaApiClient(
-            entry.data[CONF_API_KEY], session=async_get_clientsession(hass)
-        )
+        self.client = client
         self.location = format_location(
-            lon=entry.data[CONF_LONGITUDE], lat=entry.data[CONF_LATITUDE]
+            lon=subentry.data[CONF_LONGITUDE], lat=subentry.data[CONF_LATITUDE]
         )
         self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
             manufacturer="Foreca",
             entry_type=DeviceEntryType.SERVICE,
         )
@@ -76,8 +77,6 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
             daily = await self.client.forecast_daily(
                 self.location, periods=DAILY_PERIODS, dataset="full"
             )
-        except ForecaAuthError as err:
-            raise ConfigEntryAuthFailed("API key was rejected") from err
         except ForecaError as err:
             raise UpdateFailed(
                 f"Error communicating with the Foreca API: {err}"

@@ -85,7 +85,7 @@
     'suggested_object_id': None,
     'supported_features': <WeatherEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': '01JZ4Q1F0RECA0000000000000',
+    'unique_id': '01JZ4Q1F0RECALOCATION000001',
     'unit_of_measurement': None,
   })
 # ---

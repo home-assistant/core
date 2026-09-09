@@ -1,6 +1,5 @@
 """Config flow for the Foreca integration."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -13,13 +12,20 @@ from pyforeca import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector
 
@@ -28,95 +34,105 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+async def _async_check_location(
+    hass: Any, api_key: str, latitude: float, longitude: float
+) -> tuple[dict[str, str], Location | None]:
+    """Check a key against a location, returning form errors if any."""
+    client = ForecaApiClient(api_key, session=async_get_clientsession(hass))
+    location = format_location(lon=longitude, lat=latitude)
+    try:
+        info = await client.location_info(location)
+        await client.current(location)
+    except ForecaAuthError:
+        return {"base": "invalid_auth"}, None
+    except ForecaError:
+        return {"base": "cannot_connect"}, None
+    except Exception:
+        _LOGGER.exception("Unexpected error validating Foreca API key")
+        return {"base": "unknown"}, None
+    return {}, info
+
+
 class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Foreca."""
-
-    async def _async_validate_key(
-        self, api_key: str, latitude: float, longitude: float
-    ) -> tuple[dict[str, str], Location | None]:
-        """Check an API key against the location, returning form errors if any."""
-        client = ForecaApiClient(api_key, session=async_get_clientsession(self.hass))
-        location = format_location(lon=longitude, lat=latitude)
-        try:
-            info = await client.location_info(location)
-            await client.current(location)
-        except ForecaAuthError:
-            return {"base": "invalid_auth"}, None
-        except ForecaError:
-            return {"base": "cannot_connect"}, None
-        except Exception:
-            _LOGGER.exception("Unexpected error validating Foreca API key")
-            return {"base": "unknown"}, None
-        return {}, info
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Ask for the API key, and check it against the home location."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            latitude = user_input[CONF_LOCATION][CONF_LATITUDE]
-            longitude = user_input[CONF_LOCATION][CONF_LONGITUDE]
-            errors, info = await self._async_validate_key(
-                user_input[CONF_API_KEY], latitude, longitude
+            self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
+            errors, _ = await _async_check_location(
+                self.hass,
+                user_input[CONF_API_KEY],
+                self.hass.config.latitude,
+                self.hass.config.longitude,
             )
             if not errors:
-                await self.async_set_unique_id(f"{latitude}-{longitude}")
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=(info.name if info else None) or "Foreca",
-                    data={
-                        CONF_API_KEY: user_input[CONF_API_KEY],
-                        CONF_LATITUDE: latitude,
-                        CONF_LONGITUDE: longitude,
-                    },
+                    title="Foreca", data={CONF_API_KEY: user_input[CONF_API_KEY]}
                 )
 
         return self.async_show_form(
             step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            errors=errors,
+        )
+
+    @classmethod
+    @callback
+    @override
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return the subentry types this integration supports."""
+        return {"location": LocationSubentryFlowHandler}
+
+
+class LocationSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle adding a location to an existing Foreca entry."""
+
+    async def async_step_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Ask for a location to forecast."""
+        errors: dict[str, str] = {}
+        entry = self._get_entry()
+        if user_input is not None:
+            latitude = user_input[CONF_LOCATION][CONF_LATITUDE]
+            longitude = user_input[CONF_LOCATION][CONF_LONGITUDE]
+            unique = f"{latitude}-{longitude}"
+            if any(
+                subentry.unique_id == unique for subentry in entry.subentries.values()
+            ):
+                return self.async_abort(reason="already_configured")
+
+            errors, info = await _async_check_location(
+                self.hass, entry.data[CONF_API_KEY], latitude, longitude
+            )
+            if not errors:
+                return self.async_create_entry(
+                    title=(info.name if info else None) or "Foreca",
+                    data={CONF_LATITUDE: latitude, CONF_LONGITUDE: longitude},
+                    unique_id=unique,
+                )
+
+        return self.async_show_form(
+            step_id="location",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
                     vol.Required(
                         CONF_LOCATION,
                         default={
                             CONF_LATITUDE: self.hass.config.latitude,
                             CONF_LONGITUDE: self.hass.config.longitude,
                         },
-                    ): LocationSelector(),
+                    ): LocationSelector()
                 }
             ),
             errors=errors,
         )
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle an API key the API has started rejecting."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Ask for a replacement API key."""
-        errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
-        if user_input is not None:
-            errors, _ = await self._async_validate_key(
-                user_input[CONF_API_KEY],
-                reauth_entry.data[CONF_LATITUDE],
-                reauth_entry.data[CONF_LONGITUDE],
-            )
-            if not errors:
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
-            description_placeholders={"location": reauth_entry.title},
-            errors=errors,
-        )
+    async_step_user = async_step_location

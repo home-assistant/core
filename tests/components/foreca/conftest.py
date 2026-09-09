@@ -7,6 +7,7 @@ from pyforeca import CurrentWeather, DailyForecast, HourlyForecast, Location
 import pytest
 
 from homeassistant.components.foreca.const import DOMAIN
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 
 from tests.common import MockConfigEntry
@@ -101,7 +102,7 @@ def mock_foreca_client() -> Generator[MagicMock]:
     """Mock the Foreca API client."""
     with (
         patch(
-            "homeassistant.components.foreca.coordinator.ForecaApiClient",
+            "homeassistant.components.foreca.ForecaApiClient",
             autospec=True,
         ) as client_cls,
         patch(
@@ -119,15 +120,19 @@ def mock_foreca_client() -> Generator[MagicMock]:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a mock config entry."""
+    """Return a mock config entry with one location subentry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Helsinki",
+        title="Foreca",
         entry_id="01JZ4Q1F0RECA0000000000000",
-        unique_id="60.17-24.94",
-        data={
-            CONF_API_KEY: "test-key",
-            CONF_LATITUDE: 60.17,
-            CONF_LONGITUDE: 24.94,
-        },
+        data={CONF_API_KEY: "test-key"},
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_LATITUDE: 60.17, CONF_LONGITUDE: 24.94},
+                subentry_id="01JZ4Q1F0RECALOCATION000001",
+                subentry_type="location",
+                title="Helsinki",
+                unique_id="60.17-24.94",
+            )
+        ],
     )

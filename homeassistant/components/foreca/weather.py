@@ -33,15 +33,12 @@ async def async_setup_entry(
     entry: ForecaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add a Foreca weather entity from a config entry."""
-    async_add_entities([ForecaWeather(entry.runtime_data, entry)])
-
-
-def _as_percentage(value: float | None) -> int | None:
-    """Round a percentage the API may report with decimals to a whole percent."""
-    if value is None:
-        return None
-    return round(value)
+    """Add a Foreca weather entity for every configured location."""
+    for subentry_id, coordinator in entry.runtime_data.items():
+        async_add_entities(
+            [ForecaWeather(coordinator, subentry_id)],
+            config_subentry_id=subentry_id,
+        )
 
 
 def _daily_to_forecast(day: DailyForecast) -> Forecast | None:
@@ -55,7 +52,7 @@ def _daily_to_forecast(day: DailyForecast) -> Forecast | None:
         native_temperature=day.max_temp,
         native_templow=day.min_temp,
         native_precipitation=day.precip_accum,
-        precipitation_probability=_as_percentage(day.precip_prob),
+        precipitation_probability=day.precip_prob,
         native_wind_speed=day.max_wind_speed,
         native_wind_gust_speed=day.max_wind_gust,
         wind_bearing=day.wind_dir,
@@ -75,12 +72,12 @@ def _hourly_to_forecast(hour: HourlyForecast) -> Forecast | None:
         native_temperature=hour.temperature,
         native_apparent_temperature=hour.feels_like_temp,
         native_precipitation=hour.precip_accum,
-        precipitation_probability=_as_percentage(hour.precip_prob),
+        precipitation_probability=hour.precip_prob,
         native_wind_speed=hour.wind_speed,
         native_wind_gust_speed=hour.wind_gust,
         wind_bearing=hour.wind_dir,
         humidity=hour.rel_humidity,
-        cloud_coverage=_as_percentage(hour.cloudiness),
+        cloud_coverage=hour.cloudiness,
         native_pressure=hour.pressure,
         native_dew_point=hour.dew_point,
         uv_index=hour.uv_index,
@@ -102,12 +99,11 @@ class ForecaWeather(
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
 
-    def __init__(
-        self, coordinator: ForecaUpdateCoordinator, entry: ForecaConfigEntry
-    ) -> None:
+    def __init__(self, coordinator: ForecaUpdateCoordinator, subentry_id: str) -> None:
         """Initialize the weather entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = entry.entry_id
+        self._attr_unique_id = subentry_id
+        self._attr_device_info = coordinator.device_info
 
     @property
     @override
