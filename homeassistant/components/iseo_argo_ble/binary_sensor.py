@@ -104,11 +104,14 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
         # and if the credential was already suspended when the list was first
         # read, what we hold is the expired sentinel, not the real window.
         self._validity: bytes | None
-        saved = entry.data.get(CONF_SAVED_VALIDITY, {}).get(user.uuid_hex)
-        if user.disabled and saved is not None:
+        saved = entry.data.get(CONF_SAVED_VALIDITY, {})
+        if user.disabled and user.uuid_hex in saved:
             # Home Assistant suspended this one and kept its window; the lock
-            # only reports the expired sentinel now.
-            self._validity = bytes.fromhex(saved)
+            # only reports the expired sentinel now. A stored null is not a
+            # missing entry: it records a credential that had no restriction,
+            # which is just as restorable as one that did.
+            stored = saved[user.uuid_hex]
+            self._validity = None if stored is None else bytes.fromhex(stored)
             self._validity_is_original = True
         else:
             self._validity = user.validity
@@ -191,7 +194,9 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                     await asyncio.sleep(ADMIN_SETTLE_DELAY)
         except ValueError as err:
             # The lock no longer lists this credential — it was removed in the
-            # Argo app since the list was read.
+            # Argo app since the list was read. Drop its stored window too, or
+            # re-enrolling the same UUID would inherit the old one.
+            self._remember_validity(suspended=False)
             self._forget_credential()
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -241,10 +246,12 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
         entry = self.coordinator.config_entry
         saved = dict(entry.data.get(CONF_SAVED_VALIDITY, {}))
         if suspended:
-            if self._validity is None:
-                saved.pop(self._uuid_hex, None)
-            else:
-                saved[self._uuid_hex] = self._validity.hex()
+            # Store the window even when it is None: "no restriction" is a
+            # window worth putting back, and a missing key has to keep meaning
+            # "we never saw the original".
+            saved[self._uuid_hex] = (
+                None if self._validity is None else self._validity.hex()
+            )
         else:
             saved.pop(self._uuid_hex, None)
         if saved != entry.data.get(CONF_SAVED_VALIDITY, {}):

@@ -164,6 +164,43 @@ async def test_restore_survives_a_reload(
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_restore_survives_a_reload_without_a_window(
+    hass: HomeAssistant,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a credential with no restriction is still restorable after a reload.
+
+    "No window" is a window worth putting back. Storing nothing for it would
+    be indistinguishable from never having seen the original, which is what
+    permanently refuses a restore.
+    """
+    mock_iseo_client.read_users.return_value = [
+        replace(user, validity=None)
+        if user.uuid_hex == "1111111111111111111111111111aaaa"
+        else user
+        for user in mock_iseo_client.read_users.return_value
+    ]
+    await setup_integration(hass, mock_admin_config_entry)
+    await _set_enabled(hass, ALICE_ENTITY_ID, False)
+
+    mock_iseo_client.read_users.return_value = [
+        replace(user, disabled=True)
+        if user.uuid_hex == "1111111111111111111111111111aaaa"
+        else user
+        for user in mock_iseo_client.read_users.return_value
+    ]
+    await hass.config_entries.async_reload(mock_admin_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_iseo_client.set_user_disabled.reset_mock()
+    await _set_enabled(hass, ALICE_ENTITY_ID, True)
+
+    assert mock_iseo_client.set_user_disabled.await_args.kwargs["validity"] is None
+    assert hass.states.get(ALICE_ENTITY_ID).state == STATE_ON
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
 async def test_restore_refuses_when_the_window_is_unknown(
     hass: HomeAssistant,
     mock_admin_config_entry: MockConfigEntry,
