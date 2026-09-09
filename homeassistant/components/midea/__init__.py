@@ -127,6 +127,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
                 translation_placeholders={"device_id": str(device_id)},
             )
 
+    unavailable_logged = False
+
+    def _log_availability(_status: Mapping[str, Any]) -> None:
+        """Log once when the device goes offline and once when it is back."""
+        nonlocal unavailable_logged
+        if not device.available and not unavailable_logged:
+            LOGGER.info("Device %s is unavailable", device_id)
+            unavailable_logged = True
+        elif device.available and unavailable_logged:
+            LOGGER.info("Device %s is back online", device_id)
+            unavailable_logged = False
+
+    device.register_update(_log_availability)
+    entry.async_on_unload(partial(device.unregister_update, _log_availability))
+
     # The library's reconnect loop keeps retrying with a growing backoff
     # (up to 600s) without checking for a stop request while sleeping, so
     # device.close() alone cannot guarantee the background thread exits
