@@ -18,7 +18,6 @@ from tests.common import MockConfigEntry
 ENTITY_ID = "media_player.friendly_name"
 
 
-@pytest.mark.usefixtures("mock_device")
 async def test_device_uses_shared_session(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
