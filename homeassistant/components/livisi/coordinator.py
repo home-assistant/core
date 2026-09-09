@@ -114,7 +114,9 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[LivisiDevice]]):
         """Set the discovered devices list."""
         devices = await self.aiolivisi.async_get_devices()
         device_ids = {device.id for device in devices}
-        unreachable_devices = {device.id for device in devices if device.unreachable}
+        unreachable_devices = {
+            device.id for device in devices if device.unreachable
+        } | (self.devices - device_ids)
         for device_id in unreachable_devices:
             self._async_dispatch_reachability(device_id, False)
         for device_id in (self._unreachable_devices - unreachable_devices) & device_ids:
