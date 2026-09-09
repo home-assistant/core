@@ -423,7 +423,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_REASONING_EFFORT in options:
             options.pop(CONF_REASONING_EFFORT)
 
-        if model.startswith("gpt-5.6"):
+        if model.startswith(("gpt-5.6", "gpt-6")):
             step_schema.update(
                 {
                     vol.Optional(
@@ -435,7 +435,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_PRO_MODE in options:
             options.pop(CONF_PRO_MODE)
 
-        if model.startswith("gpt-5"):
+        if model.startswith(("gpt-5", "gpt-6")):
             step_schema.update(
                 {
                     vol.Optional(
@@ -453,7 +453,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_VERBOSITY in options:
             options.pop(CONF_VERBOSITY)
 
-        if model.startswith(("o", "gpt-5")):
+        if model.startswith(("o", "gpt-5", "gpt-6")):
             reasoning_summary_options = ["off", "auto", "concise", "detailed"]
             if model.startswith("o"):
                 reasoning_summary_options.remove("concise")
@@ -553,6 +553,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             ] = SelectSelector(
                 SelectSelectorConfig(
                     options=[
+                        "gpt-image-2.5-sunburst",
+                        "gpt-image-2.5-flare",
                         "gpt-image-2",
                         "gpt-image-1.5",
                         "gpt-image-1",
@@ -602,10 +604,13 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
 
     def _get_reasoning_options(self, model: str) -> list[str]:
         """Get reasoning effort options based on model."""
-        if not model.startswith(("o", "gpt-5")) or model.startswith("gpt-5-pro"):
+        if not model.startswith(("o", "gpt-5", "gpt-6")) or model.startswith(
+            "gpt-5-pro"
+        ):
             return []
 
         models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
+            "gpt-6": ["low", "medium", "high", "xhigh", "max"],
             "gpt-5.6": ["none", "low", "medium", "high", "xhigh", "max"],
             ("gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro"): ["medium", "high", "xhigh"],
             ("gpt-5.2", "gpt-5.3", "gpt-5.4", "gpt-5.5"): [

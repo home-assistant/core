@@ -1,11 +1,12 @@
 """Test the CalDAV config flow."""
 
 from collections.abc import Generator
+from functools import partial
 from unittest.mock import AsyncMock, Mock, patch
 
 from caldav.lib.error import AuthorizationError, DAVError
+from caldav.lib.http_sync import requests as caldav_requests
 import pytest
-import requests
 
 from homeassistant import config_entries
 from homeassistant.components.caldav.const import DOMAIN
@@ -30,6 +31,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 async def test_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    dav_client: Mock,
 ) -> None:
     """Test successful config flow setup."""
     result = await hass.config_entries.flow.async_init(
@@ -38,15 +40,20 @@ async def test_form(
     assert result.get("type") is FlowResultType.FORM
     assert not result.get("errors")
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_URL: TEST_URL,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_VERIFY_SSL: False,
-        },
-    )
+    with patch.object(
+        hass,
+        "async_add_executor_job",
+        wraps=hass.async_add_executor_job,
+    ) as mock_add_executor_job:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_URL: TEST_URL,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+                CONF_VERIFY_SSL: False,
+            },
+        )
     await hass.async_block_till_done()
 
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
@@ -58,14 +65,18 @@ async def test_form(
         CONF_VERIFY_SSL: False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    assert any(
+        isinstance(call.args[0], partial) and call.args[0].func is dav_client
+        for call in mock_add_executor_job.call_args_list
+    )
 
 
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
         (Exception(), "unknown"),
-        (requests.Timeout(), "cannot_connect"),
-        (requests.ConnectionError(), "cannot_connect"),
+        (caldav_requests.exceptions.Timeout(), "cannot_connect"),
+        (caldav_requests.exceptions.ConnectionError(), "cannot_connect"),
         (DAVError(), "cannot_connect"),
         (AuthorizationError(reason="Unauthorized"), "invalid_auth"),
         (AuthorizationError(reason="Other"), "cannot_connect"),
@@ -82,7 +93,7 @@ async def test_caldav_client_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    dav_client.return_value.principal.side_effect = side_effect
+    dav_client.return_value.get_principal.side_effect = side_effect
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -146,7 +157,7 @@ async def test_reauth_failure(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    dav_client.return_value.principal.side_effect = DAVError
+    dav_client.return_value.get_principal.side_effect = DAVError
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -160,7 +171,7 @@ async def test_reauth_failure(
     assert result2.get("errors") == {"base": "cannot_connect"}
 
     # Complete the form and it succeeds this time
-    dav_client.return_value.principal.side_effect = None
+    dav_client.return_value.get_principal.side_effect = None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {

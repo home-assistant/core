@@ -1,10 +1,11 @@
 """The caldav component."""
 
+from functools import partial
 import logging
 
-import caldav
+from caldav.davclient import DAVClient
 from caldav.lib.error import AuthorizationError, DAVError
-import requests
+from caldav.lib.http_sync import requests as caldav_requests
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -19,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import TIMEOUT
 
-type CalDavConfigEntry = ConfigEntry[caldav.DAVClient]
+type CalDavConfigEntry = ConfigEntry[DAVClient]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,15 +30,18 @@ PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
 
 async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bool:
     """Set up CalDAV from a config entry."""
-    client = caldav.DAVClient(
-        entry.data[CONF_URL],
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
-        ssl_verify_cert=entry.data[CONF_VERIFY_SSL],
-        timeout=TIMEOUT,
+    client = await hass.async_add_executor_job(
+        partial(
+            DAVClient,
+            entry.data[CONF_URL],
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+            ssl_verify_cert=entry.data[CONF_VERIFY_SSL],
+            timeout=TIMEOUT,
+        )
     )
     try:
-        await hass.async_add_executor_job(client.principal)
+        await hass.async_add_executor_job(client.get_principal)
     except AuthorizationError as err:
         if err.reason == "Unauthorized":
             raise ConfigEntryAuthFailed("Credentials error from CalDAV server") from err
@@ -45,9 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bo
         # on some other unexpected server response.
         _LOGGER.warning("Unexpected CalDAV server response: %s", err)
         return False
-    except requests.Timeout as err:
+    except caldav_requests.exceptions.Timeout as err:
         raise ConfigEntryNotReady("Timeout connecting to CalDAV server") from err
-    except requests.ConnectionError as err:
+    except caldav_requests.exceptions.ConnectionError as err:
         raise ConfigEntryNotReady("Connection error from CalDAV server") from err
     except DAVError as err:
         raise ConfigEntryNotReady("CalDAV client error") from err
