@@ -60,7 +60,17 @@ class RepairsFlowManager(
         if "issue_id" not in _context and data is not None and "issue_id" in data:
             # fallback for custom integrations
             _context |= {"issue_id": data["issue_id"]}
-        return await super().async_init(handler, context=_context, data=data)
+
+        if "issue_id" not in _context:
+            raise KeyError("issue_id was not set in context")
+        # interim compatibility fallback for custom integrations that may expect
+        # "issue_id" in user_input of async_step_init
+        _data = (
+            {"issue_id": _context["issue_id"]}
+            if data is None
+            else {**data, "issue_id": _context["issue_id"]}
+        )
+        return await super().async_init(handler, context=_context, data=_data)
 
     @override
     async def async_create_flow(
