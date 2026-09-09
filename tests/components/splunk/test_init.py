@@ -253,6 +253,57 @@ async def test_event_listener_unauthorized(
     assert flows[0]["context"]["source"] == "reauth"
 
 
+async def test_event_listener_unauthorized_repeated_failures_log_once(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a sustained run of 401s logs only the first one and still reauths."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_hass_splunk.queue.side_effect = SplunkPayloadError(
+        0, "Unauthorized", HTTPStatus.UNAUTHORIZED
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        for i in range(5):
+            hass.states.async_set("sensor.test", str(i))
+            await hass.async_block_till_done()
+
+    matching_records = [
+        record
+        for record in caplog.records
+        if record.levelno == logging.ERROR
+        and "Splunk token unauthorized" in record.message
+    ]
+    assert len(matching_records) == 1
+
+    # Reauth is still triggered on every failure; the config entries flow
+    # manager dedupes it into a single active flow.
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+
+    caplog.clear()
+    mock_hass_splunk.queue.side_effect = None
+
+    with caplog.at_level(logging.DEBUG):
+        hass.states.async_set("sensor.test", "recovered")
+        await hass.async_block_till_done()
+
+    recovery_records = [
+        record
+        for record in caplog.records
+        if record.levelno == logging.INFO
+        and "Sending events to Splunk has recovered" in record.message
+    ]
+    assert len(recovery_records) == 1
+
+
 @pytest.mark.parametrize(
     ("error", "expected_log_level", "expected_message"),
     [

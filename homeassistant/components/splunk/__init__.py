@@ -250,8 +250,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=True)
         except SplunkPayloadError as err:
             if err.status == HTTPStatus.UNAUTHORIZED:
-                _LOGGER.error("Splunk token unauthorized: %s", err)
-                # Trigger reauth flow
+                if not send_failing:
+                    _LOGGER.error("Splunk token unauthorized: %s", err)
+                send_failing = True
                 entry.async_start_reauth(hass)
             else:
                 if not send_failing:
