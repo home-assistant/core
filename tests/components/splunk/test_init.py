@@ -537,6 +537,48 @@ async def test_event_listener_recovery_from_debug_only_outage_stays_at_debug(
     assert recovery_records[0].levelno == logging.DEBUG
 
 
+async def test_event_listener_recovery_after_error_then_debug_stays_visible(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test recovery keeps the highest severity seen, not just the latest failure.
+
+    An ERROR-level failure (unauthorized) followed by a DEBUG-level failure
+    (connection blip) before recovery must still surface the recovery at
+    ERROR, not be silently downgraded to DEBUG.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_hass_splunk.queue.side_effect = SplunkPayloadError(
+        0, "Unauthorized", HTTPStatus.UNAUTHORIZED
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        hass.states.async_set("sensor.test", "unauthorized")
+        await hass.async_block_till_done()
+
+        mock_hass_splunk.queue.side_effect = ClientConnectionError("Connection failed")
+        hass.states.async_set("sensor.test", "connection-blip")
+        await hass.async_block_till_done()
+
+        mock_hass_splunk.queue.side_effect = None
+        hass.states.async_set("sensor.test", "recovered")
+        await hass.async_block_till_done()
+
+    recovery_records = [
+        record
+        for record in caplog.records
+        if "Sending events to Splunk has recovered" in record.message
+    ]
+    assert len(recovery_records) == 1
+    assert recovery_records[0].levelno == logging.ERROR
+
+
 async def test_event_listener_no_recovery_message_without_prior_failure(
     hass: HomeAssistant,
     mock_hass_splunk: AsyncMock,
