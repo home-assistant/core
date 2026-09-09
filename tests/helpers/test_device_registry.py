@@ -396,8 +396,6 @@ async def test_loading_from_storage(
             "devices": [
                 {
                     "area_id": "12345A",
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -428,8 +426,6 @@ async def test_loading_from_storage(
             "deleted_devices": [
                 {
                     "area_id": "12345A",
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "has_composite_identifiers": False,
@@ -1754,7 +1750,7 @@ async def test_migration_from_1_11(
     """Test migration from version 1.11."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
-        "minor_version": 10,
+        "minor_version": 11,
         "key": dr.STORAGE_KEY,
         "data": {
             "devices": [
@@ -1763,7 +1759,7 @@ async def test_migration_from_1_11(
                     "config_entries": [mock_config_entry.entry_id],
                     "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
-                    "connections": [["mac", "123456ABCDEF"]],
+                    "connections": [["mac", "12:34:56:ab:cd:ef"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
@@ -1788,7 +1784,7 @@ async def test_migration_from_1_11(
                     "area_id": None,
                     "config_entries": ["234567"],
                     "config_entries_subentries": {"234567": [None]},
-                    "connections": [["mac", "123456ABCDAB"]],
+                    "connections": [["mac", "12:34:56:ab:cd:ab"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "id": "abcdefghijklm2",
@@ -7762,8 +7758,6 @@ async def test_loading_invalid_configuration_url_from_storage(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -8390,23 +8384,128 @@ async def test_device_registry_deleted_device_collision(
     assert len(device_registry._deleted_devices) == 0
 
 
+@pytest.mark.parametrize(
+    ("initial", "update"),
+    [
+        pytest.param(
+            {
+                "connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+                "identifiers": {("bridgeid", "0123")},
+            },
+            {"new_connections": set(), "new_identifiers": set()},
+            id="clear_both",
+        ),
+        pytest.param(
+            {"identifiers": {("bridgeid", "0123")}},
+            {"new_identifiers": set()},
+            id="clear_only_identifiers_of_identifier_only_device",
+        ),
+        pytest.param(
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}},
+            {"new_connections": set()},
+            id="clear_only_connections_of_connection_only_device",
+        ),
+    ],
+)
 async def test_update_device_no_connections_or_identifiers(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    initial: dict[str, set[tuple[str, str]]],
+    update: dict[str, set[tuple[str, str]]],
+) -> None:
+    """Test an update leaving a device with no identity is rejected.
+
+    Clearing the last identity side would leave a device that can never be restored
+    once deleted, so it must be rejected whether both sides are cleared at once or one
+    side is cleared while the other is already empty.
+    """
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, **initial
+    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="A device must have at least one of identifiers or connections",
+    ):
+        device_registry.async_update_device(device.id, **update)
+
+    assert device_registry.async_get(device.id) == device
+    assert len(device_registry._deleted_devices) == 0
+
+
+async def test_update_device_can_clear_one_identity_side(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test clearing one identity side is allowed while the other remains."""
+    # Stored MAC connections are normalized to lowercase
+    connection = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+    identifier = ("bridgeid", "0123")
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={connection},
+        identifiers={identifier},
+    )
+
+    updated = device_registry.async_update_device(device.id, new_identifiers=set())
+    assert updated.identifiers == set()
+    assert updated.connections == {connection}
+
+    # Dropping all connections is allowed while an identifier remains
+    updated = device_registry.async_update_device(
+        device.id, new_identifiers={identifier}, new_connections=set()
+    )
+    assert updated.connections == set()
+    assert updated.identifiers == {identifier}
+
+
+async def test_update_device_empty_identity_rejected_before_mutation(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test updating a device clearing connections and identifiers."""
-    mock_config_entry = MockConfigEntry(domain="mqtt", title=None)
-    mock_config_entry.add_to_hass(hass)
+    """Test the empty-identity rejection runs before any sibling state is mutated.
 
-    device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        identifiers={("bridgeid", "0123")},
+    Completing a composite split's move clears its siblings' pending moves. An update
+    combining that move with an identity-emptying replacement must reject before that
+    mutation, so the rejected update leaves no partial state behind.
+    """
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry(domain="test")
+    entry_3.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
     )
-    with pytest.raises(HomeAssistantError):
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate two migration splits of one composite, each with a pending move to entry_3
+    pending_move = dr._PendingMove(entry_3.entry_id, None, None)
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id, pending_move=pending_move
+    )
+    device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id, pending_move=pending_move
+    )
+
+    # Removing device_1's owning entry completes its pending move (which would clear the
+    # sibling's pending move) while new_identifiers=set() empties its identity
+    with pytest.raises(
+        HomeAssistantError,
+        match="A device must have at least one of identifiers or connections",
+    ):
         device_registry.async_update_device(
-            device.id, new_connections=set(), new_identifiers=set()
+            device_1.id,
+            remove_config_entry_id=entry_1.entry_id,
+            new_identifiers=set(),
         )
+
+    # device_1 is untouched, and the sibling's pending move survives the rejected update
+    assert device_registry._devices[device_1.id].config_entry_id == entry_1.entry_id
+    assert device_registry._devices[device_1.id].identifiers == {("test", "1")}
+    assert device_registry._devices[device_2.id]._pending_move == pending_move
 
 
 async def test_connections_validator() -> None:
@@ -11704,6 +11803,70 @@ async def test_loading_child_device_with_missing_parent(
     # until an unrelated write
     await flush_store(registry._store)
     assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == []
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_loading_drops_empty_deleted_devices(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test stored deleted devices with no identifiers or connections are dropped."""
+
+    def _deleted_device(
+        device_id: str,
+        identifiers: list[list[str]],
+        connections: list[list[str]],
+    ) -> dict[str, Any]:
+        return {
+            "area_id": None,
+            "config_entry_id": mock_config_entry.entry_id,
+            "config_subentry_id": None,
+            "connections": connections,
+            "created_at": "2024-01-01T00:00:00+00:00",
+            "disabled_by": None,
+            "disabled_by_undefined": False,
+            "id": device_id,
+            "identifiers": identifiers,
+            "labels": [],
+            "modified_at": "2024-01-01T00:00:00+00:00",
+            "name_by_user": None,
+            "orphaned_timestamp": None,
+            "domain": None,
+        }
+
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [],
+            "child_devices": [],
+            "deleted_devices": [
+                _deleted_device("with_identifiers", [["test", "1"]], []),
+                _deleted_device("with_connections", [], [["mac", "12:34:56:78:90:ab"]]),
+                _deleted_device("empty_1", [], []),
+                _deleted_device("empty_2", [], []),
+            ],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    assert set(registry._deleted_devices) == {"with_identifiers", "with_connections"}
+    assert "Dropped 2 deleted devices with no identifiers or connections" in caplog.text
+
+    # The drop scheduled a save, so it persists instead of leaving the store dirty
+    # until an unrelated write
+    await flush_store(registry._store)
+    stored_ids = {
+        device["id"]
+        for device in hass_storage[dr.STORAGE_KEY]["data"]["deleted_devices"]
+    }
+    assert stored_ids == {"with_identifiers", "with_connections"}
 
 
 async def test_effective_area_id(

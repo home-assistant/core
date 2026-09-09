@@ -269,7 +269,7 @@ class FroniusModbusInverterUpdateCoordinator(FroniusModbusCoordinatorBase):
             values[f"mppt_{number}_current_dc"] = module.current
             values[f"mppt_{number}_voltage_dc"] = module.voltage
             values[f"mppt_{number}_power_dc"] = module.power
-            values[f"mppt_{number}_energy_dc"] = module.energy
+            values[f"mppt_{number}_energy"] = module.energy
         return self._as_device_data(values)
 
 

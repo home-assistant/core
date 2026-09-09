@@ -15,7 +15,7 @@ from homeassistant.components.rest.schema import (  # pylint: disable=home-assis
     DEFAULT_METHOD,
     METHODS,
 )
-from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
+from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntry,
@@ -59,6 +59,7 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    StateClassSelector,
     TemplateSelector,
     TextSelector,
     TextSelectorConfig,
@@ -155,14 +156,7 @@ SENSOR_SETTINGS = vol.Schema(
                     vol.Optional(CONF_DEVICE_CLASS): DeviceClassSelector(
                         DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
-                    vol.Optional(CONF_STATE_CLASS): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[cls.value for cls in SensorStateClass],
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="state_class",
-                            sort=True,
-                        )
-                    ),
+                    vol.Optional(CONF_STATE_CLASS): StateClassSelector(),
                     vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
                         SelectSelectorConfig(
                             options=[cls.value for cls in UnitOfTemperature],

@@ -12,6 +12,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidCredentialsError,
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
+    PyViCareRateLimitError,
 )
 
 from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION, DOMAIN
@@ -154,7 +155,9 @@ async def test_migrate_entry_token_failure(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_migrate_entry_creates_repair_issue(hass: HomeAssistant) -> None:
+async def test_migrate_entry_creates_repair_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test migration creates a repair issue for redirect URI update."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -181,7 +184,7 @@ async def test_migrate_entry_creates_repair_issue(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, "update_redirect_uri")  # pylint: disable=home-assistant-tests-registry-fixtures
+    issue = issue_registry.async_get_issue(DOMAIN, "update_redirect_uri")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
 
@@ -328,6 +331,42 @@ async def test_setup_entry_invalid_credentials(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_rate_limited(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries when the daily API quota is spent."""
+    mock_config_entry.add_to_hass(hass)
+
+    rate_limit_error = PyViCareRateLimitError(
+        {
+            "extendedPayload": {
+                "name": "development portal",
+                "requestCountLimit": 1450,
+                "limitReset": 1757376004000,
+            }
+        }
+    )
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            side_effect=rate_limit_error,
+        ) as setup_api,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    setup_api.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    # SETUP_RETRY alone would also match an unrelated ConfigEntryNotReady.
+    assert "rate limit" in mock_config_entry.reason
+    assert str(rate_limit_error.limitResetDate) in mock_config_entry.reason
 
 
 async def test_setup_entry_invalid_configuration(
