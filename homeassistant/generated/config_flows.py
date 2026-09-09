@@ -102,6 +102,7 @@ FLOWS = {
         "bang_olufsen",
         "bayesian",
         "besen",
+        "bizkaibus",
         "blebox",
         "blink",
         "blue_current",

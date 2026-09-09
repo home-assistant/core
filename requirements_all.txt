@@ -670,7 +670,7 @@ beautifulsoup4==4.13.3
 besen==0.4.0
 
 # homeassistant.components.bizkaibus
-bizkaibus==0.1.1
+bizkaibus==0.5.3
 
 # homeassistant.components.esphome
 bleak-esphome==4.0.0
