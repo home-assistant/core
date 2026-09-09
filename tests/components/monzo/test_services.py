@@ -23,7 +23,8 @@ from homeassistant.components.monzo.services import (
     SERVICE_DEPOSIT_INTO_POT,
     SERVICE_WITHDRAW_FROM_POT,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Context, HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
     OAuth2TokenRequestReauthError,
@@ -218,7 +219,7 @@ async def test_missing_device(
     transfer_devices: TransferDevices,
 ) -> None:
     """Test a missing selected device is rejected."""
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DEPOSIT_INTO_POT,
@@ -230,22 +231,76 @@ async def test_missing_device(
             blocking=True,
         )
 
+    assert error.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert error.value.translation_key == "service_device_not_found"
 
-async def test_devices_from_different_entries(
+
+async def test_device_from_other_integration(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     transfer_devices: TransferDevices,
 ) -> None:
-    """Test the account and pot must belong to the same config entry."""
+    """Test a device not owned by a Monzo config entry is rejected."""
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other", "other-device")},
+        name="Other device",
+    )
+
+    with pytest.raises(ServiceValidationError) as error:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DEPOSIT_INTO_POT,
+            {
+                ATTR_ACCOUNT: transfer_devices.account_device_id,
+                ATTR_POT: other_device.id,
+                ATTR_AMOUNT: 1,
+            },
+            blocking=True,
+        )
+
+    assert error.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert error.value.translation_key == "service_device_wrong_domain"
+
+
+@pytest.mark.parametrize(
+    ("other_entry_state", "translation_domain", "translation_key"),
+    [
+        pytest.param(
+            ConfigEntryState.LOADED,
+            DOMAIN,
+            "different_entries",
+            id="loaded-entry",
+        ),
+        pytest.param(
+            ConfigEntryState.NOT_LOADED,
+            HOMEASSISTANT_DOMAIN,
+            "service_config_entry_not_loaded",
+            id="not-loaded-entry",
+        ),
+    ],
+)
+async def test_devices_from_different_entries(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    transfer_devices: TransferDevices,
+    other_entry_state: ConfigEntryState,
+    translation_domain: str,
+    translation_key: str,
+) -> None:
+    """Test the account and pot must belong to the same loaded config entry."""
     other_entry = MockConfigEntry(domain=DOMAIN)
     other_entry.add_to_hass(hass)
+    other_entry.mock_state(hass, other_entry_state)
     other_pot = device_registry.async_get_or_create(
         config_entry_id=other_entry.entry_id,
         identifiers={(DOMAIN, "other-pot")},
         name="Other pot",
     )
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DEPOSIT_INTO_POT,
@@ -256,6 +311,9 @@ async def test_devices_from_different_entries(
             },
             blocking=True,
         )
+
+    assert error.value.translation_domain == translation_domain
+    assert error.value.translation_key == translation_key
 
 
 async def test_pot_must_belong_to_selected_account(
