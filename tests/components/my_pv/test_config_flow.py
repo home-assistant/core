@@ -442,3 +442,68 @@ async def test_step_discovery_auth_wrong_password(
         CONF_PASSWORD: "test-password",
     }
     assert result["result"].unique_id == ELWA2_SERIAL_NUMBER
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_reauth(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for reauth."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert updated_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_reauth_wrong_password(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for reauth with an incorrect password."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth"
+    assert not result["errors"]
+
+    mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "wrong-password"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth"
+    assert result["errors"]["password"] == "invalid_password"
+
+    mock_my_pv_client.connect.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert updated_entry.data[CONF_PASSWORD] == "new-password"
