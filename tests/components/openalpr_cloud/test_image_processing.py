@@ -1,11 +1,12 @@
 """The tests for the openalpr cloud platform."""
 
-from unittest.mock import PropertyMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import camera, image_processing as ip
 from homeassistant.components.openalpr_cloud.image_processing import OPENALPR_API_URL
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -38,9 +39,8 @@ async def setup_openalpr_cloud(hass: HomeAssistant) -> None:
     }
 
     with patch(
-        "homeassistant.components.openalpr_cloud.image_processing."
-        "OpenAlprCloudEntity.should_poll",
-        new_callable=PropertyMock(return_value=False),
+        "homeassistant.components.openalpr_cloud.image_processing.OpenAlprCloudEntity._attr_should_poll",
+        new=False,
     ):
         await async_setup_component(hass, ip.DOMAIN, config)
         await hass.async_block_till_done()
@@ -61,9 +61,8 @@ async def setup_openalpr_cloud_vehicle_details(hass: HomeAssistant) -> None:
     }
 
     with patch(
-        "homeassistant.components.openalpr_cloud.image_processing."
-        "OpenAlprCloudEntity.should_poll",
-        new_callable=PropertyMock(return_value=False),
+        "homeassistant.components.openalpr_cloud.image_processing.OpenAlprCloudEntity._attr_should_poll",
+        new=False,
     ):
         await async_setup_component(hass, ip.DOMAIN, config)
         await hass.async_block_till_done()
@@ -290,6 +289,48 @@ async def test_openalpr_process_image_with_vehicle_details_low_confidence(
             "model": None,
         }
     ]
+
+
+async def test_openalpr_process_image_vehicle_details_respect_threshold(
+    alpr_events,
+    setup_openalpr_cloud_vehicle_details,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Vehicle details are not exposed for a plate below the confidence threshold.
+
+    The best plate (70.25) is below the default 80 threshold, so it is filtered
+    out of the reported plates. Its vehicle details must not leak into the
+    entity's state attributes or the found_plate event for a plate that is not
+    reported.
+    """
+    aioclient_mock.post(
+        OPENALPR_API_URL,
+        params=PARAMS_VEHICLE,
+        text=await async_load_fixture(
+            hass, "alpr_cloud_vehicle_below_threshold.json", "openalpr_cloud"
+        ),
+        status=200,
+    )
+
+    with patch(
+        "homeassistant.components.camera.async_get_image",
+        return_value=camera.Image("image/jpeg", b"image"),
+    ):
+        common.async_scan(hass, entity_id="image_processing.test_local")
+        await hass.async_block_till_done()
+
+    state = hass.states.get("image_processing.test_local")
+
+    # Best plate is below the 80 threshold -> no plate is reported as state.
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("plates") == {}
+    assert state.attributes.get("vehicle_details") == []
+    assert "color" not in state.attributes
+    assert "manufacturer" not in state.attributes
+    assert "model" not in state.attributes
+    # No found_plate event fired for the filtered-out plate.
+    assert len(alpr_events) == 0
 
 
 async def test_openalpr_process_image_api_error(

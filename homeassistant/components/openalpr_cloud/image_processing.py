@@ -255,10 +255,16 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
 
             self.hass.bus.async_fire(EVENT_FOUND_PLATE, event_data)
 
-        # Update entity store
+        # Update entity store. Keep only details whose plate survived the
+        # confidence filter so vehicle data is never exposed for a plate that
+        # is not reported as state.
         self.plates = plates
         self.vehicles = vehicles
-        self.vehicle_details = vehicle_details
+        self.vehicle_details = [
+            vehicle
+            for vehicle in vehicle_details
+            if vehicle[ATTR_PLATE] in plates
+        ]
 
 
 class OpenAlprCloudEntity(ImageProcessingAlprEntity):
