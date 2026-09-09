@@ -732,10 +732,10 @@
       "message": "Invalid fan speed: {fan_speed}"
     },
     "invalid_q10_coordinate": {
-      "message": "Coordinates ({x}, {y}) are outside the range supported by this vacuum"
+      "message": "Coordinates ({x}, {y}) are not valid for this vacuum"
     },
     "invalid_q10_zone": {
-      "message": "The zone coordinates are outside the range supported by this vacuum"
+      "message": "The zone coordinates are not valid for this vacuum"
     },
     "invalid_user_agreement": {
       "message": "User agreement must be accepted again. Open your Roborock app and accept the agreement."

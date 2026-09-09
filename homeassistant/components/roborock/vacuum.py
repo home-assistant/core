@@ -773,7 +773,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                     "command": command,
                 },
             ) from err
-        self.coordinator.api.vacuum.cancel_goto()
 
     async def get_maps(self) -> ServiceResponse:
         """Get map information such as map id and room ids."""

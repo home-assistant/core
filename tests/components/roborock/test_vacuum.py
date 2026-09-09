@@ -1187,7 +1187,7 @@ async def test_q10_send_command(
         blocking=True,
     )
     assert q10_vacuum_api.command.send.call_count == 1
-    q10_vacuum_api.vacuum.cancel_goto.assert_called_once_with()
+    q10_vacuum_api.vacuum.cancel_goto.assert_not_called()
 
 
 async def test_q10_send_command_invalid(
