@@ -1,9 +1,10 @@
 """Test the Modbus websocket API."""
 
 from collections.abc import Callable, Generator
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from modbus_connection import ModbusTcpParams
+from modbus_connection.tmodbus import ModbusConnection
 import pytest
 
 from homeassistant.components.modbus import async_get_unit
@@ -70,10 +71,59 @@ async def test_list_connections(
     await client.send_json_auto_id({"type": "modbus/connections/list"})
     result = (await client.receive_json())["result"]
 
-    assert len(result["connections"]) == 1
-    reported = result["connections"][0]
-    assert reported["endpoint"] == ["tcp", "device.local", 502]
-    assert reported["units"] == {first.entry_id: [1], second.entry_id: [2]}
+    assert result == {
+        "connections": [
+            {
+                "endpoint": ["tcp", "device.local", 502],
+                "connected": False,
+                "units": {first.entry_id: [1], second.entry_id: [2]},
+            }
+        ]
+    }
+
+
+async def test_a_connection_that_is_up_reports_itself_connected(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    consumer: ConsumerFactory,
+) -> None:
+    """The reported state follows the connection, rather than being fixed."""
+    assert await async_setup_component(hass, "modbus", {})
+
+    entry = consumer()
+    await hass.config_entries.async_setup(entry.entry_id)
+    async_get_unit(hass, entry, ModbusTcpParams(host="device.local", port=502), 1)
+
+    client = await hass_ws_client(hass)
+    with patch.object(ModbusConnection, "connected", True):
+        await client.send_json_auto_id({"type": "modbus/connections/list"})
+        result = (await client.receive_json())["result"]
+
+    assert result == {
+        "connections": [
+            {
+                "endpoint": ["tcp", "device.local", 502],
+                "connected": True,
+                "units": {entry.entry_id: [1]},
+            }
+        ]
+    }
+
+
+async def test_listing_the_connections_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """The endpoint names devices and config entries, so admins only."""
+    assert await async_setup_component(hass, "modbus", {})
+
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+    await client.send_json_auto_id({"type": "modbus/connections/list"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
 
 
 async def test_unloading_an_entry_drops_it_from_the_listing(
