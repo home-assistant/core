@@ -2745,26 +2745,17 @@ async def test_reader_writer_restore_late_error(
     }
 
 
-def _set_error_key(err: SupervisorError, error_key: str | None) -> SupervisorError:
-    """Set the error_key of a SupervisorError instance for testing."""
-    err.error_key = error_key
-    return err
-
-
 @pytest.mark.parametrize(
     ("supervisor_error", "expect_reload_and_update"),
     [
         pytest.param(
-            _set_error_key(
-                SupervisorServiceUnavailableError(
-                    "Backup was made on supervisor version 2026.08.0, can't restore "
-                    "on 2026.07.5. Update is in-progress, try again after it "
-                    "completes."
-                ),
-                "backup_supervisor_update_in_progress_error",
+            SupervisorServiceUnavailableError(
+                "Backup was made on supervisor version 2026.08.0, can't restore "
+                "on 2026.07.5. Update is in-progress, try again after it "
+                "completes."
             ),
             False,
-            id="update_in_progress_error_key",
+            id="update_in_progress_503",
         ),
         pytest.param(
             SupervisorBadRequestError(
@@ -2858,18 +2849,14 @@ async def test_reader_writer_restore_retries_after_supervisor_update(
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
-async def test_reader_writer_restore_version_error_raises(
+async def test_reader_writer_restore_unrelated_bad_request_raises(
     hass: HomeAssistant,
     hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test a version error with auto-update disabled is raised immediately."""
+    """Test an unrelated bad request error is raised without retrying."""
     client = await hass_supervisor_ws_client()
-    err = SupervisorBadRequestError(
-        "Backup was made on supervisor version 2026.08.0, can't restore on "
-        "2026.07.5. Must update supervisor first."
-    )
-    err.error_key = "backup_supervisor_version_error"
+    err = SupervisorBadRequestError("Some other unrelated error")
     supervisor_client.backups.partial_restore.side_effect = err
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
@@ -3133,7 +3120,6 @@ async def test_reader_writer_restore_wait_for_update_error(
         "Backup was made on supervisor version 2026.08.0, can't restore on "
         "2026.07.5. Update is in-progress, try again after it completes."
     )
-    err.error_key = "backup_supervisor_update_in_progress_error"
     supervisor_client.backups.partial_restore.side_effect = err
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     # The agent reads the backup details twice before the update check does

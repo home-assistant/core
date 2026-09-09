@@ -563,7 +563,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         )
 
     async def _async_start_supervisor_update(
-        self, err: SupervisorError, backup_id: str
+        self, err: SupervisorError, backup_id: str, *, update_in_progress: bool
     ) -> AwesomeVersion | None:
         """Start the Supervisor update a failed restore needs.
 
@@ -575,7 +575,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         if err.error_key == "backup_supervisor_version_error":
             # Auto update is disabled, Supervisor can't help itself
             return None
-        update_in_progress = (
+        update_in_progress = update_in_progress or (
             err.error_key == "backup_supervisor_update_in_progress_error"
         )
         if not update_in_progress and (
@@ -658,6 +658,31 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 "Timeout waiting for Supervisor to restart after update"
             ) from err
 
+    async def _async_handle_restore_error(
+        self,
+        err: SupervisorError,
+        backup_id: str,
+        options: supervisor_backups.PartialRestoreOptions,
+        *,
+        allow_retry: bool,
+        update_in_progress: bool,
+    ) -> supervisor_backups.BackupJob:
+        """Retry a restore once after a Supervisor update, or raise."""
+        if allow_retry and (
+            backup_version := await self._async_start_supervisor_update(
+                err, backup_id, update_in_progress=update_in_progress
+            )
+        ):
+            await self._async_wait_for_supervisor_update(backup_version)
+            return await self._async_partial_restore(
+                backup_id, options, allow_retry=False
+            )
+        # Supervisor currently does not transmit machine parsable error types
+        message = err.args[0]
+        if message.startswith("Invalid password for backup"):
+            raise IncorrectPasswordError(message) from err
+        raise HomeAssistantError(message) from err
+
     async def _async_partial_restore(
         self,
         backup_id: str,
@@ -670,21 +695,25 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             return await self._client.backups.partial_restore(backup_id, options)
         except SupervisorNotFoundError as err:
             raise BackupNotFound from err
-        except (SupervisorBadRequestError, SupervisorServiceUnavailableError) as err:
-            if allow_retry and (
-                backup_version := await self._async_start_supervisor_update(
-                    err, backup_id
-                )
-            ):
-                await self._async_wait_for_supervisor_update(backup_version)
-                return await self._async_partial_restore(
-                    backup_id, options, allow_retry=False
-                )
-            # Supervisor currently does not transmit machine parsable error types
-            message = err.args[0]
-            if message.startswith("Invalid password for backup"):
-                raise IncorrectPasswordError(message) from err
-            raise HomeAssistantError(message) from err
+        except SupervisorServiceUnavailableError as err:
+            # Stopgap until aiohasupervisor knows the update-in-progress error
+            # key and Supervisor sends it: a 503 currently has no other cause
+            # during a restore.
+            return await self._async_handle_restore_error(
+                err,
+                backup_id,
+                options,
+                allow_retry=allow_retry,
+                update_in_progress=True,
+            )
+        except SupervisorBadRequestError as err:
+            return await self._async_handle_restore_error(
+                err,
+                backup_id,
+                options,
+                allow_retry=allow_retry,
+                update_in_progress=False,
+            )
 
     @override
     async def async_restore_backup(
