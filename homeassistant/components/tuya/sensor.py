@@ -1036,6 +1036,37 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    DeviceCategory.QCCDZ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.WORK_STATE,
+            translation_key="charger_status",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FORWARD_ENERGY_TOTAL,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CHARGE_ENERGY_ONCE,
+            translation_key="session_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.POWER_TOTAL,
+            translation_key="total_power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
     DeviceCategory.QN: (
         TuyaSensorEntityDescription(
             key=DPCode.WORK_POWER,

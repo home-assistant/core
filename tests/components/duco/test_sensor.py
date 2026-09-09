@@ -95,11 +95,22 @@ async def test_ventilation_related_sensors_created_for_supported_node_types(
     assert hass.states.get("sensor.office_co2_state_end_time") is None
 
 
+@pytest.mark.parametrize(
+    ("ventilation_state", "expected_state_end"),
+    [
+        pytest.param(VentilationState.MAN1, "2023-11-14T22:20:59+00:00", id="timed"),
+        pytest.param(VentilationState.CNT1, STATE_UNKNOWN, id="continuous-1"),
+        pytest.param(VentilationState.CNT2, STATE_UNKNOWN, id="continuous-2"),
+        pytest.param(VentilationState.CNT3, STATE_UNKNOWN, id="continuous-3"),
+    ],
+)
 async def test_ventilation_related_sensors_created_for_box_node(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
+    ventilation_state: VentilationState,
+    expected_state_end: str,
 ) -> None:
     """Test ventilation-related sensors are created for the box node.
 
@@ -111,6 +122,7 @@ async def test_ventilation_related_sensors_created_for_box_node(
         mock_sensor_nodes[0],
         ventilation=replace(
             mock_sensor_nodes[0].ventilation,
+            state=ventilation_state,
             flow_lvl_tgt=42,
             time_state_end=1700000459,
         ),
@@ -124,7 +136,7 @@ async def test_ventilation_related_sensors_created_for_box_node(
 
     state = hass.states.get("sensor.living_ventilation_state")
     assert state is not None
-    assert state.state == "auto"
+    assert state.state == ventilation_state.lower()
 
     state = hass.states.get("sensor.living_target_flow_level")
     assert state is not None
@@ -132,7 +144,7 @@ async def test_ventilation_related_sensors_created_for_box_node(
 
     state = hass.states.get("sensor.living_state_end_time")
     assert state is not None
-    assert state.state == "2023-11-14T22:20:59+00:00"
+    assert state.state == expected_state_end
 
     assert hass.states.get("sensor.office_co2_ventilation_state") is None
     assert hass.states.get("sensor.office_co2_target_flow_level") is None
@@ -183,15 +195,14 @@ async def test_iaq_sensor_entities_disabled_by_default(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_diagnostic_sensor_entities_disabled_by_default(
+async def test_rssi_sensor_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that diagnostic sensor entities are disabled by default."""
-    for entity_id in ("sensor.living_signal_strength",):
-        entry = entity_registry.async_get(entity_id)
-        assert entry is not None
-        assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+    """Test that the RSSI sensor is disabled by default."""
+    entry = entity_registry.async_get("sensor.living_signal_strength")
+    assert entry is not None
+    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.usefixtures("init_integration")

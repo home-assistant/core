@@ -11,38 +11,53 @@
   },
   "entity": {
     "sensor": {
+      "all_in_average_price": {
+        "name": "Average all-in price"
+      },
+      "all_in_current_price": {
+        "name": "Current all-in price"
+      },
+      "all_in_max_price": {
+        "name": "Maximum all-in price"
+      },
+      "all_in_min_price": {
+        "name": "Minimum all-in price"
+      },
+      "all_in_next_price": {
+        "name": "Next all-in price"
+      },
       "average_price": {
-        "name": "Average - today"
+        "name": "Average market price"
       },
       "current_hour_price": {
         "name": "Current hour"
       },
       "current_price": {
-        "name": "Current price"
+        "name": "Current market price"
       },
       "highest_price_time": {
-        "name": "Time of highest price - today"
+        "name": "Highest market price time"
       },
       "hours_priced_equal_or_lower": {
-        "name": "Periods priced equal or lower"
+        "name": "Market periods priced equal or lower"
       },
       "lowest_price_time": {
-        "name": "Time of lowest price - today"
+        "name": "Lowest market price time"
       },
       "max_price": {
-        "name": "Highest price - today"
+        "name": "Maximum market price"
       },
       "min_price": {
-        "name": "Lowest price - today"
+        "name": "Minimum market price"
       },
       "next_hour_price": {
         "name": "Next hour"
       },
       "next_price": {
-        "name": "Next price"
+        "name": "Next market price"
       },
       "percentage_of_max": {
-        "name": "Current percentage of highest price - today"
+        "name": "Market percentage of maximum"
       }
     }
   },
