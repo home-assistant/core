@@ -76,9 +76,6 @@
     "cannot_connect": {
       "message": "Unable to connect to {config_entry_title}."
     },
-    "invalid_device_id": {
-      "message": "LCN device for given device ID {device_id} has not been configured."
-    },
     "invalid_domain": {
       "message": "Invalid domain {domain}."
     },
