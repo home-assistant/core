@@ -203,9 +203,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         manual and the discovery flow can obtain, it survives every address
         change, and the custom (HACS) integration already keys its entries by
         it -- so an installation moving to core is recognised instead of being
-        offered a second time. Serial, UDN and host are fallbacks only, used
-        when the hub cannot be reached for its MAC; a successful setup then
-        rewrites the entry onto the MAC (see ``async_setup_entry``).
+        offered a second time. Serial, UDN and host are fallbacks only, for the
+        hub that answers but reports no usable ``lan mac`` -- null on a platform
+        with no configured LAN interface, absent on firmware that predates the
+        key -- or for a read that fails on its own connection. An unreachable
+        hub produces no entry at all: ``validate_input`` gates the creation.
+        Once a MAC can be read, setup rewrites the entry onto it (see
+        ``async_setup_entry``).
         """
         return await _async_hub_mac(await self._async_probe_host(host))
 
@@ -218,10 +222,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> str:
         """Return the hub's identity, or the best fallback available.
 
-        The MAC is what every path keys on. The rest only applies when the hub
-        cannot be reached for it -- an advertised serial, a probed one, a UDN,
-        and finally the host, which changes with the DHCP lease and is
-        therefore the last resort.
+        The MAC is what every path keys on. The rest applies only when the hub
+        answered but gave no usable ``lan mac`` (see ``_async_hub_mac``): an
+        advertised serial, a probed one, a UDN, and finally the host, which
+        changes with the DHCP lease and is therefore the last resort. A hub
+        that stays without a MAC keeps its fallback id and is still matched by
+        it, because the same ladder yields the same value next time.
         """
         if identity := await self._async_hub_identity(host):
             return identity
@@ -427,9 +433,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 updates={CONF_HOST: stored_host}, reload_on_update=False
             )
 
-            # The id did not match. An entry created before the hub could be
-            # reached for its MAC carries a serial-, UDN- or host-based id, so
-            # fall back to comparing the address.
+            # The id did not match. An entry created while the hub reported no
+            # usable MAC carries a serial-, UDN- or host-based id, so fall back
+            # to comparing the address.
             if await self._is_device_already_configured(
                 host_input, probed.get("ip") if probed else None
             ):
