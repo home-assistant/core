@@ -45,8 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
     try:
         await coordinator.start()
     except OSError as ex:
-        # Every address failed to bind. Both causes are transient -- the port
-        # frees up, or the adapter comes back -- so let HA retry either way.
+        # No address bound. Adapters are enumerated once at startup, so retry
+        # rather than fail: a late or stale adapter recovers on the next attempt.
         if ex.errno == EADDRINUSE:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
