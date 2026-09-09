@@ -1,5 +1,6 @@
 """Test the Sofar Inverter Modbus integration setup and unload."""
 
+from collections.abc import Callable
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -16,9 +17,10 @@ from homeassistant.components.sofar.const import (
 )
 from homeassistant.components.sofar.coordinator import SofarRuntimeData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import (
     MOCK_HW_VERSION,
@@ -30,7 +32,13 @@ from . import (
     seed_hybrid_inverter,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
+from tests.typing import WebSocketGenerator
 
 PV_POWER_REGISTER = 0x0586
 BATTERY_3_VOLTAGE_REGISTER = 0x0612
@@ -106,6 +114,68 @@ async def test_setup_removes_the_stale_waiting_time_entity(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entity_registry.async_get(entry.entity_id) is None
+
+
+def _seed_without_extra_data(hass: HomeAssistant, entity_id: str) -> None:
+    """Restore a total the way a non-sensor entity stores it: no extra data."""
+    mock_restore_cache(hass, [State(entity_id, "120.0")])
+
+
+def _seed_with_unusable_value(hass: HomeAssistant, entity_id: str) -> None:
+    """Restore a total that was unknown when it was written."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(entity_id, STATE_UNKNOWN),
+                {"native_value": None, "native_unit_of_measurement": "kWh"},
+            )
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    "seed_restore_cache",
+    [
+        pytest.param(_seed_without_extra_data, id="no_extra_data"),
+        pytest.param(_seed_with_unusable_value, id="no_value"),
+    ],
+)
+async def test_setup_skips_seeding_an_unusable_restored_total(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    seed_restore_cache: Callable[[HomeAssistant, str], None],
+) -> None:
+    """Test a restored total without a usable number seeds no high-water mark."""
+    mock_config_entry.add_to_hass(hass)
+    entry = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_SERIAL}_load_consumption_total",
+        config_entry=mock_config_entry,
+    )
+    seed_restore_cache(hass, entry.entity_id)
+
+    with (
+        patch(
+            "homeassistant.components.sofar.async_get_unit",
+            side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+                unit_id
+            ),
+        ),
+        patch(
+            "sofar_modbus.model.TornReadCorrectedComponent.seed_high_water"
+        ) as mock_seed,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # A seed attempt would raise on the unusable value, so setup surviving
+    # is half the assertion.
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_seed.assert_not_called()
 
 
 async def test_setup_entry_unrecognized_inverter_raises_setup_error(
@@ -346,7 +416,7 @@ async def test_every_component_failing_recovers_on_a_later_poll(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
     # Availability alone cannot tell a failed poll from one that reported
     # every component as failed; only the logged error separates them.
-    assert "no component answered" in caplog.text
+    assert "No component answered" in caplog.text
 
     mock_connection.for_unit(1).fail_requests(None)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
@@ -574,6 +644,139 @@ async def test_battery_pack_appears_once_its_block_answers(
     await hass.async_block_till_done()
 
     # No reload: the coordinator's own listener notices the pack answering.
+    entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "51.5"
+
+
+async def _setup_hybrid(
+    hass: HomeAssistant, connection: MockModbusConnection
+) -> MockConfigEntry:
+    """Set up a hybrid entry against a connection the caller still owns."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_USER_INPUT,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    return entry
+
+
+@pytest.mark.parametrize(
+    ("identifiers", "removable"),
+    [
+        pytest.param({(DOMAIN, MOCK_HYBRID_SERIAL)}, False, id="inverter"),
+        pytest.param(
+            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_1")}, False, id="wired_pack"
+        ),
+        pytest.param(
+            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_pv_string_2")}, False, id="pv_string"
+        ),
+        pytest.param(
+            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_9")}, True, id="pack_off_the_map"
+        ),
+        pytest.param(
+            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_x")}, True, id="unparseable_part"
+        ),
+        pytest.param(
+            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_\u00b2")},
+            True,
+            id="non_decimal_digit",
+        ),
+        pytest.param(
+            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_gizmo_1")}, True, id="unknown_part_kind"
+        ),
+        pytest.param({("other", MOCK_HYBRID_SERIAL)}, True, id="foreign_identifier"),
+    ],
+)
+async def test_only_absent_battery_packs_can_be_removed(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    identifiers: set[tuple[str, str]],
+    removable: bool,
+) -> None:
+    """Test removal is refused for anything the inverter still reports."""
+    assert await async_setup_component(hass, "config", {})
+    connection = MockModbusConnection()
+    seed_hybrid_inverter(connection.for_unit(1))
+    entry = await _setup_hybrid(hass, connection)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers=identifiers
+    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device.id)
+
+    assert response["success"] is removable
+    assert (device_registry.async_get(device.id) is None) is removable
+
+
+async def test_an_absent_pack_is_removable_while_the_entry_is_unloaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a pack whose liveness cannot be checked is taken on trust."""
+    assert await async_setup_component(hass, "config", {})
+    connection = MockModbusConnection()
+    seed_hybrid_inverter(connection.for_unit(1))
+    entry = await _setup_hybrid(hass, connection)
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_1"), entry.entry_id
+    )
+    assert device is not None
+    client = await hass_ws_client(hass)
+
+    assert (await client.remove_device(device.id))["success"]
+    assert device_registry.async_get(device.id) is None
+
+
+async def test_a_removed_pack_comes_back_without_a_restart(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing a pack does not bar it from being added again."""
+    assert await async_setup_component(hass, "config", {})
+    connection = MockModbusConnection()
+    unit = connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    entry = await _setup_hybrid(hass, connection)
+
+    unit.holding[BATTERY_3_VOLTAGE_REGISTER] = 0
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_3"), entry.entry_id
+    )
+    assert device is not None
+    client = await hass_ws_client(hass)
+    assert (await client.remove_device(device.id))["success"]
+
+    unique_id = f"{MOCK_HYBRID_SERIAL}_battery_voltage_3"
+    assert entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id) is None
+
+    unit.holding[BATTERY_3_VOLTAGE_REGISTER] = 515
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == "51.5"

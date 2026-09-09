@@ -23,6 +23,7 @@ from pyportainer import (
 from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
+    DockerDFType,
     DockerSystemDF,
     DockerVolume,
     DockerVolumeUsageData,
@@ -261,7 +262,9 @@ class PortainerCoordinator(
                     self.portainer.get_containers(endpoint.id),
                     self.portainer.docker_version(endpoint.id),
                     self.portainer.docker_info(endpoint.id),
-                    self.portainer.docker_system_df(endpoint.id, verbose=True),
+                    self.portainer.docker_system_df(
+                        endpoint.id, data_type=DockerDFType.VOLUME, verbose=True
+                    ),
                     self.portainer.get_volumes(endpoint.id),
                 )
 
