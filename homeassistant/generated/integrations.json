@@ -6636,7 +6636,7 @@
     },
     "skoda": {
       "name": "\u0160koda",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },

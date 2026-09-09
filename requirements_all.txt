@@ -3087,7 +3087,7 @@ simplisafe-python==2024.01.0
 sisyphus-control==3.1.4
 
 # homeassistant.components.skoda
-skoda-public-api==1.2.0
+skoda-public-api==1.2.1
 
 # homeassistant.components.sky_remote
 skyboxremote==0.0.6
