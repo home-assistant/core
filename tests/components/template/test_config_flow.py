@@ -7,6 +7,7 @@ import pytest
 from pytest_unordered import unordered
 
 from homeassistant import config_entries
+from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.template import DOMAIN, async_setup_entry
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import STATE_UNAVAILABLE
@@ -191,9 +192,9 @@ BINARY_SENSOR_OPTIONS = {
             "on",
             {"one": "on", "two": "off"},
             {},
-            {"turn_on": [], "turn_off": []},
-            {"turn_on": [], "turn_off": []},
-            {},
+            {"turn_on": [], "turn_off": [], "supports_transition": "{{ true }}"},
+            {"turn_on": [], "turn_off": [], "supports_transition": "{{ true }}"},
+            {"supported_features": LightEntityFeature.TRANSITION},
         ),
         (
             "lock",

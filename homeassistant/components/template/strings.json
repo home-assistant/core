@@ -260,6 +260,7 @@
           "set_level": "Actions on set level",
           "set_temperature": "Actions on set color temperature",
           "state": "[%key:component::template::common::state%]",
+          "supports_transition": "Supports transition",
           "temperature": "Color temperature",
           "turn_off": "[%key:component::template::common::turn_off%]",
           "turn_on": "[%key:component::template::common::turn_on%]"
@@ -272,6 +273,7 @@
           "set_level": "Defines actions to run when the light is given a brightness command. The script will only be called if the `turn_on` call only has `brightness`, and optionally `transition`. Receives variables `brightness` and, optionally, `transition`.",
           "set_temperature": "Defines actions to run when the light is given a color temperature command. Receives variable `color_temp_kelvin`. May also receive variables `brightness` and/or `transition`.",
           "state": "The light is `on` if the template evaluates as `True`, `yes`, `on`, `enable` or a positive number. Any other value will render it as `off`.",
+          "supports_transition": "The light supports transitions if the template evaluates as `True`. A value of `False` will disable transitions.",
           "temperature": "Defines a template to get the color temperature of the light.",
           "turn_off": "Defines actions to run when the light is turned off.",
           "turn_on": "Defines actions to run when the light is turned on."
@@ -852,6 +854,7 @@
           "set_level": "[%key:component::template::config::step::light::data::set_level%]",
           "set_temperature": "[%key:component::template::config::step::light::data::set_temperature%]",
           "state": "[%key:component::template::common::state%]",
+          "supports_transition": "[%key:component::template::config::step::light::data::supports_transition%]",
           "temperature": "[%key:component::template::config::step::light::data::temperature%]",
           "turn_off": "[%key:component::template::common::turn_off%]",
           "turn_on": "[%key:component::template::common::turn_on%]"
@@ -864,6 +867,7 @@
           "set_level": "[%key:component::template::config::step::light::data_description::set_level%]",
           "set_temperature": "[%key:component::template::config::step::light::data_description::set_temperature%]",
           "state": "[%key:component::template::config::step::light::data_description::state%]",
+          "supports_transition": "[%key:component::template::config::step::light::data_description::supports_transition%]",
           "temperature": "[%key:component::template::config::step::light::data_description::temperature%]",
           "turn_off": "[%key:component::template::config::step::light::data_description::turn_off%]",
           "turn_on": "[%key:component::template::config::step::light::data_description::turn_on%]"
