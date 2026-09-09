@@ -56,12 +56,12 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                if info_api.serial_number is None:
+                if info_api.data is None:
                     errors["base"] = "missing_device_info"
                 else:
-                    unique_id = str(info_api.serial_number)
-                    if info_api.uid is not None:
-                        unique_id = info_api.uid.replace("-", "")
+                    unique_id = str(info_api.data.device.serial)
+                    if info_api.data.uid is not None:
+                        unique_id = info_api.data.uid.replace("-", "")
                     await self.async_set_unique_id(unique_id)
                     if self.source == SOURCE_RECONFIGURE:
                         self._abort_if_unique_id_mismatch()

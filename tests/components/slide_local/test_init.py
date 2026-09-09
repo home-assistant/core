@@ -24,8 +24,8 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_platform(hass, mock_config_entry, [Platform.COVER])
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "1234567890ab")}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "1234567890ab"), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot

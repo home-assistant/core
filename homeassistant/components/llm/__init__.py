@@ -6,6 +6,7 @@ from typing import Protocol, override
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.helpers.llm import (
     API,
@@ -17,6 +18,7 @@ from homeassistant.helpers.llm import (
     selector_serializer,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_issue_integration
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -25,6 +27,8 @@ from .websocket_api import async_setup as async_setup_ws_api
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+TOOL_PREFIX_BREAKS_IN_HA_VERSION = "2027.3"
 
 DATA_PLATFORMS: HassKey[LazyIntegrationPlatforms[LLMToolsPlatformProtocol]] = HassKey(
     "llm_platforms"
@@ -87,10 +91,36 @@ async def async_get_tools(
             continue
         if result is None:
             continue
+        _async_report_unprefixed_tools(hass, domain, result.tools)
         tools.extend(result.tools)
         if result.prompt:
             prompts.append(result.prompt)
     return LLMTools(tools=tools, prompt="\n".join(prompts) if prompts else None)
+
+
+@callback
+def _async_report_unprefixed_tools(
+    hass: HomeAssistant, domain: str, tools: list[Tool]
+) -> None:
+    """Report tools that are not prefixed with the domain offering them."""
+    prefix = f"{domain}__"
+    unprefixed = [tool.name for tool in tools if not tool.name.startswith(prefix)]
+    if not unprefixed:
+        return
+
+    integration = async_get_issue_integration(hass, domain)
+    report_usage(
+        f"provides LLM tools that are not prefixed with '{prefix}': "
+        f"{', '.join(sorted(unprefixed))}",
+        breaks_in_ha_version=TOOL_PREFIX_BREAKS_IN_HA_VERSION,
+        core_behavior=ReportBehavior.LOG,
+        core_integration_behavior=ReportBehavior.LOG,
+        custom_integration_behavior=ReportBehavior.LOG,
+        integration_domain=domain,
+        level=logging.WARNING
+        if integration and not integration.is_built_in
+        else logging.ERROR,
+    )
 
 
 class AssistAPI(API):

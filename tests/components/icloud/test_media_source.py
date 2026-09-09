@@ -3,7 +3,7 @@
 from base64 import b64encode
 from http import HTTPStatus
 from types import SimpleNamespace
-from unittest.mock import PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 import urllib.parse
 
 from aiohttp import hdrs
@@ -793,7 +793,7 @@ async def test_media_source_view_streams_content_and_headers(
         hdrs.CONTENT_LENGTH: "6",
     }
     upstream_resp.content = _Content()
-    upstream_resp.release.return_value = None
+    upstream_resp.release = MagicMock(return_value=None)
 
     mock_session = AsyncMock()
     mock_session.get.return_value = upstream_resp
@@ -855,7 +855,7 @@ async def test_media_source_view_streams_timeout(
         hdrs.CONTENT_LENGTH: "6",
     }
     upstream_resp.content = _Content()
-    upstream_resp.release.return_value = None
+    upstream_resp.release = MagicMock(return_value=None)
 
     mock_session = AsyncMock()
     mock_session.get.return_value = upstream_resp
@@ -931,7 +931,7 @@ async def test_media_source_view_streams_content_and_headers_cache_tests(
         upstream_resp.content = _Content(
             int(upstream_resp.headers[hdrs.CONTENT_LENGTH])
         )
-        upstream_resp.release.return_value = None
+        upstream_resp.release = MagicMock(return_value=None)
         return upstream_resp
 
     mock_session = AsyncMock()

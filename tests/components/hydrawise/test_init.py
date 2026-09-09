@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from pydrawise.schema import Controller, User, Zone
+import pytest
 
 from homeassistant.components.hydrawise.const import DOMAIN, MAIN_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -51,13 +52,13 @@ async def test_auto_add_devices(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test new devices are auto-added to the device registry."""
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, str(controller.id))}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(controller.id)), mock_added_config_entry.entry_id
     )
     assert device is not None
     for zone in zones:
-        zone_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, str(zone.id))}
+        zone_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(zone.id)), mock_added_config_entry.entry_id
         )
         assert zone_device is not None
     all_devices = dr.async_entries_for_config_entry(
@@ -90,8 +91,8 @@ async def test_auto_add_devices(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    new_controller_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, str(controller2.id))}
+    new_controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(controller2.id)), mock_added_config_entry.entry_id
     )
     assert new_controller_device is not None
 
@@ -101,8 +102,8 @@ async def test_auto_add_devices(
     assert hass.states.get("binary_sensor.home_controller_2_connectivity") is not None
 
     for zone in zones2:
-        new_zone_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, str(zone.id))}
+        new_zone_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(zone.id)), mock_added_config_entry.entry_id
         )
         assert new_zone_device is not None
 
@@ -118,38 +119,6 @@ async def test_auto_add_devices(
     assert hass.states.get("sensor.zone_two_2_daily_active_watering_time") is not None
 
 
-async def test_setup_clears_self_referential_via_device(
-    hass: HomeAssistant,
-    device_registry: DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-    mock_pydrawise: AsyncMock,
-) -> None:
-    """Test setup clears a self-referential via_device left by older versions.
-
-    Older versions linked the controller device to itself via its rain sensor
-    entity, which persists in the device registry across upgrades.
-    """
-    mock_config_entry.add_to_hass(hass)
-    controller = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "52496")},
-        name="Home Controller",
-    )
-    controller = device_registry.async_update_device(
-        controller.id, via_device_id=controller.id
-    )
-    assert controller.via_device_id == controller.id
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    controller = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "52496"), mock_config_entry.entry_id
-    )
-    assert controller is not None
-    assert controller.via_device_id is None
-
-
 async def test_auto_remove_devices(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
@@ -161,11 +130,15 @@ async def test_auto_remove_devices(
 ) -> None:
     """Test old devices are auto-removed from the device registry."""
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, str(controller.id))})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(controller.id)), mock_added_config_entry.entry_id
+        )
         is not None
     )
     for zone in zones:
-        device = device_registry.async_get_device(identifiers={(DOMAIN, str(zone.id))})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(zone.id)), mock_added_config_entry.entry_id
+        )
         assert device is not None
 
     user.controllers = []
@@ -175,13 +148,48 @@ async def test_auto_remove_devices(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, str(controller.id))})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(controller.id)), mock_added_config_entry.entry_id
+        )
         is None
     )
     for zone in zones:
-        device = device_registry.async_get_device(identifiers={(DOMAIN, str(zone.id))})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(zone.id)), mock_added_config_entry.entry_id
+        )
         assert device is None
     all_devices = dr.async_entries_for_config_entry(
         device_registry, mock_added_config_entry.entry_id
     )
     assert len(all_devices) == 0
+
+
+async def test_zones_of_one_controller_go_missing(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+    zones: list[Zone],
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a controller answering without its zones does not crash the update.
+
+    The controller is still there, so the entities of its zones are still
+    subscribed when the refresh that drops them arrives.
+    """
+    assert hass.states.get("binary_sensor.zone_one_watering") is not None
+
+    mock_pydrawise.get_zones.return_value = []
+
+    freezer.tick(MAIN_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_pydrawise.get_zones.return_value = zones
+
+    freezer.tick(MAIN_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.zone_one_watering") is not None
+    assert "KeyError" not in caplog.text

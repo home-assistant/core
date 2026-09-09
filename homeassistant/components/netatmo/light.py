@@ -183,6 +183,7 @@ class NetatmoLight(NetatmoReachabilityEntity, LightEntity):
             await self.device.async_set_brightness(
                 round(kwargs[ATTR_BRIGHTNESS] / 2.55)
             )
+            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
 
         else:
             await self.device.async_on()

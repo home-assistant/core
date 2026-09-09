@@ -261,8 +261,8 @@ async def test_device_setup_registry(
 
     assert len(device_registry.devices) == 1
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     assert device_entry.identifiers == {(DOMAIN, device.mac)}
     assert device_entry.name == device.name
@@ -351,8 +351,8 @@ async def test_device_update_listener(
         hass.config_entries.async_update_entry(mock_setup.entry, title="New Name")
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     assert device_entry.name == "New Name"
     for entry in er.async_entries_for_device(entity_registry, device_entry.id):

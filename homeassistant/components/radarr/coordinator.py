@@ -22,6 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 
@@ -171,7 +172,7 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
     async def _fetch_data(self) -> None:
         """Fetch the calendar."""
         self.event = None
-        _date = datetime.today()
+        _date = dt_util.now()
         while self.event is None:
             await self.async_get_events(_date, _date + timedelta(days=1))
             for event in self._events:
@@ -179,7 +180,7 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
                     self.event = event
                     break
             # Prevent infinite loop in case there is nothing recent in the calendar
-            if (_date - datetime.today()).days > 45:
+            if (_date - dt_util.now()).days > 45:
                 break
             _date = _date + timedelta(days=1)
 
@@ -191,7 +192,7 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
         self._events = [
             e
             for e in self._events
-            if e.start >= datetime.now().date() - timedelta(days=30)  # pylint: disable=home-assistant-enforce-naive-now
+            if e.start >= dt_util.now().date() - timedelta(days=30)
         ]
         _days = (end_date - start_date).days
         await asyncio.gather(

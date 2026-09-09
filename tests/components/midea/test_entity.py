@@ -3,10 +3,13 @@
 from collections.abc import Callable
 
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
+from midealocal.exceptions import SocketException
 import pytest
 
 from homeassistant.components.midea.const import DOMAIN
+from homeassistant.components.midea.entity import midea_api_call
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
@@ -14,6 +17,16 @@ from .conftest import DummyDevice, default_ac_device, entity_entries
 from .const import TEST_DEVICE_ID, TEST_MAC_ADDRESS, TEST_MODEL, TEST_SERIAL_NUMBER
 
 from tests.common import MockConfigEntry
+
+
+def test_midea_api_call_translates_midea_local_error() -> None:
+    """Test midea_api_call turns a midealocal error into a HomeAssistantError."""
+    with pytest.raises(HomeAssistantError) as exc_info, midea_api_call():
+        raise SocketException("offline")
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "device_communication_error"
+    assert exc_info.value.translation_placeholders == {"error": "offline"}
 
 
 @pytest.mark.parametrize(
@@ -117,8 +130,8 @@ async def test_device_info_optional_metadata(
     await setup_integration(hass, config_entry, device)
 
     assert (
-        device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, str(TEST_DEVICE_ID))}
+        device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(TEST_DEVICE_ID)), config_entry.entry_id
         )
     ) is not None
 

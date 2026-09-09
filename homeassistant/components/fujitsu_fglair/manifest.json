@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/fujitsu_fglair",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["ayla-iot-unofficial==1.4.7"]
+  "requirements": ["ayla-iot-unofficial==1.5.2"]
 }

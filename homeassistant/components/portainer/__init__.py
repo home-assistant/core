@@ -21,7 +21,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -33,6 +33,7 @@ from .services import async_setup_services
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
@@ -122,12 +123,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_watcher)
     )
 
+    @callback
+    def _start_event_listeners(_hass: HomeAssistant) -> None:
+        """Start the Docker event listeners in the event loop."""
+        coordinator.async_start_event_listeners()
+
+    @callback
+    def _stop_event_listeners(_event: Event) -> None:
+        """Stop the Docker event listeners in the event loop."""
+        coordinator.async_stop_event_listeners()
+
+    # Defer the event listener, to avoid a thunderherd of connections during startup
+    entry.async_on_unload(async_at_started(hass, _start_event_listeners))
+    entry.async_on_unload(coordinator.async_stop_event_listeners)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_event_listeners)
+    )
+
     return True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Portainer integration."""
-    await async_setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
@@ -229,7 +247,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     entry: PortainerConfigEntry,
-    device: DeviceEntry,
+    device: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     coordinator = entry.runtime_data

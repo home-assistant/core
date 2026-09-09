@@ -204,7 +204,7 @@ async def async_unload_entry(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: SynologyDSMConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: SynologyDSMConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove synology_dsm config entry from a device."""
     data = entry.runtime_data

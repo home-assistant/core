@@ -14,9 +14,16 @@ import pyqrcode
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
@@ -27,13 +34,14 @@ from homeassistant.components.media_player import (
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntityFeature
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.const import (
     ATTR_CODE,
-    ATTR_DEVICE_CLASS,
-    ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -299,6 +307,10 @@ SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
 
 VALVE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
+        vol.Optional(CONF_TYPE): vol.All(
+            cv.string,
+            vol.In((TYPE_FAUCET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_VALVE)),
+        ),
         vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(
             [INPUT_NUMBER_DOMAIN, NUMBER_DOMAIN]
         ),
@@ -353,7 +365,7 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
         if not isinstance(config, dict):
             raise vol.Invalid(f"The configuration for {entity} must be a dictionary.")
 
-        if domain == "alarm_control_panel":
+        if domain == ALARM_CONTROL_PANEL_DOMAIN:
             config = CODE_SCHEMA(config)
 
         elif domain == MEDIA_PLAYER_DOMAIN:
@@ -367,31 +379,31 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
                 feature_list[key] = params
             config[CONF_FEATURE_LIST] = feature_list
 
-        elif domain == "camera":
+        elif domain == CAMERA_DOMAIN:
             config = CAMERA_SCHEMA(config)
 
-        elif domain == "lock":
+        elif domain == LOCK_DOMAIN:
             config = LOCK_SCHEMA(config)
 
-        elif domain == "switch":
+        elif domain == SWITCH_DOMAIN:
             config = SWITCH_TYPE_SCHEMA(config)
 
-        elif domain == "humidifier":
+        elif domain == HUMIDIFIER_DOMAIN:
             config = HUMIDIFIER_SCHEMA(config)
 
-        elif domain == "climate":
+        elif domain == CLIMATE_DOMAIN:
             config = CLIMATE_SCHEMA(config)
 
-        elif domain == "cover":
+        elif domain == COVER_DOMAIN:
             config = COVER_SCHEMA(config)
 
-        elif domain == "fan":
+        elif domain == FAN_DOMAIN:
             config = FAN_SCHEMA(config)
 
-        elif domain == "sensor":
+        elif domain == SENSOR_DOMAIN:
             config = SENSOR_SCHEMA(config)
 
-        elif domain == "valve":
+        elif domain == VALVE_DOMAIN:
             config = VALVE_SCHEMA(config)
 
         else:
@@ -403,7 +415,7 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
 def get_media_player_features(state: State) -> list[str]:
     """Determine features for media players."""
-    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
     supported_modes = []
     if features & (
@@ -716,7 +728,7 @@ def state_needs_accessory_mode(state: State) -> bool:
 
     return (
         state.domain == MEDIA_PLAYER_DOMAIN
-        and state.attributes.get(ATTR_DEVICE_CLASS)
+        and state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         in (
             MediaPlayerDeviceClass.TV,
             MediaPlayerDeviceClass.RECEIVER,
@@ -724,7 +736,7 @@ def state_needs_accessory_mode(state: State) -> bool:
         )
     ) or (
         state.domain == REMOTE_DOMAIN
-        and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        and state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         & RemoteEntityFeature.ACTIVITY
     )
 

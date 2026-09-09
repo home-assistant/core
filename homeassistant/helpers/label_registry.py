@@ -271,6 +271,17 @@ def async_get(hass: HomeAssistant) -> LabelRegistry:
     return LabelRegistry(hass)
 
 
+@callback
+def async_get_missing_label_ids(
+    hass: HomeAssistant, label_ids: Iterable[str]
+) -> set[str]:
+    """Return the label ids which are missing from the label registry."""
+    registry = async_get(hass)
+    return {
+        label_id for label_id in label_ids if registry.async_get_label(label_id) is None
+    }
+
+
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load label registry."""
     assert DATA_REGISTRY not in hass.data

@@ -124,8 +124,8 @@ async def test_dual_lens_sub_devices(
     assert config_entry.state is ConfigEntryState.LOADED
 
     for channel in (0, 1):
-        lens_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{TEST_UID}_lens{channel}")}
+        lens_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{TEST_UID}_lens{channel}"), config_entry.entry_id
         )
         assert lens_device is not None
         assert lens_device.name == f"{TEST_CAM_NAME} lens {channel}"
@@ -144,8 +144,8 @@ async def test_dual_lens_sub_devices(
     assert entity.device_id == host_device.id
 
     # the pre-existing lens sub-device and entity should have been reused
-    lens_0_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_UID}_lens0")}
+    lens_0_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_UID}_lens0"), config_entry.entry_id
     )
     assert lens_0_device is not None
     assert lens_0_device.id == old_lens_device.id
@@ -185,12 +185,12 @@ async def test_dual_lens_sub_devices_nvr(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    parent_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, parent_dev_id)}
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, parent_dev_id), config_entry.entry_id
     )
     assert parent_device is not None
-    lens_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_UID}_lens0")}
+    lens_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_UID}_lens0"), config_entry.entry_id
     )
     assert lens_device is not None
     assert lens_device.via_device_id == parent_device.id

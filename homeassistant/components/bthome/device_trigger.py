@@ -58,19 +58,12 @@ def get_event_classes_by_device_id(hass: HomeAssistant, device_id: str) -> list[
     Events for BTHome BLE devices are dynamically discovered
     and stored in the device config entry when they are first seen.
     """
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get(device_id)
-    if TYPE_CHECKING:
-        assert device is not None
-
-    config_entries = [
-        hass.config_entries.async_get_entry(entry_id)
-        for entry_id in device.config_entries
-    ]
-    bthome_config_entry = next(
-        entry for entry in config_entries if entry and entry.domain == DOMAIN
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device_id, domain=DOMAIN
     )
-    return bthome_config_entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, [])  # type: ignore[no-any-return]
+    if TYPE_CHECKING:
+        assert config_entry is not None
+    return config_entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, [])  # type: ignore[no-any-return]
 
 
 def get_event_types_by_event_class(event_class: str) -> set[str]:

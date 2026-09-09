@@ -1,7 +1,6 @@
 """Define test fixtures for OpenUV."""
 
 from collections.abc import Generator
-import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -20,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_API_KEY = "abcde12345"
 TEST_ELEVATION = 0
@@ -85,13 +84,13 @@ def config_fixture() -> dict[str, Any]:
 @pytest.fixture(name="data_protection_window", scope="package")
 def data_protection_window_fixture():
     """Define a fixture to return UV protection window data."""
-    return json.loads(load_fixture("protection_window_data.json", "openuv"))
+    return load_json_object_fixture("protection_window_data.json", "openuv")
 
 
 @pytest.fixture(name="data_uv_index", scope="package")
 def data_uv_index_fixture():
     """Define a fixture to return UV index data."""
-    return json.loads(load_fixture("uv_index_data.json", "openuv"))
+    return load_json_object_fixture("uv_index_data.json", "openuv")
 
 
 @pytest.fixture(name="mock_pyopenuv")

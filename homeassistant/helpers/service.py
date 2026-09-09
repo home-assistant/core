@@ -431,9 +431,8 @@ async def async_extract_config_entry_ids(
     # Some devices may have no entities
     for device_id in referenced.referenced_devices:
         if (
-            device_id in dev_reg.devices
-            and (device := dev_reg.async_get(device_id)) is not None
-        ):
+            device := dev_reg.async_get(device_id, include_composite_devices=False)
+        ) is not None:
             config_entry_ids.update(device.config_entries)
 
     for entity_id in referenced.referenced | referenced.indirectly_referenced:
@@ -613,7 +612,16 @@ def async_set_service_schema(
     }
 
     if "target" in schema:
-        description["target"] = schema["target"]
+        # Match validation applied to descriptions loaded from services.yaml.
+        try:
+            description["target"] = TargetSelector.CONFIG_SCHEMA(schema["target"])
+        except vol.Invalid as err:
+            _LOGGER.warning(
+                "Invalid target in the description of service %s.%s, ignoring it: %s",
+                domain,
+                service,
+                err,
+            )
 
     if (
         response := hass.services.supports_response(domain, service)
@@ -679,6 +687,7 @@ async def _resolve_entity_service_call_entities(
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
+    admin_only: bool = False,
 ) -> list[Entity] | None:
     """Resolve and filter entities for an entity service call."""
     entity_perms: Callable[[str, str], bool] | None = None
@@ -688,6 +697,8 @@ async def _resolve_entity_service_call_entities(
         if user is None:
             raise UnknownUser(context=call.context)
         if not user.is_admin:
+            if admin_only:
+                raise Unauthorized(context=call.context)
             entity_perms = user.permissions.check_entity
 
     target_all_entities = call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL
@@ -884,6 +895,7 @@ async def entity_service_call(
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
     *,
+    admin_only: bool = False,
     entity_device_classes: Iterable[str | None] | None = None,
 ) -> EntityServiceResponse | None:
     """Handle an entity service call.
@@ -891,7 +903,12 @@ async def entity_service_call(
     Calls all platforms simultaneously.
     """
     entities = await _resolve_entity_service_call_entities(
-        hass, registered_entities, call, required_features, entity_device_classes
+        hass,
+        registered_entities,
+        call,
+        required_features,
+        entity_device_classes,
+        admin_only=admin_only,
     )
     if entities is None:
         return None
@@ -1153,6 +1170,7 @@ def async_register_entity_service(
     domain: str,
     name: str,
     *,
+    admin_only: bool = False,
     description_placeholders: Mapping[str, str] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
     entities: Mapping[str, Entity],
@@ -1181,6 +1199,7 @@ def async_register_entity_service(
             hass,
             entities,
             service_func,
+            admin_only=admin_only,
             entity_device_classes=entity_device_classes,
             required_features=required_features,
         ),
@@ -1270,29 +1289,19 @@ def async_register_platform_entity_service(
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
-    entity_handler = partial(
-        entity_service_call,
-        hass,
-        partial(_get_platform_entities, hass, entity_domain, service_domain),
-        service_func,
-        entity_device_classes=entity_device_classes,
-        required_features=required_features,
-    )
-
-    service_handler = (
-        partial(
-            _async_admin_handler,
-            hass,
-            HassJob(entity_handler, f"admin service {service_domain}.{service_name}"),
-        )
-        if admin_only
-        else entity_handler
-    )
 
     hass.services.async_register(
         service_domain,
         service_name,
-        service_handler,
+        partial(
+            entity_service_call,
+            hass,
+            partial(_get_platform_entities, hass, entity_domain, service_domain),
+            service_func,
+            admin_only=admin_only,
+            entity_device_classes=entity_device_classes,
+            required_features=required_features,
+        ),
         schema,
         supports_response,
         job_type=HassJobType.Coroutinefunction,
@@ -1414,3 +1423,42 @@ def _async_get_single_loaded_config_entry(
             },
         )
     return config_entry
+
+
+@callback
+def async_get_device_and_config_entry(
+    hass: HomeAssistant, domain: str, device_id: str
+) -> tuple[device_registry.DeviceEntry, ConfigEntry]:
+    """Get and validate the device and the loaded config entry of the domain owning it.
+
+    Raises ServiceValidationError if the device is unknown, is not owned by a
+    config entry of the domain, or if that config entry is not loaded.
+    """
+    device, config_entry = device_registry.async_get_device_and_config_entry_for_domain(
+        hass, device_id, domain=domain
+    )
+    if device is None:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_device_not_found",
+            translation_placeholders={"device_id": device_id},
+        )
+    if config_entry is None:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_device_wrong_domain",
+            translation_placeholders={
+                "device_name": device.name_by_user or device.name or device_id,
+                "domain": domain,
+            },
+        )
+    if config_entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_config_entry_not_loaded",
+            translation_placeholders={
+                "domain": domain,
+                "entry_title": config_entry.title,
+            },
+        )
+    return device, config_entry

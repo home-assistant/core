@@ -51,6 +51,9 @@ class UnifiEntityLoader:
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
         self._polling_coordinators: dict[int, UnifiDataUpdateCoordinator] = {
+            id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
+                hub, hub.api.object_oriented_network_configs
+            ),
             id(hub.api.traffic_rules): UnifiDataUpdateCoordinator(
                 hub, hub.api.traffic_rules
             ),

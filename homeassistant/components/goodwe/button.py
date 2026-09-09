@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from datetime import datetime
 import logging
 from typing import override
 
@@ -13,6 +12,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import GoodweConfigEntry
 
@@ -30,7 +30,9 @@ SYNCHRONIZE_CLOCK = GoodweButtonEntityDescription(
     key="synchronize_clock",
     translation_key="synchronize_clock",
     entity_category=EntityCategory.CONFIG,
-    action=lambda inv: inv.write_setting("time", datetime.now()),  # pylint: disable=home-assistant-enforce-naive-now
+    # The inverter clock shows wall time, and encode_datetime only reads the
+    # calendar fields, so the configured time zone is what should be written.
+    action=lambda inv: inv.write_setting("time", dt_util.now()),
 )
 
 

@@ -3,10 +3,10 @@
 import asyncio
 from collections.abc import Mapping
 import contextlib
-from datetime import datetime
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
+import time
 from typing import Any, cast, override
 
 from aiohttp import web
@@ -587,8 +587,7 @@ async def ws_start_preview(
 
     if user_input.get(CONF_STILL_IMAGE_URL):
         ha_still_url = (
-            "/api/generic/preview_flow_image"
-            f"/{msg['flow_id']}?t={datetime.now().isoformat()}"  # pylint: disable=home-assistant-enforce-naive-now
+            f"/api/generic/preview_flow_image/{msg['flow_id']}?t={time.time()}"
         )
         _LOGGER.debug("Got preview still URL: %s", ha_still_url)
 

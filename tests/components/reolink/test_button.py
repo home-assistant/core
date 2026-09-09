@@ -27,8 +27,20 @@ async def test_all_entities(
     snapshot: SnapshotAssertion,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    reolink_host: MagicMock,
 ) -> None:
     """Test all entities."""
+
+    def mock_supported(ch, capability, sub_channel=None):
+        if capability in {"ptz_stop", "pan", "tilt"}:
+            return sub_channel == 1
+        if sub_channel is not None:
+            return False
+        return True
+
+    reolink_host.sub_channels.return_value = {None, 1}
+    reolink_host.supported = mock_supported
+
     with patch(
         "homeassistant.components.reolink.PLATFORMS",
         [Platform.BUTTON],
@@ -68,12 +80,22 @@ async def test_button(
         )
 
 
+@pytest.mark.parametrize(
+    "sub_channel",
+    [
+        None,
+        1,
+    ],
+)
 async def test_ptz_move_service(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_host: MagicMock,
+    sub_channel: int | None,
 ) -> None:
     """Test ptz_move entity service using PTZ button entity."""
+    reolink_host.sub_channels.return_value = {sub_channel}
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BUTTON]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -87,7 +109,9 @@ async def test_ptz_move_service(
         {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 5},
         blocking=True,
     )
-    reolink_host.set_ptz_command.assert_called_with(0, command="Up", speed=5)
+    reolink_host.set_ptz_command.assert_called_with(
+        0, sub_channel, command="Up", speed=5
+    )
 
     reolink_host.set_ptz_command.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
