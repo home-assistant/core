@@ -159,6 +159,7 @@ async def test_setup_websocket_2(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_ENTRY_WS,
+        unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
 
