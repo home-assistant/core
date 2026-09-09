@@ -528,6 +528,28 @@ UPS_DEVICE_2["vbms_table"]["battpool"]["device_bypass_voltage"] = 121.7
                             {"availability": 0.0, "target": "1.1.1.1", "type": "icmp"},
                         ],
                     },
+                    "WAN3": {
+                        "monitors": [
+                            {
+                                "availability": 100.0,
+                                "latency_average": 41,
+                                "target": "www.microsoft.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 100.0,
+                                "latency_average": 32,
+                                "target": "google.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 100.0,
+                                "latency_average": 16,
+                                "target": "1.1.1.1",
+                                "type": "icmp",
+                            },
+                        ],
+                    },
                 },
                 "state": 1,
                 "type": "usw",
@@ -1819,6 +1841,28 @@ async def test_device_uptime(
                             {"availability": 0.0, "target": "1.1.1.1", "type": "icmp"},
                         ],
                     },
+                    "WAN3": {
+                        "monitors": [
+                            {
+                                "availability": 100.0,
+                                "latency_average": 41,
+                                "target": "www.microsoft.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 100.0,
+                                "latency_average": 32,
+                                "target": "google.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 100.0,
+                                "latency_average": 16,
+                                "target": "1.1.1.1",
+                                "type": "icmp",
+                            },
+                        ],
+                    },
                 },
                 "state": 1,
                 "type": "usw",
@@ -1828,21 +1872,93 @@ async def test_device_uptime(
     ],
 )
 @pytest.mark.parametrize(
-    ("monitor_id", "state", "index_to_update", "monitor_update", "updated_state"),
+    (
+        "wan",
+        "monitor_id",
+        "state",
+        "index_to_update",
+        "monitor_update",
+        "updated_state",
+    ),
     [
         pytest.param(
-            "microsoft_wan", "56", 0, {"latency_average": 20}, "20", id="microsoft"
+            "WAN",
+            "microsoft_wan",
+            "56",
+            0,
+            {"latency_average": 20},
+            "20",
+            id="microsoft",
         ),
-        pytest.param("google_wan", "53", 1, {"latency_average": 90}, "90", id="google"),
         pytest.param(
-            "cloudflare_wan", "30", 2, {"latency_average": 80}, "80", id="cloudflare"
+            "WAN", "google_wan", "53", 1, {"latency_average": 90}, "90", id="google"
         ),
         pytest.param(
-            "microsoft_wan", "56", 0, {}, STATE_UNKNOWN, id="microsoft_no_response"
+            "WAN",
+            "cloudflare_wan",
+            "30",
+            2,
+            {"latency_average": 80},
+            "80",
+            id="cloudflare",
         ),
-        pytest.param("google_wan", "53", 1, {}, STATE_UNKNOWN, id="google_no_response"),
         pytest.param(
-            "cloudflare_wan", "30", 2, {}, STATE_UNKNOWN, id="cloudflare_no_response"
+            "WAN",
+            "microsoft_wan",
+            "56",
+            0,
+            {},
+            STATE_UNKNOWN,
+            id="microsoft_no_response",
+        ),
+        pytest.param(
+            "WAN", "google_wan", "53", 1, {}, STATE_UNKNOWN, id="google_no_response"
+        ),
+        pytest.param(
+            "WAN",
+            "cloudflare_wan",
+            "30",
+            2,
+            {},
+            STATE_UNKNOWN,
+            id="cloudflare_no_response",
+        ),
+        # A third WAN reports under its own key with the same monitor set
+        pytest.param(
+            "WAN3",
+            "microsoft_wan3",
+            "41",
+            0,
+            {"latency_average": 25},
+            "25",
+            id="microsoft_wan3",
+        ),
+        pytest.param(
+            "WAN3",
+            "google_wan3",
+            "32",
+            1,
+            {"latency_average": 60},
+            "60",
+            id="google_wan3",
+        ),
+        pytest.param(
+            "WAN3",
+            "cloudflare_wan3",
+            "16",
+            2,
+            {"latency_average": 70},
+            "70",
+            id="cloudflare_wan3",
+        ),
+        pytest.param(
+            "WAN3",
+            "cloudflare_wan3",
+            "16",
+            2,
+            {},
+            STATE_UNKNOWN,
+            id="cloudflare_wan3_no_response",
         ),
     ],
 )
@@ -1852,6 +1968,7 @@ async def test_wan_monitor_latency(
     entity_registry: er.EntityRegistry,
     mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
+    wan: str,
     monitor_id: str,
     state: str,
     index_to_update: int,
@@ -1886,7 +2003,7 @@ async def test_wan_monitor_latency(
 
     # Update state
     device = deepcopy(device_payload[0])
-    monitor = device["uptime_stats"]["WAN"]["monitors"][index_to_update]
+    monitor = device["uptime_stats"][wan]["monitors"][index_to_update]
     monitor.pop("latency_average")
     monitor.update(monitor_update)
     mock_websocket_message(message=MessageKey.DEVICE, data=device)

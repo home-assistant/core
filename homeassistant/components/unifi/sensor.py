@@ -67,6 +67,12 @@ from .hub import UnifiHub
 
 PARALLEL_UPDATES = 0
 
+# WAN interfaces a gateway can report uptime stats for. UniFi names the first
+# one "WAN" rather than "WAN1". Gateways report only the interfaces they
+# actually have, and supported_fn filters per device, so listing one that a
+# given gateway lacks creates no entity.
+type WanName = Literal["WAN", "WAN2", "WAN3"]
+
 
 @callback
 def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
@@ -256,7 +262,7 @@ def async_device_state_value_fn(hub: UnifiHub, device: Device) -> str | None:
 
 @callback
 def async_device_wan_latency_supported_fn(
-    wan: Literal["WAN", "WAN2"],
+    wan: WanName,
     monitor_target: str,
     hub: UnifiHub,
     obj_id: str,
@@ -269,7 +275,7 @@ def async_device_wan_latency_supported_fn(
 
 @callback
 def async_device_wan_latency_value_fn(
-    wan: Literal["WAN", "WAN2"],
+    wan: WanName,
     monitor_target: str,
     hub: UnifiHub,
     device: Device,
@@ -286,7 +292,7 @@ def async_device_wan_latency_value_fn(
 
 @callback
 def _device_wan_latency_monitor(
-    wan: Literal["WAN", "WAN2"], monitor_target: str, device: Device
+    wan: WanName, monitor_target: str, device: Device
 ) -> TypedDeviceUptimeStatsWanMonitor | None:
     """Return the target of the WAN latency monitor."""
     if device.uptime_stats and (uptime_stats_wan := device.uptime_stats.get(wan)):
@@ -300,7 +306,7 @@ def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
     """Create WAN latency sensors from WAN monitor data."""
 
     def make_wan_latency_entity_description(
-        wan: Literal["WAN", "WAN2"], name: str, monitor_target: str
+        wan: WanName, name: str, monitor_target: str
     ) -> UnifiSensorEntityDescription:
         name_wan = f"{name} {wan}"
         return UnifiSensorEntityDescription[Devices, Device](
@@ -323,7 +329,7 @@ def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
             value_fn=partial(async_device_wan_latency_value_fn, wan, monitor_target),
         )
 
-    wans: tuple[Literal["WAN"], Literal["WAN2"]] = ("WAN", "WAN2")
+    wans: tuple[WanName, ...] = ("WAN", "WAN2", "WAN3")
     return tuple(
         make_wan_latency_entity_description(wan, name, target)
         for wan in wans
