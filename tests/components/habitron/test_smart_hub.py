@@ -15,6 +15,7 @@ import pytest
 
 from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.components.habitron.smart_hub import SmartHub
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -489,3 +490,53 @@ async def test_async_close_delegates_to_comm(
     """async_close hands off to comm.async_close to release the bus client."""
     await smart_hub_stub.async_close()
     smart_hub_stub.comm.async_close.assert_awaited()
+
+
+async def test_setup_stops_before_registering_a_hub_another_entry_owns(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A hub configured twice fails the second entry without touching the registry.
+
+    Both entries derive the same uid from the same MAC, and devices and entity
+    unique ids are keyed by it -- so the second entry would attach itself to
+    the first one's devices. The check therefore runs before the first
+    ``async_get_or_create``, not after the model is registered.
+    """
+    MockConfigEntry(domain=DOMAIN, title="Other", unique_id=MOCK_UID).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="habitron_192.168.1.50",
+        data=MOCK_CONFIG_DATA,
+        options=MOCK_CONFIG_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+
+    client = AsyncMock(spec=HabitronClient)
+    client.host = MOCK_HOST
+    client.get_smhub_info = AsyncMock(return_value=_smhub_info("none"))
+    router = Router(uid="rt_1")
+    with (
+        patch(
+            "homeassistant.components.habitron.communicate.HabitronClient",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.habitron.smart_hub.async_build_system",
+            new=AsyncMock(return_value=router),
+        ),
+        patch(
+            "homeassistant.components.habitron.coordinator."
+            "HbtnCoordinator._async_update_data",
+            new=AsyncMock(return_value=0),
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    # Nothing of this entry's making reached the registry.
+    assert not dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    # ... and the entry it collided with keeps its own id.
+    assert entry.unique_id == "habitron_192.168.1.50"

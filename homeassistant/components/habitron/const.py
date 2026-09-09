@@ -22,6 +22,11 @@ SCAN_INTERVAL: Final = timedelta(seconds=10)
 # A hub's identity is its MAC, written bare and lower case -- the custom (HACS)
 # integration derives it the same way, so both recognise the same entry.
 _MAC_RE: Final = re.compile(r"[0-9a-f]{12}")
+# Shape alone is not enough: the all-zero address is what this integration
+# starts out with before a hub has answered, and the broadcast address is not
+# a machine either. Both pass the pattern and would be shared by every hub
+# reporting them.
+_NOT_AN_IDENTITY: Final = frozenset({"000000000000", "ffffffffffff"})
 
 
 def normalised_mac(value: str) -> str | None:
@@ -32,4 +37,6 @@ def normalised_mac(value: str) -> str | None:
     would otherwise hand out a unique_id that two machines could share.
     """
     mac = value.replace(":", "").replace("-", "").casefold()
-    return mac if _MAC_RE.fullmatch(mac) else None
+    if not _MAC_RE.fullmatch(mac) or mac in _NOT_AN_IDENTITY:
+        return None
+    return mac
