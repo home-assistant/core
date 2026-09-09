@@ -70,16 +70,16 @@ class ESPHomeDashboardManager:
                 addons = get_addons_info(self._hass)
             except HassioNotReadyError:
                 # Supervisor was unreachable during its own setup, so we cannot
-                # tell if the addon is installed. Supervisor discovery sets the
-                # dashboard up again once it recovers.
-                _LOGGER.debug("Supervisor is not ready, skipping dashboard restore")
-                return
-            if info["addon_slug"] not in addons:
-                # The addon is not installed anymore, but it make come back
-                # so we don't want to remove the dashboard, but for now
-                # we don't want to use it.
-                _LOGGER.debug("Addon %s is no longer installed", info["addon_slug"])
-                return
+                # tell if the addon is installed. Restore the dashboard anyway,
+                # a stale one only fails to refresh.
+                _LOGGER.debug("Supervisor is not ready, skipping addon check")
+            else:
+                if info["addon_slug"] not in addons:
+                    # The addon is not installed anymore, but it make come back
+                    # so we don't want to remove the dashboard, but for now
+                    # we don't want to use it.
+                    _LOGGER.debug("Addon %s is no longer installed", info["addon_slug"])
+                    return
 
         await self.async_set_dashboard_info(
             info["addon_slug"], info["host"], info["port"]

@@ -112,11 +112,11 @@ async def test_restore_dashboard_storage_skipped_if_addon_uninstalled(
 
 
 @pytest.mark.usefixtures("hassio_stubs")
-async def test_restore_dashboard_storage_skipped_if_supervisor_not_ready(
+async def test_restore_dashboard_storage_if_supervisor_not_ready(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Restore is skipped, and setup succeeds, if Supervisor is not ready."""
+    """Restore the dashboard, without failing setup, if Supervisor is not ready."""
     hass_storage[dashboard.STORAGE_KEY] = {
         "version": dashboard.STORAGE_VERSION,
         "minor_version": dashboard.STORAGE_VERSION,
@@ -137,7 +137,7 @@ async def test_restore_dashboard_storage_skipped_if_supervisor_not_ready(
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-        assert not mock_dashboard_api.called
+        assert mock_dashboard_api.mock_calls[0][1][0] == "http://new-host:6052"
 
 
 async def test_setup_dashboard_fails(
