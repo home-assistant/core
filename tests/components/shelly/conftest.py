@@ -230,7 +230,7 @@ MOCK_CONFIG = {
         "xcounts": {"expr": None, "unit": None},
         "xfreq": {"expr": None, "unit": None},
     },
-    "ir": {},
+    "ir": {"raw_receive": True},
     "flood:0": {"id": 0, "name": "Kitchen"},
     "light:0": {"name": "test light_0"},
     "light:1": {"name": "test light_1"},
