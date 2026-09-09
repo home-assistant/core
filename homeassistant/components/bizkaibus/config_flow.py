@@ -236,10 +236,7 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_LINES: {route_id: lines[route_id]},
             }
         else:
-            options = {
-                CONF_LINE_IDS: line_ids,
-                CONF_LINES: lines,
-            }
+            return self.async_abort(reason="invalid_line_id")
 
         title = await _get_title_name(api, stop_id)
         if title is None:

@@ -132,6 +132,28 @@ async def test_user_flow_with_timetable_none(hass: HomeAssistant) -> None:
         assert result["step_id"] == "lines"
 
 
+async def test_user_flow_with_title_connection_error(hass: HomeAssistant) -> None:
+    """Test the user flow handles a title connection error."""
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        mock_api = mock_api_class.return_value
+        mock_api.TestConnection = AsyncMock(side_effect=[True, False])
+        mock_api.GetLinesOnStop = AsyncMock(
+            return_value=[SimpleNamespace(id="A", route="Route A")]
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "5678"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_lines_flow_creates_entry(hass: HomeAssistant) -> None:
     """Test the lines step creates an entry with selected lines."""
     stop_id = "1234"
@@ -424,6 +446,41 @@ async def test_reconfigure_step_with_invalid_stop_id(hass: HomeAssistant) -> Non
     assert result["errors"] == {CONF_STOP_ID: "invalid_stop_id"}
 
 
+async def test_reconfigure_step_with_title_connection_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfiguration handles a title connection error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STOP_ID: "0252"},
+        unique_id="0252",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        mock_api = mock_api_class.return_value
+        mock_api.TestConnection = AsyncMock(side_effect=[True, False])
+        mock_api.GetLinesOnStop = AsyncMock(
+            return_value=[SimpleNamespace(id="A", route="Route A")]
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_RECONFIGURE,
+                "entry_id": config_entry.entry_id,
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "9999"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
     """Test reconfiguration recovers when the stop comes back online."""
     config_entry = MockConfigEntry(
@@ -455,15 +512,15 @@ async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_STOP_ID: "9999"}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_STOP_ID: "9999"}
-    )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "9999"}
+        )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "lines"
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "lines"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
@@ -524,10 +581,9 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
     ):
         mock_api = mock_api_class.return_value
         config_entry.runtime_data = SimpleNamespace(api=mock_api)
-        mock_api.TestConnection = AsyncMock(return_value=True)
-        mock_api.GetLinesOnStop = AsyncMock(
-            return_value=[SimpleNamespace(id="A", route="Route A")]
-        )
+        mock_api.TestConnection = AsyncMock(side_effect=[True, False])
+        mock_api.GetLinesOnStop = AsyncMock(return_value=[])
+        mock_api.GetTimetable = AsyncMock(return_value=None)
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -615,11 +671,29 @@ async def test_import_flow_with_unknown_route(hass: HomeAssistant) -> None:
             data={OLD_CONF_STOP_ID: "1234", OLD_CONF_ROUTE_ID: "UNKNOWN"},
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["options"] == {
-        CONF_LINE_IDS: ["A"],
-        CONF_LINES: {"A": "Route A"},
-    }
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_line_id"
+
+
+async def test_import_flow_title_connection_error(hass: HomeAssistant) -> None:
+    """Test importing a stop aborts when fetching its title fails."""
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        mock_api = mock_api_class.return_value
+        mock_api.TestConnection = AsyncMock(side_effect=[True, False])
+        mock_api.GetLinesOnStop = AsyncMock(
+            return_value=[SimpleNamespace(id="A", route="Route A")]
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: "A"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_options_flow_connection_error_on_save(hass: HomeAssistant) -> None:
@@ -636,10 +710,11 @@ async def test_options_flow_connection_error_on_save(hass: HomeAssistant) -> Non
     ) as mock_api_class:
         mock_api = mock_api_class.return_value
         config_entry.runtime_data = SimpleNamespace(api=mock_api)
-        mock_api.TestConnection = AsyncMock(return_value=True)
+        mock_api.TestConnection = AsyncMock(side_effect=[True, False])
         mock_api.GetLinesOnStop = AsyncMock(
             return_value=[SimpleNamespace(id="A", route="Route A")]
         )
+        mock_api.GetTimetable = AsyncMock(return_value=None)
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
