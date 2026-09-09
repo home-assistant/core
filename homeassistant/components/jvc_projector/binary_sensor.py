@@ -28,7 +28,6 @@ class JvcBinarySensor(JvcProjectorEntity, BinarySensorEntity):
     """The entity class for JVC Projector Binary Sensor."""
 
     _attr_translation_key = "power"
-    _attr_name = "Power"
 
     def __init__(
         self,

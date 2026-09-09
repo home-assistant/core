@@ -26,34 +26,26 @@ class JvcProjectorSensorDescription(SensorEntityDescription):
     """Describes JVC Projector sensor entities."""
 
     command: type[Command]
-    name: str | None = None
 
 
 SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     JvcProjectorSensorDescription(
         key="power",
-        name="Power",
+        translation_key="power",
         command=cmd.Power,
         device_class=SensorDeviceClass.ENUM,
     ),
     JvcProjectorSensorDescription(
         key="light_time",
-        name="Light Time",
+        translation_key="light_time",
         command=cmd.LightTime,
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.HOURS,
     ),
     JvcProjectorSensorDescription(
-        key="software_version",
-        name="Software Version",
-        command=cmd.Version,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    JvcProjectorSensorDescription(
         key="color_depth",
-        name="Color Depth",
+        translation_key="color_depth",
         command=cmd.ColorDepth,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -61,7 +53,7 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     ),
     JvcProjectorSensorDescription(
         key="color_space",
-        name="Color Space",
+        translation_key="color_space",
         command=cmd.ColorSpace,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -69,7 +61,7 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     ),
     JvcProjectorSensorDescription(
         key="hdr",
-        name="HDR",
+        translation_key="hdr",
         command=cmd.Hdr,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -79,7 +71,7 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     # migrated to the equivalent select entities.
     JvcProjectorSensorDescription(
         key="hdr_processing",
-        name="HDR Processing",
+        translation_key="hdr_processing",
         command=cmd.HdrProcessing,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -87,7 +79,7 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     ),
     JvcProjectorSensorDescription(
         key="picture_mode",
-        name="Picture Mode",
+        translation_key="picture_mode",
         command=cmd.PictureMode,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -95,7 +87,7 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     ),
     JvcProjectorSensorDescription(
         key="resolution",
-        name="Resolution",
+        translation_key="resolution",
         command=cmd.Source,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -103,7 +95,7 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     ),
     JvcProjectorSensorDescription(
         key="colorimetry",
-        name="Colorimetry",
+        translation_key="colorimetry",
         command=cmd.Colorimetry,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -111,7 +103,7 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     ),
     JvcProjectorSensorDescription(
         key="link_rate",
-        name="Link Rate",
+        translation_key="link_rate",
         command=cmd.LinkRate,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -165,10 +157,8 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
         self.command: type[Command] = description.command
 
         self.entity_description = description
-        self._attr_translation_key = description.key
+        self._attr_translation_key = description.translation_key
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
-        if description.name:
-            self._attr_name = description.name
 
         self._options_map: dict[str, str] = {}
         if self.device_class == SensorDeviceClass.ENUM:
@@ -190,17 +180,6 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
 
         if value is None:
             return None
-
-        # Format the raw four-digit version 0301 as 3.01.
-        if self.entity_description.key == "software_version" and value:
-            try:
-                # Remove "PJ" suffix if present
-                value = value.removesuffix("PJ")
-                # Pad to 4 digits
-                value = value.zfill(4)
-                return f"{int(value[0:2])}.{value[2:]}"
-            except (ValueError, IndexError):
-                return value
 
         if self.device_class == SensorDeviceClass.ENUM:
             return self._options_map.get(value)

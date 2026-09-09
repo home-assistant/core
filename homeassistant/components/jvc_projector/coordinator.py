@@ -70,6 +70,19 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         self.state: dict[type[Command], str] = {}
 
+    @property
+    def software_version(self) -> str | None:
+        """Return the formatted software version, if it has been cached."""
+        value = self.state.get(cmd.Version)
+        if not value:
+            return None
+
+        try:
+            value = value.removesuffix("PJ").zfill(4)
+            return f"{int(value[:2])}.{value[2:]}"
+        except (ValueError, IndexError):
+            return value
+
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update state with the current value of a command."""
@@ -144,8 +157,8 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         elif self.state.get(cmd.Signal) != cmd.Signal.NONE:
             new_state[cmd.Signal] = cmd.Signal.NONE
 
-        # Fetch software version once while on, then use the cached value.
-        if power == cmd.Power.ON and cmd.Version not in self.state:
+        # Fetch software version once and use the cached value for device info.
+        if cmd.Version not in self.state:
             await self._update_command_state(cmd.Version, new_state)
 
         return new_state

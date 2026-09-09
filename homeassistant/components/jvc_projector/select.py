@@ -19,57 +19,58 @@ class JvcProjectorSelectDescription(SelectEntityDescription):
 
     command: type[Command]
     snake_case_states: bool = False
-    name: str | None = None
 
 
 SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
-    JvcProjectorSelectDescription(key="input", name="Input", command=cmd.Input),
+    JvcProjectorSelectDescription(
+        key="input", translation_key="input", command=cmd.Input
+    ),
     JvcProjectorSelectDescription(
         key="installation_mode",
-        name="Installation Mode",
+        translation_key="installation_mode",
         command=cmd.InstallationMode,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="light_power",
-        name="Light Power",
+        translation_key="light_power",
         command=cmd.LightPower,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="dynamic_control",
-        name="Dynamic Control",
+        translation_key="dynamic_control",
         command=cmd.DynamicControl,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="clear_motion_drive",
-        name="Clear Motion Drive",
+        translation_key="clear_motion_drive",
         command=cmd.ClearMotionDrive,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="motion_enhance",
-        name="Motion Enhance",
+        translation_key="motion_enhance",
         command=cmd.MotionEnhance,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="anamorphic",
-        name="Anamorphic",
+        translation_key="anamorphic",
         command=cmd.Anamorphic,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="hdr_processing",
-        name="HDR Processing",
+        translation_key="hdr_processing",
         command=cmd.HdrProcessing,
         entity_registry_enabled_default=False,
         snake_case_states=True,
     ),
     JvcProjectorSelectDescription(
         key="picture_mode",
-        name="Picture Mode",
+        translation_key="picture_mode",
         command=cmd.PictureMode,
         entity_registry_enabled_default=False,
         snake_case_states=True,
@@ -105,10 +106,8 @@ class JvcProjectorSelectEntity(JvcProjectorEntity, SelectEntity):
         self.command: type[Command] = description.command
 
         self.entity_description = description
-        self._attr_translation_key = description.key
+        self._attr_translation_key = description.translation_key
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
-        if description.name:
-            self._attr_name = description.name
 
         self._options_map: dict[str, str] = coordinator.get_options_map(
             self.command.name,
