@@ -320,5 +320,9 @@ class BackupAgentClient:
                 "Failed to create SFTP client."
                 " Re-installing integration might be required"
             ) from e
+        except (OSError, SSHError) as e:
+            raise SFTPConnectionError(
+                f"Failed to open SFTP session on {self.cfg.runtime_data.host}: {e}"
+            ) from e
 
         return self
