@@ -1450,7 +1450,7 @@ async def test_legacy_fetching_in_async(
         stream.async_set_message(message)
         return stream
 
-    # Each stream fetches the same message independently
+    # Streams for the same message share a single fetch
     stream = create_stream("test message")
     stream2 = create_stream("test message")
     stream3 = create_stream("test message")
@@ -1508,7 +1508,7 @@ async def test_fetching_in_async(
         stream.async_set_message(message)
         return stream
 
-    # Each stream fetches the same message independently
+    # Streams for the same message share a single fetch
     stream = create_stream("test message")
     stream2 = create_stream("test message")
     stream3 = create_stream("test message")
