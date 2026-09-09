@@ -26,11 +26,13 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry as dr,
     issue_registry as ir,
     selector,
 )
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.service import (
+    async_get_device_and_config_entry,
+    async_register_admin_service,
+)
 from homeassistant.util.dt import now
 
 from .const import (
@@ -47,10 +49,8 @@ from .const import (
     ATTR_SLUG,
     DOMAIN,
     ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
-    MAIN_COORDINATOR,
     SupervisorEntityModel,
 )
-from .coordinator import HassioMainDataUpdateCoordinator
 from .handler import get_supervisor_client
 
 SERVICE_ADDON_START = "addon_start"
@@ -449,28 +449,14 @@ def async_register_network_storage_services(
     hass: HomeAssistant, supervisor_client: SupervisorClient
 ) -> None:
     """Register network storage (or mount) services."""
-    dev_reg = dr.async_get(hass)
 
     async def async_mount_reload(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
-        coordinator: HassioMainDataUpdateCoordinator | None = None
+        device, _ = async_get_device_and_config_entry(
+            hass, DOMAIN, service.data[ATTR_DEVICE_ID]
+        )
 
-        if (
-            device := dev_reg.async_get(
-                service.data[ATTR_DEVICE_ID], include_child_devices=False
-            )
-        ) is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="mount_reload_unknown_device_id",
-            )
-
-        if (
-            device.name is None
-            or device.model != SupervisorEntityModel.MOUNT
-            or (coordinator := hass.data.get(MAIN_COORDINATOR)) is None
-            or coordinator.entry_id != device.config_entry_id
-        ):
+        if device.name is None or device.model != SupervisorEntityModel.MOUNT:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mount_reload_invalid_device",
