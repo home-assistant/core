@@ -84,10 +84,10 @@ def node(request: pytest.FixtureRequest) -> Node:
 @pytest.mark.parametrize(
     "node",
     [
-        # Vision ZL7432 In Wall Dual Relay Switch: two independent relay outputs:
-        # endpoint 1 controls load 1 and endpoint 2 controls load 2. Both expose
-        # SWITCH_BINARY currentValue, so they are two separate physical switch
-        # outputs on the same in-wall module.
+        # Vision ZL7432 In Wall Dual Relay Switch: two independently controllable
+        # relay outputs on one in-wall module. Endpoints 1 and 2 each expose
+        # SWITCH_BINARY currentValue, one per relay output; the manual does not
+        # state which endpoint maps to which physical load.
         pytest.param("vision_security_zl7432", id="vision_zl7432"),
         # Fibaro FGR-223 Roller Shutter 3: single motor output controlling a roller
         # or venetian shutter. Endpoint 1 is the primary shutter control
@@ -96,24 +96,25 @@ def node(request: pytest.FixtureRequest) -> Node:
         # integration by default (disabled_by: integration), so a registry entry
         # exists but the entity is off unless the user enables it.
         pytest.param("fibaro_fgr223_shutter", id="fibaro_fgr223"),
-        # Shelly/Qubino QNSH-001P10 Wave Shutter: two genuine motor outputs sharing
-        # one device. Endpoint 1 is the primary shutter (SWITCH_MULTILEVEL for
-        # position). Endpoint 2 is a second independent output and produces its own
-        # full set of entities: cover, binary sensors, power sensors, and buttons,
-        # most of which are enabled by default. The secondary cover entity itself is
-        # disabled by the integration, but the endpoint-2 monitoring entities are not.
+        # Shelly/Qubino QNSH-001P10 Wave Shutter: one bi-directional motor (O1 up,
+        # O2 down), same topology as the FGR-223. Endpoint 1 is shutter position;
+        # endpoint 2 is the venetian slat tilt, present only when operating mode
+        # (param 71) is Venetian. The endpoint-2 cover is disabled by the
+        # integration, but unlike the FGR-223 this endpoint also mirrors the Meter
+        # and Notification CCs, yielding a duplicate set of enabled sensor, binary
+        # sensor and button entities.
         pytest.param("shelly_qnsh_001P10_shutter", id="shelly_qnsh_001p10"),
-        # Merten 507801 Connect Roller Shutter: single motor output controlling a
-        # roller shutter. Endpoint 1 is the primary shutter control
-        # (SWITCH_MULTILEVEL). Endpoint 2 exposes an additional control mode (e.g.
-        # slat/scene control) and is created as a disabled-by-integration entity by
-        # default; it is not suppressed, so it still produces a registry entry.
+        # Merten 507801 Connect Roller Shutter: a 1-gang receiver with a single
+        # motor output (two interlocked make contacts for up/down). Endpoints 1
+        # and 2 have identical capabilities (SWITCH_MULTILEVEL + PROTECTION); the
+        # manufacturer documents no endpoint semantics at all, and the integration
+        # discovers endpoint 2 disabled.
         pytest.param("merten_507801", id="merten_507801"),
-        # Inovelli LZW36 Light/Fan Combo: two independent outputs on a single
-        # ceiling-fan canopy module: endpoint 1 controls the light kit
-        # (SWITCH_MULTILEVEL for dimming) and endpoint 2 controls the fan motor
-        # (SWITCH_MULTILEVEL for speed). The two outputs are physically separate
-        # and are meant to be controlled independently.
+        # Inovelli LZW36 Light/Fan Combo: an in-wall switch paired with a canopy
+        # module in the fan; only the switch is the Z-Wave node, driving the module
+        # over proprietary RF. Endpoint 1 is the light (SWITCH_MULTILEVEL dimming),
+        # endpoint 2 the fan motor (SWITCH_MULTILEVEL speed). The two loads are
+        # physically separate and independently controllable.
         pytest.param("inovelli_lzw36", id="inovelli_lzw36"),
         # Heatit Z-TRM6 floor thermostat: thermostat input on endpoint 0/1. Three
         # separate temperature sensor probes report via SENSOR_MULTILEVEL Air
@@ -126,10 +127,12 @@ def node(request: pytest.FixtureRequest) -> Node:
         # reporting Air temperature on endpoints 2 (internal), 3 (external), and 4
         # (floor).
         pytest.param("climate_heatit_z_trm3", id="heatit_z_trm3"),
-        # Heatit Z-TRM2fx floor thermostat: thermostat control on endpoint 0/1.
-        # Endpoints 2 and 3 each expose an Air temperature sensor and a BASIC class
-        # entity. Unlike the Z-TRM3 and Z-TRM6, this device has only two temperature
-        # probes (endpoints 2 and 3) and no endpoint-4 floor sensor.
+        # Heatit Z-TRM2fx floor thermostat: thermostat on endpoint 1. Unlike the
+        # Z-TRM3 and Z-TRM6, the endpoint order differs and there is no internal
+        # room sensor: endpoint 2 is the external room sensor and endpoint 3 is the
+        # floor sensor (it still reports sensor type "Air temperature"). Endpoint 4
+        # is the internal relay (Binary Switch + Meter), not a sensor. The BASIC
+        # currentValue/targetValue on endpoints 2 and 3 are undocumented.
         pytest.param("climate_heatit_z_trm2fx", id="heatit_z_trm2fx"),
     ],
     indirect=True,
