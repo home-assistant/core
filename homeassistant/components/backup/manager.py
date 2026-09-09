@@ -47,6 +47,7 @@ from .config import (
     CreateBackupParametersDict,
     check_unavailable_agents,
     delete_backups_exceeding_configured_count,
+    delete_backups_older_than_configured_days,
 )
 from .const import (
     BUF_SIZE,
@@ -1308,6 +1309,11 @@ class BackupManager:
                 )
             )
             await delete_backups_exceeding_configured_count(self)
+            # The scheduled delete only fires a day after the config is loaded,
+            # so an instance restarted more often than that never reaches it.
+            # Retention by days is applied here as well, the same way retention
+            # by copies already is.
+            await delete_backups_older_than_configured_days(self)
 
         finally:
             self._backup_task = None
