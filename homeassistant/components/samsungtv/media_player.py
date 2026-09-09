@@ -58,7 +58,6 @@ SUPPORT_SAMSUNGTV = (
 # Max delay waiting for app_list to return, as some TVs simply ignore the request
 APP_LIST_DELAY = 3
 
-# Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 
@@ -164,7 +163,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
                 await self._dmr_device.async_unsubscribe_services()
             return
 
-        startup_tasks: list[asyncio.Task[Any]] = []
+        startup_tasks: list[asyncio.Task[None]] = []
 
         if not self._app_list_event.is_set():
             startup_tasks.append(create_eager_task(self._async_startup_app_list()))
