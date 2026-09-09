@@ -94,6 +94,20 @@ async def _get_hourly_stats(
     )
 
 
+def _hourly_rows(
+    statistics: list[StatisticsRow],
+) -> list[tuple[str, float | None, float | None]]:
+    """Show recorded UTC timestamps alongside interval energy and cumulative sums."""
+    return [
+        (
+            dt_util.utc_from_timestamp(row["start"]).isoformat(),
+            row["state"],
+            row["sum"],
+        )
+        for row in statistics
+    ]
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Create a config entry for the coordinator."""
@@ -230,13 +244,54 @@ async def test_hourly_aggregation_and_repeated_refresh(
 
 
 @pytest.mark.parametrize(
-    ("time_zone", "date", "expected_states"),
+    ("time_zone", "before", "missing", "expected"),
     [
-        pytest.param(SITE_TIME_ZONE, "2023-06-01", [10, 170, 45], id="pacific"),
-        pytest.param("Asia/Kolkata", "2023-06-01", [10, 215], id="half-hour"),
-        pytest.param("Pacific/Chatham", "2023-06-01", [10, 215], id="quarter-hour"),
-        pytest.param(SITE_TIME_ZONE, "2023-03-12", [10, 170, 45], id="spring-dst"),
-        pytest.param(SITE_TIME_ZONE, "2023-11-05", [10, 170, 45], id="fall-dst"),
+        pytest.param(
+            SITE_TIME_ZONE,
+            BEFORE,
+            LAST,
+            [
+                ("2023-06-02T06:00:00+00:00", 150, 150),
+                ("2023-06-02T07:00:00+00:00", 20, 170),
+            ],
+            id="pacific",
+        ),
+        pytest.param(
+            "Asia/Kolkata",
+            "2023-06-01T23:45:00+05:30",
+            "2023-06-01T23:55:00+05:30",
+            [("2023-06-01T18:00:00+00:00", 170, 170)],
+            id="half-hour",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            "2023-06-01T23:45:00+12:45",
+            "2023-06-01T23:55:00+12:45",
+            [("2023-06-01T11:00:00+00:00", 170, 170)],
+            id="quarter-hour",
+        ),
+        pytest.param(
+            SITE_TIME_ZONE,
+            "2023-03-12T01:55:00-08:00",
+            "2023-03-12T03:00:00-07:00",
+            [
+                ("2023-03-12T09:00:00+00:00", 100, 100),
+                ("2023-03-12T10:00:00+00:00", 50, 150),
+                ("2023-03-13T07:00:00+00:00", 20, 170),
+            ],
+            id="spring-dst",
+        ),
+        pytest.param(
+            SITE_TIME_ZONE,
+            "2023-11-05T01:30:00-07:00",
+            "2023-11-05T01:30:00-08:00",
+            [
+                ("2023-11-05T08:00:00+00:00", 100, 100),
+                ("2023-11-05T09:00:00+00:00", 50, 150),
+                ("2023-11-06T08:00:00+00:00", 20, 170),
+            ],
+            id="fall-dst",
+        ),
     ],
 )
 async def test_backfill_after_midnight(
@@ -246,104 +301,158 @@ async def test_backfill_after_midnight(
     mock_energy_site: AsyncMock,
     history_responses: dict[str | None, dict[str, Any]],
     time_zone: str,
-    date: str,
-    expected_states: list[float],
+    before: str,
+    missing: str,
+    expected: list[tuple[str, float, float]],
 ) -> None:
-    """Restore the old day's tail and whole UTC buckets after a restart."""
-    zone = await dt_util.async_get_time_zone(time_zone)
-    assert zone is not None
-    day = datetime.fromisoformat(date).replace(tzinfo=zone)
-    tomorrow = day + timedelta(days=1)
-    before = [
-        ((day + timedelta(hours=22)).isoformat(), {GRID: 10}),
-        ((day + timedelta(hours=23, minutes=45)).isoformat(), {GRID: 100}),
-    ]
-    history_responses[None] = _history(*before, time_zone=time_zone)
+    """Recover the actual UTC hours across midnight and daylight-saving changes."""
+    history_responses[None] = _history((before, {GRID: 100}), time_zone=time_zone)
     await _refresh(hass, coordinator)
     coordinator = TeslaFleetEnergySiteHistoryCoordinator(
         hass, mock_config_entry, mock_energy_site, SITE_NAME
     )
-    end_date = (tomorrow - timedelta(seconds=1)).isoformat()
+    end_date = (
+        datetime.fromisoformat(missing)
+        .replace(hour=23, minute=59, second=59)
+        .isoformat()
+    )
     history_responses[end_date] = _history(
-        *before,
-        ((day + timedelta(hours=23, minutes=50)).isoformat(), {GRID: 30}),
-        ((day + timedelta(hours=23, minutes=55)).isoformat(), {GRID: 40}),
+        (before, {GRID: 100}),
+        (missing, {GRID: 50}),
         time_zone=time_zone,
+    )
+    current = datetime.fromisoformat(missing).replace(hour=0, minute=5) + timedelta(
+        days=1
     )
     history_responses[None] = _history(
-        (tomorrow.isoformat(), {GRID: 20}),
-        ((tomorrow + timedelta(minutes=5)).isoformat(), {GRID: 25}),
-        time_zone=time_zone,
+        (current.isoformat(), {GRID: 20}), time_zone=time_zone
     )
     output = await _refresh(hass, coordinator)
-    assert output[GRID] == 45
-    assert output["_period_start"] == tomorrow
+    assert output[GRID] == 20
+    assert output["_period_start"] == current
     mock_energy_site.energy_history.assert_called_with(
         TeslaEnergyPeriod.DAY, end_date=end_date
     )
     stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID})
-    assert [row["state"] for row in stats[GRID_STATISTIC_ID]] == expected_states
-    assert stats[GRID_STATISTIC_ID][-1]["sum"] == 225
+    assert _hourly_rows(stats[GRID_STATISTIC_ID]) == expected
     await _refresh(hass, coordinator)
     assert await _get_hourly_stats(hass, {GRID_STATISTIC_ID}) == stats
 
 
-@pytest.mark.parametrize("time_zone", ["UTC", "Asia/Kolkata"])
-async def test_streaming_multi_day_history(
-    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
+@pytest.mark.parametrize(
+    ("time_zone", "expected"),
+    [
+        pytest.param(
+            "UTC",
+            [
+                ("2023-06-01T23:00:00+00:00", 10, 10),
+                ("2023-06-02T00:00:00+00:00", 20, 30),
+                ("2023-06-02T23:00:00+00:00", 30, 60),
+                ("2023-06-03T00:00:00+00:00", 80, 140),
+            ],
+            id="whole-hour",
+        ),
+        pytest.param(
+            "Asia/Kolkata",
+            [
+                ("2023-06-01T18:00:00+00:00", 30, 30),
+                ("2023-06-02T18:00:00+00:00", 110, 140),
+            ],
+            id="half-hour",
+        ),
+    ],
+)
+async def test_multi_day_recovery(
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    mock_energy_site: AsyncMock,
-    history_responses: dict[str | None, dict[str, Any]],
+    normal_config_entry: MockConfigEntry,
+    mock_energy_history: AsyncMock,
+    freezer: FrozenDateTimeFactory,
     time_zone: str,
+    expected: list[tuple[str, float, float]],
 ) -> None:
-    """Carry totals across days and sparse fields even when recorder writes lag."""
+    """A loaded integration recovers each missed hour without lumping energy together."""
     zone = await dt_util.async_get_time_zone(time_zone)
     assert zone is not None
     day = datetime(2023, 6, 1, tzinfo=zone)
     last = day + timedelta(hours=23, minutes=55)
-    history_responses[None] = _history(
+    freezer.move_to(last - ENERGY_HISTORY_INTERVAL)
+    mock_energy_history.return_value = _history(
         (last.isoformat(), {GRID: 1, SOLAR: 100}), time_zone=time_zone
     )
-    await _refresh(hass, coordinator)
-    history_responses[None] = _history(
-        ((day + timedelta(days=4, minutes=5)).isoformat(), {GRID: 80, SOLAR: 50}),
-        time_zone=time_zone,
-    )
-    history_responses[(day + timedelta(days=1, seconds=-1)).isoformat()] = _history(
-        (last.isoformat(), {GRID: 10, SOLAR: 100}), time_zone=time_zone
-    )
-    for index in range(1, 4):
-        history_responses[(day + timedelta(days=index + 1, seconds=-1)).isoformat()] = (
-            _history(
-                ((day + timedelta(days=index)).isoformat(), {GRID: index * 20}),
-                ((last + timedelta(days=index)).isoformat(), {GRID: index * 20 + 10}),
-                time_zone=time_zone,
-            )
-        )
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_wait_recording_done(hass)
+    assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
 
-    # Both jobs see the old recorder baseline; neither may skip ahead of its inputs.
+    freezer.move_to(day + timedelta(days=2))
+    mock_energy_history.side_effect = [
+        _history(
+            ((day + timedelta(days=2, minutes=5)).isoformat(), {GRID: 80, SOLAR: 50}),
+            time_zone=time_zone,
+        ),
+        _history((last.isoformat(), {GRID: 10, SOLAR: 100}), time_zone=time_zone),
+        _history(
+            ((day + timedelta(days=1)).isoformat(), {GRID: 20}),
+            ((last + timedelta(days=1)).isoformat(), {GRID: 30}),
+            time_zone=time_zone,
+        ),
+    ]
+    mock_energy_history.reset_mock()
+    with patch("homeassistant.components.tesla_fleet.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(normal_config_entry.entry_id)
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_wait_recording_done(hass)
+
+    assert mock_energy_history.call_args_list == [
+        call(TeslaEnergyPeriod.DAY),
+        call(
+            TeslaEnergyPeriod.DAY,
+            end_date=(day + timedelta(days=1, seconds=-1)).isoformat(),
+        ),
+        call(
+            TeslaEnergyPeriod.DAY,
+            end_date=(day + timedelta(days=2, seconds=-1)).isoformat(),
+        ),
+    ]
+    stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID, SOLAR_STATISTIC_ID})
+    assert _hourly_rows(stats[GRID_STATISTIC_ID]) == expected
+    assert _hourly_rows(stats[SOLAR_STATISTIC_ID]) == [
+        (expected[0][0], 100, 100),
+        (expected[-1][0], 50, 150),
+    ]
+    state = hass.states.get("sensor.energy_site_grid_imported")
+    assert state is not None
+    assert state.state == "0.08"
+
+
+async def test_repeated_import_with_delayed_recorder(
+    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    history_responses: dict[str | None, dict[str, Any]],
+) -> None:
+    """Keep sums correct when a second import sees the previous recorder baseline."""
+    history_responses[None] = _history((BEFORE, {GRID: 100}))
+    await _refresh(hass, coordinator)
+    history_responses[None] = _history((AFTER, {GRID: 20}))
+    history_responses[END_DATE] = _history((BEFORE, {GRID: 100}), (LAST, {GRID: 50}))
     with patch.object(recorder_mock, "queue_task") as queue:
         for _ in range(2):
-            mock_energy_site.energy_history.reset_mock()
-            assert (await coordinator._async_update_data())[GRID] == 80
+            await coordinator._async_update_data()
             await hass.async_block_till_done(wait_background_tasks=True)
-            assert mock_energy_site.energy_history.call_args_list == [
-                call(TeslaEnergyPeriod.DAY),
-                *(
-                    call(
-                        TeslaEnergyPeriod.DAY,
-                        end_date=(day + timedelta(days=index, seconds=-1)).isoformat(),
-                    )
-                    for index in range(1, 5)
-                ),
-            ]
     for queued in queue.call_args_list:
         recorder_mock.queue_task(queued.args[0])
     await async_wait_recording_done(hass)
-    stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID, SOLAR_STATISTIC_ID})
-    assert stats[GRID_STATISTIC_ID][-1]["sum"] == 360
-    assert stats[SOLAR_STATISTIC_ID][-1]["sum"] == 150
+    stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID})
+    assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
+        ("2023-06-02T06:00:00+00:00", 150, 150),
+        ("2023-06-02T07:00:00+00:00", 20, 170),
+    ]
 
 
 async def test_independent_baselines_and_new_fields(
@@ -465,7 +574,9 @@ async def test_resume_valid_prefix_after_failure(
     await _refresh(hass, coordinator)
     assert (await _refresh(hass, coordinator))[GRID] == 40
     stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID})
-    assert stats[GRID_STATISTIC_ID][-1]["sum"] == 10
+    assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
+        ("2023-06-01T23:00:00+00:00", 10, 10)
+    ]
 
     coordinator = TeslaFleetEnergySiteHistoryCoordinator(
         hass, mock_config_entry, mock_energy_site, SITE_NAME
@@ -478,7 +589,12 @@ async def test_resume_valid_prefix_after_failure(
     ]
     await _refresh(hass, coordinator)
     stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID})
-    assert stats[GRID_STATISTIC_ID][-1]["sum"] == 100
+    assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
+        ("2023-06-01T23:00:00+00:00", 10, 10),
+        ("2023-06-02T23:00:00+00:00", 20, 30),
+        ("2023-06-03T23:00:00+00:00", 30, 60),
+        ("2023-06-04T00:00:00+00:00", 40, 100),
+    ]
 
 
 @pytest.mark.parametrize("time_zone", [None, "", "Invalid/Timezone"])
