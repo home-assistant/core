@@ -18,6 +18,7 @@ TO_REDACT = [
     CONF_MAC_ADDRESS,
     CONF_GROUP,
     CONF_LOCATION,
+    "network_name",
 ]
 
 

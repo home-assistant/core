@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import contextmanager
 from dataclasses import replace
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, IPv6Address
 from unittest.mock import AsyncMock, patch
 
 from lifx import (
@@ -124,10 +124,16 @@ def _mock_broadcast_discovery(
         yield
 
 
+@pytest.mark.parametrize(
+    "address",
+    [IPv4Address(IP_ADDRESS), IPv6Address("fd00::1234")],
+    ids=["wifi", "thread"],
+)
 async def test_zeroconf_discovery_creates_version_2_entry(
-    hass: HomeAssistant, mock_light: Light
+    hass: HomeAssistant, mock_light: Light, address: IPv4Address | IPv6Address
 ) -> None:
     """Test mDNS discovery creates a per-device version 2 entry."""
+    mock_light.ip = str(address)
     with patch(
         "homeassistant.components.lifx.config_flow.Device.connect",
         return_value=mock_light,
@@ -135,7 +141,7 @@ async def test_zeroconf_discovery_creates_version_2_entry(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=_zeroconf_info(),
+            data=replace(_zeroconf_info(), ip_address=address, ip_addresses=[address]),
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -145,7 +151,7 @@ async def test_zeroconf_discovery_creates_version_2_entry(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == LABEL
-    assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}
+    assert result["data"] == {CONF_HOST: str(address), CONF_SERIAL: SERIAL}
     assert result["result"].unique_id == SERIAL
     assert result["result"].version == 2
     mock_light.close.assert_awaited_once_with()

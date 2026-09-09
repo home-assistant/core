@@ -33,6 +33,7 @@
       'model': 'LIFX Mini W',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -1264,6 +1265,7 @@
         'kelvin': 3500,
         'saturation': 0.0,
       }),
+      'thread_info': None,
       'tile_colors': list([
         dict({
           'brightness': 0.5,
@@ -4045,6 +4047,7 @@
         'kelvin': 3500,
         'saturation': 0.0,
       }),
+      'thread_info': None,
       'tile_colors': list([
         dict({
           'brightness': 0.5,
@@ -4880,6 +4883,7 @@
       'model': 'Original',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -4933,6 +4937,7 @@
       'model': 'LIFX White 900 (BR30)',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -4987,6 +4992,7 @@
       'model': 'LIFX Beam',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -5533,6 +5539,7 @@
       'model': 'LIFX Clean A19 1100lm',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -5587,6 +5594,7 @@
       'model': 'LIFX+ (A19)',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -5641,6 +5649,7 @@
       'model': 'LIFX Z',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -5881,6 +5890,7 @@
       'model': 'LIFX Tile',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'tile_colors': list([
         dict({
           'brightness': 0.5,

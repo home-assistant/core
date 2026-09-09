@@ -8,6 +8,7 @@ from lifx import (
     CeilingLight,
     CeilingLightState,
     CollectionInfo,
+    Connectivity,
     DeviceCapabilities,
     FirmwareEffect,
     FirmwareInfo,
@@ -142,7 +143,8 @@ def _create_mock_device(
     device.set_reboot = AsyncMock()
     device.apply_theme = AsyncMock()
     # The library only reads the signal strength once it is switched on
-    device.fetch_wifi_info = False
+    device.fetch_radio_info = False
+    device.connectivity = Connectivity.WIFI
     return cast(_DeviceT, device)
 
 
