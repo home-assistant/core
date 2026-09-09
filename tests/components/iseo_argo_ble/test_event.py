@@ -409,6 +409,45 @@ async def test_action_joins_a_read_already_running(
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_entries_sharing_a_second_keep_the_log_order(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the newest of a tied group wins, and lands last.
+
+    Timestamps have one-second precision, so a burst can share a second. The
+    lock hands the log over oldest first, which is the only thing left to
+    order by — otherwise the earliest of a tied group is reported, and the
+    entity can settle on an older event than the one that actually happened
+    last.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    tied = datetime(2026, 9, 2, 9, 0, tzinfo=UTC)
+    mock_iseo_client.gw_read_unread_logs.return_value = [
+        _log_entry(CODE_OPENED, tied, extra_description="Alice"),
+        _log_entry(CODE_WRONG_PIN, tied, user_info="keypad"),
+        _log_entry(CODE_OPENED, tied, extra_description="Bob"),
+    ]
+
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    await _open_the_door(hass, freezer, mock_iseo_client)
+
+    reported = [
+        event.data["new_state"].attributes[ATTR_EVENT_TYPE]
+        for event in events
+        if event.data["entity_id"] == ENTITY_ID
+    ]
+    # Bob opened the door after the wrong PIN, so his opening is the newest of
+    # its kind and the entity's final state.
+    assert reported == ["access_denied", "opened"]
+    assert hass.states.get(ENTITY_ID).attributes["opened_by"] == "Bob"
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
 async def test_unloading_does_not_interrupt_a_read_in_flight(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

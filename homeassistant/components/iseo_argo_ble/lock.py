@@ -408,15 +408,28 @@ class IseoLockEntity(LockEntity):
         it had just happened, so only the newest of each kind is reported, in
         timestamp order so the entity ends up on the most recent one.
         """
-        newest: list[tuple[str, LogEntry]] = []
+        # Timestamps have one-second precision, so entries sharing a second
+        # need the position the lock handed them over in as the tie-breaker:
+        # the log is drained oldest first, so a later position is a later
+        # event. Without it max() keeps the earliest of a tied group, and the
+        # ordering below falls back to the order of _EVENT_TYPE_CODES, either
+        # of which can leave an older event as the entity's final state.
+        newest: list[tuple[int, str, LogEntry]] = []
         for event_type, codes in _EVENT_TYPE_CODES:
-            matching = [entry for entry in entries if entry.event_code in codes]
+            matching = [
+                (position, entry)
+                for position, entry in enumerate(entries)
+                if entry.event_code in codes
+            ]
             if matching:
-                newest.append(
-                    (event_type, max(matching, key=lambda entry: entry.timestamp))
+                position, entry = max(
+                    matching, key=lambda item: (item[1].timestamp, item[0])
                 )
+                newest.append((position, event_type, entry))
 
-        for event_type, entry in sorted(newest, key=lambda item: item[1].timestamp):
+        for _position, event_type, entry in sorted(
+            newest, key=lambda item: (item[2].timestamp, item[0])
+        ):
             _LOGGER.debug(
                 "Access log: %s (code %s) at %s",
                 describe_event(entry.event_code),
