@@ -35,11 +35,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -
     still triggers this migration but keeps that path open, which matters while
     both exist side by side.
 
-    ``websock_token`` is deliberately kept. This integration does not implement
-    the SmartController Touch/Assist push path that consumes it, but the custom
-    integration does and reads it from this very entry -- dropping it here
-    would break that installation the moment someone switches back. It can go
-    once the custom integration is retired.
+    ``websock_token`` is deliberately kept. It is a real setting, not a
+    leftover: a SmartHub running on its own machine reaches Home Assistant over
+    a websocket and authenticates with a long-lived token, where a hub sharing
+    the machine uses the supervisor token and needs none. This first version
+    does not expose the field because it implements no path that reads it, but
+    the custom integration does -- from this very entry -- and a later PR here
+    will. Dropping it would strand both.
     """
     data = {**entry.data}
     if entry.version == 1 and "habitron_host" in data:
