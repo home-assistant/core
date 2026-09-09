@@ -31,6 +31,7 @@ from homeassistant.components.camera import async_get_image, async_get_mjpeg_str
 from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import (
     CONF_STREAM_URL_TEMPLATE,
+    CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -244,7 +245,9 @@ async def test_get_stream_from_camera(
 ) -> None:
     """Test getting a stream."""
 
-    stream_handler = AsyncMock(return_value=web.Response(body=""))
+    async def stream_handler(request: web.Request) -> web.Response:
+        assert request.headers["Authorization"] == "Basic Y2FtZXJhX3VzZXI6Y2FtZXJhX3Bhc3N3b3Jk"
+        return web.Response(body="")
 
     app = web.Application()
     app.add_routes([web.get("/", stream_handler)])
@@ -260,9 +263,12 @@ async def test_get_stream_from_camera(
             CONF_URL: f"http://127.0.0.1:{stream_server.port}",
             # The port won't be used as the client is a mock.
             CONF_SURVEILLANCE_USERNAME: TEST_SURVEILLANCE_USERNAME,
+            CONF_SURVEILLANCE_PASSWORD: "global_password",
         },
     )
     cameras = copy.deepcopy(TEST_CAMERAS)
+    cameras[KEY_CAMERAS][0]["streaming_username"] = "camera_user"
+    cameras[KEY_CAMERAS][0]["streaming_password"] = "camera_password"
     client.async_get_cameras = AsyncMock(return_value=cameras)
     await setup_mock_motioneye_config_entry(
         hass, config_entry=config_entry, client=client
