@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from copy import deepcopy
 from unittest.mock import Mock, patch
 
+from aiohue.v2.controllers.events import EventType
+from aiohue.v2.models.scene import Scene as HueScene
 import pytest
 
 from homeassistant.components.hue.v2.select import HueSceneSelectEntity
@@ -562,7 +565,11 @@ async def test_scene_select_refreshes_options_missed_before_subscribe(
     hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
 ) -> None:
     """Test options include a scene added after init and before subscribe."""
-    test_data = deepcopy(v2_resources_test_data)
+    test_data = [
+        deepcopy(resource)
+        for resource in v2_resources_test_data
+        if resource["id"] != TEST_ZONE_ID
+    ]
     regular_scene = next(
         resource
         for resource in test_data
@@ -579,8 +586,26 @@ async def test_scene_select_refreshes_options_missed_before_subscribe(
     async def async_added_to_hass_with_late_scene(
         self: HueSceneSelectEntity,
     ) -> None:
-        if self.unique_id == f"{TEST_ROOM_ID}_scene_select":
+        assert self.unique_id == f"{TEST_ROOM_ID}_scene_select"
+        scene_added = asyncio.Event()
+
+        def on_scene_added(_: EventType, scene: HueScene) -> None:
+            scene_added.set()
+
+        unsubscribe = mock_bridge_v2.api.scenes.subscribe(
+            on_scene_added,
+            late_scene["id"],
+            EventType.RESOURCE_ADDED,
+        )
+        try:
             mock_bridge_v2.api.emit_event("add", late_scene)
+            async with asyncio.timeout(5):
+                await scene_added.wait()
+        finally:
+            unsubscribe()
+
+        assert late_scene["id"] in mock_bridge_v2.api.scenes
+        assert "Late scene" not in self.options
         await original_added_to_hass(self)
 
     await mock_bridge_v2.api.load_test_data(test_data)
@@ -589,7 +614,7 @@ async def test_scene_select_refreshes_options_missed_before_subscribe(
         "async_added_to_hass",
         async_added_to_hass_with_late_scene,
     ):
-        await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
+        await setup_platform(hass, mock_bridge_v2, Platform.SELECT)
 
     state = hass.states.get(TEST_ROOM_SCENE_ENTITY)
     assert state is not None
