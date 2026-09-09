@@ -328,11 +328,16 @@ async def test_insufficient_credits_resolved_by_stream(
     assert (issue is None) is resolved
 
 
-async def test_insufficient_credits_cleared_on_unload(
+async def test_insufficient_credits_kept_on_unload(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test the insufficient credits issue is cleared when the entry unloads."""
+    """Test the insufficient credits issue survives an ordinary unload.
+
+    The repair reflects the account's credit state, not this load of the
+    entry: an unload (including one preceding a reload) must not silently
+    drop the warning while the account is still short on credits.
+    """
 
     entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
     issue_id = f"insufficient_credits_{entry.entry_id}"
@@ -349,6 +354,75 @@ async def test_insufficient_credits_cleared_on_unload(
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
     assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_insufficient_credits_survives_reload_and_still_clears(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test a reload while credits are still short leaves a working repair.
+
+    Metadata and subentry changes schedule a reload of the whole entry, which
+    unloads and re-sets-up the account; setup does not re-probe credits, so
+    the repair must survive that round trip and remain resolvable by a later
+    credits-stream event.
+    """
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="insufficient_credits",
+        translation_placeholders={"account": entry.title, "credits_url": CREDITS_URL},
+    )
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    mock_add_listener.send(
+        {
+            "credits": {"type": "topup", "cost": -100, "name": "topup", "balance": 100},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_insufficient_credits_cleared_on_removal(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the insufficient credits issue is cleared when the entry is removed."""
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="insufficient_credits",
+        translation_placeholders={"account": entry.title, "credits_url": CREDITS_URL},
+    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    assert await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

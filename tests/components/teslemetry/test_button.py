@@ -9,6 +9,7 @@ from tesla_fleet_api.exceptions import InsufficientCredits
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.teslemetry.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -97,6 +98,42 @@ async def test_insufficient_credits(
     )
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_insufficient_credits_not_recreated_after_unload(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a command failing after its entry unloads does not orphan a repair.
+
+    The entry's credits-stream listener is unsubscribed as part of the unload,
+    so a repair created afterwards would have no listener left able to clear
+    it; it must not be (re-)created once the entry is no longer loaded.
+    """
+    entry = await setup_platform(hass, [Platform.BUTTON])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+
+    async def unload_then_fail(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        # The entry finishes unloading while this command is still in flight.
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        raise InsufficientCredits
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.wake_up",
+            side_effect=unload_then_fail,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: ["button.test_wake"]},
+            blocking=True,
+        )
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_insufficient_credits_stale_response_ignored(

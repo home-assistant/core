@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 from tesla_fleet_api.exceptions import InsufficientCredits, TeslaFleetError
 from teslemetry_stream.const import CreditsEvent
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -64,7 +65,11 @@ async def handle_command(
 ) -> dict[str, Any]:
     """Handle a command."""
     issue_id = insufficient_credits_issue_id(entry)
-    credits_generation = entry.runtime_data.credits_generation
+    # Snapshot the runtime data instead of re-reading entry.runtime_data after
+    # the await: an unload occurring while the command is in flight deletes
+    # that attribute outright, which would otherwise raise AttributeError here.
+    runtime_data = entry.runtime_data
+    credits_generation = runtime_data.credits_generation
     try:
         result = await command
     except InsufficientCredits as e:
@@ -74,10 +79,13 @@ async def handle_command(
         # insufficient event landing mid-flight is a real problem that must still
         # surface, so only an available latest state suppresses it.
         stale = (
-            entry.runtime_data.credits_generation != credits_generation
-            and entry.runtime_data.credits_available
+            runtime_data.credits_generation != credits_generation
+            and runtime_data.credits_available
         )
-        if not stale:
+        # An unload also unsubscribes the credits-stream listener before this
+        # command settles, so a repair created after that point would have no
+        # listener left able to clear it. Only create it while still loaded.
+        if not stale and entry.state is ConfigEntryState.LOADED:
             ir.async_create_issue(
                 hass,
                 DOMAIN,
