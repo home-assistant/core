@@ -223,11 +223,11 @@ def test_described_sensor_not_diagnostic_for_normal_type() -> None:
         (CURRENT_DESCRIPTION, "Mod_MOD-1_snsr0_current"),
         (VOLTAGE_DESCRIPTION, "Mod_MOD-1_snsr0_voltage"),
         (TIMEOUT_DESCRIPTION, "Mod_MOD-1_snsr0_timeout"),
-        # The ekey members produce two entities each.
-        (EKEY_ID_DESCRIPTION, "Mod_MOD-1_snsr0_ekey_id"),
-        (EKEY_USER_NAME_DESCRIPTION, "Mod_MOD-1_snsr0_ekey_user_name"),
-        # Numbered in its own list.
-        (ANALOG_DESCRIPTION, "Mod_MOD-1_snsr0_analog"),
+        # Consolidated here from separate classes in the custom integration;
+        # these keep that integration's ids so both produce the same entity.
+        (EKEY_ID_DESCRIPTION, "Mod_MOD-1_ekey_ident"),
+        (EKEY_USER_NAME_DESCRIPTION, "Mod_MOD-1_ekey_ident_name"),
+        (ANALOG_DESCRIPTION, "Mod_MOD-1_adin0"),
     ],
 )
 def test_described_sensor_unique_id(
@@ -729,7 +729,7 @@ async def test_async_setup_entry_emits_all_sensor_types(hass: HomeAssistant) -> 
     }
 
 
-_ANALOG_UNIQUE_ID = "Mod_MOD-1_snsr0_analog"
+_ANALOG_UNIQUE_ID = "Mod_MOD-1_adin0"
 
 
 def _analog_coordinator(ain_area: int, module_area: int = 1) -> MagicMock:
@@ -958,3 +958,52 @@ async def test_host_readings_unknown_until_first_hub_answer() -> None:
     hub.host_diags_valid = True
     assert CPU_LOAD_DESCRIPTION.value_fn(hub, 0) == 42.0
     assert MEMORY_DESCRIPTION.value_fn(hub, 0) == 17.0
+
+
+# The ids the custom (HACS) integration produces, read off its sensor.py. Both
+# integrations write into the same registry and users move between them in
+# either direction while both exist, so every one of these has to match
+# exactly -- a divergence registers a second entity instead of adopting the
+# first, and the user loses that entity's history and customisations.
+_CUSTOM_INTEGRATION_IDS = {
+    "ANALOG_DESCRIPTION": "Mod_MOD-1_adin0",
+    "EKEY_ID_DESCRIPTION": "Mod_MOD-1_ekey_ident",
+    "EKEY_USER_NAME_DESCRIPTION": "Mod_MOD-1_ekey_ident_name",
+    "EKEY_FINGER_DESCRIPTION": "Mod_MOD-1_ekey_fngr",
+    "EKEY_FINGER_NAME_DESCRIPTION": "Mod_MOD-1_ekey_fngr_ident",
+    "STATUS_DESCRIPTION": "Mod_MOD-1_module_status",
+    "POWER_TEMP_DESCRIPTION": "Mod_MOD-1_PowerTemp",
+    "MEMORY_DESCRIPTION": "Mod_MOD-1_perc0",
+    "DISK_DESCRIPTION": "Mod_MOD-1_perc0",
+    "CPU_LOAD_DESCRIPTION": "Mod_MOD-1_dperc0",
+    "CPU_FREQUENCY_DESCRIPTION": "Mod_MOD-1_snsr0",
+    "CPU_TEMPERATURE_DESCRIPTION": "Mod_MOD-1_CPU Temperature",
+}
+
+
+@pytest.mark.parametrize(("name", "expected"), sorted(_CUSTOM_INTEGRATION_IDS.items()))
+def test_legacy_unique_ids_match_the_custom_integration(
+    name: str, expected: str
+) -> None:
+    """Each consolidated description reproduces the custom integration's id."""
+    description = getattr(habitron_sensor, name)
+    module = _make_module()
+    sensor_desc = _make_sensor_descriptor()
+    coord = MagicMock(spec=DataUpdateCoordinator)
+    entity = HbtnDescribedSensor(module, sensor_desc, coord, 0, description)
+    assert entity.unique_id == expected
+
+
+def test_every_consolidated_description_declares_a_legacy_id() -> None:
+    """Pin which descriptions carry a ``legacy_uid``.
+
+    Adding one without it would silently hand a migrating installation a second
+    entity; removing one would do the same in the other direction. Either way
+    the set belongs in a test rather than in someone's memory.
+    """
+    declared = {
+        name
+        for name, obj in vars(habitron_sensor).items()
+        if isinstance(obj, HbtnSensorEntityDescription) and obj.legacy_uid is not None
+    }
+    assert declared == set(_CUSTOM_INTEGRATION_IDS)
