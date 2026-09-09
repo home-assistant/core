@@ -456,7 +456,7 @@ async def test_step_reauth(
     result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth"
+    assert result["step_id"] == "reauth_confirm"
     assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
@@ -482,7 +482,7 @@ async def test_step_reauth_wrong_password(
     result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth"
+    assert result["step_id"] == "reauth_confirm"
     assert not result["errors"]
 
     mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
@@ -492,7 +492,7 @@ async def test_step_reauth_wrong_password(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth"
+    assert result["step_id"] == "reauth_confirm"
     assert result["errors"]["password"] == "invalid_password"
 
     mock_my_pv_client.connect.side_effect = None
