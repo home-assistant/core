@@ -32,7 +32,7 @@ async def test_all_entities(
     """Test all entities."""
 
     def mock_supported(ch, capability, sub_channel=None):
-        if capability in {"ptz_stop", "pan", "tilt"}:
+        if capability in {"ptz_stop", "pan", "tilt", "ptz_speed"}:
             return sub_channel == 1
         if sub_channel is not None:
             return False
