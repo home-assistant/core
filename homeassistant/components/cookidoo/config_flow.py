@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
+    SOURCE_SSDP,
     SOURCE_USER,
     ConfigFlow,
     ConfigFlowResult,
@@ -28,6 +29,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import DOMAIN
 from .helpers import cookidoo_from_config_data
@@ -68,6 +70,24 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         """Perform reconfigure upon an user action."""
         return await self.async_step_user(user_input)
 
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by SSDP discovery of a Thermomix.
+
+        The Thermomix only exposes a minimal UPnP description without any
+        account information, so a discovery cannot set up the cloud connection
+        on its own. The device UDN is used to deduplicate discoveries, and the
+        flow then hands over to the regular user step to collect the Cookidoo
+        credentials.
+        """
+        await self.async_set_unique_id(discovery_info.ssdp_udn)
+        self._abort_if_unique_id_configured()
+
+        self.context["title_placeholders"] = {"name": "Thermomix"}
+
+        return await self.async_step_user()
+
     @override
     async def async_step_user(
         self,
@@ -80,7 +100,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             errors := await self.validate_input(user_input)
         ):
             await self.async_set_unique_id(self.user_uuid)
-            if self.source == SOURCE_USER:
+            if self.source in (SOURCE_USER, SOURCE_SSDP):
                 self._abort_if_unique_id_configured()
             if self.source == SOURCE_RECONFIGURE:
                 self._abort_if_unique_id_mismatch()
@@ -117,7 +137,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         if language_input is not None and not (
             errors := await self.validate_input(self.user_input, language_input)
         ):
-            if self.source == SOURCE_USER:
+            if self.source in (SOURCE_USER, SOURCE_SSDP):
                 return self.async_create_entry(
                     title="Cookidoo", data={**self.user_input, **language_input}
                 )

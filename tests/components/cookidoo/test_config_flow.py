@@ -10,10 +10,16 @@ from cookidoo_api.exceptions import (
 import pytest
 
 from homeassistant.components.cookidoo.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_SERIAL,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .conftest import COUNTRY, EMAIL, LANGUAGE, PASSWORD
 from .test_init import setup_integration
@@ -29,6 +35,20 @@ MOCK_DATA_USER_STEP = {
 MOCK_DATA_LANGUAGE_STEP = {
     CONF_LANGUAGE: LANGUAGE,
 }
+
+TEST_SSDP_UDN = "uuid:3432E6654473"
+
+TEST_SSDP_SERVICE_INFO = SsdpServiceInfo(
+    ssdp_usn=f"{TEST_SSDP_UDN}::urn:device:vorwerk:nwotdevice:1",
+    ssdp_st="urn:device:vorwerk:nwotdevice:1",
+    ssdp_udn=TEST_SSDP_UDN,
+    ssdp_location="http://192.0.2.7:49152/description.xml",
+    upnp={
+        ATTR_UPNP_DEVICE_TYPE: "urn:device:vorwerk:nwotdevice:1",
+        ATTR_UPNP_SERIAL: "25145556024103937",
+        ATTR_UPNP_UDN: TEST_SSDP_UDN,
+    },
+)
 
 
 async def test_flow_user_success(
@@ -478,3 +498,83 @@ async def test_flow_reauth_id_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
+
+
+async def test_flow_ssdp_discovery(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cookidoo_client: AsyncMock
+) -> None:
+    """Test the Thermomix is discovered via SSDP and the flow completes."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=TEST_SSDP_SERVICE_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_USER_STEP,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "language"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_LANGUAGE_STEP,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Cookidoo"
+    assert result["data"] == {**MOCK_DATA_USER_STEP, **MOCK_DATA_LANGUAGE_STEP}
+    assert result["result"].unique_id == "sub_uuid"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_flow_ssdp_discovery_device_already_configured(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+) -> None:
+    """Test SSDP discovery aborts when the device UDN is already configured."""
+    cookidoo_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        cookidoo_config_entry, unique_id=TEST_SSDP_UDN
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=TEST_SSDP_SERVICE_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_flow_ssdp_discovery_account_already_configured(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+) -> None:
+    """Test SSDP discovery aborts when the Cookidoo account is already set up."""
+    cookidoo_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=TEST_SSDP_SERVICE_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_USER_STEP,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
