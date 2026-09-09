@@ -572,17 +572,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         should be retried once Supervisor is back. Returns None if the error is
         unrelated, or if nothing more can be done about it.
         """
-        if err.error_key == "backup_supervisor_version_error":
-            # Auto update is disabled, Supervisor can't help itself
-            return None
-        update_in_progress = update_in_progress or (
-            err.error_key == "backup_supervisor_update_in_progress_error"
-        )
-        if not update_in_progress and (
-            err.error_key is not None or LEGACY_SUPERVISOR_VERSION_ERROR not in str(err)
-        ):
-            # Older Supervisor versions don't set an error key and use the
-            # message above for this error.
+        if not update_in_progress and LEGACY_SUPERVISOR_VERSION_ERROR not in str(err):
             return None
 
         # Read the version before Supervisor restarts for its update
