@@ -9,6 +9,10 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK]
 CONF_PRIV_SCALAR = "priv_scalar"
 CONF_ADMIN_UUID = "admin_uuid"
 CONF_ADMIN_PRIV_SCALAR = "admin_priv_scalar"
+# Validity windows of credentials Home Assistant suspended, by credential UUID.
+# The lock only reports the expired sentinel once a credential is suspended, so
+# without this a restart would leave one permanently unrestorable.
+CONF_SAVED_VALIDITY = "saved_validity"
 
 # Config flow field: opt in to enrolling the admin identity
 CONF_ENABLE_ADMIN = "enable_admin"

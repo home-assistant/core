@@ -30,7 +30,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IseoConfigEntry
-from .const import ADMIN_SETTLE_DELAY, CONF_ADMIN_UUID, DEFAULT_USER_SUBTYPE, DOMAIN
+from .const import (
+    ADMIN_SETTLE_DELAY,
+    CONF_ADMIN_UUID,
+    CONF_SAVED_VALIDITY,
+    DEFAULT_USER_SUBTYPE,
+    DOMAIN,
+)
 from .coordinator import IseoUserCoordinator
 
 PARALLEL_UPDATES = 1
@@ -61,6 +67,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up a sensor per lock credential from a config entry."""
     if (coordinator := entry.runtime_data.user_coordinator) is None:
+        return
+    if coordinator.data is None:
+        # The first credential read failed. The lock is deliberately set up
+        # anyway, so there is simply nothing to add until a later read works.
         return
 
     admin_uuid_hex = entry.data.get(CONF_ADMIN_UUID)
@@ -93,8 +103,15 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
         # Suspending overwrites it, so this is the only copy to restore from —
         # and if the credential was already suspended when the list was first
         # read, what we hold is the expired sentinel, not the real window.
-        self._validity = user.validity
-        self._validity_is_original = not user.disabled
+        saved = entry.data.get(CONF_SAVED_VALIDITY, {}).get(user.uuid_hex)
+        if user.disabled and saved is not None:
+            # Home Assistant suspended this one and kept its window; the lock
+            # only reports the expired sentinel now.
+            self._validity = bytes.fromhex(saved)
+            self._validity_is_original = True
+        else:
+            self._validity = user.validity
+            self._validity_is_original = not user.disabled
 
         self._attr_translation_key = USER_TYPE_TRANSLATION_KEYS.get(
             user.user_type, "credential_other"
@@ -212,7 +229,27 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                 validity=self._validity if enabled else None,
             )
 
+        # Only this entity instance knew the window, and suspending has just
+        # overwritten it on the lock. Persist it, or a restart would leave the
+        # credential permanently unrestorable.
+        self._remember_validity(suspended=not enabled)
         self._apply_to_cached_users(disabled=not enabled)
+
+    def _remember_validity(self, suspended: bool) -> None:
+        """Keep or drop this credential's stored validity window."""
+        entry = self.coordinator.config_entry
+        saved = dict(entry.data.get(CONF_SAVED_VALIDITY, {}))
+        if suspended:
+            if self._validity is None:
+                saved.pop(self._uuid_hex, None)
+            else:
+                saved[self._uuid_hex] = self._validity.hex()
+        else:
+            saved.pop(self._uuid_hex, None)
+        if saved != entry.data.get(CONF_SAVED_VALIDITY, {}):
+            self.hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_SAVED_VALIDITY: saved}
+            )
 
     async def async_delete_credential(self) -> None:
         """Remove this credential from the lock for good.
@@ -227,6 +264,7 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                 subtype=self._inner_subtype,
             )
 
+        self._remember_validity(suspended=False)
         self._forget_credential()
 
     def _forget_credential(self) -> None:

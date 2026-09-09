@@ -1,5 +1,6 @@
 """Test the ISEO Argo BLE credential sensors."""
 
+from dataclasses import replace
 from unittest.mock import MagicMock, patch
 
 from iseo_argo_ble import USER_TYPE_RFID, IseoAuthError, IseoConnectionError
@@ -125,6 +126,40 @@ async def test_restore_credential_puts_its_window_back(
         "disabled": False,
         "validity": MOCK_VALIDITY,
     }
+    assert hass.states.get(ALICE_ENTITY_ID).state == STATE_ON
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_restore_survives_a_reload(
+    hass: HomeAssistant,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a credential suspended here stays restorable after a restart.
+
+    Only the entity instance knew the window, and suspending overwrote it on
+    the lock, so without persisting it a reload would leave the credential
+    permanently unrestorable.
+    """
+    await setup_integration(hass, mock_admin_config_entry)
+    await _set_enabled(hass, ALICE_ENTITY_ID, False)
+
+    # What the lock reports from now on: suspended, with the expired sentinel.
+    mock_iseo_client.read_users.return_value = [
+        replace(user, disabled=True, validity=None)
+        if user.uuid_hex == "1111111111111111111111111111aaaa"
+        else user
+        for user in mock_iseo_client.read_users.return_value
+    ]
+    await hass.config_entries.async_reload(mock_admin_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_iseo_client.set_user_disabled.reset_mock()
+    await _set_enabled(hass, ALICE_ENTITY_ID, True)
+
+    assert mock_iseo_client.set_user_disabled.await_args.kwargs["validity"] == (
+        MOCK_VALIDITY
+    )
     assert hass.states.get(ALICE_ENTITY_ID).state == STATE_ON
 
 

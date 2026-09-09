@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
+import logging
 
 from cryptography.hazmat.primitives.asymmetric.ec import SECP224R1, derive_private_key
 from iseo_argo_ble import IseoClient
@@ -30,6 +31,8 @@ from .const import (
     SERVICE_SET_CREDENTIAL_ENABLED,
 )
 from .coordinator import IseoUserCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -123,7 +126,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool
     )
 
     if user_coordinator is not None:
-        await user_coordinator.async_config_entry_first_refresh()
+        # Deliberately not async_config_entry_first_refresh(): that turns any
+        # failure into ConfigEntryNotReady, which would hold up the lock over
+        # an optional capability and then retry the admin session on a
+        # schedule. Repeated admin reads are the one thing that must never
+        # happen to this lock. The credential entities simply do not appear,
+        # and the next successful action or reload brings them back.
+        await user_coordinator.async_refresh()
+        if not user_coordinator.last_update_success:
+            _LOGGER.warning(
+                "Could not read the credentials enrolled on %s, continuing "
+                "without them: %s",
+                address,
+                user_coordinator.last_exception,
+            )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

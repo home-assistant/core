@@ -76,12 +76,23 @@ async def test_setup_retries_when_user_read_fails(
     mock_ble_device: MagicMock,
     error: Exception,
 ) -> None:
-    """Test setup is retried when the lock will not hand over its user list."""
+    """Test the lock still loads when it will not hand over its user list.
+
+    Failing setup here would hold up the lock over an optional capability and
+    then retry the administrator session on a schedule, which is the one thing
+    that must never happen to this lock.
+    """
     mock_iseo_client.read_users.side_effect = error
 
     await setup_integration(hass, mock_admin_config_entry)
 
-    assert mock_admin_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_admin_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("lock.iseo_lock") is not None
+    assert not [
+        state
+        for state in hass.states.async_all("binary_sensor")
+        if state.entity_id.startswith("binary_sensor.iseo")
+    ]
 
 
 @pytest.mark.usefixtures("mock_iseo_client", "mock_derive_private_key")
@@ -90,11 +101,12 @@ async def test_setup_retries_when_device_gone_before_user_read(
     mock_admin_config_entry: MockConfigEntry,
     mock_ble_device: MagicMock,
 ) -> None:
-    """Test setup is retried when the lock stops advertising mid-setup."""
+    """Test the lock still loads when it stops advertising mid-setup."""
     with patch(
         "homeassistant.components.iseo_argo_ble.coordinator.async_ble_device_from_address",
         return_value=None,
     ):
         await setup_integration(hass, mock_admin_config_entry)
 
-    assert mock_admin_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_admin_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("lock.iseo_lock") is not None

@@ -66,8 +66,14 @@ class IseoUserCoordinator(DataUpdateCoordinator[list[UserEntry]]):
         try:
             async with self._ble_lock:
                 self.client.update_ble_device(ble_device)
-                users = await self.client.read_users()
-                await asyncio.sleep(ADMIN_SETTLE_DELAY)
+                try:
+                    users = await self.client.read_users()
+                finally:
+                    # A failed admin session needs the teardown time just as
+                    # much as a successful one, and the mutex has to stay held
+                    # across it so nothing else connects first. The write path
+                    # already waits after both outcomes.
+                    await asyncio.sleep(ADMIN_SETTLE_DELAY)
         except IseoAuthError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
