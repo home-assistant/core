@@ -9,10 +9,12 @@ from airgradient.models import ConfigurationControl
 
 from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
+    NumberMode,
 )
-from homeassistant.const import EntityCategory, UnitOfRatio
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -21,6 +23,7 @@ from . import AirGradientConfigEntry
 from .const import (
     DISPLAY_BRIGHTNESS as DISPLAY_BRIGHTNESS_CONFIG,
     DOMAIN,
+    MEASUREMENT_INTERVAL as MEASUREMENT_INTERVAL_CONFIG,
     supports_config,
 )
 from .coordinator import AirGradientCoordinator
@@ -64,6 +67,21 @@ LED_BAR_BRIGHTNESS = AirGradientNumberEntityDescription(
     set_value_fn=lambda client, value: client.set_led_bar_brightness(value),
 )
 
+MEASUREMENT_INTERVAL = AirGradientNumberEntityDescription(
+    key="measurement_interval",
+    translation_key="measurement_interval",
+    entity_category=EntityCategory.CONFIG,
+    device_class=NumberDeviceClass.DURATION,
+    mode=NumberMode.BOX,
+    native_min_value=1,
+    native_max_value=3600,
+    native_step=1,
+    native_unit_of_measurement=UnitOfTime.SECONDS,
+    config_key=MEASUREMENT_INTERVAL_CONFIG,
+    value_fn=lambda config: config.measurement_interval,
+    set_value_fn=lambda client, value: client.set_measurement_interval(value),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -74,7 +92,7 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
     model = coordinator.data.measures.model
-    descriptions = (DISPLAY_BRIGHTNESS, LED_BAR_BRIGHTNESS)
+    descriptions = (DISPLAY_BRIGHTNESS, LED_BAR_BRIGHTNESS, MEASUREMENT_INTERVAL)
     descriptions_by_key = {description.key: description for description in descriptions}
     added_entities: set[str] = set()
 
