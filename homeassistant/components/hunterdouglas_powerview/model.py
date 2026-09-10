@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.hub import Hub
+from aiopvapi.resources.automation import Automation
 from aiopvapi.resources.room import Room
 from aiopvapi.resources.scene import Scene
 from aiopvapi.resources.shade import BaseShade
@@ -22,9 +23,10 @@ class PowerviewEntryData:
     """Define class for main domain information."""
 
     api: AioRequest
-    room_data: dict[str, Room]
-    scene_data: dict[str, Scene]
-    shade_data: dict[str, BaseShade]
+    room_data: dict[int, Room]
+    scene_data: dict[int, Scene]
+    shade_data: dict[int, BaseShade]
+    automation_data: dict[int, Automation]
     coordinator: PowerviewShadeUpdateCoordinator
     device_info: PowerviewDeviceInfo
 
