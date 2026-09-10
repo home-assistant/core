@@ -2,6 +2,7 @@
 
 import asyncio
 from base64 import b64decode
+import binascii
 from collections.abc import Mapping
 from contextlib import suppress
 import os
@@ -64,6 +65,7 @@ from .const import (
     ATTR_REPEAT_MODE,
     ATTR_SHUFFLE_ENABLED,
     DOMAIN,
+    LOGGER,
 )
 from .entity import MusicAssistantDashboardEntity, MusicAssistantEntity
 from .helpers import catch_musicassistant_error, catch_user_not_found
@@ -138,6 +140,9 @@ NOW_PLAYING_ID_PREFIX = f"{DashboardType.NOW_PLAYING.value}/"
 # dashboard types whose media image is a provider icon rather than player artwork;
 # their DashboardType value doubles as the provider domain for providers/icon
 DASHBOARD_ICON_TYPES = frozenset({DashboardType.PARTY, DashboardType.MUSIC_QUIZ})
+DASHBOARD_ICON_PROVIDER_DOMAINS = frozenset(
+    icon_type.value for icon_type in DASHBOARD_ICON_TYPES
+)
 
 
 def _get_mdi_icon(icon: str) -> str:
@@ -165,11 +170,22 @@ def _get_player_artwork_url(mass: MusicAssistantClient, player: Player) -> str |
     return None
 
 
-def _decode_data_uri(data_uri: str) -> tuple[bytes, str]:
-    """Decode a `data:<content-type>;base64,<data>` URI."""
-    header, _, encoded = data_uri.partition(",")
+def _decode_data_uri(data_uri: str) -> tuple[bytes | None, str | None]:
+    """Decode a `data:<content-type>;base64,<data>` URI.
+
+    Returns (None, None) if the URI is malformed rather than raising.
+    """
+    header, sep, encoded = data_uri.partition(",")
+    if not sep or not encoded:
+        return None, None
     content_type = header.removeprefix("data:").removesuffix(";base64")
-    return b64decode(encoded), content_type
+    try:
+        decoded = b64decode(encoded)
+    except binascii.Error, ValueError:
+        return None, None
+    if not decoded:
+        return None, None
+    return decoded, content_type
 
 
 async def async_setup_entry(
@@ -852,8 +868,9 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
     def __init__(self, mass: MusicAssistantClient, dashboard_id: str) -> None:
         """Initialize MusicAssistantDashboardPlayer."""
         super().__init__(mass, dashboard_id)
-        # provider icon data URIs, keyed by provider domain (party/music_quiz)
-        self._provider_icon_cache: dict[str, str | None] = {}
+        # decoded provider icons (bytes, content_type), keyed by provider
+        # domain (party/music_quiz); a failed fetch is cached as None
+        self._provider_icon_cache: dict[str, tuple[bytes, str] | None] = {}
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -865,6 +882,9 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
                 self.__on_session_updated, EventType.DASHBOARD_SESSIONS_UPDATED
             )
         )
+        # the now_playing session's target player can change per session, so
+        # these are unscoped (no player id filter); __on_player_or_queue_updated
+        # matches the current session's player itself
         self.async_on_remove(
             self.mass.subscribe(
                 self.__on_player_or_queue_updated, EventType.PLAYER_UPDATED
@@ -923,14 +943,19 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         session = self.mass.dashboard.get_session(self.dashboard_id)
         if session is not None and session.dashboard in DASHBOARD_ICON_TYPES:
             return session.dashboard.value
-        return None
+        # now_playing (or no session): fall back to the base class, which
+        # hashes media_image_url - needed for the media_image_local proxy
+        # path to engage for MA-hosted (non-remotely-accessible) artwork
+        return super().media_image_hash
 
     @override
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch the provider icon for an active party/music_quiz session."""
         session = self.mass.dashboard.get_session(self.dashboard_id)
         if session is None or session.dashboard not in DASHBOARD_ICON_TYPES:
-            return None, None
+            # now_playing (or no session): let the base class fetch/proxy
+            # media_image_url itself, same as the regular player entity
+            return await super().async_get_media_image()
         return await self._fetch_provider_icon(session.dashboard.value)
 
     @override
@@ -941,6 +966,8 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:
         """Fetch a provider icon for a browse tree leaf."""
+        if media_content_id not in DASHBOARD_ICON_PROVIDER_DOMAINS:
+            return None, None
         return await self._fetch_provider_icon(media_content_id)
 
     async def __on_session_updated(self, event: MassEvent) -> None:
@@ -959,6 +986,7 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         else:
             matches = event.object_id in (
                 player.active_source if player else None,
+                player.active_group if player else None,
                 session.player_id,
             )
         if not matches:
@@ -1072,18 +1100,34 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
     async def _fetch_provider_icon(
         self, provider_domain: str
     ) -> tuple[bytes | None, str | None]:
-        """Fetch and decode a provider icon, caching the raw data URI per domain."""
+        """Fetch and decode a provider icon, caching the decoded result per domain."""
         if provider_domain not in self._provider_icon_cache:
-            try:
-                icon = await self.mass.send_command(
-                    "providers/icon", provider=provider_domain
-                )
-            except MusicAssistantError:
-                icon = None
-            self._provider_icon_cache[provider_domain] = icon
-        if (data_uri := self._provider_icon_cache[provider_domain]) is None:
-            return None, None
-        return _decode_data_uri(data_uri)
+            self._provider_icon_cache[
+                provider_domain
+            ] = await self._request_provider_icon(provider_domain)
+        return self._provider_icon_cache[provider_domain] or (None, None)
+
+    async def _request_provider_icon(
+        self, provider_domain: str
+    ) -> tuple[bytes, str] | None:
+        """Fetch and decode a provider icon from the server, logging on failure."""
+        try:
+            data_uri = await self.mass.send_command(
+                "providers/icon", provider=provider_domain
+            )
+        except MusicAssistantError:
+            LOGGER.debug(
+                "Failed to fetch provider icon for %s", provider_domain, exc_info=True
+            )
+            return None
+        if data_uri is None:
+            LOGGER.debug("No provider icon available for %s", provider_domain)
+            return None
+        decoded, content_type = _decode_data_uri(data_uri)
+        if decoded is None or content_type is None:
+            LOGGER.warning("Malformed provider icon data URI for %s", provider_domain)
+            return None
+        return decoded, content_type
 
     def _build_root_listing(self, dashboard: DashboardDevice) -> BrowseMedia:
         """Build the root browse listing, filtered to this display's dashboards."""
