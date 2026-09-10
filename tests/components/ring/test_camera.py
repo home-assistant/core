@@ -27,7 +27,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockStreamReader
 
 from .common import MockConfigEntry, setup_platform
-from .device_mocks import FRONT_DEVICE_ID, INGRESS_DEVICE_ID
+from .device_mocks import FRONT_DEVICE_ID, FRONT_DOOR_DEVICE_ID, INGRESS_DEVICE_ID
 
 from tests.common import async_fire_time_changed, snapshot_platform
 from tests.typing import WebSocketGenerator
@@ -355,6 +355,44 @@ async def test_camera_live_view_no_subscription(
     # Requesting an image without subscription should raise an error
     with pytest.raises(HomeAssistantError):
         await async_get_image(hass, "camera.front_live_view")
+
+
+@pytest.mark.parametrize(
+    ("device_id", "entity_id"),
+    [
+        pytest.param(
+            FRONT_DOOR_DEVICE_ID, "camera.front_door_live_view", id="doorbell"
+        ),
+        pytest.param(FRONT_DEVICE_ID, "camera.front_live_view", id="stickup-camera"),
+    ],
+)
+@pytest.mark.usefixtures("mock_ring_client")
+async def test_camera_live_view_without_video_capability(
+    hass: HomeAssistant,
+    mock_ring_devices: Mock,
+    device_id: int,
+    entity_id: str,
+) -> None:
+    """Keep existing cameras when the library does not recognize their video kind."""
+    device = mock_ring_devices.get_device(device_id)
+    device.has_capability.side_effect = None
+    device.has_capability.return_value = False
+
+    await setup_platform(hass, Platform.CAMERA)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["supported_features"] == CameraEntityFeature.STREAM
+
+
+@pytest.mark.usefixtures("mock_ring_client")
+async def test_camera_live_view_excludes_audio_intercom(
+    hass: HomeAssistant,
+) -> None:
+    """Do not create a camera for an intercom without video capability."""
+    await setup_platform(hass, Platform.CAMERA)
+
+    assert hass.states.get("camera.ingress_live_view") is None
 
 
 @pytest.mark.usefixtures("mock_ring_client")

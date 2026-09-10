@@ -58,7 +58,10 @@ CAMERA_DESCRIPTIONS: tuple[RingCameraEntityDescription[RingCameraDevice], ...] =
     RingCameraEntityDescription(
         key="live_view",
         translation_key="live_view",
-        exists_fn=lambda device: device.has_capability(RingCapability.VIDEO),
+        exists_fn=lambda device: (
+            isinstance(device, RingDoorBell)
+            or device.has_capability(RingCapability.VIDEO)
+        ),
         live_stream=True,
         motion_detection=False,
     ),
