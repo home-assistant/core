@@ -11,7 +11,6 @@ from iseo_argo_ble import (
     IseoAuthError,
     IseoClient,
     IseoConnectionError,
-    MasterAuthError,
     is_iseo_advertisement,
 )
 import voluptuous as vol
@@ -212,7 +211,30 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             ec.derive_private_key, int(self._priv_scalar, 16), ec.SECP224R1()
         )
 
-        return await self.async_step_gw_register()
+        return await self.async_step_admin_register()
+
+    async def async_step_admin_register(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Enrol the administrator identity on an entry set up without one.
+
+        Its own step so the form says what this flow actually does. Sharing
+        gw_register's would announce "Register gateway" and explain that Home
+        Assistant is registering as one, which is neither the point here nor
+        news to someone whose lock is already set up.
+        """
+        return await self.async_step_gw_register(user_input)
+
+    async def async_step_gw_register_retry(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Retry a registration that already generated an admin identity.
+
+        Also its own step, because the user management choice is no longer
+        open — see async_step_gw_register — and re-offering a toggle whose
+        answer is ignored would be a lie.
+        """
+        return await self.async_step_gw_register(user_input)
 
     async def async_step_gw_register(
         self, user_input: dict[str, Any] | None = None
@@ -232,10 +254,8 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                 # identity has to be enrolled alongside the gateway one or not
                 # at all. Reconfiguring only ever enrols it — an entry that
                 # already has one aborts before reaching this step.
-                enable_admin: bool = (
-                    True if reconfiguring else user_input[CONF_ENABLE_ADMIN]
-                )
-                if self._admin_priv is not None:
+                enable_admin: bool
+                if reconfiguring or self._admin_priv is not None:
                     # An earlier attempt already offered this identity to the
                     # lock, which is sent it before acknowledging it — so the
                     # lock may hold it even though that attempt failed. Keep
@@ -243,9 +263,12 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     # or dropping this one would leave a credential on the lock
                     # that nobody can use, and that only the Argo app can
                     # remove. Re-offering it is harmless, as the lock stores
-                    # credentials by UUID.
+                    # credentials by UUID. The retry step stops asking, rather
+                    # than asking and ignoring the answer.
                     enable_admin = True
-                elif enable_admin:
+                else:
+                    enable_admin = user_input[CONF_ENABLE_ADMIN]
+                if enable_admin and self._admin_priv is None:
                     self._admin_priv = await self.hass.async_add_executor_job(
                         _generate_identity
                     )
@@ -286,26 +309,33 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self._async_create_iseo_entry(with_admin=enable_admin)
                 except IseoConnectionError:
                     errors["base"] = "cannot_connect"
-                except (IseoAuthError, MasterAuthError) as exc:
-                    # MasterAuthError is a sibling of IseoAuthError rather than
-                    # a subclass, and it is the one setup_gateway() raises when
-                    # the lock refuses the Master Card — which is exactly what
-                    # auth_failed tells the user to go and scan.
+                except IseoAuthError as exc:
+                    # This is what an unscanned Master Card looks like here:
+                    # setup_gateway() is called without a master password, so
+                    # it never runs master_login(), and the lock refuses the
+                    # first user registration with status 5 instead.
                     _LOGGER.debug("Gateway setup failed: %s", exc)
                     errors["base"] = "auth_failed"
                 except Exception:
                     _LOGGER.exception("Unexpected error during gateway setup")
                     errors["base"] = "unknown"
 
+        if reconfiguring:
+            step_id = "admin_register"
+        elif self._admin_priv is not None:
+            step_id = "gw_register_retry"
+        else:
+            step_id = "gw_register"
+
         return self.async_show_form(
-            step_id="gw_register",
-            data_schema=None
-            if reconfiguring
-            else vol.Schema(
+            step_id=step_id,
+            data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ENABLE_ADMIN, default=True): BooleanSelector(),
                 }
-            ),
+            )
+            if step_id == "gw_register"
+            else None,
             errors=errors,
         )
 

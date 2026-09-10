@@ -133,7 +133,14 @@ async def async_setup_entry(
 
 
 class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorEntity):
-    """Reports whether one credential enrolled on the lock may open the door.
+    """Reports whether one credential enrolled on the lock is suspended.
+
+    On means nobody has suspended it; off means an administrator has. That is
+    not quite the same as "can open the door right now": a credential can also
+    carry a validity window of its own — an invitation, or a guest card that
+    runs to the end of the month — and the lock keeps that window separately
+    from the suspension. One sitting outside its window still reads on, because
+    the only thing the lock reports here is the suspension.
 
     Read-only on purpose. Suspending someone's credential is a change to who
     can get in, so it goes through the `set_credential_enabled` action, which

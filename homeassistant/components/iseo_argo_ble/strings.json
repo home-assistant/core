@@ -14,6 +14,10 @@
     },
     "flow_title": "{name}",
     "step": {
+      "admin_register": {
+        "description": "To manage who can open this lock, Home Assistant needs a second, administrator identity enrolled on it. That lets it list the credentials on the lock and switch each of them on or off. The lock only accepts a new identity during a Master Card scan.\n\n**Warning:** Close the ARGO app before clicking Submit.\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully.",
+        "title": "Enable user management"
+      },
       "bluetooth_confirm": {
         "description": "Found a new ISEO lock nearby: **{name}**.\n\nClick **Submit** to begin setup.",
         "title": "ISEO lock discovered"
@@ -27,6 +31,10 @@
         },
         "description": "To register Home Assistant as a Gateway:\n\n**Warning:** Close the ARGO app before clicking Submit.\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully.",
         "title": "Register gateway"
+      },
+      "gw_register_retry": {
+        "description": "The last attempt did not complete. Home Assistant had already offered the lock its administrator identity by then, and the lock may have kept it, so this retry enrols user management rather than leaving a credential behind that only the ARGO app could remove.\n\n**Warning:** Close the ARGO app before clicking Submit.\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully.",
+        "title": "Retry registration"
       },
       "user": {
         "data": {
@@ -99,10 +107,10 @@
       "name": "Delete credential"
     },
     "set_credential_enabled": {
-      "description": "Lets a credential enrolled on the lock open the door, or stops it doing so. The credential stays on the lock either way. Only administrators can run this action.",
+      "description": "Suspends a credential enrolled on the lock, or restores it. The credential stays on the lock either way. Only administrators can run this action.",
       "fields": {
         "enabled": {
-          "description": "Whether the credential may open the lock.",
+          "description": "Whether the credential is allowed to open the lock. Turn it off to suspend the credential, and on to restore it along with any validity window it had — a restored credential still has to be inside that window to open the door.",
           "name": "Enabled"
         }
       },

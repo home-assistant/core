@@ -130,8 +130,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool
         # failure into ConfigEntryNotReady, which would hold up the lock over
         # an optional capability and then retry the admin session on a
         # schedule. Repeated admin reads are the one thing that must never
-        # happen to this lock. The credential entities simply do not appear,
-        # and the next successful action or reload brings them back.
+        # happen to this lock. The credential entities simply do not appear
+        # until the entry is reloaded: the actions are platform entity
+        # services, so with no entities there is nothing to target, and
+        # nothing that could retry the read on its own.
         await user_coordinator.async_refresh()
         if not user_coordinator.last_update_success:
             _LOGGER.warning(

@@ -1,6 +1,7 @@
 """Test the ISEO Argo BLE credential sensors."""
 
 from dataclasses import replace
+import struct
 from unittest.mock import MagicMock, patch
 
 from iseo_argo_ble import (
@@ -8,6 +9,7 @@ from iseo_argo_ble import (
     USER_TYPE_RFID,
     IseoAuthError,
     IseoConnectionError,
+    UserEntry,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -37,7 +39,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_ADMIN_UUID_HEX, MOCK_UUID_HEX, setup_integration
-from .conftest import MOCK_VALIDITY
+from .conftest import MOCK_USERS, MOCK_VALIDITY
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -142,6 +144,50 @@ async def test_deleting_a_gateway_credential_is_refused(
     mock_iseo_client.erase_user_by_uuid.assert_not_called()
 
     # The credential is still there, and suspending it is unaffected.
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_a_credential_outside_its_validity_window_still_reads_on(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the sensor reports suspension, not whether the door would open.
+
+    The lock keeps a credential's validity window separately from the
+    suspension, and only flags `disabled` for the sentinel an administrator
+    writes. A guest card whose week has passed is therefore not suspended, and
+    reads on although it would not open the door.
+    """
+    expired = (
+        bytes([0x01]) + struct.pack(">II", 1_600_000_000, 1_700_000_000) + bytes(10)
+    )
+    uuid_hex = "5555555555555555555555555555eeee"
+    mock_iseo_client.read_users.return_value = [
+        *MOCK_USERS,
+        UserEntry(
+            user_type=USER_TYPE_RFID,
+            uuid_hex=uuid_hex,
+            name="Guest",
+            inner_subtype=None,
+            disabled=False,
+            validity=expired,
+        ),
+    ]
+
+    with patch(
+        "homeassistant.components.iseo_argo_ble.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await setup_integration(hass, mock_admin_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        f"{mock_admin_config_entry.unique_id}_user_{USER_TYPE_RFID}_{uuid_hex}",
+    )
+    assert entity_id
     assert hass.states.get(entity_id).state == STATE_ON
 
 

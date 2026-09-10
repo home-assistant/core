@@ -5,7 +5,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 import uuid
 
-from iseo_argo_ble import IseoAuthError, IseoConnectionError, MasterAuthError
+from iseo_argo_ble import IseoAuthError, IseoConnectionError
 import pytest
 
 from homeassistant import config_entries
@@ -284,10 +284,11 @@ async def test_gw_register_keeps_an_offered_identity_when_retried_without_admin(
     hass: HomeAssistant,
     mock_iseo_client: MagicMock,
 ) -> None:
-    """Test an identity already offered to the lock is kept, toggle or not.
+    """Test an identity already offered to the lock is kept, and stops asking.
 
     The failed attempt may have stored it, so dropping its key would leave a
-    credential on the lock that only the Argo app can remove.
+    credential on the lock that only the Argo app can remove. The retry says
+    so instead of offering a choice it is going to override.
     """
     mock_iseo_client.setup_gateway.side_effect = [IseoConnectionError, None]
 
@@ -308,6 +309,9 @@ async def test_gw_register_keeps_an_offered_identity_when_retried_without_admin(
         result2["flow_id"], user_input={CONF_ENABLE_ADMIN: True}
     )
     assert result3["errors"] == {"base": "cannot_connect"}
+    # The choice is gone, because the answer would be ignored either way.
+    assert result3["step_id"] == "gw_register_retry"
+    assert result3["data_schema"] is None
 
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"], user_input={CONF_ENABLE_ADMIN: False}
@@ -352,20 +356,18 @@ async def test_gw_register_connection_error(
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.parametrize("error", [IseoAuthError, MasterAuthError])
 @pytest.mark.usefixtures("_patch_identity")
 async def test_gw_register_auth_error(
     hass: HomeAssistant,
     mock_iseo_client: MagicMock,
-    error: type[Exception],
 ) -> None:
-    """Test gw_register handles both authentication failures.
+    """Test gw_register reports an unscanned Master Card as an auth failure.
 
-    A refused Master Card raises MasterAuthError, which is a sibling of
-    IseoAuthError rather than a subclass, so catching only the latter left the
-    commonest failure of this step showing "unknown".
+    That is an IseoAuthError here: this step calls setup_gateway() without a
+    master password, so the lock refuses the first user registration rather
+    than any master login being attempted.
     """
-    mock_iseo_client.setup_gateway.side_effect = error
+    mock_iseo_client.setup_gateway.side_effect = IseoAuthError
 
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
@@ -508,7 +510,10 @@ async def test_reconfigure_enrols_admin_identity(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "gw_register"
+    # Its own step: this flow enrols the administrator identity, and saying
+    # "Register gateway" to someone whose lock is already set up says nothing
+    # about what is being asked of them.
+    assert result["step_id"] == "admin_register"
 
     configure = hass.async_create_task(
         hass.config_entries.flow.async_configure(result["flow_id"], user_input={})
@@ -563,7 +568,7 @@ async def test_reconfigure_connection_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "gw_register"
+    assert result2["step_id"] == "admin_register"
     assert result2["errors"] == {"base": "cannot_connect"}
     assert mock_config_entry.data == original_data
 
