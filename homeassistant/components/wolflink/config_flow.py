@@ -10,6 +10,7 @@ from wolf_comm.wolf_client import FetchFailed, WolfClient
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 
 from .const import DOMAIN
 
@@ -41,10 +42,14 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
             self._abort_if_unique_id_configured()
 
-            wolf_client = WolfClient(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-            )
             try:
+                wolf_client = WolfClient(
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                    client=create_async_httpx_client(
+                        hass=self.hass, verify_ssl=False, timeout=20
+                    ),
+                )
                 devices = await wolf_client.fetch_system_list()
             except RequestError, FetchFailed:
                 errors["base"] = "cannot_connect"

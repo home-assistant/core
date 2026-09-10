@@ -1,6 +1,6 @@
 """Test the Wolf SmartSet Service config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from httpx import RequestError
 import pytest
@@ -44,16 +44,13 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
+async def test_create_entry(hass: HomeAssistant, mock_wolflink: MagicMock) -> None:
     """Test entry creation only stores credentials, not the device list."""
     result = await _start_user_flow(hass)
+    mock_wolflink.fetch_system_list.return_value = [DEVICE, SECOND_DEVICE]
 
-    with (
-        patch(
-            "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
-            return_value=[DEVICE, SECOND_DEVICE],
-        ),
-        patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
+    with patch(
+        "homeassistant.components.wolflink.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=INPUT_CONFIG
@@ -74,28 +71,26 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     ],
 )
 async def test_user_flow_errors(
-    hass: HomeAssistant, side_effect: Exception, expected_error: str
+    hass: HomeAssistant,
+    mock_wolflink: MagicMock,
+    side_effect: Exception,
+    expected_error: str,
 ) -> None:
-    """Test error handling in the user step keeps the form open with errors."""
+    """Test error handling keeps the form open and the flow can recover."""
     result = await _start_user_flow(hass)
 
-    with patch(
-        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
-        side_effect=side_effect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=INPUT_CONFIG
-        )
+    mock_wolflink.fetch_system_list.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=INPUT_CONFIG
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
-    with (
-        patch(
-            "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
-            return_value=[DEVICE],
-        ),
-        patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
+    mock_wolflink.fetch_system_list.side_effect = None
+    mock_wolflink.fetch_system_list.return_value = [DEVICE]
+    with patch(
+        "homeassistant.components.wolflink.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=INPUT_CONFIG
@@ -104,17 +99,14 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_no_devices_abort(hass: HomeAssistant) -> None:
+async def test_no_devices_abort(hass: HomeAssistant, mock_wolflink: MagicMock) -> None:
     """Test we abort if the account has no devices."""
     result = await _start_user_flow(hass)
+    mock_wolflink.fetch_system_list.return_value = []
 
-    with patch(
-        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=INPUT_CONFIG
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=INPUT_CONFIG
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices"
