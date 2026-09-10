@@ -1105,6 +1105,51 @@
       "description": "Add and manage KNX entities",
       "title": "Entities"
     },
+    "entity_links": {
+      "create": {
+        "title": "Entity link",
+        "description": "Make a Home Assistant entity behave like a KNX actuator: its state is sent to the status group address and telegrams received on the command group address control it.",
+        "entity": {
+          "label": "[%key:component::knx::config_panel::expose::create::entity::label%]",
+          "description": "Home Assistant entity to control from and report to the KNX bus."
+        },
+        "ga_status": {
+          "label": "Status address",
+          "description": "Group address the entity state is sent to (Home Assistant to KNX)."
+        },
+        "ga_command": {
+          "label": "Command address",
+          "description": "Group address listened on to control the entity (KNX to Home Assistant). It must differ from the status address."
+        },
+        "invert": {
+          "label": "Invert",
+          "description": "Invert payloads of the status and command group addresses."
+        },
+        "respond_to_read": {
+          "label": "[%key:component::knx::config_panel::entities::create::_::knx::respond_to_read::label%]",
+          "description": "Respond to GroupValueRead telegrams received to the status address."
+        },
+        "section_advanced_options": {
+          "title": "[%key:component::knx::config_panel::expose::create::section_advanced_options::title%]"
+        },
+        "send_on_init": {
+          "label": "[%key:component::knx::config_panel::expose::create::send_on_init::label%]",
+          "description": "Send the entity state to the status address when the link is initialized. When disabled, a state change will trigger the first telegram."
+        },
+        "cooldown": {
+          "label": "[%key:component::knx::config_panel::expose::create::cooldown::label%]",
+          "description": "[%key:component::knx::config_panel::expose::create::cooldown::description%]"
+        },
+        "periodic_send": {
+          "label": "[%key:component::knx::config_panel::expose::create::periodic_send::label%]",
+          "description": "[%key:component::knx::config_panel::expose::create::periodic_send::description%]"
+        },
+        "notes": {
+          "label": "[%key:component::knx::config_panel::expose::create::notes::label%]",
+          "placeholder": "[%key:component::knx::config_panel::expose::create::notes::placeholder%]"
+        }
+      }
+    },
     "expose": {
       "create": {
         "add_expose": "Add expose",
