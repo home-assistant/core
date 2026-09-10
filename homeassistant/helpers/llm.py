@@ -464,7 +464,12 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "format": "date-time"}
 
     if isinstance(schema, selector.DurationSelector):
-        return to_openapi(cv.time_period_dict)
+        result = to_openapi(cv.time_period_dict)
+        if schema.signed:
+            result["properties"]["negative"] = {"type": "boolean"}
+        else:
+            del result["properties"]["negative"]
+        return result
 
     if isinstance(schema, selector.EntitySelector):
         if schema.config.get("multiple"):
