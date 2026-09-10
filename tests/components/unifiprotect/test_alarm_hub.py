@@ -1,17 +1,17 @@
 """Tests for the UniFi Protect Alarm Hub (Public API) entities."""
 
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from uiprotect.data import LinkStation, PublicBootstrap
+from uiprotect.data import LinkStation, PublicBootstrap, WSAction
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .utils import MockUFPFixture, init_entry
+from .utils import MockUFPFixture, init_entry, public_device_ws_message
 
 from tests.common import load_json_object_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -39,6 +39,21 @@ def _make_public_bootstrap(hub: LinkStation | None) -> Mock:
     pb.fobs = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
+    pb.nvr = Mock()
+    # Distinct from ALARM_HUB_MAC: a shared mac would make the hub its own via device.
+    pb.nvr.mac = "112233445566"
+    pb.nvr.name = "Test NVR"
+    pb.nvr.display_name = "Test NVR"
+    pb.nvr.device_type = None
+    pb.nvr.type = None
+
+    # The baseline and reconnect resync enumerate all_devices(); a hub missing
+    # from it would be redispatched as new on every reconnect.
+    def _all_devices(*, include_nvr: bool = False) -> list[Mock]:
+        devices = list(pb.alarm_hubs.values())
+        return [pb.nvr, *devices] if include_nvr else devices
+
+    pb.all_devices = _all_devices
     return pb
 
 
@@ -362,3 +377,56 @@ async def test_alarm_hub_disconnected_battery(
     voltage = hass.states.get("sensor.alarm_hub_battery_voltage")
     assert voltage is not None
     assert voltage.state == "unknown"
+
+
+async def test_alarm_hub_added_at_runtime(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """A hub adopted after setup is discovered from its public add frame."""
+    ufp.api.is_public_only = True
+    ufp.api.has_public_bootstrap = True
+    pb = _make_public_bootstrap(None)
+    ufp.api.public_bootstrap = pb
+    ufp.api.update_public = AsyncMock(return_value=pb)
+
+    await init_entry(hass, ufp, [])
+    assert hass.states.get("sensor.alarm_hub_battery_voltage") is None
+
+    pb.alarm_hubs = {alarm_hub.id: alarm_hub}
+    msg = public_device_ws_message(alarm_hub)
+    msg.action = WSAction.ADD
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.alarm_hub_battery_voltage").state == "12.108427"
+    assert hass.states.get("binary_sensor.alarm_hub_tamper").state == "off"
+    assert hass.states.get("binary_sensor.alarm_hub_hallway") is not None
+    assert (
+        entity_registry.async_get("sensor.alarm_hub_battery_voltage").unique_id
+        == f"{ALARM_HUB_MAC}_battery_voltage"
+    )
+
+
+async def test_alarm_hub_unavailable_when_public_bootstrap_lost(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """Losing the public bootstrap marks alarm hub entities unavailable."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    entity_id = "sensor.alarm_hub_battery_voltage"
+    assert hass.states.get(entity_id).state == "12.108427"
+
+    ufp_with_alarm_hub.api.has_public_bootstrap = False
+    msg = public_device_ws_message(alarm_hub)
+    msg.old_obj = alarm_hub
+    assert ufp_with_alarm_hub.devices_ws_subscription is not None
+    ufp_with_alarm_hub.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
