@@ -52,7 +52,13 @@ from .frame import (
     get_integration_frame,
     report_usage,
 )
-from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
+from .json import (
+    JSON_DUMP,
+    cached_json_bytes,
+    cached_json_fragment,
+    find_paths_unserializable_data,
+    json_fragment,
+)
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .typing import UNDEFINED, UndefinedType
 
@@ -435,7 +441,7 @@ class BaseDeviceEntry:
         """Return a cached JSON representation of the entry."""
         try:
             dict_repr = self.dict_repr
-            return json_bytes(dict_repr)
+            return cached_json_bytes(dict_repr)
         except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -564,39 +570,35 @@ class DeviceEntry(BaseDeviceEntry):
     @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "area_id": self.area_id,
-                    "config_entry_id": self.config_entry_id,
-                    "config_subentry_id": self.config_subentry_id,
-                    "configuration_url": self.configuration_url,
-                    "connections": list(self.connections),
-                    "created_at": self.created_at,
-                    "disabled_by": self.disabled_by,
-                    "entry_type": self.entry_type,
-                    "hw_version": self.hw_version,
-                    "id": self.id,
-                    "identifiers": list(self.identifiers),
-                    "labels": list(self.labels),
-                    "composite_device_id": self.composite_device_id,
-                    "composite_primary_config_entry": (
-                        self.composite_primary_config_entry
-                    ),
-                    "split_at": self.split_at,
-                    "manufacturer": self.manufacturer,
-                    "model": self.model,
-                    "model_id": self.model_id,
-                    "modified_at": self.modified_at,
-                    "name_by_user": self.name_by_user,
-                    "name": self.name,
-                    "has_composite_identifiers": (self.has_composite_identifiers),
-                    "primary_config_entry": self.primary_config_entry,
-                    "serial_number": self.serial_number,
-                    "sw_version": self.sw_version,
-                    "via_device_id": self.via_device_id,
-                }
-            )
+        return cached_json_fragment(
+            {
+                "area_id": self.area_id,
+                "config_entry_id": self.config_entry_id,
+                "config_subentry_id": self.config_subentry_id,
+                "configuration_url": self.configuration_url,
+                "connections": list(self.connections),
+                "created_at": self.created_at,
+                "disabled_by": self.disabled_by,
+                "entry_type": self.entry_type,
+                "hw_version": self.hw_version,
+                "id": self.id,
+                "identifiers": list(self.identifiers),
+                "labels": list(self.labels),
+                "composite_device_id": self.composite_device_id,
+                "composite_primary_config_entry": self.composite_primary_config_entry,
+                "split_at": self.split_at,
+                "manufacturer": self.manufacturer,
+                "model": self.model,
+                "model_id": self.model_id,
+                "modified_at": self.modified_at,
+                "name_by_user": self.name_by_user,
+                "name": self.name,
+                "has_composite_identifiers": (self.has_composite_identifiers),
+                "primary_config_entry": self.primary_config_entry,
+                "serial_number": self.serial_number,
+                "sw_version": self.sw_version,
+                "via_device_id": self.via_device_id,
+            }
         )
 
     @property
@@ -686,23 +688,21 @@ class ChildDeviceEntry(BaseDeviceEntry):
     @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "area_id": self.area_id,
-                    "config_entry_id": self.config_entry_id,
-                    "config_subentry_id": self.config_subentry_id,
-                    "created_at": self.created_at,
-                    "disabled_by": self.disabled_by,
-                    "id": self.id,
-                    "identifiers": list(self.identifiers),
-                    "labels": list(self.labels),
-                    "modified_at": self.modified_at,
-                    "name_by_user": self.name_by_user,
-                    "name": self.name,
-                    "parent_device_id": self.parent_device_id,
-                }
-            )
+        return cached_json_fragment(
+            {
+                "area_id": self.area_id,
+                "config_entry_id": self.config_entry_id,
+                "config_subentry_id": self.config_subentry_id,
+                "created_at": self.created_at,
+                "disabled_by": self.disabled_by,
+                "id": self.id,
+                "identifiers": list(self.identifiers),
+                "labels": list(self.labels),
+                "modified_at": self.modified_at,
+                "name_by_user": self.name_by_user,
+                "name": self.name,
+                "parent_device_id": self.parent_device_id,
+            }
         )
 
 
@@ -849,27 +849,25 @@ class DeletedDeviceEntry:
     @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "area_id": self.area_id,
-                    "config_entry_id": self.config_entry_id,
-                    "config_subentry_id": self.config_subentry_id,
-                    "connections": list(self.connections),
-                    "created_at": self.created_at,
-                    "disabled_by": self.disabled_by
-                    if self.disabled_by is not UNDEFINED
-                    else None,
-                    "disabled_by_undefined": self.disabled_by is UNDEFINED,
-                    "identifiers": list(self.identifiers),
-                    "id": self.id,
-                    "labels": list(self.labels),
-                    "modified_at": self.modified_at,
-                    "name_by_user": self.name_by_user,
-                    "orphaned_timestamp": self.orphaned_timestamp,
-                    "domain": self.domain,
-                }
-            )
+        return cached_json_fragment(
+            {
+                "area_id": self.area_id,
+                "config_entry_id": self.config_entry_id,
+                "config_subentry_id": self.config_subentry_id,
+                "connections": list(self.connections),
+                "created_at": self.created_at,
+                "disabled_by": self.disabled_by
+                if self.disabled_by is not UNDEFINED
+                else None,
+                "disabled_by_undefined": self.disabled_by is UNDEFINED,
+                "identifiers": list(self.identifiers),
+                "id": self.id,
+                "labels": list(self.labels),
+                "modified_at": self.modified_at,
+                "name_by_user": self.name_by_user,
+                "orphaned_timestamp": self.orphaned_timestamp,
+                "domain": self.domain,
+            }
         )
 
 
@@ -1757,6 +1755,25 @@ class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
                 if not self._orphaned_identifiers[identifier]:
                     del self._orphaned_identifiers[identifier]
 
+    def get_orphaned_entries(
+        self,
+        identifiers: set[tuple[str, str]],
+        connections: set[tuple[str, str]],
+        domain: str,
+    ) -> list[DeletedDeviceEntry]:
+        """Get the orphans of a domain holding any of the given keys.
+
+        Orphans are matched on their recorded domain so a chance identifier or connection
+        collision doesn't match another integration's device. connections must be
+        normalized.
+        """
+        orphans: dict[str, DeletedDeviceEntry] = {}
+        for identifier in identifiers:
+            orphans.update(self._orphaned_identifiers.get(identifier, {}))
+        for connection in connections:
+            orphans.update(self._orphaned_connections.get(connection, {}))
+        return [entry for entry in orphans.values() if entry.domain == domain]
+
     def get_orphaned_entry(
         self,
         identifiers: set[tuple[str, str]] | None,
@@ -1770,15 +1787,10 @@ class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
         (carried over by the migration with no recoverable domain) is left for the
         periodic purge rather than restored.
         """
-        orphans: dict[str, DeletedDeviceEntry] = {}
-        for identifier in identifiers or ():
-            orphans.update(self._orphaned_identifiers.get(identifier, {}))
-        for connection in _normalize_connections(connections or set()):
-            orphans.update(self._orphaned_connections.get(connection, {}))
-        for entry in orphans.values():
-            if entry.domain == domain:
-                return entry
-        return None
+        orphans = self.get_orphaned_entries(
+            identifiers or set(), _normalize_connections(connections or set()), domain
+        )
+        return orphans[0] if orphans else None
 
 
 class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
@@ -3050,11 +3062,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "add_config_entry_id or remove_config_entry_id"
             )
 
-        if not new_connections and not new_identifiers:
-            raise HomeAssistantError(
-                "A device must have at least one of identifiers or connections"
-            )
-
         if merge_connections is not UNDEFINED and new_connections is not UNDEFINED:
             raise HomeAssistantError(
                 "Cannot define both merge_connections and new_connections"
@@ -3063,6 +3070,25 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
             raise HomeAssistantError(
                 "Cannot define both merge_identifiers and new_identifiers"
+            )
+
+        # Intentional lazy set operations to determine if the device will have
+        # identifiers, actual merge happens later.
+        if new_identifiers is not UNDEFINED:
+            has_identifiers = new_identifiers
+        elif merge_identifiers is not UNDEFINED:
+            has_identifiers = old.identifiers or merge_identifiers
+        else:
+            has_identifiers = old.identifiers
+        if new_connections is not UNDEFINED:
+            has_connections = new_connections
+        elif merge_connections is not UNDEFINED:
+            has_connections = old.connections or merge_connections
+        else:
+            has_connections = old.connections
+        if not has_identifiers and not has_connections:
+            raise HomeAssistantError(
+                "A device must have at least one of identifiers or connections"
             )
 
         if (
@@ -4368,16 +4394,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # device from the same integration is orphaned, drop any existing orphan
             # it overlaps so the newest one wins deterministically instead of shadowing
             # it.
-            for existing in list(self._deleted_devices.values()):
-                if (
-                    existing.config_entry_id is None
-                    and existing.domain == domain
-                    and (
-                        existing.connections & deleted_device.connections
-                        or existing.identifiers & deleted_device.identifiers
-                    )
-                ):
-                    del self._deleted_devices[existing.id]
+            for existing in self._deleted_devices.get_orphaned_entries(
+                deleted_device.identifiers, deleted_device.connections, domain
+            ):
+                del self._deleted_devices[existing.id]
         self._deleted_devices[deleted_device.id] = attr.evolve(
             deleted_device,
             config_entry_id=None,

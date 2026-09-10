@@ -94,6 +94,9 @@
       "prompt_tone": {
         "default": "mdi:bullhorn"
       },
+      "pump": {
+        "default": "mdi:water-pump"
+      },
       "screen_display": {
         "default": "mdi:monitor"
       },
