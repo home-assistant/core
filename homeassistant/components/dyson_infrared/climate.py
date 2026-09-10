@@ -121,9 +121,14 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features.
 
-        The AM09 has no IR codes for a cooling target temperature, so
-        TARGET_TEMPERATURE is only advertised while heating.
+        The unit ignores everything but the power toggle while in standby, so
+        nothing is adjustable until it is running. The AM09 also has no IR
+        codes for a cooling target temperature, so TARGET_TEMPERATURE is only
+        advertised while heating.
         """
+        if self._attr_hvac_mode is HVACMode.OFF:
+            return ClimateEntityFeature(0)
+
         features = (
             ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.PRESET_MODE
