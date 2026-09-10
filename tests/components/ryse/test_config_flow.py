@@ -584,7 +584,7 @@ async def test_async_step_bluetooth_lost_local_source(
     assert result["errors"] == {"base": "not_local_source"}
     mock_device.pair.assert_not_called()
 
-    mock_scanner_by_source.side_effect = lambda hass, source: None
+    mock_scanner_by_source.side_effect = lambda hass, source: MagicMock()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
