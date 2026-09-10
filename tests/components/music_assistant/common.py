@@ -199,7 +199,7 @@ async def trigger_subscription_callback(
 
 
 def setup_dashboards(music_assistant_client: MagicMock) -> None:
-    """Seed the mocked client with dashboard endpoints and one active session."""
+    """Seed the mocked client with dashboard endpoints and two active sessions."""
     music_assistant_client.dashboard._dashboards = {
         "chromecast_kitchen": DashboardDevice(
             dashboard_id="chromecast_kitchen",

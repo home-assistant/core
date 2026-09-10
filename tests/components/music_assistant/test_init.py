@@ -8,6 +8,7 @@ from music_assistant_models.errors import ActionUnavailable, AuthenticationRequi
 
 from homeassistant.components.music_assistant.const import (
     ATTR_CONF_EXPOSE_PLAYER_TO_HA,
+    DASHBOARD_DEVICE_MODEL,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -96,7 +97,7 @@ async def test_remove_dashboard_device(
     client = await hass_ws_client(hass)
 
     device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "chromecast_kitchen"), config_entry.entry_id
+        (DOMAIN, "chromecast_kitchen_dashboard"), config_entry.entry_id
     )
     assert device_entry
 
@@ -122,7 +123,13 @@ async def test_remove_dashboard_device(
         )
     )
     await trigger_subscription_callback(
-        hass, music_assistant_client, EventType.DASHBOARDS_UPDATED
+        hass,
+        music_assistant_client,
+        EventType.DASHBOARDS_UPDATED,
+        data=[
+            dashboard.to_dict()
+            for dashboard in music_assistant_client.dashboard._dashboards.values()
+        ],
     )
     assert hass.states.get("media_player.kitchen_display")
 
@@ -142,7 +149,7 @@ async def test_dashboard_device_survives_reload_with_empty_cache(
     setup_dashboards(music_assistant_client)
     config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
     assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, "chromecast_kitchen"), config_entry.entry_id
+        (DOMAIN, "chromecast_kitchen_dashboard"), config_entry.entry_id
     )
 
     # simulate an MA server restart: the dashboard cache is empty again,
@@ -153,11 +160,57 @@ async def test_dashboard_device_survives_reload_with_empty_cache(
     await hass.async_block_till_done()
 
     assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, "chromecast_kitchen"), config_entry.entry_id
+        (DOMAIN, "chromecast_kitchen_dashboard"), config_entry.entry_id
     )
     state = hass.states.get("media_player.kitchen_display")
     assert state
     assert state.state == "unavailable"
+
+
+async def test_dashboard_device_id_namespaced(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    music_assistant_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a dashboard endpoint sharing a player's id gets its own device.
+
+    Fully Kiosk registers dashboard_id == player_id. If the dashboard
+    device identifier were not namespaced, the display would merge into
+    the player's device, and removing the player would delete the display.
+    """
+    assert await async_setup_component(hass, "config", {})
+    setup_dashboards(music_assistant_client)
+    collision_id = "00:00:00:00:00:01"
+    music_assistant_client.dashboard._dashboards[collision_id] = DashboardDevice(
+        dashboard_id=collision_id,
+        name="Player Display",
+        supported_types={DashboardType.PARTY},
+    )
+    config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    client = await hass_ws_client(hass)
+
+    player_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, collision_id), config_entry.entry_id
+    )
+    dashboard_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{collision_id}_dashboard"), config_entry.entry_id
+    )
+    assert player_device
+    assert dashboard_device
+    assert player_device.id != dashboard_device.id
+    assert player_device.model != DASHBOARD_DEVICE_MODEL
+    assert dashboard_device.model == DASHBOARD_DEVICE_MODEL
+
+    # removing the player device must not be refused because a dashboard
+    # endpoint happens to be live under the same bare id, and must not
+    # touch the (separate) display device
+    music_assistant_client.config.remove_player_config = AsyncMock()
+    response = await client.remove_device(player_device.id)
+    assert response["success"] is True
+    await hass.async_block_till_done()
+    assert not device_registry.async_get(player_device.id)
+    assert device_registry.async_get(dashboard_device.id)
 
 
 async def test_player_config_expose_to_ha_toggle(

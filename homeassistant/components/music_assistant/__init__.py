@@ -304,8 +304,8 @@ async def async_remove_config_entry_device(
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
-    # identifier value is a player_id for a player device, or a dashboard_id
-    # for a dashboard display device
+    # identifier value is a player_id for a player device, or
+    # f"{dashboard_id}_dashboard" for a dashboard display device
     identifier_value = next(
         (
             identifier[1]
@@ -318,12 +318,12 @@ async def async_remove_config_entry_device(
         # this should not be possible at all, but guard it anyways
         return False
     mass = get_music_assistant_client(hass, config_entry.entry_id)
-    if mass.dashboard.get(identifier_value) is not None:
+    if device_entry.model == DASHBOARD_DEVICE_MODEL:
+        dashboard_id = identifier_value.removesuffix("_dashboard")
         # the display endpoint is still live, refuse removal
-        return False
+        return mass.dashboard.get(dashboard_id) is None
     if mass.players.get(identifier_value) is None:
-        # player (or dashboard endpoint) is already gone from the server,
-        # this is an orphaned device
+        # player is already gone from the server, this is an orphaned device
         return True
     # try to remove the player from the server
     try:
