@@ -308,7 +308,9 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         if stream_source:
             return stream_source
         try:
-            stream_source = await camera.async_get_stream_source(
+            # A shared source lets every session read from one connection to the
+            # camera, where its own source opens one per session
+            stream_source = await camera.async_get_shared_stream_source(
                 self.hass, self.entity_id
             )
         except Exception:
