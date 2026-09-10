@@ -88,7 +88,14 @@ class OAuth2FlowHandler(
                 description_placeholders={"gamertag": me.people[0].gamertag}
             )
 
-            return self.async_update_and_abort(self._get_reauth_entry(), data=data)
+            reauth_entry = self._get_reauth_entry()
+            result = self.async_update_and_abort(reauth_entry, data=data)
+
+            # Reauth can replace the credentials and is the only way to recover
+            # from an authentication failure, so the entry has to be reloaded
+            self.hass.config_entries.async_schedule_reload(reauth_entry.entry_id)
+
+            return result
 
         self._abort_if_unique_id_configured()
 

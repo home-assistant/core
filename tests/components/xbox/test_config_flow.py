@@ -791,8 +791,11 @@ async def test_flow_reauth(
         },
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_reload:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -801,6 +804,8 @@ async def test_flow_reauth(
 
     assert config_entry.data["token"]["refresh_token"] == "new-refresh-token"
     assert config_entry.data["token"]["access_token"] == "new-access-token"
+
+    mock_reload.assert_called_once_with(config_entry.entry_id)
 
 
 @pytest.mark.usefixtures(
@@ -861,7 +866,12 @@ async def test_flow_reauth_unique_id_mismatch(
         },
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_reload:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
+
+    mock_reload.assert_not_called()
