@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_snapshot[switch.garden_back_lawn-entry]
+# name: test_switch_snapshot[switch.garden_test_mower_1_back_lawn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.garden_back_lawn',
+    'entity_id': 'switch.garden_test_mower_1_back_lawn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[switch.garden_back_lawn-state]
+# name: test_switch_snapshot[switch.garden_test_mower_1_back_lawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back lawn',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.garden_back_lawn',
+    'entity_id': 'switch.garden_test_mower_1_back_lawn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_snapshot[switch.garden_front_lawn-entry]
+# name: test_switch_snapshot[switch.garden_test_mower_1_front_lawn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.garden_front_lawn',
+    'entity_id': 'switch.garden_test_mower_1_front_lawn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -86,20 +86,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[switch.garden_front_lawn-state]
+# name: test_switch_snapshot[switch.garden_test_mower_1_front_lawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front lawn',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.garden_front_lawn',
+    'entity_id': 'switch.garden_test_mower_1_front_lawn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_snapshot[switch.garden_my_lawn-entry]
+# name: test_switch_snapshot[switch.garden_test_mower_1_my_lawn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -113,7 +113,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.garden_my_lawn',
+    'entity_id': 'switch.garden_test_mower_1_my_lawn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -136,13 +136,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[switch.garden_my_lawn-state]
+# name: test_switch_snapshot[switch.garden_test_mower_1_my_lawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My lawn',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.garden_my_lawn',
+    'entity_id': 'switch.garden_test_mower_1_my_lawn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -313,8 +313,6 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.garden_test_mower_2_enable_schedule',
-    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
