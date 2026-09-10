@@ -267,6 +267,23 @@ class IseoLockEntity(LockEntity):
         self._attr_available = available
         self.async_write_ha_state()
 
+    def _reject_identity(self, exc: Exception) -> None:
+        """Record that the lock refused the enrolled identity.
+
+        Rejected credentials do not recover on their own: the gateway identity
+        has to be enrolled on the lock again. Advertisements carry nothing
+        about credentials, so the entity has to stay unavailable until it is —
+        otherwise it looks healthy while every operation fails.
+        """
+        if not self._identity_rejected:
+            _LOGGER.warning(
+                "Lock rejected the Home Assistant identity (%s), delete the "
+                "integration and set it up again to enroll it anew",
+                exc,
+            )
+            self._identity_rejected = True
+        self._set_available(False, exc)
+
     def _update_firmware_version(self, state: LockState) -> None:
         """Store the reported firmware version on the device entry, once."""
         if self._fw_version_set or not state.firmware_info:
@@ -320,7 +337,7 @@ class IseoLockEntity(LockEntity):
         surface as an unretrieved task exception rather than a retry.
         """
         try:
-            await self._poll_state()
+            await self._poll_state(probing=True)
         except Exception:
             _LOGGER.debug("Probing the lock failed; will retry", exc_info=True)
 
@@ -346,15 +363,23 @@ class IseoLockEntity(LockEntity):
         )
         return from_manager or self._last_ble_device
 
-    async def _poll_state(self) -> None:
-        """Read door state via TLV_INFO and update HA state."""
+    async def _poll_state(self, *, probing: bool = False) -> None:
+        """Read door state via TLV_INFO and update HA state.
+
+        ``probing`` marks the one-off capability read that runs off the first
+        advertisement. That advertisement has just proved the lock is there, so
+        a transient failure to connect says nothing about reachability and must
+        not override the availability it established: the read is retried on a
+        later advertisement, and silence is what _check_availability is for.
+        """
         _LOGGER.debug("Polling lock state, current available: %s", self._attr_available)
         if self._ble_lock.locked():
             _LOGGER.debug("Skipping poll cycle — BLE operation already in progress")
             return
 
         if not (ble_device := self._async_get_ble_device()):
-            self._set_available(False, "device not found")
+            if not probing:
+                self._set_available(False, "device not found")
             return
 
         if self._door_status_supported is False and not self._entry.options.get(
@@ -373,19 +398,12 @@ class IseoLockEntity(LockEntity):
                 self.client.update_ble_device(ble_device)
                 state: LockState = await self.client.read_state()
         except IseoAuthError as exc:
-            if not self._identity_rejected:
-                # Rejected credentials do not recover on their own: the gateway
-                # identity has to be enrolled on the lock again.
-                _LOGGER.warning(
-                    "Lock rejected the Home Assistant identity (%s), delete the "
-                    "integration and set it up again to enroll it anew",
-                    exc,
-                )
-                self._identity_rejected = True
-                self._attr_available = False
-                self.async_write_ha_state()
+            self._reject_identity(exc)
             return
         except (TimeoutError, IseoConnectionError, OSError) as exc:
+            if probing:
+                _LOGGER.debug("Probing the lock failed; will retry: %s", exc)
+                return
             self._set_available(False, exc)
             return
 
@@ -471,7 +489,11 @@ class IseoLockEntity(LockEntity):
                 self.client.update_ble_device(ble_device)
                 await self.client.gw_open(remote_user_name="Home Assistant")
         except IseoAuthError as exc:
-            self._set_locked()
+            # Same permanent rejection _poll_state() reports: keep the entity
+            # unavailable rather than restoring it, so the opt-in poll timer
+            # stops waking the lock with credentials that cannot work.
+            self._set_locked(available=False)
+            self._reject_identity(exc)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="lock_rejected_identity",

@@ -398,8 +398,15 @@ async def test_unlock_rejected_identity(
     mock_config_entry: MockConfigEntry,
     mock_iseo_client: MagicMock,
 ) -> None:
-    """Test unlocking raises when the lock rejects the identity."""
+    """Test unlocking raises when the lock rejects the identity.
+
+    A rejection from the unlock is the same permanent one a read reports: the
+    entity has to stay unavailable, or it looks healthy while every operation
+    fails and the opt-in poll timer keeps waking the lock for nothing.
+    """
     await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
 
     mock_iseo_client.gw_open = AsyncMock(side_effect=IseoAuthError("bad auth"))
 
@@ -407,7 +414,12 @@ async def test_unlock_rejected_identity(
         await _unlock(hass)
 
     assert excinfo.value.translation_key == "lock_rejected_identity"
-    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # Advertisements carry nothing about credentials, so hearing the lock again
+    # must not make it look healthy.
+    await _advertise(hass, door_closed=True)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
@@ -600,16 +612,44 @@ async def test_probe_retries_when_the_first_read_fails(
     mock_config_entry: MockConfigEntry,
     mock_iseo_client: MagicMock,
 ) -> None:
-    """Test a transient failure does not permanently skip the one-off read."""
+    """Test a transient failure does not permanently skip the one-off read.
+
+    The advertisement that triggered the probe has just proved the lock is
+    there, so a failed capability read must not take the entity offline: door
+    state from that advertisement stays valid, and going quiet is what the
+    freshness timer is for.
+    """
     mock_iseo_client.read_state.side_effect = IseoConnectionError("busy")
     await setup_integration(hass, mock_config_entry)
     await _advertise(hass, door_closed=True)
+
+    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
 
     mock_iseo_client.read_state.side_effect = None
     mock_iseo_client.read_state.reset_mock()
     await _advertise(hass, door_closed=True)
 
     mock_iseo_client.read_state.assert_awaited()
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_probe_failure_still_expires_with_the_advertisements(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test keeping availability through a failed probe still honours silence."""
+    mock_iseo_client.read_state.side_effect = IseoConnectionError("busy")
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
+
+    freezer.tick(_UNAVAILABLE_AFTER + _AVAILABILITY_CHECK_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
