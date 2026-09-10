@@ -61,15 +61,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool
         presence.async_config_entry_first_refresh(),
     )
 
-    entry.runtime_data = XboxCoordinators(
-        consoles,
-        status,
-        presence,
-        _subentry_snapshot(entry),
-        entry.data["auth_implementation"],
-    )
+    entry.runtime_data = XboxCoordinators(consoles, status, presence)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    subentries = _subentry_snapshot(entry)
+
+    async def _async_update_listener(
+        hass: HomeAssistant, entry: XboxConfigEntry
+    ) -> None:
+        """Reload only when the subentries change, not on a token refresh."""
+        if subentries != _subentry_snapshot(entry):
+            hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
@@ -88,17 +91,6 @@ def _subentry_snapshot(
         subentry_id: subentry.as_dict()
         for subentry_id, subentry in entry.subentries.items()
     }
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: XboxConfigEntry) -> None:
-    """Ignore token-only updates unless polling stopped after an authentication failure."""
-    coordinators = entry.runtime_data
-    if (
-        entry.data["auth_implementation"] != coordinators.auth_implementation
-        or coordinators.subentries != _subentry_snapshot(entry)
-        or coordinators.has_auth_failure()
-    ):
-        hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
