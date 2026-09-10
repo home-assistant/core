@@ -265,9 +265,13 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                 translation_placeholders={"name": self._credential_name},
             )
 
-        entry = self.coordinator.config_entry
-        saved_before = dict(entry.data.get(CONF_SAVED_VALIDITY, {}))
         async with self._admin_session() as client:
+            # Read inside the mutex, so this is the map as it stands once
+            # every other credential's operation has settled rather than one
+            # captured while waiting to get in.
+            saved_before = dict(
+                self.coordinator.config_entry.data.get(CONF_SAVED_VALIDITY, {})
+            )
             if not enabled:
                 # Persist before the write, not after: the write overwrites
                 # the window on the lock and only this entity instance held a
@@ -336,9 +340,20 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                 entry, data={**entry.data, CONF_SAVED_VALIDITY: saved}
             )
 
-    def _restore_saved_validity(self, saved: dict[str, str | None]) -> None:
-        """Put the stored-window map back to an earlier snapshot."""
+    def _restore_saved_validity(self, previous: dict[str, str | None]) -> None:
+        """Put this credential's stored window back as the snapshot had it.
+
+        Only this credential's key is touched. Writing the whole map back
+        would undo whatever another credential settled in the meantime, and
+        nothing here has any business deciding what theirs should hold.
+        """
         entry = self.coordinator.config_entry
+        saved = dict(entry.data.get(CONF_SAVED_VALIDITY, {}))
+        key = self._validity_key
+        if key in previous:
+            saved[key] = previous[key]
+        else:
+            saved.pop(key, None)
         if saved != entry.data.get(CONF_SAVED_VALIDITY, {}):
             self.hass.config_entries.async_update_entry(
                 entry, data={**entry.data, CONF_SAVED_VALIDITY: saved}
