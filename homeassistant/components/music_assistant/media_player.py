@@ -187,7 +187,7 @@ def _decode_data_uri(data_uri: str) -> tuple[bytes | None, str | None]:
         return None, None
     try:
         decoded = b64decode(encoded, validate=True)
-    except (binascii.Error, ValueError):
+    except binascii.Error, ValueError:
         return None, None
     if not decoded:
         return None, None
