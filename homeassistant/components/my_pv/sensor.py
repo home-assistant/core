@@ -38,12 +38,14 @@ SENSOR_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {
     },
     "curr_mains": {
         "device_class": SensorDeviceClass.CURRENT,
+        "suggested_display_precision": 1,
         "translation_key": "curr_l1",
     },
     "freq": {
         "device_class": SensorDeviceClass.FREQUENCY,
         "enabled": False,
         "entity_category": EntityCategory.DIAGNOSTIC,
+        "suggested_display_precision": 2,
         "translation_key": "freq",
     },
     "power": {"device_class": SensorDeviceClass.POWER},
@@ -58,24 +60,29 @@ SENSOR_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {
     "screen_mode_flag": {"translation_key": "screen_mode_flag"},
     "temp1": {
         "device_class": SensorDeviceClass.TEMPERATURE,
+        "suggested_display_precision": 1,
         "translation_key": "temp1",
     },
     "temp2": {
         "device_class": SensorDeviceClass.TEMPERATURE,
+        "suggested_display_precision": 1,
         "translation_key": "temp2",
     },
     "temp3": {
         "device_class": SensorDeviceClass.TEMPERATURE,
+        "suggested_display_precision": 1,
         "translation_key": "temp3",
     },
     "temp4": {
         "device_class": SensorDeviceClass.TEMPERATURE,
+        "suggested_display_precision": 1,
         "translation_key": "temp4",
     },
     "temp_ps": {
         "device_class": SensorDeviceClass.TEMPERATURE,
         "enabled": False,
         "entity_category": EntityCategory.DIAGNOSTIC,
+        "suggested_display_precision": 1,
         "translation_key": "temp_ps",
     },
     "uptime": {
@@ -108,16 +115,19 @@ SENSOR_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {
     "volt_mains_l1": {
         "device_class": SensorDeviceClass.VOLTAGE,
         "entity_category": EntityCategory.DIAGNOSTIC,
+        "suggested_display_precision": 1,
         "translation_key": "volt_l1",
     },
     "volt_mains_l2": {
         "device_class": SensorDeviceClass.VOLTAGE,
         "entity_category": EntityCategory.DIAGNOSTIC,
+        "suggested_display_precision": 1,
         "translation_key": "volt_l2",
     },
     "volt_mains_l3": {
         "device_class": SensorDeviceClass.VOLTAGE,
         "entity_category": EntityCategory.DIAGNOSTIC,
+        "suggested_display_precision": 1,
         "translation_key": "volt_l3",
     },
     "volt_solar": {
@@ -185,13 +195,6 @@ async def async_setup_entry(
             ):
                 translation_key = None
 
-            suggested_display_precision = None
-            divider = config.get("divider")
-            if divider == 10:
-                suggested_display_precision = 1
-            elif divider:
-                suggested_display_precision = 2
-
             entity_description = SensorEntityDescription(
                 key=key,
                 device_class=device_class,
@@ -200,7 +203,9 @@ async def async_setup_entry(
                 native_unit_of_measurement=config.get("unit"),
                 options=options,
                 state_class=state_class,
-                suggested_display_precision=suggested_display_precision,
+                suggested_display_precision=sensor_description.get(
+                    "suggested_display_precision"
+                ),
                 entity_registry_enabled_default=sensor_description.get("enabled", True),
             )
             entities.append(
