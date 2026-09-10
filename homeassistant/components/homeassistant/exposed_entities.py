@@ -336,11 +336,10 @@ class ExposedEntities:
                     purged_assistants.update(exposed_entity.assistants)
                     changed = True
 
-            # Checkpoint each chunk before yielding: the sweep runs as a
-            # background task and is cancelled at shutdown, so waiting for the
-            # full pass could discard all progress. async_delay_save debounces
-            # (one write in normal operation) and a pending delayed save is
-            # flushed at final write.
+            # Schedule a save per changed chunk so a sweep cancelled at
+            # shutdown keeps its progress: async_delay_save postpones the
+            # write on each call (one write per pass in practice), and a
+            # pending save is flushed at final write.
             if changed:
                 self._async_schedule_save()
 
@@ -350,7 +349,10 @@ class ExposedEntities:
         # like cloud Alexa cache those settings and only sync remote removals
         # when notified. Notify once per assistant after the pass: listeners
         # debounce-resync on every call (cloud SYNC_DELAY is 1s), so per-chunk
-        # calls could trigger repeated full syncs mid-sweep.
+        # calls could trigger repeated full syncs mid-sweep. A shutdown here
+        # drops the notification -- accepted: a sync scheduled at shutdown
+        # couldn't complete either, and a stale remote device is the
+        # pre-purge status quo.
         for assistant in purged_assistants:
             for listener in self._listeners.get(assistant, []):
                 listener()
