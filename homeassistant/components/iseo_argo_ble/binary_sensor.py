@@ -53,6 +53,18 @@ USER_TYPE_TRANSLATION_KEYS = {
 }
 
 
+def _translation_key(user: UserEntry) -> str:
+    """Return the name template for one credential's kind.
+
+    USER_TYPE_BT covers both smartphones and gateways, so the subtype decides
+    between them — calling a gateway a phone would be plain wrong on the one
+    lock that has two of them.
+    """
+    if user.user_type == USER_TYPE_BT and user.inner_subtype == DEFAULT_USER_SUBTYPE:
+        return "credential_gateway"
+    return USER_TYPE_TRANSLATION_KEYS.get(user.user_type, "credential_other")
+
+
 def _is_home_assistant_identity(
     user: UserEntry, gateway_uuid_hex: str, admin_uuid_hex: str | None
 ) -> bool:
@@ -157,9 +169,7 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
             self._validity = user.validity
             self._validity_is_original = not user.disabled
 
-        self._attr_translation_key = USER_TYPE_TRANSLATION_KEYS.get(
-            user.user_type, "credential_other"
-        )
+        self._attr_translation_key = _translation_key(user)
         # Credentials enrolled without a name are only identifiable by UUID.
         self._credential_name = user.name.strip() or user.uuid_hex[:8]
         self._attr_translation_placeholders = {"name": self._credential_name}

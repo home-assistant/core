@@ -47,6 +47,9 @@
       "credential_fingerprint": {
         "name": "{name} (fingerprint)"
       },
+      "credential_gateway": {
+        "name": "{name} (gateway)"
+      },
       "credential_invitation": {
         "name": "{name} (invitation)"
       },

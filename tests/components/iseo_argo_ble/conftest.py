@@ -56,6 +56,15 @@ MOCK_USERS = [
         inner_subtype=16,
         disabled=False,
     ),
+    # A gateway someone else enrolled on the same lock. Shares the subtype of
+    # Home Assistant's own gateway, and is a credential like any other.
+    UserEntry(
+        user_type=USER_TYPE_BT,
+        uuid_hex="4444444444444444444444444444dddd",
+        name="Concierge",
+        inner_subtype=DEFAULT_USER_SUBTYPE,
+        disabled=False,
+    ),
     # The two identities Home Assistant enrolled for itself; neither gets a
     # credential sensor.
     UserEntry(
