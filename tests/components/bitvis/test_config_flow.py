@@ -2,8 +2,10 @@
 
 import asyncio
 from ipaddress import ip_address
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from bitvis_protobuf.parse import PayloadSample
+from bitvis_protobuf.powerhub_pb2 import Payload
 import pytest
 
 from homeassistant.components.bitvis.const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
@@ -46,6 +48,13 @@ def _zeroconf_discovery(
 
 
 ZEROCONF_DISCOVERY = _zeroconf_discovery()
+UNRELATED_HOST = "10.9.9.9"
+
+
+def _invalid_mac_datagram() -> bytes:
+    payload = Payload()
+    payload.sample.SetInParent()
+    return payload.SerializeToString()
 
 
 @pytest.mark.parametrize(
@@ -382,6 +391,99 @@ async def test_aborted_flow_removes_listener(
     assert result["errors"] == {"base": "timeout_connect"}
     mock_shared_listener.stop.assert_awaited_once()
     assert not async_get_listener_registry(hass).has_listener(DEFAULT_PORT)
+
+
+async def test_invalid_mac_from_other_host_is_ignored(
+    hass: HomeAssistant, mock_shared_listener: FakeListener
+) -> None:
+    """Test an invalid-MAC datagram from another host does not fail the flow."""
+    with patch_config_flow_connectivity(
+        USER_HOST, deliver_mac=False, shared_listener=mock_shared_listener
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        configure_task = asyncio.create_task(
+            hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_HOST: USER_HOST,
+                },
+            )
+        )
+        await hass.async_block_till_done()
+
+        mock_shared_listener.dispatch(_invalid_mac_datagram(), (UNRELATED_HOST, 1234))
+        mock_shared_listener.deliver(
+            PayloadSample(mac_address=TEST_DEVICE_MAC, sample=MagicMock()),
+            (USER_HOST, 1234),
+        )
+        result = await configure_task
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_DEVICE_MAC
+
+
+async def test_invalid_mac_does_not_fail_other_flow(
+    hass: HomeAssistant, mock_shared_listener: FakeListener
+) -> None:
+    """Test an invalid-MAC datagram only fails the flow waiting for that host."""
+
+    async def resolve_host(host: str) -> set[str]:
+        return {host}
+
+    with (
+        patch(
+            "homeassistant.components.bitvis.config_flow.async_verify_udp_port_bindable",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.bitvis.config_flow.async_resolve_host",
+            side_effect=resolve_host,
+        ),
+        patch(
+            "homeassistant.components.bitvis.coordinator.SharedListener",
+            return_value=mock_shared_listener,
+        ),
+    ):
+        first_result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        first_task = asyncio.create_task(
+            hass.config_entries.flow.async_configure(
+                first_result["flow_id"],
+                {
+                    CONF_HOST: USER_HOST,
+                },
+            )
+        )
+        await hass.async_block_till_done()
+
+        second_result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        second_task = asyncio.create_task(
+            hass.config_entries.flow.async_configure(
+                second_result["flow_id"],
+                {
+                    CONF_HOST: ZEROCONF_HOST,
+                },
+            )
+        )
+        await hass.async_block_till_done()
+
+        mock_shared_listener.dispatch(_invalid_mac_datagram(), (ZEROCONF_HOST, 1234))
+        mock_shared_listener.deliver(
+            PayloadSample(mac_address=TEST_DEVICE_MAC, sample=MagicMock()),
+            (USER_HOST, 1234),
+        )
+        first_result = await first_task
+        second_result = await second_task
+
+    assert first_result["type"] is FlowResultType.CREATE_ENTRY
+    assert first_result["result"].unique_id == TEST_DEVICE_MAC
+    assert second_result["type"] is FlowResultType.FORM
+    assert second_result["errors"] == {"base": "invalid_mac"}
 
 
 async def test_concurrent_flow_same_host_aborts(hass: HomeAssistant) -> None:

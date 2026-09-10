@@ -4,7 +4,7 @@ from bitvis_protobuf import powerhub_pb2
 from bitvis_protobuf.parse import PayloadSample
 import pytest
 
-from homeassistant.components.bitvis.const import DOMAIN
+from homeassistant.components.bitvis.const import DATA_LISTENER_REGISTRY, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -27,8 +27,10 @@ async def test_unload_entry(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test that unloading stops the coordinator and unloads platforms."""
+    assert DATA_LISTENER_REGISTRY in hass.data
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     assert init_integration.state is ConfigEntryState.NOT_LOADED
+    assert DATA_LISTENER_REGISTRY not in hass.data
 
 
 async def test_two_entries_share_listener(
@@ -52,9 +54,11 @@ async def test_two_entries_share_listener(
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     patch_shared_listener.stop.assert_not_called()
+    assert DATA_LISTENER_REGISTRY in hass.data
 
     assert await hass.config_entries.async_unload(mock_second_config_entry.entry_id)
     patch_shared_listener.stop.assert_awaited_once()
+    assert DATA_LISTENER_REGISTRY not in hass.data
 
 
 async def test_unload_after_dynamic_entities(

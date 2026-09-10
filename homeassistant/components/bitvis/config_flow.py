@@ -68,8 +68,12 @@ async def _async_discover_mac_address(hass: HomeAssistant, host: str, port: int)
             future.set_result(payload.mac_address)
 
     @callback
-    def _on_error(err: Exception, _addr: tuple[str, int]) -> None:
-        if not future.done() and isinstance(err, InvalidMacAddressError):
+    def _on_error(err: Exception, addr: tuple[str, int]) -> None:
+        if (
+            addr[0] in resolved_ips
+            and not future.done()
+            and isinstance(err, InvalidMacAddressError)
+        ):
             future.set_exception(err)
 
     filters: list[FilterIp] = []
