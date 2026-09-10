@@ -18,7 +18,7 @@ excludeAgent: "cloud-agent"
 - For entity actions and entity services, avoid requesting redundant defensive checks for fields already enforced by Home Assistant validation schemas and entity filters; only request extra guards when values bypass validation or are transformed unsafely.
 - When validation guarantees a key is present, prefer direct dictionary indexing (`data["key"]`) over `.get("key")` so invalid assumptions fail fast.
 - Integrations should be thin wrappers. Protocol parsing, device state machines, or other domain logic belong in a separate PyPI library, not in the integration itself. If unsure, ask before inlining.
-- Integrations should not implement fixes or workarounds for limitations in libraries. Instead, the library should be updated to fix the issue. Code that exists only because of how Home Assistant models the device, or because of the config entry setup, migration and unload lifecycle, is not a library workaround.
+- Integrations should not implement fixes or workarounds for limitations in libraries. Instead, the library should be updated to fix the issue. Code that exists only to fit Home Assistant's own model, how it represents devices and config entries, or how missing data has to become `unknown`, is not a library workaround.
 
 The following platforms have extra guidelines:
 - **Diagnostics**: [`platform-diagnostics.md`](platform-diagnostics.md) for diagnostic data collection
@@ -32,8 +32,8 @@ The following platforms have extra guidelines:
 
 ## Reauth and reconfigure
 
-- An action that fails on authentication has to start reauth itself: call `entry.async_start_reauth(hass)` and raise a `HomeAssistantError`. Use `async_start_reauth_if_available()` where the integration may have no reauth step. Raising `ConfigEntryAuthFailed` from an action starts nothing on its own; only a config entry's own setup and a coordinator refresh act on it, and an `OAuth2Session` that fails to refresh its token.
-- Reauth cannot fix an account limitation. When it is temporary, such as a rate limit or a quota that resets on its own, raise `UpdateFailed` from the coordinator update. When it lasts and the user can act on it, such as an expired subscription, create a repair issue.
+- An action that fails on authentication has to start reauth itself: call `entry.async_start_reauth(hass)` and raise a `HomeAssistantError`. Raising `ConfigEntryAuthFailed` there starts nothing; only a config entry's own setup and a coordinator refresh act on it. An `OAuth2Session` also starts reauth on its own, but on `OAuth2TokenRequestReauthError` from its token refresh.
+- Reauth cannot fix an account limitation, so never route one into it. While the limit is temporary, such as a rate limit or a quota that resets on its own, raise `UpdateFailed` from the coordinator update. When it lasts, raise `ConfigEntryError` where the entry cannot work at all, and create a repair issue where it stays loaded.
 - In a reauth or reconfigure flow, call `_abort_if_unique_id_mismatch()` after `async_set_unique_id()`. It aborts when the unique ID does not match the entry being changed. `_abort_if_unique_id_configured()` is for the flows that add an entry, user and discovery alike.
 
 ## Integration Quality Scale
@@ -45,7 +45,7 @@ Template scale file: `./script/scaffold/templates/integration/integration/qualit
 
 ### How Rules Apply
 1. **Check `manifest.json`**: Look for `"quality_scale"` key to determine integration level
-2. **Bronze Rules**: Required (`done` or `exempt`) when `quality_scale` is `bronze`, `silver`, `gold` or `platinum`. The other accepted values (`custom`, `no_score`, `internal`, `legacy`) are not tiers, so don't hold those integrations to the Bronze rules
+2. **Bronze Rules**: Required (`done` or `exempt`) when `quality_scale` is `bronze`, `silver`, `gold` or `platinum`. Any other accepted value is not a tier, so don't hold those integrations to the Bronze rules
 3. **Higher Tier Rules**: Only apply if integration targets that tier or higher
 4. **Rule Status**: Check `quality_scale.yaml` in integration folder for:
    - `done`: Rule implemented
