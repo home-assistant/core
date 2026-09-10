@@ -102,9 +102,12 @@
       ]),
       'light_zones': list([
         dict({
+          'c_blue': 0,
+          'c_green': 0,
+          'c_red': 0,
           'color': dict({
             '__type': "<enum 'LightColor'>",
-            'repr': "<LightColor.OFF: 'WHEEL_OFF'>",
+            'repr': "<LightColor.BLUE: 'BLUE'>",
           }),
           'intensity': 0,
           'is_enabled': True,
@@ -114,6 +117,7 @@
             'repr': "<LightWheelMode.OFF: 'off'>",
           }),
           'loop_speed': 0,
+          'rgb_state': 'inactive',
           'zone_id': 1,
         }),
       ]),
@@ -266,9 +270,12 @@
       ]),
       'light_zones': list([
         dict({
+          'c_blue': 0,
+          'c_green': 0,
+          'c_red': 0,
           'color': dict({
             '__type': "<enum 'LightColor'>",
-            'repr': "<LightColor.OFF: 'WHEEL_OFF'>",
+            'repr': "<LightColor.BLUE: 'BLUE'>",
           }),
           'intensity': 0,
           'is_enabled': True,
@@ -278,6 +285,7 @@
             'repr': "<LightWheelMode.OFF: 'off'>",
           }),
           'loop_speed': 0,
+          'rgb_state': 'inactive',
           'zone_id': 1,
         }),
       ]),

@@ -96,7 +96,8 @@ async def test_device_not_in_registry_raises(
             entry.runtime_data.api, "send_command", new_callable=AsyncMock
         ) as mock_send,
         pytest.raises(
-            ServiceValidationError, match="Device nonexistent-device-id not found"
+            ServiceValidationError,
+            match="Device with ID nonexistent-device-id was not found",
         ),
     ):
         await hass.services.async_call(

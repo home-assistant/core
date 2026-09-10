@@ -3,6 +3,7 @@
 from collections.abc import Generator
 
 import pytest
+from watergate_local_api.models import AutoShutOffState
 
 from homeassistant.components.watergate.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
@@ -42,6 +43,11 @@ def mock_watergate_client() -> Generator[AsyncMock]:
         )
         mock_client_instance.async_get_telemetry_data = AsyncMock(
             return_value=DEFAULT_TELEMETRY_STATE
+        )
+        # Build a fresh model per test: the switch mutates auto_shut_off.enabled, so a
+        # shared instance would leak state between tests and create order dependencies.
+        mock_client_instance.async_get_auto_shut_off = AsyncMock(
+            return_value=AutoShutOffState(True, 1000, 60)
         )
         yield mock_client_instance
 

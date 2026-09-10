@@ -26,7 +26,12 @@ from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -156,6 +161,33 @@ async def test_home_assistant_stop(
     await hass.async_stop()
 
     assert client.disconnect.call_count == 1
+
+
+async def test_home_assistant_stop_waits_for_neighbors_refresh(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+) -> None:
+    """Test stop disconnects only after a neighbors refresh releases the lock.
+
+    The refresh turns the radio back on before releasing, so disconnecting
+    earlier could leave the radio off.
+    """
+    disconnected = asyncio.Event()
+
+    async def mock_disconnect() -> None:
+        disconnected.set()
+
+    client.disconnect.side_effect = mock_disconnect
+
+    async with integration.runtime_data.network_neighbors_lock:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        for _ in range(10):
+            await asyncio.sleep(0)
+        assert not disconnected.is_set()
+
+    await hass.async_block_till_done()
+    assert disconnected.is_set()
 
 
 @pytest.mark.usefixtures("client", "connect_timeout")
@@ -1034,7 +1066,7 @@ async def test_start_addon(
     "set_addon_options_side_effect",
     [
         SupervisorError(
-            "not a valid value for dictionary value @ data['options']. "
+            "not a valid value at 'options'. "
             f"Got {{'s0_legacy_key': '{TEST_SENSITIVE_NETWORK_KEY}'}}"
         )
     ],
@@ -1064,7 +1096,7 @@ async def test_start_addon_redacts_set_options_error(
     assert set_addon_options.call_count == 1
     assert start_addon.call_count == 0
     assert "Failed to set the Z-Wave JS app options" in caplog.text
-    assert "not a valid value for dictionary value" in caplog.text
+    assert "not a valid value at" in caplog.text
     assert REDACTED in caplog.text
     assert secret not in caplog.text
 

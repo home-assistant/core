@@ -6,6 +6,7 @@ import collections.abc
 from collections.abc import Callable
 import contextlib
 from datetime import timedelta
+from enum import ReprEnum
 from functools import lru_cache, partial
 import logging
 import pathlib
@@ -34,6 +35,7 @@ from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
+from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
 from .context import (
@@ -299,6 +301,38 @@ def _cached_parse_result(render_result: str) -> Any:
     return render_result
 
 
+_FINALIZE_DICT_TYPES = (dict, ReadOnlyDict)
+_FINALIZE_CONTAINER_TYPES = (list, set, tuple)
+
+
+def _finalize_output(value: Any, _nested: bool = False) -> Any:
+    """Resolve ReprEnum members nested in containers so output round-trips.
+
+    Jinja stringifies containers via repr() of their items, and enum members
+    repr as e.g. <MyEnum.FOO: 'foo'>, which literal_eval cannot parse back into
+    a dict/list. Replace such members inside containers with their underlying
+    value before the container is stringified. Only ReprEnum members (StrEnum,
+    IntEnum, IntFlag) are handled: they use the mixed-in type's str(), so their
+    value is a literal-safe scalar that already matches their bare str() output
+    and nested/top-level rendering stay consistent. Plain Enum/Flag members are
+    left untouched. ReadOnlyDict is handled explicitly since state attributes
+    use it; other dict subclasses, namedtuples, and result wrappers are left
+    untouched to avoid rebuilding types that don't take an iterable constructor
+    or carry their own str().
+    """
+    if _nested and isinstance(value, ReprEnum):
+        return value.value
+    value_type = type(value)
+    if value_type in _FINALIZE_DICT_TYPES:
+        return {
+            _finalize_output(key, True): _finalize_output(item, True)
+            for key, item in value.items()
+        }
+    if value_type in _FINALIZE_CONTAINER_TYPES:
+        return value_type(_finalize_output(item, True) for item in value)
+    return value
+
+
 class Template:
     """Class to hold a template and manage caching and rendering."""
 
@@ -523,7 +557,7 @@ class Template:
         if not self.hass:
             raise RuntimeError(f"hass not set while rendering {self}")
 
-        if render_info_cv.get() is not None:
+        if (in_flight := render_info_cv.get()) is not None and in_flight.collecting:
             raise RuntimeError(
                 f"RenderInfo already set while rendering {self}, "
                 "this usually indicates the template is being rendered "
@@ -543,6 +577,7 @@ class Template:
         except TemplateError as ex:
             render_info.exception = ex
         finally:
+            render_info.collecting = False
             render_info_cv.reset(token)
 
         render_info._freeze()  # noqa: SLF001
@@ -596,7 +631,8 @@ class Template:
             render_result = render_with_context(
                 self.template, compiled, **variables
             ).strip()
-        except jinja2.TemplateError as ex:
+        # A cyclic value makes the finalize hook recurse until RecursionError.
+        except (jinja2.TemplateError, RecursionError) as ex:
             if error_value is _SENTINEL:
                 _LOGGER.error(
                     "Error parsing value: %s (value: %s, template: %s)",
@@ -794,7 +830,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         log_fn: Callable[[int, str], None] | None = None,
     ) -> None:
         """Initialise template environment."""
-        super().__init__(undefined=make_logging_undefined(strict, log_fn))
+        super().__init__(
+            undefined=make_logging_undefined(strict, log_fn),
+            finalize=_finalize_output,
+        )
         self.hass = hass
         self.limited = limited
         self.template_cache: weakref.WeakValueDictionary[

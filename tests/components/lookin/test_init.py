@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant.components.lookin import UDP_MANAGER
 from homeassistant.components.lookin.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
@@ -81,3 +82,37 @@ async def test_controlled_device_links_to_lookin_device(
     )
     assert controlled_device is not None
     assert controlled_device.via_device_id == lookin_device.id
+
+
+async def test_udp_manager_outlives_the_config_entry(hass: HomeAssistant) -> None:
+    """Test the shared UDP manager is reused rather than rebuilt per entry."""
+    device = _mocked_device()
+    remote = _mocked_remote()
+    protocol = _mocked_protocol(device, remote)
+
+    subscriptions = MagicMock()
+    subscriptions.subscribe_event = MagicMock(return_value=MagicMock())
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=DEVICE_ID
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(f"{MODULE}.LookInHttpProtocol", return_value=protocol),
+        patch(f"{MODULE}.LookinUDPSubscriptions", return_value=subscriptions),
+        patch(f"{MODULE}.start_lookin_udp", AsyncMock(return_value=MagicMock())),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        manager = hass.data[UDP_MANAGER]
+        assert manager is not None
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    # The manager is keyed globally, not on the entry, so a reload reuses it
+    # instead of leaving a second listener behind.
+    assert hass.data[UDP_MANAGER] is manager

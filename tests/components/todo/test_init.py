@@ -529,8 +529,8 @@ async def test_update_todo_item_service_by_summary_not_found(
 @pytest.mark.parametrize(
     ("item_data", "expected_error"),
     [
-        ({}, r"required key not provided @ data\['item'\]"),
-        ({"status": "needs_action"}, r"required key not provided @ data\['item'\]"),
+        ({}, r"required key not provided at 'item'"),
+        ({"status": "needs_action"}, r"required key not provided at 'item'"),
         ({"item": "Item #1"}, "must contain at least one of"),
         (
             {"item": "", "status": "needs_action"},
@@ -786,9 +786,7 @@ async def test_remove_todo_item_service_invalid_input(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(
-        vol.Invalid, match=r"required key not provided @ data\['item'\]"
-    ):
+    with pytest.raises(vol.Invalid, match=r"required key not provided at 'item'"):
         await hass.services.async_call(
             DOMAIN,
             TodoServices.REMOVE_ITEM,

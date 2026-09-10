@@ -44,7 +44,6 @@ from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
-from homeassistant.util.json import json_loads
 
 from . import (
     HCI0_SOURCE_ADDRESS,
@@ -66,7 +65,7 @@ from tests.common import (
     MockModule,
     async_call_logger_set_level,
     async_fire_time_changed,
-    async_load_fixture,
+    async_load_json_object_fixture,
     mock_integration,
 )
 
@@ -466,8 +465,10 @@ async def test_restore_history_from_dbus_and_remote_adapters(
     """Test we can restore history from dbus along with remote adapters."""
     address = "AA:BB:CC:CC:CC:FF"
 
-    data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
-        await async_load_fixture(hass, "bluetooth.remote_scanners", bluetooth.DOMAIN)
+    data = hass_storage[
+        storage.REMOTE_SCANNER_STORAGE_KEY
+    ] = await async_load_json_object_fixture(
+        hass, "bluetooth.remote_scanners", bluetooth.DOMAIN
     )
     now = time.time()
     timestamps = data["data"]["atom-bluetooth-proxy-ceaac4"][
@@ -508,10 +509,10 @@ async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
     """Test history restore when remote adapters data is corrupted."""
     address = "AA:BB:CC:CC:CC:FF"
 
-    data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
-        await async_load_fixture(
-            hass, "bluetooth.remote_scanners.corrupt", bluetooth.DOMAIN
-        )
+    data = hass_storage[
+        storage.REMOTE_SCANNER_STORAGE_KEY
+    ] = await async_load_json_object_fixture(
+        hass, "bluetooth.remote_scanners.corrupt", bluetooth.DOMAIN
     )
     now = time.time()
     timestamps = data["data"]["atom-bluetooth-proxy-ceaac4"][
@@ -1766,6 +1767,7 @@ async def test_async_register_disappeared_callback(
 @pytest.mark.usefixtures("one_adapter")
 async def test_repair_issue_created_for_degraded_scanner_in_docker(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair issue is created when scanner is in degraded mode in Docker."""
     await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -1805,8 +1807,7 @@ async def test_repair_issue_created_for_degraded_scanner_in_docker(
         manager.on_scanner_start(scanner)
 
         issue_id = f"bluetooth_adapter_missing_permissions_{scanner.source}"
-        registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-        issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
+        issue = issue_registry.async_get_issue(bluetooth.DOMAIN, issue_id)
         assert issue is not None
         assert issue.severity == ir.IssueSeverity.WARNING
         assert not issue.is_fixable
@@ -1816,13 +1817,13 @@ async def test_repair_issue_created_for_degraded_scanner_in_docker(
 @pytest.mark.usefixtures("one_adapter")
 async def test_repair_issue_deleted_when_scanner_not_degraded(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair issue is deleted when scanner is not in degraded mode."""
     await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
 
     manager = _get_manager()
-    registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     scanner = HaScanner(
         mode=BluetoothScanningMode.ACTIVE,
@@ -1857,7 +1858,7 @@ async def test_repair_issue_deleted_when_scanner_not_degraded(
     ):
         manager.on_scanner_start(scanner)
 
-    assert registry.async_get_issue(bluetooth.DOMAIN, issue_id) is not None
+    assert issue_registry.async_get_issue(bluetooth.DOMAIN, issue_id) is not None
 
     with (
         patch(
@@ -1868,12 +1869,13 @@ async def test_repair_issue_deleted_when_scanner_not_degraded(
     ):
         manager.on_scanner_start(scanner)
 
-    assert registry.async_get_issue(bluetooth.DOMAIN, issue_id) is None
+    assert issue_registry.async_get_issue(bluetooth.DOMAIN, issue_id) is None
 
 
 @pytest.mark.usefixtures("one_adapter")
 async def test_no_repair_issue_when_not_docker(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test no repair issue is created when not running in Docker."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -1898,13 +1900,13 @@ async def test_no_repair_issue_when_not_docker(
         manager.on_scanner_start(scanner)
 
         issue_id = f"bluetooth_adapter_missing_permissions_{scanner.source}"
-        registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-        assert registry.async_get_issue(bluetooth.DOMAIN, issue_id) is None
+        assert issue_registry.async_get_issue(bluetooth.DOMAIN, issue_id) is None
 
 
 @pytest.mark.usefixtures("one_adapter")
 async def test_no_repair_issue_for_remote_scanner(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test no repair issue is created for remote scanners."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -1924,10 +1926,9 @@ async def test_no_repair_issue_for_remote_scanner(
     ):
         manager.on_scanner_start(scanner)
 
-        registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
         issues = [
             issue
-            for issue in registry.issues.values()
+            for issue in issue_registry.issues.values()
             if issue.domain == bluetooth.DOMAIN
             and "bluetooth_adapter_missing_permissions" in issue.issue_id
         ]
@@ -1937,6 +1938,7 @@ async def test_no_repair_issue_for_remote_scanner(
 @pytest.mark.usefixtures("one_adapter")
 async def test_repair_issue_created_for_passive_mode_fallback(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair issue is created when scanner falls back to passive mode."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -1961,8 +1963,7 @@ async def test_repair_issue_created_for_passive_mode_fallback(
 
     # Check repair issue is created
     issue_id = f"bluetooth_adapter_passive_mode_{scanner.source}"
-    registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(bluetooth.DOMAIN, issue_id)
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     # Should default to USB translation key when adapter type is unknown
@@ -1974,6 +1975,7 @@ async def test_repair_issue_created_for_passive_mode_fallback(
 
 async def test_repair_issue_created_for_passive_mode_fallback_uart(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair issue is created with UART-specific message for UART adapters."""
     with patch(
@@ -2012,8 +2014,7 @@ async def test_repair_issue_created_for_passive_mode_fallback_uart(
 
         # Check repair issue is created with UART-specific translation key
         issue_id = f"bluetooth_adapter_passive_mode_{scanner.source}"
-        registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-        issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
+        issue = issue_registry.async_get_issue(bluetooth.DOMAIN, issue_id)
         assert issue is not None
         assert issue.severity == ir.IssueSeverity.WARNING
         assert issue.translation_key == "bluetooth_adapter_passive_mode_uart"
@@ -2025,6 +2026,7 @@ async def test_repair_issue_created_for_passive_mode_fallback_uart(
 @pytest.mark.usefixtures("one_adapter")
 async def test_repair_issue_deleted_when_passive_mode_resolved(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair issue is deleted when scanner no longer in passive mode."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -2049,8 +2051,7 @@ async def test_repair_issue_deleted_when_passive_mode_resolved(
 
     # Check repair issue is created
     issue_id = f"bluetooth_adapter_passive_mode_{scanner.source}"
-    registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(bluetooth.DOMAIN, issue_id)
     assert issue is not None
 
     # Now simulate scanner recovering to active mode
@@ -2058,7 +2059,7 @@ async def test_repair_issue_deleted_when_passive_mode_resolved(
     manager.on_scanner_start(scanner)
 
     # Check repair issue is deleted
-    issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(bluetooth.DOMAIN, issue_id)
     assert issue is None
 
     cancel()

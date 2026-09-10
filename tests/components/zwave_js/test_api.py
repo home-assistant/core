@@ -1,6 +1,7 @@
 """Test the Z-Wave JS Websocket API."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from copy import deepcopy
 from http import HTTPStatus
 from io import BytesIO
@@ -397,6 +398,478 @@ async def test_node_status(
             ID: 5,
             TYPE: "zwave_js/node_status",
             DEVICE_ID: device.id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+def mock_neighbors_commands(
+    client: MagicMock,
+    handler: Callable[[dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    """Record the commands sent to the driver and answer them with handler."""
+    commands: list[dict[str, Any]] = []
+
+    async def _send_command(message: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        commands.append(message)
+        return await handler(message)
+
+    client.async_send_command.side_effect = _send_command
+    return commands
+
+
+async def neighbors_ok(message: dict[str, Any]) -> dict[str, Any]:
+    """Answer both toggling RF and reading neighbors successfully."""
+    if message["command"] == "controller.get_node_neighbors":
+        return {"neighbors": []}
+    return {"success": True}
+
+
+async def test_network_neighbors(
+    hass: HomeAssistant,
+    multisensor_6: Node,
+    wallmote_central_scene: Node,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the network_neighbors websocket command."""
+    ws_client = await hass_ws_client(hass)
+    # Long range nodes are not part of the mesh and must be skipped
+    wallmote_central_scene.data["protocol"] = Protocols.ZWAVE_LONG_RANGE
+
+    async def handler(message: dict[str, Any]) -> dict[str, Any]:
+        if message["command"] == "controller.get_node_neighbors":
+            neighbors = [35, 32] if message["nodeId"] == multisensor_6.node_id else []
+            return {"neighbors": neighbors}
+        return {"success": True}
+
+    commands = mock_neighbors_commands(client, handler)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "1": [],
+        str(multisensor_6.node_id): [35, 32],
+    }
+    # The nodes are read one at a time while the radio is off
+    assert commands == [
+        {"command": "controller.toggle_rf", "enabled": False},
+        {"command": "controller.get_node_neighbors", "nodeId": 1},
+        {"command": "controller.get_node_neighbors", "nodeId": multisensor_6.node_id},
+        {"command": "controller.toggle_rf", "enabled": True},
+    ]
+
+
+async def test_network_neighbors_node_failure(
+    hass: HomeAssistant,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a node that fails to report its neighbors is skipped."""
+    ws_client = await hass_ws_client(hass)
+
+    async def handler(message: dict[str, Any]) -> dict[str, Any]:
+        if message["command"] != "controller.get_node_neighbors":
+            return {"success": True}
+        if message["nodeId"] == 1:
+            raise FailedZWaveCommand("failed_command", 1, "error message")
+        return {"neighbors": []}
+
+    commands = mock_neighbors_commands(client, handler)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {str(multisensor_6.node_id): []}
+    assert commands[-1] == {"command": "controller.toggle_rf", "enabled": True}
+
+
+async def test_network_neighbors_node_added_while_reading(
+    hass: HomeAssistant,
+    multisensor_6: Node,
+    wallmote_central_scene: Node,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a node joining the network while reading doesn't abort the reads."""
+    ws_client = await hass_ws_client(hass)
+
+    async def handler(message: dict[str, Any]) -> dict[str, Any]:
+        if message["command"] == "controller.get_node_neighbors":
+            client.driver.controller.nodes.setdefault(999, wallmote_central_scene)
+            return {"neighbors": []}
+        return {"success": True}
+
+    commands = mock_neighbors_commands(client, handler)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "1": [],
+        str(multisensor_6.node_id): [],
+        str(wallmote_central_scene.node_id): [],
+    }
+    assert commands[-1] == {"command": "controller.toggle_rf", "enabled": True}
+
+
+async def test_network_neighbors_rf_disable_rejected(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the nodes are not read when the radio can't be turned off."""
+    ws_client = await hass_ws_client(hass)
+
+    async def handler(message: dict[str, Any]) -> dict[str, Any]:
+        if message["command"] == "controller.toggle_rf":
+            return {"success": message["enabled"]}
+        return {"neighbors": []}
+
+    commands = mock_neighbors_commands(client, handler)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "rf_toggle_failed"
+    assert commands == [
+        {"command": "controller.toggle_rf", "enabled": False},
+        {"command": "controller.toggle_rf", "enabled": True},
+    ]
+
+
+async def test_network_neighbors_rf_restore_rejected(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a radio that can't be turned back on is reported and logged."""
+    ws_client = await hass_ws_client(hass)
+
+    async def handler(message: dict[str, Any]) -> dict[str, Any]:
+        if message["command"] == "controller.toggle_rf":
+            return {"success": not message["enabled"]}
+        return {"neighbors": []}
+
+    commands = mock_neighbors_commands(client, handler)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "rf_toggle_failed"
+    assert commands[-1] == {"command": "controller.toggle_rf", "enabled": True}
+    assert "Failed to re-enable RF" in caplog.text
+
+
+async def test_network_neighbors_rf_toggle_error(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a single response is sent when the radio can't be toggled at all."""
+    ws_client = await hass_ws_client(hass)
+
+    async def handler(message: dict[str, Any]) -> dict[str, Any]:
+        if message["enabled"]:
+            raise FailedZWaveCommand("failed_command", 1, "error message")
+        return {"success": False}
+
+    mock_neighbors_commands(client, handler)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "rf_toggle_failed"
+    assert "Failed to re-enable RF" in caplog.text
+
+    # The next frame is the pong, proving no second response was sent
+    await ws_client.send_json_auto_id({TYPE: "ping"})
+    msg = await ws_client.receive_json()
+    assert msg["type"] == "pong"
+
+
+async def test_network_neighbors_cancelled(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the radio is turned back on when the command is cancelled."""
+    ws_client = await hass_ws_client(hass)
+
+    async def handler(message: dict[str, Any]) -> dict[str, Any]:
+        if message["command"] == "controller.toggle_rf" and not message["enabled"]:
+            raise asyncio.CancelledError
+        return {"success": True}
+
+    commands = mock_neighbors_commands(client, handler)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
+        }
+    )
+    # A cancelled command sends no response, so sync on a ping instead
+    await ws_client.send_json_auto_id({TYPE: "ping"})
+    msg = await ws_client.receive_json()
+    assert msg["type"] == "pong"
+    await hass.async_block_till_done()
+
+    assert commands == [
+        {"command": "controller.toggle_rf", "enabled": False},
+        {"command": "controller.toggle_rf", "enabled": True},
+    ]
+
+
+async def test_network_neighbors_handler_cancelled(
+    hass: HomeAssistant,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test an abandoned request doesn't interrupt the refresh.
+
+    The refresh must keep the lock and turn the radio back on even when the
+    websocket command handler is cancelled, e.g. by a closing connection.
+    """
+    ws_client = await hass_ws_client(hass)
+    read_started = asyncio.Event()
+    resume_read = asyncio.Event()
+
+    async def handler(message: dict[str, Any]) -> dict[str, Any]:
+        if message["command"] == "controller.get_node_neighbors":
+            read_started.set()
+            await resume_read.wait()
+            return {"neighbors": []}
+        return {"success": True}
+
+    commands = mock_neighbors_commands(client, handler)
+    lock = integration.runtime_data.network_neighbors_lock
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
+        }
+    )
+    await read_started.wait()
+
+    handler_task = next(
+        task
+        for task in asyncio.all_tasks()
+        if "_handle_async_response" in repr(task.get_coro())
+    )
+    handler_task.cancel()
+    for _ in range(5):
+        await asyncio.sleep(0)
+    # The abandoned refresh keeps reading with the lock held
+    assert lock.locked()
+
+    resume_read.set()
+    await hass.async_block_till_done()
+    assert not lock.locked()
+    assert commands == [
+        {"command": "controller.toggle_rf", "enabled": False},
+        {"command": "controller.get_node_neighbors", "nodeId": 1},
+        {"command": "controller.get_node_neighbors", "nodeId": multisensor_6.node_id},
+        {"command": "controller.toggle_rf", "enabled": True},
+    ]
+
+
+async def test_network_neighbors_concurrent(
+    hass: HomeAssistant,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test concurrent requests are serialized so the radio is never shared."""
+    ws_client = await hass_ws_client(hass)
+    ws_client_2 = await hass_ws_client(hass)
+    read_started = asyncio.Event()
+    resume_read = asyncio.Event()
+
+    async def handler(message: dict[str, Any]) -> dict[str, Any]:
+        if message["command"] == "controller.get_node_neighbors":
+            read_started.set()
+            await resume_read.wait()
+            return {"neighbors": []}
+        return {"success": True}
+
+    commands = mock_neighbors_commands(client, handler)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
+        }
+    )
+    await read_started.wait()
+
+    await ws_client_2.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
+        }
+    )
+    await ws_client_2.send_json_auto_id({TYPE: "ping"})
+    msg = await ws_client_2.receive_json()
+    assert msg["type"] == "pong"
+    # The second request must not have touched the radio yet
+    assert commands == [
+        {"command": "controller.toggle_rf", "enabled": False},
+        {"command": "controller.get_node_neighbors", "nodeId": 1},
+    ]
+
+    resume_read.set()
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    msg = await ws_client_2.receive_json()
+    assert msg["success"]
+    # The second request turns the radio off only after the first turned it on
+    assert commands == [
+        {"command": "controller.toggle_rf", "enabled": False},
+        {"command": "controller.get_node_neighbors", "nodeId": 1},
+        {"command": "controller.get_node_neighbors", "nodeId": multisensor_6.node_id},
+        {"command": "controller.toggle_rf", "enabled": True},
+        {"command": "controller.toggle_rf", "enabled": False},
+        {"command": "controller.get_node_neighbors", "nodeId": 1},
+        {"command": "controller.get_node_neighbors", "nodeId": multisensor_6.node_id},
+        {"command": "controller.toggle_rf", "enabled": True},
+    ]
+
+
+async def test_network_neighbors_unload_waits(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test unloading the entry waits for the radio to be turned back on."""
+    ws_client = await hass_ws_client(hass)
+    read_started = asyncio.Event()
+    resume_read = asyncio.Event()
+
+    async def handler(message: dict[str, Any]) -> dict[str, Any]:
+        if message["command"] == "controller.get_node_neighbors":
+            read_started.set()
+            await resume_read.wait()
+            return {"neighbors": []}
+        return {"success": True}
+
+    commands = mock_neighbors_commands(client, handler)
+
+    async def mock_disconnect() -> None:
+        commands.append({"command": "disconnect"})
+
+    client.disconnect.side_effect = mock_disconnect
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
+        }
+    )
+    await read_started.wait()
+
+    unload_task = hass.async_create_task(
+        hass.config_entries.async_unload(integration.entry_id)
+    )
+    for _ in range(10):
+        await asyncio.sleep(0)
+    # The refresh is holding the lock, so the client must still be connected
+    assert not unload_task.done()
+
+    resume_read.set()
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert await unload_task
+    # The radio was turned back on before the client disconnected
+    assert commands[-2:] == [
+        {"command": "controller.toggle_rf", "enabled": True},
+        {"command": "disconnect"},
+    ]
+
+
+async def test_network_neighbors_invalid_entry(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the network_neighbors websocket command with an invalid entry."""
+    ws_client = await hass_ws_client(hass)
+    mock_neighbors_commands(client, neighbors_ok)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: "fake_entry_id",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    await hass.config_entries.async_unload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
         }
     )
     msg = await ws_client.receive_json()

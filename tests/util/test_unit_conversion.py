@@ -1,7 +1,6 @@
 """Test Home Assistant unit conversion utility functions."""
 
 import inspect
-from itertools import chain
 
 import pytest
 
@@ -881,6 +880,11 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
         (30, UnitOfPressure.MMHG, 16.0572051431838, UnitOfPressure.INH2O),
         (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
+        (1, UnitOfPressure.ATM, 101325, UnitOfPressure.PA),
+        (1, UnitOfPressure.ATM, 1013.25, UnitOfPressure.HPA),
+        (1, UnitOfPressure.ATM, 1013.25, UnitOfPressure.MBAR),
+        (1, UnitOfPressure.ATM, 1.01325, UnitOfPressure.BAR),
+        (101325, UnitOfPressure.PA, 1, UnitOfPressure.ATM),
     ],
     RadiationConcentrationConverter: [
         (
@@ -1282,38 +1286,22 @@ def test_all_converters(converter: type[BaseUnitConverter]) -> None:
         ), f"Unit `{valid_unit}` is not tested in _CONVERTED_VALUE"
 
 
-@pytest.mark.parametrize(
-    ("converter", "valid_unit"),
-    [
-        # Ensure all units are tested
-        (converter, valid_unit)
-        for converter, valid_units in _ALL_CONVERTERS.items()
-        for valid_unit in valid_units
-    ],
-)
-def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) -> None:
+@pytest.mark.parametrize("converter", _ALL_CONVERTERS)
+def test_convert_same_unit(converter: type[BaseUnitConverter]) -> None:
     """Test conversion from any valid unit to same unit."""
-    assert converter.convert(2, valid_unit, valid_unit) == 2
+    for valid_unit in _ALL_CONVERTERS[converter]:
+        assert converter.convert(2, valid_unit, valid_unit) == 2
 
 
-@pytest.mark.parametrize(
-    ("converter", "valid_unit"),
-    [
-        # Ensure all units are tested
-        (converter, valid_unit)
-        for converter, valid_units in _ALL_CONVERTERS.items()
-        for valid_unit in valid_units
-    ],
-)
-def test_convert_invalid_unit(
-    converter: type[BaseUnitConverter], valid_unit: str
-) -> None:
+@pytest.mark.parametrize("converter", _ALL_CONVERTERS)
+def test_convert_invalid_unit(converter: type[BaseUnitConverter]) -> None:
     """Test exception is thrown for invalid units."""
-    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
-        converter.convert(5, INVALID_SYMBOL, valid_unit)
+    for valid_unit in _ALL_CONVERTERS[converter]:
+        with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
+            converter.convert(5, INVALID_SYMBOL, valid_unit)
 
-    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
-        converter.convert(5, valid_unit, INVALID_SYMBOL)
+        with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
+            converter.convert(5, valid_unit, INVALID_SYMBOL)
 
 
 @pytest.mark.parametrize(
@@ -1370,46 +1358,22 @@ def get_unit_floored_log_ratio(
     assert converter.get_unit_floored_log_ratio(to_unit, from_unit) == 1 / ratio
 
 
-@pytest.mark.parametrize(
-    ("converter", "value", "from_unit", "expected", "to_unit"),
-    [
-        # Process all items in _CONVERTED_VALUE
-        (converter, value, from_unit, expected, to_unit)
-        for converter, item in _CONVERTED_VALUE.items()
-        for value, from_unit, expected, to_unit in item
-    ],
-)
-def test_unit_conversion(
-    converter: type[BaseUnitConverter],
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-) -> None:
+@pytest.mark.parametrize("converter", _CONVERTED_VALUE)
+def test_unit_conversion(converter: type[BaseUnitConverter]) -> None:
     """Test conversion to other units."""
-    assert converter.convert(value, from_unit, to_unit) == pytest.approx(expected)
+    for value, from_unit, expected, to_unit in _CONVERTED_VALUE[converter]:
+        assert converter.convert(value, from_unit, to_unit) == pytest.approx(
+            expected
+        ), f"{value} {from_unit} to {to_unit}"
 
 
-@pytest.mark.parametrize(
-    ("converter", "value", "from_unit", "expected", "to_unit"),
-    [
-        # Process all items in _CONVERTED_VALUE
-        (converter, value, from_unit, expected, to_unit)
-        for converter, item in _CONVERTED_VALUE.items()
-        for value, from_unit, expected, to_unit in item
-    ],
-)
-def test_unit_conversion_factory(
-    converter: type[BaseUnitConverter],
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-) -> None:
+@pytest.mark.parametrize("converter", _CONVERTED_VALUE)
+def test_unit_conversion_factory(converter: type[BaseUnitConverter]) -> None:
     """Test conversion to other units."""
-    assert converter.converter_factory(from_unit, to_unit)(value) == pytest.approx(
-        expected
-    )
+    for value, from_unit, expected, to_unit in _CONVERTED_VALUE[converter]:
+        assert converter.converter_factory(from_unit, to_unit)(value) == pytest.approx(
+            expected
+        ), f"{value} {from_unit} to {to_unit}"
 
 
 def test_unit_conversion_factory_allow_none_with_none() -> None:
@@ -1504,34 +1468,17 @@ def test_unit_conversion_factory_allow_none_with_zero_for_inverse_units() -> Non
     )(25) == pytest.approx(4)
 
 
-@pytest.mark.parametrize(
-    ("converter", "value", "from_unit", "expected", "to_unit"),
-    chain(
-        [
-            # Process all items in _CONVERTED_VALUE
-            (converter, value, from_unit, expected, to_unit)
-            for converter, item in _CONVERTED_VALUE.items()
-            for value, from_unit, expected, to_unit in item
-        ],
-        [
-            # Process all items in _CONVERTED_VALUE and replace the value with None
-            (converter, None, from_unit, None, to_unit)
-            for converter, item in _CONVERTED_VALUE.items()
-            for value, from_unit, expected, to_unit in item
-        ],
-    ),
-)
+@pytest.mark.parametrize("converter", _CONVERTED_VALUE)
 def test_unit_conversion_factory_allow_none(
     converter: type[BaseUnitConverter],
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
 ) -> None:
-    """Test conversion to other units."""
-    assert converter.converter_factory_allow_none(from_unit, to_unit)(
-        value
-    ) == pytest.approx(expected)
+    """Test conversion to other units, and that None is passed through."""
+    for value, from_unit, expected, to_unit in _CONVERTED_VALUE[converter]:
+        convert = converter.converter_factory_allow_none(from_unit, to_unit)
+        assert convert(value) == pytest.approx(expected), (
+            f"{value} {from_unit} to {to_unit}"
+        )
+        assert convert(None) is None, f"None {from_unit} to {to_unit}"
 
 
 @pytest.mark.parametrize(

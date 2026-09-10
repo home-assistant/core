@@ -10,6 +10,7 @@ from ouman_eh_800_api import (
     L2BaseEndpoints,
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
+    OumanClientError,
     OumanEh800Client,
     OumanEndpoint,
     OumanRegistrySet,
@@ -128,6 +129,8 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             raise HomeAssistantError("Authentication failed") from err
         except OumanClientCommunicationError as err:
             raise HomeAssistantError("Error communicating with API") from err
+        except OumanClientError as err:
+            raise HomeAssistantError("Unexpected response from device") from err
 
         self.async_set_updated_data({**self.data, endpoint: result})
         # Separate refresh on all endpoints to catch cascading changes.

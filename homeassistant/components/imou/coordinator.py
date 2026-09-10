@@ -6,11 +6,12 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from pyimouapi.exceptions import ImouException
+from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import ImouHaDevice, ImouHaDeviceManager
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -83,6 +84,11 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 fresh_devices = await self._device_manager.async_get_devices()
         except TimeoutError as err:
             raise UpdateFailed(f"Timeout while fetching data: {err}") from err
+        except InvalidAppIdOrSecretException as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except ImouException as err:
             raise UpdateFailed(f"Error fetching Imou devices: {err}") from err
 

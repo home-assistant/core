@@ -1,8 +1,7 @@
 """Native Home Assistant iOS app component."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import web
 import voluptuous as vol
@@ -16,7 +15,6 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json_object
 
 from .const import (
@@ -42,6 +40,7 @@ from .const import (
     CONF_ACTION_SHOW_IN_WATCH,
     CONF_ACTION_USE_CUSTOM_COLORS,
     DOMAIN,
+    IOS_DATA,
 )
 
 CONF_PUSH = "push"
@@ -71,8 +70,6 @@ ATTR_DEFAULT_BEHAVIOR = "default"
 ATTR_TEXT_INPUT_BEHAVIOR = "textInput"
 
 BEHAVIORS = [ATTR_DEFAULT_BEHAVIOR, ATTR_TEXT_INPUT_BEHAVIOR]
-
-ATTR_LAST_SEEN_AT = "lastSeenAt"
 
 ATTR_PUSH_TOKEN = "pushToken"
 ATTR_APP = "app"
@@ -220,7 +217,7 @@ def devices_with_push(hass: HomeAssistant) -> dict[str, str]:
     """Return a dictionary of push enabled targets."""
     return {
         device_name: device.get(ATTR_PUSH_ID)
-        for device_name, device in hass.data[DOMAIN][ATTR_DEVICES].items()
+        for device_name, device in hass.data[IOS_DATA][ATTR_DEVICES].items()
         if device.get(ATTR_PUSH_ID) is not None
     }
 
@@ -229,21 +226,21 @@ def enabled_push_ids(hass: HomeAssistant) -> list[str]:
     """Return a list of push enabled target push IDs."""
     return [
         device.get(ATTR_PUSH_ID)
-        for device in hass.data[DOMAIN][ATTR_DEVICES].values()
+        for device in hass.data[IOS_DATA][ATTR_DEVICES].values()
         if device.get(ATTR_PUSH_ID) is not None
     ]
 
 
 def devices(hass: HomeAssistant) -> dict[str, dict[str, Any]]:
     """Return a dictionary of all identified devices."""
-    return hass.data[DOMAIN][ATTR_DEVICES]  # type: ignore[no-any-return]
+    return hass.data[IOS_DATA][ATTR_DEVICES]
 
 
 def device_name_for_push_id(hass: HomeAssistant, push_id: str) -> str | None:
     """Return the device name for the push ID."""
-    for device_name, device in hass.data[DOMAIN][ATTR_DEVICES].items():
+    for device_name, device in hass.data[IOS_DATA][ATTR_DEVICES].items():
         if device.get(ATTR_PUSH_ID) is push_id:
-            return device_name  # type: ignore[no-any-return]
+            return device_name
     return None
 
 
@@ -251,8 +248,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iOS component."""
     conf: ConfigType | None = config.get(DOMAIN)
 
-    ios_config = await hass.async_add_executor_job(
-        load_json_object, hass.config.path(CONFIGURATION_FILE)
+    ios_config = cast(
+        dict[str, dict[str, Any]],
+        await hass.async_add_executor_job(
+            load_json_object, hass.config.path(CONFIGURATION_FILE)
+        ),
     )
 
     if ios_config == {}:
@@ -263,7 +263,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     ios_config[CONF_USER] = conf_user
 
-    hass.data[DOMAIN] = ios_config
+    hass.data[IOS_DATA] = ios_config
 
     # No entry support for notify component yet
     discovery.load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config)
@@ -285,8 +285,10 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
-    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_USER][CONF_PUSH]))
-    hass.http.register_view(iOSConfigView(hass.data[DOMAIN][CONF_USER]))
+    hass.http.register_view(
+        iOSPushConfigView(hass.data[IOS_DATA][CONF_USER][CONF_PUSH])
+    )
+    hass.http.register_view(iOSConfigView(hass.data[IOS_DATA][CONF_USER]))
 
     return True
 
@@ -342,16 +344,14 @@ class iOSIdentifyDeviceView(HomeAssistantView):
 
         hass = request.app[KEY_HASS]
 
-        data[ATTR_LAST_SEEN_AT] = dt_util.now().isoformat()
-
         device_id = data[ATTR_DEVICE_ID]
 
-        hass.data[DOMAIN][ATTR_DEVICES][device_id] = data
+        hass.data[IOS_DATA][ATTR_DEVICES][device_id] = data
 
         async_dispatcher_send(hass, f"{DOMAIN}.{device_id}", data)
 
         try:
-            save_json(self._config_path, hass.data[DOMAIN])
+            save_json(self._config_path, hass.data[IOS_DATA])
         except HomeAssistantError:
             return self.json_message(
                 "Error saving device.", HTTPStatus.INTERNAL_SERVER_ERROR

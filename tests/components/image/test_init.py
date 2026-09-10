@@ -1,6 +1,5 @@
 """The tests for the image component."""
 
-from datetime import datetime
 from http import HTTPStatus
 import ssl
 from unittest.mock import MagicMock, mock_open, patch
@@ -17,6 +16,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     MockImageEntity,
@@ -427,7 +427,7 @@ async def test_image_stream(
             assert not resp.closed
             assert resp.status == HTTPStatus.OK
 
-            mock_image.image_last_updated = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+            mock_image.image_last_updated = dt_util.utcnow()
             mock_image.async_write_ha_state()
             # Two blocks to ensure the frame is written
             await hass.async_block_till_done()
