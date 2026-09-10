@@ -39,6 +39,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowMenuStep,
 )
 
+from . import validators as tcv
 from .alarm_control_panel import (
     CONF_ARM_AWAY_ACTION,
     CONF_ARM_CUSTOM_BYPASS_ACTION,
@@ -543,6 +544,8 @@ def validate_user_input(
         if template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
+        if template_type == Platform.CLIMATE:
+            tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)
         return {"template_type": template_type} | user_input
 
     return _validate_user_input
