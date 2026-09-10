@@ -230,6 +230,83 @@ async def test_suspending_an_already_suspended_credential_saves_nothing(
         await _set_enabled(hass, ALICE_ENTITY_ID, True)
 
 
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_a_rejected_suspension_leaves_no_restore_marker(
+    hass: HomeAssistant,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a suspension the lock refused outright stores nothing.
+
+    The marker is written before the write, so an identity the lock rejects
+    would otherwise leave behind a claim that Home Assistant suspended this
+    credential. A later suspension made in the Argo app would then be taken
+    for one of ours and restored with an obsolete window.
+    """
+    await setup_integration(hass, mock_admin_config_entry)
+    mock_iseo_client.set_user_disabled.side_effect = IseoAuthError("rejected")
+
+    with pytest.raises(HomeAssistantError):
+        await _set_enabled(hass, ALICE_ENTITY_ID, False)
+
+    assert not mock_admin_config_entry.data.get(CONF_SAVED_VALIDITY)
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_a_rejected_suspension_keeps_an_earlier_marker(
+    hass: HomeAssistant,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the rollback restores the map instead of clearing the key.
+
+    Suspending an already-suspended credential legitimately finds a marker
+    from the first suspension. A rejected write must put that one back, not
+    drop it and make the credential unrestorable.
+    """
+    await setup_integration(hass, mock_admin_config_entry)
+    await _set_enabled(hass, ALICE_ENTITY_ID, False)
+    saved = dict(mock_admin_config_entry.data[CONF_SAVED_VALIDITY])
+    assert saved == {
+        f"{USER_TYPE_RFID}_1111111111111111111111111111aaaa": MOCK_VALIDITY.hex()
+    }
+
+    mock_iseo_client.set_user_disabled.side_effect = IseoAuthError("rejected")
+    with pytest.raises(HomeAssistantError):
+        await _set_enabled(hass, ALICE_ENTITY_ID, False)
+
+    assert mock_admin_config_entry.data[CONF_SAVED_VALIDITY] == saved
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_setup_drops_a_marker_the_lock_contradicts(
+    hass: HomeAssistant,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a credential re-enabled elsewhere loses its stored window.
+
+    Home Assistant suspends, the Argo app restores, the entry reloads. The
+    marker is stale from that point on, and keeping it would let a later
+    Argo-side suspension be restored with the window saved before.
+    """
+    await setup_integration(hass, mock_admin_config_entry)
+    await _set_enabled(hass, ALICE_ENTITY_ID, False)
+    assert mock_admin_config_entry.data[CONF_SAVED_VALIDITY]
+
+    # The lock now reports Alice enabled again, with a window changed since.
+    mock_iseo_client.read_users.return_value = [
+        replace(user, disabled=False, validity=b"\x01" * len(MOCK_VALIDITY))
+        if user.uuid_hex == "1111111111111111111111111111aaaa"
+        else user
+        for user in mock_iseo_client.read_users.return_value
+    ]
+    await hass.config_entries.async_reload(mock_admin_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not mock_admin_config_entry.data.get(CONF_SAVED_VALIDITY)
+
+
 @pytest.mark.usefixtures("mock_derive_private_key")
 async def test_an_unreachable_lock_leaves_no_restore_marker(
     hass: HomeAssistant,

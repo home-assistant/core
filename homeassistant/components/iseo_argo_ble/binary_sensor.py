@@ -1,7 +1,7 @@
 """ISEO Argo BLE lock credential sensors."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from typing import cast, override
@@ -60,6 +60,31 @@ def _is_home_assistant_identity(user: UserEntry, admin_uuid_hex: str | None) -> 
     return bool(admin_uuid_hex) and user.uuid_hex == admin_uuid_hex
 
 
+def _prune_saved_validity(
+    hass: HomeAssistant, entry: IseoConfigEntry, users: Sequence[UserEntry]
+) -> None:
+    """Drop stored windows for credentials the lock no longer reports suspended.
+
+    A marker only claims "Home Assistant suspended this one and kept its
+    window". Once the lock reports the credential enabled again — restored in
+    the Argo app, say — that claim is stale. Leaving it behind would let a
+    later suspension made outside Home Assistant look like one of ours and be
+    restored with an obsolete window, so the list the lock just gave us is
+    what the stored map gets reconciled against.
+    """
+    saved = entry.data.get(CONF_SAVED_VALIDITY, {})
+    if not saved:
+        return
+    still_suspended = {
+        f"{user.user_type}_{user.uuid_hex}" for user in users if user.disabled
+    }
+    kept = {key: value for key, value in saved.items() if key in still_suspended}
+    if kept != saved:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_SAVED_VALIDITY: kept}
+        )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IseoConfigEntry,
@@ -72,6 +97,10 @@ async def async_setup_entry(
         # The first credential read failed. The lock is deliberately set up
         # anyway, so there is simply nothing to add until a later read works.
         return
+
+    # Reconcile before the entities read the map, so each one starts from a
+    # marker the lock still corroborates.
+    _prune_saved_validity(hass, entry, coordinator.data)
 
     admin_uuid_hex = entry.data.get(CONF_ADMIN_UUID)
     async_add_entities(
@@ -226,6 +255,8 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                 translation_placeholders={"name": self._credential_name},
             )
 
+        entry = self.coordinator.config_entry
+        saved_before = dict(entry.data.get(CONF_SAVED_VALIDITY, {}))
         async with self._admin_session() as client:
             if not enabled:
                 # Persist before the write, not after: the write overwrites
@@ -236,14 +267,27 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                 # was never reached leaves no marker claiming Home Assistant
                 # suspended it.
                 self._remember_validity(suspended=True)
-            await client.set_user_disabled(
-                uuid_hex=self._uuid_hex,
-                user_type=self._user_type,
-                disabled=not enabled,
-                # Put the credential's own validity window back, so restoring an
-                # invitation that ran for one weekend does not make it permanent.
-                validity=self._validity if enabled else None,
-            )
+            try:
+                await client.set_user_disabled(
+                    uuid_hex=self._uuid_hex,
+                    user_type=self._user_type,
+                    disabled=not enabled,
+                    # Put the credential's own validity window back, so restoring
+                    # an invitation that ran for one weekend does not make it
+                    # permanent.
+                    validity=self._validity if enabled else None,
+                )
+            except IseoAuthError:
+                # The lock refused the identity, so the suspension definitively
+                # did not happen and the marker just written claims something
+                # untrue. Put the map back exactly as it was rather than
+                # dropping the key: re-suspending an already-suspended
+                # credential legitimately finds a marker here, and that one has
+                # to survive. Connection failures are deliberately left alone —
+                # the write may still have landed, and discarding the window
+                # then would make the credential unrestorable.
+                self._restore_saved_validity(saved_before)
+                raise
 
         if enabled:
             # Only now is the lock known to hold the window again, so the
@@ -277,6 +321,14 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
             )
         else:
             saved.pop(self._validity_key, None)
+        if saved != entry.data.get(CONF_SAVED_VALIDITY, {}):
+            self.hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_SAVED_VALIDITY: saved}
+            )
+
+    def _restore_saved_validity(self, saved: dict[str, str | None]) -> None:
+        """Put the stored-window map back to an earlier snapshot."""
+        entry = self.coordinator.config_entry
         if saved != entry.data.get(CONF_SAVED_VALIDITY, {}):
             self.hass.config_entries.async_update_entry(
                 entry, data={**entry.data, CONF_SAVED_VALIDITY: saved}
