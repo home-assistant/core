@@ -520,7 +520,10 @@ _TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
 
 
 def _time_period_dict_to_timedelta(value: dict[str, Any]) -> timedelta:
-    delta = timedelta(**{key: val for key, val in value.items() if key != "negative"})
+    components = {key: val for key, val in value.items() if key != "negative"}
+    if "negative" in value and any(val < 0 for val in components.values()):
+        raise vol.Invalid("negative components are not allowed with the negative key")
+    delta = timedelta(**components)
     if value.get("negative"):
         return -delta
     return delta
