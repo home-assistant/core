@@ -611,6 +611,35 @@ async def test_door_closing_inside_the_relock_window_is_applied(
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_unlocking_again_keeps_a_door_already_standing_open(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a second unlock does not forget that the door is open.
+
+    The latch is already released, so the lock has no further open transition
+    to report. Discarding what the last reading said would let the relock
+    timer claim locked five seconds later with the door standing open, until
+    an advertisement corrects it minutes on.
+    """
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+    await _advertise(hass, door_closed=False)
+    assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
+
+    with patch("homeassistant.components.iseo_argo_ble.lock._RELOCK_DELAY", 0):
+        await _unlock(hass)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
+
+    # It still gives way to the door actually closing.
+    await _advertise(hass, door_closed=True)
+    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
 async def test_polling_stops_after_the_identity_is_rejected(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

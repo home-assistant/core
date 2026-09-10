@@ -71,11 +71,8 @@ class IseoLockEntity(LockEntity):
     is used for the release because the lock stays engaged in the door frame
     and the physical door itself is never operated.
 
-    Door state comes from the lock's advertisements, which the lock already
-    broadcasts: following those reports changes as they happen instead of up to
-    30 seconds later, and spares the lock a connection and its battery a wake-up
-    every cycle. Connecting on a timer remains available for locks that cannot
-    report door status passively.
+    Door state comes from the lock's advertisements. Polling on a timer is
+    available as an option for locks that cannot report door status passively.
     """
 
     _attr_has_entity_name = True
@@ -113,7 +110,7 @@ class IseoLockEntity(LockEntity):
         self._last_ble_device: BLEDevice | None = None
         self._initial_read: asyncio.Task[None] | None = None
         self._probed = False
-        self._opened_while_unlocking = False
+        self._door_seen_open = False
         self._identity_rejected = False
 
     @override
@@ -199,40 +196,32 @@ class IseoLockEntity(LockEntity):
     @callback
     def _apply_door_state(self, door_closed: bool) -> None:
         """Apply a door reading, respecting the window after an unlock."""
-        if self._attr_is_unlocking:
-            if door_closed and not self._opened_while_unlocking:
-                # The latch has not released yet; that is not news.
-                return
-            # The latch released while gw_open() was still awaiting its
-            # response. Dropping that would leave the relock timer to report
-            # "locked" a few seconds later with the door standing open, and the
-            # correcting reading can be minutes away. Track what the door did
-            # last rather than only that it opened, so a close arriving before
-            # the command returns is not lost either.
-            self._opened_while_unlocking = not door_closed
         if (
             door_closed
-            and not self._opened_while_unlocking
-            and self._poll_suppress_until
-            and dt_util.utcnow() < self._poll_suppress_until
+            and not self._door_seen_open
+            and (
+                self._attr_is_unlocking
+                or (
+                    self._poll_suppress_until
+                    and dt_util.utcnow() < self._poll_suppress_until
+                )
+            )
         ):
             # The lock keeps reporting "closed" for a moment after the latch is
-            # released, so ignore that. Never ignore the door actually opening:
-            # the next reading can be minutes away, and the relock timer would
-            # otherwise leave the entity locked with the door standing open.
-            # Nor a close once that open has been seen — that is the door
-            # itself, not the lag, and it is what clears the flag below.
+            # released — while gw_open() is still in flight, and for a few
+            # seconds after it returns — so that is not news. A close once the
+            # door has been seen open is the door itself rather than that lag,
+            # and is applied.
             return
 
         if not door_closed:
+            # Never ignore the door opening: the next reading can be minutes
+            # away, and the relock timer would otherwise leave the entity
+            # locked with the door standing open.
             self._cancel_relock_task()
             self._poll_suppress_until = None
-        else:
-            # Nothing is standing open any more, so the relock timer has no
-            # reason to hold off. Leaving this set would strand the entity on
-            # "unlocked" until the next advertisement, minutes away.
-            self._opened_while_unlocking = False
 
+        self._door_seen_open = not door_closed
         self._attr_is_locked = door_closed
         self.async_write_ha_state()
 
@@ -463,9 +452,9 @@ class IseoLockEntity(LockEntity):
         door was actually left open.
         """
         await asyncio.sleep(_RELOCK_DELAY)
-        if self._opened_while_unlocking:
-            # The door was seen opening during the unlock; leave it that way
-            # until an advertisement reports it closed again.
+        if self._door_seen_open:
+            # The door is standing open as far as the last reading goes; leave
+            # it that way until an advertisement reports it closed again.
             return
         self._set_locked(available=self._attr_available)
 
@@ -482,7 +471,10 @@ class IseoLockEntity(LockEntity):
         """Open the lock (momentary actuator — always re-latches automatically)."""
         self._cancel_relock_task()
 
-        self._opened_while_unlocking = False
+        # _door_seen_open is deliberately left alone: unlocking again while the
+        # door already stands open must not discard that, or the relock timer
+        # would report locked five seconds later. Only a closed reading clears
+        # it.
         self._set_unlocking()
 
         if not (ble_device := self._async_get_ble_device()):
