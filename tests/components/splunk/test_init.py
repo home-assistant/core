@@ -1,5 +1,6 @@
 """Test the Splunk integration init."""
 
+import asyncio
 from http import HTTPStatus
 import logging
 from unittest.mock import AsyncMock, MagicMock
@@ -603,6 +604,60 @@ async def test_event_listener_no_recovery_message_without_prior_failure(
     assert not any(
         "Sending events to Splunk has recovered" in record.message
         for record in caplog.records
+    )
+
+
+async def test_event_listener_out_of_order_completion_preserves_failure(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a slow success finishing after a fast failure doesn't erase it.
+
+    Each firing of the listener runs as its own task, so an older send that
+    is slow to resolve can complete after a newer send has already failed.
+    That late success must not clear the failure state or log a false
+    recovery.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async def delayed_queue(data: str, send: bool = True) -> bool:
+        if "slow-success" in data:
+            await asyncio.sleep(0.1)
+            return True
+        raise SplunkPayloadError(0, "Bad request", HTTPStatus.BAD_REQUEST)
+
+    mock_hass_splunk.queue.side_effect = delayed_queue
+
+    with caplog.at_level(logging.DEBUG):
+        # Dispatched first but resolves last.
+        hass.states.async_set("sensor.test", "slow-success")
+        # Dispatched second but resolves first.
+        hass.states.async_set("sensor.test", "fast-failure")
+        await hass.async_block_till_done()
+
+    assert not any(
+        "Sending events to Splunk has recovered" in record.message
+        for record in caplog.records
+    )
+
+    caplog.clear()
+    mock_hass_splunk.queue.side_effect = SplunkPayloadError(
+        0, "Bad request", HTTPStatus.BAD_REQUEST
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        hass.states.async_set("sensor.test", "still-failing")
+        await hass.async_block_till_done()
+
+    # The failure category set by the fast failure must have survived the
+    # late-arriving success, so a same-category failure is suppressed again.
+    assert not any(
+        "Splunk payload error" in record.message for record in caplog.records
     )
 
 
