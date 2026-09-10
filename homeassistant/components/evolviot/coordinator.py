@@ -7,6 +7,7 @@ from pyevolviot import (
     EvolvIOTApi,
     EvolvIOTApiError,
     EvolvIOTCommandResult,
+    EvolvIOTConnectionError,
     EvolvIOTData,
     EvolvIOTEntity,
     EvolvIOTEvent,
@@ -77,15 +78,20 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[EvolvIOTData]):
 
     async def async_command(self, entity_id: str, command: str) -> None:
         """Send a command to an EvolvIOT entity."""
-        if self.websocket is None or not self.websocket.connected:
-            result = await self.api.async_send_command(entity_id, command)
-            self._raise_if_command_rejected(result)
-            if result.state is not None and self.data is not None:
-                self.async_set_updated_data(self.data.with_state(result.state))
-            return
+        websocket = self.websocket
+        if websocket is not None and websocket.connected:
+            try:
+                result = await websocket.async_command(entity_id, command)
+            except EvolvIOTConnectionError:
+                pass
+            else:
+                self._raise_if_command_rejected(result)
+                return
 
-        result = await self.websocket.async_command(entity_id, command)
+        result = await self.api.async_send_command(entity_id, command)
         self._raise_if_command_rejected(result)
+        if result.state is not None and self.data is not None:
+            self.async_set_updated_data(self.data.with_state(result.state))
 
     @staticmethod
     def _raise_if_command_rejected(result: EvolvIOTCommandResult) -> None:
