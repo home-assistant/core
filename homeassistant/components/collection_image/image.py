@@ -91,7 +91,7 @@ class CollectionImageImageEntity(ImageEntity):
                 media = await async_browse_media(self.hass, media_content_id)
             except BrowseError as err:
                 _LOGGER.warning("%s: %s", self.entity_id, str(err))
-                return []
+                continue
 
             if media.children:
                 images.extend(
@@ -99,7 +99,7 @@ class CollectionImageImageEntity(ImageEntity):
                     for item in media.children
                     if item.media_class == MediaClass.IMAGE
                 )
-            if not images:
+            else:
                 _LOGGER.warning(
                     "%s: No valid images in %s",
                     self.entity_id,
