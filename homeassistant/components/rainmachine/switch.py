@@ -7,16 +7,16 @@ from datetime import datetime
 from typing import Any, Concatenate, override
 
 from regenmaschine.errors import RainMachineError
-import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ID, EntityCategory
+from homeassistant.const import ATTR_ID, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
+from homeassistant.util import slugify
 
 from . import RainMachineConfigEntry, RainMachineData
 from .const import (
@@ -28,11 +28,10 @@ from .const import (
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
-    DEFAULT_ZONE_RUN,
 )
 from .entity import RainMachineEntity, RainMachineEntityDescription
 from .services import async_update_programs_and_zones
-from .util import RUN_STATE_MAP, key_exists
+from .util import RUN_STATE_MAP, deprecate_entity, key_exists
 
 ATTR_ACTIVITY_TYPE = "activity_type"
 ATTR_AREA = "area"
@@ -180,17 +179,7 @@ async def async_setup_entry(
 
     services: tuple[tuple[str, VolDictType | None, str], ...] = (
         ("start_program", None, "async_start_program"),
-        (
-            "start_zone",
-            {
-                vol.Optional(
-                    CONF_DEFAULT_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
-                ): cv.positive_int
-            },
-            "async_start_zone",
-        ),
         ("stop_program", None, "async_stop_program"),
-        ("stop_zone", None, "async_stop_zone"),
     )
     for service_name, schema, method in services:
         platform.async_register_entity_service(service_name, schema, method)
@@ -198,43 +187,79 @@ async def async_setup_entry(
     data = entry.runtime_data
     entities: list[RainMachineBaseSwitch] = []
 
-    for kind, api_category, switch_class, switch_enabled_class in (
-        ("program", DATA_PROGRAMS, RainMachineProgram, RainMachineProgramEnabled),
-        ("zone", DATA_ZONES, RainMachineZone, RainMachineZoneEnabled),
-    ):
-        coordinator = data.coordinators[api_category]
-        for uid, activity in coordinator.data.items():
-            name = activity["name"].capitalize()
-
-            # Add a switch to start/stop the program or zone:
-            entities.append(
-                switch_class(
+    program_coordinator = data.coordinators[DATA_PROGRAMS]
+    for uid, program in program_coordinator.data.items():
+        name = program["name"].capitalize()
+        entities.extend(
+            (
+                RainMachineProgram(
                     entry,
                     data,
                     RainMachineActivitySwitchDescription(
-                        key=f"{kind}_{uid}",
+                        key=f"program_{uid}",
+                        name=f"{name} program",
+                        api_category=DATA_PROGRAMS,
+                        kind="program",
+                        uid=uid,
+                    ),
+                ),
+                RainMachineProgramEnabled(
+                    entry,
+                    data,
+                    RainMachineActivitySwitchDescription(
+                        key=f"program_{uid}_enabled",
+                        name=f"{name} program enabled",
+                        api_category=DATA_PROGRAMS,
+                        kind="program",
+                        uid=uid,
+                    ),
+                ),
+            )
+        )
+
+    zone_coordinator = data.coordinators[DATA_ZONES]
+    entity_registry = er.async_get(hass)
+    for uid, zone in zone_coordinator.data.items():
+        name = zone["name"].capitalize()
+        unique_id = f"{data.controller.mac}_zone_{uid}"
+        if deprecate_entity(
+            hass,
+            entity_registry,
+            Platform.SWITCH,
+            unique_id,
+            f"deprecated_zone_switch_{entry.entry_id}_{uid}",
+            "deprecated_zone_switch",
+            Platform.VALVE,
+            unique_id,
+            f"valve.{slugify(data.controller.name)}_{slugify(zone['name'])}",
+            "2027.4.0",
+        ):
+            entities.append(
+                RainMachineZone(
+                    entry,
+                    data,
+                    RainMachineActivitySwitchDescription(
+                        key=f"zone_{uid}",
                         name=name,
-                        api_category=api_category,
-                        kind=kind,
+                        api_category=DATA_ZONES,
+                        kind="zone",
                         uid=uid,
                     ),
                 )
             )
-
-            # Add a switch to enabled/disable the program or zone:
-            entities.append(
-                switch_enabled_class(
-                    entry,
-                    data,
-                    RainMachineActivitySwitchDescription(
-                        key=f"{kind}_{uid}_enabled",
-                        name=f"{name} enabled",
-                        api_category=api_category,
-                        kind=kind,
-                        uid=uid,
-                    ),
-                )
+        entities.append(
+            RainMachineZoneEnabled(
+                entry,
+                data,
+                RainMachineActivitySwitchDescription(
+                    key=f"zone_{uid}_enabled",
+                    name=f"{name} enabled",
+                    api_category=DATA_ZONES,
+                    kind="zone",
+                    uid=uid,
+                ),
             )
+        )
 
     # Add switches to control restrictions:
     for description in RESTRICTIONS_SWITCH_DESCRIPTIONS:
@@ -288,7 +313,7 @@ class RainMachineBaseSwitch(RainMachineEntity, SwitchEntity):
 
 
 class RainMachineActivitySwitch(RainMachineBaseSwitch):
-    """Define a RainMachine switch to start/stop an activity (program or zone)."""
+    """Define a RainMachine switch to start/stop a program."""
 
     _attr_icon = "mdi:water"
     entity_description: RainMachineActivitySwitchDescription
@@ -313,12 +338,12 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
         The only way this could occur is if someone rapidly turns a disabled activity
         off right after turning it on.
         """
-        if (
-            not self._entry.options[CONF_ALLOW_INACTIVE_ZONES_TO_RUN]
-            and not self.coordinator.data[self.entity_description.uid]["active"]
+        if not self.coordinator.data[self.entity_description.uid]["active"] and (
+            self.entity_description.kind == "program"
+            or not self._entry.options[CONF_ALLOW_INACTIVE_ZONES_TO_RUN]
         ):
             raise HomeAssistantError(
-                f"Cannot turn off an inactive program/zone: {self.name}"
+                f"Cannot turn off an inactive {self.entity_description.kind}: {self.name}"
             )
 
         await self.async_turn_off_when_active(**kwargs)
@@ -331,14 +356,14 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        if (
-            not self._entry.options[CONF_ALLOW_INACTIVE_ZONES_TO_RUN]
-            and not self.coordinator.data[self.entity_description.uid]["active"]
+        if not self.coordinator.data[self.entity_description.uid]["active"] and (
+            self.entity_description.kind == "program"
+            or not self._entry.options[CONF_ALLOW_INACTIVE_ZONES_TO_RUN]
         ):
             self._attr_is_on = False
             self.async_write_ha_state()
             raise HomeAssistantError(
-                f"Cannot turn on an inactive program/zone: {self.name}"
+                f"Cannot turn on an inactive {self.entity_description.kind}: {self.name}"
             )
 
         await self.async_turn_on_when_active(**kwargs)
@@ -487,7 +512,7 @@ class RainMachineRestrictionSwitch(RainMachineBaseSwitch):
 
 
 class RainMachineZone(RainMachineActivitySwitch):
-    """Define a RainMachine zone."""
+    """Define a deprecated RainMachine zone switch."""
 
     @override
     async def async_start_zone(self, *, zone_run_time: int) -> None:
@@ -510,22 +535,16 @@ class RainMachineZone(RainMachineActivitySwitch):
     @override
     async def async_turn_on_when_active(self, **kwargs: Any) -> None:
         """Turn the switch on when its associated activity is active."""
-        # 1. Use duration parameter if provided from service call
         duration = kwargs.get(CONF_DURATION)
         if not duration:
             if (
                 self._entry.options[CONF_USE_APP_RUN_TIMES]
                 and ATTR_ZONE_RUN_TIME in self._attr_extra_state_attributes
             ):
-                # 2. Use app's zone-specific default, if enabled and available
                 duration = self._attr_extra_state_attributes[ATTR_ZONE_RUN_TIME]
             else:
-                # 3. Fall back to global zone default duration
                 duration = self._entry.options[CONF_DEFAULT_ZONE_RUN_TIME]
-        await self._data.controller.zones.start(
-            self.entity_description.uid,
-            duration,
-        )
+        await self._data.controller.zones.start(self.entity_description.uid, duration)
         self._update_activities()
 
     @callback
@@ -533,7 +552,6 @@ class RainMachineZone(RainMachineActivitySwitch):
     def update_from_latest_data(self) -> None:
         """Update the entity when new data is received."""
         data = self.coordinator.data[self.entity_description.uid]
-
         self._attr_is_on = bool(data["state"])
 
         attrs = {

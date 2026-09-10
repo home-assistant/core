@@ -1,7 +1,8 @@
 """Define tests for the OpenUV config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from regenmaschine.errors import RainMachineError
@@ -18,6 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
+from tests.common import MockConfigEntry
 
 
 async def test_duplicate_error(hass: HomeAssistant, config, config_entry) -> None:
@@ -60,14 +63,14 @@ async def test_invalid_password(hass: HomeAssistant, config) -> None:
 async def test_migrate_1_2(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    client,
-    config,
-    config_entry,
-    entity_id,
-    entity_name,
-    old_unique_id,
-    new_unique_id,
-    platform,
+    client: AsyncMock,
+    config: dict[str, Any],
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    entity_name: str,
+    old_unique_id: str,
+    new_unique_id: str,
+    platform: str,
 ) -> None:
     """Test migration from version 1 to 2 (consistent unique IDs)."""
     # Create entity RegistryEntry using old unique ID format:
@@ -94,8 +97,11 @@ async def test_migrate_1_2(
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    # Check that new RegistryEntry is using new unique ID format
+    assert config_entry.version == 2
+
+    # Check that the RegistryEntry is using the new unique ID format.
     entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
     assert entity_entry.unique_id == new_unique_id
     assert entity_registry.async_get_entity_id(platform, DOMAIN, old_unique_id) is None
 

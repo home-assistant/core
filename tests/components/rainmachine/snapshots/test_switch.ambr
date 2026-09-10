@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switches[switch.12345_evening-entry]
+# name: test_switches[switch.12345_evening_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.12345_evening',
+    'entity_id': 'switch.12345_evening_program',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Evening',
+    'object_id_base': 'Evening program',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:water',
-    'original_name': 'Evening',
+    'original_name': 'Evening program',
     'platform': 'rainmachine',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,11 +36,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.12345_evening-state]
+# name: test_switches[switch.12345_evening_program-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'program',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Evening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Evening program',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 2,
       'next_run': '2018-06-04T06:00:00',
@@ -68,14 +68,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'switch.12345_evening',
+    'entity_id': 'switch.12345_evening_program',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[switch.12345_evening_enabled-entry]
+# name: test_switches[switch.12345_evening_program_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -89,7 +89,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.12345_evening_enabled',
+    'entity_id': 'switch.12345_evening_program_enabled',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -97,12 +97,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Evening enabled',
+    'object_id_base': 'Evening program enabled',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:cog',
-    'original_name': 'Evening enabled',
+    'original_name': 'Evening program enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -112,15 +112,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.12345_evening_enabled-state]
+# name: test_switches[switch.12345_evening_program_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'program',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Evening enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Evening program enabled',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.12345_evening_enabled',
+    'entity_id': 'switch.12345_evening_program_enabled',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -172,71 +172,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_extra_water_on_hot_days',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[switch.12345_flower_box-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.12345_flower_box',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Flower box',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Flower box',
-    'platform': 'rainmachine',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch.12345_flower_box-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'activity_type': 'zone',
-      'area': 92.9,
-      'current_cycle': 0,
-      'field_capacity': 0.17,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower box',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
-      'id': 2,
-      'number_of_cycles': 0,
-      'restrictions': False,
-      'slope': 'Flat',
-      'soil_type': 'Sandy Loam',
-      'sprinkler_head_precipitation_rate': 12.7,
-      'sprinkler_head_type': 'Surface Drip',
-      'status': <RunStates.NOT_RUNNING: 'Not Running'>,
-      'sun_exposure': 'Full Sun',
-      'vegetation_type': 'Vegetables',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.12345_flower_box',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -346,71 +281,6 @@
     'state': 'on',
   })
 # ---
-# name: test_switches[switch.12345_landscaping-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.12345_landscaping',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Landscaping',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Landscaping',
-    'platform': 'rainmachine',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch.12345_landscaping-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'activity_type': 'zone',
-      'area': 92.9,
-      'current_cycle': 0,
-      'field_capacity': 0.17,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
-      'id': 1,
-      'number_of_cycles': 0,
-      'restrictions': False,
-      'slope': 'Flat',
-      'soil_type': 'Sandy Loam',
-      'sprinkler_head_precipitation_rate': 25.4,
-      'sprinkler_head_type': 'Bubblers Drip',
-      'status': <RunStates.NOT_RUNNING: 'Not Running'>,
-      'sun_exposure': 'Full Sun',
-      'vegetation_type': 'Flowers',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.12345_landscaping',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_switches[switch.12345_landscaping_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -463,7 +333,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switches[switch.12345_morning-entry]
+# name: test_switches[switch.12345_morning_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -477,7 +347,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.12345_morning',
+    'entity_id': 'switch.12345_morning_program',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -485,12 +355,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Morning',
+    'object_id_base': 'Morning program',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:water',
-    'original_name': 'Morning',
+    'original_name': 'Morning program',
     'platform': 'rainmachine',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -500,11 +370,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.12345_morning-state]
+# name: test_switches[switch.12345_morning_program-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'program',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Morning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Morning program',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 1,
       'next_run': '2018-06-04T06:00:00',
@@ -532,14 +402,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'switch.12345_morning',
+    'entity_id': 'switch.12345_morning_program',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[switch.12345_morning_enabled-entry]
+# name: test_switches[switch.12345_morning_program_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -553,7 +423,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.12345_morning_enabled',
+    'entity_id': 'switch.12345_morning_program_enabled',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -561,12 +431,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Morning enabled',
+    'object_id_base': 'Morning program enabled',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:cog',
-    'original_name': 'Morning enabled',
+    'original_name': 'Morning program enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -576,84 +446,19 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.12345_morning_enabled-state]
+# name: test_switches[switch.12345_morning_program_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'program',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Morning enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Morning program enabled',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.12345_morning_enabled',
+    'entity_id': 'switch.12345_morning_program_enabled',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
-  })
-# ---
-# name: test_switches[switch.12345_test-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.12345_test',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Test',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Test',
-    'platform': 'rainmachine',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch.12345_test-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'activity_type': 'zone',
-      'area': 92.9,
-      'current_cycle': 0,
-      'field_capacity': 0.3,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Test',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
-      'id': 3,
-      'number_of_cycles': 0,
-      'restrictions': False,
-      'slope': 'Flat',
-      'soil_type': 'Clay Loam',
-      'sprinkler_head_precipitation_rate': 35.56,
-      'sprinkler_head_type': 'Popup Spray',
-      'status': <RunStates.NOT_RUNNING: 'Not Running'>,
-      'sun_exposure': 'Full Sun',
-      'vegetation_type': 'Drought Tolerant Plants',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.12345_test',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
   })
 # ---
 # name: test_switches[switch.12345_test_enabled-entry]
@@ -702,71 +507,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_test_enabled',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[switch.12345_zone_10-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.12345_zone_10',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 10',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Zone 10',
-    'platform': 'rainmachine',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch.12345_zone_10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'activity_type': 'zone',
-      'area': 92.9,
-      'current_cycle': 0,
-      'field_capacity': 0.3,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
-      'id': 10,
-      'number_of_cycles': 0,
-      'restrictions': False,
-      'slope': 'Flat',
-      'soil_type': 'Clay Loam',
-      'sprinkler_head_precipitation_rate': 35.56,
-      'sprinkler_head_type': 'Popup Spray',
-      'status': <RunStates.NOT_RUNNING: 'Not Running'>,
-      'sun_exposure': 'Full Sun',
-      'vegetation_type': 'Cool Season Grass',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.12345_zone_10',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -825,71 +565,6 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[switch.12345_zone_11-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.12345_zone_11',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 11',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Zone 11',
-    'platform': 'rainmachine',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch.12345_zone_11-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'activity_type': 'zone',
-      'area': 92.9,
-      'current_cycle': 0,
-      'field_capacity': 0.3,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
-      'id': 11,
-      'number_of_cycles': 0,
-      'restrictions': False,
-      'slope': 'Flat',
-      'soil_type': 'Clay Loam',
-      'sprinkler_head_precipitation_rate': 35.56,
-      'sprinkler_head_type': 'Popup Spray',
-      'status': <RunStates.NOT_RUNNING: 'Not Running'>,
-      'sun_exposure': 'Full Sun',
-      'vegetation_type': 'Cool Season Grass',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.12345_zone_11',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_switches[switch.12345_zone_11_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -936,71 +611,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_11_enabled',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[switch.12345_zone_12-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.12345_zone_12',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 12',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Zone 12',
-    'platform': 'rainmachine',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch.12345_zone_12-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'activity_type': 'zone',
-      'area': 92.9,
-      'current_cycle': 0,
-      'field_capacity': 0.3,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
-      'id': 12,
-      'number_of_cycles': 0,
-      'restrictions': False,
-      'slope': 'Flat',
-      'soil_type': 'Clay Loam',
-      'sprinkler_head_precipitation_rate': 35.56,
-      'sprinkler_head_type': 'Popup Spray',
-      'status': <RunStates.NOT_RUNNING: 'Not Running'>,
-      'sun_exposure': 'Full Sun',
-      'vegetation_type': 'Cool Season Grass',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.12345_zone_12',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1059,71 +669,6 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[switch.12345_zone_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.12345_zone_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 4',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Zone 4',
-    'platform': 'rainmachine',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch.12345_zone_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'activity_type': 'zone',
-      'area': 92.9,
-      'current_cycle': 0,
-      'field_capacity': 0.3,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
-      'id': 4,
-      'number_of_cycles': 0,
-      'restrictions': False,
-      'slope': 'Flat',
-      'soil_type': 'Clay Loam',
-      'sprinkler_head_precipitation_rate': 35.56,
-      'sprinkler_head_type': 'Popup Spray',
-      'status': <RunStates.NOT_RUNNING: 'Not Running'>,
-      'sun_exposure': 'Full Sun',
-      'vegetation_type': 'Cool Season Grass',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.12345_zone_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_switches[switch.12345_zone_4_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1170,71 +715,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_4_enabled',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[switch.12345_zone_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.12345_zone_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 5',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Zone 5',
-    'platform': 'rainmachine',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch.12345_zone_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'activity_type': 'zone',
-      'area': 92.9,
-      'current_cycle': 0,
-      'field_capacity': 0.3,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
-      'id': 5,
-      'number_of_cycles': 0,
-      'restrictions': False,
-      'slope': 'Flat',
-      'soil_type': 'Clay Loam',
-      'sprinkler_head_precipitation_rate': 35.56,
-      'sprinkler_head_type': 'Popup Spray',
-      'status': <RunStates.NOT_RUNNING: 'Not Running'>,
-      'sun_exposure': 'Full Sun',
-      'vegetation_type': 'Cool Season Grass',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.12345_zone_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1293,71 +773,6 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[switch.12345_zone_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.12345_zone_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 6',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Zone 6',
-    'platform': 'rainmachine',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch.12345_zone_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'activity_type': 'zone',
-      'area': 92.9,
-      'current_cycle': 0,
-      'field_capacity': 0.3,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
-      'id': 6,
-      'number_of_cycles': 0,
-      'restrictions': False,
-      'slope': 'Flat',
-      'soil_type': 'Clay Loam',
-      'sprinkler_head_precipitation_rate': 35.56,
-      'sprinkler_head_type': 'Popup Spray',
-      'status': <RunStates.NOT_RUNNING: 'Not Running'>,
-      'sun_exposure': 'Full Sun',
-      'vegetation_type': 'Cool Season Grass',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.12345_zone_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_switches[switch.12345_zone_6_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1404,71 +819,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_6_enabled',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[switch.12345_zone_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.12345_zone_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 7',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Zone 7',
-    'platform': 'rainmachine',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch.12345_zone_7-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'activity_type': 'zone',
-      'area': 92.9,
-      'current_cycle': 0,
-      'field_capacity': 0.3,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
-      'id': 7,
-      'number_of_cycles': 0,
-      'restrictions': False,
-      'slope': 'Flat',
-      'soil_type': 'Clay Loam',
-      'sprinkler_head_precipitation_rate': 35.56,
-      'sprinkler_head_type': 'Popup Spray',
-      'status': <RunStates.NOT_RUNNING: 'Not Running'>,
-      'sun_exposure': 'Full Sun',
-      'vegetation_type': 'Cool Season Grass',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.12345_zone_7',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1527,71 +877,6 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[switch.12345_zone_8-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.12345_zone_8',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 8',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Zone 8',
-    'platform': 'rainmachine',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch.12345_zone_8-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'activity_type': 'zone',
-      'area': 92.9,
-      'current_cycle': 0,
-      'field_capacity': 0.3,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
-      'id': 8,
-      'number_of_cycles': 0,
-      'restrictions': False,
-      'slope': 'Flat',
-      'soil_type': 'Clay Loam',
-      'sprinkler_head_precipitation_rate': 35.56,
-      'sprinkler_head_type': 'Popup Spray',
-      'status': <RunStates.NOT_RUNNING: 'Not Running'>,
-      'sun_exposure': 'Full Sun',
-      'vegetation_type': 'Cool Season Grass',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.12345_zone_8',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_switches[switch.12345_zone_8_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1638,71 +923,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_8_enabled',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[switch.12345_zone_9-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.12345_zone_9',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 9',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Zone 9',
-    'platform': 'rainmachine',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch.12345_zone_9-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'activity_type': 'zone',
-      'area': 92.9,
-      'current_cycle': 0,
-      'field_capacity': 0.3,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
-      'id': 9,
-      'number_of_cycles': 0,
-      'restrictions': False,
-      'slope': 'Flat',
-      'soil_type': 'Clay Loam',
-      'sprinkler_head_precipitation_rate': 35.56,
-      'sprinkler_head_type': 'Popup Spray',
-      'status': <RunStates.NOT_RUNNING: 'Not Running'>,
-      'sun_exposure': 'Full Sun',
-      'vegetation_type': 'Cool Season Grass',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.12345_zone_9',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
