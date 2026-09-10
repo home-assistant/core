@@ -5,6 +5,7 @@ Necessary until copilot can handle skills.
 """
 
 from pathlib import Path
+import re
 import sys
 
 GENERATED_MESSAGE = (
@@ -18,6 +19,11 @@ INTEGRATION_PATH_SPECIFIC_OUTPUT_FILE = Path(
     ".github/instructions/integrations.instructions.md"
 )
 PR_TEMPLATE_FILE = Path(".github/PULL_REQUEST_TEMPLATE.md")
+INTEGRATION_SKILL_BLOB_URL = (
+    "https://github.com/home-assistant/core/blob/dev/"
+    f"{INTEGRATION_SKILL_FILE.parent.as_posix()}/"
+)
+_RELATIVE_MD_LINK_RE = re.compile(r"\]\((?!https?://)([^)]+\.md)\)")
 
 COPILOT_SPECIFIC_INSTRUCTIONS = """
 # Copilot code review instructions
@@ -56,13 +62,32 @@ def _strip_frontmatter(text: str) -> str:
     return text[end + len("\n---\n") :].lstrip("\n")
 
 
+def _absolutize_companion_links(text: str) -> str:
+    """Rewrite links to the skill's companion files as absolute GitHub URLs.
+
+    The skill keeps them relative for the loader, which resolves them against
+    the checked-out companion files. The generated file has no companions next
+    to it, so a relative link there points at nothing.
+    """
+
+    def _replace(match: re.Match[str]) -> str:
+        target = match.group(1)
+        if not (INTEGRATION_SKILL_FILE.parent / target).is_file():
+            return match.group(0)
+        return f"]({INTEGRATION_SKILL_BLOB_URL}{target})"
+
+    return _RELATIVE_MD_LINK_RE.sub(_replace, text)
+
+
 def generate_integration_path_specific_instructions() -> str:
     """Generate instructions for integration paths."""
     if not INTEGRATION_SKILL_FILE.exists():
         print(f"Error: {INTEGRATION_SKILL_FILE} not found")
         sys.exit(1)
 
-    skill_content = _strip_frontmatter(INTEGRATION_SKILL_FILE.read_text())
+    skill_content = _absolutize_companion_links(
+        _strip_frontmatter(INTEGRATION_SKILL_FILE.read_text())
+    )
 
     return (
         INTEGRATION_PATH_SPECIFIC_INSTRUCTIONS
