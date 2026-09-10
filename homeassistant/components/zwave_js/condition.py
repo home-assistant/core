@@ -11,7 +11,7 @@ from zwave_js_server.model.node import Node as ZwaveNode
 
 from homeassistant.const import ATTR_DEVICE_ID, CONF_OPTIONS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.condition import (
     ATTR_BEHAVIOR,
@@ -97,11 +97,10 @@ def _async_resolve_nodes(
     hass: HomeAssistant, device_ids: Iterable[str]
 ) -> _ResolvedNodes:
     """Resolve targeted device IDs to Z-Wave nodes."""
-    dev_reg = dr.async_get(hass)
     resolved = _ResolvedNodes()
     for device_id in set(device_ids):
         try:
-            node = async_get_node_from_device_id(hass, device_id, dev_reg)
+            node = async_get_node_from_device_id(hass, device_id)
         except ValueError:
             resolved.unresolved += 1
         else:
