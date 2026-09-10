@@ -464,7 +464,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
 
     if isinstance(schema, selector.DurationSelector):
         result = probatio.to_openapi(cv.time_period_dict)
-        if schema.signed:
+        if schema.allows_negative:
             result["properties"]["negative"] = {"type": "boolean"}
         else:
             del result["properties"]["negative"]
