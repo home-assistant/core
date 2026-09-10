@@ -1,5 +1,6 @@
 """Support for MQTT vacuums."""
 
+from datetime import datetime
 import logging
 from typing import Any, cast, override
 
@@ -22,9 +23,10 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PAUSED,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolSchemaType
 from homeassistant.util.json import json_loads_object
@@ -47,6 +49,8 @@ STATE_DOCKED = "docked"
 STATE_ERROR = "error"
 STATE_RETURNING = "returning"
 STATE_CLEANING = "cleaning"
+
+SEGMENTS_CHANGED_DEBOUNCE_SECONDS = 30
 
 POSSIBLE_STATES: dict[str, VacuumActivity] = {
     STATE_IDLE: VacuumActivity.IDLE,
@@ -221,6 +225,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     _set_fan_speed_topic: str | None
     _send_command_topic: str | None
     _clean_segments_command_topic: str | None = None
+    _cancel_segments_issue: CALLBACK_TYPE | None = None
     _payloads: dict[str, str | None]
 
     def __init__(
@@ -234,6 +239,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self._state_attrs: dict[str, Any] = {}
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
+        self.async_on_remove(self._async_cancel_segments_issue)
 
     @staticmethod
     @override
@@ -318,11 +324,32 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
             if (last_seen := self.last_seen_segments) is not None:
                 if {s.id: s for s in last_seen} != {s.id: s for s in self._segments}:
-                    self.async_create_segments_issue()
+                    if self._cancel_segments_issue is None:
+                        self._cancel_segments_issue = async_call_later(
+                            self.hass,
+                            SEGMENTS_CHANGED_DEBOUNCE_SECONDS,
+                            self._async_create_segments_issue,
+                        )
                 else:
-                    self.async_delete_segments_issue()
+                    self._async_cancel_segments_issue()
 
         self._update_state_attributes(payload)
+
+    @callback
+    def _async_cancel_segments_issue(self) -> None:
+        """Cancel a pending segments-changed repair issue."""
+        if self._cancel_segments_issue is not None:
+            self._cancel_segments_issue()
+            self._cancel_segments_issue = None
+
+    @callback
+    def _async_create_segments_issue(self, _now: datetime) -> None:
+        """Create a repair issue if the segments are still changed."""
+        self._cancel_segments_issue = None
+        if (last_seen := self.last_seen_segments) is not None and {
+            s.id: s for s in last_seen
+        } != {s.id: s for s in self._segments}:
+            self.async_create_segments_issue()
 
     @callback
     @override

@@ -1,6 +1,7 @@
 """The tests for the State vacuum Mqtt platform."""
 
 from copy import deepcopy
+from datetime import timedelta
 import json
 from typing import Any
 from unittest.mock import call, patch
@@ -40,6 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.util import dt as dt_util
 
 from .common import (
     help_custom_config,
@@ -71,7 +73,7 @@ from .common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message, async_fire_time_changed
 from tests.components.vacuum import common
 from tests.typing import (
     MqttMockHAClientGenerator,
@@ -417,6 +419,7 @@ async def test_clean_segments_command(
         in mqtt_mock.async_publish.mock_calls
     )
     await hass.async_block_till_done()
+    now = dt_util.utcnow()
     message = """{
         "battery_level": 54,
         "state": "cleaning",
@@ -428,8 +431,8 @@ async def test_clean_segments_command(
     }"""
     async_fire_mqtt_message(hass, "vacuum/state", message)
     await hass.async_block_till_done()
-    # We expect a repair issue now as the available segments have changed
-    assert len(issue_registry.issues) == 1
+    # A repair issue should not be created before the debounce period ends
+    assert len(issue_registry.issues) == 0
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -443,20 +446,82 @@ async def test_clean_segments_command(
         {"id": "3", "name": "Diningroom", "group": None},
     ]
 
+    async_fire_time_changed(
+        hass,
+        now + timedelta(seconds=mqttvacuum.SEGMENTS_CHANGED_DEBOUNCE_SECONDS),
+    )
+    await hass.async_block_till_done()
+    # We expect a repair issue now as the available segments are still changed
+    assert len(issue_registry.issues) == 1
+
+
+@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS])
+async def test_transient_clean_segments_change_does_not_create_repair(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test a transient segment change does not create a repair issue."""
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    entity_registry.async_get_or_create(
+        vacuum.DOMAIN,
+        DOMAIN,
+        "veryunique",
+        config_entry=config_entry,
+        suggested_object_id="test",
+    )
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"Nabu Casa": ["1", "2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
+            ],
+        },
+    )
+    await mqtt_mock_entry()
+    await hass.async_block_till_done()
+
+    now = dt_util.utcnow()
     async_fire_mqtt_message(
         hass,
         "vacuum/state",
         """{
-            "battery_level": 54,
-            "state": "idle",
+            "state": "cleaning",
+            "segments":{
+                "1":"Livingroom",
+                "2":"Kitchen",
+                "3":"Diningroom"
+            }
+        }""",
+    )
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 0
+
+    async_fire_time_changed(hass, now + timedelta(seconds=15))
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 0
+
+    async_fire_mqtt_message(
+        hass,
+        "vacuum/state",
+        """{
+            "state": "cleaning",
             "segments":{
                 "1":"Livingroom",
                 "2":"Kitchen"
             }
         }""",
     )
+    async_fire_time_changed(
+        hass,
+        now + timedelta(seconds=mqttvacuum.SEGMENTS_CHANGED_DEBOUNCE_SECONDS),
+    )
     await hass.async_block_till_done()
-    # The repair issue should be cleared when the segments match again
+
     assert len(issue_registry.issues) == 0
 
 
