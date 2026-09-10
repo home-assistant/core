@@ -765,6 +765,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 self._attr_hvac_mode = hvac_mode
                 write_state = True
 
+        updates = []
         for option, attr, param in (
             (
                 CONF_TARGET_TEMPERATURE,
@@ -792,8 +793,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             ) is not None:
                 rounded = self._round_temperature_value(validated)
                 common_params[param] = rounded
-                if self.update_assumed_attribute(option, rounded):
-                    write_state = True
+                updates.append((option, rounded))
 
         if script := self._action_scripts.get(SET_TEMPERATURE_ACTION):
             await self.async_run_script(
@@ -801,6 +801,10 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 run_variables=common_params,
                 context=self._context,
             )
+
+            for option, value in updates:
+                if self.update_assumed_attribute(option, value):
+                    write_state = True
 
         if write_state:
             self.async_write_ha_state()
