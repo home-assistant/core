@@ -6,7 +6,6 @@ from pathlib import Path
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.quality_scale.entity_unique_id import (
     EntityUniqueIdChecker,
 )
@@ -15,7 +14,7 @@ from pylint_home_assistant.helpers.quality_scale import clear_quality_scale_cach
 import pytest
 import yaml
 
-from tests.pylint import assert_adds_messages, assert_no_messages
+from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="entity_unique_id_checker")
@@ -258,10 +257,8 @@ def test_handled(
     _create_quality_scale(integration_dir, {"entity-unique-id": "done"})
 
     root_node = _parse(code, integration_dir)
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -351,10 +348,8 @@ def test_ancestor_satisfies_rule(
     astroid.parse(ancestor_code, "homeassistant.components.test_integration.eui_entity")
     root_node = _parse(sensor_code, integration_dir)
 
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 def test_missing_fires(
@@ -377,10 +372,8 @@ class MySensor(Entity):
     )
 
     class_node = next(root_node.nodes_of_class(nodes.ClassDef))
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -444,10 +437,8 @@ def test_conditional_self_assignment_fires(
         for cls in root_node.nodes_of_class(nodes.ClassDef)
         if cls.name == class_name
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 def test_explicit_none_class_body_fires(
@@ -470,10 +461,8 @@ class MySensor(Entity):
     )
 
     class_node = next(root_node.nodes_of_class(nodes.ClassDef))
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 def test_subclass_nullifies_ancestor_value(
@@ -510,10 +499,8 @@ class MySensor(TestIntegrationBaseEntity):
         for cls in root_node.nodes_of_class(nodes.ClassDef)
         if cls.name == "MySensor"
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 def test_explicit_none_self_assign_fires(
@@ -537,10 +524,8 @@ class MySensor(Entity):
     )
 
     class_node = next(root_node.nodes_of_class(nodes.ClassDef))
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 def test_bare_annotation_only_fires(
@@ -563,10 +548,8 @@ class MySensor(Entity):
     )
 
     class_node = next(root_node.nodes_of_class(nodes.ClassDef))
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 def test_entity_default_does_not_satisfy(
@@ -596,10 +579,8 @@ class MySensor(Entity):
     )
 
     class_node = next(root_node.nodes_of_class(nodes.ClassDef))
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -638,10 +619,8 @@ def test_class_not_subject_to_rule(
 
     root_node = _parse(code, integration_dir)
 
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 def test_leaf_class_still_fires(
@@ -671,10 +650,8 @@ class SomethingUnrelated:
         for cls in root_node.nodes_of_class(nodes.ClassDef)
         if cls.name == "LonelySensor"
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 def test_dict_status_done_fires(
@@ -700,10 +677,8 @@ class MySensor(Entity):
     )
 
     class_node = next(root_node.nodes_of_class(nodes.ClassDef))
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_adds_messages(linter, _expect_missing(class_node)):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -773,10 +748,8 @@ class MySensor(Entity):
 """
     root_node = _parse(code, integration_dir, module_name, file_name)
 
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 def _find_attr_value_node(
@@ -848,10 +821,8 @@ def test_static_class_body_string_in_multi_entry_fires(
 
     root_node = _parse(code, integration_dir)
     value_node = _find_attr_value_node(root_node)
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_adds_messages(linter, _expect_static(value_node, "MySensor")):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 def test_static_class_body_string_no_manifest_fires(
@@ -875,10 +846,8 @@ class MySensor(Entity):
     )
 
     value_node = _find_attr_value_node(root_node)
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_adds_messages(linter, _expect_static(value_node, "MySensor")):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)
 
 
 _STATIC_CLASS_BODY_STRING = """
@@ -946,7 +915,5 @@ def test_static_rule_does_not_warn(
     _create_quality_scale(integration_dir, {"entity-unique-id": rule_status})
 
     root_node = _parse(code, integration_dir)
-    walker = ASTWalker(linter)
-    walker.add_checker(entity_unique_id_checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, entity_unique_id_checker, root_node)

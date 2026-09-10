@@ -2,7 +2,7 @@
 
 import dataclasses
 
-from pyvlx import PyVLX, PyVLXException, Window
+from pyvlx import OpeningDevice, PyVLX, PyVLXException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
 
     limitation_coordinators: dict[int, VeluxLimitationCoordinator] = {}
     for node in pyvlx.nodes:
-        if isinstance(node, Window) and node.rain_sensor:
+        if isinstance(node, OpeningDevice):
             coordinator = VeluxLimitationCoordinator(hass, entry, node)
             # do not await coordinator.async_config_entry_first_refresh() here to avoid doing
             # it for disabled entities, the entities will call it when they are added to hass

@@ -1,0 +1,23 @@
+{
+  "rollupDataPoints": [
+    {
+      "totalCalories": {
+        "kcalSum": 2100.2
+      },
+      "civilStartTime": {
+        "date": {
+          "year": 2026,
+          "month": 6,
+          "day": 28
+        }
+      },
+      "civilEndTime": {
+        "date": {
+          "year": 2026,
+          "month": 6,
+          "day": 29
+        }
+      }
+    }
+  ]
+}

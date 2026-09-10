@@ -14,15 +14,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
-    PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
 )
@@ -67,8 +66,8 @@ UNIT_OF_MEASUREMENT_MAPPING = {
     pypck.lcn_defs.VarUnit.METERPERSECOND: UnitOfSpeed.METERS_PER_SECOND,
     pypck.lcn_defs.VarUnit.VOLT: UnitOfElectricPotential.VOLT,
     pypck.lcn_defs.VarUnit.AMPERE: UnitOfElectricCurrent.AMPERE,
-    pypck.lcn_defs.VarUnit.PPM: CONCENTRATION_PARTS_PER_MILLION,
-    pypck.lcn_defs.VarUnit.PERCENT: PERCENTAGE,
+    pypck.lcn_defs.VarUnit.PPM: UnitOfRatio.PARTS_PER_MILLION,
+    pypck.lcn_defs.VarUnit.PERCENT: UnitOfRatio.PERCENTAGE,
 }
 
 

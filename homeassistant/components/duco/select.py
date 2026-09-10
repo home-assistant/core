@@ -10,7 +10,6 @@ from duco_connectivity import (
     KnownActionName,
     Node,
     NodeListActionItemList,
-    NodeType,
     VentilationState,
 )
 
@@ -19,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, VENTILATION_CAPABLE_NODE_TYPES
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
@@ -71,7 +70,9 @@ async def async_setup_entry(
             if node.node_id in known_nodes:
                 continue
 
-            if node.general.node_type is not NodeType.BOX:
+            # Duco advertises SetVentilationState broadly, so keep the select
+            # limited to the box and known valve node families.
+            if node.general.node_type not in VENTILATION_CAPABLE_NODE_TYPES:
                 continue
 
             options = options_by_node.get(node.node_id)
@@ -128,9 +129,7 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
         try:
             # SelectEntity exposes string options, and passing the raw API value
             # through keeps newly added Duco states forward-compatible.
-            await self.coordinator.client.async_set_ventilation_state(
-                self._node_id, option
-            )
+            await self.coordinator.async_set_ventilation_state(self._node_id, option)
         except DucoRateLimitError as err:
             _LOGGER.warning("Duco write rate limit exceeded for node %s", self._node_id)
             raise HomeAssistantError(
@@ -142,7 +141,3 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_state",
             ) from err
-
-        # Duco may normalize the requested action on readback, such as
-        # MAN1x2 -> MAN1 or AUTO -> CNT1, so refresh the authoritative state.
-        await self.coordinator.async_refresh()

@@ -35,6 +35,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -1477,6 +1478,64 @@ async def test_subscribe_unsubscribe_logbook_stream(
     assert listeners_without_writes(
         hass.bus.async_listeners()
     ) == listeners_without_writes(init_listeners)
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_subscribe_logbook_stream_state_attributes(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the live logbook stream exposes allowlisted state attributes."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+    hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["event"]["partial"] is True
+
+    await hass.async_block_till_done()
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert "partial" not in msg["event"]
+    assert msg["event"]["events"] == []
+
+    hass.states.async_set("event.doorbell", STATE_UNKNOWN, {"event_type": None})
+    hass.states.async_set(
+        "event.doorbell",
+        "2024-01-01T00:00:00.000+00:00",
+        {"event_type": "ring", "supported_features": 1},
+    )
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == [
+        {
+            "entity_id": "event.doorbell",
+            "state": "2024-01-01T00:00:00.000+00:00",
+            "attributes": {"event_type": "ring"},
+            "when": ANY,
+        }
+    ]
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)

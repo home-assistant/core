@@ -62,6 +62,7 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
             device.device_type == ATTR_DEVICE_WATER_METER_CONTROLLER
             and not device.device_model_name.startswith(DEV_MODEL_WATER_METER_YS5007)
         ),
+        should_update_entity=lambda value: value is not None,
     ),
     YoLinkValveEntityDescription(
         key="valve_1_state",
@@ -71,6 +72,7 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         exists_fn=lambda device: (
             device.device_type == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
         ),
+        should_update_entity=lambda value: value is not None,
         channel_index=0,
     ),
     YoLinkValveEntityDescription(
@@ -81,6 +83,7 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         exists_fn=lambda device: (
             device.device_type == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
         ),
+        should_update_entity=lambda value: value is not None,
         channel_index=1,
     ),
     YoLinkValveEntityDescription(

@@ -27,7 +27,7 @@ from .const import CONDITIONS_MAP, DOMAIN, FORECAST_MAP
 _LOGGER = logging.getLogger(__name__)
 
 API_TIMEOUT: Final[int] = 120
-WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
+WEATHER_UPDATE_INTERVAL = timedelta(minutes=20)
 
 type AemetConfigEntry = ConfigEntry[AemetData]
 

@@ -11,6 +11,7 @@ from .const import DEFAULT_URL
 from .coordinator import PTDevicesConfigEntry, PTDevicesCoordinator
 
 _PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
 

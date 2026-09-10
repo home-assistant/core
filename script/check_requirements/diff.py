@@ -17,11 +17,13 @@ from .models import PackageChange
 # of truth for pinned package changes.
 TRACKED_PATTERNS = (
     "requirements*.txt",
+    "**/requirements*.txt",
     "homeassistant/package_constraints.txt",
 )
 
 
-def _is_tracked(path: str) -> bool:
+def is_tracked(path: str) -> bool:
+    """Return True if `path` is a requirement file the checks care about."""
     return any(fnmatchcase(path, pattern) for pattern in TRACKED_PATTERNS)
 
 
@@ -61,7 +63,7 @@ def parse_diff(diff_text: str) -> list[PackageChange]:
     added: dict[str, _Pin] = {}
     removed: dict[str, _Pin] = {}
     for patched_file in PatchSet(diff_text):
-        if not _is_tracked(patched_file.path):
+        if not is_tracked(patched_file.path):
             continue
         for hunk in patched_file:
             for line in hunk:

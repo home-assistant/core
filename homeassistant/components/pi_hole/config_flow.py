@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_LOCATION,
-    CONF_NAME,
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
@@ -49,7 +48,6 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._config = {
                 CONF_HOST: f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
-                CONF_NAME: user_input[CONF_NAME],
                 CONF_LOCATION: user_input[CONF_LOCATION],
                 CONF_SSL: user_input[CONF_SSL],
                 CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
@@ -64,9 +62,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
             if not (errors := await self._async_try_connect()):
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=self._config
-                )
+                return self.async_create_entry(title=DEFAULT_NAME, data=self._config)
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -77,11 +73,6 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_PORT, default=user_input.get(CONF_PORT, 80)
                     ): vol.Coerce(int),
-                    # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=home-assistant-config-flow-name-field
-                    vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
-                    ): str,
                     vol.Required(
                         CONF_LOCATION,
                         default=user_input.get(CONF_LOCATION, DEFAULT_LOCATION),

@@ -12,11 +12,10 @@ from homeassistant.helpers.condition import (
     make_entity_state_condition,
 )
 
-from . import ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED
-from .const import DOMAIN, MediaPlayerState
+from .const import DOMAIN, MediaPlayerEntityStateAttribute, MediaPlayerState
 
 VOLUME_DOMAIN_SPECS: dict[str, DomainSpec] = {
-    DOMAIN: DomainSpec(value_source=ATTR_MEDIA_VOLUME_LEVEL),
+    DOMAIN: DomainSpec(value_source=MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL),
 }
 
 
@@ -38,8 +37,10 @@ class _MediaPlayerMutedConditionBase(EntityConditionBase):
     def _has_volume_attributes(self, state: State) -> bool:
         """Check if the state has volume muted or volume level attributes."""
         return (
-            state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is not None
-            or state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is not None
+            state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED)
+            is not None
+            or state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL)
+            is not None
         )
 
     @override
@@ -50,8 +51,10 @@ class _MediaPlayerMutedConditionBase(EntityConditionBase):
     def _is_muted(self, state: State) -> bool:
         """Check if the media player is muted."""
         return (
-            state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is True
-            or state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == 0
+            state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED)
+            is True
+            or state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL)
+            == 0
         )
 
     @override
@@ -96,7 +99,8 @@ class MediaPlayerIsVolumeCondition(EntityNumericalConditionBase):
         """Skip media players that do not expose a volume_level attribute."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is not None
+            and state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL)
+            is not None
         )
 
 

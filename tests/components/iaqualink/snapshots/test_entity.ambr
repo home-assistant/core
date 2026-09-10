@@ -107,7 +107,7 @@
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 1.1,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 28.9,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 28.9,
     }),
     'context': <ANY>,
     'entity_id': 'climate.pool_set_point',

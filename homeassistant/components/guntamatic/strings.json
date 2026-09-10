@@ -27,8 +27,28 @@
   },
   "entity": {
     "sensor": {
+      "auxiliary_pump": {
+        "name": "Auxiliary pump {pump}",
+        "state": {
+          "auto": "Auto",
+          "nonstop": "Non-stop",
+          "off": "Off"
+        }
+      },
+      "boiler_shunt_pump": {
+        "name": "Boiler shunt pump"
+      },
       "boiler_temperature": {
         "name": "Boiler temperature"
+      },
+      "buffer_bottom_0_temperature": {
+        "name": "Buffer 0 bottom temperature"
+      },
+      "buffer_bottom_1_temperature": {
+        "name": "Buffer 1 bottom temperature"
+      },
+      "buffer_bottom_2_temperature": {
+        "name": "Buffer 2 bottom temperature"
       },
       "buffer_bottom_temperature": {
         "name": "Buffer bottom temperature"
@@ -39,14 +59,97 @@
       "buffer_load": {
         "name": "Buffer load"
       },
+      "buffer_stage_bottom_temperature": {
+        "name": "Buffer stage {tank} bottom temperature"
+      },
+      "buffer_stage_top_temperature": {
+        "name": "Buffer stage {tank} top temperature"
+      },
+      "buffer_top_0_temperature": {
+        "name": "Buffer 0 top temperature"
+      },
+      "buffer_top_1_temperature": {
+        "name": "Buffer 1 top temperature"
+      },
+      "buffer_top_2_temperature": {
+        "name": "Buffer 2 top temperature"
+      },
       "buffer_top_temperature": {
         "name": "Buffer top temperature"
+      },
+      "burner_output": {
+        "name": "Burner output"
+      },
+      "circuit_temperature": {
+        "name": "Flow temperature"
+      },
+      "co2_content": {
+        "name": "Flue CO2 content"
+      },
+      "dhw_pump": {
+        "name": "DHW pump {circuit}"
       },
       "domestic_hot_water_0_temperature": {
         "name": "Domestic hot water circuit 0 temperature"
       },
+      "domestic_hot_water_1_temperature": {
+        "name": "Domestic hot water circuit 1 temperature"
+      },
+      "domestic_hot_water_2_temperature": {
+        "name": "Domestic hot water circuit 2 temperature"
+      },
+      "domestic_hot_water_temperature": {
+        "name": "Domestic hot water circuit {circuit} temperature"
+      },
+      "extra_dhw_1_temperature": {
+        "name": "Extra DHW 1 temperature"
+      },
+      "extra_dhw_2_temperature": {
+        "name": "Extra DHW 2 temperature"
+      },
+      "extra_dhw_boost": {
+        "name": "Extra DHW pump {pump}",
+        "state": {
+          "auto": "Auto",
+          "nonstop": "Non-stop",
+          "off": "Off"
+        }
+      },
+      "extra_dhw_temperature": {
+        "name": "Extra DHW circuit {circuit} temperature"
+      },
+      "flue_gas_actuator_target": {
+        "name": "Flue gas actuator target"
+      },
+      "heating_circulation_program": {
+        "name": "Program",
+        "state": {
+          "heat": "Heat",
+          "hibernate": "Setback mode",
+          "hibernate_to": "Away mode",
+          "off": "Off",
+          "timer": "Timer"
+        }
+      },
+      "heating_circulation_pump": {
+        "name": "Pump",
+        "state": {
+          "auto": "Auto",
+          "nonstop": "Non-stop",
+          "off": "Off"
+        }
+      },
+      "interruption": {
+        "name": "Interruption {number}"
+      },
+      "operating_time": {
+        "name": "Operating time"
+      },
       "outdoor_temperature": {
         "name": "Outdoor temperature"
+      },
+      "primary_air": {
+        "name": "Primary air"
       },
       "program": {
         "name": "Program",
@@ -60,17 +163,20 @@
           "timer": "Timer"
         }
       },
-      "room_0_temperature": {
-        "name": "Room 0 temperature"
+      "room_temperature": {
+        "name": "Room temperature"
       },
-      "room_1_temperature": {
-        "name": "Room 1 temperature"
+      "secondary_air": {
+        "name": "Secondary air"
       },
-      "room_2_temperature": {
-        "name": "Room 2 temperature"
+      "service_date": {
+        "name": "Service date"
       },
       "status": {
         "name": "Status"
+      },
+      "suction_fan": {
+        "name": "Suction fan"
       }
     }
   }

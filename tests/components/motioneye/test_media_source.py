@@ -105,6 +105,7 @@ async def test_async_browse_media_success(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": "directory",
         "thumbnail": None,
         "children": [
@@ -118,6 +119,7 @@ async def test_async_browse_media_success(
                 "can_play": False,
                 "can_expand": True,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": None,
                 "children_media_class": "directory",
             }
@@ -135,6 +137,7 @@ async def test_async_browse_media_success(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": "directory",
         "thumbnail": None,
         "children": [
@@ -149,6 +152,7 @@ async def test_async_browse_media_success(
                 "can_play": False,
                 "can_expand": True,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": None,
                 "children_media_class": "directory",
             }
@@ -169,6 +173,7 @@ async def test_async_browse_media_success(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": "directory",
         "thumbnail": None,
         "children": [
@@ -183,6 +188,7 @@ async def test_async_browse_media_success(
                 "can_play": False,
                 "can_expand": True,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": None,
                 "children_media_class": "video",
             },
@@ -197,6 +203,7 @@ async def test_async_browse_media_success(
                 "can_play": False,
                 "can_expand": True,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": None,
                 "children_media_class": "image",
             },
@@ -220,6 +227,7 @@ async def test_async_browse_media_success(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": "video",
         "thumbnail": None,
         "children": [
@@ -234,6 +242,7 @@ async def test_async_browse_media_success(
                 "can_play": False,
                 "can_expand": True,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": None,
                 "children_media_class": "directory",
             }
@@ -257,6 +266,7 @@ async def test_async_browse_media_success(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": "video",
         "thumbnail": None,
         "children": [
@@ -272,6 +282,7 @@ async def test_async_browse_media_success(
                 "can_play": True,
                 "can_expand": False,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": "http://movie",
                 "children_media_class": None,
             },
@@ -287,6 +298,7 @@ async def test_async_browse_media_success(
                 "can_play": True,
                 "can_expand": False,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": "http://movie",
                 "children_media_class": None,
             },
@@ -302,6 +314,7 @@ async def test_async_browse_media_success(
                 "can_play": True,
                 "can_expand": False,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": "http://movie",
                 "children_media_class": None,
             },
@@ -341,6 +354,7 @@ async def test_async_browse_media_images_success(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": "image",
         "thumbnail": None,
         "children": [
@@ -356,6 +370,7 @@ async def test_async_browse_media_images_success(
                 "can_play": False,
                 "can_expand": False,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": "http://image",
                 "children_media_class": None,
             }
@@ -503,6 +518,7 @@ async def test_async_resolve_media_failure(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": "video",
         "thumbnail": None,
         "children": [],

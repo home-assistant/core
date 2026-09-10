@@ -79,8 +79,8 @@ class SchemaFlowFormStep(SchemaFlowStep):
 
     suggested_values: (
         Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, dict[str, Any]]]
-        | None
         | UndefinedType
+        | None
     ) = UNDEFINED
     """Optional property to populate suggested values.
 

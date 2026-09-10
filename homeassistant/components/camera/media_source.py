@@ -12,7 +12,7 @@ from homeassistant.components.media_source import (
     Unresolvable,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -31,7 +31,9 @@ def _media_source_for_camera(
     camera_state = hass.states.get(camera.entity_id)
     title = camera.name
     if camera_state:
-        title = camera_state.attributes.get(ATTR_FRIENDLY_NAME, camera.name)
+        title = camera_state.attributes.get(
+            EntityStateAttribute.FRIENDLY_NAME, camera.name
+        )
 
     return BrowseMediaSource(
         domain=DOMAIN,

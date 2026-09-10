@@ -12,6 +12,7 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
+    VacuumEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -136,7 +137,7 @@ _FEATURE_PAYLOADS = {
 
 MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
     {
-        vacuum.ATTR_FAN_SPEED,
+        VacuumEntityStateAttribute.FAN_SPEED,
     }
 )
 
@@ -329,7 +330,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
-            {"_attr_battery_level", "_attr_fan_speed", "_attr_activity"},
+            {"_attr_fan_speed", "_attr_activity"},
         )
 
     @override

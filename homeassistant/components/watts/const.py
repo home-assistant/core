@@ -23,7 +23,7 @@ OAUTH2_SCOPES = [
 # Update intervals
 UPDATE_INTERVAL_SECONDS = 30
 FAST_POLLING_INTERVAL_SECONDS = 5
-DISCOVERY_INTERVAL_MINUTES = 15
+DISCOVERY_INTERVAL_SECONDS = 15 * 60
 
 # Mapping from Watts Vision+ modes to Home Assistant HVAC modes
 THERMOSTAT_MODE_TO_HVAC: dict[ThermostatMode, HVACMode] = {

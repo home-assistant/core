@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers import area_registry as ar, label_registry as lr
 
 
 @callback
@@ -69,8 +69,8 @@ def websocket_create_area(
         data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
-        # Convert labels to a set
-        data["labels"] = set(data["labels"])
+        labels = set(data["labels"])
+        data["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
     try:
         entry = registry.async_create(**data)
@@ -139,8 +139,8 @@ def websocket_update_area(
         data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
-        # Convert labels to a set
-        data["labels"] = set(data["labels"])
+        labels = set(data["labels"])
+        data["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
     try:
         entry = registry.async_update(**data)

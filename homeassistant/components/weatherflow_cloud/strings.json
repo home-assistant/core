@@ -29,6 +29,9 @@
       "air_density": {
         "name": "Air density"
       },
+      "air_temperature": {
+        "name": "Temperature"
+      },
       "barometric_pressure": {
         "name": "Pressure barometric"
       },
@@ -122,6 +125,9 @@
       },
       "wind_sample_interval": {
         "name": "Wind sample interval"
+      },
+      "wind_speed": {
+        "name": "Wind speed"
       }
     }
   }

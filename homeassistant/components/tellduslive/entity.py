@@ -2,21 +2,17 @@
 
 from datetime import datetime
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from tellduslive import BATTERY_LOW, BATTERY_OK, BATTERY_UNKNOWN
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_VIA_DEVICE,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_MANUFACTURER, ATTR_MODEL
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import SIGNAL_UPDATE_ENTITY
+from .const import DOMAIN, SIGNAL_UPDATE_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,7 +110,7 @@ class TelldusLiveEntity(Entity):
         """Return device info."""
         device = self._client.device_info(self.device.device_id)
         device_info = DeviceInfo(
-            identifiers={("tellduslive", self.device.device_id)},
+            identifiers={(DOMAIN, self.device.device_id)},
             name=self.device.name,
         )
         if (model := device.get("model")) is not None:
@@ -122,5 +118,14 @@ class TelldusLiveEntity(Entity):
         if (protocol := device.get("protocol")) is not None:
             device_info[ATTR_MANUFACTURER] = protocol.title()
         if (client := device.get("client")) is not None:
-            device_info[ATTR_VIA_DEVICE] = ("tellduslive", client)
+            config_entry = self.platform.config_entry
+            if TYPE_CHECKING:
+                assert config_entry
+            # The hub is not registered when fetching the client list failed while
+            # device requests succeeded, so link only when the hub device exists.
+            hub_device = dr.async_get(self.hass).async_get_device_by_identifier(
+                (DOMAIN, client), config_entry.entry_id
+            )
+            if hub_device is not None:
+                device_info["via_device_id"] = hub_device.id
         return device_info

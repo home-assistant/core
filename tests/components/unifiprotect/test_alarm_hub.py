@@ -34,6 +34,9 @@ def _make_public_bootstrap(hub: LinkStation | None) -> Mock:
     pb.alarm_hubs = {hub.id: hub} if hub is not None else {}
     pb.sirens = {}
     pb.relays = {}
+    pb.cameras = {}
+    pb.lights = {}
+    pb.fobs = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
     return pb
@@ -239,7 +242,9 @@ async def test_alarm_hub_device_and_entities(
     """Snapshot the alarm hub device and all of its entities."""
     await init_entry(hass, ufp_with_alarm_hub, [])
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, ALARM_HUB_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ALARM_HUB_MAC), ufp_with_alarm_hub.entry.entry_id
+    )
     assert device is not None
     assert device == snapshot(name="device")
 

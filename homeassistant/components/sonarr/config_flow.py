@@ -100,12 +100,14 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
             )
 
-            # aiopyarr defaults to the service port if one isn't given
-            # this is counter to standard practice where http = 80
-            # and https = 443.
+            # Ensure an explicit port is present in the URL so that
+            # aiopyarr does not fall back to its own service-port default
+            # (which differs from the standard HTTP/HTTPS ports).
             if CONF_URL in user_input:
                 url = yarl.URL(user_input[CONF_URL])
-                user_input[CONF_URL] = f"{url.scheme}://{url.host}:{url.port}{url.path}"
+                if url.explicit_port is None:
+                    url = url.with_port(url.port)
+                user_input[CONF_URL] = url.human_repr()
 
             if self.source == SOURCE_REAUTH:
                 user_input = {**self._get_reauth_entry().data, **user_input}

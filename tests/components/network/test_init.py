@@ -608,7 +608,7 @@ async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=[],
     ):
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
         with pytest.raises(HomeAssistantError):
             await network.async_get_source_ip(hass, MDNS_TARGET_IP)
@@ -770,9 +770,13 @@ async def test_websocket_network_url(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test the network/url websocket command."""
-    assert await async_setup_component(hass, DOMAIN, {})
+    with patch(
+        "homeassistant.components.network.util.async_get_source_ip",
+        return_value="10.10.10.10",
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
 
-    client = await hass_ws_client(hass)
+        client = await hass_ws_client(hass)
 
     with (
         patch(

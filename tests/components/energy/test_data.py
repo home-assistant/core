@@ -176,6 +176,32 @@ async def test_battery_stat_soc_round_trip(
     assert source["stat_soc"] == "sensor.battery_state_of_charge"
 
 
+async def test_battery_capacity_round_trip(
+    hass: HomeAssistant,
+) -> None:
+    """Test that battery capacity is preserved through async_update."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    battery_source = {
+        "type": "battery",
+        "stat_energy_from": "sensor.battery_energy_from",
+        "stat_energy_to": "sensor.battery_energy_to",
+        "capacity": 13.5,
+    }
+    sources = ENERGY_SOURCE_SCHEMA([battery_source])
+
+    await manager.async_update({"energy_sources": sources})
+
+    assert manager.data is not None
+    assert manager.data["energy_sources"][0]["capacity"] == 13.5
+    with pytest.raises(vol.Invalid):
+        ENERGY_SOURCE_SCHEMA([{**battery_source, "capacity": 0}])
+    with pytest.raises(vol.Invalid):
+        ENERGY_SOURCE_SCHEMA([{**battery_source, "capacity": -1}])
+
+
 async def test_grid_power_config_inverted_sets_stat_rate(
     hass: HomeAssistant,
 ) -> None:

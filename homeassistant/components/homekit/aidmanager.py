@@ -25,6 +25,7 @@ AID_MANAGER_SAVE_DELAY = 2
 
 ALLOCATIONS_KEY = "allocations"
 UNIQUE_IDS_KEY = "unique_ids"
+ACCESSORY_TYPES_KEY = "accessory_types"
 
 INVALID_AIDS = (0, 1)
 
@@ -69,6 +70,7 @@ class AccessoryAidStorage:
         self.hass = hass
         self.allocations: dict[str, int] = {}
         self.allocated_aids: set[int] = set()
+        self.accessory_types: dict[str, str] = {}
         self._entry_id = entry_id
         self.store: Store | None = None
         self._entity_registry = er.async_get(hass)
@@ -84,6 +86,59 @@ class AccessoryAidStorage:
         assert isinstance(raw_storage, dict)
         self.allocations = raw_storage.get(ALLOCATIONS_KEY, {})
         self.allocated_aids = set(self.allocations.values())
+        self.accessory_types = raw_storage.get(ACCESSORY_TYPES_KEY, {})
+
+    def _stable_storage_keys(self, entity_id: str) -> tuple[str, ...]:
+        """Return the keys the entity's stable identity can resolve to.
+
+        The preferred key comes first, matching the aid allocation
+        preference for the system unique id over the entity id.
+        """
+        if not (entry := self._entity_registry.async_get(entity_id)):
+            return (entity_id,)
+        keys = [get_system_unique_id(entry, entry.unique_id)]
+        if previous_unique_id := entry.previous_unique_id:
+            keys.append(get_system_unique_id(entry, previous_unique_id))
+        keys.append(entity_id)
+        return tuple(keys)
+
+    @callback
+    def async_set_accessory_type(
+        self, entity_id: str, accessory_type: str | None
+    ) -> None:
+        """Persist the accessory type an entity resolved to, None clears it.
+
+        The choice is stored by the same stable identity as the aid
+        allocation, so it survives entity id renames and unique id changes.
+        """
+        if accessory_type == self.get_accessory_type(entity_id):
+            return
+        types = self.accessory_types
+        keys = self._stable_storage_keys(entity_id)
+        for key in keys:
+            types.pop(key, None)
+        if accessory_type is not None:
+            types[keys[0]] = accessory_type
+        self.async_schedule_save()
+
+    @callback
+    def get_accessory_type(self, entity_id: str) -> str | None:
+        """Return the stored accessory type for the entity, if any.
+
+        A type found under an outdated identity moves to the current one
+        and schedules a save, since only the latest previous unique id
+        stays resolvable; the read is loop bound because of that.
+        """
+        types = self.accessory_types
+        keys = self._stable_storage_keys(entity_id)
+        for key in keys:
+            if (accessory_type := types.get(key)) is not None:
+                if key != keys[0]:
+                    del types[key]
+                    types[keys[0]] = accessory_type
+                    self.async_schedule_save()
+                return accessory_type
+        return None
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str) -> int:
         """Generate a stable aid for an entity id."""
@@ -93,6 +148,15 @@ class AccessoryAidStorage:
         sys_unique_id = get_system_unique_id(entry, entry.unique_id)
         self._migrate_unique_id_aid_assignment_if_needed(sys_unique_id, entry)
         return self.get_or_allocate_aid(sys_unique_id, entity_id)
+
+    def entity_is_allocated(self, entity_id: str) -> bool:
+        """Return True when the entity already has an allocated aid.
+
+        Checks every key get_or_allocate_aid_for_entity_id could resolve to,
+        without allocating, so callers can tell a previously bridged entity
+        from a new one.
+        """
+        return self.get_allocated_aid_for_entity_id(entity_id) is not None
 
     def _migrate_unique_id_aid_assignment_if_needed(
         self, sys_unique_id: str, entry: er.RegistryEntry
@@ -129,6 +193,24 @@ class AccessoryAidStorage:
             f"Unable to generate unique aid allocation for {entity_id} [{unique_id}]"
         )
 
+    def get_allocated_aid_for_entity_id(self, entity_id: str) -> int | None:
+        """Return the entity's allocated aid without allocating one."""
+        allocations = self.allocations
+        return next(
+            (
+                allocations[key]
+                for key in self._stable_storage_keys(entity_id)
+                if key in allocations
+            ),
+            None,
+        )
+
+    @callback
+    def async_delete_aid_for_entity_id(self, entity_id: str) -> None:
+        """Remove the aid allocation for an entity."""
+        for key in self._stable_storage_keys(entity_id):
+            self.delete_aid(key)
+
     def delete_aid(self, storage_key: str) -> None:
         """Delete an aid allocation."""
         if storage_key not in self.allocations:
@@ -150,6 +232,11 @@ class AccessoryAidStorage:
         return await self.store.async_save(self._data_to_save())
 
     @callback
-    def _data_to_save(self) -> dict[str, dict[str, int]]:
+    def _data_to_save(self) -> dict[str, dict[str, int] | dict[str, str]]:
         """Return data of entity map to store in a file."""
-        return {ALLOCATIONS_KEY: self.allocations}
+        data: dict[str, dict[str, int] | dict[str, str]] = {
+            ALLOCATIONS_KEY: self.allocations
+        }
+        if self.accessory_types:
+            data[ACCESSORY_TYPES_KEY] = self.accessory_types
+        return data

@@ -36,7 +36,11 @@ from .const import (  # noqa: F401
     LOGGER,
     PLATFORM_TYPE_LEGACY,
     SCAN_INTERVAL,
+    DeviceTrackerEntityCapabilityAttribute,
+    DeviceTrackerEntityStateAttribute,
+    ScannerEntityStateAttribute,
     SourceType,
+    TrackerEntityStateAttribute,
     TrackingType,
 )
 from .entity import (  # noqa: F401

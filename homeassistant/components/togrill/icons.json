@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "silence": {
+        "default": "mdi:alarm-off"
+      }
+    },
     "select": {
       "grill_type": {
         "default": "mdi:grill",

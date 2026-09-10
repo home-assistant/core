@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -102,28 +102,6 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         """Initialize the climate device."""
         super().__init__(coordinator, device_id)
         self._attr_unique_id = device_id
-
-    @property
-    @override
-    def temperature_unit(self) -> str:
-        """Return the unit of temperature in Home Assistant format.
-
-        It can change over time based on the device settings,
-        so we fetch it dynamically from the client.
-        """
-        unit = self.client.temperature_unit()
-
-        if not unit:
-            return UnitOfTemperature.CELSIUS
-
-        normalized = unit.strip().lower()
-
-        if normalized in {"c", "°c", "celsius"}:
-            return UnitOfTemperature.CELSIUS
-        if normalized in {"f", "°f", "fahrenheit"}:
-            return UnitOfTemperature.FAHRENHEIT
-
-        return UnitOfTemperature.CELSIUS
 
     @property
     @override

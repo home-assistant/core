@@ -21,13 +21,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_MODE,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
@@ -88,11 +82,6 @@ def get_user_step_schema(data: Mapping[str, Any]) -> vol.Schema:
         travel_mode = TRAVEL_MODE_PUBLIC
     return vol.Schema(
         {
-            # Name field is no longer allowed in config flow schemas
-            # pylint: disable-next=home-assistant-config-flow-name-field
-            vol.Optional(
-                CONF_NAME, default=data.get(CONF_NAME, DEFAULT_NAME)
-            ): cv.string,
             vol.Required(CONF_API_KEY, default=data.get(CONF_API_KEY)): cv.string,
             vol.Optional(
                 CONF_MODE, default=data.get(CONF_MODE, TRAVEL_MODE_CAR)
@@ -136,7 +125,6 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             if not errors:
-                self._config[CONF_NAME] = user_input[CONF_NAME]
                 self._config[CONF_API_KEY] = user_input[CONF_API_KEY]
                 self._config[CONF_MODE] = user_input[CONF_MODE]
                 return await self.async_step_origin_menu()
@@ -237,11 +225,10 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             if self.source == SOURCE_RECONFIGURE:
                 return self.async_update_reload_and_abort(
                     self._get_reconfigure_entry(),
-                    title=self._config[CONF_NAME],
                     data=self._config,
                 )
             return self.async_create_entry(
-                title=self._config[CONF_NAME],
+                title=DEFAULT_NAME,
                 data=self._config,
                 options=DEFAULT_OPTIONS,
             )
@@ -283,7 +270,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._get_reconfigure_entry(), data=self._config
                 )
             return self.async_create_entry(
-                title=self._config[CONF_NAME],
+                title=DEFAULT_NAME,
                 data=self._config,
                 options=DEFAULT_OPTIONS,
             )

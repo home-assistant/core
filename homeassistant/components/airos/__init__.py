@@ -184,8 +184,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
         mac_adress = dr.format_mac(entry.unique_id)
 
         device_registry = dr.async_get(hass)
-        if device_entry := device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac_adress)}
+        if device_entry := device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac_adress), entry.entry_id
         ):
             old_device_id = next(
                 (
@@ -217,6 +217,21 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
 
         hass.config_entries.async_update_entry(
             entry, version=new_version, minor_version=new_minor_version
+        )
+
+    if entry.version == 2:
+        new_version = 3
+        new_minor_version = 1
+        new_data = {**entry.data}
+
+        if "advanced_settings" in new_data:
+            new_data[SECTION_ADDITIONAL_SETTINGS] = new_data.pop("advanced_settings")
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data=new_data,
+            version=new_version,
+            minor_version=new_minor_version,
         )
 
     return True

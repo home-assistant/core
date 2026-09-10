@@ -27,6 +27,7 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,6 +46,7 @@ class IndevoltSensorEntityDescription(SensorEntityDescription):
     state_mapping: dict[str | int, str] = field(default_factory=dict)
     generation: tuple[int, ...] = (1, 2)
     energy_mode: IndevoltEnergyMode | None = None
+    charge_discharge_state: int | None = None
 
 
 SENSORS: Final = (
@@ -241,6 +243,26 @@ SENSORS: Final = (
         translation_key="battery_charge_discharge_state",
         state_mapping={1000: "static", 1001: "charging", 1002: "discharging"},
         device_class=SensorDeviceClass.ENUM,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.REMAINING_CHARGING_TIME,
+        generation=(2,),
+        translation_key="remaining_charging_time",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        charge_discharge_state=1001,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.REMAINING_DISCHARGING_TIME,
+        generation=(2,),
+        translation_key="remaining_discharging_time",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        charge_discharge_state=1002,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltBattery.SOC,
@@ -947,6 +969,14 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
             energy_mode = self.coordinator.data.get(IndevoltConfig.READ_ENERGY_MODE)
             if energy_mode != self.entity_description.energy_mode:
                 return False
+
+        # Check whether the battery is not in the required charge/discharge state
+        if (
+            self.entity_description.charge_discharge_state is not None
+            and self.coordinator.data.get(IndevoltBattery.CHARGE_DISCHARGE_STATE)
+            != self.entity_description.charge_discharge_state
+        ):
+            return False
 
         # Check whether inverter is reporting 0 degrees with heater not active (thus reporting to indicate "idle")
         # Pending fix by Indevolt: https://discord.com/channels/1417471269942591571/1510277757689659522

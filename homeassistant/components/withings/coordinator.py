@@ -189,9 +189,7 @@ class WithingsSleepDataUpdateCoordinator(
         if not response:
             return None
 
-        return sorted(
-            response, key=lambda sleep_summary: sleep_summary.end_date, reverse=True
-        )[0]
+        return max(response, key=lambda sleep_summary: sleep_summary.end_date)
 
 
 class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[None]):

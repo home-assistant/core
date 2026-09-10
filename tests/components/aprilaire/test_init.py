@@ -1,6 +1,6 @@
 """Tests for the Aprilaire integration setup."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyaprilaire.const import Attribute
 from syrupy.assertion import SnapshotAssertion
@@ -27,6 +27,7 @@ async def test_device_registry(
     config_entry.add_to_hass(hass)
 
     client = AsyncMock()
+    client.stop_listen = MagicMock()
     client.data = {
         Attribute.MAC_ADDRESS: "1234567890ab",
         Attribute.NAME: "Aprilaire",
@@ -46,7 +47,7 @@ async def test_device_registry(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "12:34:56:78:90:ab")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:78:90:ab"), config_entry.entry_id
     )
     assert device_entry == snapshot

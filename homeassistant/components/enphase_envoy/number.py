@@ -16,6 +16,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -120,7 +121,11 @@ class EnvoyRelayNumberEntity(EnvoyBaseEntity, NumberEntity):
             model="Dry contact relay",
             name=self.data.dry_contact_settings[relay_id].load_name,
             sw_version=str(enpower.firmware_version),
-            via_device=(DOMAIN, serial_number),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, serial_number),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
     @property
@@ -164,7 +169,11 @@ class EnvoyStorageSettingsNumberEntity(EnvoyBaseEntity, NumberEntity):
                 model="Enpower",
                 name=f"Enpower {self._serial_number}",
                 sw_version=str(enpower.firmware_version),
-                via_device=(DOMAIN, self.envoy_serial_num),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, self.envoy_serial_num),
+                    config_entry_id=coordinator.config_entry.entry_id,
+                ),
                 serial_number=self._serial_number,
             )
         else:

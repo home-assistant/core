@@ -102,8 +102,8 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
 
                 device_reg = dr.async_get(self.hass)
-                if device := device_reg.async_get_device(
-                    identifiers={(DOMAIN, f"{old_lat}, {old_lon}")}
+                if device := device_reg.async_get_device_by_identifier(
+                    (DOMAIN, f"{old_lat}, {old_lon}"), reconfigure_entry.entry_id
                 ):
                     device_reg.async_update_device(
                         device.id, new_identifiers={(DOMAIN, f"{lat}, {lon}")}

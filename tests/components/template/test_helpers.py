@@ -1,11 +1,7 @@
 """The tests for template helpers."""
 
-from unittest.mock import AsyncMock, Mock
-
 import pytest
-import voluptuous as vol
 
-from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.alarm_control_panel import (
     SCRIPT_FIELDS as ALARM_CONTROL_PANEL_SCRIPT_FIELDS,
@@ -42,64 +38,14 @@ from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
     ConfigurationStyle,
-    TemplatePlatformSetup,
     assert_action,
     async_trigger,
-    make_test_trigger,
+    make_mock_device_actions,
     setup_entity,
+    setup_mock_devices,
 )
 
-from tests.common import MockConfigEntry, mock_platform
-
-
-async def _setup_mock_devices(
-    hass: HomeAssistant,
-    domain: str,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> tuple[TemplatePlatformSetup, dr.DeviceEntry, er.RegistryEntry]:
-    FAKE_DOMAIN = "fake_integration"
-
-    hass.config.components.add(FAKE_DOMAIN)
-
-    async def _async_get_actions(
-        hass: HomeAssistant, device_id: str
-    ) -> list[dict[str, str]]:
-        """List device actions."""
-        return await toggle_entity.async_get_actions(hass, device_id, FAKE_DOMAIN)
-
-    mock_platform(
-        hass,
-        f"{FAKE_DOMAIN}.device_action",
-        Mock(
-            ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
-                {vol.Required("domain"): FAKE_DOMAIN}
-            ),
-            async_get_actions=_async_get_actions,
-            async_call_action_from_config=AsyncMock(),
-            spec=[
-                "ACTION_SCHEMA",
-                "async_get_actions",
-                "async_call_action_from_config",
-            ],
-        ),
-    )
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entity_entry = entity_registry.async_get_or_create(
-        "fake_integration", "test", "5678", device_id=device_entry.id
-    )
-    await hass.async_block_till_done()
-
-    platform_setup = TemplatePlatformSetup(
-        domain, "test_entity", make_test_trigger("sensor.trigger")
-    )
-    return (platform_setup, device_entry, entity_entry)
+from tests.common import MockConfigEntry
 
 
 async def _setup_and_test_yaml_device_action(
@@ -114,29 +60,13 @@ async def _setup_and_test_yaml_device_action(
     calls: list,
 ) -> None:
 
-    platform_setup, device_entry, entity_entry = await _setup_mock_devices(
+    platform_setup, device_entry, entity_entry = await setup_mock_devices(
         hass, domain, device_registry, entity_registry
     )
 
-    actions = {
-        action: [
-            {
-                "action": "test.automation",
-                "data": {
-                    "action": "fake_action",
-                    "caller": platform_setup.entity_id,
-                },
-            },
-            {
-                "domain": "fake_integration",
-                "type": "turn_on",
-                "device_id": device_entry.id,
-                "entity_id": entity_entry.id,
-                "metadata": {"secondary": False},
-            },
-        ]
-        for action in script_fields
-    }
+    actions = make_mock_device_actions(
+        script_fields, platform_setup, device_entry, entity_entry
+    )
 
     await setup_entity(hass, platform_setup, style, 1, {**actions, **extra_config})
     await async_trigger(hass, "sensor.trigger", "anything")
@@ -490,29 +420,13 @@ async def test_config_entry_device_actions(
 ) -> None:
     """Test device actions in config flow."""
 
-    platform_setup, device_entry, entity_entry = await _setup_mock_devices(
+    platform_setup, device_entry, entity_entry = await setup_mock_devices(
         hass, domain, device_registry, entity_registry
     )
 
-    actions = {
-        action: [
-            {
-                "action": "test.automation",
-                "data": {
-                    "action": "fake_action",
-                    "caller": platform_setup.entity_id,
-                },
-            },
-            {
-                "domain": "fake_integration",
-                "type": "turn_on",
-                "device_id": device_entry.id,
-                "entity_id": entity_entry.id,
-                "metadata": {"secondary": False},
-            },
-        ]
-        for action in script_fields
-    }
+    actions = make_mock_device_actions(
+        script_fields, platform_setup, device_entry, entity_entry
+    )
 
     template_config_entry = MockConfigEntry(
         data={},

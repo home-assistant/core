@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_MODEL,
     CONF_PASSWORD,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -63,6 +64,7 @@ from .repairs import (
     async_manage_deprecated_firmware_issue,
     async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
+    async_manage_rtsp_disabled_issue,
 )
 from .services import async_setup_services
 from .utils import (
@@ -82,6 +84,7 @@ from .utils import (
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,
@@ -193,13 +196,9 @@ async def _async_setup_block_entry(
     dev_reg = dr.async_get(hass)
     device_entry = None
     if entry.unique_id is not None:
-        device_entry = dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
+        device_entry = dev_reg.async_get_device_by_connection(
+            (CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
         )
-    # https://github.com/home-assistant/core/pull/48076
-    if device_entry and entry.entry_id not in device_entry.config_entries:
-        LOGGER.debug("Detected first time setup for device %s", entry.title)
-        device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
@@ -294,6 +293,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         entry.data.get(CONF_PASSWORD),
         device_mac=entry.unique_id,
         port=get_http_port(entry.data),
+        verify_ssl=entry.data.get(CONF_VERIFY_SSL, False),
     )
 
     ws_context = await get_ws_context(hass)
@@ -307,13 +307,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
     dev_reg = dr.async_get(hass)
     device_entry = None
     if entry.unique_id is not None:
-        device_entry = dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
+        device_entry = dev_reg.async_get_device_by_connection(
+            (CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
         )
-    # https://github.com/home-assistant/core/pull/48076
-    if device_entry and entry.entry_id not in device_entry.config_entries:
-        LOGGER.debug("Detected first time setup for device %s", entry.title)
-        device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
@@ -398,6 +394,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             entry,
         )
         async_manage_open_wifi_ap_issue(hass, entry)
+        async_manage_rtsp_disabled_issue(hass, entry)
         remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None

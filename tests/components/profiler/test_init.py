@@ -13,7 +13,8 @@ from lru import LRU
 import objgraph
 import pytest
 
-from homeassistant.components.profiler import (
+from homeassistant.components.profiler.const import DOMAIN
+from homeassistant.components.profiler.services import (
     _LRU_CACHE_WRAPPER_OBJECT,
     _SQLALCHEMY_LRU_OBJECT,
     CONF_SECONDS,
@@ -31,7 +32,6 @@ from homeassistant.components.profiler import (
     SERVICE_STOP_LOG_OBJECT_SOURCES,
     SERVICE_STOP_LOG_OBJECTS,
 )
-from homeassistant.components.profiler.const import DOMAIN
 from homeassistant.const import CONF_ENABLED, CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError

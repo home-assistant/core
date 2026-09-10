@@ -11,6 +11,7 @@
         "state": {
           "cool": "mdi:fan-speed-2",
           "full_speed": "mdi:fan-speed-3",
+          "low_power": "mdi:fan-chevron-down",
           "quiet": "mdi:fan-speed-1"
         }
       }

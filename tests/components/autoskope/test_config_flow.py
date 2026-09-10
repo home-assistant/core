@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.autoskope.const import (
     DEFAULT_HOST,
     DOMAIN,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 USER_INPUT = {
     CONF_USERNAME: "test_user",
     CONF_PASSWORD: "test_password",
-    SECTION_ADVANCED_SETTINGS: {
+    SECTION_ADDITIONAL_SETTINGS: {
         CONF_HOST: DEFAULT_HOST,
     },
 }
@@ -102,7 +102,7 @@ async def test_flow_invalid_url(
         {
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_password",
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_HOST: "not-a-valid-url",
             },
         },
@@ -151,7 +151,7 @@ async def test_custom_host(
         {
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_password",
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_HOST: "https://custom.autoskope.server",
             },
         },

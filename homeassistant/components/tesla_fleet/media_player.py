@@ -76,14 +76,11 @@ class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
         self._attr_state = STATES.get(
             self.get("vehicle_state_media_info_media_playback_status") or "Off",
         )
+        # volume_level is audio_volume / audio_volume_max, so one notch as a
+        # fraction of range is the per-notch increment divided by the max.
         self._attr_volume_step = (
-            1.0
-            / self._volume_max
-            / (
-                self.get("vehicle_state_media_info_audio_volume_increment")
-                or VOLUME_STEP
-            )
-        )
+            self.get("vehicle_state_media_info_audio_volume_increment") or VOLUME_STEP
+        ) / self._volume_max
 
         if volume := self.get("vehicle_state_media_info_audio_volume"):
             self._attr_volume_level = volume / self._volume_max

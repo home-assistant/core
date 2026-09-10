@@ -3,12 +3,10 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
-from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from teltasync import TeltonikaAuthenticationError, TeltonikaConnectionError
-from teltasync.error_codes import TeltonikaErrorCode
 
 from homeassistant.components.teltonika.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
@@ -28,10 +26,10 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_sensor_modem_removed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
     mock_modems: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -62,10 +60,10 @@ async def test_sensor_modem_removed(
     assert state.state == "unavailable"
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_sensor_update_failure_and_recovery(
     hass: HomeAssistant,
     mock_modems: AsyncMock,
-    init_integration: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor becomes unavailable on update failure and recovers."""
@@ -102,38 +100,19 @@ async def test_sensor_update_failure_and_recovery(
     ("side_effect", "expect_reauth"),
     [
         (TeltonikaAuthenticationError("Invalid credentials"), True),
-        (
-            ClientResponseError(
-                request_info=MagicMock(),
-                history=(),
-                status=401,
-                message="Unauthorized",
-                headers={},
-            ),
-            True,
-        ),
-        (
-            ClientResponseError(
-                request_info=MagicMock(),
-                history=(),
-                status=500,
-                message="Server error",
-                headers={},
-            ),
-            False,
-        ),
+        (TeltonikaConnectionError("Connection lost"), False),
     ],
-    ids=["auth_exception", "http_auth_error", "http_non_auth_error"],
+    ids=["auth_error", "connection_error"],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_sensor_update_exception_paths(
     hass: HomeAssistant,
     mock_modems: AsyncMock,
-    init_integration: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     side_effect: Exception,
     expect_reauth: bool,
 ) -> None:
-    """Test auth and non-auth exceptions during updates."""
+    """Test an auth error triggers reauth while a connection error stays working."""
     mock_modems.get_status.side_effect = side_effect
 
     freezer.tick(timedelta(seconds=31))
@@ -151,28 +130,18 @@ async def test_sensor_update_exception_paths(
     assert has_reauth is expect_reauth
 
 
-@pytest.mark.parametrize(
-    ("error_code", "expect_reauth"),
-    [
-        (TeltonikaErrorCode.UNAUTHORIZED_ACCESS, True),
-        (999, False),
-    ],
-    ids=["api_auth_error", "api_non_auth_error"],
-)
-async def test_sensor_update_unsuccessful_response_paths(
+@pytest.mark.usefixtures("init_integration")
+async def test_sensor_update_unsuccessful_response(
     hass: HomeAssistant,
     mock_modems: AsyncMock,
-    init_integration: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    error_code: int,
-    expect_reauth: bool,
 ) -> None:
-    """Test unsuccessful API response handling."""
+    """Test an unsuccessful API response marks entities unavailable without reauth."""
     mock_modems.get_status.side_effect = None
     mock_modems.get_status.return_value = MagicMock(
         success=False,
         data=None,
-        errors=[MagicMock(code=error_code, error="API error")],
+        errors=[MagicMock(code=999, error="API error")],
     )
 
     freezer.tick(timedelta(seconds=31))
@@ -187,4 +156,4 @@ async def test_sensor_update_unsuccessful_response_paths(
         flow["handler"] == DOMAIN and flow["context"]["source"] == SOURCE_REAUTH
         for flow in hass.config_entries.flow.async_progress()
     )
-    assert has_reauth is expect_reauth
+    assert has_reauth is False

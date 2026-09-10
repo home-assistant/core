@@ -1,4 +1,8 @@
 {
+  "common": {
+    "split_phase": "Single-phase / Split-phase electrical service",
+    "split_phase_description": "Enable if your Wall Connector is powered by single-phase / split-phase electrical service. This affects the calculation of the Total power sensor. Leave disabled for three-phase supply (default)."
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -11,10 +15,12 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "split_phase": "[%key:component::tesla_wall_connector::common::split_phase%]"
         },
         "data_description": {
-          "host": "Hostname or IP address of your Tesla Wall Connector."
+          "host": "Hostname or IP address of your Tesla Wall Connector.",
+          "split_phase": "[%key:component::tesla_wall_connector::common::split_phase_description%]"
         },
         "title": "Configure Tesla Wall Connector"
       }
@@ -38,6 +44,9 @@
       },
       "current_c_a": {
         "name": "Phase C current"
+      },
+      "energy_kwh": {
+        "name": "Lifetime energy"
       },
       "grid_hz": {
         "name": "Grid frequency"
@@ -78,6 +87,9 @@
       "total_power_w": {
         "name": "Total power"
       },
+      "vehicle_current_a": {
+        "name": "Vehicle current"
+      },
       "voltage_a_v": {
         "name": "Phase A voltage"
       },
@@ -86,6 +98,21 @@
       },
       "voltage_c_v": {
         "name": "Phase C voltage"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "split_phase": "[%key:component::tesla_wall_connector::common::split_phase%]"
+        },
+        "data_description": {
+          "split_phase": "[%key:component::tesla_wall_connector::common::split_phase_description%]"
+        }
       }
     }
   }

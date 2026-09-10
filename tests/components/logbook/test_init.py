@@ -42,6 +42,7 @@ from homeassistant.const import (
     EVENT_LOGBOOK_ENTRY,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -182,11 +183,11 @@ async def test_service_call_create_log_book_entry_no_message(
 
 
 async def test_filter_sensor(
-    hass_: HomeAssistant, hass_client: ClientSessionGenerator
+    hass_: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test numeric sensors are filtered."""
-
-    registry = er.async_get(hass_)
 
     # Unregistered sensor without a unit of measurement - should be in logbook
     entity_id1 = "sensor.bla"
@@ -195,7 +196,7 @@ async def test_filter_sensor(
     entity_id2 = "sensor.blu"
     attributes_2 = {ATTR_UNIT_OF_MEASUREMENT: "cats"}
     # Registered sensor with state class - should be excluded from logbook
-    entity_id3 = registry.async_get_or_create(
+    entity_id3 = entity_registry.async_get_or_create(
         "sensor",
         "test",
         "unique_3",
@@ -204,7 +205,7 @@ async def test_filter_sensor(
     ).entity_id
     attributes_3 = None
     # Registered sensor without state class or unit - should be in logbook
-    entity_id4 = registry.async_get_or_create(
+    entity_id4 = entity_registry.async_get_or_create(
         "sensor", "test", "unique_4", suggested_object_id="ble"
     ).entity_id
     attributes_4 = None
@@ -345,6 +346,7 @@ def create_state_changed_event_from_old_new(
         state=new_state and new_state.get("state"),
         entity_id=entity_id,
         icon=None,
+        attributes=None,
         context_only=False,
         data=None,
         context=None,
@@ -1858,6 +1860,46 @@ async def test_icon_and_state(
 
 
 @pytest.mark.usefixtures("recorder_mock")
+async def test_state_attributes_in_logbook(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test state attributes are exposed in the logbook like the history.
+
+    The recorded subset is surfaced, so attributes the recorder excludes
+    (such as supported_features) must not appear.
+    """
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    hass.states.async_set("event.doorbell", STATE_UNKNOWN, {"event_type": None})
+    hass.states.async_set(
+        "event.doorbell",
+        "2024-01-01T00:00:00.000+00:00",
+        {"event_type": "ring", "supported_features": 1},
+    )
+    hass.states.async_set(
+        "event.doorbell", "2024-01-01T00:01:00.000+00:00", {"event_type": "motion"}
+    )
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_client()
+    response_json = await _async_fetch_logbook(client)
+
+    entries = [e for e in response_json if e.get("entity_id") == "event.doorbell"]
+    assert len(entries) == 2
+    assert entries[0]["attributes"] == {"event_type": "ring"}
+    assert entries[1]["attributes"] == {"event_type": "motion"}
+
+
+@pytest.mark.usefixtures("recorder_mock")
 async def test_fire_logbook_entries(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
@@ -3154,6 +3196,7 @@ async def test_logbook_user_id_from_parent_context_state_changes_only(
 
 async def test_context_user_ids_lru_eviction(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that the parent context user-id cache is bounded by LRU eviction.
 
@@ -3183,13 +3226,12 @@ async def test_context_user_ids_lru_eviction(
         for_live_stream=True,
     )
     context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
-    ent_reg = er.async_get(hass)
 
     processor = logbook.processor.EventProcessor.__new__(
         logbook.processor.EventProcessor
     )
     processor.hass = hass
-    processor.ent_reg = ent_reg
+    processor.ent_reg = entity_registry
     processor.logbook_run = logbook_run
     processor.context_augmenter = context_augmenter
 
@@ -3261,6 +3303,7 @@ async def test_context_user_ids_lru_eviction(
 
 async def test_parent_user_attribution_does_not_use_origin_event_fallback(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that parent context lookup doesn't fall back to origin_event.
 
@@ -3311,13 +3354,11 @@ async def test_parent_user_attribution_does_not_use_origin_event_fallback(
         memoize_new_contexts=False,
     )
     context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
-    ent_reg = er.async_get(hass)
-
     processor = logbook.processor.EventProcessor.__new__(
         logbook.processor.EventProcessor
     )
     processor.hass = hass
-    processor.ent_reg = ent_reg
+    processor.ent_reg = entity_registry
     processor.logbook_run = logbook_run
     processor.context_augmenter = context_augmenter
 
@@ -3335,6 +3376,7 @@ async def test_parent_user_attribution_does_not_use_origin_event_fallback(
         state=STATE_ON,
         entity_id="switch.heater",
         icon=None,
+        attributes=None,
         context_only=False,
         data={},
         context=child_context,

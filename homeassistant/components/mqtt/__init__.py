@@ -30,7 +30,7 @@ from homeassistant.helpers import (
     event as ev,
     issue_registry as ir,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -689,7 +689,7 @@ def is_connected(hass: HomeAssistant) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove MQTT config entry from a device."""
     from . import device_automation  # noqa: PLC0415

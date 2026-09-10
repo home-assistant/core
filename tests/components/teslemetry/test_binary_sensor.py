@@ -86,6 +86,7 @@ async def test_binary_sensors_streaming(
                     }
                 },
                 Signal.DRIVER_SEAT_BELT: None,
+                Signal.REAR_DEFROST_ENABLED: True,
             },
             "createdAt": "2024-10-04T10:45:17.537Z",
         }
@@ -104,6 +105,7 @@ async def test_binary_sensors_streaming(
     assert hass.states.get("binary_sensor.test_front_driver_door").state == "off"
     assert hass.states.get("binary_sensor.test_front_passenger_door").state == "off"
     assert hass.states.get("binary_sensor.test_driver_seat_belt").state == "off"
+    assert hass.states.get("binary_sensor.test_rear_defroster").state == "on"
 
 
 async def test_binary_sensors_connectivity(

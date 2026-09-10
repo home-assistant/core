@@ -18,6 +18,8 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorExtraStoredData,
     SensorStateClass,
 )
@@ -60,8 +62,8 @@ PARALLEL_UPDATES = 0
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
-        sensor.ATTR_LAST_RESET,
-        sensor.ATTR_STATE_CLASS,
+        SensorEntityStateAttribute.LAST_RESET,
+        SensorEntityCapabilityAttribute.STATE_CLASS,
     }
 )
 
@@ -246,7 +248,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             self._expiration_trigger()
             self._expiration_trigger = None
             self._expired = False
-        await MqttEntity.async_will_remove_from_hass(self)
+        await super().async_will_remove_from_hass()
 
     @staticmethod
     @override

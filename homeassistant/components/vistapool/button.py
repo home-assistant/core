@@ -6,12 +6,13 @@ from typing import override
 from aioaquarite import AquariteError
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VistapoolConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_NEW_POOL
 from .coordinator import VistapoolDataUpdateCoordinator
 from .entity import VistapoolEntity
 
@@ -22,16 +23,34 @@ _LIGHT_STATUS_PATH = "light.status"
 _LED_PULSE_DELAY_SECONDS = 1.0
 
 
+def _build_button_entities(
+    coordinator: VistapoolDataUpdateCoordinator,
+) -> list[VistapoolLEDPulseButton]:
+    """Build the button entities for a single pool."""
+    if not coordinator.get_value(_HASLED_PATH):
+        return []
+    return [VistapoolLEDPulseButton(coordinator)]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: VistapoolConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Vistapool buttons for every pool that has an LED fixture."""
-    async_add_entities(
-        VistapoolLEDPulseButton(coordinator)
-        for coordinator in entry.runtime_data.coordinators.values()
-        if coordinator.get_value(_HASLED_PATH)
+    entities: list[VistapoolLEDPulseButton] = []
+    for coordinator in entry.runtime_data.coordinators.values():
+        entities.extend(_build_button_entities(coordinator))
+    async_add_entities(entities)
+
+    @callback
+    def _async_add_pool(coordinator: VistapoolDataUpdateCoordinator) -> None:
+        async_add_entities(_build_button_entities(coordinator))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{SIGNAL_NEW_POOL}_{entry.entry_id}", _async_add_pool
+        )
     )
 
 

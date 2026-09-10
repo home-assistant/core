@@ -6,15 +6,13 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     CONF_DEVICE_ID,
     CONF_ICON,
     CONF_NAME,
     CONF_OPTIMISTIC,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
@@ -24,6 +22,7 @@ from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ATTRIBUTES, CONF_DEFAULT_ENTITY_ID, CONF_PICTURE
+from .schemas import BlockedTemplateAttributes
 
 _SENTINEL = object()
 
@@ -47,6 +46,7 @@ class AbstractTemplateEntity(Entity):
     _extra_optimistic_options: tuple[str, ...] | None = None
     _state_option: str | None = None
     _restore_state_extra_data: Any | None = None
+    _blocked_attributes: BlockedTemplateAttributes | None = None
 
     # Restore state properties. The state will be restored if set to None.
     # If a tuple is supplied, all properties must be None for the state to restore.
@@ -64,9 +64,14 @@ class AbstractTemplateEntity(Entity):
         self._templates: dict[str, EntityTemplate] = {}
         self._action_scripts: dict[str, Script] = {}
         self._attr_extra_state_attributes = {}
-        self._attribute_templates: dict[str, Template] | None = config.get(
-            CONF_ATTRIBUTES
-        )
+
+        self._attribute_templates: dict[str, Template] | None = None
+        self._attributes_template: Template | None = None
+        if templates := config.get(CONF_ATTRIBUTES):
+            if isinstance(templates, dict):
+                self._attribute_templates = templates
+            elif isinstance(templates, Template):
+                self._attributes_template = templates
 
         if self._optimistic_entity:
             optimistic = config.get(CONF_OPTIMISTIC)
@@ -90,8 +95,13 @@ class AbstractTemplateEntity(Entity):
             )
 
         device_registry = dr.async_get(hass)
-        if (device_id := config.get(CONF_DEVICE_ID)) is not None:
-            self.device_entry = device_registry.async_get(device_id)
+        # Allow linking to a main or child device, but not to a composite device.
+        if (device_id := config.get(CONF_DEVICE_ID)) is not None and (
+            device_entry := device_registry.async_get(
+                device_id, include_composite_devices=False
+            )
+        ) is not None:
+            self.device_entry = device_entry
 
     @property
     @abstractmethod
@@ -289,9 +299,9 @@ class AbstractTemplateEntity(Entity):
         """Restore attributes from the last state."""
         # Restore built-in attributes from templates
         for conf_key, attr, _attr in (
-            (CONF_ICON, ATTR_ICON, "_attr_icon"),
-            (CONF_NAME, ATTR_FRIENDLY_NAME, "_attr_name"),
-            (CONF_PICTURE, ATTR_ENTITY_PICTURE, "_attr_entity_picture"),
+            (CONF_ICON, EntityStateAttribute.ICON, "_attr_icon"),
+            (CONF_NAME, EntityStateAttribute.FRIENDLY_NAME, "_attr_name"),
+            (CONF_PICTURE, EntityStateAttribute.ENTITY_PICTURE, "_attr_entity_picture"),
         ):
             if conf_key not in self._config or attr not in last_state.attributes:
                 continue

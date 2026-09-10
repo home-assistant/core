@@ -29,6 +29,7 @@ BINARY_SENSOR_TYPES = (
     ),
     BinarySensorEntityDescription(
         key="input",
+        translation_key="input",
     ),
 )
 

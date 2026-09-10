@@ -144,7 +144,9 @@ async def _async_migrate_unique_ids(
             return None
         sensor_id = unique_id.split("_")[1]
         new_unique_id = f"occupancygroup_{bridge_unique_id}_{sensor_id}"
-        if dev_entry := dev_reg.async_get_device(identifiers={(DOMAIN, unique_id)}):
+        if dev_entry := dev_reg.async_get_device_by_identifier(
+            (DOMAIN, unique_id), entry.entry_id
+        ):
             dev_reg.async_update_device(
                 dev_entry.id, new_identifiers={(DOMAIN, new_unique_id)}
             )
@@ -215,7 +217,7 @@ async def async_setup_entry(
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # platforms we're setting up.
 
-    entry.runtime_data = LutronCasetaData(bridge, bridge_device, keypad_data)
+    entry.runtime_data = LutronCasetaData(bridge, bridge_device, keypad_data, entry_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -234,7 +236,6 @@ def _async_register_bridge_device(
         manufacturer=MANUFACTURER,
         identifiers={(DOMAIN, bridge_device["serial"])},
         model=f"{bridge_device['model']} ({bridge_device['type']})",
-        via_device=(DOMAIN, bridge_device["serial"]),
         configuration_url="https://device-login.lutron.com",
     )
 
@@ -278,7 +279,12 @@ def _async_setup_keypads(
         if not (keypad := keypads.get(keypad_lutron_device_id)):
             # First time seeing this keypad, build keypad data and store in keypads
             keypad = keypads[keypad_lutron_device_id] = _async_build_lutron_keypad(
-                bridge, bridge_device, bridge_keypad, keypad_lutron_device_id
+                hass,
+                config_entry_id,
+                bridge,
+                bridge_device,
+                bridge_keypad,
+                keypad_lutron_device_id,
             )
 
             # Register the keypad device
@@ -351,6 +357,8 @@ def _async_build_trigger_schemas(
 
 @callback
 def _async_build_lutron_keypad(
+    hass: HomeAssistant,
+    config_entry_id: str,
     bridge: Smartbridge,
     bridge_device: dict[str, Any],
     bridge_keypad: dict[str, Any],
@@ -365,7 +373,9 @@ def _async_build_lutron_keypad(
         manufacturer=MANUFACTURER,
         identifiers={(DOMAIN, keypad_serial)},
         model=f"{bridge_keypad['model']} ({bridge_keypad['type']})",
-        via_device=(DOMAIN, bridge_device["serial"]),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, bridge_device["serial"]), config_entry_id=config_entry_id
+        ),
     )
     if area_name != UNASSIGNED_AREA:
         device_info["suggested_area"] = area_name
@@ -504,7 +514,7 @@ def _id_to_identifier(lutron_id: str) -> tuple[str, str]:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: LutronCasetaConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: LutronCasetaConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove lutron_caseta config entry from a device."""
     data = entry.runtime_data

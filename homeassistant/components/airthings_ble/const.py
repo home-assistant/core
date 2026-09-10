@@ -5,9 +5,6 @@ from airthings_ble import AirthingsDeviceType
 DOMAIN = "airthings_ble"
 MFCT_ID = 820
 
-VOLUME_BECQUEREL = "Bq/m³"
-VOLUME_PICOCURIE = "pCi/L"
-
 DEVICE_MODEL = "device_model"
 
 DEFAULT_SCAN_INTERVAL = 300

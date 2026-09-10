@@ -198,7 +198,7 @@ class BaseFirmwareUpdateEntity(
                     self.entity_description.expected_firmware_type,
                     self._current_firmware_info.firmware_type,
                 )
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.warning(
                     "Failed to call firmware type changed callback", exc_info=True
                 )

@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfVolume
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
@@ -67,7 +67,7 @@ BSH_PROGRAM_SENSORS = (
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key="program_progress",
         appliance_types=APPLIANCES_WITH_PROGRAMS,
     ),
@@ -158,6 +158,7 @@ SENSORS = (
     HomeConnectSensorEntityDescription(
         key=StatusKey.BSH_COMMON_BATTERY_LEVEL,
         device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.BSH_COMMON_VIDEO_CAMERA_STATE,
@@ -228,6 +229,22 @@ EVENT_SENSORS = (
         appliance_types=("Oven", "Cooktop"),
     ),
     HomeConnectSensorEntityDescription(
+        key=EventKey.BSH_COMMON_EVENT_FAVORITE_001_EXTERNAL_TRIGGER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="favorite_short_press",
+        appliance_types=("Hood", "Cooktop"),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.BSH_COMMON_EVENT_FAVORITE_002_EXTERNAL_TRIGGER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="favorite_long_press",
+        appliance_types=("Hood", "Cooktop"),
+    ),
+    HomeConnectSensorEntityDescription(
         key=EventKey.COOKING_OVEN_EVENT_PREHEAT_FINISHED,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
@@ -252,6 +269,46 @@ EVENT_SENSORS = (
         appliance_types=("Dryer",),
     ),
     HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_MACHINE_CARE_AND_FILTER_CLEANING_REMINDER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="machine_care_and_filter_cleaning_reminder",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_MACHINE_CARE_AND_LOW_MAINTENANCE_FILTER_CLEANING_REMINDER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="machine_care_and_low_maintenance_filter_cleaning_reminder",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_MACHINE_CARE_REMINDER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="machine_care_reminder",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_PROGRAM_BLOCKED_SALT_LACK,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="program_blocked_salt_lack",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_SALT_LACK,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="salt_lack",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
         key=EventKey.DISHCARE_DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
@@ -260,11 +317,27 @@ EVENT_SENSORS = (
         appliance_types=("Dishwasher",),
     ),
     HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_RINSE_AID_LACK,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="rinse_aid_lack",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
         key=EventKey.DISHCARE_DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
         translation_key="rinse_aid_nearly_empty",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_SMART_FILTER_CLEANING_REMINDER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="smart_filter_cleaning_reminder",
         appliance_types=("Dishwasher",),
     ),
     HomeConnectSensorEntityDescription(

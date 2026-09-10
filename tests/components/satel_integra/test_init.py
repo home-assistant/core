@@ -7,7 +7,9 @@ import pytest
 from satel_integra import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
+    SatelMonitoringStartError,
     SatelPanelBusyError,
+    SatelUnexpectedResponseError,
 )
 from syrupy.assertion import SnapshotAssertion
 
@@ -218,10 +220,31 @@ async def test_parent_device_exists(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_ENTRY_ID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_ENTRY_ID), mock_config_entry.entry_id
     )
     assert device_entry == snapshot(name="parent-device")
+    mock_satel.read_panel_info.assert_awaited_once_with()
+
+
+async def test_panel_info_read_error(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    device_registry: DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a panel information read error does not prevent setup."""
+    mock_satel.read_panel_info.side_effect = SatelUnexpectedResponseError
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_ENTRY_ID), mock_config_entry.entry_id
+    )
+    assert device_entry is not None
+    assert device_entry.model is None
+    assert device_entry.sw_version is None
 
 
 @pytest.mark.parametrize(
@@ -243,3 +266,21 @@ async def test_setup_exceptions(
     mock_satel.connect.side_effect = exception
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is expected_state
+
+
+async def test_monitoring_start_error(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup is retried when monitoring fails to start."""
+    mock_satel.start.side_effect = SatelMonitoringStartError
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == (
+        "Connected to the alarm panel, but the panel did not confirm the request to start sending status updates"
+    )
+    mock_satel.start.assert_awaited_once_with(enable_monitoring=True)
+    mock_satel.read_panel_info.assert_not_awaited()

@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "bot_logout_failed": "Failed to log out Telegram bot. Please try again later.",
@@ -33,16 +31,16 @@
         },
         "description": "Reconfigure Telegram bot",
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
-              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data::api_endpoint%]",
-              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data::proxy_url%]"
+              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::data::api_endpoint%]",
+              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::data::proxy_url%]"
             },
             "data_description": {
-              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data_description::api_endpoint%]",
-              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data_description::proxy_url%]"
+              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::data_description::api_endpoint%]",
+              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::data_description::proxy_url%]"
             },
-            "name": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::name%]"
+            "name": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::name%]"
           }
         },
         "title": "Telegram bot setup"
@@ -58,7 +56,7 @@
         },
         "description": "To create a Telegram bot, follow these steps:\n\n1. Open Telegram and start a chat with [{botfather_username}]({botfather_url}).\n1. Send the command `/newbot`.\n1. Follow the instructions to create your bot and get your API token.",
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
               "api_endpoint": "API endpoint",
               "proxy_url": "Proxy URL"

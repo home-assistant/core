@@ -1,1 +1,1 @@
-"""Tests for the foobot component."""
+"""Tests for the Foobot integration."""

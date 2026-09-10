@@ -5,7 +5,9 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
@@ -96,7 +98,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryNumberVehicleEntityDescription, ...] = (
 class TeslemetryNumberBatteryEntityDescription(NumberEntityDescription):
     """Describes Teslemetry Number entity."""
 
-    func: Callable[[EnergySite, float], Awaitable[Any]]
+    func: Callable[[EnergySite | EnergySiteRouter, float], Awaitable[Any]]
     requires: str | None = None
     scopes: list[Scope]
 
@@ -142,7 +144,7 @@ async def async_setup_entry(
                     description,
                     entry.runtime_data.scopes,
                 )
-                if vehicle.poll or vehicle.firmware < "2024.26"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingNumberEntity(
                     vehicle,
                     description,
