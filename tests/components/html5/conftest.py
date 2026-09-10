@@ -55,11 +55,9 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_load_config() -> Generator[MagicMock]:
     """Mock load config."""
 
-    with (
-        patch(
-            "homeassistant.components.html5.notify._load_config", return_value={}
-        ) as mock_load_config,
-    ):
+    with patch(
+        "homeassistant.components.html5.notify._load_config", return_value={}
+    ) as mock_load_config:
         yield mock_load_config
 
 
