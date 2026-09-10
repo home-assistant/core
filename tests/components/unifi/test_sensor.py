@@ -1710,14 +1710,30 @@ async def test_device_uptime(
     ],
 )
 @pytest.mark.parametrize(
-    ("monitor_id", "state", "updated_state", "index_to_update"),
+    ("monitor_id", "state", "index_to_update", "monitor_update", "updated_state"),
     [
         # Microsoft
-        ("microsoft_wan", "56", "20", 0),
+        pytest.param(
+            "microsoft_wan", "56", 0, {"latency_average": "20"}, "20", id="microsoft"
+        ),
         # Google
-        ("google_wan", "53", "90", 1),
+        pytest.param(
+            "google_wan", "53", 1, {"latency_average": "90"}, "90", id="google"
+        ),
         # Cloudflare
-        ("cloudflare_wan", "30", "80", 2),
+        pytest.param(
+            "cloudflare_wan", "30", 2, {"latency_average": "80"}, "80", id="cloudflare"
+        ),
+        # Microsoft no response
+        pytest.param(
+            "microsoft_wan", "56", 0, {}, STATE_UNKNOWN, id="microsoft_no_response"
+        ),
+        # Google no response
+        pytest.param("google_wan", "53", 1, {}, STATE_UNKNOWN, id="google_no_response"),
+        # Cloudflare no response
+        pytest.param(
+            "cloudflare_wan", "30", 2, {}, STATE_UNKNOWN, id="cloudflare_no_response"
+        ),
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
@@ -1728,8 +1744,9 @@ async def test_wan_monitor_latency(
     device_payload: list[dict[str, Any]],
     monitor_id: str,
     state: str,
-    updated_state: str,
     index_to_update: int,
+    monitor_update: dict[str, Any],
+    updated_state: str,
 ) -> None:
     """Verify that wan latency sensors are working as expected."""
     entity_id = f"sensor.mock_name_{monitor_id}_latency"
@@ -1757,68 +1774,15 @@ async def test_wan_monitor_latency(
     # Verify sensor state
     assert hass.states.get(entity_id).state == state
 
-    # Verify state update
-    device = device_payload[0]
-    device["uptime_stats"]["WAN"]["monitors"][index_to_update]["latency_average"] = (
-        updated_state
-    )
-
+    # Update state
+    device = deepcopy(device_payload[0])
+    monitor = device["uptime_stats"]["WAN"]["monitors"][index_to_update]
+    monitor.pop("latency_average")
+    monitor.update(monitor_update)
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
+    # Verify state update
     assert hass.states.get(entity_id).state == updated_state
-
-
-@pytest.mark.parametrize(
-    "device_payload",
-    [
-        [
-            {
-                "board_rev": 2,
-                "device_id": "mock-id",
-                "ip": "10.0.1.1",
-                "mac": "10:00:00:00:01:01",
-                "last_seen": 1562600145,
-                "model": "US16P150",
-                "name": "mock-name",
-                "port_overrides": [],
-                "uptime_stats": {
-                    "WAN": {
-                        "monitors": [
-                            # A monitor that got no response omits
-                            # "latency_average" rather than reporting a value.
-                            {
-                                "availability": 0.0,
-                                "target": "www.microsoft.com",
-                                "type": "icmp",
-                            },
-                        ],
-                    },
-                },
-                "state": 1,
-                "type": "usw",
-                "version": "4.0.42.10433",
-            }
-        ]
-    ],
-)
-@pytest.mark.usefixtures("config_entry_setup")
-async def test_wan_monitor_latency_unresponsive_monitor(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Verify an unresponsive monitor reports unknown rather than 0 ms."""
-    entity_id = "sensor.mock_name_microsoft_wan_latency"
-
-    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
-
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
