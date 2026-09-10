@@ -11,6 +11,7 @@ from iseo_argo_ble import (
     IseoAuthError,
     IseoClient,
     IseoConnectionError,
+    MasterAuthError,
     is_iseo_advertisement,
 )
 import voluptuous as vol
@@ -285,7 +286,11 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self._async_create_iseo_entry(with_admin=enable_admin)
                 except IseoConnectionError:
                     errors["base"] = "cannot_connect"
-                except IseoAuthError as exc:
+                except (IseoAuthError, MasterAuthError) as exc:
+                    # MasterAuthError is a sibling of IseoAuthError rather than
+                    # a subclass, and it is the one setup_gateway() raises when
+                    # the lock refuses the Master Card — which is exactly what
+                    # auth_failed tells the user to go and scan.
                     _LOGGER.debug("Gateway setup failed: %s", exc)
                     errors["base"] = "auth_failed"
                 except Exception:

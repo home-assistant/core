@@ -5,7 +5,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 import uuid
 
-from iseo_argo_ble import IseoAuthError, IseoConnectionError
+from iseo_argo_ble import IseoAuthError, IseoConnectionError, MasterAuthError
 import pytest
 
 from homeassistant import config_entries
@@ -352,13 +352,20 @@ async def test_gw_register_connection_error(
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.parametrize("error", [IseoAuthError, MasterAuthError])
 @pytest.mark.usefixtures("_patch_identity")
 async def test_gw_register_auth_error(
     hass: HomeAssistant,
     mock_iseo_client: MagicMock,
+    error: type[Exception],
 ) -> None:
-    """Test gw_register handles auth error."""
-    mock_iseo_client.setup_gateway.side_effect = IseoAuthError
+    """Test gw_register handles both authentication failures.
+
+    A refused Master Card raises MasterAuthError, which is a sibling of
+    IseoAuthError rather than a subclass, so catching only the latter left the
+    commonest failure of this step showing "unknown".
+    """
+    mock_iseo_client.setup_gateway.side_effect = error
 
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
