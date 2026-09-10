@@ -206,7 +206,9 @@ class DeviceEntryType(StrEnum):
 class DeviceInfoError(HomeAssistantError):
     """Raised when device info is invalid."""
 
-    def __init__(self, domain: str, device_info: DeviceInfo, message: str) -> None:
+    def __init__(
+        self, domain: str, device_info: Mapping[str, Any], message: str
+    ) -> None:
         """Initialize error."""
         super().__init__(
             f"Invalid device info {device_info} for '{domain}' config entry: {message}",
@@ -246,7 +248,7 @@ class DeviceConnectionCollisionError(DeviceCollisionError):
 
 def _validate_device_info(
     config_entry: ConfigEntry,
-    device_info: DeviceInfo,
+    device_info: Mapping[str, Any],
 ) -> None:
     """Validate that a device info has enough information to match up a device."""
     if not device_info.get("connections") and not device_info.get("identifiers"):
@@ -2333,10 +2335,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 config_entry, translation_key, translation_placeholders
             )
 
-        # Reconstruct a DeviceInfo dict from the arguments.
-        # When we upgrade to Python 3.12, we can change this method to instead
-        # accept kwargs typed as a DeviceInfo dict (PEP 692)
-        device_info: DeviceInfo = {  # type: ignore[assignment]
+        # Reconstruct a device info dict from the arguments, used for error
+        # reporting. It can hold deprecated keys, so it's not a DeviceInfo.
+        device_info: dict[str, Any] = {
             key: val
             for key, val in (
                 ("connections", connections),
@@ -2649,9 +2650,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 config_entry, translation_key, translation_placeholders
             )
 
-        # Reconstruct a ChildDeviceInfo dict from the arguments, used for error reporting
-        # and conversion of an existing device to a child device.
-        device_info: DeviceInfo = {  # type: ignore[assignment]
+        # Reconstruct a child device info dict from the arguments, used for error
+        # reporting and conversion of an existing device to a child device.
+        device_info: dict[str, Any] = {
             key: val
             for key, val in (
                 ("identifiers", identifiers),
@@ -2836,7 +2837,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         device: DeviceEntry,
         parent: DeviceEntry,
         config_entry: ConfigEntry,
-        device_info: DeviceInfo,
+        device_info: Mapping[str, Any],
     ) -> None:
         """Validate converting a device to a child device.
 
@@ -3867,7 +3868,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         matched_device: DeviceEntry | None,
         config_entry: ConfigEntry,
-        device_info: DeviceInfo,
+        device_info: Mapping[str, Any],
         identifiers: set[tuple[str, str]],
         connections: set[tuple[str, str]],
     ) -> None:
