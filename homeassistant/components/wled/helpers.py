@@ -51,3 +51,46 @@ def kelvin_to_255(k: int, min_k: int, max_k: int) -> int:
 def kelvin_to_255_reverse(v: int, min_k: int, max_k: int) -> int:
     """Map color temperature from 0-255 to minK-maxK K."""
     return int(v / 255 * (max_k - min_k) + min_k)
+
+
+def white_channels_to_cct(cold: int, warm: int) -> tuple[int, int]:
+    """Convert cold/warm white channel values to (CCT, brightness).
+
+    CCT is represented on a 0..255 scale:
+        0 = fully warm
+        127 = neutral midpoint
+        255 = fully cold
+
+    Brightness is the maximum of the two channel values.
+    """
+    brightness = max(cold, warm)
+    if brightness == 0:
+        return 127, 0
+    if warm == brightness:
+        cct = round(cold * 127 / brightness)
+    else:
+        cct = 255 - round(warm * 128 / brightness)
+    return cct, brightness
+
+
+def cct_to_white_channels(cct: int, brightness: int) -> tuple[int, int]:
+    """Convert a 0..255 CCT value and brightness to cold/warm channels.
+
+    CCT:
+        0 = fully warm
+        127 = neutral midpoint
+        255 = fully cold
+
+    Brightness: 0..255
+    """
+    if cct <= 127:
+        # At low CCT values (warm end), keep warm white at full
+        # brightness and scale in cold white as CCT increases.
+        cold = round(cct * brightness / 127)
+        warm = brightness
+    else:
+        # At high CCT values (cold end), keep cold white at full
+        # brightness and scale out warm white as CCT increases.
+        cold = brightness
+        warm = round((255 - cct) * brightness / 128)
+    return cold, warm
