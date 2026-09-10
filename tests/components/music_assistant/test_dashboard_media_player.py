@@ -40,7 +40,8 @@ from .common import (
     trigger_subscription_callback,
 )
 
-from tests.typing import WebSocketGenerator
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 KITCHEN_ENTITY_ID = "media_player.kitchen_display"
 HALLWAY_ENTITY_ID = "media_player.hallway_display"
@@ -482,6 +483,59 @@ async def test_dashboard_async_get_browse_image_no_icon(
     assert await entity.async_get_browse_image("dashboard", "party") == (None, None)
 
 
+async def test_dashboard_async_get_browse_image_rejects_unknown_content_id(
+    hass: HomeAssistant, music_assistant_client: MagicMock
+) -> None:
+    """Test async_get_browse_image rejects any id besides the two icon domains.
+
+    This bounds the icon cache to the party/music_quiz keys it's sized for,
+    and must reject before ever touching the cache or the server.
+    """
+    setup_dashboards(music_assistant_client)
+    _mock_provider_icon(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
+    assert await entity.async_get_browse_image(
+        "dashboard", "now_playing/00:00:00:00:00:01"
+    ) == (None, None)
+    assert entity._provider_icon_cache == {}
+    icon_calls = [
+        icon_call
+        for icon_call in music_assistant_client.send_command.call_args_list
+        if icon_call.args[:1] == ("providers/icon",)
+    ]
+    assert not icon_calls
+
+
+@pytest.mark.parametrize(
+    "malformed_data_uri",
+    [
+        "not-a-data-uri",
+        "data:image/svg+xml;base64,",
+        "data:image/svg+xml;base64,not_base64!!",
+    ],
+)
+async def test_dashboard_async_get_browse_image_malformed_icon(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    malformed_data_uri: str,
+) -> None:
+    """Test a malformed provider icon data URI is handled without raising."""
+    setup_dashboards(music_assistant_client)
+
+    async def send_command(command: str, **kwargs: Any) -> Any:
+        if command == "providers/icon":
+            return malformed_data_uri
+        return None
+
+    music_assistant_client.send_command = AsyncMock(side_effect=send_command)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
+    assert await entity.async_get_browse_image("dashboard", "party") == (None, None)
+
+
 async def test_dashboard_dynamic_add_and_unavailable(
     hass: HomeAssistant, music_assistant_client: MagicMock
 ) -> None:
@@ -677,6 +731,137 @@ async def test_dashboard_now_playing_session_media_image(
     state = hass.states.get(KITCHEN_ENTITY_ID)
     # a non-MA-hosted url is remotely accessible, so entity_picture is the raw url
     assert state.attributes["entity_picture"] == art_url
+
+
+async def test_dashboard_now_playing_session_media_image_ma_hosted(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test MA-hosted now_playing artwork is proxied and actually fetched.
+
+    Regression test: media_image_hash/async_get_media_image used to always
+    return None for a now_playing session, so the base class's local-proxy
+    fallback (which needs media_image_hash to build the proxy url, and
+    fetches through async_get_media_image) never engaged and entity_picture
+    silently disappeared for any MA-hosted artwork.
+    """
+    setup_dashboards(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    art_url = f"{music_assistant_client.server_url}/imageproxy/track.jpg"
+    music_assistant_client.players._players[
+        "00:00:00:00:00:01"
+    ].current_media = PlayerMedia(uri="spotify://track/x", image_url=art_url)
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.QUEUE_UPDATED, "00:00:00:00:00:01"
+    )
+
+    state = hass.states.get(KITCHEN_ENTITY_ID)
+    entity_picture = state.attributes["entity_picture"]
+    # MA-hosted artwork is not remotely accessible, so it's served through
+    # the local media proxy rather than as a direct url
+    assert entity_picture.startswith(f"/api/media_player_proxy/{KITCHEN_ENTITY_ID}?")
+
+    aioclient_mock.get(
+        art_url, content=b"artwork-bytes", headers={"Content-Type": "image/jpeg"}
+    )
+    client = await hass_client()
+    response = await client.get(entity_picture)
+    assert response.status == 200
+    assert await response.read() == b"artwork-bytes"
+
+
+async def test_dashboard_now_playing_session_media_image_player_updated(
+    hass: HomeAssistant, music_assistant_client: MagicMock
+) -> None:
+    """Test a now_playing session's artwork also refreshes on PLAYER_UPDATED."""
+    setup_dashboards(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    state = hass.states.get(KITCHEN_ENTITY_ID)
+    assert state.attributes.get("entity_picture") is None
+
+    art_url = "https://example.com/player-art.jpg"
+    music_assistant_client.players._players[
+        "00:00:00:00:00:01"
+    ].current_media = PlayerMedia(uri="spotify://track/x", image_url=art_url)
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.PLAYER_UPDATED, "00:00:00:00:00:01"
+    )
+
+    state = hass.states.get(KITCHEN_ENTITY_ID)
+    assert state.attributes["entity_picture"] == art_url
+
+
+async def test_dashboard_now_playing_session_media_image_active_group_match(
+    hass: HomeAssistant, music_assistant_client: MagicMock
+) -> None:
+    """Test QUEUE_UPDATED for the session player's active_group also refreshes artwork.
+
+    Mirrors MusicAssistantEntity.__on_mass_update's active_group matching, so
+    artwork stays in sync when the session's player is joined into a group.
+    """
+    setup_dashboards(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    music_assistant_client.players._players[
+        "00:00:00:00:00:01"
+    ].active_group = "group-1"
+
+    art_url = "https://example.com/group-art.jpg"
+    music_assistant_client.players._players[
+        "00:00:00:00:00:01"
+    ].current_media = PlayerMedia(uri="spotify://track/x", image_url=art_url)
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.QUEUE_UPDATED, "group-1"
+    )
+
+    state = hass.states.get(KITCHEN_ENTITY_ID)
+    assert state.attributes["entity_picture"] == art_url
+
+
+async def test_dashboard_session_transition_now_playing_remote_to_party(
+    hass: HomeAssistant, music_assistant_client: MagicMock
+) -> None:
+    """Test switching from a now_playing session with remote art to a party session.
+
+    Regression test for _clear_media_image: without resetting
+    media_image_remotely_accessible, entity_picture would incorrectly
+    short-circuit to the (now None) media_image_url instead of falling
+    through to the local proxy serving the party icon.
+    """
+    setup_dashboards(music_assistant_client)
+    _mock_provider_icon(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    art_url = "https://example.com/remote-art.jpg"
+    music_assistant_client.players._players[
+        "00:00:00:00:00:01"
+    ].current_media = PlayerMedia(uri="spotify://track/x", image_url=art_url)
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.QUEUE_UPDATED, "00:00:00:00:00:01"
+    )
+    state = hass.states.get(KITCHEN_ENTITY_ID)
+    assert state.attributes["entity_picture"] == art_url
+
+    music_assistant_client.dashboard._sessions["chromecast_kitchen"] = DashboardSession(
+        dashboard_id="chromecast_kitchen",
+        name="Kitchen Display",
+        dashboard=DashboardType.PARTY,
+    )
+    await trigger_subscription_callback(
+        hass,
+        music_assistant_client,
+        EventType.DASHBOARD_SESSIONS_UPDATED,
+        data=_sessions_event_data(music_assistant_client),
+    )
+
+    state = hass.states.get(KITCHEN_ENTITY_ID)
+    assert state.attributes["entity_picture"].startswith(
+        f"/api/media_player_proxy/{KITCHEN_ENTITY_ID}?"
+    )
 
 
 async def test_dashboard_browse_media_unknown_content_id(
