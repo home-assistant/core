@@ -1935,10 +1935,8 @@ async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
     ]
 
 
-# A paired site's LAN gateway returns a cloud-shaped live_status with distinct
-# values for the ten locally-owned keys (grid_status "Inactive" and
-# island_status "off_grid" differ from the cloud fixture so a reroute is
-# visible) and None for the six keys it cannot serve.
+# grid_status and island_status deliberately differ from the cloud fixture so
+# a reroute through the local snapshot is visible in test assertions.
 _LOCAL_LIVE_STATUS = {
     "response": {
         "solar_power": 2000,
