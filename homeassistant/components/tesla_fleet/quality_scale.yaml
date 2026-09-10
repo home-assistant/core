@@ -11,9 +11,7 @@ rules:
     status: todo
     comment: Review feedback questioned whether the custom OAuth flow implementation can be simplified, including whether `CONFIG_SCHEMA` and the custom `OAuth2FlowHandler` are both needed.
   dependency-transparency: done
-  docs-actions:
-    status: todo
-    comment: The charge schedule actions need documenting on home-assistant.io.
+  docs-actions: done
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
@@ -60,9 +58,7 @@ rules:
     comment: Documentation includes NGINX configuration examples but lacks automation use case examples.
   docs-known-limitations: done
   docs-supported-devices: done
-  docs-supported-functions:
-    status: todo
-    comment: The charge schedules sensor is missing from the entity table on home-assistant.io.
+  docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases:
     status: todo
