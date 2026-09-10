@@ -5,7 +5,12 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from tesla_fleet_api.exceptions import Forbidden, InvalidToken, MissingToken
+from tesla_fleet_api.exceptions import (
+    Forbidden,
+    InvalidToken,
+    MissingToken,
+    TeslaFleetError,
+)
 
 from homeassistant.components.tessie import PLATFORMS
 from homeassistant.components.tessie.const import DOMAIN
@@ -101,6 +106,53 @@ async def test_coordinator_connection(
     assert coordinator.last_exception.translation_key == "cannot_connect"
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(InvalidToken(), id="invalid_token"),
+        pytest.param(MissingToken(), id="missing_token"),
+    ],
+)
+async def test_coordinator_fleet_auth_failure(
+    hass: HomeAssistant,
+    mock_get_state,
+    freezer: FrozenDateTimeFactory,
+    exception: TeslaFleetError,
+) -> None:
+    """Tests that the coordinator translates tesla_fleet_api token errors."""
+
+    mock_get_state.side_effect = exception
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    coordinator = entry.runtime_data.vehicles[0].data_coordinator
+
+    freezer.tick(WAIT)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
+    assert coordinator.last_exception is not None
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == "auth_failed"
+
+
+async def test_coordinator_fleet_error(
+    hass: HomeAssistant, mock_get_state, freezer: FrozenDateTimeFactory
+) -> None:
+    """Tests that the coordinator translates generic tesla_fleet_api errors."""
+
+    mock_get_state.side_effect = Forbidden()
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    coordinator = entry.runtime_data.vehicles[0].data_coordinator
+
+    freezer.tick(WAIT)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
+    assert hass.states.get("binary_sensor.test_status").state == STATE_UNAVAILABLE
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == "cannot_connect"
+
+
 async def test_coordinator_live_error(
     hass: HomeAssistant, mock_live_status, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -120,6 +172,36 @@ async def test_coordinator_live_error(
     assert isinstance(coordinator.last_exception, UpdateFailed)
     assert coordinator.last_exception.translation_domain == DOMAIN
     assert coordinator.last_exception.translation_key == "cannot_connect"
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(InvalidToken(), id="invalid_token"),
+        pytest.param(MissingToken(), id="missing_token"),
+    ],
+)
+async def test_coordinator_live_auth_failure(
+    hass: HomeAssistant,
+    mock_live_status,
+    freezer: FrozenDateTimeFactory,
+    exception: TeslaFleetError,
+) -> None:
+    """Tests that the energy live coordinator translates token errors on refresh."""
+
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    coordinator = entry.runtime_data.energysites[0].live_coordinator
+    assert coordinator is not None
+
+    mock_live_status.reset_mock()
+    mock_live_status.side_effect = exception
+    freezer.tick(TESSIE_FLEET_API_SYNC_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_live_status.assert_called_once()
+    assert coordinator.last_exception is not None
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == "auth_failed"
 
 
 async def test_coordinator_info_error(
