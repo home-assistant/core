@@ -241,11 +241,9 @@ async def async_setup_entry(  # noqa: C901
     )
 
     # check if any playerconfigs have been removed while we were disconnected.
-    # dashboard devices are excluded: their MA-side registration is
-    # connection-scoped, so the dashboard cache may still be empty right
-    # after a reconnect even though the endpoint is still very much alive -
-    # they're reconciled by manual device removal instead, guarded in
-    # async_remove_config_entry_device below.
+    # dashboard devices are excluded: their registration is connection-scoped,
+    # so the cache may still be empty right after a reconnect while the display
+    # is alive; stale ones are removed manually via async_remove_config_entry_device.
     all_player_configs = await mass.config.get_player_configs()
     player_ids = {player.player_id for player in all_player_configs}
     dev_reg = dr.async_get(hass)
@@ -304,6 +302,9 @@ async def async_remove_config_entry_device(
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # child devices cannot be removed on their own
+        return False
     # identifier value is a player_id for a player device, or
     # f"{dashboard_id}_dashboard" for a dashboard display device
     identifier_value = next(
