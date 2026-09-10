@@ -8,7 +8,6 @@ from music_assistant_models.player import Player, PlayerOption
 
 from homeassistant.const import EntityCategory
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DASHBOARD_DEVICE_MODEL, DOMAIN
@@ -30,7 +29,7 @@ class MusicAssistantEntity(Entity):
         provider = self.mass.get_provider(self.player.provider)
         if TYPE_CHECKING:
             assert provider is not None
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, player_id)},
             manufacturer=self.player.device_info.manufacturer or provider.name,
             model=self.player.device_info.model or self.player.name,
@@ -147,8 +146,10 @@ class MusicAssistantDashboardEntity(Entity):
         if TYPE_CHECKING:
             assert dashboard is not None
         self._attr_unique_id = f"{dashboard_id}_dashboard"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, dashboard_id)},
+        # namespaced: Fully Kiosk registers dashboard_id == player_id, and a bare
+        # id here would merge this device into the player's own device
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
             name=dashboard.name,
             manufacturer="Music Assistant",
             model=DASHBOARD_DEVICE_MODEL,
