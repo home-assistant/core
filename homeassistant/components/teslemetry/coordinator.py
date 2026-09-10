@@ -446,21 +446,9 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
     def async_set_local_value(self, key: str, value: Any) -> None:
         """Update the cached local config after a successful local command.
 
-        Only a locally-owned key (``LOCAL_SITE_INFO_KEYS``) belongs in this
-        cache; any other key is cloud-owned and this is a no-op for it, since
-        ``merge_site_info`` never overlays it and stashing it here would just
-        get discarded as soon as the next merge runs.
-
-        A locally-owned key is only refreshed by :meth:`_async_local_poll` on
-        its own cadence, so without this a site-info or tariff push arriving
-        before the next poll would re-merge the pre-command value still cached
-        in ``_local_config`` over the command that just succeeded, visibly
-        reverting it. The command's own value is the freshest known state for
-        that key until the next poll confirms (or corrects) it, which is sooner
-        than falling back to the composed cloud view: the cloud side never saw
-        a command that was routed straight to the LAN gateway. Bumping the
-        generation counter here is what lets a poll already in flight recognize
-        its own result as stale; see :meth:`_async_local_poll`.
+        A no-op for a key outside ``LOCAL_SITE_INFO_KEYS``. Bumping the
+        generation counter here is what lets a poll already in flight in
+        :meth:`_async_local_poll` recognize its own result as stale.
         """
         if self._local is None or key not in LOCAL_SITE_INFO_KEYS:
             return
