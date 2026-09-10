@@ -58,12 +58,23 @@ TOWEL_DRYER_DRYING_DURATION = FixtureDevice(
     "io://1234-5678-5643/5237136#1",
     "number.my_home_bathroom_towel_dryer_drying_duration",
 )
+ZONE_COMFORT_COOLING_TARGET_TEMPERATURE = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch_zone_control.json",
+    "io://1234-1234-5752/960379#2",
+    "number.somfy_tahoma_switch_living_room_comfort_cooling_target_temperature",
+)
+ZONE_ECO_HEATING_TARGET_TEMPERATURE = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch_zone_control.json",
+    "io://1234-1234-5752/960379#2",
+    "number.somfy_tahoma_switch_living_room_eco_heating_target_temperature",
+)
 
 SNAPSHOT_FIXTURES = [
     MEMORIZED_POSITION,
     OFFICE_BLINDS_MEMORIZED_POSITION,
     EXPECTED_NUMBER_OF_SHOWER,
     COMFORT_ROOM_TEMPERATURE,
+    ZONE_COMFORT_COOLING_TARGET_TEMPERATURE,
 ]
 
 
@@ -111,6 +122,18 @@ async def test_number_entities_snapshot(
             "setDryingDuration",
             id="towel_dryer_drying_duration",
         ),
+        pytest.param(
+            ZONE_COMFORT_COOLING_TARGET_TEMPERATURE,
+            25.5,
+            "setComfortCoolingTargetTemperature",
+            id="zone_comfort_cooling_target_temperature",
+        ),
+        pytest.param(
+            ZONE_ECO_HEATING_TARGET_TEMPERATURE,
+            17.5,
+            "setEcoHeatingTargetTemperature",
+            id="zone_eco_heating_target_temperature",
+        ),
     ],
 )
 async def test_number_set_value(
@@ -118,7 +141,7 @@ async def test_number_set_value(
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     device: FixtureDevice,
-    value: int,
+    value: float,
     command_name: str,
 ) -> None:
     """Test setting a number value sends the correct command."""
