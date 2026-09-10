@@ -26,7 +26,6 @@ REPLACEMENT_TOKEN: dict[str, Any] = {
 
 async def test_token_replaced_without_refresh_is_used() -> None:
     """Test a replacement token is used before the scheduled reload completes."""
-    """
 
     oauth_session = AsyncMock()
     oauth_session.token = SETUP_TOKEN
