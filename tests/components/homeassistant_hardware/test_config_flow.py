@@ -56,6 +56,10 @@ from tests.common import (
 
 TEST_DOMAIN = "test_firmware_domain"
 TEST_DEVICE = "/dev/SomeDevice123"
+TEST_PROXIED_DEVICE = (
+    "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT"
+    "?port_name=USB+(Zigbee)&usb_serial=10B41DE58F10"
+)
 TEST_HARDWARE_NAME = "Some Hardware Name"
 TEST_RELEASES_URL = URL("http://invalid/releases")
 
@@ -80,7 +84,7 @@ class FakeFirmwareConfigFlow(BaseFirmwareConfigFlow, domain=TEST_DOMAIN):
         self, data: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle hardware flow."""
-        self._device = TEST_DEVICE
+        self._device = data["device"] if data is not None else TEST_DEVICE
         self._hardware_name = TEST_HARDWARE_NAME
 
         return await self.async_step_confirm()
@@ -852,6 +856,69 @@ async def test_config_flow_thread(
         )
         assert start_addon.call_count == 1
         assert start_addon.call_args == call("core_openthread_border_router")
+
+
+async def test_config_flow_thread_not_supported_over_serial_proxy(
+    hass: HomeAssistant,
+) -> None:
+    """Picking Thread for an adapter behind an ESPHome device explains and returns."""
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN,
+        context={"source": "hardware"},
+        data={"device": TEST_PROXIED_DEVICE},
+    )
+    assert init_result["type"] is FlowResultType.MENU
+    assert init_result["step_id"] == "pick_firmware"
+
+    pick_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"],
+        user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
+    )
+    assert pick_result["type"] is FlowResultType.FORM
+    assert pick_result["step_id"] == "thread_not_supported"
+    assert pick_result["description_placeholders"]["model"] == TEST_HARDWARE_NAME
+
+    # Acknowledging brings the choice back, with Zigbee still on offer
+    back_result = await hass.config_entries.flow.async_configure(
+        pick_result["flow_id"], user_input={}
+    )
+    assert back_result["type"] is FlowResultType.MENU
+    assert back_result["step_id"] == "pick_firmware"
+    assert STEP_PICK_FIRMWARE_ZIGBEE in back_result["menu_options"]
+
+
+async def test_options_flow_thread_not_supported_over_serial_proxy(
+    hass: HomeAssistant,
+) -> None:
+    """The same holds when changing the firmware of a configured adapter."""
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "firmware": "ezsp",
+            "device": TEST_PROXIED_DEVICE,
+            "hardware": TEST_HARDWARE_NAME,
+        },
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    init_result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert init_result["type"] is FlowResultType.MENU
+
+    pick_result = await hass.config_entries.options.async_configure(
+        init_result["flow_id"],
+        user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
+    )
+    assert pick_result["type"] is FlowResultType.FORM
+    assert pick_result["step_id"] == "thread_not_supported"
+
+    back_result = await hass.config_entries.options.async_configure(
+        pick_result["flow_id"], user_input={}
+    )
+    assert back_result["type"] is FlowResultType.MENU
+    assert back_result["step_id"] == "pick_firmware"
 
 
 @pytest.mark.usefixtures("addon_installed")
