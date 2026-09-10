@@ -1,5 +1,6 @@
-"""The sensor tests for the AEMET OpenData platform."""
+"""The weather tests for the AEMET OpenData platform."""
 
+from collections.abc import Generator
 import datetime
 from unittest.mock import patch
 
@@ -7,50 +8,44 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.aemet.const import ATTRIBUTION
 from homeassistant.components.aemet.coordinator import WEATHER_UPDATE_INTERVAL
 from homeassistant.components.weather import (
-    ATTR_CONDITION_SNOWY,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_GUST_SPEED,
-    ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
     SERVICE_GET_FORECASTS,
 )
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .util import async_init_integration, mock_api_call
 
+from tests.common import snapshot_platform
 from tests.typing import WebSocketGenerator
 
 
-async def test_aemet_weather(
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.aemet.PLATFORMS", [Platform.WEATHER]):
+        yield
+
+
+async def test_all_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test states of the weather."""
+    """Test all entities."""
 
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
-    await async_init_integration(hass)
+    config_entry = await async_init_integration(hass)
 
-    state = hass.states.get("weather.aemet")
-    assert state
-    assert state.state == ATTR_CONDITION_SNOWY
-    assert state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
-    assert state.attributes[ATTR_WEATHER_HUMIDITY] == 99.0
-    assert state.attributes[ATTR_WEATHER_PRESSURE] == 1004.4  # 100440.0 Pa -> hPa
-    assert state.attributes[ATTR_WEATHER_TEMPERATURE] == -0.7
-    assert state.attributes[ATTR_WEATHER_WIND_BEARING] == 122.0
-    assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 12.2
-    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 3.2
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
-    state = hass.states.get("weather.aemet_hourly")
-    assert state is None
+    # The hourly forecast is served by the single weather entity, not a separate one
+    assert hass.states.get("weather.aemet_hourly") is None
 
 
 @pytest.mark.parametrize(

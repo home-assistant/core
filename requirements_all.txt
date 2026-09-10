@@ -672,6 +672,9 @@ beautifulsoup4==4.13.3
 # homeassistant.components.besen
 besen==0.4.0
 
+# homeassistant.components.bitvis
+bitvis-protobuf==2.0.4
+
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
@@ -1342,7 +1345,7 @@ huum==0.8.2
 hyperion-py==0.7.6
 
 # homeassistant.components.hypontech
-hyponcloud==1.0.1
+hyponcloud==1.0.2
 
 # homeassistant.components.iammeter
 iammeter==0.2.1
@@ -1429,7 +1432,7 @@ irm-kmi-api==1.1.1
 isal==1.8.0
 
 # homeassistant.components.iseo_argo_ble
-iseo-argo-ble==0.9.8
+iseo-argo-ble==0.9.10
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.2
@@ -1824,7 +1827,7 @@ open-meteo==0.3.2
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
 # homeassistant.components.ovhcloud_ai_endpoints
-openai==2.45.0
+openai==3.10.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1921,7 +1924,7 @@ plugwise==1.14.6
 pmsensor==0.4
 
 # homeassistant.components.poolsense
-poolsense==0.0.8
+poolsense==0.1.0
 
 # homeassistant.components.powerfox
 # homeassistant.components.powerfox_local
@@ -2090,7 +2093,7 @@ pyaprilaire==0.9.1
 pyaqvify==0.0.12
 
 # homeassistant.components.atag
-pyatag==0.3.5.3
+pyatag==0.3.7.1
 
 # homeassistant.components.netatmo
 pyatmo==9.9.0
