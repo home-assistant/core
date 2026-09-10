@@ -23,7 +23,7 @@ INTEGRATION_SKILL_BLOB_URL = (
     "https://github.com/home-assistant/core/blob/dev/"
     f"{INTEGRATION_SKILL_FILE.parent.as_posix()}/"
 )
-_RELATIVE_MD_LINK_RE = re.compile(r"\]\((?!https?://)([^)]+\.md)\)")
+_RELATIVE_MD_LINK_RE = re.compile(r"\]\((?!https?://)([^)#]+\.md)(#[^)]*)?\)")
 
 COPILOT_SPECIFIC_INSTRUCTIONS = """
 # Copilot code review instructions
@@ -74,7 +74,7 @@ def _absolutize_companion_links(text: str) -> str:
         target = match.group(1)
         if not (INTEGRATION_SKILL_FILE.parent / target).is_file():
             return match.group(0)
-        return f"]({INTEGRATION_SKILL_BLOB_URL}{target})"
+        return f"]({INTEGRATION_SKILL_BLOB_URL}{target}{match.group(2) or ''})"
 
     return _RELATIVE_MD_LINK_RE.sub(_replace, text)
 
