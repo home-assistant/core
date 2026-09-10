@@ -52,6 +52,9 @@ async def test_diagnostics(
     """Test public typed diagnostics and private-value redaction."""
     entry = await async_setup_lifx_entry(hass, factory())
 
+    hass.config_entries.async_update_entry(entry, title="Private bedroom light")
+
     diagnostics = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
+    assert diagnostics["entry"]["title"] == "**REDACTED**"
     assert diagnostics == snapshot

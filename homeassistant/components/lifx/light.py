@@ -18,7 +18,6 @@ from lifx import (
     MultiZoneLight,
     MultiZoneLightState,
 )
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -26,7 +25,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_EFFECT,
     ATTR_TRANSITION,
-    LIGHT_TURN_ON_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -34,13 +32,10 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    ATTR_DURATION,
     ATTR_INFRARED,
     ATTR_POWER,
     ATTR_ZONES,
@@ -73,22 +68,6 @@ LIFX_STATE_SETTLE_DELAY = 0.3
 
 LIFX_MIN_COLOR_RAMP = 0.25
 
-SERVICE_LIFX_SET_STATE = "set_state"
-
-LIFX_SET_STATE_SCHEMA: VolDictType = {
-    **LIGHT_TURN_ON_SCHEMA,
-    ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
-    ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
-    ATTR_POWER: cv.boolean,
-}
-
-SERVICE_LIFX_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
-
-LIFX_SET_HEV_CYCLE_STATE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_POWER): cv.boolean,
-    ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -99,12 +78,6 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     manager = hass.data[DATA_LIFX_MANAGER]
     device = coordinator.device
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_LIFX_SET_STATE,
-        LIFX_SET_STATE_SCHEMA,
-        "set_state",
-    )
     if isinstance(device, CeilingLight):
         entity: LIFXLight = LIFXCeiling(coordinator, manager)
     elif isinstance(device, MatrixLight):
@@ -113,12 +86,6 @@ async def async_setup_entry(
         entity = LIFXMultiZone(coordinator, manager)
     elif isinstance(device, HevLight):
         entity = LIFXHevLight(coordinator, manager)
-        # Offered only once a bulb that has HEV LEDs is set up
-        platform.async_register_entity_service(
-            SERVICE_LIFX_SET_HEV_CYCLE_STATE,
-            LIFX_SET_HEV_CYCLE_STATE_SCHEMA,
-            "set_hev_cycle_state",
-        )
     elif coordinator.data.capabilities.has_color:
         entity = LIFXColor(coordinator, manager)
     else:

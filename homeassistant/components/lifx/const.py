@@ -11,8 +11,11 @@ if TYPE_CHECKING:
 DOMAIN = "lifx"
 DATA_LIFX_MANAGER: HassKey[LIFXManager] = HassKey(DOMAIN)
 
+CONF_GROUP = "group"
 CONF_LABEL = "label"
+CONF_MAC_ADDRESS = "mac_address"
 CONF_SERIAL = "serial"
+CONF_TITLE = "title"
 
 IDENTIFY = "identify"
 RESTART = "restart"

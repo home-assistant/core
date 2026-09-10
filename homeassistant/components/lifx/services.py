@@ -15,17 +15,20 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     COLOR_GROUP,
+    LIGHT_TURN_ON_SCHEMA,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
 )
-from homeassistant.const import ATTR_MODE
+from homeassistant.const import ATTR_MODE, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_platform_entity_service
 from homeassistant.helpers.target import (
     TargetSelection,
     async_extract_referenced_entity_ids,
 )
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ATTR_CHANGE,
@@ -33,8 +36,11 @@ from .const import (
     ATTR_CLOUD_SATURATION_MIN,
     ATTR_CYCLES,
     ATTR_DIRECTION,
+    ATTR_DURATION,
+    ATTR_INFRARED,
     ATTR_PALETTE,
     ATTR_PERIOD,
+    ATTR_POWER,
     ATTR_POWER_ON,
     ATTR_SATURATION_MAX,
     ATTR_SATURATION_MIN,
@@ -42,6 +48,7 @@ from .const import (
     ATTR_SPEED,
     ATTR_SPREAD,
     ATTR_THEME,
+    ATTR_ZONES,
     DATA_LIFX_MANAGER,
     DOMAIN,
     SERVICE_EFFECT_COLORLOOP,
@@ -56,6 +63,23 @@ from .const import (
 
 if TYPE_CHECKING:
     from .manager import LIFXManager
+
+SERVICE_LIFX_SET_STATE = "set_state"
+
+LIFX_SET_STATE_SCHEMA: VolDictType = {
+    **LIGHT_TURN_ON_SCHEMA,
+    ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
+    ATTR_POWER: cv.boolean,
+}
+
+SERVICE_LIFX_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
+
+LIFX_SET_HEV_CYCLE_STATE_SCHEMA: VolDictType = {
+    vol.Required(ATTR_POWER): cv.boolean,
+    ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
+}
+
 
 # The firmware effect palette is carried in a fixed sixteen color field
 EFFECT_PALETTE_MAX = 16
@@ -246,7 +270,23 @@ async def _async_start_effect(service: ServiceCall) -> None:
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Register the LIFX effect services."""
+    """Register the LIFX actions."""
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_LIFX_SET_STATE,
+        entity_domain=Platform.LIGHT,
+        schema=LIFX_SET_STATE_SCHEMA,
+        func="set_state",
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_LIFX_SET_HEV_CYCLE_STATE,
+        entity_domain=Platform.LIGHT,
+        schema=LIFX_SET_HEV_CYCLE_STATE_SCHEMA,
+        func="set_hev_cycle_state",
+    )
     for service, schema in SERVICES_SCHEMA.items():
         hass.services.async_register(
             DOMAIN, service, _async_start_effect, schema=schema
