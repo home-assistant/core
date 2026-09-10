@@ -175,13 +175,19 @@ def _decode_data_uri(data_uri: str) -> tuple[bytes | None, str | None]:
 
     Returns (None, None) if the URI is malformed rather than raising.
     """
+    if not data_uri.startswith("data:"):
+        return None, None
     header, sep, encoded = data_uri.partition(",")
     if not sep or not encoded:
         return None, None
+    if not header.endswith(";base64"):
+        return None, None
     content_type = header.removeprefix("data:").removesuffix(";base64")
+    if not content_type:
+        return None, None
     try:
-        decoded = b64decode(encoded)
-    except binascii.Error, ValueError:
+        decoded = b64decode(encoded, validate=True)
+    except (binascii.Error, ValueError):
         return None, None
     if not decoded:
         return None, None
@@ -974,7 +980,7 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         self.async_write_ha_state()
 
     async def __on_player_or_queue_updated(self, event: MassEvent) -> None:
-        """Refresh the now_playing session's artwork on its player or queue changing."""
+        """Refresh now_playing session attributes on player/queue updates."""
         session = self.mass.dashboard.get_session(self.dashboard_id)
         if session is None or session.dashboard != DashboardType.NOW_PLAYING:
             return
@@ -989,9 +995,13 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
             )
         if not matches:
             return
+        previous_title = self._attr_media_title
         previous_image_url = self._attr_media_image_url
-        self._update_session_player_image(player)
-        if self._attr_media_image_url != previous_image_url:
+        self._update_from_session()
+        if (
+            self._attr_media_title != previous_title
+            or self._attr_media_image_url != previous_image_url
+        ):
             self.async_write_ha_state()
 
     def _update_from_session(self) -> None:

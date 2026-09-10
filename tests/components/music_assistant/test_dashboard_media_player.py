@@ -514,6 +514,10 @@ async def test_dashboard_async_get_browse_image_rejects_unknown_content_id(
         "not-a-data-uri",
         "data:image/svg+xml;base64,",
         "data:image/svg+xml;base64,not_base64!!",
+        "bogus,PHN2Zy8+",  # no data: prefix
+        "data:image/svg+xml,PHN2Zy8+",  # missing ;base64 marker
+        "data:;base64,PHN2Zy8+",  # empty content type
+        "data:image/svg+xml;base64,!!!invalid!!!",  # invalid base64 chars
     ],
 )
 async def test_dashboard_async_get_browse_image_malformed_icon(
@@ -820,6 +824,31 @@ async def test_dashboard_now_playing_session_media_image_active_group_match(
 
     state = hass.states.get(KITCHEN_ENTITY_ID)
     assert state.attributes["entity_picture"] == art_url
+
+
+async def test_dashboard_now_playing_session_title_on_player_rename(
+    hass: HomeAssistant, music_assistant_client: MagicMock
+) -> None:
+    """Test now_playing session title refreshes when the player is renamed."""
+    setup_dashboards(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    # Kitchen display shows now_playing for Test Player 1
+    state = hass.states.get(KITCHEN_ENTITY_ID)
+    assert state.attributes[ATTR_MEDIA_TITLE] == "Now playing: Test Player 1"
+
+    # Player is renamed
+    music_assistant_client.players._players["00:00:00:00:00:01"] = dataclasses.replace(
+        music_assistant_client.players._players["00:00:00:00:00:01"],
+        name="Renamed Player",
+    )
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.PLAYER_UPDATED, "00:00:00:00:00:01"
+    )
+
+    # Title should reflect the new player name
+    state = hass.states.get(KITCHEN_ENTITY_ID)
+    assert state.attributes[ATTR_MEDIA_TITLE] == "Now playing: Renamed Player"
 
 
 async def test_dashboard_session_transition_now_playing_remote_to_party(
