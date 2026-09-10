@@ -26,17 +26,27 @@ _HASS_LOOP: asyncio.AbstractEventLoop | None = None
 
 
 def build_url(
-    entry_id: str, port_name: str, usb_serial_number: str | None = None
+    entry_id: str,
+    port_name: str,
+    usb_serial_number: str | None = None,
+    vid: str | None = None,
+    pid: str | None = None,
 ) -> URL:
     """Build a canonical `esphome-hass://` URL.
 
     A serial number pins the URL to one USB device: the port is a socket, so without it the
     connection succeeds against whatever is plugged in, which is how an adapter swap ends up
-    talking to the wrong radio instead of failing.
+    talking to the wrong radio instead of failing. The vendor and product ids complete the
+    identity, the same fields a /dev/serial/by-id link is built from, so the `usb`
+    integration can recognize the adapter when it turns up plugged into the host instead.
     """
     query = {"port_name": port_name}
     if usb_serial_number:
         query["usb_serial"] = usb_serial_number
+    if vid is not None:
+        query["vid"] = vid
+    if pid is not None:
+        query["pid"] = pid
     return URL.build(
         scheme="esphome-hass",
         host="esphome",

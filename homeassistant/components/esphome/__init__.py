@@ -87,7 +87,12 @@ def _async_scan_serial_ports(
             usb = usb_infos[instance]
             url = str(
                 serial_proxy.build_url(
-                    entry.entry_id, proxy.name, usb.serial_number or None
+                    entry.entry_id,
+                    proxy.name,
+                    usb.serial_number or None,
+                    # Spelled the way USBDevice spells them
+                    vid=f"{usb.vendor_id:04X}",
+                    pid=f"{usb.product_id:04X}",
                 )
             )
 

@@ -141,7 +141,14 @@ def _mock_usb_info(
 
 
 def _zbt2_port(entry_id: str) -> USBDevice:
-    url = str(serial_proxy.build_url(entry_id, "USB (Zigbee)", "10B41DE58F10"))
+    url = str(
+        serial_proxy.build_url(
+            entry_id, "USB (Zigbee)", "10B41DE58F10", vid="303A", pid="4001"
+        )
+    )
+    assert url.endswith(
+        "?port_name=USB+(Zigbee)&usb_serial=10B41DE58F10&vid=303A&pid=4001"
+    )
     return USBDevice(
         device=url,
         resolved_device=url,
