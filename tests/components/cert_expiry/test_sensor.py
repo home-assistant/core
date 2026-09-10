@@ -9,7 +9,14 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.cert_expiry.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_CA_DATA,
+    CONF_HOST,
+    CONF_IGNORE_HOSTNAME,
+    CONF_PORT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -71,6 +78,43 @@ async def test_async_setup_entry_bad_cert(hass: HomeAssistant) -> None:
     assert state.state != STATE_UNAVAILABLE
     assert state.attributes.get("error") == "some error"
     assert not state.attributes.get("is_valid")
+
+
+async def test_async_setup_entry_passes_tls_options(hass: HomeAssistant) -> None:
+    """Test async_setup_entry passes ignore_hostname and ca_data values."""
+    assert hass.state is CoreState.running
+
+    pem = "-----BEGIN CERTIFICATE-----\nZmFrZQ==\n-----END CERTIFICATE-----"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_IGNORE_HOSTNAME: True,
+            CONF_CA_DATA: pem,
+        },
+        unique_id=f"{HOST}:{PORT}",
+        version=2,
+    )
+
+    timestamp = future_timestamp(100)
+
+    with patch(
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+        return_value=timestamp,
+    ) as mock_get_cert_expiry_timestamp:
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_get_cert_expiry_timestamp.assert_awaited()
+    assert mock_get_cert_expiry_timestamp.await_args_list[0].args == (
+        hass,
+        HOST,
+        PORT,
+        True,
+        pem,
+    )
 
 
 async def test_update_sensor(hass: HomeAssistant) -> None:
