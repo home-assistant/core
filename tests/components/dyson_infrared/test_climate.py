@@ -795,6 +795,59 @@ async def test_fahrenheit_device_uses_fahrenheit_range_and_single_steps(
     assert state.attributes[ATTR_TEMPERATURE] == 35
 
 
+@pytest.mark.usefixtures("mock_make_dyson_am09_command")
+async def test_fahrenheit_device_rounds_converted_celsius_request(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a Celsius request onto a Fahrenheit device rounds to the nearest degree.
+
+    The system unit is left metric while the device is in Fahrenheit, so the
+    service converts the target and hands over a fractional value.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="01JTEST0000000000000000004",
+        title="Dyson Heater/Cooler via Test IR emitter",
+        data={
+            CONF_DEVICE_TYPE: DysonDeviceType.HEATER_COOLER,
+            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_COMMAND_STEP_DELAY: 0,
+            CONF_TEMPERATURE_UNIT: DysonTemperatureUnit.FAHRENHEIT,
+        },
+        unique_id=f"heater_cooler_converted_{MOCK_INFRARED_ENTITY_ID}",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = er.async_entries_for_config_entry(entity_registry, entry.entry_id)[
+        0
+    ].entity_id
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    # 2 degrees Celsius converts to 35.6 F, two steps up from the 34 F minimum
+    # the entity starts at. Truncating instead of rounding would send only one.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 2},
+        blocking=True,
+    )
+
+    assert mock_infrared_emitter_entity.send_command_calls == (
+        [DysonAm09Code.HEAT_UP] * 2
+    )
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_set_temperature_raises_outside_heat_mode(
     hass: HomeAssistant,
