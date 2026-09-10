@@ -11,9 +11,6 @@ from homeassistant.helpers.service import async_get_config_entry
 from .const import ATTR_VAPID_PUB_KEY, DOMAIN
 
 WS_TYPE_APPKEY = "notify/html5/appkey"
-SCHEMA_WS_APPKEY = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_APPKEY}
-)
 
 
 @callback
