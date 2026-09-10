@@ -6,6 +6,7 @@ import logging
 from typing import Any, override
 
 from cookidoo_api import (
+    CookidooAuthData,
     CookidooAuthException,
     CookidooRequestException,
     get_country_options,
@@ -26,6 +27,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
@@ -214,6 +216,15 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         }
 
+    @callback
+    def _save_token(self, auth_data: CookidooAuthData) -> None:
+        """Keep the tokens the library hands us during the validation requests.
+
+        Any of them can refresh the access token, which rotates the refresh
+        token with it, so the entry has to be created with the last pair.
+        """
+        self.token = asdict(auth_data)
+
     async def validate_input(
         self,
         user_input: dict[str, Any],
@@ -236,16 +247,15 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 await get_localization_options(country=data_input[CONF_COUNTRY].lower())
             )[0].language  # Pick any language to test login
 
-        cookidoo = await cookidoo_from_config_data(self.hass, data_input)
+        cookidoo = await cookidoo_from_config_data(
+            self.hass, data_input, on_auth_data_update=self._save_token
+        )
         try:
             await cookidoo.login()
             user_info = await cookidoo.get_user_info()
             self.user_uuid = user_info.id
             if language_input:
                 await cookidoo.get_additional_items()
-            # Snapshot the tokens after the last request, as any of them can
-            # refresh the access token and rotate the refresh token with it
-            self.token = asdict(cookidoo.auth_data) if cookidoo.auth_data else {}
         except CookidooRequestException:
             errors["base"] = "cannot_connect"
         except CookidooAuthException:

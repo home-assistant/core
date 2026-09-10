@@ -1,10 +1,12 @@
 """Unit tests for the cookidoo integration."""
 
+from collections.abc import Callable
 from dataclasses import asdict
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from cookidoo_api import (
+    CookidooAuthData,
     CookidooAuthException,
     CookidooParseException,
     CookidooRequestException,
@@ -72,8 +74,6 @@ async def test_init_failure(
     cookidoo_config_entry: MockConfigEntry,
 ) -> None:
     """Test an initialization error on integration load."""
-    # No tokens on the config entry, so the coordinator logs in with credentials
-    mock_cookidoo_client.auth_data = None
     mock_cookidoo_client.login.side_effect = exception
     await setup_integration(hass, cookidoo_config_entry)
     assert cookidoo_config_entry.state is status
@@ -141,8 +141,6 @@ async def test_config_entry_not_ready_auth_error(
     raises CookidooAuthException (expired session), then re-login either
     succeeds or fails. On success, the next data fetch returns valid data.
     """
-    # No tokens on the config entry, so the coordinator logs in with credentials
-    mock_cookidoo_client.auth_data = None
     # get_ingredient_items raises auth error once, then returns valid data
     default_return = mock_cookidoo_client.get_ingredient_items.return_value
     mock_cookidoo_client.get_ingredient_items.side_effect = [
@@ -499,11 +497,6 @@ async def test_login_persists_tokens(
     cookidoo_config_entry: MockConfigEntry,
 ) -> None:
     """Test the OAuth2 tokens of a credential login are stored on the entry."""
-    mock_cookidoo_client.auth_data = None
-    mock_cookidoo_client.login.side_effect = lambda: setattr(
-        mock_cookidoo_client, "auth_data", AUTH_DATA
-    )
-
     await setup_integration(hass, cookidoo_config_entry)
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
@@ -517,10 +510,6 @@ async def test_tokens_persisted_when_user_info_fails(
     cookidoo_config_entry: MockConfigEntry,
 ) -> None:
     """Test tokens of a successful login survive a failing user info fetch."""
-    mock_cookidoo_client.auth_data = None
-    mock_cookidoo_client.login.side_effect = lambda: setattr(
-        mock_cookidoo_client, "auth_data", AUTH_DATA
-    )
     mock_cookidoo_client.get_user_info.side_effect = CookidooRequestException()
 
     await setup_integration(hass, cookidoo_config_entry)
@@ -555,9 +544,6 @@ async def test_expired_tokens_fall_back_to_login(
         CookidooAuthException(),
         user_info,
     ]
-    mock_cookidoo_client.login.side_effect = lambda: setattr(
-        mock_cookidoo_client, "auth_data", AUTH_DATA
-    )
 
     await setup_integration(hass, cookidoo_config_entry_with_token)
 
@@ -570,6 +556,7 @@ async def test_rotated_tokens_persisted_when_update_fails(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
     cookidoo_config_entry_with_token: MockConfigEntry,
+    notify_auth_data_update: Callable[[CookidooAuthData], None],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test tokens rotated during an update survive a later call failing."""
@@ -577,7 +564,7 @@ async def test_rotated_tokens_persisted_when_update_fails(
 
     # The library rotates the tokens on the first call, a later one then fails
     def _rotate() -> list:
-        mock_cookidoo_client.auth_data = AUTH_DATA
+        notify_auth_data_update(AUTH_DATA)
         return []
 
     mock_cookidoo_client.get_ingredient_items.side_effect = _rotate
@@ -596,12 +583,22 @@ async def test_refreshed_tokens_are_persisted(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
     cookidoo_config_entry_with_token: MockConfigEntry,
+    notify_auth_data_update: Callable[[CookidooAuthData], None],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test tokens refreshed by the library during an update are persisted."""
     await setup_integration(hass, cookidoo_config_entry_with_token)
 
-    mock_cookidoo_client.auth_data = AUTH_DATA
+    # The library refreshes the expired access token while serving the update
+    ingredient_items = mock_cookidoo_client.get_ingredient_items.return_value
+
+    def _refresh() -> list:
+        notify_auth_data_update(AUTH_DATA)
+        return ingredient_items
+
+    mock_cookidoo_client.get_ingredient_items.side_effect = _refresh
+    mock_cookidoo_client.login.assert_not_awaited()
+
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

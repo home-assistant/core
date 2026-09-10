@@ -1,5 +1,6 @@
 """Test the Cookidoo config flow."""
 
+from collections.abc import Callable
 from dataclasses import asdict
 from typing import Any
 from unittest.mock import AsyncMock
@@ -77,9 +78,12 @@ async def test_flow_user_success(
 
 
 async def test_flow_user_stores_token_rotated_during_validation(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cookidoo_client: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_cookidoo_client: AsyncMock,
+    notify_auth_data_update: Callable[[CookidooAuthData], None],
 ) -> None:
-    """Test the tokens are snapshotted after the last validation request."""
+    """Test the entry is created with the tokens of the last validation request."""
     rotated = CookidooAuthData(
         access_token="rotated-access-token",
         refresh_token="rotated-refresh-token",
@@ -88,7 +92,7 @@ async def test_flow_user_stores_token_rotated_during_validation(
 
     async def _rotate(*args: Any, **kwargs: Any) -> list:
         # A request can transparently refresh and rotate the refresh token
-        mock_cookidoo_client.auth_data = rotated
+        notify_auth_data_update(rotated)
         return []
 
     mock_cookidoo_client.get_additional_items.side_effect = _rotate
@@ -121,6 +125,7 @@ async def test_flow_user_stores_token_rotated_during_validation(
 async def test_flow_user_init_data_unknown_error_and_recover_on_step_1(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
+    login_success: Callable[[], None],
     raise_error: Exception,
     text_error: str,
 ) -> None:
@@ -139,7 +144,7 @@ async def test_flow_user_init_data_unknown_error_and_recover_on_step_1(
     assert result["errors"]["base"] == text_error
 
     # Recover
-    mock_cookidoo_client.login.side_effect = None
+    mock_cookidoo_client.login.side_effect = login_success
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=MOCK_DATA_USER_STEP,
@@ -297,6 +302,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
     hass: HomeAssistant,
     cookidoo_config_entry: AsyncMock,
     mock_cookidoo_client: AsyncMock,
+    login_success: Callable[[], None],
     raise_error: Exception,
     text_error: str,
 ) -> None:
@@ -320,7 +326,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
     assert result["errors"]["base"] == text_error
 
     # Recover
-    mock_cookidoo_client.login.side_effect = None
+    mock_cookidoo_client.login.side_effect = login_success
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={**MOCK_DATA_USER_STEP, CONF_COUNTRY: "DE"},
@@ -478,6 +484,7 @@ async def test_flow_reauth_error_and_recover(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
     cookidoo_config_entry: MockConfigEntry,
+    login_success: Callable[[], None],
     raise_error,
     text_error,
 ) -> None:
@@ -498,7 +505,7 @@ async def test_flow_reauth_error_and_recover(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
-    mock_cookidoo_client.login.side_effect = None
+    mock_cookidoo_client.login.side_effect = login_success
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
