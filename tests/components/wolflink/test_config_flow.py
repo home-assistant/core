@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from httpx import RequestError
 import pytest
 from wolf_comm.models import Device
-from wolf_comm.token_auth import InvalidAuth
+from wolf_comm.token_auth import InvalidAuth, PasswordToLong, PortalUnavailable
 
 from homeassistant import config_entries
 from homeassistant.components.wolflink.const import DOMAIN
@@ -66,7 +66,9 @@ async def test_create_entry(hass: HomeAssistant, mock_wolflink: MagicMock) -> No
     ("side_effect", "expected_error"),
     [
         pytest.param(InvalidAuth, "invalid_auth", id="invalid_auth"),
+        pytest.param(PortalUnavailable, "cannot_connect", id="portal_unavailable"),
         pytest.param(RequestError("boom"), "cannot_connect", id="cannot_connect"),
+        pytest.param(PasswordToLong, "password_too_long", id="password_too_long"),
         pytest.param(Exception("boom"), "unknown", id="unknown"),
     ],
 )
@@ -126,3 +128,33 @@ async def test_already_configured_aborts(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_wolflink: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication updates the password and reloads the entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_wolflink.fetch_system_list.side_effect = InvalidAuth
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PASSWORD: "wrong-password"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_wolflink.fetch_system_list.side_effect = None
+    mock_wolflink.fetch_system_list.return_value = [DEVICE]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"

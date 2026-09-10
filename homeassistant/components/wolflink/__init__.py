@@ -5,7 +5,7 @@ import logging
 
 from httpx import RequestError
 from wolf_comm.models import Device
-from wolf_comm.token_auth import InvalidAuth
+from wolf_comm.token_auth import InvalidAuth, PortalUnavailable
 from wolf_comm.wolf_client import FetchFailed, WolfClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -34,6 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> 
 
     try:
         devices = await wolf_client.fetch_system_list()
+    except PortalUnavailable as exception:
+        raise ConfigEntryNotReady(f"Portal unavailable: {exception}") from exception
     except InvalidAuth as exception:
         raise ConfigEntryAuthFailed(f"Invalid credentials: {exception}") from exception
     except (FetchFailed, RequestError) as exception:
