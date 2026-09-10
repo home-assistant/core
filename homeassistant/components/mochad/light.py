@@ -15,6 +15,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -119,9 +120,12 @@ class MochadLight(LightEntity):
                     self._adjust_brightness(brightness)
                 self._attr_brightness = brightness
                 self._attr_is_on = True
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (MochadException, OSError) as exc:
-                _LOGGER.error("Error with mochad communication: %s", exc)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="turn_on_failed",
+                    translation_placeholders={"error": str(exc)},
+                ) from exc
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
@@ -138,6 +142,9 @@ class MochadLight(LightEntity):
                 if self._brightness_levels == 31:
                     self._attr_brightness = 0
                 self._attr_is_on = False
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (MochadException, OSError) as exc:
-                _LOGGER.error("Error with mochad communication: %s", exc)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="turn_off_failed",
+                    translation_placeholders={"error": str(exc)},
+                ) from exc
