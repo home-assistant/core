@@ -40,12 +40,13 @@ async def test_button_unavailable_not_connected(
 ) -> None:
     """Test if a button is unavailable when not connected."""
 
-    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.BUTTON]):
+        mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_client.connected = False
+        mock_my_pv_client.connected = False
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("button.my_pv_ac_elwa_2_restart")
     assert state.state == STATE_UNAVAILABLE
