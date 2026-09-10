@@ -75,7 +75,10 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: done
+  stale-devices:
+    status: exempt
+    comment: |
+      This integration has a fixed single device per config entry.
 
   # Platinum
   async-dependency: done

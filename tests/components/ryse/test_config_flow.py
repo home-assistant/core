@@ -118,10 +118,15 @@ PAIRING_ERRORS = [
 @pytest.fixture(autouse=True)
 def mock_last_service_info() -> Generator[MagicMock]:
     """Use the stored discovery advertisement when no scanner cache is present."""
-    with patch(
-        "homeassistant.components.ryse.config_flow.async_last_service_info",
-        return_value=None,
-    ) as mock:
+    with (
+        patch(
+            "homeassistant.components.ryse.config_flow.async_last_service_info",
+            return_value=None,
+        ) as mock,
+        patch(
+            "homeassistant.components.ryse.config_flow.async_clear_address_from_match_history",
+        ),
+    ):
         yield mock
 
 
@@ -482,17 +487,7 @@ async def test_async_step_user_keeps_proxy_selected_when_also_local(
 async def test_async_step_bluetooth_not_in_pairing_mode(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
-    """Test idle advertisements keep a discovery flow until the user presses PAIR."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_BLUETOOTH},
-        data=_idle_discovery(),
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "bluetooth_confirm"
-    mock_device.pair.assert_not_called()
-
+    """Test idle advertisements are not shown as discoveries."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
@@ -500,7 +495,8 @@ async def test_async_step_bluetooth_not_in_pairing_mode(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_in_progress"
+    assert result["reason"] == "not_in_pairing_mode"
+    mock_device.pair.assert_not_called()
 
 
 async def test_async_step_bluetooth_rejects_proxy_source(
@@ -628,19 +624,26 @@ async def test_async_step_bluetooth_left_pairing_mode(
 async def test_async_step_bluetooth_idle_then_pair(
     hass: HomeAssistant,
     mock_device: MagicMock,
-    mock_last_service_info: MagicMock,
 ) -> None:
-    """Test an idle discovery can pair after a later PAIR advertisement."""
+    """Test an idle advertisement can be rediscovered after the PAIR flag appears."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
         data=_idle_discovery(),
     )
 
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_in_pairing_mode"
+    mock_device.pair.assert_not_called()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=DISCOVERY_INFO,
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
-
-    mock_last_service_info.return_value = DISCOVERY_INFO
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}

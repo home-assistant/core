@@ -12,6 +12,7 @@ from homeassistant.components.bluetooth import (
     BaseHaRemoteScanner,
     BluetoothScannerDevice,
     BluetoothServiceInfoBleak,
+    async_clear_address_from_match_history,
     async_discovered_service_info,
     async_last_service_info,
     async_scanner_by_source,
@@ -158,6 +159,13 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             # start and abort a new flow on every packet.
             await self.async_set_unique_id(None)
             return self.async_abort(reason="not_local_source")
+        if not is_pairing_mode(latest.manufacturer_data):
+            # Idle shades still match the manifest; drop them here so they are
+            # not shown as unusable discoveries. Clear matcher history so a
+            # later PAIR-flag advertisement can start a new flow.
+            await self.async_set_unique_id(None)
+            async_clear_address_from_match_history(self.hass, discovery_info.address)
+            return self.async_abort(reason="not_in_pairing_mode")
 
         self._discovery_info = latest
 
