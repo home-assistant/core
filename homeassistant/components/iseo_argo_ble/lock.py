@@ -52,6 +52,12 @@ _UNAVAILABLE_AFTER = timedelta(minutes=10)
 
 _AVAILABILITY_CHECK_INTERVAL = timedelta(minutes=1)
 
+# How often to re-read the capabilities of a lock that reported it has no
+# door status. Door Status Advice can be switched on in the Argo app at any
+# time and only shows up in a read, so the answer cannot be taken as final —
+# but it changes about never, and each read wakes the lock.
+_CAPABILITY_RECHECK = timedelta(hours=12)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -110,6 +116,7 @@ class IseoLockEntity(LockEntity):
         self._last_ble_device: BLEDevice | None = None
         self._initial_read: asyncio.Task[None] | None = None
         self._probed = False
+        self._last_probe: datetime | None = None
         self._door_seen_open = False
         self._identity_rejected = False
 
@@ -316,7 +323,7 @@ class IseoLockEntity(LockEntity):
         # before the assignment below, which would leave a completed task here
         # forever and skip every retry.
         if (
-            self._probed
+            not self._probe_is_due()
             # A rejected identity does not recover on its own, so retrying only
             # wakes the lock on every advertisement for a read that cannot work.
             or self._identity_rejected
@@ -325,6 +332,25 @@ class IseoLockEntity(LockEntity):
             return
 
         self._initial_read = self.hass.async_create_task(self._async_probe())
+
+    def _probe_is_due(self) -> bool:
+        """Return whether the capability read should run.
+
+        Once for every lock, and then only again for one that reported it has
+        no door status: Door Status Advice can be enabled in the Argo app at
+        any time and shows up nowhere but a read, so a single "no" would leave
+        the entity assuming state for good. Rate-limited, because each read
+        wakes the lock. A lock that does report door status has nothing left
+        to learn and is followed passively from here on.
+        """
+        if not self._probed:
+            return True
+        if self._door_status_supported is not False:
+            return False
+        return (
+            self._last_probe is None
+            or dt_util.utcnow() - self._last_probe >= _CAPABILITY_RECHECK
+        )
 
     async def _async_probe(self) -> None:
         """Read the lock once, without letting a failure escape the task.
@@ -337,6 +363,11 @@ class IseoLockEntity(LockEntity):
             await self._poll_state(probing=True)
         except Exception:
             _LOGGER.debug("Probing the lock failed; will retry", exc_info=True)
+        finally:
+            # Stamped even on failure: a failed probe leaves _probed False and
+            # retries on the next advertisement regardless, so this only ever
+            # paces the recheck of a lock that already answered.
+            self._last_probe = dt_util.utcnow()
 
     def _cancel_initial_read(self) -> None:
         """Cancel a pending first read."""
@@ -363,11 +394,13 @@ class IseoLockEntity(LockEntity):
     async def _poll_state(self, *, probing: bool = False) -> None:
         """Read door state via TLV_INFO and update HA state.
 
-        ``probing`` marks the one-off capability read that runs off the first
-        advertisement. That advertisement has just proved the lock is there, so
-        a transient failure to connect says nothing about reachability and must
-        not override the availability it established: the read is retried on a
-        later advertisement, and silence is what _check_availability is for.
+        ``probing`` marks a capability read — the one off the first
+        advertisement, and the rare recheck after it. That advertisement has
+        just proved the lock is there, so a transient failure to connect says
+        nothing about reachability and must not override the availability it
+        established: the read is retried on a later advertisement, and silence
+        is what _check_availability is for. It also reads a lock that reported
+        no door status, which the poll cycle otherwise leaves alone.
         """
         _LOGGER.debug("Polling lock state, current available: %s", self._attr_available)
         if self._ble_lock.locked():
@@ -379,8 +412,10 @@ class IseoLockEntity(LockEntity):
                 self._set_available(False, "device not found")
             return
 
-        if self._door_status_supported is False and not self._entry.options.get(
-            CONF_ENABLE_POLLING, False
+        if (
+            self._door_status_supported is False
+            and not probing
+            and not self._entry.options.get(CONF_ENABLE_POLLING, False)
         ):
             # Nothing to read from this lock: seeing it advertise is all the
             # reachability information there is, and it spares the battery a

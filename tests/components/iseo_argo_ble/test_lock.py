@@ -10,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.iseo_argo_ble.const import CONF_ENABLE_POLLING, DOMAIN
 from homeassistant.components.iseo_argo_ble.lock import (
     _AVAILABILITY_CHECK_INTERVAL,
+    _CAPABILITY_RECHECK,
     _POLL_INTERVAL,
     _UNAVAILABLE_AFTER,
 )
@@ -637,6 +638,62 @@ async def test_unlocking_again_keeps_a_door_already_standing_open(
     # It still gives way to the door actually closing.
     await _advertise(hass, door_closed=True)
     assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_door_status_enabled_later_is_picked_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a lock that gains Door Status Advice stops assuming state.
+
+    The setting lives in the Argo app and shows up nowhere but a read, so an
+    entity that took the first "no" as final would assume state for good.
+    """
+    mock_iseo_client.read_state.return_value = _lock_state(door_closed=None)
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_ASSUMED_STATE] is True
+
+    # Not on every advertisement: that would wake the lock constantly.
+    mock_iseo_client.read_state.reset_mock()
+    await _advertise(hass, door_closed=True)
+    mock_iseo_client.read_state.assert_not_called()
+
+    # Enabled in the app; the recheck comes round and finds it.
+    mock_iseo_client.read_state.return_value = _lock_state(door_closed=False)
+    freezer.tick(_CAPABILITY_RECHECK)
+    await _advertise(hass, door_closed=False)
+
+    mock_iseo_client.read_state.assert_awaited()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == LockState.UNLOCKED
+    assert ATTR_ASSUMED_STATE not in state.attributes
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_a_lock_with_door_status_is_never_reprobed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the recheck is only for locks that answered "no door status".
+
+    One that reports it has nothing left to learn, and following it passively
+    is the whole point — waking it twice a day would undo that.
+    """
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+
+    mock_iseo_client.read_state.reset_mock()
+    freezer.tick(_CAPABILITY_RECHECK * 3)
+    await _advertise(hass, door_closed=True)
+
+    mock_iseo_client.read_state.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
