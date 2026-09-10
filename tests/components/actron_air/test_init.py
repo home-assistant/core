@@ -9,7 +9,7 @@ from homeassistant.components.actron_air.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import setup_integration
@@ -132,3 +132,64 @@ async def test_device_via_device_id(
     )
     assert device is not None
     assert device.via_device_id == system_device.id
+
+
+async def test_dynamic_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_actron_api: AsyncMock,
+    mock_zone: MagicMock,
+) -> None:
+    """Test zones and peripherals discovered after setup are added once."""
+    status = mock_actron_api.state_manager.get_status.return_value
+    peripheral = status.peripherals[0]
+    status.peripherals = []
+
+    with patch(
+        "homeassistant.components.actron_air.PLATFORMS",
+        [Platform.CLIMATE, Platform.COVER, Platform.SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    _, push_callback = mock_actron_api.subscribe_system_updates.call_args.args
+    status.remote_zone_info = [mock_zone]
+    status.peripherals = [peripheral]
+    push_callback(status)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id("climate", DOMAIN, "123456_zone_0")
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id("cover", DOMAIN, "123456_zone_0_damper")
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, "PERIPH001_temperature")
+        is not None
+    )
+
+    system_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456"), mock_config_entry.entry_id
+    )
+    assert system_device is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "123456_zone_0"), mock_config_entry.entry_id
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "PERIPH001"), mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+    entity_count = len(entity_registry.entities)
+    push_callback(status)
+    await hass.async_block_till_done()
+    assert len(entity_registry.entities) == entity_count
