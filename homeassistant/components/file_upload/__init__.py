@@ -129,6 +129,7 @@ async def _receive_file_field(
                 file_handle.write(_chunk)
 
     fut: asyncio.Future[None] | None = None
+    cancelled: asyncio.CancelledError | None = None
     try:
         fut = hass.async_add_executor_job(_sync_queue_consumer)
         chunks_sent = 0
@@ -144,6 +145,11 @@ async def _receive_file_field(
             if fut.done():
                 # The executor job failed
                 break
+    except asyncio.CancelledError as err:
+        # Remember a cancellation from the streaming loop so the join below re-raises
+        # it instead of a later writer error.
+        cancelled = err
+        raise
     finally:
         # Always terminate the queue consumer, also if the stream raised or the task
         # was cancelled, otherwise awaiting the consumer future deadlocks.
@@ -154,7 +160,6 @@ async def _receive_file_field(
             # cancelled: asyncio.wait neither cancels the future nor raises its
             # exception, so the thread is fully done (file written and closed) before
             # the caller cleans up. The loop re-waits through repeated cancellations.
-            cancelled: asyncio.CancelledError | None = None
             while not fut.done():
                 try:
                     await asyncio.wait({fut})

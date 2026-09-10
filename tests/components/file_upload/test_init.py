@@ -437,3 +437,78 @@ async def test_receive_file_field_cancel_wins_over_writer_error(
     assert task.cancelled()
     with pytest.raises(asyncio.CancelledError):
         task.result()
+
+
+async def test_receive_file_field_cancel_in_stream_wins_over_writer_error(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test a cancel in the streaming loop is not masked by a writer error.
+
+    When the cancellation lands in read_chunk (not the join) and the writer has
+    already failed, the caller must still observe CancelledError, not the writer's
+    exception.
+    """
+    file_path = tmp_path / "upload_dir" / "uploaded.bin"
+    writer_failed = asyncio.Event()  # set once the writer thread has raised
+    reading_blocked = asyncio.Event()  # set when the stream parks on its 2nd read
+    blocked = asyncio.Event()  # never set, so the 2nd read blocks until cancelled
+
+    class _FailingHandle:
+        """A file handle whose first write fails the writer thread."""
+
+        def __enter__(self) -> Self:
+            return self
+
+        def __exit__(self, *exc: object) -> bool:
+            return False
+
+        def write(self, data: bytes) -> int:
+            hass.loop.call_soon_threadsafe(writer_failed.set)
+            raise OSError("write failed")
+
+    real_open = Path.open
+
+    def _failing_open(self: Path, *args: object, **kwargs: object) -> object:
+        if self != file_path:
+            return real_open(self, *args, **kwargs)
+        return _FailingHandle()
+
+    reads = 0
+
+    class _Part:
+        """Fake BodyPartReader yielding one chunk, then blocking on the next read."""
+
+        async def read_chunk(self, size: int) -> bytes:
+            nonlocal reads
+            reads += 1
+            if reads == 1:
+                return b"chunk1"
+            reading_blocked.set()
+            await blocked.wait()
+            return b""
+
+    with patch.object(Path, "open", _failing_open):
+        task = asyncio.create_task(
+            file_upload._receive_file_field(hass, _Part(), file_path)
+        )
+        try:
+            # The stream is parked on its second read and the writer has failed, so
+            # the cancel lands in the streaming loop with the writer future already
+            # done with an error.
+            await reading_blocked.wait()
+            await writer_failed.wait()
+            for _ in range(5):
+                await asyncio.sleep(0)
+            task.cancel()
+            for _ in range(10):
+                await asyncio.sleep(0)
+        finally:
+            # Always unblock the stream so a failed assertion can't hang teardown.
+            blocked.set()
+        _done, pending = await asyncio.wait({task}, timeout=10)
+
+    assert not pending
+    # The cancellation wins over the writer's OSError.
+    assert task.cancelled()
+    with pytest.raises(asyncio.CancelledError):
+        task.result()
