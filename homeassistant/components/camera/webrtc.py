@@ -162,9 +162,8 @@ class CameraWebRTCProvider(ABC):
         """Return a restream of the given source that consumers can share.
 
         The provider multiplexes them onto its single upstream connection, so the
-        camera sees one. Takes the source rather than reading it from the camera,
-        so a camera offering several can have each of them restreamed. None means
-        the provider cannot restream this source.
+        camera sees one. None means the provider cannot restream this source and
+        the caller should use it as it is.
         """
         return None
 

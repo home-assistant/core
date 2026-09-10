@@ -736,6 +736,9 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
     await provider.async_register_camera(camera)
     await provider.async_unregister_camera(camera)
     await provider.async_on_camera_prefs_update(camera)
+    assert (
+        await provider.async_get_shared_stream_source(camera, "stream_source") is None
+    )
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")

@@ -255,9 +255,11 @@ async def async_get_shared_stream_source(
 ) -> str | None:
     """Fetch a stream source for a camera entity that consumers can share.
 
-    Prefers a restream from the camera's provider, which multiplexes consumers
-    onto one upstream connection so the camera sees only that one, and falls back
-    to the camera's own source.
+    Prefers a restream from the camera's provider, which multiplexes consumers onto
+    one upstream connection so the camera sees only that one, and falls back to the
+    camera's own source. A restream lives only as long as the provider serving it,
+    and carries the camera orientation the user configured, which the raw source
+    does not.
     """
     camera = get_camera_from_entity_id(hass, entity_id)
     if (stream_source := await camera.stream_source()) is None:

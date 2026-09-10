@@ -382,25 +382,31 @@ class WebRTCProvider(CameraWebRTCProvider):
             get_camera_identifier(camera), width, height
         )
 
-    async def _update_stream_source(
-        self, camera: Camera, stream_source: str | None = None
-    ) -> None:
-        """Update the stream source in go2rtc config if needed."""
-        if stream_source is None:
-            stream_source = await camera.stream_source()
-        if not stream_source:
-            await self._close_camera_sessions(camera)
-            raise HomeAssistantError("Camera has no stream source")
-
+    @staticmethod
+    def _as_go2rtc_source(camera: Camera, stream_source: str) -> str:
         if camera.platform.platform_name == "generic":
             # This is a workaround to use ffmpeg for generic cameras
             # A proper fix will be added in the future together
             # with supporting multiple streams per camera
-            stream_source = "ffmpeg:" + stream_source
+            return _FFMPEG + ":" + stream_source
+        return stream_source
 
-        if not self.async_is_supported(stream_source):
-            await self._close_camera_sessions(camera)
-            raise HomeAssistantError("Stream source is not supported by go2rtc")
+    async def _update_stream_source(
+        self, camera: Camera, stream_source: str | None = None
+    ) -> None:
+        """Update the stream source in go2rtc config if needed.
+
+        A source passed in is registered as given; only a source resolved here is
+        checked, and a camera that fails that check loses its sessions.
+        """
+        if stream_source is None:
+            if not (source := await camera.stream_source()):
+                await self._close_camera_sessions(camera)
+                raise HomeAssistantError("Camera has no stream source")
+            stream_source = self._as_go2rtc_source(camera, source)
+            if not self.async_is_supported(stream_source):
+                await self._close_camera_sessions(camera)
+                raise HomeAssistantError("Stream source is not supported by go2rtc")
 
         camera_prefs = await get_dynamic_camera_stream_settings(
             self._hass, camera.entity_id
@@ -484,7 +490,13 @@ class WebRTCProvider(CameraWebRTCProvider):
     ) -> str | None:
         """Return the RTSP restream URL of the managed go2rtc server."""
         if not self._managed:
-            # An external server's RTSP endpoint is not known to us.
+            # go2rtc's API reports only its version, so the RTSP port of a server we
+            # did not start ourselves cannot be derived from the URL we were given.
+            return None
+        stream_source = self._as_go2rtc_source(camera, stream_source)
+        # Checked here rather than in _update_stream_source, which answers an
+        # unusable source by closing the camera's sessions. This is only a question.
+        if not self.async_is_supported(stream_source):
             return None
         try:
             await self._update_stream_source(camera, stream_source)
