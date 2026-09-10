@@ -65,6 +65,11 @@
         "name": "Dismiss current notification"
       }
     },
+    "notify": {
+      "message": {
+        "name": "Message"
+      }
+    },
     "number": {
       "brightness": {
         "name": "Brightness"
