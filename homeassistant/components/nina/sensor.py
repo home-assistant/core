@@ -108,7 +108,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     regions: dict[str, str] = config_entry.data[CONF_REGIONS]
-    message_slots: int = config_entry.data[CONF_MESSAGE_SLOTS]
+    message_slots: int = config_entry.options[CONF_MESSAGE_SLOTS]
 
     entities = [
         create_sensors_for_warning(coordinator, ent, regions[ent], i + 1)
