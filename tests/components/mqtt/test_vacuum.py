@@ -448,7 +448,7 @@ async def test_clean_segments_command(
 
     async_fire_time_changed(
         hass,
-        now + timedelta(seconds=mqttvacuum.SEGMENTS_CHANGED_DEBOUNCE_SECONDS),
+        now + timedelta(seconds=mqttvacuum.SEGMENTS_CHANGED_DEBOUNCE_SECONDS + 1),
     )
     await hass.async_block_till_done()
     # We expect a repair issue now as the available segments are still changed
@@ -516,9 +516,10 @@ async def test_transient_clean_segments_change_does_not_create_repair(
             }
         }""",
     )
+    await hass.async_block_till_done()
     async_fire_time_changed(
         hass,
-        now + timedelta(seconds=mqttvacuum.SEGMENTS_CHANGED_DEBOUNCE_SECONDS),
+        now + timedelta(seconds=mqttvacuum.SEGMENTS_CHANGED_DEBOUNCE_SECONDS + 1),
     )
     await hass.async_block_till_done()
 
@@ -716,7 +717,7 @@ async def test_clean_area_feature_preserved_on_config_update(
             "1":"Livingroom",
             "2":"Kitchen"
         }
-    }"""
+    }""
     async_fire_mqtt_message(hass, "vacuum/state", message)
     await hass.async_block_till_done()
     state = hass.states.get("vacuum.test")
