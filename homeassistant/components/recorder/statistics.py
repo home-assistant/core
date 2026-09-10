@@ -2152,9 +2152,7 @@ def _synthesize_current_hour_from_short_term(
         return {}
 
     query_ids = [
-        meta_id
-        for meta_id, meta in metadata.values()
-        if meta["has_sum"] and (metadata_ids is None or meta_id in metadata_ids)
+        meta_id for meta_id, meta in metadata.values() if meta["has_sum"]
     ]
     if not query_ids:
         return {}
