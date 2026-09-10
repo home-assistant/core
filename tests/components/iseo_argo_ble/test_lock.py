@@ -577,6 +577,40 @@ async def test_door_closing_again_during_the_unlock_is_not_lost(
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_door_closing_inside_the_relock_window_is_applied(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a close following an open we saw is not taken for the latch lag.
+
+    The window after an unlock exists because the lock keeps reporting
+    "closed" while the latch releases. Once the door has actually been seen
+    opening, a close is the door itself: suppressing it would leave the relock
+    timer standing down on a stale flag and the entity stuck unlocked until
+    another advertisement, which can be minutes away.
+    """
+    await setup_integration(hass, mock_config_entry)
+    await _advertise(hass, door_closed=True)
+
+    async def _release_the_latch(*args: object, **kwargs: object) -> None:
+        inject_bluetooth_service_info_bleak(hass, iseo_advertisement(False))
+
+    mock_iseo_client.gw_open.side_effect = _release_the_latch
+
+    await _unlock(hass)
+    assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
+
+    # The door shuts again while the window is still open.
+    await _advertise(hass, door_closed=True)
+    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
+
+    # And the relock timer agrees rather than reviving "unlocked".
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == LockState.LOCKED
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
 async def test_polling_stops_after_the_identity_is_rejected(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

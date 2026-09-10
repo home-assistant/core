@@ -212,6 +212,7 @@ class IseoLockEntity(LockEntity):
             self._opened_while_unlocking = not door_closed
         if (
             door_closed
+            and not self._opened_while_unlocking
             and self._poll_suppress_until
             and dt_util.utcnow() < self._poll_suppress_until
         ):
@@ -219,11 +220,18 @@ class IseoLockEntity(LockEntity):
             # released, so ignore that. Never ignore the door actually opening:
             # the next reading can be minutes away, and the relock timer would
             # otherwise leave the entity locked with the door standing open.
+            # Nor a close once that open has been seen — that is the door
+            # itself, not the lag, and it is what clears the flag below.
             return
 
         if not door_closed:
             self._cancel_relock_task()
             self._poll_suppress_until = None
+        else:
+            # Nothing is standing open any more, so the relock timer has no
+            # reason to hold off. Leaving this set would strand the entity on
+            # "unlocked" until the next advertisement, minutes away.
+            self._opened_while_unlocking = False
 
         self._attr_is_locked = door_closed
         self.async_write_ha_state()
