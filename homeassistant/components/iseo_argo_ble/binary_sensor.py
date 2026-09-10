@@ -1,0 +1,439 @@
+"""ISEO Argo BLE lock credential sensors."""
+
+import asyncio
+from collections.abc import AsyncIterator, Sequence
+from contextlib import asynccontextmanager
+from dataclasses import replace
+from typing import cast, override
+
+from iseo_argo_ble import (
+    USER_TYPE_ACCOUNT,
+    USER_TYPE_BT,
+    USER_TYPE_FINGERPRINT,
+    USER_TYPE_INVITATION,
+    USER_TYPE_PIN,
+    USER_TYPE_RFID,
+    IseoAuthError,
+    IseoClient,
+    IseoConnectionError,
+    UserEntry,
+)
+
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.const import CONF_ADDRESS, CONF_UUID, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from . import IseoConfigEntry
+from .const import (
+    ADMIN_SETTLE_DELAY,
+    CONF_ADMIN_UUID,
+    CONF_SAVED_VALIDITY,
+    DEFAULT_USER_SUBTYPE,
+    DOMAIN,
+)
+from .coordinator import IseoUserCoordinator
+
+PARALLEL_UPDATES = 1
+
+# The credential kind is part of the entity name: a person often holds several
+# (a card and a phone), and the lock lets them share a name.
+USER_TYPE_TRANSLATION_KEYS = {
+    USER_TYPE_RFID: "credential_rfid",
+    USER_TYPE_BT: "credential_phone",
+    USER_TYPE_PIN: "credential_pin",
+    USER_TYPE_INVITATION: "credential_invitation",
+    USER_TYPE_FINGERPRINT: "credential_fingerprint",
+    USER_TYPE_ACCOUNT: "credential_account",
+}
+
+
+def _translation_key(user: UserEntry) -> str:
+    """Return the name template for one credential's kind.
+
+    USER_TYPE_BT covers both smartphones and gateways, so the subtype decides
+    between them — calling a gateway a phone would be plain wrong on the one
+    lock that has two of them.
+    """
+    if user.user_type == USER_TYPE_BT and user.inner_subtype == DEFAULT_USER_SUBTYPE:
+        return "credential_gateway"
+    return USER_TYPE_TRANSLATION_KEYS.get(user.user_type, "credential_other")
+
+
+def _is_home_assistant_identity(
+    user: UserEntry, gateway_uuid_hex: str, admin_uuid_hex: str | None
+) -> bool:
+    """Return True for the two identities Home Assistant enrolled for itself.
+
+    Both are matched by the UUID this entry enrolled. The gateway subtype is
+    generic — another gateway enrolled on the same lock carries it too — so
+    filtering on the subtype would hide a credential that is not ours.
+    """
+    if user.user_type != USER_TYPE_BT:
+        return False
+    return user.uuid_hex == gateway_uuid_hex or (
+        admin_uuid_hex is not None and user.uuid_hex == admin_uuid_hex
+    )
+
+
+def _prune_saved_validity(
+    hass: HomeAssistant, entry: IseoConfigEntry, users: Sequence[UserEntry]
+) -> None:
+    """Drop stored windows for credentials the lock no longer reports suspended.
+
+    A marker only claims "Home Assistant suspended this one and kept its
+    window". Once the lock reports the credential enabled again — restored in
+    the Argo app, say — that claim is stale. Leaving it behind would let a
+    later suspension made outside Home Assistant look like one of ours and be
+    restored with an obsolete window, so the list the lock just gave us is
+    what the stored map gets reconciled against.
+    """
+    saved = entry.data.get(CONF_SAVED_VALIDITY, {})
+    if not saved:
+        return
+    still_suspended = {
+        f"{user.user_type}_{user.uuid_hex}" for user in users if user.disabled
+    }
+    kept = {key: value for key, value in saved.items() if key in still_suspended}
+    if kept != saved:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_SAVED_VALIDITY: kept}
+        )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: IseoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up a sensor per lock credential from a config entry."""
+    if (coordinator := entry.runtime_data.user_coordinator) is None:
+        return
+    if not coordinator.last_update_success:
+        # The first credential read failed. The lock is deliberately set up
+        # anyway, so there is simply nothing to add until a later read works.
+        return
+
+    # Reconcile before the entities read the map, so each one starts from a
+    # marker the lock still corroborates.
+    _prune_saved_validity(hass, entry, coordinator.data)
+
+    gateway_uuid_hex = entry.data[CONF_UUID]
+    admin_uuid_hex = entry.data.get(CONF_ADMIN_UUID)
+    async_add_entities(
+        IseoCredentialSensor(coordinator, user)
+        for user in coordinator.data
+        if not _is_home_assistant_identity(user, gateway_uuid_hex, admin_uuid_hex)
+    )
+
+
+class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorEntity):
+    """Reports whether one credential enrolled on the lock is suspended.
+
+    On means nobody has suspended it; off means an administrator has. That is
+    not quite the same as "can open the door right now": a credential can also
+    carry a validity window of its own — an invitation, or a guest card that
+    runs to the end of the month — and the lock keeps that window separately
+    from the suspension. One sitting outside its window still reads on, because
+    the only thing the lock reports here is the suspension.
+
+    Read-only on purpose. Suspending someone's credential is a change to who
+    can get in, so it goes through the `set_credential_enabled` action, which
+    only administrators may call.
+    """
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: IseoUserCoordinator, user: UserEntry) -> None:
+        """Initialize the credential sensor."""
+        super().__init__(coordinator)
+        entry = coordinator.config_entry
+        self._uuid_hex = user.uuid_hex
+        self._user_type = user.user_type
+        self._inner_subtype = user.inner_subtype
+        # The time profile the lock had before Home Assistant touched it.
+        # Suspending overwrites it, so this is the only copy to restore from —
+        # and if the credential was already suspended when the list was first
+        # read, what we hold is the expired sentinel, not the real window.
+        self._validity: bytes | None
+        saved = entry.data.get(CONF_SAVED_VALIDITY, {})
+        validity_key = f"{user.user_type}_{user.uuid_hex}"
+        if user.disabled and validity_key in saved:
+            # Home Assistant suspended this one and kept its window; the lock
+            # only reports the expired sentinel now. A stored null is not a
+            # missing entry: it records a credential that had no restriction,
+            # which is just as restorable as one that did.
+            stored = saved[validity_key]
+            self._validity = None if stored is None else bytes.fromhex(stored)
+            self._validity_is_original = True
+        else:
+            self._validity = user.validity
+            self._validity_is_original = not user.disabled
+
+        self._attr_translation_key = _translation_key(user)
+        # Credentials enrolled without a name are only identifiable by UUID.
+        self._credential_name = user.name.strip() or user.uuid_hex[:8]
+        self._attr_translation_placeholders = {"name": self._credential_name}
+        self._attr_unique_id = (
+            f"{entry.unique_id}_user_{user.user_type}_{user.uuid_hex}"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, cast(str, entry.unique_id))},
+        )
+        self._attr_is_on = not user.disabled
+
+    @property
+    def _user(self) -> UserEntry | None:
+        """Return this sensor's credential in the current coordinator data."""
+        return next(
+            (
+                user
+                for user in self.coordinator.data
+                if user.uuid_hex == self._uuid_hex and user.user_type == self._user_type
+            ),
+            None,
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True while the lock still lists this credential."""
+        return super().available and self._user is not None
+
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Take the new state, unless the credential is gone from the lock."""
+        if (user := self._user) is not None:
+            self._attr_is_on = not user.disabled
+        super()._handle_coordinator_update()
+
+    @override
+    async def async_update(self) -> None:
+        """Do nothing, on purpose.
+
+        `CoordinatorEntity` would ask the coordinator to refresh, which re-reads
+        the credential list over an admin session. Repeating that is what faults
+        the lock's firmware, so `homeassistant.update_entity` is inert here.
+        Reload the config entry to pick up credentials changed elsewhere.
+        """
+
+    @asynccontextmanager
+    async def _admin_session(self) -> AsyncIterator[IseoClient]:
+        """Hold the BLE mutex for one admin operation on this credential."""
+        entry = self.coordinator.config_entry
+        address = entry.data[CONF_ADDRESS]
+        if not (
+            ble_device := async_ble_device_from_address(
+                self.hass, address, connectable=True
+            )
+        ):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={"address": address},
+            )
+
+        try:
+            async with entry.runtime_data.ble_lock:
+                self.coordinator.client.update_ble_device(ble_device)
+                try:
+                    yield self.coordinator.client
+                finally:
+                    # Always wait, failure included: the lock needs the same
+                    # moment to close the session either way, and targeting
+                    # several credentials runs this once per entity.
+                    await asyncio.sleep(ADMIN_SETTLE_DELAY)
+        except ValueError as err:
+            # The lock no longer lists this credential — it was removed in the
+            # Argo app since the list was read. Drop its stored window too, or
+            # re-enrolling the same UUID would inherit the old one.
+            self._remember_validity(suspended=False)
+            self._forget_credential()
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="credential_not_on_lock",
+                translation_placeholders={"name": self._credential_name},
+            ) from err
+        except IseoAuthError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="admin_rejected_identity",
+            ) from err
+        except (TimeoutError, IseoConnectionError, OSError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+
+    async def async_set_enabled(self, enabled: bool) -> None:
+        """Let this credential open the lock, or stop it doing so."""
+        if enabled and not self._validity_is_original:
+            # Restoring would have to guess, and guessing "no restriction" hands
+            # out more access than the credential ever had.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="validity_window_unknown",
+                translation_placeholders={"name": self._credential_name},
+            )
+
+        async with self._admin_session() as client:
+            # Read inside the mutex, so this is the map as it stands once
+            # every other credential's operation has settled rather than one
+            # captured while waiting to get in.
+            saved_before = dict(
+                self.coordinator.config_entry.data.get(CONF_SAVED_VALIDITY, {})
+            )
+            if not enabled:
+                # Persist before the write, not after: the write overwrites
+                # the window on the lock and only this entity instance held a
+                # copy, so shutting down in between — the settling delay alone
+                # is seconds — would leave the credential suspended with
+                # nothing to restore from. Inside the session, so a lock that
+                # was never reached leaves no marker claiming Home Assistant
+                # suspended it.
+                self._remember_validity(suspended=True)
+            try:
+                await client.set_user_disabled(
+                    uuid_hex=self._uuid_hex,
+                    user_type=self._user_type,
+                    disabled=not enabled,
+                    # Put the credential's own validity window back, so restoring
+                    # an invitation that ran for one weekend does not make it
+                    # permanent.
+                    validity=self._validity if enabled else None,
+                )
+            except IseoAuthError:
+                # The lock refused the identity, so the suspension definitively
+                # did not happen and the marker just written claims something
+                # untrue. Put the map back exactly as it was rather than
+                # dropping the key: re-suspending an already-suspended
+                # credential legitimately finds a marker here, and that one has
+                # to survive. Connection failures are deliberately left alone —
+                # the write may still have landed, and discarding the window
+                # then would make the credential unrestorable.
+                self._restore_saved_validity(saved_before)
+                raise
+
+        if enabled:
+            # Only now is the lock known to hold the window again, so the
+            # stored copy is safe to drop.
+            self._remember_validity(suspended=False)
+        self._apply_to_cached_users(disabled=not enabled)
+
+    @property
+    def _validity_key(self) -> str:
+        """Return the key this credential's stored window is held under.
+
+        A raw identifier can repeat across credential types, so the type is
+        part of the identity everywhere else and has to be here too.
+        """
+        return f"{self._user_type}_{self._uuid_hex}"
+
+    def _remember_validity(self, suspended: bool) -> None:
+        """Keep or drop this credential's stored validity window."""
+        entry = self.coordinator.config_entry
+        saved = dict(entry.data.get(CONF_SAVED_VALIDITY, {}))
+        if suspended and self._validity_is_original:
+            # Store the window even when it is None: "no restriction" is a
+            # window worth putting back, and a missing key has to keep meaning
+            # "we never saw the original". Suspending a credential that was
+            # already suspended stores nothing, because what is held then is
+            # the lock's expired sentinel — saving it would let a later
+            # restore hand back an expired profile, or grant unrestricted
+            # access, as though it were the real window.
+            saved[self._validity_key] = (
+                None if self._validity is None else self._validity.hex()
+            )
+        else:
+            saved.pop(self._validity_key, None)
+        if saved != entry.data.get(CONF_SAVED_VALIDITY, {}):
+            self.hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_SAVED_VALIDITY: saved}
+            )
+
+    def _restore_saved_validity(self, previous: dict[str, str | None]) -> None:
+        """Put this credential's stored window back as the snapshot had it.
+
+        Only this credential's key is touched. Writing the whole map back
+        would undo whatever another credential settled in the meantime, and
+        nothing here has any business deciding what theirs should hold.
+        """
+        entry = self.coordinator.config_entry
+        saved = dict(entry.data.get(CONF_SAVED_VALIDITY, {}))
+        key = self._validity_key
+        if key in previous:
+            saved[key] = previous[key]
+        else:
+            saved.pop(key, None)
+        if saved != entry.data.get(CONF_SAVED_VALIDITY, {}):
+            self.hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_SAVED_VALIDITY: saved}
+            )
+
+    async def async_delete_credential(self) -> None:
+        """Remove this credential from the lock for good.
+
+        There is no undo from Home Assistant: whoever held it has to be
+        enrolled again with the Master Card.
+        """
+        if (
+            self._user_type == USER_TYPE_BT
+            and self._inner_subtype == DEFAULT_USER_SUBTYPE
+        ):
+            # Erasing a gateway takes master-level authorisation, which the
+            # lock only grants from a physical Master Card scan. Administrator
+            # rights are not enough, so the erase would sit there unanswered
+            # until it timed out. Suspending one still works.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_delete_gateway_credential",
+                translation_placeholders={"name": self._credential_name},
+            )
+
+        async with self._admin_session() as client:
+            await client.erase_user_by_uuid(
+                uuid_bytes=bytes.fromhex(self._uuid_hex),
+                user_type=self._user_type,
+                subtype=self._inner_subtype,
+            )
+
+        self._remember_validity(suspended=False)
+        self._forget_credential()
+
+    def _forget_credential(self) -> None:
+        """Drop the credential from the cached list and remove its entity.
+
+        Neither comes back on its own: the credential is gone from the lock,
+        and the list is only re-read when the config entry reloads.
+        """
+        self.coordinator.async_set_updated_data(
+            [
+                user
+                for user in self.coordinator.data
+                if user.uuid_hex != self._uuid_hex or user.user_type != self._user_type
+            ]
+        )
+        er.async_get(self.hass).async_remove(self.entity_id)
+
+    def _apply_to_cached_users(self, *, disabled: bool) -> None:
+        """Patch the cached credential list rather than re-reading it.
+
+        Re-reading costs a second BLE session — connect, ECDH, admin login and a
+        paginated read of every credential — to learn a value we just wrote, and
+        the lock answers nobody else while it runs. The write above raises on
+        failure, so getting here means the lock took it.
+        """
+        self.coordinator.async_set_updated_data(
+            [
+                replace(user, disabled=disabled)
+                if user.uuid_hex == self._uuid_hex and user.user_type == self._user_type
+                else user
+                for user in self.coordinator.data
+            ]
+        )
