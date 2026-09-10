@@ -1,11 +1,12 @@
 """Test for calendar platform of the Cookidoo integration."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from dataclasses import asdict
 from datetime import UTC, date, datetime
 from unittest.mock import AsyncMock, patch
 
 from cookidoo_api import (
+    CookidooAuthData,
     CookidooAuthException,
     CookidooParseException,
     CookidooRequestException,
@@ -166,9 +167,6 @@ async def test_get_events_relogin_persists_tokens(
         week_plan,
         week_plan,
     ]
-    mock_cookidoo_client.login.side_effect = lambda: setattr(
-        mock_cookidoo_client, "auth_data", AUTH_DATA
-    )
 
     await hass.services.async_call(
         "calendar",
@@ -190,6 +188,7 @@ async def test_get_events_persists_rotated_tokens(
     hass: HomeAssistant,
     cookidoo_config_entry_with_token: MockConfigEntry,
     mock_cookidoo_client: AsyncMock,
+    notify_auth_data_update: Callable[[CookidooAuthData], None],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test tokens rotated during a plain calendar fetch are persisted."""
@@ -204,7 +203,7 @@ async def test_get_events_persists_rotated_tokens(
     week_plan = mock_cookidoo_client.get_recipes_in_calendar_week.return_value
 
     def _rotate(week_day: date) -> list:
-        mock_cookidoo_client.auth_data = AUTH_DATA
+        notify_auth_data_update(AUTH_DATA)
         return week_plan
 
     mock_cookidoo_client.get_recipes_in_calendar_week.side_effect = _rotate

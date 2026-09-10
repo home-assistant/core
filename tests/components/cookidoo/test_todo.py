@@ -1,12 +1,13 @@
 """Test for todo platform of the Cookidoo integration."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from dataclasses import asdict
 import re
 from unittest.mock import AsyncMock, patch
 
 from cookidoo_api import (
     CookidooAdditionalItem,
+    CookidooAuthData,
     CookidooIngredientItem,
     CookidooRequestException,
 )
@@ -299,13 +300,14 @@ async def test_failed_action_persists_rotated_tokens(
     hass: HomeAssistant,
     cookidoo_config_entry_with_token: MockConfigEntry,
     mock_cookidoo_client: AsyncMock,
+    notify_auth_data_update: Callable[[CookidooAuthData], None],
 ) -> None:
     """Test tokens rotated during a failing todo action are still persisted."""
     await setup_integration(hass, cookidoo_config_entry_with_token)
 
     # The library rotates the tokens while serving the request, which then fails
     def _rotate_then_fail(uids: list[str]) -> None:
-        mock_cookidoo_client.auth_data = AUTH_DATA
+        notify_auth_data_update(AUTH_DATA)
         raise CookidooRequestException
 
     mock_cookidoo_client.remove_additional_items.side_effect = _rotate_then_fail
