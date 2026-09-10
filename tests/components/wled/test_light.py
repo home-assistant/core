@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
+from wled import Color, Device as WLEDDevice, WLEDConnectionError, WLEDError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -391,6 +391,34 @@ async def test_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
         on=True,
         segment_id=0,
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_cct_light_reflects_active_color_mode(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+) -> None:
+    """Test reporting the active color mode for an RGB+CCT segment."""
+    device = mock_wled.update.return_value
+
+    device.state.segments[0].color = Color(primary=(255, 0, 0, 0))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.RGBW
+    assert state.attributes.get(ATTR_RGBW_COLOR) == (255, 0, 0, 0)
+
+    device.state.segments[0].color = Color(primary=(0, 0, 0, 200))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.COLOR_TEMP
+    assert state.attributes.get(ATTR_RGBW_COLOR) is None
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
