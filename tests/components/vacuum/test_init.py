@@ -457,12 +457,6 @@ async def test_clean_area_no_registry_entry(hass: HomeAssistant) -> None:
     ):
         mock_vacuum.async_create_segments_issue()
 
-    with pytest.raises(
-        RuntimeError,
-        match="Cannot delete segments issue, registry entry is not set",
-    ):
-        mock_vacuum.async_delete_segments_issue()
-
 
 @pytest.mark.usefixtures("config_flow_fixture")
 async def test_last_seen_segments(
@@ -543,14 +537,6 @@ async def test_segments_changed_issue(
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
-
-    # Simulate an entity reload, where the issue persists but runtime state does not.
-    mock_vacuum._segments_changed_last_seen = None
-    mock_vacuum.async_delete_segments_issue()
-
-    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
-
-    mock_vacuum.async_create_segments_issue()
 
     entity_registry.async_update_entity_options(
         mock_vacuum.entity_id,

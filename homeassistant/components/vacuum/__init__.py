@@ -334,7 +334,7 @@ class StateVacuumEntity(
                     f" {entity.entity_id}"
                 )
 
-            options: Mapping[str, Any] = entity.registry_entry.options.get(DOMAIN, {})
+            options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
             area_mapping: dict[str, list[str]] | None = options.get("area_mapping")
 
             if area_mapping is None:
@@ -422,23 +422,6 @@ class StateVacuumEntity(
         self._segments_changed_last_seen = options.get("last_seen_segments")
 
     @callback
-    def async_delete_segments_issue(self) -> None:
-        """Delete the segments-changed repair issue.
-
-        Integrations should call this method when the vacuum reports the same
-        segments as those previously saved in the area mapping.
-        """
-        if self.registry_entry is None:
-            raise RuntimeError(
-                "Cannot delete segments issue, registry entry is not set for"
-                f" {self.entity_id}"
-            )
-
-        issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
-        ir.async_delete_issue(self.hass, DOMAIN, issue_id)
-        self._segments_changed_last_seen = None
-
-    @callback
     def _async_check_segments_issues(self) -> None:
         """Create or delete segment-related repair issues."""
         if self.registry_entry is None:
@@ -450,7 +433,9 @@ class StateVacuumEntity(
             VacuumEntityFeature.CLEAN_AREA not in self.supported_features
             or options.get("last_seen_segments") != self._segments_changed_last_seen
         ):
-            self.async_delete_segments_issue()
+            issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            self._segments_changed_last_seen = None
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
