@@ -132,25 +132,42 @@ async def test_sensor_unknown_value(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(None, id="missing"),
+        pytest.param("Unexpected", id="unsupported"),
+        pytest.param("Unknown", id="unknown"),
+        *(
+            pytest.param(f"Unknown {index}", id=f"unknown_{index}")
+            for index in range(11)
+        ),
+    ],
+)
 async def test_enum_sensors_unknown_for_unsupported_values(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_besen_client: Mock,
+    value: str | None,
 ) -> None:
-    """Test unsupported protocol values are exposed as unknown."""
-
-    mock_besen_client.state = charger_state(
-        charge=ChargeStatus(
-            error_details="Unexpected",
-            charging_status="Unexpected",
-            charging_status_description="Unexpected",
-            plug_state="Unexpected",
-            output_state="Unexpected",
-            current_state="Unexpected",
-        )
-    )
+    """Test missing and undocumented protocol values clear the previous state."""
 
     await setup_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    publish_besen_state(
+        mock_besen_client,
+        charger_state(
+            charge=ChargeStatus(
+                error_details=value,
+                charging_status=value,
+                charging_status_description=value,
+                plug_state=value,
+                output_state=value,
+                current_state=value,
+            )
+        ),
+    )
+    await hass.async_block_till_done()
 
     for entity_id in (
         CHARGING_STATUS_ENTITY_ID,
@@ -258,12 +275,18 @@ async def test_three_phase_sensor_filtering(
     assert three_phase_unique_ids.issubset(unique_ids) is expected
 
 
-def test_enum_sensor_options_cover_library_states() -> None:
-    """Test every library state has a stable Home Assistant option."""
+def test_enum_sensor_options_cover_known_library_states() -> None:
+    """Test every known library state has a stable Home Assistant option."""
 
-    assert set(ERROR_STATES) == set(ERRORS.values())
+    assert set(ERROR_STATES) == set(ERRORS.values()) - {"Unknown"}
     assert set(CHARGING_STATES) == set(CHARGING_STATUS.values())
     assert set(CHARGING_MESSAGES) == set(CHARGING_STATUS_DESCRIPTIONS.values())
-    assert set(PLUG_STATES) == set(PLUG_STATE)
-    assert set(OUTPUT_STATES) == set(OUTPUT_STATE)
-    assert set(CURRENT_STATES) == set(CURRENT_STATE)
+    assert set(PLUG_STATES) == set(PLUG_STATE) - {
+        f"Unknown {index}" for index in range(6)
+    }
+    assert set(OUTPUT_STATES) == set(OUTPUT_STATE) - {
+        f"Unknown {index}" for index in range(7)
+    }
+    assert set(CURRENT_STATES) == set(CURRENT_STATE) - {
+        f"Unknown {index}" for index in range(1, 11)
+    }

@@ -37,7 +37,6 @@ ERROR_STATES: Final = {
     "CP Error": "cp_error",
     "Emergency Stop": "emergency_stop",
     "Over Temperature": "over_temperature",
-    "Unknown": "unknown",
     "Leakage Protection": "leakage_protection",
     "Short Circuit": "short_circuit",
     "Over Current": "over_current",
@@ -79,51 +78,28 @@ CHARGING_MESSAGES: Final = {
 }
 
 PLUG_STATES: Final = {
-    "Unknown 0": "unknown_0",
     "Disconnected": "disconnected",
     "Connected Unlocked": "connected_unlocked",
-    "Unknown 1": "unknown_1",
     "Connected Locked": "connected_locked",
-    "Unknown 2": "unknown_2",
-    "Unknown 3": "unknown_3",
-    "Unknown 4": "unknown_4",
-    "Unknown 5": "unknown_5",
 }
 
 OUTPUT_STATES: Final = {
-    "Unknown 0": "unknown_0",
     "Charging": "charging",
     "Idle": "idle",
-    "Unknown 1": "unknown_1",
-    "Unknown 2": "unknown_2",
-    "Unknown 3": "unknown_3",
-    "Unknown 4": "unknown_4",
-    "Unknown 5": "unknown_5",
-    "Unknown 6": "unknown_6",
 }
 
 CURRENT_STATES: Final = {
     "Fault": "fault",
     "Charging Fault 1": "charging_fault_1",
     "Charging Fault 2": "charging_fault_2",
-    "Unknown 1": "unknown_1",
-    "Unknown 2": "unknown_2",
-    "Unknown 3": "unknown_3",
-    "Unknown 4": "unknown_4",
-    "Unknown 5": "unknown_5",
-    "Unknown 6": "unknown_6",
     "Waiting for swipe": "waiting_for_swipe",
     "Waiting for button": "waiting_for_button",
     "Not Connected": "not_connected",
     "Ready to charge": "ready_to_charge",
     "Charging": "charging",
     "Completed": "completed",
-    "Unknown 7": "unknown_7",
     "Completed Full Charge": "completed_full_charge",
-    "Unknown 8": "unknown_8",
-    "Unknown 9": "unknown_9",
     "Charging Reservation": "charging_reservation",
-    "Unknown 10": "unknown_10",
 }
 
 

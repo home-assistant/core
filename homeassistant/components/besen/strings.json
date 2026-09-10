@@ -81,16 +81,6 @@
           "fault": "[%key:common::state::fault%]",
           "not_connected": "Not connected",
           "ready_to_charge": "Ready to charge",
-          "unknown_1": "Unknown 1",
-          "unknown_10": "Unknown 10",
-          "unknown_2": "Unknown 2",
-          "unknown_3": "Unknown 3",
-          "unknown_4": "Unknown 4",
-          "unknown_5": "Unknown 5",
-          "unknown_6": "Unknown 6",
-          "unknown_7": "Unknown 7",
-          "unknown_8": "Unknown 8",
-          "unknown_9": "Unknown 9",
           "waiting_for_button": "Waiting for button",
           "waiting_for_swipe": "Waiting for card swipe"
         }
@@ -117,8 +107,7 @@
           "relay_stick_error": "Relay stick error",
           "rtc_failure": "RTC failure",
           "short_circuit": "Short circuit",
-          "ungrounded": "Ungrounded",
-          "unknown": "Unknown"
+          "ungrounded": "Ungrounded"
         }
       },
       "external_temperature": { "name": "External temperature" },
@@ -133,14 +122,7 @@
         "name": "Output state",
         "state": {
           "charging": "[%key:common::state::charging%]",
-          "idle": "[%key:common::state::idle%]",
-          "unknown_0": "Unknown 0",
-          "unknown_1": "Unknown 1",
-          "unknown_2": "Unknown 2",
-          "unknown_3": "Unknown 3",
-          "unknown_4": "Unknown 4",
-          "unknown_5": "Unknown 5",
-          "unknown_6": "Unknown 6"
+          "idle": "[%key:common::state::idle%]"
         }
       },
       "plug_state": {
@@ -148,13 +130,7 @@
         "state": {
           "connected_locked": "Connected, locked",
           "connected_unlocked": "Connected, unlocked",
-          "disconnected": "[%key:common::state::disconnected%]",
-          "unknown_0": "Unknown 0",
-          "unknown_1": "Unknown 1",
-          "unknown_2": "Unknown 2",
-          "unknown_3": "Unknown 3",
-          "unknown_4": "Unknown 4",
-          "unknown_5": "Unknown 5"
+          "disconnected": "[%key:common::state::disconnected%]"
         }
       },
       "session_energy": { "name": "Session energy" },
