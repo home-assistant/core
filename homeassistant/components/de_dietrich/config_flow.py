@@ -73,7 +73,6 @@ class DeDietrichConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            user_input[CONF_HOST] = user_input[CONF_HOST].lower()
             connection = {
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],

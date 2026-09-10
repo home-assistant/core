@@ -10,9 +10,9 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.de_dietrich.const import DOMAIN
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 
 from . import MOCK_USER_INPUT, seed_boiler
 
@@ -34,8 +34,21 @@ def _patch_temporary_unit(connection: MockModbusConnection) -> _patch:
     )
 
 
-async def test_user_step_shows_form(hass: HomeAssistant) -> None:
-    """Test the initial form renders with no errors before any input."""
+@pytest.mark.parametrize(
+    "boiler_type",
+    [
+        pytest.param(20, id="diematic_3_type_20"),
+        pytest.param(22, id="diematic_3_type_22"),
+        pytest.param(24, id="diematic_4_type_24"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_success(hass: HomeAssistant, boiler_type: int) -> None:
+    """Test the flow detects supported base layouts and stores settings."""
+    mock_conn = MockModbusConnection()
+    unit = mock_conn.for_unit(10)
+    seed_boiler(unit, boiler_type)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -44,19 +57,9 @@ async def test_user_step_shows_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_success(hass: HomeAssistant) -> None:
-    """Test the flow detects the base layout and stores connection settings."""
-    mock_conn = MockModbusConnection()
-    unit = mock_conn.for_unit(10)
-    seed_boiler(unit)
-
     with _patch_temporary_unit(mock_conn):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -64,6 +67,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
     assert result["data"] == MOCK_USER_INPUT
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_rejects_unknown_device(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -71,11 +75,13 @@ async def test_user_step_rejects_unknown_device(
     mock_conn = MockModbusConnection()
     seed_boiler(mock_conn.for_unit(10), 999)
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
     with _patch_temporary_unit(mock_conn):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -85,25 +91,43 @@ async def test_user_step_rejects_unknown_device(
         "probe outcomes: ['success', 'success', 'success', 'unsupported'" in caplog.text
     )
 
+    working_conn = MockModbusConnection()
+    seed_boiler(working_conn.for_unit(10))
 
+    with _patch_temporary_unit(working_conn):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    "boiler_type",
+    [
+        pytest.param(20, id="diematic_3_type_20"),
+        pytest.param(22, id="diematic_3_type_22"),
+        pytest.param(24, id="diematic_4_type_24"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_detects_isystem(
-    hass: HomeAssistant,
-) -> None:
+async def test_user_step_detects_isystem(hass: HomeAssistant, boiler_type: int) -> None:
     """Test iSystem detection survives a failed base-layout probe."""
     mock_conn = MockModbusConnection()
     unit = mock_conn.for_unit(10)
-    seed_boiler(unit)
+    seed_boiler(unit, boiler_type)
     unit.fail_read(3, ModbusTimeoutError("base probe timeout"))
     unit.fail_read(600, None)
     unit.fail_read(679, None)
     unit.holding.update({600: 100, 679: 12, 680: 30, 681: 2, 682: 10, 683: 9, 684: 25})
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
     with _patch_temporary_unit(mock_conn):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -118,11 +142,13 @@ async def test_user_step_cannot_connect(
     mock_conn = MockModbusConnection()
     mock_conn.for_unit(10).fail_requests(ModbusConnectionError("stuck"))
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
     with _patch_temporary_unit(mock_conn):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -153,58 +179,106 @@ async def test_user_step_identity_read_fails(hass: HomeAssistant) -> None:
     unit.fail_read(600, ModbusTimeoutError("no iSystem identity"))
     unit.fail_read(679, ModbusTimeoutError("no iSystem clock"))
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
     with _patch_temporary_unit(mock_conn):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    working_conn = MockModbusConnection()
+    seed_boiler(working_conn.for_unit(10))
+
+    with _patch_temporary_unit(working_conn):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_link_settings_conflict(hass: HomeAssistant) -> None:
+    """Test a shared Modbus link conflict is recoverable."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.de_dietrich.config_flow.async_get_temporary_unit",
+        side_effect=HomeAssistantError("different framing"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["description_placeholders"] == {"error": "different framing"}
+
+    working_conn = MockModbusConnection()
+    seed_boiler(working_conn.for_unit(10))
+
+    with _patch_temporary_unit(working_conn):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_unknown_error(hass: HomeAssistant) -> None:
     """Test unexpected errors are logged and shown as unknown."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
     with patch(
-        "homeassistant.components.de_dietrich.config_flow._async_detect",
+        "homeassistant.components.de_dietrich.config_flow.async_get_temporary_unit",
         side_effect=Exception("boom"),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
 
+    working_conn = MockModbusConnection()
+    seed_boiler(working_conn.for_unit(10))
 
-@pytest.mark.parametrize(
-    "host",
-    [
-        pytest.param("boiler.local", id="same_connection"),
-        pytest.param("BOILER.LOCAL", id="host_case"),
-    ],
-)
-async def test_user_step_already_configured(hass: HomeAssistant, host: str) -> None:
+    with _patch_temporary_unit(working_conn):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_step_already_configured(hass: HomeAssistant) -> None:
     """Test duplicates are rejected without connecting to the boiler."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={**MOCK_USER_INPUT, CONF_HOST: "boiler.local"}
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
     with patch(
         "homeassistant.components.de_dietrich.config_flow.async_get_temporary_unit",
         side_effect=ModbusConnectionError("offline"),
     ) as mock_get_unit:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={**MOCK_USER_INPUT, CONF_HOST: host},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
         )
 
     assert result["type"] is FlowResultType.ABORT
