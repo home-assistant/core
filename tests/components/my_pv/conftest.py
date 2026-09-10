@@ -83,5 +83,8 @@ def mock_my_pv_client() -> Generator[AsyncMock]:
         client.get_command_configuration = Mock(
             side_effect=_command_configuration_lookup
         )
+        client.connected = True
+        client.is_on = True
+        client.send_command = AsyncMock(return_value=True)
 
         yield client
