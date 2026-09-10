@@ -378,6 +378,11 @@ async def test_event_listener_category_change_logs_again(
             logging.WARNING,
             "Splunk response error: Internal Server Error",
         ),
+        (
+            SplunkPayloadError(0, "Bad request", HTTPStatus.BAD_REQUEST),
+            logging.WARNING,
+            "Splunk payload error: Bad request",
+        ),
     ],
 )
 async def test_event_listener_error_handling(
