@@ -9,17 +9,13 @@ description: Everything you need to know to build, test and review Home Assistan
 
 ## General guidelines
 
-- When looking for examples, prefer Platinum or Gold integrations, but judge each pattern on its own merits: the tier certifies the quality-scale rules, not every design choice in the code.
+- When looking for examples, prefer integrations with the platinum or gold quality scale level first; the tier certifies the quality-scale rules, not every design choice in the code.
 - Polling intervals are NOT user-configurable. Never add scan_interval, update_interval, or polling frequency options to config flows or config entries.
-- Do NOT allow users to set config entry names in config flows. Names are automatically generated or can be customized later in UI. Exceptions: helper integrations may allow custom names, and subentry flows may legitimately ask for one (e.g. naming a conversation-agent subentry).
-- The `home-assistant-config-flow-name-field` pylint check enforces this for `CONF_NAME`, `CONF_DEVICE_NAME`, `name` and `device_name`, and carves out only those two cases. Anything else needs a reviewed `# pylint: disable-next=` line: never add one to a new flow, and don't flag an existing one that already carries such a comment.
-- A path- or URL-based source that needs to tell its instances apart should derive a distinguishing title from the configured value, as the `file` integration does. Derive from enough of the value to keep different sources apart: `generic` derives from the URL host alone, so two cameras behind one host end up with the same title.
+- Do NOT allow users to set config entry names in config flows. Names are automatically generated or can be customized later in UI. Exceptions: helper integrations may allow custom names, and a subentry flow may ask for one (e.g. naming a conversation-agent subentry).
 - For entity actions and entity services, avoid requesting redundant defensive checks for fields already enforced by Home Assistant validation schemas and entity filters; only request extra guards when values bypass validation or are transformed unsafely.
 - When validation guarantees a key is present, prefer direct dictionary indexing (`data["key"]`) over `.get("key")` so invalid assumptions fail fast.
 - Integrations should be thin wrappers. Protocol parsing, device state machines, or other domain logic belong in a separate PyPI library, not in the integration itself. If unsure, ask before inlining.
-- Integrations should not patch around bugs or limitations in a library's own behavior — fix the library instead. Logic that only exists because of Home Assistant's own lifecycle (for example, handing an authenticated session off from `async_migrate_entry` to `async_setup_entry` to avoid a duplicate login) is integration-specific glue, not a library workaround.
-- Keep each pull request to a single change; add reauth, reconfigure, diagnostics, repairs, and extra platforms in follow-up PRs, and bump dependencies separately.
-- Be batteries-included: set everything up and let users disable what they don't want; don't make them choose which accounts or devices to add — except an open-ended result set from a query (e.g. every station within a search radius) genuinely needs a picker, unlike a finite set of accounts or devices behind one hub.
+- Integrations should not implement fixes or workarounds for limitations in libraries. Instead, the library should be updated to fix the issue. Logic that exists only because of Home Assistant's own lifecycle is integration glue, not a library workaround.
 
 The following platforms have extra guidelines:
 - **Diagnostics**: [`platform-diagnostics.md`](platform-diagnostics.md) for diagnostic data collection
@@ -28,39 +24,18 @@ The following platforms have extra guidelines:
 ## Entity platforms
 
 - Ensure `async_added_to_hass()` and `async_will_remove_from_hass()` have symmetrical behavior. For example, if a subscription is created in `async_added_to_hass()`, it should be unsubscribed in `async_will_remove_from_hass()`. Also, if something is torn down in `async_will_remove_from_hass()`, it should be set up in `async_added_to_hass()`.
-- Register subscriptions and listeners in `async_added_to_hass()`, not `__init__()`, and undo them in `async_will_remove_from_hass()` or by handing the unsubscribe to `async_on_remove()`. (Bronze: `entity-event-setup`)
 - Entity base class (e.g. `SensorEntity`, `TrackerEntity`) provide a stable API for child classes to inherit from. Do not suggest redeclaring or duplicating attributes, properties, or methods the base class already provides, and do not add guards against the parent's behavior changing — rely on the base class instead.
-- Give every entity a stable `unique_id` built from an identifier the device or service provides (serial, account or installation id, MAC via `format_mac()`), plus a per-entity key when one identifier backs several entities (for example `f"{serial}_{description.key}"`). The config entry id is an acceptable last resort. Never build it from a user-entered value (host, IP, username), a list position, or the entity name. A channel, port or zone number works as the per-entity key when the integration passes that same number back to the device in commands; if the diff doesn't show that, ask instead of asserting it is a list index. (Bronze: `entity-unique-id`)
-- Set `has_entity_name = True`, either as `_attr_has_entity_name` on the entity or as a default on its `EntityDescription`. (Bronze: `has-entity-name`)
-- Set `PARALLEL_UPDATES` explicitly in every entity platform file. `0` removes the limit, which fits a platform whose entities all read from a coordinator or a push subscription and whose actions the backend can take concurrently. Use a bounded value (typically `1`) where the entities poll the device themselves, or where concurrent action calls are more than the backend can take. (Silver: `parallel-updates`)
 - Prefer separate entities (disabled by default if noisy) over `extra_state_attributes`.
-
-## Setup and coordinators
-
-- Create the client in `async_setup_entry()` and store it on `entry.runtime_data`, not `hass.data`. A push-only integration (webhook, subscription) with nothing to hold between calls can legitimately have no coordinator or runtime data at all. (Bronze: `runtime-data`)
-- Keep shared modules in their conventional place: a `DataUpdateCoordinator` for shared polled data in `coordinator.py`, and a shared base entity in `entity.py` once more than one platform needs it. A single-platform integration can define its entity class in that platform file. (Bronze: `common-modules`)
-- A custom `type MyConfigEntry = ConfigEntry[MyRuntimeData]` alias, used on `async_setup_entry()`, the platforms, diagnostics and the coordinator, is part of strict typing rather than a Bronze requirement. (Platinum: `strict-typing`)
-- After an action, update entity state through the coordinator rather than writing it directly: request a refresh, push the new value with the coordinator's own `async_set_updated_data()`, or rely on an already-active push-based coordinator to pick it up. If none of those fit, set optimistic state only after the command succeeds.
+- After an action, update entity state through the coordinator rather than writing it directly; set optimistic state only once the command succeeded.
 
 ## Errors
 
-- During setup, raise `ConfigEntryNotReady` for transient failures (offline device, timeout) and `ConfigEntryError` for other non-retryable ones. (Bronze: `test-before-setup`)
-- During setup, raise `ConfigEntryAuthFailed` when reauthenticating would actually restore access (invalid credentials, a revoked or insufficient scope). It starts a reauthentication flow. (Bronze: `test-before-setup`)
-- A coordinator update raises `ConfigEntryAuthFailed` for the same reasons. Reauth cannot fix an account limitation: a transient one, such as a rate limit or a quota that resets on its own, is an ordinary `UpdateFailed`, while a lasting one the user can act on, such as an expired subscription, belongs in a repair issue. (Gold: `repair-issues`)
-- In an action, `ConfigEntryAuthFailed` reaching the service-call dispatcher does not start reauth on its own: call `entry.async_start_reauth(hass)` explicitly (`async_start_reauth_if_available()` where the integration may have no reauth step), then raise a translated `HomeAssistantError`.
-- In actions, raise `ServiceValidationError` for user errors and `HomeAssistantError` for device errors. (Silver: `action-exceptions`)
-- Don't put raw or stringified library exceptions into user-facing translated messages; use exception translation keys and chain the original exception (`raise ... from err`) instead of logging it separately. (Gold: `exception-translations`)
+- An action has to start reauthentication itself: `ConfigEntryAuthFailed` reaching the service-call dispatcher does nothing, so call `entry.async_start_reauth(hass)` explicitly and raise a translated `HomeAssistantError`.
+- Reauth cannot fix an account limitation. A transient one, such as a rate limit or a quota that resets by itself, is an ordinary `UpdateFailed`; a lasting one the user can act on, such as an expired subscription, belongs in a repair issue.
 
 ## Config flow
 
-- Validate the connection before creating the entry. Exempt: nothing to test at all (webhook-based, helpers), or the connection was already exercised earlier in the same flow — during automatic discovery, for example — making a second validation at entry-creation redundant. (Bronze: `test-before-configure`)
-- Use typed selectors (`TextSelector`, `NumberSelector`, `SelectSelector`, `BooleanSelector`, etc.) for the form schema, and `add_suggested_values_to_schema()` to prefill a form that has values to suggest — it has nothing to do on a form with no defaults to prefill.
-- Set a `unique_id` when a stable identifier exists and guard duplicates with `_abort_if_unique_id_configured()`. In a reauth or reconfigure flow use `_abort_if_unique_id_mismatch()`, which compares against the entry being changed. Without a stable identifier, guard with `_async_abort_entries_match()` instead and don't invent a unique id. Both fit together where a flow has to check before it knows the identifier, which also catches entries added before the integration had unique ids. (Bronze: `unique-config-entry`)
-
-## Translations
-
-- Keep user-facing text in `strings.json`, in Sentence case (third person for action descriptions). Reuse shared strings via `[%key:common::...%]`, and translate + `snake_case` enum options instead of hardcoding display text. These conventions apply regardless of tier; translating the entity name itself is the Gold-tier `entity-translations` rule specifically.
-- Only `binary_sensor`, `button`, `event`, `number`, `sensor` and `update` name an unnamed entity after its `device_class` (those platforms override `_default_to_device_class_name()`). There, an entity whose `device_class` is unique on its device needs no `translation_key`; keep one where several entities on the device share that `device_class`. On any other platform the device class does not name the entity, so never ask for a `translation_key` to be dropped there. (Gold: `entity-translations`)
+- In a reauth or reconfigure flow, guard the identifier with `_abort_if_unique_id_mismatch()`, which compares against the entry being changed, rather than with `_abort_if_unique_id_configured()`.
 
 ## Integration Quality Scale
 
@@ -71,20 +46,14 @@ Template scale file: `./script/scaffold/templates/integration/integration/qualit
 
 ### How Rules Apply
 1. **Check `manifest.json`**: Look for `"quality_scale"` key to determine integration level
-2. **Bronze Rules**: Always required (must be `done` or `exempt`) for any integration with quality scale
-3. **Higher Tier Rules**: Every rule at every tier must still be listed in `quality_scale.yaml` (`todo` is fine below the target tier) — only enforcement (must be `done` or `exempt`) is gated by the integration's target tier
+2. **Bronze Rules**: Required (`done` or `exempt`) once `quality_scale` names a tier, so `bronze`, `silver`, `gold` or `platinum`. `legacy`, `internal` and `no_score` are not tiers, so don't hold that code to the rules
+3. **Higher Tier Rules**: Only apply if integration targets that tier or higher
 4. **Rule Status**: Check `quality_scale.yaml` in integration folder for:
    - `done`: Rule implemented
    - `exempt`: Rule doesn't apply (with reason in comment)
    - `todo`: Rule needs implementation
-5. **Tier tags in this document**: guidance tagged with a tier and rule (for example "(Silver: `parallel-updates`)") is a requirement from that tier upward and a suggestion below it, and a rule the integration lists as `done` is a requirement whatever its tier. Untagged guidance applies regardless of tier: read "never" and "do not" as blocking, "prefer" as a suggestion.
 
 
 ## Testing Requirements
 
 - Tests should avoid interacting or mocking internal integration details. For more info, see https://developers.home-assistant.io/docs/development_testing/#writing-tests-for-integrations
-- Test through the public surface: set the integration up via `hass` and assert entity state and the entity/device registries (`snapshot_platform` preferred). Entity and platform tests should not read the coordinator or `runtime_data`.
-- Drive a polling integration's updates with `freezer` plus `async_fire_time_changed`, the default whenever a test needs a further update. Push integrations (webhook, subscription) must exercise their real update path instead, since time advancement doesn't trigger them.
-- A dedicated `test_coordinator.py` calling the coordinator's own methods to cover its update and error logic is a separate, accepted pattern.
-- Patch the third-party library, not integration internals, and put shared fixtures in `conftest.py`.
-- A config-flow test should end in `CREATE_ENTRY`, `ABORT`, or a `FORM` that asserts a specific persistent error. One that stops at an intermediate `FORM` is fine where another test in the same file drives that flow to its end; check for that before flagging. Assert the `unique_id` when the flow assigns one (some integrations are legitimately exempt from `unique-config-entry`). (Bronze: `config-flow-test-coverage`)
