@@ -304,6 +304,45 @@ async def test_restores_hvac_mode_without_extra_data(
     assert state.state == HVACMode.COOL
 
 
+@pytest.mark.parametrize(
+    ("restored_mode", "requested_mode", "expected_code"),
+    [
+        pytest.param(HVACMode.HEAT, HVACMode.COOL, DysonAm09Code.COOL_ON, id="heat"),
+        pytest.param(HVACMode.COOL, HVACMode.HEAT, DysonAm09Code.HEAT_UP, id="cool"),
+    ],
+)
+@pytest.mark.usefixtures("mock_make_dyson_am09_command")
+async def test_restored_running_mode_still_gets_a_mode_select(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    restored_mode: HVACMode,
+    requested_mode: HVACMode,
+    expected_code: DysonAm09Code,
+) -> None:
+    """Test a running unit restored without extra data is not assumed to be cooling."""
+    mock_restore_cache(hass, [State(CLIMATE_ENTITY_ID, restored_mode)])
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: CLIMATE_ENTITY_ID, ATTR_HVAC_MODE: requested_mode},
+        blocking=True,
+    )
+
+    # Taking the default cooling assumption here would send nothing at all,
+    # leaving the unit in its old mode while the entity reports the new one.
+    assert mock_infrared_emitter_entity.send_command_calls == [expected_code]
+
+    state = hass.states.get(CLIMATE_ENTITY_ID)
+    assert state
+    assert state.state == requested_mode
+
+
 @pytest.mark.usefixtures("mock_make_dyson_am09_command")
 async def test_state_survives_a_reload(
     hass: HomeAssistant,

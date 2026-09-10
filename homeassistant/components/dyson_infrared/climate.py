@@ -171,7 +171,12 @@ class DysonInfraredHeaterCooler(
             return
 
         if last_state.state in self._attr_hvac_modes:
-            self._attr_hvac_mode = HVACMode(last_state.state)
+            self._attr_hvac_mode = restored_mode = HVACMode(last_state.state)
+            # A running unit resumes the mode it is already in, so the visible
+            # state settles this; the stored one only matters when it came back
+            # off, where the mode is no longer part of that visible state.
+            if restored_mode is not HVACMode.OFF:
+                self._last_active_mode = restored_mode
 
         if (last_extra_data := await self.async_get_last_extra_data()) is None:
             return
@@ -179,7 +184,10 @@ class DysonInfraredHeaterCooler(
         if restored is None:
             return
 
-        if restored.last_active_mode in (HVACMode.COOL, HVACMode.HEAT):
+        if self._attr_hvac_mode is HVACMode.OFF and restored.last_active_mode in (
+            HVACMode.COOL,
+            HVACMode.HEAT,
+        ):
             self._last_active_mode = HVACMode(restored.last_active_mode)
         # A changed temperature unit option rescales the range, which would make
         # the stored target mean a different temperature than it was set to.
