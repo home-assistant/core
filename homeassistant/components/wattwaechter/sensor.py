@@ -4,6 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
+from aio_wattwaechter.models import ObisValue
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -18,6 +20,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactiveEnergy,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -215,6 +218,39 @@ OBIS_PHASE: dict[str, str] = {
     "73.7.0": "L3",
 }
 
+# Fallback mapping for momentary readings of OBIS codes without a dedicated
+# description, keyed by the reported unit.
+UNIT_MAP: dict[str, tuple[SensorDeviceClass, SensorStateClass]] = {
+    UnitOfPower.WATT: (SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT),
+    UnitOfElectricPotential.VOLT: (
+        SensorDeviceClass.VOLTAGE,
+        SensorStateClass.MEASUREMENT,
+    ),
+    UnitOfElectricCurrent.AMPERE: (
+        SensorDeviceClass.CURRENT,
+        SensorStateClass.MEASUREMENT,
+    ),
+    UnitOfFrequency.HERTZ: (SensorDeviceClass.FREQUENCY, SensorStateClass.MEASUREMENT),
+}
+
+# Units that mark an x.8.y register as a cumulative energy total.
+CUMULATIVE_ENERGY_UNITS: dict[str, SensorDeviceClass] = {
+    UnitOfEnergy.KILO_WATT_HOUR: SensorDeviceClass.ENERGY,
+    UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: (
+        SensorDeviceClass.REACTIVE_ENERGY
+    ),
+}
+
+# OBIS groups 0.x.y and 96.x.y carry device metadata such as serial numbers
+# or manufacturer identification, not measurements.
+METADATA_OBIS_PREFIXES = ("0.", "96.")
+
+
+def _is_cumulative_register(obis_code: str) -> bool:
+    """Return True for x.8.y registers, the OBIS cumulative energy totals."""
+    parts = obis_code.split(".")
+    return len(parts) == 3 and parts[1] == "8"
+
 
 @dataclass(frozen=True, kw_only=True)
 class WattwaechterDiagnosticSensorDescription(SensorEntityDescription):
@@ -256,15 +292,20 @@ async def async_setup_entry(
     """Set up WattWächter sensors from a config entry."""
     coordinator = entry.runtime_data
 
-    entities: list[SensorEntity] = [
-        WattwaechterObisSensor(
-            coordinator=coordinator,
-            description=KNOWN_OBIS_CODES[obis_code],
-            obis_code=obis_code,
-        )
-        for obis_code in coordinator.data.meter.values
-        if obis_code in KNOWN_OBIS_CODES
-    ]
+    entities: list[SensorEntity] = []
+    for obis_code, obis_value in coordinator.data.meter.values.items():
+        if obis_code in KNOWN_OBIS_CODES:
+            entities.append(
+                WattwaechterObisSensor(
+                    coordinator=coordinator,
+                    description=KNOWN_OBIS_CODES[obis_code],
+                    obis_code=obis_code,
+                )
+            )
+        else:
+            entities.append(
+                WattwaechterGenericObisSensor(coordinator, obis_code, obis_value)
+            )
     entities.extend(
         WattwaechterDiagnosticSensor(coordinator, description)
         for description in DIAGNOSTIC_SENSORS
@@ -290,6 +331,48 @@ class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.device_id}_{obis_code}"
         if obis_code in OBIS_PHASE:
             self._attr_translation_placeholders = {"phase": OBIS_PHASE[obis_code]}
+
+    @property
+    @override
+    def native_value(self) -> float | str | None:
+        """Return the current sensor value."""
+        obis = self.coordinator.data.meter.values.get(self._obis_code)
+        if obis is None:
+            return None
+        return obis.value
+
+
+class WattwaechterGenericObisSensor(WattwaechterEntity, SensorEntity):
+    """Sensor for an OBIS code without a dedicated description."""
+
+    def __init__(
+        self,
+        coordinator: WattwaechterCoordinator,
+        obis_code: str,
+        obis_value: ObisValue,
+    ) -> None:
+        """Initialize the generic OBIS sensor."""
+        super().__init__(coordinator)
+        self._obis_code = obis_code
+        self._attr_unique_id = f"{coordinator.device_id}_{obis_code}"
+        self._attr_name = obis_value.name or f"OBIS {obis_code}"
+        is_metadata = obis_code.startswith(METADATA_OBIS_PREFIXES)
+        if is_metadata:
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        # Non-numeric readings are exposed as-is, without a unit or state class.
+        if isinstance(obis_value.value, str):
+            return
+        self._attr_native_unit_of_measurement = obis_value.unit or None
+        if is_metadata:
+            return
+        if (
+            device_class := CUMULATIVE_ENERGY_UNITS.get(obis_value.unit)
+        ) and _is_cumulative_register(obis_code):
+            # total_increasing also absorbs resets from a meter exchange.
+            self._attr_device_class = device_class
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        elif mapping := UNIT_MAP.get(obis_value.unit):
+            self._attr_device_class, self._attr_state_class = mapping
 
     @property
     @override

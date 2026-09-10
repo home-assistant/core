@@ -7,5 +7,15 @@
   "32.7.0": { "value": 230.1, "unit": "V", "name": "Voltage L1" },
   "31.7.0": { "value": 6.52, "unit": "A", "name": "Current L1" },
   "14.7.0": { "value": 50.01, "unit": "Hz", "name": "Frequency" },
-  "13.7.0": { "value": 0.985, "unit": "", "name": "Power Factor" }
+  "13.7.0": { "value": 0.985, "unit": "", "name": "Power Factor" },
+  "1.7.0": { "value": 1480.2, "unit": "W", "name": "Import Power" },
+  "15.8.0": { "value": 13580.245, "unit": "kWh", "name": "Absolute Energy" },
+  "3.8.0": { "value": 245.891, "unit": "kvarh", "name": "Reactive Import" },
+  "1.6.0": { "value": 4.21, "unit": "kW", "name": "Maximum Demand" },
+  "96.1.0": {
+    "value": "0a014845480000123456",
+    "unit": "",
+    "name": "Serial Number"
+  },
+  "0.2.0": { "value": 10203, "unit": "", "name": "Firmware Revision" }
 }
