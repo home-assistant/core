@@ -16,10 +16,12 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
 )
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_notify_firmware_info,
+    async_register_firmware_info_provider,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    OwningIntegration,
 )
 from homeassistant.components.usb import DOMAIN as USB_DOMAIN, USBDevice
 from homeassistant.config_entries import ConfigFlowResult
@@ -431,6 +433,22 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
+    # An integration using the radio through the old path follows it to the new one
+    zha_entry = MockConfigEntry(domain="zha", unique_id="zha", data={})
+    zha_entry.add_to_hass(hass)
+    zha = Mock(spec=["get_firmware_info", "async_update_device_path"])
+    zha.get_firmware_info = Mock(
+        return_value=FirmwareInfo(
+            device="/dev/oldpath",
+            firmware_type=ApplicationType.EZSP,
+            firmware_version=None,
+            source="zha",
+            owners=[OwningIntegration(config_entry_id=zha_entry.entry_id)],
+        )
+    )
+    zha.async_update_device_path = AsyncMock()
+    async_register_firmware_info_provider(hass, "zha", zha)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "usb"}, data=USB_DATA_ZBT2
     )
@@ -439,6 +457,16 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
     assert result["reason"] == "already_configured"
 
     assert config_entry.data["device"] == USB_DATA_ZBT2.device
+    assert zha.async_update_device_path.mock_calls == [
+        call(hass, zha_entry, USB_DATA_ZBT2.device)
+    ]
+
+    # Seeing it again where it already is moves nothing
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=USB_DATA_ZBT2
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert len(zha.async_update_device_path.mock_calls) == 1
 
 
 async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None:

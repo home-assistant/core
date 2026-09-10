@@ -7,6 +7,7 @@ from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import firmware_config_flow
 from homeassistant.components.homeassistant_hardware.helpers import (
     HardwareFirmwareDiscoveryInfo,
+    async_notify_device_path_changed,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
@@ -131,6 +132,26 @@ class HomeAssistantConnectZBT2ConfigFlow(
         discovery_info.device = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, discovery_info.device
         )
+
+        # A known adapter turning up somewhere else has moved: to another USB port on
+        # the host, or to a port behind an ESPHome device. The integrations using it
+        # through us are pointed at the new path first, then our own entry below.
+        serial_number = discovery_info.serial_number
+        existing_entry = (
+            self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, serial_number
+            )
+            if serial_number is not None
+            else None
+        )
+        if (
+            existing_entry is not None
+            and DEVICE in existing_entry.data
+            and existing_entry.data[DEVICE] != discovery_info.device
+        ):
+            await async_notify_device_path_changed(
+                self.hass, existing_entry.data[DEVICE], discovery_info.device
+            )
 
         try:
             await self.async_set_unique_id(discovery_info.serial_number)

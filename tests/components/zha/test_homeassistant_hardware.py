@@ -1,6 +1,6 @@
 """Test Home Assistant Hardware platform for ZHA."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from zigpy.application import ControllerApplication
@@ -17,7 +17,10 @@ from homeassistant.components.homeassistant_hardware.util import (
     OwningIntegration,
 )
 from homeassistant.components.zha import DOMAIN
-from homeassistant.components.zha.homeassistant_hardware import get_firmware_info
+from homeassistant.components.zha.homeassistant_hardware import (
+    async_update_device_path,
+    get_firmware_info,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -96,6 +99,51 @@ async def test_get_firmware_info_errors(
     zha.add_to_hass(hass)
 
     assert (get_firmware_info(hass, zha)) is None
+
+
+@pytest.mark.parametrize(
+    ("state", "reloads"),
+    [
+        (ConfigEntryState.LOADED, 1),
+        (ConfigEntryState.SETUP_RETRY, 1),
+        (ConfigEntryState.NOT_LOADED, 0),
+    ],
+)
+async def test_async_update_device_path(
+    hass: HomeAssistant, state: ConfigEntryState, reloads: int
+) -> None:
+    """Following the radio rewrites only the path and reloads an entry that is up."""
+    zha = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="epid=0011223344556677",
+        data={
+            "device": {
+                "path": "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE58F10-if00",
+                "baudrate": 115200,
+                "flow_control": "hardware",
+            },
+            "radio_type": "ezsp",
+        },
+        version=5,
+    )
+    zha.add_to_hass(hass)
+    zha.mock_state(hass, state)
+
+    new_path = "esphome-hass://esphome/entry?port_name=USB&usb_serial=10B41DE58F10"
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        await async_update_device_path(hass, zha, new_path)
+
+    assert zha.data["device"] == {
+        "path": new_path,
+        "baudrate": 115200,
+        "flow_control": "hardware",
+    }
+    assert mock_reload.mock_calls == [call(zha.entry_id)] * reloads
+
+    # The same path again is not a move
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        await async_update_device_path(hass, zha, new_path)
+    assert len(mock_reload.mock_calls) == 0
 
 
 async def test_hardware_firmware_info_provider_notification(

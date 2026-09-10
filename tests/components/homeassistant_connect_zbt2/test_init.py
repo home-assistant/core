@@ -385,18 +385,16 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
         # Now we make it available but do not wait
         mock_exists.return_value = True
 
-        with patch_scanned_serial_ports(
-            return_value=[
-                USBDevice(
-                    device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_80B54EEFAE18-if01-port0",
-                    vid="303A",
-                    pid="4001",
-                    serial_number="80B54EEFAE18",
-                    manufacturer="Nabu Casa",
-                    description="ZBT-2",
-                )
-            ],
-        ):
+        stick = USBDevice(
+            device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_80B54EEFAE18-if01-port0",
+            vid="303A",
+            pid="4001",
+            serial_number="80B54EEFAE18",
+            manufacturer="Nabu Casa",
+            description="ZBT-2",
+        )
+
+        with patch_scanned_serial_ports(return_value=[stick]):
             await async_request_scan(hass)
             # Settled while the scan is still patched: letting it run afterwards would
             # process the real system's ports instead
@@ -405,8 +403,12 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
         # It loads immediately
         assert config_entry.state is ConfigEntryState.LOADED
 
-        # Wait for a bit for the USB scan debouncer to cool off
-        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=5))
+        # Wait for a bit for the USB scan debouncer to cool off. The polling watcher
+        # scans on this timer as well; it must still see the stick, or it is that scan
+        # that removes it, while the presence check below still says it is there
+        with patch_scanned_serial_ports(return_value=[stick]):
+            async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=5))
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         # Unplug the stick
         mock_exists.return_value = False

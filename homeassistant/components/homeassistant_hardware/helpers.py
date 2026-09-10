@@ -58,6 +58,18 @@ type HardwareFirmwareInfoModule = (
 )
 
 
+class DevicePathUpdateModule(Protocol):
+    """Optional protocol for providers whose config entries can follow a moved adapter."""
+
+    async def async_update_device_path(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        new_path: str,
+    ) -> None:
+        """Point the config entry at the adapter's new serial port path."""
+
+
 @hass_callback
 def async_get_hardware_domain_for_usb_device(
     hass: HomeAssistant, usb_device: USBDevice
@@ -173,27 +185,59 @@ class HardwareInfoDispatcher:
             ),
         )
 
+    async def _async_get_firmware_info(
+        self, fw_info_module: HardwareFirmwareInfoModule, config_entry: ConfigEntry
+    ) -> FirmwareInfo | None:
+        """Ask a provider about one of its config entries, whichever method it offers."""
+        try:
+            if hasattr(fw_info_module, "get_firmware_info"):
+                return fw_info_module.get_firmware_info(self.hass, config_entry)
+            return await fw_info_module.async_get_firmware_info(self.hass, config_entry)
+        except Exception:
+            _LOGGER.exception(
+                "Error while getting firmware info from %r", fw_info_module
+            )
+            return None
+
     async def iter_firmware_info(self) -> AsyncIterator[FirmwareInfo]:
         """Iterate over all firmware information for all hardware."""
         for domain, fw_info_module in self._providers.items():
             for config_entry in self.hass.config_entries.async_entries(domain):
-                try:
-                    if hasattr(fw_info_module, "get_firmware_info"):
-                        fw_info = fw_info_module.get_firmware_info(
-                            self.hass, config_entry
-                        )
-                    else:
-                        fw_info = await fw_info_module.async_get_firmware_info(
-                            self.hass, config_entry
-                        )
-                except Exception:
-                    _LOGGER.exception(
-                        "Error while getting firmware info from %r", fw_info_module
-                    )
-                    continue
-
+                fw_info = await self._async_get_firmware_info(
+                    fw_info_module, config_entry
+                )
                 if fw_info is not None:
                     yield fw_info
+
+    async def notify_device_path_changed(self, old_path: str, new_path: str) -> None:
+        """Move every config entry using a device from its old path to its new one.
+
+        A hardware integration calls this once it has followed its adapter to another
+        port, on the host or behind an ESPHome device, so the integrations using that
+        adapter follow along without anyone re-pairing. Providers that cannot move an
+        entry are left as they are.
+        """
+        for domain, fw_info_module in self._providers.items():
+            if not hasattr(fw_info_module, "async_update_device_path"):
+                continue
+
+            for config_entry in self.hass.config_entries.async_entries(domain):
+                fw_info = await self._async_get_firmware_info(
+                    fw_info_module, config_entry
+                )
+                if fw_info is None or fw_info.device != old_path:
+                    continue
+
+                _LOGGER.debug(
+                    "Moving %s entry %s from %s to %s",
+                    domain,
+                    config_entry.entry_id,
+                    old_path,
+                    new_path,
+                )
+                await fw_info_module.async_update_device_path(
+                    self.hass, config_entry, new_path
+                )
 
     def register_firmware_update_in_progress(
         self, device: str, source_domain: str
@@ -249,6 +293,14 @@ def async_notify_firmware_info(
 ) -> Awaitable[None]:
     """Notify the dispatcher of new firmware information."""
     return hass.data[DATA_COMPONENT].notify_firmware_info(domain, firmware_info)
+
+
+@hass_callback
+def async_notify_device_path_changed(
+    hass: HomeAssistant, old_path: str, new_path: str
+) -> Awaitable[None]:
+    """Notify the dispatcher that an adapter moved to a new serial port path."""
+    return hass.data[DATA_COMPONENT].notify_device_path_changed(old_path, new_path)
 
 
 @hass_callback
