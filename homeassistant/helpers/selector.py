@@ -1079,7 +1079,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
         super().__init__(config)
 
     @property
-    def signed(self) -> bool:
+    def allows_negative(self) -> bool:
         """Return whether the selector allows a negative duration."""
         mode = self.config.get("mode", DurationSelectorMode.POSITIVE)
         return mode != DurationSelectorMode.POSITIVE or bool(
@@ -1088,7 +1088,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
-        if self.signed:
+        if self.allows_negative:
             cv.time_period_dict(data)
         else:
             if isinstance(data, dict) and "negative" in data:
