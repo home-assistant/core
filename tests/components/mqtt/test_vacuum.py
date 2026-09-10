@@ -288,7 +288,7 @@ async def test_commands_without_supported_features(
 
     with pytest.raises(HomeAssistantError):
         await common.async_send_command(
-            hass, "44 FE 93", {"key": "value"}, entity_id="vacuum.mqtttest"
+            hass, "some command", {"key": "value"}, entity_id="vacuum.mqtttest"
         )
     mqtt_mock.async_publish.assert_not_called()
 
@@ -330,6 +330,7 @@ async def test_command_without_command_topic(
 @pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS])
 async def test_clean_segments_initial_setup_without_repair_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test setup does not fire repair after segments are received."""
@@ -355,7 +356,6 @@ async def test_clean_segments_initial_setup_without_repair_issue(
         state.attributes.get(ATTR_SUPPORTED_FEATURES)
         & vacuum.VacuumEntityFeature.CLEAN_AREA
     )
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 0
 
 
@@ -364,6 +364,7 @@ async def test_clean_segments_command(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test cleaning segments and repair flow."""
@@ -405,7 +406,6 @@ async def test_clean_segments_command(
         & vacuum.VacuumEntityFeature.CLEAN_AREA
     )
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     # We do not expect a repair flow as the segments did not change
     assert len(issue_registry.issues) == 0
 
@@ -442,6 +442,22 @@ async def test_clean_segments_command(
         {"id": "2", "name": "Kitchen", "group": None},
         {"id": "3", "name": "Diningroom", "group": None},
     ]
+
+    async_fire_mqtt_message(
+        hass,
+        "vacuum/state",
+        """{
+            "battery_level": 54,
+            "state": "idle",
+            "segments":{
+                "1":"Livingroom",
+                "2":"Kitchen"
+            }
+        }""",
+    )
+    await hass.async_block_till_done()
+    # The repair issue should be cleared when the segments match again
+    assert len(issue_registry.issues) == 0
 
 
 @pytest.mark.parametrize(
@@ -705,8 +721,7 @@ async def test_status(
             (
                 {
                     mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
-                        mqttvacuum.DEFAULT_SERVICES
-                        | vacuum.VacuumEntityFeature.BATTERY,
+                        mqttvacuum.DEFAULT_SERVICES,
                         SERVICE_TO_STRING,
                     )
                 },
@@ -806,7 +821,7 @@ async def test_custom_availability_payload(
 async def test_setting_attribute_via_mqtt_json_message(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test the setting of attribute via MQTT with JSON payload."""
+    """Test the setting of attribute via a MQTT JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock_entry, vacuum.DOMAIN, DEFAULT_CONFIG_2
     )
@@ -815,7 +830,7 @@ async def test_setting_attribute_via_mqtt_json_message(
 async def test_setting_blocked_attribute_via_mqtt_json_message(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test the setting of attribute via MQTT with JSON payload."""
+    """Test the setting of a blocked attribute via a MQTT JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
         mqtt_mock_entry,
@@ -828,7 +843,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 async def test_setting_attribute_with_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test the setting of attribute via MQTT with JSON payload."""
+    """Test the setting of a attribute with a template."""
     await help_test_setting_attribute_with_template(
         hass, mqtt_mock_entry, vacuum.DOMAIN, DEFAULT_CONFIG_2
     )
