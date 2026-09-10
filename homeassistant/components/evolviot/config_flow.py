@@ -24,6 +24,14 @@ def _pair_schema() -> vol.Schema:
     return vol.Schema({})
 
 
+def _refresh_token_from_response(token_data: dict[str, Any]) -> str:
+    """Return the refresh token from a token response."""
+    refresh_token = str(token_data.get(CONF_REFRESH_TOKEN, "")).strip()
+    if not refresh_token:
+        raise EvolvIOTApiError("Token response did not include refresh token")
+    return refresh_token
+
+
 class EvolvIOTConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle an EvolvIOT config flow."""
 
@@ -85,7 +93,7 @@ class EvolvIOTConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 token_data = await self._api().async_exchange_device_code(device_code)
                 access_token = str(token_data[CONF_ACCESS_TOKEN]).strip()
-                refresh_token = str(token_data[CONF_REFRESH_TOKEN]).strip()
+                refresh_token = _refresh_token_from_response(token_data)
                 data = await self._api(
                     access_token, refresh_token
                 ).async_validate_data()

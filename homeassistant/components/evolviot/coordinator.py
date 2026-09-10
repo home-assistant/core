@@ -5,6 +5,8 @@ from typing import override
 
 from pyevolviot import (
     EvolvIOTApi,
+    EvolvIOTApiError,
+    EvolvIOTCommandResult,
     EvolvIOTData,
     EvolvIOTEntity,
     EvolvIOTEvent,
@@ -77,11 +79,19 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[EvolvIOTData]):
         """Send a command to an EvolvIOT entity."""
         if self.websocket is None or not self.websocket.connected:
             result = await self.api.async_send_command(entity_id, command)
+            self._raise_if_command_rejected(result)
             if result.state is not None and self.data is not None:
                 self.async_set_updated_data(self.data.with_state(result.state))
             return
 
-        await self.websocket.async_command(entity_id, command)
+        result = await self.websocket.async_command(entity_id, command)
+        self._raise_if_command_rejected(result)
+
+    @staticmethod
+    def _raise_if_command_rejected(result: EvolvIOTCommandResult) -> None:
+        """Raise when EvolvIOT rejects a command."""
+        if not result.accepted:
+            raise EvolvIOTApiError("EvolvIOT rejected the command")
 
     @override
     async def _async_update_data(self) -> EvolvIOTData:

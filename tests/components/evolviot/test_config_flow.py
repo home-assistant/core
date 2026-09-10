@@ -28,6 +28,7 @@ PAIRING_PAYLOAD = {
 }
 
 
+@pytest.mark.usefixtures("mock_connect_websocket")
 async def test_pairing_success(hass: HomeAssistant) -> None:
     """Test a successful pairing flow."""
     with (
@@ -243,6 +244,56 @@ async def test_pairing_validation_unknown_error(hass: HomeAssistant) -> None:
         patch(
             "pyevolviot.EvolvIOTApi.async_validate_data",
             AsyncMock(side_effect=EvolvIOTApiError),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    assert result["errors"] == {"base": "unknown"}
+
+
+@pytest.mark.parametrize(
+    "token_data",
+    [
+        pytest.param(
+            {CONF_ACCESS_TOKEN: "mock-access-token"},
+            id="missing",
+        ),
+        pytest.param(
+            {
+                CONF_ACCESS_TOKEN: "mock-access-token",
+                CONF_REFRESH_TOKEN: "",
+            },
+            id="empty",
+        ),
+        pytest.param(
+            {
+                CONF_ACCESS_TOKEN: "mock-access-token",
+                CONF_REFRESH_TOKEN: "   ",
+            },
+            id="whitespace",
+        ),
+    ],
+)
+async def test_pairing_invalid_refresh_token(
+    hass: HomeAssistant, token_data: dict[str, str]
+) -> None:
+    """Test a token response without a usable refresh token."""
+    with (
+        patch(
+            "pyevolviot.EvolvIOTApi.async_start_device_authorization",
+            AsyncMock(return_value=PAIRING_PAYLOAD),
+        ),
+        patch(
+            "pyevolviot.EvolvIOTApi.async_exchange_device_code",
+            AsyncMock(return_value=token_data),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
