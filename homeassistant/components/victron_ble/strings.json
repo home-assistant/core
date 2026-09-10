@@ -10,8 +10,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_access_token": "Invalid encryption key for instant readout",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "not_supported": "Device not supported",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "not_supported": "Device not supported"
     },
     "error": {
       "invalid_access_token": "Invalid encryption key for instant readout",
