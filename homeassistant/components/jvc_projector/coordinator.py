@@ -81,7 +81,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         try:
             value = value.removesuffix("PJ").zfill(4)
             return f"{int(value[:2])}.{value[2:]}"
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             return value
 
     @override
