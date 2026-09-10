@@ -657,6 +657,54 @@ async def test_a_reload_does_not_poll_over_a_read_still_draining_the_lock(
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_deleting_the_entry_clears_what_a_surviving_read_buffers(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test nothing is left in hass.data after the entry is deleted.
+
+    Removal deliberately follows an unload that only waits a bounded time, so
+    a slow read is still draining the lock and still buffering what it reads.
+    Clearing before it stops would let it refill the buffer with entries no
+    entity can ever consume.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    release = asyncio.Event()
+    opened_at = datetime(2026, 9, 2, 14, 3, 11, tzinfo=UTC)
+
+    async def _blocked_read() -> list[LogEntry]:
+        await release.wait()
+        return [_log_entry(CODE_OPENED, opened_at, extra_description="Federico")]
+
+    mock_iseo_client.gw_read_unread_logs.side_effect = _blocked_read
+    mock_iseo_client.read_state.return_value = _lock_state(door_closed=False)
+
+    freezer.tick(_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=_ACCESS_LOG_DEBOUNCE))
+    async_fire_time_changed(hass)
+    while not mock_iseo_client.gw_read_unread_logs.called:
+        await asyncio.sleep(0)
+
+    # Delete the entry while the read is still in flight.
+    with patch("homeassistant.components.iseo_argo_ble.ACCESS_LOG_UNLOAD_TIMEOUT", 0):
+        assert await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    for _ in range(10):
+        await asyncio.sleep(0)
+
+    release.set()
+    await hass.async_block_till_done()
+
+    # The read buffered its entry after the removal, and nothing was left
+    # holding it once the read stopped writing.
+    assert mock_config_entry.entry_id not in hass.data.get(PENDING_LOG_ENTRIES, {})
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
 async def test_a_held_entry_is_reported_when_the_entity_comes_back(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

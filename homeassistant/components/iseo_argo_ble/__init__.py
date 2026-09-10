@@ -150,5 +150,18 @@ async def async_remove_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> Non
     """
     entry_id = entry.entry_id
     hass.data.get(BLE_LOCKS, {}).pop(entry_id, None)
-    hass.data.get(ACCESS_LOG_READS, {}).pop(entry_id, None)
-    hass.data.get(PENDING_LOG_ENTRIES, {}).pop(entry_id, None)
+    read = hass.data.get(ACCESS_LOG_READS, {}).pop(entry_id, None)
+
+    def _drop_pending() -> None:
+        hass.data.get(PENDING_LOG_ENTRIES, {}).pop(entry_id, None)
+
+    if read is not None and not read.done():
+        # A read that outran the unload wait is still draining the lock, and
+        # buffers everything it reports once runtime_data is gone. Clearing
+        # now would let it refill the buffer straight afterwards and leave
+        # those entries in hass.data for good — nothing can consume them, the
+        # entry is deleted — so wait for it to stop writing first.
+        read.add_done_callback(lambda _: _drop_pending())
+        return
+
+    _drop_pending()
