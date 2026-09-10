@@ -334,7 +334,7 @@ class StateVacuumEntity(
                     f" {entity.entity_id}"
                 )
 
-            options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+            options: Mapping[str, Any] = entity.registry_entry.options.get(DOMAIN, {})
             area_mapping: dict[str, list[str]] | None = options.get("area_mapping")
 
             if area_mapping is None:
