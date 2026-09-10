@@ -250,13 +250,11 @@ async def test_select_option_unavailable_offline_device(
         if entry.unique_id == "d1$night_vision_mode"
     )
 
-    async def set_devices_offline(devices: list[ImouHaDevice]) -> set[str]:
-        for device in devices:
-            device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.OFFLINE.value}
-        return set()
+    async def set_device_offline(device: ImouHaDevice) -> None:
+        device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.OFFLINE.value}
 
-    mock_imou_ha_device_manager.async_update_devices_status.side_effect = (
-        set_devices_offline
+    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
+        set_device_offline
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

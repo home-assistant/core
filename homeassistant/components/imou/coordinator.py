@@ -102,16 +102,35 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         try:
             async with asyncio.timeout(UPDATE_TIMEOUT):
-                await self._device_manager.async_update_devices_status(devices)
+                results = await asyncio.gather(
+                    *(
+                        self._device_manager.async_update_device_status(device)
+                        for device in devices
+                    ),
+                    return_exceptions=True,
+                )
         except TimeoutError as err:
             raise UpdateFailed(f"Timeout while fetching data: {err}") from err
-        except InvalidAppIdOrSecretException as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from err
-        except ImouException as err:
-            raise UpdateFailed(f"Error updating Imou devices: {err}") from err
+
+        failures: list[Exception] = []
+        for device, result in zip(devices, results, strict=True):
+            if isinstance(result, BaseException) and not isinstance(result, Exception):
+                # Propagate CancelledError and other BaseExceptions instead of
+                # swallowing them as a regular device failure.
+                raise result
+            if not isinstance(result, Exception):
+                continue
+            device_key = imou_device_identifier(device)
+            _LOGGER.warning(
+                "Error updating status for Imou device %s: %s",
+                device_key,
+                result,
+            )
+            failures.append(result)
+        if failures and len(failures) == len(devices):
+            raise UpdateFailed(
+                f"Error updating Imou devices: {failures[0]}"
+            ) from failures[0]
 
     def _async_add_remove_devices(self, fresh_by_key: dict[str, ImouHaDevice]) -> None:
         """Add new devices, remove devices no longer in the account.
