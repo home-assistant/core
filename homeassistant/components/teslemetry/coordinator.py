@@ -365,6 +365,12 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
     that with a generation counter and discards that stale read rather than
     publishing it, leaving the command's value in place until the next,
     uncontended poll confirms it.
+
+    A command on a cloud-owned key is optimistically cached separately, in
+    ``_cloud_optimistic``, so that neither a LAN poll nor a cloud push that
+    doesn't happen to carry that key can recompose it back to unknown before
+    real cloud data arrives. :meth:`_merged` drops a key from that cache as
+    soon as the composed cloud view actually provides it.
     """
 
     config_entry: TeslemetryConfigEntry
@@ -388,6 +394,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self._tariff_content_v2: dict[str, Any] | None = None
         self._local: PowerwallEnergySite | None = None
         self._local_config: dict[str, Any] | None = None
+        self._cloud_optimistic: dict[str, Any] = {}
         # Bumped by async_set_local_value; lets _async_local_poll tell whether a
         # command landed while its own read was in flight.
         self._local_config_generation = 0
@@ -444,16 +451,24 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             self._local_poll_in_progress = False
 
     def async_set_local_value(self, key: str, value: Any) -> None:
-        """Update the cached local config after a successful local command.
+        """Cache a command's optimistic value after it succeeds.
 
-        A no-op for a key outside ``LOCAL_SITE_INFO_KEYS``. Bumping the
+        A key in ``LOCAL_SITE_INFO_KEYS`` is locally owned and written into
+        ``_local_config``; that is a no-op without a paired site. Bumping the
         generation counter here is what lets a poll already in flight in
         :meth:`_async_local_poll` recognize its own result as stale.
+
+        Any other key is cloud-owned and goes into ``_cloud_optimistic``
+        instead, so it survives a LAN poll or cloud push until real cloud data
+        supersedes it; see :meth:`_merged`.
         """
-        if self._local is None or key not in LOCAL_SITE_INFO_KEYS:
-            return
-        self._local_config = {**(self._local_config or {}), key: value}
-        self._local_config_generation += 1
+        if key in LOCAL_SITE_INFO_KEYS:
+            if self._local is None:
+                return
+            self._local_config = {**(self._local_config or {}), key: value}
+            self._local_config_generation += 1
+        else:
+            self._cloud_optimistic[key] = value
         self.data = self._merged()
         self.async_update_listeners()
 
@@ -470,8 +485,22 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         return result
 
     def _merged(self) -> dict[str, Any]:
-        """Overlay the cached local config onto the composed cloud view."""
-        return merge_site_info(self._compose(), self._local_config)
+        """Overlay the local config and cloud-owned optimistic values.
+
+        A cloud-owned key drops out of ``_cloud_optimistic`` once the composed
+        cloud view actually carries it, letting the real value take over.
+        """
+        composed = self._compose()
+        if self._cloud_optimistic:
+            self._cloud_optimistic = {
+                key: value
+                for key, value in self._cloud_optimistic.items()
+                if key not in composed
+            }
+        merged = merge_site_info(composed, self._local_config)
+        if self._cloud_optimistic:
+            merged.update(self._cloud_optimistic)
+        return merged
 
     def _ingest_site_info(self, site_info: dict[str, Any]) -> dict[str, Any]:
         """Split a full REST site_info response into both partitions.

@@ -2194,6 +2194,7 @@ async def test_local_command_survives_poll_started_before_it(
 
 async def test_command_on_cloud_owned_key_not_clobbered_by_stale_merge(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A command on a key ``merge_site_info`` ignores must not be reverted by it.
 
@@ -2233,6 +2234,13 @@ async def test_command_on_cloud_owned_key_not_clobbered_by_stale_merge(
 
     # The cloud side never carries this key, so a clobber shows up as the
     # optimistic value reverting to unknown, not to some other stale number.
+    assert hass.states.get("number.energy_site_off_grid_reserve").state == "88"
+
+    # The next LAN poll recomposes the coordinator view; the optimistic value
+    # must survive it until real cloud data arrives.
+    freezer.tick(ENERGY_CONFIG_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert hass.states.get("number.energy_site_off_grid_reserve").state == "88"
 
 
