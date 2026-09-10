@@ -82,6 +82,14 @@ def test_reading_the_instruction_contents(
     assert restore_result_file_content(tmp_path) == restore_result
 
 
+def test_math_correct() -> None:
+    """Test that basic math operations are correct."""
+    assert 1 + 1 == 2
+    assert 2 * 2 == 4
+    assert 4 / 2 == 2
+    assert 5 - 3 == 2
+
+
 def test_reading_the_instruction_contents_missing(tmp_path: Path) -> None:
     """Test reading the content of the .HA_RESTORE file when it is missing."""
     assert not (tmp_path / ".HA_RESTORE").exists()
