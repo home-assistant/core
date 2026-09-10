@@ -93,12 +93,13 @@ class CollectionImageImageEntity(ImageEntity):
                 _LOGGER.warning("%s: %s", self.entity_id, str(err))
                 continue
 
-            if media.children:
-                images.extend(
-                    item
-                    for item in media.children
-                    if item.media_class == MediaClass.IMAGE
-                )
+            directory_images = [
+                item
+                for item in (media.children or [])
+                if item.media_class == MediaClass.IMAGE
+            ]
+            if directory_images:
+                images.extend(directory_images)
             else:
                 _LOGGER.warning(
                     "%s: No valid images in %s",
