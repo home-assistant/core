@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
 
-from homeassistant.components.bluetooth import SOURCE_LOCAL, BaseHaRemoteScanner
+from homeassistant.components.bluetooth import BaseHaRemoteScanner
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -129,7 +129,7 @@ async def test_ble_device_callback_keeps_local_route(
     mock_ble_device_from_address: MagicMock,
     mock_device: MagicMock,
 ) -> None:
-    """Test advertisement callbacks ignore proxy-sourced BLEDevice updates."""
+    """Test advertisement callbacks pin reconnects to a local adapter BLEDevice."""
     captured: dict[str, object] = {}
 
     def _register(
@@ -152,14 +152,21 @@ async def test_ble_device_callback_keeps_local_route(
     update_callback = captured["callback"]
     assert callable(update_callback)
 
+    local_device = mock_ble_device_from_address.ble_device
     proxy_info = MagicMock()
+    proxy_info.address = "AA:BB:CC:DD:EE:FF"
     proxy_info.source = "aa:bb:cc:dd:ee:00"
+    proxy_info.device = MagicMock()
     update_callback(proxy_info, MagicMock())
-    mock_device.set_ble_device.assert_not_called()
-
-    local_device = MagicMock()
-    local_info = MagicMock()
-    local_info.source = SOURCE_LOCAL
-    local_info.device = local_device
-    update_callback(local_info, MagicMock())
     mock_device.set_ble_device.assert_called_once_with(local_device)
+
+    mock_device.set_ble_device.reset_mock()
+    proxy_scanner_device = MagicMock()
+    proxy_scanner_device.scanner = MagicMock(spec=BaseHaRemoteScanner)
+    proxy_scanner_device.ble_device = MagicMock()
+    with patch(
+        "homeassistant.components.ryse.async_scanner_devices_by_address",
+        return_value=[proxy_scanner_device],
+    ):
+        update_callback(proxy_info, MagicMock())
+    mock_device.set_ble_device.assert_not_called()

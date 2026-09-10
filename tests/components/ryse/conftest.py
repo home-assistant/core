@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.bluetooth import BaseHaRemoteScanner
 from homeassistant.components.ryse.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -13,38 +12,16 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_scanner_by_source() -> Generator[MagicMock]:
-    """Mock async_scanner_by_source so the proxy tests know they are proxies."""
-    with (
-        patch(
-            "homeassistant.components.ryse.config_flow.async_scanner_by_source",
-            create=True,
-        ) as mock_flow,
-        patch(
-            "homeassistant.components.ryse.async_scanner_by_source",
-            create=True,
-        ) as mock_init,
-    ):
-
-        def _get_scanner(hass: HomeAssistant, source: str) -> object | None:
-            if source == "aa:bb:cc:dd:ee:00":
-                return MagicMock(spec=BaseHaRemoteScanner)
-            if source == "local":
-                return MagicMock()
-            return None
-
-        mock_flow.side_effect = _get_scanner
-        mock_init.side_effect = _get_scanner
-        yield mock_flow
-
-
-@pytest.fixture(autouse=True)
 def mock_scanner_devices_by_address() -> Generator[MagicMock]:
-    """Default to no extra scanner routes so existing tests stay local-only."""
+    """Default to a local adapter seeing the device."""
+    scanner_device = MagicMock()
+    scanner_device.scanner = MagicMock()
+    scanner_device.scanner.source = "local"
+    scanner_device.ble_device = MagicMock()
     with patch(
         "homeassistant.components.ryse.config_flow.async_scanner_devices_by_address",
         create=True,
-        return_value=[],
+        return_value=[scanner_device],
     ) as mock:
         yield mock
 

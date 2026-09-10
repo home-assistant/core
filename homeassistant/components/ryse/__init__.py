@@ -11,7 +11,6 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_register_callback,
-    async_scanner_by_source,
     async_scanner_devices_by_address,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -72,11 +71,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
         service_info: BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
-        """Refresh the BLEDevice from the local adapter only."""
-        scanner = async_scanner_by_source(hass, service_info.source)
-        if scanner is None or isinstance(scanner, BaseHaRemoteScanner):
+        """Refresh the BLEDevice from a local adapter, ignoring Bluetooth proxies.
+
+        Local adapters set ``service_info.source`` to the adapter MAC, not
+        ``SOURCE_LOCAL``. Resolve via scanners that currently see the address.
+        """
+        ble_device = _async_local_ble_device(hass, service_info.address)
+        if ble_device is None:
             return
-        device.set_ble_device(service_info.device)
+        device.set_ble_device(ble_device)
 
     entry.async_on_unload(
         async_register_callback(

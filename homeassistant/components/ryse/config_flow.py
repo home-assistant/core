@@ -15,7 +15,6 @@ from homeassistant.components.bluetooth import (
     async_clear_address_from_match_history,
     async_discovered_service_info,
     async_last_service_info,
-    async_scanner_by_source,
     async_scanner_devices_by_address,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -45,19 +44,15 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             return service_info
         return latest
 
-    def _is_remote_source(self, source: str) -> bool:
-        """Return True if *source* cannot provide an available local route."""
-        scanner = async_scanner_by_source(self.hass, source)
-        return scanner is None or isinstance(scanner, BaseHaRemoteScanner)
-
-    def _local_scanner_device(self, address: str) -> BluetoothScannerDevice | None:
-        """Return a local-adapter scanner device for *address*, if any."""
-        for scanner_device in async_scanner_devices_by_address(
-            self.hass, address, connectable=True
-        ):
-            if not isinstance(scanner_device.scanner, BaseHaRemoteScanner):
-                return scanner_device
-        return None
+    def _local_scanner_devices(self, address: str) -> list[BluetoothScannerDevice]:
+        """Return local-adapter scanner devices for *address*, ignoring proxies."""
+        return [
+            scanner_device
+            for scanner_device in async_scanner_devices_by_address(
+                self.hass, address, connectable=True
+            )
+            if not isinstance(scanner_device.scanner, BaseHaRemoteScanner)
+        ]
 
     def _with_local_device(
         self,
@@ -92,6 +87,8 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
         only the Bluetooth manager's selected route. A stronger proxy can win
         that selection even when a local adapter also sees the shade. Check
         every scanner before treating the device as proxy-only.
+
+        Local adapters set ``source`` to the adapter MAC, not ``SOURCE_LOCAL``.
         """
         latest = self._latest_service_info(service_info)
         candidates: list[BluetoothServiceInfoBleak] = []
@@ -99,11 +96,12 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             if info not in candidates:
                 candidates.append(info)
 
-        local = [info for info in candidates if not self._is_remote_source(info.source)]
+        scanner_devices = self._local_scanner_devices(service_info.address)
+        if not scanner_devices:
+            return None
+        local_sources = {device.scanner.source for device in scanner_devices}
+        local = [info for info in candidates if info.source in local_sources]
         if not local:
-            scanner_device = self._local_scanner_device(service_info.address)
-            if scanner_device is None:
-                return None
             pairing_info = next(
                 (
                     info
@@ -112,7 +110,7 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 candidates[0],
             )
-            local = [self._with_local_device(pairing_info, scanner_device)]
+            local = [self._with_local_device(pairing_info, scanner_devices[0])]
         if prefer_pairing:
             for info in local:
                 if is_pairing_mode(info.manufacturer_data):
@@ -156,9 +154,10 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
 
         latest = self._local_service_info(discovery_info, prefer_pairing=True)
         if latest is None:
-            # Do not clear matcher history: proxy advertisements would otherwise
-            # start and abort a new flow on every packet.
+            # Match history stores advertisement fields, not scanner source.
+            # Clear it so a later local-adapter packet can start a new flow.
             await self.async_set_unique_id(None)
+            async_clear_address_from_match_history(self.hass, discovery_info.address)
             return self.async_abort(reason="not_local_source")
         if not is_pairing_mode(latest.manufacturer_data):
             # Idle shades still match the manifest; drop them here so they are
