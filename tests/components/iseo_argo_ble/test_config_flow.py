@@ -1,5 +1,6 @@
 """Test the ISEO Argo BLE config flow."""
 
+import asyncio
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 import uuid
@@ -17,6 +18,7 @@ from homeassistant.components.iseo_argo_ble.const import (
     CONF_PRIV_SCALAR,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -473,25 +475,45 @@ def _patch_reconfigure_identity() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("_patch_reconfigure_identity")
+@pytest.mark.usefixtures("_patch_reconfigure_identity", "mock_derive_private_key")
 async def test_reconfigure_enrols_admin_identity(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_iseo_client: MagicMock,
+    mock_ble_device: MagicMock,
 ) -> None:
-    """Test reconfigure enrols the admin identity on an entry that lacks one."""
+    """Test reconfigure enrols the admin identity on an entry that lacks one.
+
+    Reconfiguring happens on a loaded entry, so it runs alongside the lock
+    entity: the enrolment has to take that entry's BLE mutex, or a poll or an
+    unlock can open the second connection this lock will not accept and abort
+    the Master Card session.
+    """
     mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     original_data = dict(mock_config_entry.data)
+
+    # The enrolment must not start while the lock is busy.
+    ble_lock = mock_config_entry.runtime_data.ble_lock
+    await ble_lock.acquire()
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "gw_register"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
+    configure = hass.async_create_task(
+        hass.config_entries.flow.async_configure(result["flow_id"], user_input={})
     )
+    await asyncio.sleep(0)
+    mock_iseo_client.setup_gateway.assert_not_called()
+
+    ble_lock.release()
+    result2 = await configure
     await hass.async_block_till_done()
 
+    mock_iseo_client.setup_gateway.assert_called_once()
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == original_data | {

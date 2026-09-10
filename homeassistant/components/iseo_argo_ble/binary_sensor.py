@@ -105,12 +105,13 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
         # read, what we hold is the expired sentinel, not the real window.
         self._validity: bytes | None
         saved = entry.data.get(CONF_SAVED_VALIDITY, {})
-        if user.disabled and user.uuid_hex in saved:
+        validity_key = f"{user.user_type}_{user.uuid_hex}"
+        if user.disabled and validity_key in saved:
             # Home Assistant suspended this one and kept its window; the lock
             # only reports the expired sentinel now. A stored null is not a
             # missing entry: it records a credential that had no restriction,
             # which is just as restorable as one that did.
-            stored = saved[user.uuid_hex]
+            stored = saved[validity_key]
             self._validity = None if stored is None else bytes.fromhex(stored)
             self._validity_is_original = True
         else:
@@ -225,16 +226,16 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
                 translation_placeholders={"name": self._credential_name},
             )
 
-        if not enabled:
-            # Persist before the write, not after: the write overwrites the
-            # window on the lock, and only this entity instance held a copy.
-            # Shutting down in between — the settling delay alone is seconds —
-            # would leave the credential suspended with nothing to restore
-            # from. Writing this first is harmless if the write then fails;
-            # the entry is dropped again on the next successful restore.
-            self._remember_validity(suspended=True)
-
         async with self._admin_session() as client:
+            if not enabled:
+                # Persist before the write, not after: the write overwrites
+                # the window on the lock and only this entity instance held a
+                # copy, so shutting down in between — the settling delay alone
+                # is seconds — would leave the credential suspended with
+                # nothing to restore from. Inside the session, so a lock that
+                # was never reached leaves no marker claiming Home Assistant
+                # suspended it.
+                self._remember_validity(suspended=True)
             await client.set_user_disabled(
                 uuid_hex=self._uuid_hex,
                 user_type=self._user_type,
@@ -250,6 +251,15 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
             self._remember_validity(suspended=False)
         self._apply_to_cached_users(disabled=not enabled)
 
+    @property
+    def _validity_key(self) -> str:
+        """Return the key this credential's stored window is held under.
+
+        A raw identifier can repeat across credential types, so the type is
+        part of the identity everywhere else and has to be here too.
+        """
+        return f"{self._user_type}_{self._uuid_hex}"
+
     def _remember_validity(self, suspended: bool) -> None:
         """Keep or drop this credential's stored validity window."""
         entry = self.coordinator.config_entry
@@ -262,11 +272,11 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
             # the lock's expired sentinel — saving it would let a later
             # restore hand back an expired profile, or grant unrestricted
             # access, as though it were the real window.
-            saved[self._uuid_hex] = (
+            saved[self._validity_key] = (
                 None if self._validity is None else self._validity.hex()
             )
         else:
-            saved.pop(self._uuid_hex, None)
+            saved.pop(self._validity_key, None)
         if saved != entry.data.get(CONF_SAVED_VALIDITY, {}):
             self.hass.config_entries.async_update_entry(
                 entry, data={**entry.data, CONF_SAVED_VALIDITY: saved}

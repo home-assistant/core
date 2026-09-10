@@ -223,14 +223,39 @@ async def test_suspending_an_already_suspended_credential_saves_nothing(
 
     await _set_enabled(hass, ALICE_ENTITY_ID, False)
 
-    assert CONF_SAVED_VALIDITY not in mock_admin_config_entry.data or (
-        "1111111111111111111111111111aaaa"
-        not in mock_admin_config_entry.data[CONF_SAVED_VALIDITY]
-    )
+    assert not mock_admin_config_entry.data.get(CONF_SAVED_VALIDITY)
 
     # ...so a restore still refuses rather than guessing.
     with pytest.raises(ServiceValidationError):
         await _set_enabled(hass, ALICE_ENTITY_ID, True)
+
+
+@pytest.mark.usefixtures("mock_derive_private_key")
+async def test_an_unreachable_lock_leaves_no_restore_marker(
+    hass: HomeAssistant,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    mock_ble_device: MagicMock,
+) -> None:
+    """Test a suspension that never reached the lock stores nothing.
+
+    A marker means "Home Assistant suspended this and kept its window". If the
+    command never went out, that claim is false, and a credential later
+    suspended in the Argo app would be restored with an obsolete window.
+    """
+    await setup_integration(hass, mock_admin_config_entry)
+
+    with (
+        patch(
+            "homeassistant.components.iseo_argo_ble.binary_sensor.async_ble_device_from_address",
+            return_value=None,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await _set_enabled(hass, ALICE_ENTITY_ID, False)
+
+    mock_iseo_client.set_user_disabled.assert_not_called()
+    assert not mock_admin_config_entry.data.get(CONF_SAVED_VALIDITY)
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
