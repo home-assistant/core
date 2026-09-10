@@ -288,7 +288,7 @@ async def test_commands_without_supported_features(
 
     with pytest.raises(HomeAssistantError):
         await common.async_send_command(
-            hass, "some command", {"key": "value"}, entity_id="vacuum.mqtttest"
+            hass, "44 FE 93", {"key": "value"}, entity_id="vacuum.mqtttest"
         )
     mqtt_mock.async_publish.assert_not_called()
 
@@ -821,7 +821,7 @@ async def test_custom_availability_payload(
 async def test_setting_attribute_via_mqtt_json_message(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test the setting of attribute via a MQTT JSON payload."""
+    """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock_entry, vacuum.DOMAIN, DEFAULT_CONFIG_2
     )
@@ -830,7 +830,7 @@ async def test_setting_attribute_via_mqtt_json_message(
 async def test_setting_blocked_attribute_via_mqtt_json_message(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test the setting of a blocked attribute via a MQTT JSON payload."""
+    """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
         mqtt_mock_entry,
@@ -843,7 +843,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 async def test_setting_attribute_with_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test the setting of a attribute with a template."""
+    """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
         hass, mqtt_mock_entry, vacuum.DOMAIN, DEFAULT_CONFIG_2
     )
