@@ -1,5 +1,6 @@
 """Tests for the SleepIQ integration."""
 
+import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from http import HTTPStatus
@@ -18,6 +19,7 @@ from asyncsleepiq import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.sleepiq import _serialize_login
 from homeassistant.components.sleepiq.const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
 from homeassistant.components.sleepiq.coordinator import (
     LONGER_UPDATE_INTERVAL,
@@ -356,3 +358,88 @@ async def test_duplicate_beds_none_sleeper_ids_not_filtered(
     entry = await setup_platform(hass, "sensor")
     assert entry.state is ConfigEntryState.LOADED
     assert "ghost_001" in mock_asyncsleepiq.beds
+
+
+async def test_concurrent_logins_serialized(
+    hass: HomeAssistant,
+    mock_asyncsleepiq: MagicMock,
+) -> None:
+    """Test that concurrent login calls are serialized to one actual login."""
+    await setup_platform(hass, "sensor")
+
+    client = hass.config_entries.async_entries(DOMAIN)[0].runtime_data.client
+
+    real_call_count = 0
+
+    async def _counting_login(
+        email: str | None = None, password: str | None = None
+    ) -> None:
+        nonlocal real_call_count
+        real_call_count += 1
+        await asyncio.sleep(0.05)
+
+    client.login = _counting_login
+    _serialize_login(client)
+
+    tasks = [asyncio.create_task(client.login()) for _ in range(5)]
+    await asyncio.gather(*tasks)
+
+    assert real_call_count == 1
+
+
+async def test_login_serialization_allows_retry_after_failure(
+    hass: HomeAssistant,
+    mock_asyncsleepiq: MagicMock,
+) -> None:
+    """Test that a failed login does not increment the generation counter."""
+    await setup_platform(hass, "sensor")
+    client = hass.config_entries.async_entries(DOMAIN)[0].runtime_data.client
+
+    attempts = 0
+
+    async def _failing_then_succeeding(
+        email: str | None = None, password: str | None = None
+    ) -> None:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise SleepIQLoginException("transient")
+
+    client.login = _failing_then_succeeding
+    _serialize_login(client)
+
+    with pytest.raises(SleepIQLoginException):
+        await client.login()
+
+    assert attempts == 1
+
+    await client.login()
+    assert attempts == 2
+
+
+async def test_login_serialization_propagates_error_to_waiters(
+    hass: HomeAssistant,
+    mock_asyncsleepiq: MagicMock,
+) -> None:
+    """Test that waiters blocked behind a failed login receive the same error."""
+    await setup_platform(hass, "sensor")
+    client = hass.config_entries.async_entries(DOMAIN)[0].runtime_data.client
+
+    real_calls = 0
+
+    async def _slow_failure(
+        email: str | None = None, password: str | None = None
+    ) -> None:
+        nonlocal real_calls
+        real_calls += 1
+        await asyncio.sleep(0.05)
+        raise SleepIQLoginException("bad credentials")
+
+    client.login = _slow_failure
+    _serialize_login(client)
+
+    tasks = [asyncio.create_task(client.login()) for _ in range(3)]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    assert real_calls == 1
+    assert all(isinstance(r, SleepIQLoginException) for r in results)
