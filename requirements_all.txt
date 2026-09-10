@@ -1253,7 +1253,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.26.11
+habluetooth==7.0.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1918,7 +1918,7 @@ plugwise==1.14.6
 pmsensor==0.4
 
 # homeassistant.components.poolsense
-poolsense==0.0.8
+poolsense==0.1.0
 
 # homeassistant.components.powerfox
 # homeassistant.components.powerfox_local
@@ -2805,7 +2805,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==7.2.3
+python-roborock==7.4.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
