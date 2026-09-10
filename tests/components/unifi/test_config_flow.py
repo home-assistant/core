@@ -1,5 +1,6 @@
 """Test UniFi Network config flow."""
 
+from collections.abc import Callable
 import socket
 from typing import Any
 from unittest.mock import PropertyMock, patch
@@ -395,10 +396,12 @@ async def test_reauth_flow_update_configuration_on_not_loaded_entry(
     ],
 )
 async def test_abort_reauth_flow_on_site_id_mismatch(
-    hass: HomeAssistant, config_entry_setup: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_requests: Callable[[str, str], None],
 ) -> None:
     """Verify reauth flow aborts when original site can no longer be found."""
-    config_entry = config_entry_setup
+    mock_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
 
     result = await config_entry.start_reauth_flow(hass)
 
