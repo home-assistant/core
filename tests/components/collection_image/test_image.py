@@ -251,7 +251,7 @@ async def test_media_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    uris: list[str],
+    uris: str | list[str],
     error_messages: list[str],
 ) -> None:
     """Test various cases where media fails to browse images."""
