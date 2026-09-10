@@ -1,5 +1,6 @@
 """Config flow for RYSE BLE integration."""
 
+from collections.abc import Callable
 import logging
 from typing import Any, override
 
@@ -10,19 +11,76 @@ import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BaseHaRemoteScanner,
+    BluetoothCallbackMatcher,
+    BluetoothChange,
     BluetoothScannerDevice,
+    BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_clear_address_from_match_history,
     async_discovered_service_info,
     async_last_service_info,
+    async_rediscover_address,
+    async_register_callback,
     async_scanner_devices_by_address,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# Addresses waiting for a local adapter after a proxy-only discovery abort.
+_remove_local_waiters: dict[str, Callable[[], None]] = {}
+
+
+def _local_scanner_devices(
+    hass: HomeAssistant, address: str
+) -> list[BluetoothScannerDevice]:
+    """Return local-adapter scanner devices for *address*, ignoring proxies."""
+    return [
+        scanner_device
+        for scanner_device in async_scanner_devices_by_address(
+            hass, address, connectable=True
+        )
+        if not isinstance(scanner_device.scanner, BaseHaRemoteScanner)
+    ]
+
+
+@callback
+def _async_cancel_local_waiter(address: str) -> None:
+    """Stop watching *address* for a local adapter."""
+    if unsub := _remove_local_waiters.pop(address, None):
+        unsub()
+
+
+@callback
+def _async_watch_for_local_route(hass: HomeAssistant, address: str) -> None:
+    """Rediscover *address* once a local adapter sees it.
+
+    Match history is left in place so further proxy packets do not spawn
+    aborting flows. Rediscovery runs only after a local scanner sees the
+    address.
+    """
+    _async_cancel_local_waiter(address)
+
+    @callback
+    def _async_on_advertisement(
+        _service_info: BluetoothServiceInfoBleak,
+        _change: BluetoothChange,
+    ) -> None:
+        if not _local_scanner_devices(hass, address):
+            return
+        _async_cancel_local_waiter(address)
+        async_rediscover_address(hass, address)
+
+    _remove_local_waiters[address] = async_register_callback(
+        hass,
+        _async_on_advertisement,
+        BluetoothCallbackMatcher(address=address, connectable=True),
+        BluetoothScanningMode.PASSIVE,
+    )
 
 
 class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -43,16 +101,6 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
         if latest is None or service_info.time >= latest.time:
             return service_info
         return latest
-
-    def _local_scanner_devices(self, address: str) -> list[BluetoothScannerDevice]:
-        """Return local-adapter scanner devices for *address*, ignoring proxies."""
-        return [
-            scanner_device
-            for scanner_device in async_scanner_devices_by_address(
-                self.hass, address, connectable=True
-            )
-            if not isinstance(scanner_device.scanner, BaseHaRemoteScanner)
-        ]
 
     def _with_local_device(
         self,
@@ -96,7 +144,7 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             if info not in candidates:
                 candidates.append(info)
 
-        scanner_devices = self._local_scanner_devices(service_info.address)
+        scanner_devices = _local_scanner_devices(self.hass, service_info.address)
         if not scanner_devices:
             return None
         local_sources = {device.scanner.source for device in scanner_devices}
@@ -154,11 +202,12 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
 
         latest = self._local_service_info(discovery_info, prefer_pairing=True)
         if latest is None:
-            # Match history stores advertisement fields, not scanner source.
-            # Clear it so a later local-adapter packet can start a new flow.
+            # Leave match history in place so unchanged proxy packets do not
+            # restart this abort. Watch for a local adapter, then rediscover.
             await self.async_set_unique_id(None)
-            async_clear_address_from_match_history(self.hass, discovery_info.address)
+            _async_watch_for_local_route(self.hass, discovery_info.address)
             return self.async_abort(reason="not_local_source")
+        _async_cancel_local_waiter(discovery_info.address)
         if not is_pairing_mode(latest.manufacturer_data):
             # Idle shades still match the manifest; drop them here so they are
             # not shown as unusable discoveries. Clear matcher history so a

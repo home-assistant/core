@@ -131,6 +131,25 @@ def mock_clear_match_history() -> Generator[MagicMock]:
         yield mock
 
 
+@pytest.fixture(autouse=True)
+def mock_register_callback() -> Generator[MagicMock]:
+    """Avoid registering a real Bluetooth callback from proxy-only aborts."""
+    with patch(
+        "homeassistant.components.ryse.config_flow.async_register_callback",
+        return_value=MagicMock(),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_rediscover_address() -> Generator[MagicMock]:
+    """Capture rediscovery when a local adapter appears."""
+    with patch(
+        "homeassistant.components.ryse.config_flow.async_rediscover_address",
+    ) as mock:
+        yield mock
+
+
 @pytest.fixture
 def discovery() -> Generator[MagicMock]:
     """Mock async_discovered_service_info."""
@@ -508,6 +527,8 @@ async def test_async_step_bluetooth_rejects_proxy_source(
     mock_device: MagicMock,
     mock_scanner_devices_by_address: MagicMock,
     mock_clear_match_history: MagicMock,
+    mock_register_callback: MagicMock,
+    mock_rediscover_address: MagicMock,
 ) -> None:
     """Test proxy-only discoveries are aborted before the confirmation form."""
     mock_scanner_devices_by_address.return_value = []
@@ -520,7 +541,10 @@ async def test_async_step_bluetooth_rejects_proxy_source(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_local_source"
     mock_device.pair.assert_not_called()
-    mock_clear_match_history.assert_called_once_with(hass, DEVICE_ADDRESS)
+    mock_clear_match_history.assert_not_called()
+    mock_rediscover_address.assert_not_called()
+    mock_register_callback.assert_called_once()
+    assert mock_register_callback.call_args.args[2]["address"] == DEVICE_ADDRESS
 
 
 async def test_async_step_bluetooth_proxy_selected_when_also_local(
@@ -670,8 +694,10 @@ async def test_async_step_bluetooth_proxy_then_local(
     mock_device: MagicMock,
     mock_scanner_devices_by_address: MagicMock,
     mock_clear_match_history: MagicMock,
+    mock_register_callback: MagicMock,
+    mock_rediscover_address: MagicMock,
 ) -> None:
-    """Test a proxy-only abort can be rediscovered once a local adapter sees the shade."""
+    """Test a proxy-only abort rediscovers once a local adapter sees the shade."""
     mock_scanner_devices_by_address.return_value = []
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -681,14 +707,20 @@ async def test_async_step_bluetooth_proxy_then_local(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_local_source"
-    mock_clear_match_history.assert_called_once_with(hass, DEVICE_ADDRESS)
+    mock_clear_match_history.assert_not_called()
     mock_device.pair.assert_not_called()
+
+    on_advertisement = mock_register_callback.call_args.args[1]
+    on_advertisement(_proxy_discovery(), MagicMock())
+    mock_rediscover_address.assert_not_called()
 
     scanner_device = MagicMock()
     scanner_device.scanner = MagicMock()
     scanner_device.scanner.source = "local"
     scanner_device.ble_device = BLE_DEVICE
     mock_scanner_devices_by_address.return_value = [scanner_device]
+    on_advertisement(DISCOVERY_INFO, MagicMock())
+    mock_rediscover_address.assert_called_once_with(hass, DEVICE_ADDRESS)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
