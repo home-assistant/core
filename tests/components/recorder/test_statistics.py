@@ -4739,13 +4739,43 @@ async def test_statistics_during_period_fills_current_hour_from_short_term(
     )
     assert mid_hour_stats == {}
 
-    # Mean alongside change (fossil energy) must not synthesize a partial sum row
-    # without a matching mean row for other sensors in the same response.
+    # Fossil energy requests change+mean for energy and CO₂ together. Keep a
+    # mean-capable statistic in the request so mean is not discarded before the
+    # partial-hour guard runs.
+    co2_id = "sensor.co2_intensity"
+    async_import_statistics(
+        hass,
+        {
+            "has_sum": False,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "name": "CO2 intensity",
+            "source": "recorder",
+            "statistic_id": co2_id,
+            "unit_class": None,
+            "unit_of_measurement": "gCO2eq/kWh",
+        },
+        (
+            {
+                "start": hour_12,
+                "mean": 40.0,
+                "min": 40.0,
+                "max": 40.0,
+            },
+            {
+                "start": hour_13,
+                "mean": 50.0,
+                "min": 50.0,
+                "max": 50.0,
+            },
+        ),
+    )
+    await async_wait_recording_done(hass)
+
     mean_and_change = statistics_during_period(
         hass,
         day_start,
         period="hour",
-        statistic_ids={statistic_id},
+        statistic_ids={statistic_id, co2_id},
         types={"mean", "change"},
     )
     assert [row["start"] for row in mean_and_change.get(statistic_id, [])] == [
