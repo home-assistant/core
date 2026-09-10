@@ -44,6 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 RingCameraDevice = RingDoorBell | RingOther
 
+
 @dataclass(frozen=True, kw_only=True)
 class RingCameraEntityDescription(CameraEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
     """Base class for event entity description."""
@@ -210,7 +211,9 @@ class RingCam(RingEntity[RingCameraDevice], Camera):
     @exception_wrap
     async def _async_get_fresh_snapshot(self) -> bytes | None:
         """Get a fresh snapshot from the camera."""
-        if isinstance(self._device, RingOther) and callable(self._device.async_get_snapshot):
+        if isinstance(self._device, RingOther) and callable(
+            self._device.async_get_snapshot
+        ):
             return await self._device.async_get_snapshot()
         return None
 
