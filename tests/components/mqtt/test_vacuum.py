@@ -717,7 +717,7 @@ async def test_clean_area_feature_preserved_on_config_update(
             "1":"Livingroom",
             "2":"Kitchen"
         }
-    }""
+    }"""
     async_fire_mqtt_message(hass, "vacuum/state", message)
     await hass.async_block_till_done()
     state = hass.states.get("vacuum.test")
