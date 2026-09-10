@@ -293,10 +293,7 @@ async def test_get_stream_from_camera_falls_back_to_surveillance_credentials(
     async def stream_handler(request: web.Request) -> web.Response:
         nonlocal stream_called
         stream_called = True
-        assert (
-            request.headers["Authorization"]
-            == "Basic dXNlcjpwYXNzd29yZA=="
-        )
+        assert request.headers["Authorization"] == "Basic dXNlcjpwYXNzd29yZA=="
         return web.Response(body="")
 
     app = web.Application()
@@ -327,9 +324,7 @@ async def test_get_stream_from_camera_falls_back_to_surveillance_credentials(
     )
     await hass.async_block_till_done()
 
-    await async_get_mjpeg_stream(
-        hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID
-    )
+    await async_get_mjpeg_stream(hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID)
     assert stream_called
 
 async def test_state_attributes(hass: HomeAssistant) -> None:
