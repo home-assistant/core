@@ -518,6 +518,14 @@ def color_hex(value: Any) -> str:
 
 _TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
 
+
+def _time_period_dict_to_timedelta(value: dict[str, Any]) -> timedelta:
+    delta = timedelta(**{key: val for key, val in value.items() if key != "negative"})
+    if value.get("negative"):
+        return -delta
+    return delta
+
+
 time_period_dict = vol.All(
     dict,
     vol.Schema(
@@ -527,10 +535,11 @@ time_period_dict = vol.All(
             "minutes": vol.Coerce(float),
             "seconds": vol.Coerce(float),
             "milliseconds": vol.Coerce(float),
+            "negative": boolean,
         }
     ),
     has_at_least_one_key(*_TIME_PERIOD_DICT_KEYS),
-    lambda value: timedelta(**value),
+    _time_period_dict_to_timedelta,
 )
 
 

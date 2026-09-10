@@ -1021,6 +1021,14 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
         return [vol.Schema(str)(val) for val in data]
 
 
+class DurationSelectorMode(StrEnum):
+    """Possible modes for a duration selector."""
+
+    POSITIVE = "positive"
+    SIGNED = "signed"
+    OFFSET = "offset"
+
+
 class DurationSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a duration selector config."""
 
@@ -1028,6 +1036,15 @@ class DurationSelectorConfig(BaseSelectorConfig, total=False):
     enable_second: bool
     enable_millisecond: bool
     allow_negative: bool
+    mode: DurationSelectorMode
+
+
+def _validate_duration_selector_mode(config: dict[str, Any]) -> dict[str, Any]:
+    if "allow_negative" not in config or "mode" not in config:
+        return config
+    if (config["mode"] == DurationSelectorMode.POSITIVE) == config["allow_negative"]:
+        raise vol.Invalid(f"allow_negative conflicts with mode {config['mode']}")
+    return config
 
 
 @SELECTORS.register("duration")
@@ -1036,29 +1053,46 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     selector_type = "duration"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            # Enable day field in frontend. A selection with `days` set is allowed
-            # even if `enable_day` is not set
-            vol.Optional("enable_day"): cv.boolean,
-            # Enable seconds field in frontend.
-            vol.Optional("enable_second", default=True): cv.boolean,
-            # Enable millisecond field in frontend.
-            vol.Optional("enable_millisecond"): cv.boolean,
-            # Allow negative durations.
-            vol.Optional("allow_negative"): cv.boolean,
-        }
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                # Enable day field in frontend. A selection with `days` set is allowed
+                # even if `enable_day` is not set
+                vol.Optional("enable_day"): cv.boolean,
+                # Enable seconds field in frontend.
+                vol.Optional("enable_second", default=True): cv.boolean,
+                # Enable millisecond field in frontend.
+                vol.Optional("enable_millisecond"): cv.boolean,
+                # Legacy alias of mode signed, provided for backwards compatibility
+                # and feature frozen. New configs should use `mode` instead.
+                vol.Optional("allow_negative"): cv.boolean,
+                vol.Optional("mode"): vol.All(
+                    vol.Coerce(DurationSelectorMode), lambda val: val.value
+                ),
+            }
+        ),
+        _validate_duration_selector_mode,
     )
 
     def __init__(self, config: DurationSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
+    @property
+    def signed(self) -> bool:
+        """Return whether the selector allows a negative duration."""
+        mode = self.config.get("mode", DurationSelectorMode.POSITIVE)
+        return mode != DurationSelectorMode.POSITIVE or bool(
+            self.config.get("allow_negative", False)
+        )
+
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
-        if self.config.get("allow_negative", False):
+        if self.signed:
             cv.time_period_dict(data)
         else:
+            if isinstance(data, dict) and "negative" in data:
+                raise vol.Invalid("negative is only allowed in signed and offset modes")
             cv.positive_time_period_dict(data)
         return cast(dict[str, float], data)
 
