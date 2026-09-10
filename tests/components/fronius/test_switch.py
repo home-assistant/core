@@ -25,7 +25,7 @@ from .test_modbus import GEN24_HYBRID_MODULES, assert_state
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-POWER_LIMITING = "switch.gen24_storage_power_limiting"
+POWER_LIMITING = "switch.gen24_storage_ac_power_limiting"
 CHARGE_LIMITING = "switch.gen24_storage_battery_charge_power_limiting"
 DISCHARGE_LIMITING = "switch.gen24_storage_battery_discharge_power_limiting"
 GRID_CHARGING = "switch.gen24_storage_battery_grid_charging"

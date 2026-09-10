@@ -1,6 +1,7 @@
 """Test UniFi Network config flow."""
 
 import socket
+from typing import Any
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -541,6 +542,40 @@ async def test_flow_integration_discovery_aborts_if_host_already_exists(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("config_entry")
+async def test_flow_integration_discovery_aborts_on_other_announced_address(
+    hass: HomeAssistant,
+) -> None:
+    """Test we abort when the entry uses another interface of the same console."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            **INTEGRATION_DISCOVERY_INFO,
+            "source_ip": "10.0.0.1",
+            "direct_connect_domain": None,
+            "announced_ips": ["10.0.0.1", "1.2.3.4"],
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_flow_integration_discovery_ignores_entry_without_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test an entry carrying no host does not match a missing direct connect."""
+    MockConfigEntry(domain=DOMAIN, unique_id="site-id", data={}).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={**INTEGRATION_DISCOVERY_INFO, "direct_connect_domain": None},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
 async def test_flow_integration_discovery_uses_direct_connect_domain(
     hass: HomeAssistant,
 ) -> None:
@@ -580,15 +615,32 @@ async def test_flow_integration_discovery_aborts_on_direct_connect_host(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("entry_host", "extra_info"),
+    [
+        pytest.param("old.host", {}, id="stale_host"),
+        pytest.param(
+            "10.0.0.99",
+            {"announced_ips": ["10.0.0.99"]},
+            id="other_announced_interface",
+        ),
+    ],
+)
 async def test_flow_integration_discovery_updates_existing_entry_on_rediscovery(
     hass: HomeAssistant,
+    entry_host: str,
+    extra_info: dict[str, Any],
 ) -> None:
-    """Test existing entry's host is refreshed when rediscovered with same MAC."""
+    """Test existing entry's host is refreshed when rediscovered with same MAC.
+
+    This also holds when the entry sits on another interface the console
+    announces, which the host match must not abort on first.
+    """
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(INTEGRATION_DISCOVERY_INFO["hw_addr"]),
         data={
-            CONF_HOST: "old.host",
+            CONF_HOST: entry_host,
             CONF_VERIFY_SSL: False,
         },
     )
@@ -597,7 +649,7 @@ async def test_flow_integration_discovery_updates_existing_entry_on_rediscovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-        data=INTEGRATION_DISCOVERY_INFO,
+        data={**INTEGRATION_DISCOVERY_INFO, **extra_info},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

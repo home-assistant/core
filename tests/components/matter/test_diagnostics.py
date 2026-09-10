@@ -1,6 +1,5 @@
 """Test the Matter diagnostics platform."""
 
-import json
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -18,7 +17,7 @@ from homeassistant.components.matter.diagnostics import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -29,19 +28,19 @@ from tests.typing import ClientSessionGenerator
 @pytest.fixture(name="config_entry_diagnostics")
 def config_entry_diagnostics_fixture() -> dict[str, Any]:
     """Fixture for config entry diagnostics."""
-    return json.loads(load_fixture("config_entry_diagnostics.json", DOMAIN))
+    return load_json_object_fixture("config_entry_diagnostics.json", DOMAIN)
 
 
 @pytest.fixture(name="config_entry_diagnostics_redacted")
 def config_entry_diagnostics_redacted_fixture() -> dict[str, Any]:
     """Fixture for redacted config entry diagnostics."""
-    return json.loads(load_fixture("config_entry_diagnostics_redacted.json", DOMAIN))
+    return load_json_object_fixture("config_entry_diagnostics_redacted.json", DOMAIN)
 
 
 @pytest.fixture(name="device_diagnostics")
 def device_diagnostics_fixture() -> dict[str, Any]:
     """Fixture for device diagnostics."""
-    return json.loads(load_fixture("nodes/device_diagnostics.json", DOMAIN))
+    return load_json_object_fixture("nodes/device_diagnostics.json", DOMAIN)
 
 
 async def test_matter_attribute_redact(device_diagnostics: dict[str, Any]) -> None:

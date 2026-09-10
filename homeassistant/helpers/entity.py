@@ -1466,7 +1466,7 @@ class Entity(
         except BaseException as ex:
             self.__remove_future.set_exception(ex)
             raise
-        finally:
+        else:
             self.__remove_future.set_result(None)
 
     @final

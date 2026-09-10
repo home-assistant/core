@@ -269,7 +269,7 @@ class FroniusModbusInverterUpdateCoordinator(FroniusModbusCoordinatorBase):
             values[f"mppt_{number}_current_dc"] = module.current
             values[f"mppt_{number}_voltage_dc"] = module.voltage
             values[f"mppt_{number}_power_dc"] = module.power
-            values[f"mppt_{number}_energy_dc"] = module.energy
+            values[f"mppt_{number}_energy"] = module.energy
         return self._as_device_data(values)
 
 
@@ -346,8 +346,8 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         values: dict[str, float | bool | None] = {}
 
         if (controls := inverter.controls) is not None:
-            values["power_limit"] = controls.power_limit
-            values["power_limit_enabled"] = controls.enabled
+            values["ac_power_limit"] = controls.power_limit
+            values["ac_power_limit_enabled"] = controls.enabled
         if (storage := inverter.storage) is not None:
             values["battery_charge_power_limit"] = storage.charge_limit
             values["battery_charge_power_limit_enabled"] = storage.charge_limit_enabled

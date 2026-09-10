@@ -181,6 +181,9 @@
       "fingerprint": {
         "default": "mdi:fingerprint"
       },
+      "keyfob": {
+        "default": "mdi:remote"
+      },
       "motion_detection": {
         "default": "mdi:motion-sensor"
       },
@@ -273,6 +276,9 @@
       },
       "doorbell_text": {
         "default": "mdi:card-text"
+      },
+      "fob_status": {
+        "default": "mdi:remote"
       },
       "infrared_mode": {
         "default": "mdi:circle-opacity"

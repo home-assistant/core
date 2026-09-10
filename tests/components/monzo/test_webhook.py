@@ -702,6 +702,9 @@ async def test_cloud_subscription_loss_falls_back_to_external_url(
         ),
     ):
         await setup_integration(hass, polling_config_entry)
+        assert polling_config_entry.runtime_data.webhook_manager.diagnostics_data[
+            "uses_cloudhook"
+        ]
         monzo.user_account.list_account_webhooks.side_effect = [
             [Webhook("old-current", "acc_curr", CLOUDHOOK_URL)],
             [Webhook("old-flex", "acc_flex", CLOUDHOOK_URL)],
@@ -715,6 +718,9 @@ async def test_cloud_subscription_loss_falls_back_to_external_url(
 
     assert polling_config_entry.data[CONF_CLOUDHOOK_URL] == CLOUDHOOK_URL
     assert polling_config_entry.data[CONF_WEBHOOK_URL] == WEBHOOK_URL
+    assert not polling_config_entry.runtime_data.webhook_manager.diagnostics_data[
+        "uses_cloudhook"
+    ]
     assert monzo.user_account.delete_webhook.await_args_list == [
         call("old-current"),
         call("old-flex"),
