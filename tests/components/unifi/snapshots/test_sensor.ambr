@@ -2227,6 +2227,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wireless client RX',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unifi_name': 'Wireless client',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
@@ -2285,6 +2286,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wireless client TX',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unifi_name': 'Wireless client',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
@@ -2337,6 +2339,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wireless client Uptime',
+      'unifi_name': 'Wireless client',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wireless_client_uptime',
