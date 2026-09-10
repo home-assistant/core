@@ -750,6 +750,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "birdnet_go": {
+      "name": "BirdNET-Go",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "bitcoin": {
       "name": "Bitcoin",
       "integration_type": "hub",

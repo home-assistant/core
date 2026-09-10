@@ -1,0 +1,44 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "auth_not_supported": "Authentication is not supported. Please disable authentication or connect directly to BirdNET-Go.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your BirdNET-Go station.",
+          "port": "The port number of your BirdNET-Go station.",
+          "ssl": "Whether to use HTTPS to connect to your BirdNET-Go station."
+        },
+        "description": "Set up your BirdNET-Go station connection.",
+        "title": "Connect to BirdNET-Go"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "best_day_count": {
+        "name": "Best day detections (past year)"
+      },
+      "detection_streak": {
+        "name": "Detection streak"
+      },
+      "lifetime_species": {
+        "name": "Lifetime species"
+      },
+      "today_detections": {
+        "name": "Today's detections"
+      }
+    }
+  }
+}
