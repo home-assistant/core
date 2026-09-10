@@ -12,6 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.components.iseo_argo_ble import PENDING_LOG_ENTRIES
 from homeassistant.components.iseo_argo_ble.const import DOMAIN, SERVICE_READ_ACCESS_LOG
+from homeassistant.components.iseo_argo_ble.event import EVENT_TYPE_OPENED
 from homeassistant.components.iseo_argo_ble.lock import (
     _ACCESS_LOG_DEBOUNCE,
     _POLL_INTERVAL,
@@ -40,12 +41,12 @@ from tests.common import (
 ENTITY_ID = "event.iseo_lock_access_log"
 LOCK_ENTITY_ID = "lock.iseo_lock"
 
-# 8 = Door Open, 5 = Wrong PIN, 90 = Hardware fault, 3 = not an access event.
+# 8 = Door Open, 5 = Wrong PIN, 90 = Hardware fault, 19 = not an access event.
 CODE_OPENED = 8
 CODE_WRONG_PIN = 5
 CODE_HARDWARE_FAULT = 90
 CODE_NOT_YET_VALID = 51
-CODE_IGNORED = 3
+CODE_IGNORED = 19  # Door Close: read, but not an access event
 
 
 def _log_entry(
@@ -519,6 +520,109 @@ async def test_entries_drained_after_the_entity_went_away_are_replayed(
     # already marked the entries read.
     held = hass.data[PENDING_LOG_ENTRIES][mock_config_entry.entry_id]
     assert [attributes["opened_by"] for _, attributes in held] == ["Federico"]
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_a_reload_joins_a_read_still_draining_the_lock(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test a replacement entity does not open a second destructive session.
+
+    Unloading only waits a bounded time, so a slow read outlives the entry it
+    started under. The read is tracked outside the entry's runtime data for
+    exactly this reason: the lock entity that comes back after the reload has
+    to join it rather than drain a log the first read is still working
+    through.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    release = asyncio.Event()
+    opened_at = datetime(2026, 9, 2, 14, 3, 11, tzinfo=UTC)
+
+    async def _blocked_read() -> list[LogEntry]:
+        await release.wait()
+        return [_log_entry(CODE_OPENED, opened_at, extra_description="Federico")]
+
+    mock_iseo_client.gw_read_unread_logs.side_effect = _blocked_read
+    mock_iseo_client.read_state.return_value = _lock_state(door_closed=False)
+
+    freezer.tick(_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=_ACCESS_LOG_DEBOUNCE))
+    async_fire_time_changed(hass)
+    while not mock_iseo_client.gw_read_unread_logs.called:
+        await asyncio.sleep(0)
+
+    assert mock_iseo_client.gw_read_unread_logs.call_count == 1
+
+    # Unload without waiting, which is what the bounded wait amounts to when a
+    # read is slow, then bring the entry straight back. From here on the read
+    # is still blocked, so `async_block_till_done` would wait on it forever —
+    # the loop is turned by hand instead.
+    with patch("homeassistant.components.iseo_argo_ble.ACCESS_LOG_UNLOAD_TIMEOUT", 0):
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    for _ in range(10):
+        await asyncio.sleep(0)
+
+    # Ask the replacement entity for a read. Not awaited: it joins the read
+    # still in flight, which only returns once released below.
+    requested = hass.async_create_task(
+        hass.services.async_call(
+            DOMAIN,
+            SERVICE_READ_ACCESS_LOG,
+            {ATTR_ENTITY_ID: LOCK_ENTITY_ID},
+            blocking=True,
+        )
+    )
+    for _ in range(10):
+        await asyncio.sleep(0)
+
+    # Still the one session: the read from before the reload was joined rather
+    # than a second one opened over the same half-drained log.
+    assert mock_iseo_client.gw_read_unread_logs.call_count == 1
+
+    release.set()
+    await requested
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_a_held_entry_is_reported_when_the_entity_comes_back(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the other half of the handoff: the replay itself.
+
+    Buffering an entry is only useful if the entity that comes back actually
+    reports it and clears the buffer. Held entries are the ones the lock has
+    already marked read, so a regression here loses them silently.
+    """
+    opened_at = datetime(2026, 9, 2, 14, 3, 11, tzinfo=UTC)
+    hass.data.setdefault(PENDING_LOG_ENTRIES, {})[mock_config_entry.entry_id] = [
+        (
+            EVENT_TYPE_OPENED,
+            {
+                "opened_by": "Federico",
+                "event_code": CODE_OPENED,
+                "timestamp": opened_at.isoformat(),
+            },
+        )
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state != STATE_UNKNOWN
+    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_TYPE_OPENED
+    assert state.attributes["opened_by"] == "Federico"
+
+    # Taken, not merely copied: a second entity must not report it again.
+    assert mock_config_entry.entry_id not in hass.data[PENDING_LOG_ENTRIES]
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")

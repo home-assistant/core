@@ -38,10 +38,6 @@ class IseoData:
     """Runtime data for an ISEO config entry."""
 
     client: IseoClient
-    # A destructive access-log read in flight, if any. Unloading waits for it:
-    # the lock has already marked those entries read, so tearing the event
-    # entity down first would lose them.
-    access_log_read: asyncio.Task[None] | None = None
     # Whether the access-log event entity is listening. Reading the log
     # destroys it on the lock, so it must not be read with nobody to report
     # to — a user can disable the event entity and leave the lock enabled.
@@ -56,6 +52,16 @@ type IseoConfigEntry = ConfigEntry[IseoData]
 # already marked those entries read and will never offer them again.
 PENDING_LOG_ENTRIES: HassKey[dict[str, list[tuple[str, dict[str, Any]]]]] = HassKey(
     f"{DOMAIN}_pending_log_entries"
+)
+
+# The destructive access-log read in flight for an entry, if any. Kept out of
+# the entry's runtime data on purpose: unloading only waits a bounded time, so
+# a slow read outlives the entry it started under. Runtime data is replaced on
+# reload, and a fresh copy would hide the running read from the new lock
+# entity, which would then open a second BLE session over a log the first one
+# is still draining. Unloading waits on whatever is registered here.
+ACCESS_LOG_READS: HassKey[dict[str, asyncio.Task[None]]] = HassKey(
+    f"{DOMAIN}_access_log_reads"
 )
 
 
@@ -111,7 +117,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> boo
     # marked read on the lock, and unloading the platforms concurrently would
     # disconnect the event entity before they are delivered — losing them for
     # good. Bounded, so a wedged read cannot block the unload forever.
-    if (read := entry.runtime_data.access_log_read) is not None and not read.done():
+    read = hass.data.get(ACCESS_LOG_READS, {}).get(entry.entry_id)
+    if read is not None and not read.done():
         try:
             async with asyncio.timeout(ACCESS_LOG_UNLOAD_TIMEOUT):
                 await asyncio.shield(read)

@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.util import dt as dt_util
 
-from . import PENDING_LOG_ENTRIES, IseoConfigEntry
+from . import ACCESS_LOG_READS, PENDING_LOG_ENTRIES, IseoConfigEntry
 from .const import DOMAIN, signal_access_log
 from .event import EVENT_TYPE_ACCESS_DENIED, EVENT_TYPE_FAULT, EVENT_TYPE_OPENED
 
@@ -49,11 +49,22 @@ _POLL_INTERVAL = timedelta(seconds=30)
 _ACCESS_LOG_DEBOUNCE = 5
 
 # Access log event codes, grouped into the event types the log reports. Codes
-# outside these groups (door closed, mode changes, enrolments) are read and
-# discarded — they are not access events. See the library's event code table.
+# outside these groups (door closed, mode changes, enrolments, power and
+# Bluetooth lifecycle) are read and discarded — they are not access events.
+# Reading the log destroys it on the lock, so anything left out here is gone
+# for good; the groups below are meant to cover the whole event table's
+# denials and faults, not a sample of them. See the library's event code table
+# (`iseo_argo_ble.LOG_EVENT_DESCRIPTIONS`).
 _OPEN_EVENT_CODES = frozenset({7, 8, 32, 33, 34, 45, 75, 102, 103})
-_ACCESS_DENIED_EVENT_CODES = frozenset({5, 44, 51, 52, 53, 68, 77, 86, 88, 89, 99})
-_FAULT_EVENT_CODES = frozenset({21, 61, 90})
+# An attempt to open that the lock refused.
+_ACCESS_DENIED_EVENT_CODES = frozenset(
+    {3, 4, 5, 13, 31, 44, 51, 52, 53, 62, 68, 77, 86, 88, 89, 99}
+)
+# The lock could not do its job: it failed to drive the bolts, a peripheral
+# misbehaved, or it is out of memory or battery.
+_FAULT_EVENT_CODES = frozenset(
+    {6, 21, 22, 23, 24, 25, 26, 27, 57, 61, 67, 70, 71, 90, 98, 106}
+)
 
 _EVENT_TYPE_CODES = (
     (EVENT_TYPE_OPENED, _OPEN_EVENT_CODES),
@@ -325,13 +336,35 @@ class IseoLockEntity(LockEntity):
         Every caller joins the same read. Reading is destructive, so a second
         one would spend another BLE session to find the log already emptied by
         the first.
+
+        The registry is consulted before this entity's own handle, because a
+        read can outlive the entity that started it: unloading waits only a
+        bounded time, so reloading an entry mid-read leaves the old read
+        draining the lock while this replacement entity starts with no handle
+        on it. Joining it is what keeps the "one destructive read at a time"
+        rule true across a reload.
         """
+        reads = self.hass.data.setdefault(ACCESS_LOG_READS, {})
+        entry_id = self._entry.entry_id
+        running = reads.get(entry_id)
+        if running is not None and not running.done():
+            self._access_log_task = running
+            return running
+
         if self._access_log_task is None or self._access_log_task.done():
-            self._access_log_task = self.hass.async_create_task(self._async_read_log())
             # Unloading waits on this: the entries are already marked read on
             # the lock, so the event entity must still be listening when they
             # are reported.
-            self._entry.runtime_data.access_log_read = self._access_log_task
+            task = self.hass.async_create_task(self._async_read_log())
+            self._access_log_task = task
+            reads[entry_id] = task
+
+            def _forget(done: asyncio.Task[None]) -> None:
+                """Drop the finished read, unless a later one took its place."""
+                if reads.get(entry_id) is done:
+                    del reads[entry_id]
+
+            task.add_done_callback(_forget)
         return self._access_log_task
 
     async def _async_join_read(self) -> None:
