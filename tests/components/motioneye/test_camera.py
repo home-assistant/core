@@ -284,6 +284,7 @@ async def test_get_stream_from_camera(
     await async_get_mjpeg_stream(hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID)
     assert stream_called
 
+
 async def test_get_stream_from_camera_falls_back_to_surveillance_credentials(
     aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
 ) -> None:
@@ -326,6 +327,7 @@ async def test_get_stream_from_camera_falls_back_to_surveillance_credentials(
 
     await async_get_mjpeg_stream(hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID)
     assert stream_called
+
 
 async def test_state_attributes(hass: HomeAssistant) -> None:
     """Test state attributes are set correctly."""
