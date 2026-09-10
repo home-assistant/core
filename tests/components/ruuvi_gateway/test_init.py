@@ -38,3 +38,36 @@ async def test_scanner_device(
         (dr.CONNECTION_BLUETOOTH, GATEWAY_MAC), scanner_entry.entry_id
     )
     assert device_entry is not None
+
+
+async def test_scanner_removed_with_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test removing the entry also removes the scanner's Bluetooth entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=GATEWAY_MAC_LOWER,
+        title=EXPECTED_TITLE,
+        data=BASE_DATA,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.config_entries.async_entry_for_domain_unique_id(
+            BLUETOOTH_DOMAIN, GATEWAY_MAC
+        )
+        is not None
+    )
+
+    assert await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.config_entries.async_entry_for_domain_unique_id(
+            BLUETOOTH_DOMAIN, GATEWAY_MAC
+        )
+        is None
+    )
