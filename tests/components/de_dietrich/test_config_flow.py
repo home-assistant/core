@@ -2,20 +2,14 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from unittest.mock import AsyncMock, _patch, patch
+from unittest.mock import _patch, patch
 
 from modbus_connection import ModbusConnectionError, ModbusTcpParams, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.de_dietrich.const import (
-    CONF_SYSTEM,
-    DOMAIN,
-    SYSTEM_DIEMATIC_3,
-    SYSTEM_DIEMATIC_4,
-    SYSTEM_ISYSTEM,
-)
+from homeassistant.components.de_dietrich.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -52,54 +46,73 @@ async def test_user_step_shows_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-@pytest.mark.parametrize(
-    ("system", "outdoor_register", "other_layout_register"),
-    [
-        pytest.param(SYSTEM_DIEMATIC_3, 7, 601, id="diematic_3"),
-        pytest.param(SYSTEM_DIEMATIC_4, 7, 601, id="diematic_4"),
-        pytest.param(SYSTEM_ISYSTEM, 601, 7, id="isystem"),
-    ],
-)
-@pytest.mark.parametrize(
-    "boiler_type",
-    [pytest.param(24, id="known_type"), pytest.param(999, id="unknown_type")],
-)
-async def test_user_step_success(
-    hass: HomeAssistant,
-    system: str,
-    outdoor_register: int,
-    other_layout_register: int,
-    boiler_type: int,
-) -> None:
-    """Test the flow reads the selected layout and stores the connection settings."""
+async def test_user_step_success(hass: HomeAssistant) -> None:
+    """Test the flow detects the base layout and stores connection settings."""
     mock_conn = MockModbusConnection()
     unit = mock_conn.for_unit(10)
-    seed_boiler(unit, boiler_type)
-    user_input = {**MOCK_USER_INPUT, CONF_SYSTEM: system}
+    seed_boiler(unit)
 
     with _patch_temporary_unit(mock_conn):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=user_input,
+            data=MOCK_USER_INPUT,
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "De Dietrich"
-    assert result["data"] == user_input
-    assert any(
-        event.register_type == "holding"
-        and event.address <= outdoor_register < event.address + event.count
-        for event in unit.read_events
-    )
-    assert not any(
-        event.address <= other_layout_register < event.address + event.count
-        for event in unit.read_events
+    assert result["data"] == MOCK_USER_INPUT
+
+
+async def test_user_step_rejects_unknown_device(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the flow rejects an unknown device type."""
+    mock_conn = MockModbusConnection()
+    seed_boiler(mock_conn.for_unit(10), 999)
+
+    with _patch_temporary_unit(mock_conn):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=MOCK_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unsupported_device"}
+    assert "raw_type_code=999" in caplog.text
+    assert (
+        "probe outcomes: ['success', 'success', 'success', 'unsupported'" in caplog.text
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_detects_isystem(
+    hass: HomeAssistant,
+) -> None:
+    """Test iSystem detection survives a failed base-layout probe."""
+    mock_conn = MockModbusConnection()
+    unit = mock_conn.for_unit(10)
+    seed_boiler(unit)
+    unit.fail_read(3, ModbusTimeoutError("base probe timeout"))
+    unit.fail_read(600, None)
+    unit.fail_read(679, None)
+    unit.holding.update({600: 100, 679: 12, 680: 30, 681: 2, 682: 10, 683: 9, 684: 25})
+
+    with _patch_temporary_unit(mock_conn):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=MOCK_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == MOCK_USER_INPUT
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the user step reports cannot_connect on a dead link, then recovers."""
     mock_conn = MockModbusConnection()
@@ -115,7 +128,10 @@ async def test_user_step_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
-    assert result["description_placeholders"] == {"error": "stuck"}
+    assert result["description_placeholders"] == {
+        "error": "Could not identify the Diematic register layout"
+    }
+    assert "probe outcomes: ['error'" in caplog.text
 
     working_conn = MockModbusConnection()
     seed_boiler(working_conn.for_unit(10))
@@ -128,33 +144,14 @@ async def test_user_step_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_step_identity_read_fails(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test cannot_connect when the identity read fails though the link is alive."""
-    mock_conn = MockModbusConnection()
-    mock_conn.for_unit(10).fail_read(457, ModbusTimeoutError("no identity"))
-
-    with _patch_temporary_unit(mock_conn):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_user_step_sensors_read_fails(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test cannot_connect when the sensors block fails though identity succeeds."""
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_identity_read_fails(hass: HomeAssistant) -> None:
+    """Test cannot_connect when neither identity block can be read."""
     mock_conn = MockModbusConnection()
     unit = mock_conn.for_unit(10)
-    seed_boiler(unit)
-    unit.fail_read(601, ModbusTimeoutError("no sensors"))
+    unit.fail_read(457, ModbusTimeoutError("no identity"))
+    unit.fail_read(600, ModbusTimeoutError("no iSystem identity"))
+    unit.fail_read(679, ModbusTimeoutError("no iSystem clock"))
 
     with _patch_temporary_unit(mock_conn):
         result = await hass.config_entries.flow.async_init(
@@ -168,12 +165,11 @@ async def test_user_step_sensors_read_fails(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_step_unknown_error(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_unknown_error(hass: HomeAssistant) -> None:
     """Test unexpected errors are logged and shown as unknown."""
     with patch(
-        "homeassistant.components.de_dietrich.config_flow._async_probe",
+        "homeassistant.components.de_dietrich.config_flow._async_detect",
         side_effect=Exception("boom"),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -188,16 +184,13 @@ async def test_user_step_unknown_error(
 
 
 @pytest.mark.parametrize(
-    ("host", "system"),
+    "host",
     [
-        pytest.param("boiler.local", SYSTEM_ISYSTEM, id="same_connection"),
-        pytest.param("BOILER.LOCAL", SYSTEM_ISYSTEM, id="host_case"),
-        pytest.param("boiler.local", SYSTEM_DIEMATIC_3, id="different_system"),
+        pytest.param("boiler.local", id="same_connection"),
+        pytest.param("BOILER.LOCAL", id="host_case"),
     ],
 )
-async def test_user_step_already_configured(
-    hass: HomeAssistant, host: str, system: str
-) -> None:
+async def test_user_step_already_configured(hass: HomeAssistant, host: str) -> None:
     """Test duplicates are rejected without connecting to the boiler."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={**MOCK_USER_INPUT, CONF_HOST: "boiler.local"}
@@ -211,7 +204,7 @@ async def test_user_step_already_configured(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data={**MOCK_USER_INPUT, CONF_HOST: host, CONF_SYSTEM: system},
+            data={**MOCK_USER_INPUT, CONF_HOST: host},
         )
 
     assert result["type"] is FlowResultType.ABORT

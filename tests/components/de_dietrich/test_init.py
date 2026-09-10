@@ -4,13 +4,9 @@ from unittest.mock import patch
 
 from modbus_connection import ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
+import pytest
 
-from homeassistant.components.de_dietrich.const import (
-    CONF_SYSTEM,
-    DEFAULT_UNIT_ID,
-    DOMAIN,
-    SYSTEM_DIEMATIC_3,
-)
+from homeassistant.components.de_dietrich.const import DEFAULT_UNIT_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -39,6 +35,53 @@ async def test_setup_retry_when_identity_unavailable(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_error_when_device_is_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup reports an unsupported device with detection evidence."""
+    seed_boiler(mock_connection.for_unit(DEFAULT_UNIT_ID), boiler_type=999)
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.de_dietrich.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert "This device is not supported" in mock_config_entry.reason
+    assert "raw_type_code=999" in caplog.text
+
+
+async def test_setup_isystem_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test setup registers iSystem software information."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.de_dietrich.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "100"
 
 
 async def test_setup_error_when_link_settings_conflict(
@@ -71,7 +114,7 @@ async def test_base_layout_device_info(
     entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id=MOCK_ENTRY_ID,
-        data={**MOCK_USER_INPUT, CONF_SYSTEM: SYSTEM_DIEMATIC_3},
+        data=MOCK_USER_INPUT,
         title=MOCK_TITLE,
     )
     entry.add_to_hass(hass)

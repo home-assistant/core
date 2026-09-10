@@ -5,23 +5,22 @@
     },
     "error": {
       "cannot_connect": "Failed to connect: {error}",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_device": "This device is not supported: {error}"
     },
     "step": {
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "system": "System",
           "unit_id": "Modbus unit ID"
         },
         "data_description": {
-          "host": "The hostname or IP address of the Modbus TCP bridge the boiler is connected through. This must be a plain RS485-to-TCP bridge that passes through raw Modbus RTU frames, not a gateway that translates between Modbus variants.",
-          "port": "The Modbus TCP port to connect on.",
-          "system": "The Diematic system used by the boiler's control panel.",
-          "unit_id": "The boiler's Modbus unit ID, also called its Modbus device address."
+          "host": "The hostname or IP address of the plain RS485-to-TCP bridge connected to the boiler. It must pass through raw Modbus RTU frames, not translate between Modbus variants.",
+          "port": "The Modbus TCP port used by the bridge.",
+          "unit_id": "The boiler's Modbus unit ID."
         },
-        "description": "Connect over Modbus TCP. Choose the Diematic system that matches your control panel. The boiler's identity is read automatically."
+        "description": "Connect over Modbus TCP. The boiler's register layout is detected automatically."
       }
     }
   },
@@ -71,15 +70,9 @@
     },
     "no_component_answered": {
       "message": "No component answered."
-    }
-  },
-  "selector": {
-    "system": {
-      "options": {
-        "diematic_3": "Diematic 3",
-        "diematic_4": "Diematic 4",
-        "isystem": "iSystem"
-      }
+    },
+    "unsupported_device": {
+      "message": "This device is not supported: {error}"
     }
   }
 }

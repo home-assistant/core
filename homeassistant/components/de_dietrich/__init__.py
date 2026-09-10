@@ -1,16 +1,24 @@
 """Integrate De Dietrich devices into Home Assistant."""
 
-from modbus_connection import ModbusTcpParams
+import logging
+
+import diematic_modbus
+from modbus_connection import ModbusError, ModbusTcpParams
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import CONF_SYSTEM, CONF_UNIT_ID, DOMAIN, MESSAGE_SPACING, MODBUS_FRAMER
+from .const import CONF_UNIT_ID, DOMAIN, MESSAGE_SPACING, MODBUS_FRAMER
 from .coordinator import DeDietrichConfigEntry, DeDietrichDataUpdateCoordinator
-from .device import build_device
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -40,8 +48,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: DeDietrichConfigEntry) -
         ) from err
     unit.set_message_spacing(MESSAGE_SPACING)
 
-    device = build_device(unit, entry.data[CONF_SYSTEM])
+    try:
+        detection = await diematic_modbus.async_detect(unit)
+    except diematic_modbus.DiematicProbeError as err:
+        outcomes = [
+            block.outcome
+            for block in (*err.detection.base_probe, *err.detection.isystem_probe)
+        ]
+        _LOGGER.error(
+            "%s: Diematic detection failed: %s, probe outcomes: %s",
+            entry.title,
+            err.detection,
+            outcomes,
+            exc_info=err,
+        )
+        if any(
+            block.outcome == "error"
+            for block in (*err.detection.base_probe, *err.detection.isystem_probe)
+        ):
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="modbus_error",
+            ) from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_device",
+            translation_placeholders={"error": str(err)},
+        ) from err
+    except ModbusError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="modbus_error",
+        ) from err
 
+    assert detection.device is not None
+    device = detection.device
     coordinator = DeDietrichDataUpdateCoordinator(hass, entry, device)
     await coordinator.async_config_entry_first_refresh()
 

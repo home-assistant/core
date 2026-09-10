@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from diematic_modbus import Diematic, DiematicISystem
+import diematic_modbus
 from modbus_connection import ModbusError, ModbusTcpParams
 import voluptuous as vol
 
@@ -16,14 +16,10 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
     TextSelector,
 )
 
 from .const import (
-    CONF_SYSTEM,
     CONF_UNIT_ID,
     DEFAULT_NAME,
     DEFAULT_PORT,
@@ -31,11 +27,7 @@ from .const import (
     DOMAIN,
     MESSAGE_SPACING,
     MODBUS_FRAMER,
-    SYSTEM_DIEMATIC_3,
-    SYSTEM_DIEMATIC_4,
-    SYSTEM_ISYSTEM,
 )
-from .device import build_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,31 +46,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             ),
             vol.Coerce(int),
         ),
-        vol.Required(CONF_SYSTEM): SelectSelector(
-            SelectSelectorConfig(
-                options=[SYSTEM_DIEMATIC_3, SYSTEM_DIEMATIC_4, SYSTEM_ISYSTEM],
-                mode=SelectSelectorMode.LIST,
-                translation_key=CONF_SYSTEM,
-            )
-        ),
     }
 )
 
 
-async def _async_probe(
-    hass: HomeAssistant, host: str, port: int, unit_id: int, system: str
-) -> Diematic | DiematicISystem:
+async def _async_detect(
+    hass: HomeAssistant, host: str, port: int, unit_id: int
+) -> diematic_modbus.DiematicDetection:
     """Connect to the boiler and read its identity, or raise."""
     params = ModbusTcpParams(host=host, port=port, framer=MODBUS_FRAMER)
     async with async_get_temporary_unit(hass, params, unit_id) as unit:
         unit.set_message_spacing(MESSAGE_SPACING)
-        device = build_device(unit, system)
-        report = await device.async_update()
-        if "identity" in report.failed:
-            raise report.failed["identity"]
-        if "sensors" in report.failed:
-            raise report.failed["sensors"]
-    return device
+        return await diematic_modbus.async_detect(unit)
 
 
 class DeDietrichConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -102,13 +81,37 @@ class DeDietrichConfigFlow(ConfigFlow, domain=DOMAIN):
             }
             self._async_abort_entries_match(connection)
             try:
-                await _async_probe(
+                await _async_detect(
                     self.hass,
                     user_input[CONF_HOST],
                     user_input[CONF_PORT],
                     user_input[CONF_UNIT_ID],
-                    user_input[CONF_SYSTEM],
                 )
+            except diematic_modbus.DiematicProbeError as err:
+                outcomes = [
+                    block.outcome
+                    for block in (
+                        *err.detection.base_probe,
+                        *err.detection.isystem_probe,
+                    )
+                ]
+                _LOGGER.warning(
+                    "Diematic detection failed: %s, probe outcomes: %s",
+                    err.detection,
+                    outcomes,
+                )
+                errors["base"] = (
+                    "cannot_connect"
+                    if any(
+                        block.outcome == "error"
+                        for block in (
+                            *err.detection.base_probe,
+                            *err.detection.isystem_probe,
+                        )
+                    )
+                    else "unsupported_device"
+                )
+                description_placeholders["error"] = str(err)
             except (ModbusError, HomeAssistantError) as err:
                 errors["base"] = "cannot_connect"
                 description_placeholders["error"] = str(err)
