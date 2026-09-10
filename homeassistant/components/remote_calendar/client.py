@@ -18,5 +18,5 @@ async def get_calendar(
         url,
         auth=auth,
         follow_redirects=True,
-        timeout=Timeout(5, read=30, write=5, pool=5),
+        timeout=Timeout(5, connect=10, read=30),
     )

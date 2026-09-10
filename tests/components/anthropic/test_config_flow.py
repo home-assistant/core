@@ -592,6 +592,7 @@ async def test_invalid_model(
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
+                CONF_LLM_HASS_API: [],
                 CONF_PROMPT_CACHING: "off",
                 CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
@@ -695,6 +696,7 @@ async def test_invalid_model(
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
+                CONF_LLM_HASS_API: [],
                 CONF_PROMPT_CACHING: "prompt",
                 CONF_CHAT_MODEL: "claude-opus-4-7",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
@@ -728,6 +730,7 @@ async def test_invalid_model(
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
+                CONF_LLM_HASS_API: [],
                 CONF_PROMPT_CACHING: "automatic",
                 CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],

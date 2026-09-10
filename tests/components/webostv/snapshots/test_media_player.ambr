@@ -12,6 +12,7 @@
 # name: test_entity_attributes
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <MediaPlayerEntityStateAttribute.APP_ID: 'app_id'>: 'com.webos.app.livetv',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG webOS TV MODEL',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,

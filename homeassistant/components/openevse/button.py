@@ -94,5 +94,5 @@ class OpenEVSEButton(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], ButtonEnt
     @override
     async def async_press(self) -> None:
         """Press the button."""
-        with openevse_exception_handler(0.0):
+        with openevse_exception_handler():
             await self.entity_description.press_fn(self.coordinator.charger)

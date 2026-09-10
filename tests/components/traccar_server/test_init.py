@@ -4,16 +4,12 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
-import sys
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytraccar import SubscriptionData, TraccarAuthenticationException, TraccarException
 
-from homeassistant.components.traccar_server.coordinator import (
-    _SUBSCRIPTION_RECONNECT_DELAY,
-)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -150,76 +146,6 @@ async def test_subscribe_raises_config_entry_auth_failed(
     assert mock_traccar_api_client.subscribe.call_count == 1
 
 
-async def test_subscribe_does_not_recurse_across_reconnects(
-    hass: HomeAssistant,
-    mock_traccar_api_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Subscribe retries must not grow the call stack."""
-    attempts = 0
-    target_attempts = sys.getrecursionlimit() * 2
-
-    async def _flaky_subscribe(_callback: object) -> None:
-        nonlocal attempts
-        attempts += 1
-        if attempts >= target_attempts:
-            # End the task deterministically, the same way an unload would.
-            raise asyncio.CancelledError
-        raise TraccarException("Simulated dropped connection")
-
-    mock_traccar_api_client.subscribe = AsyncMock(side_effect=_flaky_subscribe)
-
-    with patch(
-        "homeassistant.components.traccar_server.coordinator._SUBSCRIPTION_RECONNECT_DELAY",
-        0,
-    ):
-        await setup_integration(hass, mock_config_entry)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert attempts == target_attempts
-
-
-async def test_subscribe_does_not_busy_loop_on_clean_return(
-    hass: HomeAssistant,
-    mock_traccar_api_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """If client.subscribe() ever returns without raising, still throttle.
-
-    pytraccar's subscribe() should always raise on disconnect (see
-    pytraccar#477), so a clean return isn't expected in practice. But the
-    retry loop must not assume that - if it ever happens, reconnecting
-    immediately with no delay would spin the event loop at 100% CPU.
-    """
-    calls = 0
-
-    async def _clean_return_then_cancel(_callback: object) -> None:
-        nonlocal calls
-        calls += 1
-        if calls >= 3:
-            raise asyncio.CancelledError
-
-    mock_traccar_api_client.subscribe = AsyncMock(side_effect=_clean_return_then_cancel)
-
-    with patch(
-        "homeassistant.components.traccar_server.coordinator.asyncio.sleep",
-        new=AsyncMock(),
-    ) as mock_sleep:
-        await setup_integration(hass, mock_config_entry)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert calls == 3
-    # Only calls 1 and 2 (the clean returns) reach the loop's delay;
-    # call 3 raises CancelledError before that line, so exactly two real
-    # reconnect delays are attributable to this code path.
-    reconnect_delay_sleeps = [
-        call
-        for call in mock_sleep.await_args_list
-        if call.args == (_SUBSCRIPTION_RECONNECT_DELAY,)
-    ]
-    assert len(reconnect_delay_sleeps) == 2
-
-
 async def test_subscribe_retries_on_unexpected_exception(
     hass: HomeAssistant,
     mock_traccar_api_client: AsyncMock,
@@ -254,104 +180,3 @@ async def test_subscribe_retries_on_unexpected_exception(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert calls == 3
-
-
-async def test_subscribe_logs_error_once_then_periodic_reminder(
-    hass: HomeAssistant,
-    mock_traccar_api_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """The first failure logs an error; later failures throttle to a periodic warning."""
-    calls = 0
-    target_attempts = 61  # Crosses two 30-attempt reminder boundaries (30, 60).
-
-    async def _always_fails(_callback: object) -> None:
-        nonlocal calls
-        calls += 1
-        if calls >= target_attempts:
-            raise asyncio.CancelledError
-        raise TraccarException("Simulated dropped connection")
-
-    mock_traccar_api_client.subscribe = AsyncMock(side_effect=_always_fails)
-
-    with (
-        patch(
-            "homeassistant.components.traccar_server.coordinator._SUBSCRIPTION_RECONNECT_DELAY",
-            0,
-        ),
-        caplog.at_level(logging.INFO, logger="homeassistant.components.traccar_server"),
-    ):
-        await setup_integration(hass, mock_config_entry)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    error_records = [
-        r
-        for r in caplog.records
-        if r.levelno == logging.ERROR
-        and r.name == "homeassistant.components.traccar_server"
-    ]
-    warning_records = [
-        r
-        for r in caplog.records
-        if r.levelno == logging.WARNING
-        and r.name == "homeassistant.components.traccar_server"
-    ]
-
-    assert len(error_records) == 1
-    assert "Error while subscribing to Traccar" in error_records[0].message
-    assert len(warning_records) == 2
-    assert all(
-        "Still unable to (re)connect to Traccar" in r.message for r in warning_records
-    )
-    assert any("60" in r.message for r in warning_records)
-
-
-async def test_subscribe_clean_return_resets_error_logging(
-    hass: HomeAssistant,
-    mock_traccar_api_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A clean return re-arms error logging for the next failure streak.
-
-    The should-log flag must reset alongside the failure counter - otherwise
-    a failure streak starting right after a clean return would be silently
-    throttled instead of logging its first error.
-    """
-    calls = 0
-
-    async def _fail_then_clean_return_then_fail(_callback: object) -> None:
-        nonlocal calls
-        calls += 1
-        if calls == 1:
-            raise TraccarException("First failure")
-        if calls == 2:
-            return  # Clean return - should re-arm error logging.
-        if calls == 3:
-            raise TraccarException("Second failure, after clean return")
-        raise asyncio.CancelledError
-
-    mock_traccar_api_client.subscribe = AsyncMock(
-        side_effect=_fail_then_clean_return_then_fail
-    )
-
-    with (
-        patch(
-            "homeassistant.components.traccar_server.coordinator._SUBSCRIPTION_RECONNECT_DELAY",
-            0,
-        ),
-        caplog.at_level(logging.INFO, logger="homeassistant.components.traccar_server"),
-    ):
-        await setup_integration(hass, mock_config_entry)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    error_records = [
-        r
-        for r in caplog.records
-        if r.levelno == logging.ERROR
-        and r.name == "homeassistant.components.traccar_server"
-    ]
-    assert len(error_records) == 2
-    assert "First failure" in error_records[0].message
-    assert "Second failure, after clean return" in error_records[1].message

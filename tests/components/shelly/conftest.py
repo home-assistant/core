@@ -603,6 +603,7 @@ def _mock_rpc_device(version: str | None = None):
         zigbee_firmware=False,
         ip_address="10.10.10.10",
         wifi_setconfig=AsyncMock(return_value={"restart_required": True}),
+        ble_getconfig=AsyncMock(return_value={}),
         ble_setconfig=AsyncMock(return_value={"restart_required": False}),
         shutdown=AsyncMock(),
     )
@@ -630,6 +631,7 @@ def _mock_blu_rtv_device(version: str | None = None):
         ),
         xmod_info={},
         wifi_setconfig=AsyncMock(return_value={}),
+        ble_getconfig=AsyncMock(return_value={}),
         ble_setconfig=AsyncMock(return_value={}),
     )
     type(device).name = PropertyMock(return_value="Test name")

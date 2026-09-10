@@ -1,8 +1,9 @@
 """Provides the constants needed for the component."""
 
 from enum import StrEnum
+from typing import Final
 
-DOMAIN = "event"
+DOMAIN: Final = "event"
 ATTR_EVENT_TYPE = "event_type"
 ATTR_EVENT_TYPES = "event_types"
 ATTR_MULTI_PRESS_COUNT = "multi_press_count"
