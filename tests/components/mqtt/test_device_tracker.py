@@ -683,6 +683,25 @@ async def test_setting_device_tracker_location_via_abbr_reset_message(
     assert state.state == STATE_HOME
 
 
+async def test_mqtt_device_tracker_without_in_zones(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test MQTT device tracker without coordinates does not report empty in_zones."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_tracker/bla/config",
+        '{"name": "test", "state_topic": "test-topic"}',
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "home")
+    state = hass.states.get("device_tracker.test")
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert "in_zones" not in state.attributes
+
+
 async def test_setting_blocked_attribute_via_mqtt_json_message(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
