@@ -1712,25 +1712,17 @@ async def test_device_uptime(
 @pytest.mark.parametrize(
     ("monitor_id", "state", "index_to_update", "monitor_update", "updated_state"),
     [
-        # Microsoft
         pytest.param(
-            "microsoft_wan", "56", 0, {"latency_average": "20"}, "20", id="microsoft"
+            "microsoft_wan", "56", 0, {"latency_average": 20}, "20", id="microsoft"
         ),
-        # Google
+        pytest.param("google_wan", "53", 1, {"latency_average": 90}, "90", id="google"),
         pytest.param(
-            "google_wan", "53", 1, {"latency_average": "90"}, "90", id="google"
+            "cloudflare_wan", "30", 2, {"latency_average": 80}, "80", id="cloudflare"
         ),
-        # Cloudflare
-        pytest.param(
-            "cloudflare_wan", "30", 2, {"latency_average": "80"}, "80", id="cloudflare"
-        ),
-        # Microsoft no response
         pytest.param(
             "microsoft_wan", "56", 0, {}, STATE_UNKNOWN, id="microsoft_no_response"
         ),
-        # Google no response
         pytest.param("google_wan", "53", 1, {}, STATE_UNKNOWN, id="google_no_response"),
-        # Cloudflare no response
         pytest.param(
             "cloudflare_wan", "30", 2, {}, STATE_UNKNOWN, id="cloudflare_no_response"
         ),
