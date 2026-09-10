@@ -84,7 +84,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Entities use device_class-derived icons; no custom icons are needed.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices:
     status: exempt
