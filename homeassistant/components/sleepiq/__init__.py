@@ -8,6 +8,7 @@ from asyncsleepiq import (
     SleepIQAPIException,
     SleepIQBed,
     SleepIQLoginException,
+    SleepIQSleeper,
     SleepIQTimeoutException,
 )
 import voluptuous as vol
@@ -94,6 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
         raise ConfigEntryNotReady(str(err) or "Error reading from SleepIQ API") from err
 
     _filter_duplicate_beds(gateway)
+    _deduplicate_sleepers(gateway)
     await _async_migrate_unique_ids(hass, entry, gateway)
 
     coordinator = SleepIQDataUpdateCoordinator(hass, entry, gateway)
@@ -173,6 +175,34 @@ def _filter_duplicate_beds(gateway: AsyncSleepIQ) -> None:
                     best,
                 )
                 del gateway.beds[bed_id]
+
+
+def _deduplicate_sleepers(gateway: AsyncSleepIQ) -> None:
+    """Remove duplicate sleepers within each bed.
+
+    The API can return the same sleeper_id more than once per bed, which
+    causes entity platforms to create entities with colliding unique IDs.
+    Keep only the first occurrence of each effective identity, keyed by
+    str(sleeper_id) so that falsy values (None, "") are also deduplicated
+    rather than skipped.
+    """
+    for bed in gateway.beds.values():
+        seen: set[str] = set()
+        filtered: list[SleepIQSleeper] = []
+        for sleeper in bed.sleepers:
+            key = str(sleeper.sleeper_id)
+            if key in seen:
+                continue
+            seen.add(key)
+            filtered.append(sleeper)
+        if len(filtered) != len(bed.sleepers):
+            _LOGGER.debug(
+                "Removed %d duplicate sleeper(s) from bed '%s' (id=%s)",
+                len(bed.sleepers) - len(filtered),
+                bed.name,
+                bed.id,
+            )
+            bed.sleepers = filtered
 
 
 async def _async_migrate_unique_ids(
