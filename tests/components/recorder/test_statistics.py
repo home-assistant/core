@@ -4896,6 +4896,82 @@ async def test_statistics_during_period_current_hour_only_short_term(
     }
 
 
+@pytest.mark.freeze_time("2024-11-03 04:17:00+00:00")
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_during_period_partial_hour_on_dst_fallback_day(
+    hass: HomeAssistant,
+) -> None:
+    """Day reduce must flush a lone partial hour on a 25-hour fall-back day."""
+    await hass.config.async_set_time_zone("America/New_York")
+    statistic_id = "sensor.total_energy_import"
+    metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": statistic_id,
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+    # Local midnight on the fall-back day (EDT); +24h would still be Nov 3.
+    hour_0 = dt_util.parse_datetime("2024-11-03 04:00:00+00:00")
+    day_end = dt_util.parse_datetime("2024-11-04 05:00:00+00:00")
+    yesterday_hour = dt_util.parse_datetime("2024-11-03 03:00:00+00:00")
+    assert hour_0 and day_end and yesterday_hour
+    day_start = hour_0
+
+    async_import_statistics(
+        hass,
+        metadata,
+        ({"start": yesterday_hour, "last_reset": None, "state": 5.0, "sum": 5.0},),
+    )
+    await async_wait_recording_done(hass)
+
+    metadata_id = get_metadata(hass, statistic_ids={statistic_id})[statistic_id][0]
+    with session_scope(hass=hass) as session:
+        session.add(
+            StatisticsShortTerm.from_stats(
+                metadata_id,
+                {
+                    "start": hour_0,
+                    "last_reset": None,
+                    "state": 8.0,
+                    "sum": 8.0,
+                },
+            )
+        )
+        session.add(
+            StatisticsShortTerm.from_stats(
+                metadata_id,
+                {
+                    "start": hour_0 + timedelta(minutes=5),
+                    "last_reset": None,
+                    "state": 11.0,
+                    "sum": 11.0,
+                },
+            )
+        )
+    await async_wait_recording_done(hass)
+
+    day_stats = statistics_during_period(
+        hass,
+        day_start,
+        period="day",
+        statistic_ids={statistic_id},
+        types={"sum", "change"},
+    )
+    assert day_stats == {
+        statistic_id: [
+            {
+                "start": process_timestamp(day_start).timestamp(),
+                "end": process_timestamp(day_end).timestamp(),
+                "sum": pytest.approx(11.0),
+                "change": pytest.approx(6.0),
+            }
+        ]
+    }
+
+
 # The STATISTIC_UNIT_TO_UNIT_CONVERTER keys are sorted to ensure that pytest runs are
 # consistent and avoid `different tests were collected between gw0 and gw1`
 @pytest.mark.parametrize(
