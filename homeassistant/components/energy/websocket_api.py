@@ -270,6 +270,12 @@ async def ws_get_fossil_energy_consumption(
     statistic_ids = set(msg["energy_statistic_ids"])
     statistic_ids.add(msg["co2_statistic_id"])
 
+    # Snapshot before the executor job so hour-rollover during the query still
+    # matches a synthesized current-hour energy row without a CO₂ mean.
+    current_hour_start_ts = (
+        dt_util.utcnow().replace(minute=0, second=0, microsecond=0).timestamp()
+    )
+
     # Fetch energy + CO2 statistics
     statistics = await recorder.get_instance(hass).async_add_executor_job(
         recorder.statistics.statistics_during_period,
@@ -338,14 +344,21 @@ async def ws_get_fossil_energy_consumption(
         {
             period["start"]: period["mean"]
             for period in statistics.get(msg["co2_statistic_id"], {})
+            if period.get("mean") is not None
         },
     )
 
-    # Calculate amount of fossil based energy, assume 100% fossil if missing
-    fossil_energy = [
-        {"start": start, "delta": delta * indexed_co2_statistics.get(start, 100) / 100}
-        for start, delta in merged_energy_statistics.items()
-    ]
+    # Calculate amount of fossil based energy. Historical hours missing CO₂ still
+    # assume 100% fossil, but skip the unfinished current hour when energy change
+    # has no matching mean (partial-hour synthesis does not invent CO₂ means).
+    fossil_energy: list[dict[str, Any]] = []
+    for start, delta in merged_energy_statistics.items():
+        co2_percentage = indexed_co2_statistics.get(start)
+        if co2_percentage is None:
+            if start == current_hour_start_ts:
+                continue
+            co2_percentage = 100
+        fossil_energy.append({"start": start, "delta": delta * co2_percentage / 100})
 
     if msg["period"] == "hour":
         reduced_fossil_energy = [

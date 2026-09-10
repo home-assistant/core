@@ -4739,9 +4739,8 @@ async def test_statistics_during_period_fills_current_hour_from_short_term(
     )
     assert mid_hour_stats == {}
 
-    # Fossil energy requests change+mean for energy and CO₂ together. Keep a
-    # mean-capable statistic in the request so mean is not discarded before the
-    # partial-hour guard runs.
+    # Mixed mean+change requests still get a partial energy sum/change row;
+    # mean/min/max stay omitted on that row so mean sensors are not skewed.
     co2_id = "sensor.co2_intensity"
     async_import_statistics(
         hass,
@@ -4778,7 +4777,26 @@ async def test_statistics_during_period_fills_current_hour_from_short_term(
         statistic_ids={statistic_id, co2_id},
         types={"mean", "change"},
     )
-    assert [row["start"] for row in mean_and_change.get(statistic_id, [])] == [
+    assert mean_and_change[statistic_id] == [
+        {
+            "start": process_timestamp(hour_12).timestamp(),
+            "end": process_timestamp(hour_12 + timedelta(hours=1)).timestamp(),
+            "mean": None,
+            "change": pytest.approx(10.0),
+        },
+        {
+            "start": process_timestamp(hour_13).timestamp(),
+            "end": process_timestamp(hour_13 + timedelta(hours=1)).timestamp(),
+            "mean": None,
+            "change": pytest.approx(10.0),
+        },
+        {
+            "start": process_timestamp(hour_14).timestamp(),
+            "end": process_timestamp(hour_14 + timedelta(hours=1)).timestamp(),
+            "change": pytest.approx(15.0),
+        },
+    ]
+    assert [row["start"] for row in mean_and_change[co2_id]] == [
         process_timestamp(hour_12).timestamp(),
         process_timestamp(hour_13).timestamp(),
     ]

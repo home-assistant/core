@@ -2124,16 +2124,11 @@ def _synthesize_current_hour_from_short_term(
 
     Only sum/state/last_reset are filled. Mean/min/max are intentionally omitted:
     a partial hour must not change day/week/month aggregates for mean sensors the
-    way an unweighted hourly reduce would. Requests that include mean/min/max are
-    skipped entirely so callers like fossil energy (change+mean) do not get a
-    partial energy row without a matching CO₂ mean. Uses the same last-sum rule
-    as ``_compile_hourly_statistics``.
+    way an unweighted hourly reduce would. Callers that need paired mean values
+    (e.g. fossil energy) must handle a missing current-hour mean themselves.
+    Uses the same last-sum rule as ``_compile_hourly_statistics``.
     """
     if not types & {"sum", "state", "last_reset"}:
-        return {}
-    # Requests that also want mean/min/max (e.g. fossil energy with change+mean)
-    # must not get a partial sum/change row without a matching mean row.
-    if types & {"mean", "min", "max"}:
         return {}
 
     now = dt_util.utcnow()
