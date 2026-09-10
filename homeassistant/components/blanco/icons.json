@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "error_count_critical": { "default": "mdi:alert-circle-outline" },
+      "error_count_warning": { "default": "mdi:alert-outline" },
+      "online": { "default": "mdi:clock-outline" }
+    }
+  }
+}
