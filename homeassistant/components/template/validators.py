@@ -490,7 +490,7 @@ def inclusive_group(name: str, optional: str, *required: str) -> Callable[[dict]
 def requires_option(option: str, required_option: str) -> Callable[[dict], dict]:
     """Validate a pair of options.
 
-    Return vol.Invalid if required_option is missing when option is present.
+    Raises vol.Invalid if required_option is missing when option is present.
     """
 
     def verify(obj: dict) -> dict:

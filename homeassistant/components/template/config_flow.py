@@ -545,7 +545,9 @@ def validate_user_input(
             _validate_unit(user_input)
             _validate_state_class(user_input)
         if template_type == Platform.CLIMATE:
-            tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)
+            tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)(
+                user_input
+            )
         return {"template_type": template_type} | user_input
 
     return _validate_user_input
