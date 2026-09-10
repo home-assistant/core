@@ -121,7 +121,7 @@ async def test_button_press_send_command_throws_error(
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
     error: MyPVConnectionError,
-    expected_ha_error,
+    expected_ha_error: type[HomeAssistantError],
 ) -> None:
     """Test for HomeAssistantError when send_command throws error."""
 
