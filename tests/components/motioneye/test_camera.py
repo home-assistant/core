@@ -244,13 +244,16 @@ async def test_get_stream_from_camera(
     aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
 ) -> None:
     """Test getting a stream."""
+    stream_called = False
 
-async def stream_handler(request: web.Request) -> web.Response:
-    assert (
-        request.headers["Authorization"]
-        == "Basic Y2FtZXJhX3VzZXI6Y2FtZXJhX3Bhc3N3b3Jk"
-    )
-    return web.Response(body="")
+    async def stream_handler(request: web.Request) -> web.Response:
+        nonlocal stream_called
+        stream_called = True
+        assert (
+            request.headers["Authorization"]
+            == "Basic Y2FtZXJhX3VzZXI6Y2FtZXJhX3Bhc3N3b3Jk"
+        )
+        return web.Response(body="")
 
     app = web.Application()
     app.add_routes([web.get("/", stream_handler)])
@@ -279,7 +282,7 @@ async def stream_handler(request: web.Request) -> web.Response:
     await hass.async_block_till_done()
 
     await async_get_mjpeg_stream(hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID)
-    assert stream_handler.called
+    assert stream_called
 
 
 async def test_state_attributes(hass: HomeAssistant) -> None:
