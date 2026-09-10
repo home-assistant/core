@@ -1,16 +1,22 @@
 """Tests for the ESPHome serial proxy helper."""
 
-from unittest.mock import AsyncMock, call, patch
+from collections.abc import Callable
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioesphomeapi import APIClient
-from aioesphomeapi.model import SerialProxyInfo, SerialProxyPortType
+from aioesphomeapi.model import (
+    SerialProxyInfo,
+    SerialProxyPortType,
+    SerialProxyStatus,
+    SerialProxyUsbInfo,
+)
 import pytest
 from serialx.platforms.serial_esphome import InvalidSettingsError
 from yarl import URL
 
 from homeassistant.components.esphome import _async_scan_serial_ports, serial_proxy
 from homeassistant.components.esphome.const import DOMAIN
-from homeassistant.components.usb import SerialDevice
+from homeassistant.components.usb import SerialDevice, USBDevice
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -87,6 +93,67 @@ async def test_resolve_client_loaded_entry(
         client = await serial_proxy._resolve_client(device.entry.entry_id)
 
     assert client is mock_client
+
+
+ZBT2 = SerialProxyUsbInfo(
+    instance=0,
+    connected=True,
+    vendor_id=0x303A,
+    product_id=0x4001,
+    bcd_device=0x0101,
+    interface_number=0,
+    manufacturer="Nabu Casa",
+    product="ZBT-2",
+    serial_number="10B41DE58F10",
+    interface_description="Nabu Casa ZBT-2",
+)
+EMPTY_SOCKET = SerialProxyUsbInfo(instance=1)
+USB_PROXIES = [
+    SerialProxyInfo(name="USB (Zigbee)", port_type=SerialProxyPortType.USB_SERIAL),
+    SerialProxyInfo(name="USB (Z-Wave)", port_type=SerialProxyPortType.USB_SERIAL),
+]
+
+
+def _mock_usb_info(
+    mock_client: APIClient, infos: dict[int, SerialProxyUsbInfo]
+) -> list[Callable[[SerialProxyUsbInfo], None]]:
+    """Answer USB info queries the way the device does: through the subscription too.
+
+    Returns the subscribed callbacks, so a test can deliver a hotplug message.
+    """
+    callbacks: list[Callable[[SerialProxyUsbInfo], None]] = []
+
+    def _subscribe(
+        on_usb_info: Callable[[SerialProxyUsbInfo], None],
+    ) -> Callable[[], None]:
+        callbacks.append(on_usb_info)
+        return Mock()
+
+    async def _get_usb_info(instance: int) -> SerialProxyUsbInfo:
+        info = infos[instance]
+        for on_usb_info in callbacks:
+            on_usb_info(info)
+        return info
+
+    mock_client.subscribe_serial_proxy_usb_info = _subscribe
+    mock_client.serial_proxy_get_usb_info = _get_usb_info
+    return callbacks
+
+
+def _zbt2_port(entry_id: str) -> USBDevice:
+    url = str(serial_proxy.build_url(entry_id, "USB (Zigbee)", "10B41DE58F10"))
+    return USBDevice(
+        device=url,
+        resolved_device=url,
+        vid="303A",
+        pid="4001",
+        serial_number="10B41DE58F10",
+        manufacturer="Nabu Casa",
+        description="ZBT-2 - Nabu Casa ZBT-2",
+        bcd_device=0x0101,
+        interface_description="Nabu Casa ZBT-2",
+        interface_num=0,
+    )
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -212,6 +279,97 @@ async def test_scan_serial_ports_skips_unavailable(
     device.entry.runtime_data.available = False
 
     assert _async_scan_serial_ports(hass) == []
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_scan_serial_ports_usb(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """A USB port lists the adapter in it, and an empty socket is not listed."""
+    _mock_usb_info(mock_client, {0: ZBT2, 1: EMPTY_SOCKET})
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"serial_proxies": USB_PROXIES},
+    )
+
+    assert device.entry.runtime_data.serial_proxy_usb_info == {0: ZBT2, 1: EMPTY_SOCKET}
+    assert _async_scan_serial_ports(hass) == [_zbt2_port(device.entry.entry_id)]
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_serial_proxy_usb_hotplug(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """A hotplug message updates the ports and has the usb integration rescan."""
+    hass.config.components.add("usb")
+    callbacks = _mock_usb_info(mock_client, {0: ZBT2, 1: EMPTY_SOCKET})
+    with patch(
+        "homeassistant.components.usb.async_request_scan", AsyncMock()
+    ) as mock_scan:
+        device = await mock_esphome_device(
+            mock_client=mock_client,
+            device_info={"serial_proxies": USB_PROXIES},
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+        # One scan once both ports have answered, not one per reply
+        assert mock_scan.mock_calls == [call(hass)]
+
+        callbacks[0](SerialProxyUsbInfo(instance=0))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert _async_scan_serial_ports(hass) == []
+        assert mock_scan.mock_calls == [call(hass)] * 2
+
+        # The same state again is not a change
+        callbacks[0](SerialProxyUsbInfo(instance=0))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_scan.mock_calls == [call(hass)] * 2
+
+        # A failed query says nothing about the port
+        callbacks[0](
+            SerialProxyUsbInfo(instance=0, status=SerialProxyStatus.INVALID_ARGUMENT)
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_scan.mock_calls == [call(hass)] * 2
+
+        callbacks[0](ZBT2)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert _async_scan_serial_ports(hass) == [_zbt2_port(device.entry.entry_id)]
+        assert mock_scan.mock_calls == [call(hass)] * 3
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_serial_proxy_usb_device_offline(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Losing the ESPHome device takes its USB ports with it until it is back."""
+    hass.config.components.add("usb")
+    _mock_usb_info(mock_client, {0: ZBT2, 1: EMPTY_SOCKET})
+    with patch(
+        "homeassistant.components.usb.async_request_scan", AsyncMock()
+    ) as mock_scan:
+        device = await mock_esphome_device(
+            mock_client=mock_client,
+            device_info={"serial_proxies": USB_PROXIES},
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_scan.mock_calls == [call(hass)]
+
+        await device.mock_disconnect(expected_disconnect=False)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert device.entry.runtime_data.serial_proxy_usb_info == {}
+        assert _async_scan_serial_ports(hass) == []
+        assert mock_scan.mock_calls == [call(hass)] * 2
+
+        await device.mock_connect()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert _async_scan_serial_ports(hass) == [_zbt2_port(device.entry.entry_id)]
+        assert mock_scan.mock_calls == [call(hass)] * 3
 
 
 @pytest.mark.usefixtures("mock_zeroconf")

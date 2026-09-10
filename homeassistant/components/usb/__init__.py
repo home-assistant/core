@@ -63,6 +63,7 @@ __all__ = [
     "async_register_port_event_callback",
     "async_register_scan_request_callback",
     "async_register_serial_port_scanner",
+    "async_request_scan",
     "async_scan_serial_ports",
     "scan_serial_ports",
     "usb_device_from_path",

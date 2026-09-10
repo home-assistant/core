@@ -2,7 +2,7 @@
 
 import logging
 
-from aioesphomeapi import APIConnectionError
+from aioesphomeapi import APIConnectionError, SerialProxyPortType
 from serialx import SerialPortInfo
 
 from homeassistant.components import zeroconf
@@ -55,21 +55,10 @@ def _async_scan_serial_ports(
         if device_info is None:
             continue
 
-        for proxy in device_info.serial_proxies:
-            url = str(
-                serial_proxy.build_url(
-                    entry.entry_id, proxy.name, proxy.usb_serial_number or None
-                )
-            )
+        usb_infos = entry_data.serial_proxy_usb_info
 
-            if proxy.usb_capable and not proxy.usb_vendor_id:
-                # An empty socket. Offering it would be like listing a /dev node for an
-                # adapter that has been unplugged: nothing can be done with it, and a
-                # client that stored a path to the device that used to be here should be
-                # told it is gone rather than handed a port that answers nothing.
-                continue
-
-            if not proxy.usb_vendor_id:
+        for instance, proxy in enumerate(device_info.serial_proxies):
+            if proxy.port_type is not SerialProxyPortType.USB_SERIAL:
                 manufacturer, model = async_get_manufacturer_model(device_info)
 
                 # A pin-header UART, where the port itself is the device
@@ -77,13 +66,30 @@ def _async_scan_serial_ports(
                     SerialDevice(
                         device=str(serial_proxy.build_url(entry.entry_id, proxy.name)),
                         serial_number=(
-                            device_info.mac_address.replace(":", "") + "-" + slugify(proxy.name)
+                            device_info.mac_address.replace(":", "")
+                            + "-"
+                            + slugify(proxy.name)
                         ),
                         manufacturer=manufacturer,
                         description=f"{model} ({proxy.name})",
                     )
                 )
                 continue
+
+            if instance not in usb_infos or not usb_infos[instance].connected:
+                # An empty socket, or one not yet asked about. Offering it would be like
+                # listing a /dev node for an adapter that has been unplugged: nothing can
+                # be done with it, and a client that stored a path to the device that
+                # used to be here should be told it is gone rather than handed a port
+                # that answers nothing.
+                continue
+
+            usb = usb_infos[instance]
+            url = str(
+                serial_proxy.build_url(
+                    entry.entry_id, proxy.name, usb.serial_number or None
+                )
+            )
 
             # A USB port is a socket, so the device in it is what callers care about.
             # Reported through the same converter a local port goes through, so an adapter
@@ -95,23 +101,14 @@ def _async_scan_serial_ports(
                     SerialPortInfo(
                         device=url,
                         resolved_device=url,
-                        vid=proxy.usb_vendor_id,
-                        pid=proxy.usb_product_id,
-                        serial_number=proxy.usb_serial_number or None,
-                        manufacturer=proxy.usb_manufacturer or None,
-                        product=proxy.usb_product or None,
-                        bcd_device=proxy.usb_bcd_device or None,
-                        # Both describe the device, not the port it sits in: a local
-                        # enumeration reports the bound interface's string and number, and
-                        # an adapter has to look the same here as it does there or it
-                        # changes identity when it moves between the two.
-                        interface_description=proxy.usb_interface_string or None,
-                        # 0xFF is the sentinel for an interface that is not claimed yet
-                        interface_num=(
-                            None
-                            if proxy.usb_interface_number == 0xFF
-                            else proxy.usb_interface_number
-                        ),
+                        vid=usb.vendor_id,
+                        pid=usb.product_id,
+                        serial_number=usb.serial_number or None,
+                        manufacturer=usb.manufacturer or None,
+                        product=usb.product or None,
+                        bcd_device=usb.bcd_device or None,
+                        interface_description=usb.interface_description or None,
+                        interface_num=usb.interface_number,
                     )
                 )
             )

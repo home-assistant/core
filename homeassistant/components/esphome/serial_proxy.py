@@ -25,7 +25,9 @@ from .entry_data import ESPHomeConfigEntry
 _HASS_LOOP: asyncio.AbstractEventLoop | None = None
 
 
-def build_url(entry_id: str, port_name: str, usb_serial_number: str | None = None) -> URL:
+def build_url(
+    entry_id: str, port_name: str, usb_serial_number: str | None = None
+) -> URL:
     """Build a canonical `esphome-hass://` URL.
 
     A serial number pins the URL to one USB device: the port is a socket, so without it the
