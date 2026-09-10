@@ -78,8 +78,14 @@ class IseoAccessLogEvent(EventEntity):
 
     @callback
     def _forget_consumer(self) -> None:
-        """Stop the lock reading a log this entity can no longer report."""
-        self._entry.runtime_data.access_log_consumer = False
+        """Stop the lock reading a log this entity can no longer report.
+
+        runtime_data is already gone when the entry itself is unloading, and
+        there is nothing left to clear then — only a removal that leaves the
+        entry loaded, such as disabling this entity, has a flag to reset.
+        """
+        if (data := getattr(self._entry, "runtime_data", None)) is not None:
+            data.access_log_consumer = False
 
     @callback
     def _async_handle_entry(self, event_type: str, attributes: dict[str, Any]) -> None:

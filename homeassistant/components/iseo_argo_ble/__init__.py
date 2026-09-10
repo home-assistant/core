@@ -12,7 +12,7 @@ from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_UUID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_platform_entity_service
@@ -63,6 +63,20 @@ PENDING_LOG_ENTRIES: HassKey[dict[str, list[tuple[str, dict[str, Any]]]]] = Hass
 ACCESS_LOG_READS: HassKey[dict[str, asyncio.Task[None]]] = HassKey(
     f"{DOMAIN}_access_log_reads"
 )
+
+# The mutex serialising every BLE session with one lock, by entry id. Kept
+# here for the same reason as ACCESS_LOG_READS: the lock accepts a single
+# connection at a time, and a read that outlives its entity has to keep
+# excluding the replacement entity's polls and unlocks. A mutex on the entity
+# cannot do that — the replacement starts with a fresh one and would open a
+# second session over the log the old read is still draining.
+BLE_LOCKS: HassKey[dict[str, asyncio.Lock]] = HassKey(f"{DOMAIN}_ble_locks")
+
+
+@callback
+def async_get_ble_lock(hass: HomeAssistant, entry_id: str) -> asyncio.Lock:
+    """Return the BLE mutex shared by everything talking to one lock."""
+    return hass.data.setdefault(BLE_LOCKS, {}).setdefault(entry_id, asyncio.Lock())
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -126,3 +140,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> boo
             _LOGGER.debug("Access log read did not finish before unload")
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> None:
+    """Drop the state deliberately kept outside the entry, once it is gone.
+
+    All of it outlives an unload on purpose, so a reload finds it again; only
+    deleting the entry means nothing will come back for it.
+    """
+    entry_id = entry.entry_id
+    hass.data.get(BLE_LOCKS, {}).pop(entry_id, None)
+    hass.data.get(ACCESS_LOG_READS, {}).pop(entry_id, None)
+    hass.data.get(PENDING_LOG_ENTRIES, {}).pop(entry_id, None)

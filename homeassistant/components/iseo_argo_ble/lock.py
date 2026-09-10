@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.util import dt as dt_util
 
-from . import ACCESS_LOG_READS, PENDING_LOG_ENTRIES, IseoConfigEntry
+from . import ACCESS_LOG_READS, PENDING_LOG_ENTRIES, IseoConfigEntry, async_get_ble_lock
 from .const import DOMAIN, signal_access_log
 from .event import EVENT_TYPE_ACCESS_DENIED, EVENT_TYPE_FAULT, EVENT_TYPE_OPENED
 
@@ -79,7 +79,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ISEO lock entity from a config entry."""
-    async_add_entities([IseoLockEntity(entry)])
+    async_add_entities(
+        [IseoLockEntity(entry, async_get_ble_lock(hass, entry.entry_id))]
+    )
 
 
 class IseoLockEntity(LockEntity):
@@ -99,11 +101,18 @@ class IseoLockEntity(LockEntity):
     def __init__(
         self,
         entry: IseoConfigEntry,
+        ble_lock: asyncio.Lock,
     ) -> None:
-        """Initialize the lock entity."""
+        """Initialize the lock entity.
+
+        The BLE mutex is passed in rather than created here: the lock accepts
+        a single connection at a time, and a destructive access-log read can
+        outlive the entity that started it, so it has to keep excluding a
+        replacement entity's polls and unlocks too.
+        """
         self._entry = entry
         self._relock_task: asyncio.Task[None] | None = None
-        self._ble_lock = asyncio.Lock()
+        self._ble_lock = ble_lock
         self._door_status_supported: bool | None = None
         self._fw_version_set = False
         self._access_log_unsub: CALLBACK_TYPE | None = None
