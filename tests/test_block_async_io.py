@@ -49,6 +49,14 @@ async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> 
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
+def test_time_monotonous() -> None:
+    """Test that time.monotonic is monotonous."""
+    t1 = time.monotonic()
+    t2 = time.monotonic()
+    t3 = time.monotonic()
+    assert t1 <= t2 <= t3
+
+
 async def test_protect_loop_sleep() -> None:
     """Test time.sleep not injected by the debugger raises."""
     block_async_io.enable()
