@@ -595,7 +595,7 @@
     'state': '2',
   })
 # ---
-# name: test_sensor[sensor.my_pv_ac_elwa_2_voltage_phase_l1-entry]
+# name: test_sensor[sensor.my_pv_ac_elwa_2_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -611,7 +611,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_pv_ac_elwa_2_voltage_phase_l1',
+    'entity_id': 'sensor.my_pv_ac_elwa_2_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -619,7 +619,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Voltage phase L1',
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -627,26 +627,26 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage phase L1',
+    'original_name': 'Voltage',
     'platform': 'my_pv',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'volt_l1',
+    'translation_key': None,
     'unique_id': '1601500000000000-volt_mains',
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_sensor[sensor.my_pv_ac_elwa_2_voltage_phase_l1-state]
+# name: test_sensor[sensor.my_pv_ac_elwa_2_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-PV AC ELWA 2 Voltage phase L1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-PV AC ELWA 2 Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_pv_ac_elwa_2_voltage_phase_l1',
+    'entity_id': 'sensor.my_pv_ac_elwa_2_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -126,7 +126,11 @@ def mock_my_pv_client() -> Generator[AsyncMock]:
         client.current_temperature = 54.3
         client.target_temperature = 62.1
         client.get_setup_configuration = Mock(side_effect=_setup_configuration_lookup)
+        client.get_command_configuration = Mock(
+            side_effect=_command_configuration_lookup
+        )
         client.get_data_configurations = Mock(return_value=DATA_CONFIGURATION)
         client.get_data_value = Mock(side_effect=_data_value_lookup)
+        client.supports_data = Mock(side_effect=DATA_CONFIGURATION.__contains__)
 
         yield client

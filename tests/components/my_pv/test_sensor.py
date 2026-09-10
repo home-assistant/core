@@ -38,12 +38,13 @@ async def test_sensor_unavailable_not_connected(
 ) -> None:
     """Test if a sensor is unavailable when not connected."""
 
-    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_client.connected = False
+        mock_my_pv_client.connected = False
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.my_pv_ac_elwa_2_temperature_1")
     assert state.state == STATE_UNAVAILABLE
@@ -56,12 +57,13 @@ async def test_sensor_unavailable_data_value_none(
 ) -> None:
     """Test if a sensor is unavailable when data value is None."""
 
-    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_client.get_data_value = Mock(return_value=None)
+        mock_my_pv_client.get_data_value = Mock(return_value=None)
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.my_pv_ac_elwa_2_temperature_1")
     assert state.state == STATE_UNAVAILABLE
