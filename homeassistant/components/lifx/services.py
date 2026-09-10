@@ -207,8 +207,8 @@ def _get_manager(service: ServiceCall) -> LIFXManager:
     hass = service.hass
     # The manager is stored before the connection and first refresh are awaited,
     # so its presence alone does not mean a device is usable.
-    if (manager := hass.data.get(DATA_LIFX_MANAGER)) is None or not any(
-        not async_entry_is_legacy(entry)
+    if (manager := hass.data.get(DATA_LIFX_MANAGER)) is None or all(
+        async_entry_is_legacy(entry)
         for entry in hass.config_entries.async_loaded_entries(DOMAIN)
     ):
         raise ServiceValidationError(
