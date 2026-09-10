@@ -80,7 +80,7 @@
     },
     "sensor": {
       "card_insertion_state": {
-        "name": "Card slot",
+        "name": "Content source",
         "state": {
           "none": "Empty",
           "physical": "Physical card",
