@@ -52,11 +52,12 @@ def async_get_client_by_device_entry(
 
     Raises ValueError if client is not found.
     """
-    entry: SamsungTVConfigEntry | None
-    for config_entry_id in device.config_entries:
-        entry = hass.config_entries.async_get_entry(config_entry_id)
-        if entry and entry.domain == DOMAIN and entry.state is ConfigEntryState.LOADED:
-            return entry.runtime_data.bridge
+    config_entry: SamsungTVConfigEntry | None
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device.id, domain=DOMAIN
+    )
+    if config_entry is not None and config_entry.state is ConfigEntryState.LOADED:
+        return config_entry.runtime_data.bridge
 
     raise ValueError(
         f"Device {device.id} is not from an existing {DOMAIN} config entry"

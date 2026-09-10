@@ -8,24 +8,30 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.helpers import selector
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_CERT_PEM, CONF_KEY_PEM, CONF_SERIAL, DOMAIN
+from .const import CONF_CERT_PEM, CONF_KEY_PEM, CONF_SERIAL, DOMAIN, MODEL
 from .coordinator import async_probe_camera
 
 SERIAL_LENGTH = 10
+HOSTNAME_PREFIX = "harborc-"
+
+TEXT_SELECTOR = selector.TextSelector(selector.TextSelectorConfig())
+PEM_SELECTOR = selector.TextSelector(selector.TextSelectorConfig(multiline=True))
 
 STEP_USER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SERIAL): selector.TextSelector(selector.TextSelectorConfig()),
-        vol.Required(CONF_CERT_PEM): selector.TextSelector(
-            selector.TextSelectorConfig(multiline=True)
-        ),
-        vol.Required(CONF_KEY_PEM): selector.TextSelector(
-            selector.TextSelectorConfig(multiline=True)
-        ),
-        vol.Required(CONF_IP_ADDRESS): selector.TextSelector(
-            selector.TextSelectorConfig()
-        ),
+        vol.Required(CONF_SERIAL): TEXT_SELECTOR,
+        vol.Required(CONF_CERT_PEM): PEM_SELECTOR,
+        vol.Required(CONF_KEY_PEM): PEM_SELECTOR,
+        vol.Required(CONF_IP_ADDRESS): TEXT_SELECTOR,
+    }
+)
+
+STEP_DISCOVERY_CONFIRM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CERT_PEM): PEM_SELECTOR,
+        vol.Required(CONF_KEY_PEM): PEM_SELECTOR,
     }
 )
 
@@ -66,63 +72,115 @@ class HarborConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _discovered_serial: str
+    _discovered_ip: str
+
+    async def _async_probe_and_create(
+        self, config: HarborCameraConfig, errors: dict[str, str]
+    ) -> ConfigFlowResult | None:
+        """Create the entry for a reachable camera, or record a connection error."""
+        try:
+            display_name = await async_probe_camera(config)
+        except TimeoutError:
+            errors["base"] = "cannot_connect"
+            return None
+
+        return self.async_create_entry(
+            title=display_name or f"Camera {config.serial}",
+            data={
+                CONF_SERIAL: config.serial,
+                CONF_CERT_PEM: config.cert_pem,
+                CONF_KEY_PEM: config.key_pem,
+                CONF_IP_ADDRESS: config.ip_address,
+            },
+        )
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=STEP_USER_SCHEMA,
-                errors={},
-            )
-
-        normalized = {
-            key: value.strip() if isinstance(value, str) else value
-            for key, value in user_input.items()
-        }
         errors: dict[str, str] = {}
-        display_name: str | None = None
 
-        serial = normalized[CONF_SERIAL]
-        if not _validate_serial(serial):
-            errors[CONF_SERIAL] = "invalid_serial"
+        if user_input is not None:
+            serial = user_input[CONF_SERIAL].strip()
+            cert_pem = user_input[CONF_CERT_PEM].strip()
+            key_pem = user_input[CONF_KEY_PEM].strip()
 
-        errors.update(
-            _validate_credentials(normalized[CONF_CERT_PEM], normalized[CONF_KEY_PEM])
+            if not _validate_serial(serial):
+                errors[CONF_SERIAL] = "invalid_serial"
+            errors.update(_validate_credentials(cert_pem, key_pem))
+
+            if not errors:
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_configured()
+
+                if result := await self._async_probe_and_create(
+                    HarborCameraConfig(
+                        serial=serial,
+                        cert_pem=cert_pem,
+                        key_pem=key_pem,
+                        ip_address=user_input[CONF_IP_ADDRESS].strip(),
+                    ),
+                    errors,
+                ):
+                    return result
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_SCHEMA, user_input
+            ),
+            errors=errors,
         )
 
-        if not errors:
-            await self.async_set_unique_id(serial)
-            self._abort_if_unique_id_configured()
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a camera discovered on the network."""
+        serial = discovery_info.hostname.removeprefix(HOSTNAME_PREFIX)
+        if not _validate_serial(serial):
+            return self.async_abort(reason="invalid_discovery_info")
 
-            config = HarborCameraConfig(
-                serial=serial,
-                cert_pem=normalized[CONF_CERT_PEM],
-                key_pem=normalized[CONF_KEY_PEM],
-                ip_address=normalized[CONF_IP_ADDRESS],
-            )
-            try:
-                display_name = await async_probe_camera(config)
-            except TimeoutError:
-                errors["base"] = "cannot_connect"
+        await self.async_set_unique_id(serial)
+        self._abort_if_unique_id_configured(
+            updates={CONF_IP_ADDRESS: discovery_info.ip}
+        )
 
-        if errors:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=STEP_USER_SCHEMA,
-                errors=errors,
-            )
+        self._discovered_serial = serial
+        self._discovered_ip = discovery_info.ip
+        self.context["title_placeholders"] = {"name": f"{MODEL} {serial}"}
+        return await self.async_step_discovery_confirm()
 
-        entry_data: dict[str, Any] = {
-            CONF_SERIAL: serial,
-            CONF_CERT_PEM: normalized[CONF_CERT_PEM],
-            CONF_KEY_PEM: normalized[CONF_KEY_PEM],
-            CONF_IP_ADDRESS: normalized[CONF_IP_ADDRESS],
-        }
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Collect the credentials for a discovered camera."""
+        errors: dict[str, str] = {}
 
-        return self.async_create_entry(
-            title=display_name or f"Camera {serial}",
-            data=entry_data,
+        if user_input is not None:
+            cert_pem = user_input[CONF_CERT_PEM].strip()
+            key_pem = user_input[CONF_KEY_PEM].strip()
+            errors = _validate_credentials(cert_pem, key_pem)
+
+            if not errors:
+                if result := await self._async_probe_and_create(
+                    HarborCameraConfig(
+                        serial=self._discovered_serial,
+                        cert_pem=cert_pem,
+                        key_pem=key_pem,
+                        ip_address=self._discovered_ip,
+                    ),
+                    errors,
+                ):
+                    return result
+
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_DISCOVERY_CONFIRM_SCHEMA, user_input
+            ),
+            description_placeholders={"serial": self._discovered_serial},
+            errors=errors,
         )

@@ -9,7 +9,7 @@ from unittest.mock import call, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from vizaio import AppConfig, RemoteKey, VizioConnectionError
+from vizaio import AppConfig, RemoteKey, VizioConnectionError, VizioNotFoundError
 from vizaio.apps import BUNDLED_APPS, UNKNOWN_APP, is_app_input
 
 from homeassistant.components.media_player import (
@@ -170,6 +170,18 @@ async def _cm_for_test_setup_without_apps(
             "homeassistant.components.vizio.Vizio.get_power_state",
             return_value=vizio_power_state,
         ),
+        # The coordinator falls back to these when the audio settings
+        # collection omits volume or mute. Default them to unsupported so
+        # a test opting out of a setting really gets no value for it;
+        # tests exercising the fallback patch over these.
+        patch(
+            "homeassistant.components.vizio.Vizio.get_volume",
+            side_effect=VizioNotFoundError("not supported"),
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.is_muted",
+            side_effect=VizioNotFoundError("not supported"),
+        ),
     ):
         yield
 
@@ -293,12 +305,12 @@ async def _test_service(
 async def test_tv_without_volume_in_audio_settings(
     hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
 ) -> None:
-    """Test a TV whose audio settings omit volume.
+    """Test a TV that exposes volume and mute nowhere at all.
 
-    Some firmware does not list `volume` (or `mute`) in the `audio`
-    settings collection even though the individual settings still work.
-    The entity must still load, with the unavailable attributes reported
-    as None instead of raising on every coordinator update.
+    Some firmware does not list them in the `audio` settings collection;
+    when the individual settings are unavailable too, there is nothing
+    left to read. The entity must still load with both attributes unset,
+    rather than raising on every coordinator update.
     """
     async with _cm_for_test_setup_without_apps({"eq": CURRENT_EQ}, True):
         await setup_integration(hass, mock_tv_config_entry)
@@ -308,6 +320,73 @@ async def test_tv_without_volume_in_audio_settings(
         assert attr.get("volume_level") is None
         assert attr.get("is_volume_muted") is None
         assert attr[ATTR_SOUND_MODE] == CURRENT_EQ
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_tv_volume_and_mute_read_individually(
+    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+) -> None:
+    """Test a TV whose audio settings omit volume and mute.
+
+    Some firmware does not list them in the `audio` collection even
+    though the individual settings still work, so the coordinator reads
+    them directly and the entity still reports both.
+    """
+    volume = int(MAX_VOLUME[MediaPlayerDeviceClass.TV] / 2)
+    async with _cm_for_test_setup_without_apps({"eq": CURRENT_EQ}, True):
+        with (
+            patch(
+                "homeassistant.components.vizio.Vizio.get_volume",
+                return_value=volume,
+            ) as get_volume,
+            patch(
+                "homeassistant.components.vizio.Vizio.is_muted",
+                return_value=True,
+            ) as is_muted,
+        ):
+            await setup_integration(hass, mock_tv_config_entry)
+
+            attr = _get_attr_and_assert_base_attr(
+                hass, MediaPlayerDeviceClass.TV, STATE_ON
+            )
+            assert (
+                attr["volume_level"]
+                == float(volume) / MAX_VOLUME[MediaPlayerDeviceClass.TV]
+            )
+            assert attr["is_volume_muted"] is True
+            assert get_volume.called
+            assert is_muted.called
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_tv_volume_and_mute_not_read_when_present(
+    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+) -> None:
+    """Test that the individual reads are skipped when not needed.
+
+    Devices that do list volume and mute in the collection must not pay
+    an extra round trip for each on every coordinator update.
+    """
+    volume = int(MAX_VOLUME[MediaPlayerDeviceClass.TV] / 2)
+    async with _cm_for_test_setup_without_apps(
+        {"volume": volume, "mute": "Off", "eq": CURRENT_EQ}, True
+    ):
+        with (
+            patch("homeassistant.components.vizio.Vizio.get_volume") as get_volume,
+            patch("homeassistant.components.vizio.Vizio.is_muted") as is_muted,
+        ):
+            await setup_integration(hass, mock_tv_config_entry)
+
+            attr = _get_attr_and_assert_base_attr(
+                hass, MediaPlayerDeviceClass.TV, STATE_ON
+            )
+            assert (
+                attr["volume_level"]
+                == float(volume) / MAX_VOLUME[MediaPlayerDeviceClass.TV]
+            )
+            assert attr["is_volume_muted"] is False
+            assert not get_volume.called
+            assert not is_muted.called
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -776,14 +855,45 @@ async def test_apps_update(
                 assert len(apps) == len(APP_RECORDS)
 
 
+@pytest.mark.parametrize(
+    ("entry_data", "app_config", "expected_app_name"),
+    [
+        pytest.param(
+            MOCK_USER_VALID_TV_CONFIG,
+            UNKNOWN_APP_CONFIG_OBJ,
+            None,
+            id="unknown_config_hides_app_name",
+        ),
+        pytest.param(
+            MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG,
+            CUSTOM_CONFIG_OBJ,
+            ADDITIONAL_APP_CONFIG["name"],
+            id="additional_config_keeps_mapped_name",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps_on_input")
 async def test_vizio_update_with_apps_on_input(
-    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entry_data: dict[str, Any],
+    app_config: AppConfig,
+    expected_app_name: str | None,
 ) -> None:
-    """Test a vizio TV with apps that is on a TV input."""
-    await setup_integration(hass, mock_tv_config_entry)
+    """Test a vizio TV with apps that is on a TV input.
+
+    The device reports an app config even on HDMI. An unrecognized one must
+    not surface as the unknown-app sentinel, while a name mapped through
+    additional_configs is deliberate user configuration and is kept.
+    """
+    config_entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id=UNIQUE_ID)
+    with patch(
+        "homeassistant.components.vizio.Vizio.get_current_app_config",
+        return_value=app_config,
+    ):
+        await setup_integration(hass, config_entry)
     attr = _get_attr_and_assert_base_attr(hass, MediaPlayerDeviceClass.TV, STATE_ON)
-    # app ID should not be in the attributes
+    assert attr[ATTR_INPUT_SOURCE] == CURRENT_INPUT
+    assert attr.get("app_name") == expected_app_name
     assert "app_id" not in attr
 
 

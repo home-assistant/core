@@ -148,11 +148,13 @@ async def test_setup_and_remove_config_entry(
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
-async def test_entry_changed(hass: HomeAssistant, platform) -> None:
+async def test_entry_changed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    platform,
+) -> None:
     """Test reconfiguring."""
-
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     def _create_mock_entity(domain: str, name: str) -> er.RegistryEntry:
         config_entry = MockConfigEntry(
