@@ -623,10 +623,11 @@ class Searcher:
                 self._async_resolve_up_area(area_id)
 
             if device_entry.is_composite_device:
-                self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
+                config_entry_ids = device_entry.config_entries
             else:
-                self._add(ItemType.CONFIG_ENTRY, device_entry.config_entry_id)
-            for config_entry_id in device_entry.config_entries:
+                config_entry_ids = {device_entry.config_entry_id}
+            self._add(ItemType.CONFIG_ENTRY, config_entry_ids)
+            for config_entry_id in config_entry_ids:
                 if entry := self.hass.config_entries.async_get_entry(config_entry_id):
                     self._add(ItemType.INTEGRATION, entry.domain)
 
