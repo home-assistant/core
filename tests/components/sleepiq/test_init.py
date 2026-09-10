@@ -391,7 +391,7 @@ async def test_login_serialization_allows_retry_after_failure(
     hass: HomeAssistant,
     mock_asyncsleepiq: MagicMock,
 ) -> None:
-    """Test that a failed login does not increment the generation counter."""
+    """Test that a fresh caller can retry after a prior login failure."""
     await setup_platform(hass, "sensor")
     client = hass.config_entries.async_entries(DOMAIN)[0].runtime_data.client
 
