@@ -12,7 +12,9 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODES,
     ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
+    FAN_HIGH,
     FAN_LOW,
+    FAN_MIDDLE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -21,6 +23,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.zhong_hong.const import ALL_FAN_MODES, FAN_MEDIUM_HIGH
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -37,9 +40,11 @@ from .conftest import DEVICE_ADDRESS, ENTITY_ID, FakeGateway, build_status
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-# Spelled out instead of importing SCAN_INTERVAL, so that changing it in the
-# integration makes these tests fail instead of following along.
+# Spelled out instead of importing SCAN_INTERVAL and READBACK_DELAY, so that
+# changing either in the integration makes these tests fail instead of
+# following along.
 POLL_INTERVAL = timedelta(seconds=60)
+READBACK_DELAY = timedelta(seconds=3)
 
 
 async def test_entity_registration(
@@ -385,3 +390,135 @@ async def test_device_address_is_used_for_the_entity(
 
     assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get("climate.ac_1_2") is not None
+
+
+async def test_a_command_is_read_back(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the gateway is re-read shortly after being commanded.
+
+    A unit reports the new state itself once it acts, so this only matters
+    for the reports that go missing: without it the entity would show the old
+    state until the next scheduled poll.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_gateway.query_all_status_calls == 1
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_HIGH},
+        blocking=True,
+    )
+    # The command is sent from the executor, which hands the re-read back to
+    # the event loop to be scheduled there. Moving the clock on before that
+    # has happened would leave the timer set past the point being fired.
+    await hass.async_block_till_done()
+
+    assert mock_gateway.query_all_status_calls == 1
+
+    freezer.tick(READBACK_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_gateway.query_all_status_calls == 2
+
+
+async def test_commands_in_a_row_are_read_back_once(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a burst of commands does not queue up a re-read for each one.
+
+    The commands are spread out rather than sent all at once, so that a
+    re-read left over from an earlier one would come due on its own. Sent in
+    the same tick they would all come due together, and the coordinator would
+    fold them into one query whether the earlier ones had been dropped or not.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_gateway.query_all_status_calls == 1
+
+    for fan_mode in (FAN_HIGH, FAN_LOW, FAN_MIDDLE):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: fan_mode},
+            blocking=True,
+        )
+        # See test_a_command_is_read_back: the re-read is scheduled on the
+        # event loop from the executor the commands are sent on.
+        await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The first command's re-read would have been due by now, a second ago.
+    assert mock_gateway.query_all_status_calls == 1
+
+    freezer.tick(READBACK_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_gateway.query_all_status_calls == 2
+
+
+@pytest.mark.parametrize("expected_lingering_timers", [False])
+async def test_a_pending_readback_does_not_outlive_the_entry(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading the entry drops a re-read that was still to come.
+
+    The re-read sits on a timer of its own, which nothing else knows to
+    cancel. A leftover one does not reach the gateway — the coordinator it
+    would refresh has been shut down by then — but it stays on the loop, and
+    holds on to that coordinator until it comes due. So what this test looks
+    at is the timer rather than the gateway: the harness is asked not to
+    forgive a lingering one, and the test ends while it would still be there.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_HIGH},
+        blocking=True,
+    )
+    # See test_a_command_is_read_back: the re-read is scheduled on the event
+    # loop from the executor the commands are sent on.
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize("expected_lingering_timers", [False])
+async def test_a_command_landing_after_the_unload_schedules_nothing(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a command still in flight at unload does not leave a re-read behind.
+
+    Commands are sent from the executor and hand the re-read back to the event
+    loop to be scheduled there, so one that was in flight lands after the
+    unload has already been through and found nothing to cancel.
+    """
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data.coordinator
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(coordinator.schedule_readback)
+    await hass.async_block_till_done()
