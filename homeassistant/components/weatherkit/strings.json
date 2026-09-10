@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -8,6 +11,20 @@
       "unsupported_location": "Apple WeatherKit does not provide data for this location."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "key_id": "[%key:component::weatherkit::config::step::user::data::key_id%]",
+          "key_pem": "[%key:component::weatherkit::config::step::user::data::key_pem%]",
+          "location": "[%key:common::config_flow::data::location%]",
+          "service_id": "[%key:component::weatherkit::config::step::user::data::service_id%]",
+          "team_id": "[%key:component::weatherkit::config::step::user::data::team_id%]"
+        },
+        "data_description": {
+          "key_pem": "Leave blank to keep the currently configured private key."
+        },
+        "description": "[%key:component::weatherkit::config::step::user::description%]",
+        "title": "[%key:component::weatherkit::config::step::user::title%]"
+      },
       "user": {
         "data": {
           "key_id": "Key ID",
