@@ -46,15 +46,19 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: todo
-  discovery: todo
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
+  discovery-update-info:
+    status: exempt
+    comment: device not discoverable
+  discovery:
+    status: exempt
+    comment: device not discoverable; Only MNDP (MikroTik Neighbor Discovery Protocol) available
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
@@ -63,7 +67,9 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: no known use cases for repair issues or flows, yet
   stale-devices: todo
 
   # Platinum

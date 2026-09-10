@@ -108,7 +108,9 @@ async def mock_omada_site_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMoc
 
     site_client.get_known_clients.return_value = async_empty()
     site_client.get_connected_clients.return_value = async_empty()
+    site_client.get_client = AsyncMock()
     site_client.reconnect_client = AsyncMock()
+    site_client.update_client = AsyncMock()
     return site_client
 
 

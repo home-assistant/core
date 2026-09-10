@@ -182,6 +182,7 @@
       'grid',
       'pv_1_2',
       'energy',
+      'meter_energy',
     ]),
     'serial_number': '**REDACTED**',
     'settings_components': list([

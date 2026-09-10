@@ -372,6 +372,13 @@ async def test_config_parameter_state(
     assert service_calls[1].data["some"] == "User Slot Status - event - test_event2"
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(255, id="raw_value"),
+        pytest.param("Enable Beeper", id="state_label"),
+    ],
+)
 async def test_value_state(
     hass: HomeAssistant,
     client,
@@ -379,6 +386,7 @@ async def test_value_state(
     integration,
     service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
+    value: int | str,
 ) -> None:
     """Test for value conditions."""
     device = device_registry.async_get_device_by_identifier(
@@ -401,7 +409,7 @@ async def test_value_state(
                             "type": "value",
                             "command_class": 112,
                             "property": 3,
-                            "value": 255,
+                            "value": value,
                         }
                     ],
                     "action": {

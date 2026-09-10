@@ -56,6 +56,8 @@ async def test_remove_entry_clears_dynamic_encryption_key(
     mock_client.connect.assert_called_once()
     mock_client.noise_encryption_set_key.assert_called_once_with(b"")
     mock_client.disconnect.assert_called_once()
+    # The connection that wipes the key must not become a dial-back target
+    assert mock_client.outgoing_connection_target is False
 
     assert await storage.async_get_key(mock_config_entry.unique_id) is None
 

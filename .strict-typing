@@ -118,6 +118,7 @@ homeassistant.components.bayesian.*
 homeassistant.components.besen.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
+homeassistant.components.bitvis.*
 homeassistant.components.blockchain.*
 homeassistant.components.blue_current.*
 homeassistant.components.blueprint.*
@@ -375,6 +376,7 @@ homeassistant.components.lovelace.*
 homeassistant.components.luftdaten.*
 homeassistant.components.lunatone.*
 homeassistant.components.lutron.*
+homeassistant.components.lyngdorf.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
 homeassistant.components.marantz_infrared.*
@@ -389,6 +391,7 @@ homeassistant.components.media_player.*
 homeassistant.components.media_source.*
 homeassistant.components.met_eireann.*
 homeassistant.components.metoffice.*
+homeassistant.components.midea.*
 homeassistant.components.miele.*
 homeassistant.components.mikrotik.*
 homeassistant.components.min_max.*

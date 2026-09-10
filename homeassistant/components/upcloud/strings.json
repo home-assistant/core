@@ -15,14 +15,5 @@
         }
       }
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Update interval in seconds, minimum 30"
-        }
-      }
-    }
   }
 }

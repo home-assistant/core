@@ -1,7 +1,7 @@
 """Select for Midea."""
 
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
 from midealocal.const import DeviceType
 
@@ -145,7 +145,9 @@ class MideaSelect(MideaEntity, SelectEntity):
     @override
     def options(self) -> list[str]:
         """Return the list of valid options."""
-        return getattr(self._device, self.entity_description.options_attribute)
+        return cast(
+            list[str], getattr(self._device, self.entity_description.options_attribute)
+        )
 
     @property
     @override

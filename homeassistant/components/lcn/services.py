@@ -21,7 +21,8 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_get_device_and_config_entry
 
 from .const import (
     CONF_KEYS,
@@ -69,28 +70,11 @@ class LcnServiceCall:
 
     def get_device_connection(self, service: ServiceCall) -> DeviceConnection:
         """Get address connection object."""
-        entries: list[LcnConfigEntry] = self.hass.config_entries.async_loaded_entries(
-            DOMAIN
+        entry: LcnConfigEntry
+        device, entry = async_get_device_and_config_entry(
+            self.hass, DOMAIN, service.data[CONF_DEVICE_ID]
         )
-        device_id = service.data[CONF_DEVICE_ID]
-        device_registry = dr.async_get(self.hass)
-        if not (device := device_registry.async_get(device_id)) or not (
-            entry := next(
-                (
-                    entry
-                    for entry in entries
-                    if entry.entry_id == device.primary_config_entry
-                ),
-                None,
-            )
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_device_id",
-                translation_placeholders={"device_id": device_id},
-            )
-
-        return entry.runtime_data.device_connections[device_id]
+        return entry.runtime_data.device_connections[device.id]
 
     async def async_call_service(self, service: ServiceCall) -> ServiceResponse:
         """Execute service call."""

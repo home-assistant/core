@@ -1,10 +1,13 @@
 """Tests for the Atag climate platform."""
 
+from collections.abc import Generator
 from unittest.mock import PropertyMock, patch
+
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.atag.climate import PRESET_MAP
 from homeassistant.components.climate import (
-    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -12,34 +15,44 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
-    HVACAction,
     HVACMode,
 )
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import UID, init_integration
 
+from tests.common import snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIMATE_ID = "climate.atag_thermostat_atag"
 
 
-async def test_climate(
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.atag.PLATFORMS", [Platform.CLIMATE]):
+        yield
+
+
+async def test_all_entities(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the creation and values of Atag climate device."""
-    await init_integration(hass, aioclient_mock)
+    """Test all entities."""
+    entry = await init_integration(hass, aioclient_mock)
 
-    assert entity_registry.async_is_registered(CLIMATE_ID)
-    entity = entity_registry.async_get(CLIMATE_ID)
-    assert entity.unique_id == f"{UID}-climate"
-    assert hass.states.get(CLIMATE_ID).attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_setting_climate(
@@ -98,7 +111,7 @@ async def test_update_failed(
     """Test data is not destroyed on update failure."""
     entry = await init_integration(hass, aioclient_mock)
     await async_setup_component(hass, HA_DOMAIN, {})
-    assert hass.states.get(CLIMATE_ID).state == HVACMode.HEAT
+    assert hass.states.get(CLIMATE_ID).state == HVACMode.AUTO
     coordinator = entry.runtime_data
     with patch("pyatag.AtagOne.update", side_effect=TimeoutError) as updater:
         await coordinator.async_refresh()

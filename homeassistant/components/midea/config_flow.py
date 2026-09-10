@@ -77,7 +77,7 @@ def _select_and_connect(
 
     Returns None if there is no device implementation for device_type.
     """
-    dm = device_selector(
+    dm: MideaDevice | None = device_selector(
         "",
         device_id,
         device_type,

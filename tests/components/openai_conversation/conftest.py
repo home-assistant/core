@@ -1,6 +1,6 @@
 """Tests helpers."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -122,13 +122,15 @@ async def mock_config_entry_with_reasoning_model(
 @pytest.fixture
 async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
+) -> AsyncGenerator[None]:
     """Initialize integration."""
     with patch(
         "openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
+        yield
 
 
 @pytest.fixture(autouse=True)

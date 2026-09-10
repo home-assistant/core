@@ -1,4 +1,51 @@
 {
+  "exceptions": {
+    "invoke_pin": {
+      "message": "Failed to invoke the pin"
+    },
+    "media_next_track": {
+      "message": "Failed to move to the next track"
+    },
+    "media_pause": {
+      "message": "Failed to pause"
+    },
+    "media_play": {
+      "message": "Failed to play"
+    },
+    "media_previous_track": {
+      "message": "Failed to move to the previous track"
+    },
+    "media_stop": {
+      "message": "Failed to stop"
+    },
+    "pins_not_supported": {
+      "message": "This device does not support pins"
+    },
+    "play_media": {
+      "message": "Failed to play media"
+    },
+    "select_source": {
+      "message": "Failed to select the source"
+    },
+    "turn_off": {
+      "message": "Failed to turn off"
+    },
+    "turn_on": {
+      "message": "Failed to turn on"
+    },
+    "volume_down": {
+      "message": "Failed to turn down the volume"
+    },
+    "volume_mute": {
+      "message": "Failed to set the mute state"
+    },
+    "volume_set": {
+      "message": "Failed to set the volume"
+    },
+    "volume_up": {
+      "message": "Failed to turn up the volume"
+    }
+  },
   "services": {
     "invoke_pin": {
       "description": "Starts playing content pinned on the specified device.",

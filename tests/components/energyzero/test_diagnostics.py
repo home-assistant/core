@@ -49,7 +49,7 @@ async def test_diagnostics_no_gas_today(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, init_integration)

@@ -5,7 +5,7 @@ from typing import override
 from pyscorpiontrack import ScorpionTrackVehicle
 
 from homeassistant.components.device_tracker import TrackerEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ScorpionTrackConfigEntry, ScorpionTrackCoordinator
@@ -21,10 +21,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up ScorpionTrack tracker entities."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        ScorpionTrackTrackerEntity(coordinator, vehicle.id)
-        for vehicle in coordinator.data.vehicles
-    )
+    known_vehicles: set[int] = set()
+
+    @callback
+    def async_add_new_vehicles() -> None:
+        """Add trackers for vehicles newly included in the share."""
+        new_vehicles = coordinator.vehicles_by_id.keys() - known_vehicles
+        if not new_vehicles:
+            return
+        known_vehicles.update(new_vehicles)
+        async_add_entities(
+            ScorpionTrackTrackerEntity(coordinator, vehicle_id)
+            for vehicle_id in new_vehicles
+        )
+
+    async_add_new_vehicles()
+    entry.async_on_unload(coordinator.async_add_listener(async_add_new_vehicles))
 
 
 class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):

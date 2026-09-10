@@ -38,6 +38,9 @@
     }
   },
   "entity": {
+    "number": {
+      "charging_current": { "name": "Charging current" }
+    },
     "sensor": {
       "charging_power": { "name": "Charging power" },
       "external_temperature": { "name": "External temperature" },

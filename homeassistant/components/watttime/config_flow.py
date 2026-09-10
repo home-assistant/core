@@ -145,7 +145,7 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             grid_region = await self._client.emissions.async_get_grid_region(
-                user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]
+                user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE], "co2_moer"
             )
         except CoordinatesNotFoundError:
             return self.async_show_form(
@@ -168,8 +168,8 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: self._data[CONF_PASSWORD],
                 CONF_LATITUDE: user_input[CONF_LATITUDE],
                 CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-                CONF_BALANCING_AUTHORITY: grid_region["name"],
-                CONF_BALANCING_AUTHORITY_ABBREV: grid_region["abbrev"],
+                CONF_BALANCING_AUTHORITY: grid_region["region_full_name"],
+                CONF_BALANCING_AUTHORITY_ABBREV: grid_region["region"],
             },
         )
 

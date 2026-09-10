@@ -9,5 +9,5 @@ DOMAIN = "nexblue"
 CONF_REFRESH_TOKEN = "refresh_token"
 DEFAULT_API_URL = "https://api.nexblue.com/third_party"
 LOGGER = logging.getLogger(__package__)
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 UPDATE_INTERVAL = timedelta(minutes=1)

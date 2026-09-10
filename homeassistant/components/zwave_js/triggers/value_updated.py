@@ -40,11 +40,11 @@ from ..const import (
     EVENT_VALUE_UPDATED,
 )
 from ..helpers import (
+    async_bypass_dynamic_config_validation,
     async_get_config_entry_from_node,
     async_get_nodes_from_targets,
     get_device_id,
 )
-from .trigger_helpers import async_bypass_dynamic_config_validation
 
 # Relative platform type should be <SUBMODULE_NAME>
 RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
@@ -170,6 +170,7 @@ async def async_attach_trigger(
             unsub()
         unsubs.clear()
 
+    @callback
     def _create_zwave_listeners() -> None:
         """Create Z-Wave JS listeners."""
         async_remove()

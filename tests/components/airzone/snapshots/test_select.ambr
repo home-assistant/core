@@ -1,0 +1,1267 @@
+# serializer version: 1
+# name: test_airzone_create_selects[select.airzone_2_1_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'heat_cool',
+        'stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.airzone_2_1_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'modes',
+    'unique_id': 'airzone_unique_id_2:1_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.airzone_2_1_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airzone 2:1 Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'heat_cool',
+        'stop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.airzone_2_1_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_airzone_create_selects[select.aux_heat_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'cool',
+        'dry',
+        'fan',
+        'heat',
+        'stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.aux_heat_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'modes',
+    'unique_id': 'airzone_unique_id_4:1_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.aux_heat_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aux Heat Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'cool',
+        'dry',
+        'fan',
+        'heat',
+        'stop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aux_heat_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_airzone_create_selects[select.despacho_cold_angle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.despacho_cold_angle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cold angle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cold angle',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grille_angles',
+    'unique_id': 'airzone_unique_id_1:4_cold-angle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.despacho_cold_angle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Despacho Cold angle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.despacho_cold_angle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90deg',
+  })
+# ---
+# name: test_airzone_create_selects[select.despacho_heat_angle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.despacho_heat_angle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heat angle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heat angle',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heat_angles',
+    'unique_id': 'airzone_unique_id_1:4_heat-angle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.despacho_heat_angle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Despacho Heat angle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.despacho_heat_angle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90deg',
+  })
+# ---
+# name: test_airzone_create_selects[select.despacho_sleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        '30m',
+        '60m',
+        '90m',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.despacho_sleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_times',
+    'unique_id': 'airzone_unique_id_1:4_sleep',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.despacho_sleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Despacho Sleep',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        '30m',
+        '60m',
+        '90m',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.despacho_sleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_airzone_create_selects[select.dkn_plus_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'cool',
+        'dry',
+        'fan',
+        'heat',
+        'heat_cool',
+        'stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.dkn_plus_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'modes',
+    'unique_id': 'airzone_unique_id_3:1_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.dkn_plus_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DKN Plus Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'cool',
+        'dry',
+        'fan',
+        'heat',
+        'heat_cool',
+        'stop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dkn_plus_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_1_cold_angle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dorm_1_cold_angle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cold angle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cold angle',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grille_angles',
+    'unique_id': 'airzone_unique_id_1:3_cold-angle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_1_cold_angle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dorm #1 Cold angle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dorm_1_cold_angle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90deg',
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_1_heat_angle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dorm_1_heat_angle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heat angle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heat angle',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heat_angles',
+    'unique_id': 'airzone_unique_id_1:3_heat-angle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_1_heat_angle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dorm #1 Heat angle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dorm_1_heat_angle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90deg',
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_1_sleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        '30m',
+        '60m',
+        '90m',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dorm_1_sleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_times',
+    'unique_id': 'airzone_unique_id_1:3_sleep',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_1_sleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dorm #1 Sleep',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        '30m',
+        '60m',
+        '90m',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dorm_1_sleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_2_cold_angle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dorm_2_cold_angle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cold angle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cold angle',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grille_angles',
+    'unique_id': 'airzone_unique_id_1:5_cold-angle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_2_cold_angle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dorm #2 Cold angle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dorm_2_cold_angle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90deg',
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_2_heat_angle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dorm_2_heat_angle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heat angle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heat angle',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heat_angles',
+    'unique_id': 'airzone_unique_id_1:5_heat-angle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_2_heat_angle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dorm #2 Heat angle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dorm_2_heat_angle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90deg',
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_2_sleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        '30m',
+        '60m',
+        '90m',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dorm_2_sleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_times',
+    'unique_id': 'airzone_unique_id_1:5_sleep',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_2_sleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dorm #2 Sleep',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        '30m',
+        '60m',
+        '90m',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dorm_2_sleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_ppal_cold_angle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dorm_ppal_cold_angle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cold angle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cold angle',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grille_angles',
+    'unique_id': 'airzone_unique_id_1:2_cold-angle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_ppal_cold_angle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dorm Ppal Cold angle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dorm_ppal_cold_angle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45deg',
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_ppal_heat_angle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dorm_ppal_heat_angle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heat angle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heat angle',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heat_angles',
+    'unique_id': 'airzone_unique_id_1:2_heat-angle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_ppal_heat_angle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dorm Ppal Heat angle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dorm_ppal_heat_angle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50deg',
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_ppal_sleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        '30m',
+        '60m',
+        '90m',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dorm_ppal_sleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_times',
+    'unique_id': 'airzone_unique_id_1:2_sleep',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.dorm_ppal_sleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dorm Ppal Sleep',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        '30m',
+        '60m',
+        '90m',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dorm_ppal_sleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30m',
+  })
+# ---
+# name: test_airzone_create_selects[select.salon_cold_angle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.salon_cold_angle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cold angle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cold angle',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grille_angles',
+    'unique_id': 'airzone_unique_id_1:1_cold-angle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.salon_cold_angle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salon Cold angle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.salon_cold_angle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90deg',
+  })
+# ---
+# name: test_airzone_create_selects[select.salon_heat_angle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.salon_heat_angle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heat angle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heat angle',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heat_angles',
+    'unique_id': 'airzone_unique_id_1:1_heat-angle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.salon_heat_angle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salon Heat angle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '90deg',
+        '50deg',
+        '45deg',
+        '40deg',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.salon_heat_angle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90deg',
+  })
+# ---
+# name: test_airzone_create_selects[select.salon_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'cool',
+        'dry',
+        'fan',
+        'heat',
+        'stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.salon_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'modes',
+    'unique_id': 'airzone_unique_id_1:1_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.salon_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salon Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'cool',
+        'dry',
+        'fan',
+        'heat',
+        'stop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.salon_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_airzone_create_selects[select.salon_sleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        '30m',
+        '60m',
+        '90m',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.salon_sleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_times',
+    'unique_id': 'airzone_unique_id_1:1_sleep',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.salon_sleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salon Sleep',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        '30m',
+        '60m',
+        '90m',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.salon_sleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_airzone_create_selects[select.system_1_q_adapt-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standard',
+        'power',
+        'silence',
+        'minimum',
+        'maximum',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.system_1_q_adapt',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Q-Adapt',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Q-Adapt',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'q_adapt',
+    'unique_id': 'airzone_unique_id_1_q-adapt',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_selects[select.system_1_q_adapt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'System 1 Q-Adapt',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standard',
+        'power',
+        'silence',
+        'minimum',
+        'maximum',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.system_1_q_adapt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standard',
+  })
+# ---
