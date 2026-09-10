@@ -25,7 +25,10 @@ rules:
     status: exempt
     comment: |
       This integration does not have any triggers.
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      The integration doesn't perform any subscriptions within its entities.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
