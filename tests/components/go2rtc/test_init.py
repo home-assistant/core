@@ -1636,3 +1636,24 @@ async def test_shared_stream_source_server_rejects(
     """A managed-server error falls back to the camera's own source."""
     rest_client.streams.add.side_effect = Go2RtcClientError
     assert await async_get_shared_stream_source(hass, "camera.test") == "rtsp://stream"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_shared_stream_source_resolves_the_camera_once(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+) -> None:
+    """The source is resolved once and handed to the provider.
+
+    stream_source() does real work in some integrations, so the fallback must not
+    ask the camera a second time.
+    """
+    init_test_integration.set_stream_source("invalid://not_supported")
+    with patch.object(
+        MockCamera, "stream_source", return_value="invalid://not_supported"
+    ) as stream_source:
+        assert (
+            await async_get_shared_stream_source(hass, "camera.test")
+            == "invalid://not_supported"
+        )
+    assert stream_source.call_count == 1

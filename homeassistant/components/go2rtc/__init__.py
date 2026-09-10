@@ -382,9 +382,13 @@ class WebRTCProvider(CameraWebRTCProvider):
             get_camera_identifier(camera), width, height
         )
 
-    async def _update_stream_source(self, camera: Camera) -> None:
+    async def _update_stream_source(
+        self, camera: Camera, stream_source: str | None = None
+    ) -> None:
         """Update the stream source in go2rtc config if needed."""
-        if not (stream_source := await camera.stream_source()):
+        if stream_source is None:
+            stream_source = await camera.stream_source()
+        if not stream_source:
             await self._close_camera_sessions(camera)
             raise HomeAssistantError("Camera has no stream source")
 
@@ -475,13 +479,15 @@ class WebRTCProvider(CameraWebRTCProvider):
             await session_info.ws_client.close()
 
     @override
-    async def async_get_shared_stream_source(self, camera: Camera) -> str | None:
+    async def async_get_shared_stream_source(
+        self, camera: Camera, stream_source: str
+    ) -> str | None:
         """Return the RTSP restream URL of the managed go2rtc server."""
         if not self._managed:
             # An external server's RTSP endpoint is not known to us.
             return None
         try:
-            await self._update_stream_source(camera)
+            await self._update_stream_source(camera, stream_source)
         except (HomeAssistantError, Go2RtcClientError) as err:
             _LOGGER.debug(
                 "No restream for %s, falling back to its own source: %s",
