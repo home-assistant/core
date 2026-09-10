@@ -29,6 +29,8 @@ def mock_scanner_by_source() -> Generator[MagicMock]:
         def _get_scanner(hass: HomeAssistant, source: str) -> object | None:
             if source == "aa:bb:cc:dd:ee:00":
                 return MagicMock(spec=BaseHaRemoteScanner)
+            if source == "local":
+                return MagicMock()
             return None
 
         mock_flow.side_effect = _get_scanner
