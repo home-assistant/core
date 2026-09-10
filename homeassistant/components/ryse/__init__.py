@@ -65,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
         ) from err
 
     entry.runtime_data = device
+    entry.async_on_unload(device.unpair)
 
     @callback
     def _async_update_ble_device(
