@@ -145,7 +145,9 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         return result
 
     @_my_pv_connection
-    async def send_command(self, key, value: bool | float | str | None = None):
+    async def send_command(
+        self, key: str, value: bool | float | str | None = None
+    ) -> bool:
         """Send command."""
         result = await self.device.send_command(key, value)
         self.async_update_listeners()
