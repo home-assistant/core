@@ -104,11 +104,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         start_time = _minutes_after_midnight(call.data.get(ATTR_START_TIME))
         end_time = _minutes_after_midnight(call.data.get(ATTR_END_TIME))
-        if start_time is None and end_time is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="charge_schedule_requires_time",
-            )
 
         location = call.data.get(
             ATTR_LOCATION,
@@ -125,18 +120,28 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schedule_id = call.data.get(ATTR_ID, int(dt_util.utcnow().timestamp()))
 
         await wake_up_vehicle(vehicle)
-        await handle_vehicle_command(
-            vehicle.api.add_charge_schedule(
-                days_of_week=_days_of_week_bitmask(call.data[ATTR_DAYS_OF_WEEK]),
-                enabled=call.data[ATTR_ENABLE],
-                lat=location[CONF_LATITUDE],
-                lon=location[CONF_LONGITUDE],
-                start_time=start_time,
-                end_time=end_time,
-                one_time=call.data.get(ATTR_ONE_TIME),
-                id=schedule_id,
+        try:
+            await handle_vehicle_command(
+                vehicle.api.add_charge_schedule(
+                    days_of_week=_days_of_week_bitmask(call.data[ATTR_DAYS_OF_WEEK]),
+                    enabled=call.data[ATTR_ENABLE],
+                    lat=location[CONF_LATITUDE],
+                    lon=location[CONF_LONGITUDE],
+                    start_time=start_time,
+                    end_time=end_time,
+                    one_time=call.data.get(ATTR_ONE_TIME),
+                    id=schedule_id,
+                )
             )
-        )
+        except ValueError as err:
+            # tesla-fleet-api rejects a schedule with neither time set, or
+            # with midnight as the only time, since it treats zero the same
+            # as absent.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="charge_schedule_requires_time",
+            ) from err
+        await vehicle.coordinator.async_request_refresh()
         return {"id": schedule_id}
 
     hass.services.async_register(
@@ -171,6 +176,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await handle_vehicle_command(
             vehicle.api.remove_charge_schedule(id=call.data[ATTR_ID])
         )
+        await vehicle.coordinator.async_request_refresh()
 
     hass.services.async_register(
         DOMAIN,

@@ -2,7 +2,7 @@
 
 from datetime import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -61,6 +61,15 @@ async def _async_get_device_id(
     )
     assert device is not None
     return device.id
+
+
+def _get_vehicle_coordinator(config_entry: MockConfigEntry, vin: str) -> AsyncMock:
+    """Return the coordinator for a vehicle, mocked to track refresh calls."""
+    for vehicle in config_entry.runtime_data.vehicles:
+        if vehicle.vin == vin:
+            vehicle.coordinator.async_request_refresh = AsyncMock()
+            return vehicle.coordinator.async_request_refresh
+    raise AssertionError(f"No vehicle found for VIN {vin}")
 
 
 @pytest.mark.parametrize(
@@ -158,7 +167,7 @@ async def _async_get_device_id(
                 ATTR_DAYS_OF_WEEK: ["monday"],
                 ATTR_ENABLE: True,
                 ATTR_START_TIME: time(0, 0),
-                ATTR_END_TIME: time(0, 0),
+                ATTR_END_TIME: time(23, 59),
             },
             {
                 "days_of_week": 2,
@@ -166,11 +175,11 @@ async def _async_get_device_id(
                 "lat": 32.87336,
                 "lon": -117.22743,
                 "start_time": 0,
-                "end_time": 0,
+                "end_time": 1439,
                 "one_time": None,
                 "id": GENERATED_ID,
             },
-            id="midnight_is_a_valid_time",
+            id="midnight_start_with_a_real_end_time",
         ),
     ],
 )
@@ -185,6 +194,8 @@ async def test_add_charge_schedule(
     freezer.move_to(FROZEN_TIME)
     device_id = await _async_get_device_id(hass, normal_config_entry, VEHICLE_VIN)
 
+    refresh = _get_vehicle_coordinator(normal_config_entry, VEHICLE_VIN)
+
     with patch(ADD_CHARGE_SCHEDULE, return_value=COMMAND_OK) as call:
         response = await hass.services.async_call(
             DOMAIN,
@@ -196,6 +207,7 @@ async def test_add_charge_schedule(
 
     call.assert_called_once_with(**expected_call)
     assert response == {"id": expected_call["id"]}
+    refresh.assert_called_once()
 
 
 async def test_remove_charge_schedule(
@@ -204,6 +216,7 @@ async def test_remove_charge_schedule(
 ) -> None:
     """Test remove_charge_schedule sends the expected command."""
     device_id = await _async_get_device_id(hass, normal_config_entry, VEHICLE_VIN)
+    refresh = _get_vehicle_coordinator(normal_config_entry, VEHICLE_VIN)
 
     with patch(REMOVE_CHARGE_SCHEDULE, return_value=COMMAND_OK) as call:
         await hass.services.async_call(
@@ -214,16 +227,43 @@ async def test_remove_charge_schedule(
         )
 
     call.assert_called_once_with(id=3)
+    refresh.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        pytest.param({}, id="no_times"),
+        pytest.param({ATTR_START_TIME: time(0, 0)}, id="midnight_start_only"),
+        pytest.param({ATTR_END_TIME: time(0, 0)}, id="midnight_end_only"),
+        pytest.param(
+            {ATTR_START_TIME: time(0, 0), ATTR_END_TIME: time(0, 0)},
+            id="midnight_start_and_end",
+        ),
+    ],
+)
 async def test_add_charge_schedule_requires_a_time(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
+    service_data: dict[str, Any],
 ) -> None:
-    """Test add_charge_schedule rejects a schedule with neither time set."""
+    """Test add_charge_schedule surfaces the library's own time validation.
+
+    tesla-fleet-api treats a time of zero the same as absent, so it raises
+    ValueError for these inputs itself; this is simulated rather than relying
+    on the pinned library version to still behave this way.
+    """
     device_id = await _async_get_device_id(hass, normal_config_entry, VEHICLE_VIN)
 
-    with pytest.raises(ServiceValidationError, match="start time"):
+    with (
+        patch(
+            ADD_CHARGE_SCHEDULE,
+            side_effect=ValueError(
+                "Either start_time or end_time or both must be provided"
+            ),
+        ),
+        pytest.raises(ServiceValidationError, match="start time"),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_CHARGE_SCHEDULE,
@@ -231,7 +271,8 @@ async def test_add_charge_schedule_requires_a_time(
                 CONF_DEVICE_ID: device_id,
                 ATTR_DAYS_OF_WEEK: ["monday"],
                 ATTR_ENABLE: True,
-            },
+            }
+            | service_data,
             blocking=True,
         )
 
