@@ -6,7 +6,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The device serial number does not match the original device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -36,6 +38,15 @@
         "description": "[%key:component::my_pv::common::discovery_description%]",
         "title": "{name}"
       },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::my_pv::common::password_description%]"
+        },
+        "title": "{name} password"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -49,7 +60,7 @@
   },
   "exceptions": {
     "auth_error": {
-      "message": "Authentication failed. Remove and add the integration again with the current device password."
+      "message": "Authentication failed, please reauthenticate."
     },
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
