@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from music_assistant_models.enums import EventType
+from music_assistant_models.dashboard import DashboardDevice
+from music_assistant_models.enums import DashboardType, EventType
 from music_assistant_models.errors import ActionUnavailable, AuthenticationRequired
 
 from homeassistant.components.music_assistant.const import (
@@ -18,7 +19,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import setup_integration_from_fixtures, trigger_subscription_callback
+from .common import (
+    setup_dashboards,
+    setup_integration_from_fixtures,
+    trigger_subscription_callback,
+)
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -76,6 +81,83 @@ async def test_remove_config_entry_device(
     response = await client.remove_device(device_entry.id)
     assert music_assistant_client.config.remove_player_config.call_count == 0
     assert response["success"] is True
+
+
+async def test_remove_dashboard_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    music_assistant_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test dashboard device removal is refused while the endpoint is live."""
+    assert await async_setup_component(hass, "config", {})
+    setup_dashboards(music_assistant_client)
+    config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    client = await hass_ws_client(hass)
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "chromecast_kitchen"), config_entry.entry_id
+    )
+    assert device_entry
+
+    # the endpoint is still live - removal must be refused
+    response = await client.remove_device(device_entry.id)
+    assert response["success"] is False
+    assert device_registry.async_get(device_entry.id)
+
+    # the endpoint is gone from the server for good - removal is now allowed
+    del music_assistant_client.dashboard._dashboards["chromecast_kitchen"]
+    response = await client.remove_device(device_entry.id)
+    assert response["success"] is True
+    assert not device_registry.async_get(device_entry.id)
+
+    # it comes back online later, without HA ever reloading in between -
+    # its entity must not stay missing (regression for a "ghost" bug)
+    music_assistant_client.dashboard._dashboards["chromecast_kitchen"] = (
+        DashboardDevice(
+            dashboard_id="chromecast_kitchen",
+            name="Kitchen Display",
+            supported_types={DashboardType.PARTY, DashboardType.NOW_PLAYING},
+            provider_domain_hint="chromecast",
+        )
+    )
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.DASHBOARDS_UPDATED
+    )
+    assert hass.states.get("media_player.kitchen_display")
+
+
+async def test_dashboard_device_survives_reload_with_empty_cache(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test dashboard devices survive a reload with a momentarily empty cache.
+
+    Regression test: dashboard registrations are connection-scoped, so right
+    after an MA server restart + HA entry reload the dashboard cache can be
+    empty before the physical endpoints have re-registered. The startup
+    stale-device cleanup must not treat that as "gone for good".
+    """
+    setup_dashboards(music_assistant_client)
+    config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "chromecast_kitchen"), config_entry.entry_id
+    )
+
+    # simulate an MA server restart: the dashboard cache is empty again,
+    # as if nothing had re-registered yet
+    music_assistant_client.dashboard._dashboards = {}
+    music_assistant_client.dashboard._sessions = {}
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "chromecast_kitchen"), config_entry.entry_id
+    )
+    state = hass.states.get("media_player.kitchen_display")
+    assert state
+    assert state.state == "unavailable"
 
 
 async def test_player_config_expose_to_ha_toggle(
