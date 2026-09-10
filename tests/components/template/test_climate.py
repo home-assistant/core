@@ -416,6 +416,32 @@ async def test_target_humidity_template(hass: HomeAssistant, expected: Any) -> N
 
 
 @pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"target_humidity": 32, **MINIMUM_REQUIREMENTS},
+    ],
+)
+async def test_missing_set_humidity_config(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a bad target humidity configuration."""
+    platform = TEST_CLIMATE
+    await setup_entity(hass, platform, style, 0, config)
+    assert len(hass.states.async_all(platform.domain)) == 0
+    assert (
+        "Invalid config for 'template': Required option: 'set_humidity' is missing for option"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
     ("attribute", "extra_config"),
     [
         (
@@ -875,6 +901,37 @@ async def test_bad_target_temperature_range_config(
     assert len(hass.states.async_all(platform.domain)) == 0
     assert (
         "Invalid config for 'template': some but not all values in the same group of inclusion 'temperature_limits'"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "target_temperature_high": 32,
+            "target_temperature_low": 17,
+            **MINIMUM_REQUIREMENTS,
+        },
+        {"target_temperature": 21, **MINIMUM_REQUIREMENTS},
+    ],
+)
+async def test_missing_set_temperature_config(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a bad target temperature range configuration."""
+    platform = TEST_CLIMATE
+    await setup_entity(hass, platform, style, 0, config)
+    assert len(hass.states.async_all(platform.domain)) == 0
+    assert (
+        "Invalid config for 'template': Required option: 'set_temperature' is missing for option"
         in caplog.text
     )
 
@@ -2113,6 +2170,7 @@ async def test_restore_state(
             "target_temperature_high": "{{ state_attr('sensor.test_state', 'target_temperature_high') }}",
             "target_temperature_low": "{{ state_attr('sensor.test_state', 'target_temperature_low') }}",
             "set_temperature": [],
+            "set_humidity": [],
         },
         "is_state_attr('sensor.test_state', 'hvac_mode', 'heat')",
     )

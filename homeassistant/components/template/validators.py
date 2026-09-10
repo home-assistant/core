@@ -485,3 +485,20 @@ def inclusive_group(name: str, optional: str, *required: str) -> Callable[[dict]
         )
 
     return verify
+
+
+def requires_option(option: str, required_option: str) -> Callable[[dict], dict]:
+    """Validate a pair of options.
+
+    Return vol.Invalid if required_option is missing when option is present.
+    """
+
+    def verify(obj: dict) -> dict:
+        if (option in obj and required_option in obj) or option not in obj:
+            return obj
+
+        raise vol.Invalid(
+            f"Required option: '{required_option}' is missing for option '{option}'. Remove '{option}' from your config or add '{required_option}'."
+        )
+
+    return verify
