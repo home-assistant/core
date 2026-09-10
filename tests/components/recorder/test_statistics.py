@@ -4739,6 +4739,20 @@ async def test_statistics_during_period_fills_current_hour_from_short_term(
     )
     assert mid_hour_stats == {}
 
+    # Mean alongside change (fossil energy) must not synthesize a partial sum row
+    # without a matching mean row for other sensors in the same response.
+    mean_and_change = statistics_during_period(
+        hass,
+        day_start,
+        period="hour",
+        statistic_ids={statistic_id},
+        types={"mean", "change"},
+    )
+    assert [row["start"] for row in mean_and_change.get(statistic_id, [])] == [
+        process_timestamp(hour_12).timestamp(),
+        process_timestamp(hour_13).timestamp(),
+    ]
+
 
 @pytest.mark.freeze_time("2024-03-15 00:12:00+00:00")
 @pytest.mark.usefixtures("recorder_mock")

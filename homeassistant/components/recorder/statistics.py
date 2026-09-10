@@ -2124,10 +2124,16 @@ def _synthesize_current_hour_from_short_term(
 
     Only sum/state/last_reset are filled. Mean/min/max are intentionally omitted:
     a partial hour must not change day/week/month aggregates for mean sensors the
-    way an unweighted hourly reduce would. Uses the same last-sum rule as
-    ``_compile_hourly_statistics``.
+    way an unweighted hourly reduce would. Requests that include mean/min/max are
+    skipped entirely so callers like fossil energy (change+mean) do not get a
+    partial energy row without a matching CO₂ mean. Uses the same last-sum rule
+    as ``_compile_hourly_statistics``.
     """
     if not types & {"sum", "state", "last_reset"}:
+        return {}
+    # Requests that also want mean/min/max (e.g. fossil energy with change+mean)
+    # must not get a partial sum/change row without a matching mean row.
+    if types & {"mean", "min", "max"}:
         return {}
 
     now = dt_util.utcnow()
@@ -2174,8 +2180,10 @@ def _synthesize_current_hour_from_short_term(
         statistic_id = metadata_by_id_row["statistic_id"]
         unit_class = metadata_by_id_row["unit_class"]
         state_unit = unit = metadata_by_id_row["unit_of_measurement"]
-        if state_obj := hass.states.get(statistic_id):
-            state_unit = state_obj.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if ha_state := hass.states.get(statistic_id):
+            state_unit = ha_state.attributes.get(
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            )
         convert = _get_statistic_to_display_unit_converter(
             unit_class, unit, state_unit, units
         )
@@ -2201,15 +2209,15 @@ def _synthesize_current_hour_from_short_term(
 
 def _merge_partial_current_hour(
     result: dict[str, list[StatisticsRow]],
-    partial: dict[str, StatisticsRow],
+    partial_hour: dict[str, StatisticsRow],
 ) -> dict[str, list[StatisticsRow]]:
     """Append synthesized current-hour rows when not already present."""
-    if not partial:
+    if not partial_hour:
         return result
     if not result:
-        return {statistic_id: [row] for statistic_id, row in partial.items()}
+        return {statistic_id: [row] for statistic_id, row in partial_hour.items()}
 
-    for statistic_id, row in partial.items():
+    for statistic_id, row in partial_hour.items():
         rows = result.get(statistic_id)
         if not rows:
             result[statistic_id] = [row]
