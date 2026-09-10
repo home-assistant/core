@@ -121,6 +121,14 @@ class CameraEntityFeature(IntFlag):
     STREAM = 2
 
 
+@dataclass(frozen=True)
+class CameraStreamSource:
+    """A camera stream source."""
+
+    url: str
+    orientation: Orientation | None = None
+
+
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
 ENTITY_IMAGE_URL: Final = "/api/camera_proxy/{0}?token={1}"
 
@@ -565,6 +573,16 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         and StreamType.HLS.
         """
         return None
+
+    async def async_get_stream_sources(self) -> list[CameraStreamSource]:
+        """Return the ordered stream sources for the camera.
+
+        The first source is the primary source. A source without an orientation
+        uses the orientation configured for the camera.
+        """
+        if source := await self.stream_source():
+            return [CameraStreamSource(source)]
+        return []
 
     async def async_handle_async_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage

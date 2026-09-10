@@ -25,7 +25,9 @@ from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     DATA_CAMERA_PREFS,
+    Camera,
     CameraPreferences,
+    CameraStreamSource,
     DynamicStreamSettings,
     StreamType,
     WebRTCAnswer as HAWebRTCAnswer,
@@ -1003,6 +1005,62 @@ async def test_async_get_image(
         HomeAssistantError, match="Stream source is not supported by go2rtc"
     ):
         await async_get_image(hass, camera.entity_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_multiple_stream_sources(
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test registering multiple camera stream sources as producers."""
+    camera = init_test_integration
+    camera.set_stream_sources(
+        [
+            CameraStreamSource("rtsp://video", Orientation.ROTATE_LEFT),
+            CameraStreamSource("rtsp://backchannel", Orientation.NO_TRANSFORM),
+        ]
+    )
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+
+    await camera.webrtc_provider.async_get_image(camera)
+
+    identifier = get_camera_identifier(camera)
+    rest_client.streams.add.assert_called_once_with(
+        identifier,
+        [
+            "ffmpeg:rtsp://video#video=h264#audio=copy#rotate=-90",
+            "rtsp://backchannel",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+        ],
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_legacy_stream_source_interface(
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test cameras implementing only stream_source remain supported."""
+    camera = init_test_integration
+    camera.set_stream_source("rtsp://legacy")
+
+    with patch.object(
+        MockCamera,
+        "async_get_stream_sources",
+        Camera.async_get_stream_sources,
+    ):
+        await camera.async_refresh_providers()
+        assert isinstance(camera.webrtc_provider, WebRTCProvider)
+        await camera.webrtc_provider.async_get_image(camera)
+
+    identifier = get_camera_identifier(camera)
+    rest_client.streams.add.assert_called_once_with(
+        identifier,
+        [
+            "rtsp://legacy",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+        ],
+    )
 
 
 @pytest.mark.usefixtures("init_integration")

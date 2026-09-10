@@ -268,6 +268,31 @@ class _SessionInfo:
     camera: Camera
 
 
+def _apply_orientation(stream_source: str, orientation: Orientation) -> str:
+    """Apply an orientation to a go2rtc stream source."""
+    if orientation is Orientation.NO_TRANSFORM:
+        return stream_source
+
+    if not stream_source.startswith(_FFMPEG):
+        stream_source = _FFMPEG + ":" + stream_source
+    stream_source += "#video=h264#audio=copy"
+    match orientation:
+        case Orientation.MIRROR:
+            return stream_source + "#raw=-vf hflip"
+        case Orientation.ROTATE_180:
+            return stream_source + "#rotate=180"
+        case Orientation.FLIP:
+            return stream_source + "#raw=-vf vflip"
+        case Orientation.ROTATE_LEFT_AND_FLIP:
+            return stream_source + "#raw=-vf transpose=2,vflip"
+        case Orientation.ROTATE_LEFT:
+            return stream_source + "#rotate=-90"
+        case Orientation.ROTATE_RIGHT_AND_FLIP:
+            return stream_source + "#raw=-vf transpose=1,vflip"
+        case Orientation.ROTATE_RIGHT:
+            return stream_source + "#rotate=90"
+
+
 class WebRTCProvider(CameraWebRTCProvider):
     """WebRTC provider."""
 
@@ -376,56 +401,43 @@ class WebRTCProvider(CameraWebRTCProvider):
 
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
-        if not (stream_source := await camera.stream_source()):
+        if not (stream_sources := await camera.async_get_stream_sources()):
             await self._close_camera_sessions(camera)
             raise HomeAssistantError("Camera has no stream source")
 
+        source_urls = [source.url for source in stream_sources]
         if camera.platform.platform_name == "generic":
             # This is a workaround to use ffmpeg for generic cameras
-            # A proper fix will be added in the future together
-            # with supporting multiple streams per camera
-            stream_source = "ffmpeg:" + stream_source
+            source_urls[0] = "ffmpeg:" + source_urls[0]
 
-        if not self.async_is_supported(stream_source):
+        if not all(self.async_is_supported(source) for source in source_urls):
             await self._close_camera_sessions(camera)
             raise HomeAssistantError("Stream source is not supported by go2rtc")
 
         camera_prefs = await get_dynamic_camera_stream_settings(
             self._hass, camera.entity_id
         )
-        if camera_prefs.orientation is not Orientation.NO_TRANSFORM:
-            # Camera orientation manually set by user
-            if not stream_source.startswith(_FFMPEG):
-                stream_source = _FFMPEG + ":" + stream_source
-            stream_source += "#video=h264#audio=copy"
-            match camera_prefs.orientation:
-                case Orientation.MIRROR:
-                    stream_source += "#raw=-vf hflip"
-                case Orientation.ROTATE_180:
-                    stream_source += "#rotate=180"
-                case Orientation.FLIP:
-                    stream_source += "#raw=-vf vflip"
-                case Orientation.ROTATE_LEFT_AND_FLIP:
-                    # Cannot use any filter when using raw one
-                    stream_source += "#raw=-vf transpose=2,vflip"
-                case Orientation.ROTATE_LEFT:
-                    stream_source += "#rotate=-90"
-                case Orientation.ROTATE_RIGHT_AND_FLIP:
-                    # Cannot use any filter when using raw one
-                    stream_source += "#raw=-vf transpose=1,vflip"
-                case Orientation.ROTATE_RIGHT:
-                    stream_source += "#rotate=90"
+        source_urls = [
+            _apply_orientation(
+                source_url,
+                source.orientation
+                if source.orientation is not None
+                else camera_prefs.orientation,
+            )
+            for source_url, source in zip(source_urls, stream_sources, strict=True)
+        ]
 
         streams = await self._rest_client.streams.list()
         identifier = get_camera_identifier(camera)
 
-        if (stream := streams.get(identifier)) is None or not any(
-            stream_source == producer.url for producer in stream.producers
+        if (stream := streams.get(identifier)) is None or not all(
+            any(source == producer.url for producer in stream.producers)
+            for source in source_urls
         ):
             await self._rest_client.streams.add(
                 identifier,
                 [
-                    stream_source,
+                    *source_urls,
                     # We are setting any ffmpeg rtsp related logs to debug
                     # Connection problems to the camera will be
                     # logged by the first stream
