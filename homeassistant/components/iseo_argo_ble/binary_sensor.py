@@ -21,7 +21,7 @@ from iseo_argo_ble import (
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.bluetooth import async_ble_device_from_address
-from homeassistant.const import CONF_ADDRESS, EntityCategory
+from homeassistant.const import CONF_ADDRESS, CONF_UUID, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -30,13 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IseoConfigEntry
-from .const import (
-    ADMIN_SETTLE_DELAY,
-    CONF_ADMIN_UUID,
-    CONF_SAVED_VALIDITY,
-    DEFAULT_USER_SUBTYPE,
-    DOMAIN,
-)
+from .const import ADMIN_SETTLE_DELAY, CONF_ADMIN_UUID, CONF_SAVED_VALIDITY, DOMAIN
 from .coordinator import IseoUserCoordinator
 
 PARALLEL_UPDATES = 1
@@ -53,11 +47,20 @@ USER_TYPE_TRANSLATION_KEYS = {
 }
 
 
-def _is_home_assistant_identity(user: UserEntry, admin_uuid_hex: str | None) -> bool:
-    """Return True for the two identities Home Assistant enrolled for itself."""
-    if user.user_type == USER_TYPE_BT and user.inner_subtype == DEFAULT_USER_SUBTYPE:
-        return True
-    return bool(admin_uuid_hex) and user.uuid_hex == admin_uuid_hex
+def _is_home_assistant_identity(
+    user: UserEntry, gateway_uuid_hex: str, admin_uuid_hex: str | None
+) -> bool:
+    """Return True for the two identities Home Assistant enrolled for itself.
+
+    Both are matched by the UUID this entry enrolled. The gateway subtype is
+    generic — another gateway enrolled on the same lock carries it too — so
+    filtering on the subtype would hide a credential that is not ours.
+    """
+    if user.user_type != USER_TYPE_BT:
+        return False
+    return user.uuid_hex == gateway_uuid_hex or (
+        admin_uuid_hex is not None and user.uuid_hex == admin_uuid_hex
+    )
 
 
 def _prune_saved_validity(
@@ -102,11 +105,12 @@ async def async_setup_entry(
     # marker the lock still corroborates.
     _prune_saved_validity(hass, entry, coordinator.data)
 
+    gateway_uuid_hex = entry.data[CONF_UUID]
     admin_uuid_hex = entry.data.get(CONF_ADMIN_UUID)
     async_add_entities(
         IseoCredentialSensor(coordinator, user)
         for user in coordinator.data
-        if not _is_home_assistant_identity(user, admin_uuid_hex)
+        if not _is_home_assistant_identity(user, gateway_uuid_hex, admin_uuid_hex)
     )
 
 

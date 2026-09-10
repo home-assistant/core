@@ -3,7 +3,13 @@
 from dataclasses import replace
 from unittest.mock import MagicMock, patch
 
-from iseo_argo_ble import USER_TYPE_RFID, IseoAuthError, IseoConnectionError
+from iseo_argo_ble import (
+    USER_TYPE_BT,
+    USER_TYPE_RFID,
+    IseoAuthError,
+    IseoConnectionError,
+    UserEntry,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,6 +21,7 @@ from homeassistant.components.homeassistant import (
 from homeassistant.components.iseo_argo_ble.const import (
     ATTR_ENABLED,
     CONF_SAVED_VALIDITY,
+    DEFAULT_USER_SUBTYPE,
     DOMAIN,
     SERVICE_DELETE_CREDENTIAL,
     SERVICE_SET_CREDENTIAL_ENABLED,
@@ -31,8 +38,8 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import setup_integration
-from .conftest import MOCK_VALIDITY
+from . import MOCK_ADMIN_UUID_HEX, MOCK_UUID_HEX, setup_integration
+from .conftest import MOCK_USERS, MOCK_VALIDITY
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -66,6 +73,48 @@ async def test_entities(
 
     await snapshot_platform(
         hass, entity_registry, snapshot, mock_admin_config_entry.entry_id
+    )
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_a_gateway_this_entry_did_not_enroll_gets_a_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the filter hides our own gateway identity, not the subtype.
+
+    The gateway subtype is generic: a gateway someone else enrolled on the
+    same lock carries it too, and is a credential like any other.
+    """
+    other_gateway_uuid = "4444444444444444444444444444dddd"
+    mock_iseo_client.read_users.return_value = [
+        *MOCK_USERS,
+        UserEntry(
+            user_type=USER_TYPE_BT,
+            uuid_hex=other_gateway_uuid,
+            name="Other Gateway",
+            inner_subtype=DEFAULT_USER_SUBTYPE,
+            disabled=False,
+        ),
+    ]
+
+    with patch(
+        "homeassistant.components.iseo_argo_ble.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await setup_integration(hass, mock_admin_config_entry)
+
+    unique_id = f"{mock_admin_config_entry.unique_id}_user_{USER_TYPE_BT}"
+    assert entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{unique_id}_{other_gateway_uuid}"
+    )
+    # Our own two identities stay hidden.
+    assert not entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{unique_id}_{MOCK_UUID_HEX}"
+    )
+    assert not entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{unique_id}_{MOCK_ADMIN_UUID_HEX}"
     )
 
 
