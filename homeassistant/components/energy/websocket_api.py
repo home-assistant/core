@@ -270,22 +270,24 @@ async def ws_get_fossil_energy_consumption(
     statistic_ids = set(msg["energy_statistic_ids"])
     statistic_ids.add(msg["co2_statistic_id"])
 
-    # Snapshot before the executor job so hour-rollover during the query still
-    # matches a synthesized current-hour energy row without a CO₂ mean.
-    current_hour_start_ts = (
-        dt_util.utcnow().replace(minute=0, second=0, microsecond=0).timestamp()
-    )
+    # One clock snapshot for both synthesis and the open-hour CO₂ skip so an
+    # hour rollover during the executor job cannot desync them.
+    now = dt_util.utcnow()
+    current_hour_start_ts = now.replace(minute=0, second=0, microsecond=0).timestamp()
 
     # Fetch energy + CO2 statistics
     statistics = await recorder.get_instance(hass).async_add_executor_job(
-        recorder.statistics.statistics_during_period,
-        hass,
-        start_time,
-        end_time,
-        statistic_ids,
-        "hour",
-        {"energy": UnitOfEnergy.KILO_WATT_HOUR},
-        {"mean", "change"},
+        functools.partial(
+            recorder.statistics.statistics_during_period,
+            hass,
+            start_time,
+            end_time,
+            statistic_ids,
+            "hour",
+            {"energy": UnitOfEnergy.KILO_WATT_HOUR},
+            {"mean", "change"},
+            now=now,
+        )
     )
 
     def _combine_change_statistics(

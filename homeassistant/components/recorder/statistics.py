@@ -2119,6 +2119,7 @@ def _synthesize_current_hour_from_short_term(
     metadata_ids: list[int] | None,
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    now: datetime | None = None,
 ) -> dict[str, StatisticsRow]:
     """Build a partial hourly sum bucket for the unfinished current hour.
 
@@ -2127,11 +2128,15 @@ def _synthesize_current_hour_from_short_term(
     way an unweighted hourly reduce would. Callers that need paired mean values
     (e.g. fossil energy) must handle a missing current-hour mean themselves.
     Uses the same last-sum rule as ``_compile_hourly_statistics``.
+
+    Pass ``now`` when the caller must match the synthesized hour (for example
+    fossil energy skipping an open hour without a CO₂ mean).
     """
     if not types & {"sum", "state", "last_reset"}:
         return {}
 
-    now = dt_util.utcnow()
+    if now is None:
+        now = dt_util.utcnow()
     current_hour_start = now.replace(minute=0, second=0, microsecond=0)
     current_hour_start_ts = current_hour_start.timestamp()
     current_hour_end_ts = (current_hour_start + Statistics.duration).timestamp()
@@ -2231,6 +2236,7 @@ def _statistics_during_period_with_session(
     period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str] | None,
     _types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+    now: datetime | None = None,
 ) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
@@ -2348,6 +2354,7 @@ def _statistics_during_period_with_session(
                 metadata_ids,
                 units,
                 types,
+                now=now,
             ),
         )
 
@@ -2389,11 +2396,16 @@ def statistics_during_period(
     period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str] | None,
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+    *,
+    now: datetime | None = None,
 ) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
     If end_time is omitted, returns statistics newer than or equal to start_time.
     If statistic_ids is omitted, returns statistics for all statistics ids.
+
+    Optional ``now`` pins the unfinished current-hour synthesis to one clock
+    snapshot so callers can match that hour without a rollover race.
     """
     with session_scope(hass=hass, read_only=True) as session:
         return _statistics_during_period_with_session(
@@ -2405,6 +2417,7 @@ def statistics_during_period(
             period,
             units,
             types,
+            now=now,
         )
 
 
