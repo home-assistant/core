@@ -25,7 +25,6 @@ from homeassistant.components.smartyplants.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_HOST,
     CONF_WEBHOOK_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -43,7 +42,6 @@ WEBHOOK_ID = "smartyplants_test_webhook"
 WEBHOOK_SECRET = "top-secret"
 
 ENTRY_DATA = {
-    CONF_HOST: "https://api.smartyplants.test",
     CONF_API_KEY: "sp_test_key_12345678",
     CONF_WEBHOOK_ID: WEBHOOK_ID,
     CONF_WEBHOOK_SECRET: WEBHOOK_SECRET,

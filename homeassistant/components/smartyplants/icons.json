@@ -1,7 +1,7 @@
 {
   "entity": {
     "sensor": {
-      "fertilize_days": {
+      "fertilize": {
         "default": "mdi:nutrition"
       },
       "health_score": {

@@ -11,15 +11,12 @@ import voluptuous as vol
 
 from homeassistant.components import webhook as hass_webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_API_KEY, CONF_WEBHOOK_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import NoURLAvailableError
 
-from .const import CONF_WEBHOOK_SECRET, DEFAULT_HOST, DOMAIN
+from .const import CONF_WEBHOOK_SECRET, DOMAIN
 
-# Everyone connects to the SmartyPlants service, so the address is never asked
-# for. Entries still carry it, which keeps existing installations working and
-# leaves one place to change when developing against another backend.
 CREDENTIALS_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
@@ -37,13 +34,9 @@ class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialise the flow state."""
         self._data: dict[str, Any] = {}
 
-    async def _async_validate(
-        self, host: str, api_key: str
-    ) -> tuple[str | None, str | None]:
+    async def _async_validate(self, api_key: str) -> tuple[str | None, str | None]:
         """Return (error key, account id); exactly one is set."""
-        client = SmartyPlantsClient(
-            api_key, host=host, session=async_get_clientsession(self.hass)
-        )
+        client = SmartyPlantsClient(api_key, session=async_get_clientsession(self.hass))
         try:
             account_id = await client.async_verify()
         except SmartyPlantsAuthError:
@@ -60,10 +53,7 @@ class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = DEFAULT_HOST
-            error, account_id = await self._async_validate(
-                host, user_input[CONF_API_KEY]
-            )
+            error, account_id = await self._async_validate(user_input[CONF_API_KEY])
             if error:
                 errors["base"] = error
             else:
@@ -74,7 +64,6 @@ class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 self._data = {
                     CONF_API_KEY: user_input[CONF_API_KEY],
-                    CONF_HOST: host,
                     CONF_WEBHOOK_ID: hass_webhook.async_generate_id(),
                 }
                 return await self.async_step_webhook()

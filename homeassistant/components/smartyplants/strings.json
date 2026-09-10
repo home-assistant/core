@@ -1,16 +1,16 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This SmartyPlants account is already set up."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
-      "cannot_connect": "Could not reach the SmartyPlants server. Check your internet connection and try again.",
-      "invalid_auth": "That API key was rejected. Check it and try again."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
       "user": {
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "Create this in the SmartyPlants app, under Settings. It identifies your account to Home Assistant."
@@ -32,7 +32,7 @@
   },
   "entity": {
     "sensor": {
-      "fertilize_days": {
+      "fertilize": {
         "name": "Fertilize in"
       },
       "health_score": {

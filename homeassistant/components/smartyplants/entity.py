@@ -24,8 +24,6 @@ class SmartyPlantsEntity(CoordinatorEntity[SmartyPlantsCoordinator]):
         sensor = self.sensor
         plant = sensor.plant
 
-        # Registering a device is what puts these entities on the auto-generated
-        # dashboard and lets the user assign them to an area.
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sensor_id)},
             manufacturer=MANUFACTURER,

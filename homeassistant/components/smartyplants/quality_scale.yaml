@@ -66,14 +66,7 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery:
-    status: exempt
-    comment: |
-      The sensors report raw measurements to the SmartyPlants cloud, which
-      derives the readings from them using the plant's species profile. A
-      sensor found on the network would have nothing usable to offer. Setup is
-      account-level in any case: one config entry covers every sensor on the
-      account and is authenticated with an API key, not per device.
+  discovery: todo
   discovery-update-info:
     status: exempt
     comment: |

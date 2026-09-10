@@ -5,13 +5,9 @@ from unittest.mock import AsyncMock
 from pysmartyplants import SmartyPlantsAuthError, SmartyPlantsConnectionError
 import pytest
 
-from homeassistant.components.smartyplants.const import (
-    CONF_WEBHOOK_SECRET,
-    DEFAULT_HOST,
-    DOMAIN,
-)
+from homeassistant.components.smartyplants.const import CONF_WEBHOOK_SECRET, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_API_KEY, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
@@ -34,7 +30,7 @@ async def external_url(hass: HomeAssistant) -> None:
 
 
 USER_INPUT = {CONF_API_KEY: API_KEY}
-ENTRY_DATA = {CONF_HOST: DEFAULT_HOST, CONF_API_KEY: API_KEY}
+ENTRY_DATA = {CONF_API_KEY: API_KEY}
 
 
 async def test_full_flow_with_webhook_secret(
@@ -186,7 +182,6 @@ async def test_the_flow_never_asks_for_a_server(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     # Still recorded on the entry, so an existing installation keeps working
     # and there is one place to look when debugging.
-    assert result["data"][CONF_HOST] == DEFAULT_HOST
 
 
 async def test_no_external_url_skips_the_webhook_step(

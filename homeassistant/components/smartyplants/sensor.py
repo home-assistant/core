@@ -19,7 +19,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SmartyPlantsConfigEntry, SmartyPlantsCoordinator
@@ -86,6 +86,7 @@ SENSOR_TYPES: tuple[SmartyPlantsSensorDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=1,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         unit_fn=_temperature_unit,
         value_fn=_metric(lambda readings: readings.temperature),
     ),
@@ -131,8 +132,9 @@ SENSOR_TYPES: tuple[SmartyPlantsSensorDescription, ...] = (
         value_fn=_health_score,
     ),
     SmartyPlantsSensorDescription(
-        key="fertilize_days",
-        translation_key="fertilize_days",
+        key="fertilize",
+        translation_key="fertilize",
+        device_class=SensorDeviceClass.DURATION,
         suggested_display_precision=0,
         native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=_fertilize_days,
@@ -179,27 +181,16 @@ class SmartyPlantsSensor(SmartyPlantsEntity, SensorEntity):
         super().__init__(coordinator, sensor_id)
         self.entity_description = description
         self._attr_unique_id = f"{sensor_id}_{description.key}"
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        self._update_unit()
 
-    @callback
+    @property
     @override
-    def _handle_coordinator_update(self) -> None:
-        """Pick up the unit alongside the new readings."""
-        self._update_unit()
-        super()._handle_coordinator_update()
-
-    @callback
-    def _update_unit(self) -> None:
-        """Follow the unit the backend reports for this reading.
-
-        Held as an attribute rather than read on demand because the unit is
-        part of the entity's capabilities, which Home Assistant reads even
-        while the sensor is unavailable and has no readings to consult.
-        """
-        if (unit_fn := self.entity_description.unit_fn) is not None:
-            if self._sensor_id in self.coordinator.data:
-                self._attr_native_unit_of_measurement = unit_fn(self.sensor)
+    def native_unit_of_measurement(self) -> str | None:
+        """Follow the unit the backend reports for this reading."""
+        unit_fn = self.entity_description.unit_fn
+        # Read even while unavailable, when the sensor has left the payload.
+        if unit_fn is None or self._sensor_id not in self.coordinator.data:
+            return super().native_unit_of_measurement
+        return unit_fn(self.sensor)
 
     @property
     @override
