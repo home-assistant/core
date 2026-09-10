@@ -19,6 +19,15 @@ toggle:
     entity:
       domain: automation
 
+suspend:
+  target:
+    entity:
+      domain: automation
+  fields:
+    until:
+      selector:
+        datetime:
+
 trigger:
   target:
     entity:

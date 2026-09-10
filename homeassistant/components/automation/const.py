@@ -20,6 +20,7 @@ class AutomationEntityStateAttribute(StrEnum):
     MODE = "mode"
     CUR = "current"
     MAX = "max"
+    SUSPENDED_UNTIL = "suspended_until"
 
 
 CONF_HIDE_ENTITY = "hide_entity"
