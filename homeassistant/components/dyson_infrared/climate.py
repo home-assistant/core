@@ -103,6 +103,9 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
 
         self._attr_unique_id = unique_id
         self._attr_hvac_mode = HVACMode.OFF
+        # Standby restores the mode the unit was in, so the mode it would come
+        # back to has to be tracked separately from the reported OFF state.
+        self._last_active_mode = HVACMode.COOL
         self._attr_target_temperature = float(self._attr_min_temp)
         self._attr_fan_mode = _FAN_MODES[_SPEED_COUNT // 2 - 1]
         self._attr_preset_mode = PRESET_DIFFUSED
@@ -146,21 +149,22 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
         if hvac_mode is HVACMode.OFF:
             await self._async_send_am09_action(DysonAm09Code.POWER)
         else:
-            came_from_off = self._attr_hvac_mode is HVACMode.OFF
-            if came_from_off:
+            needs_mode_select = hvac_mode is not self._last_active_mode
+            if self._attr_hvac_mode is HVACMode.OFF:
                 await self._async_send_am09_action(DysonAm09Code.POWER)
-                await asyncio.sleep(self._step_delay)
-            if hvac_mode is HVACMode.COOL:
-                await self._async_send_am09_action(DysonAm09Code.COOL_ON)
-            elif hvac_mode is HVACMode.HEAT:
-                await self._async_send_am09_action(DysonAm09Code.HEAT_UP)
-                if came_from_off:
-                    # Powering on from OFF makes the HEAT_UP mode-select
-                    # press also bump the device's remembered target by one
-                    # degree. Cancel that out with HEAT_DOWN. Switching
-                    # directly from COOL doesn't have this side effect.
+                if needs_mode_select:
                     await asyncio.sleep(self._step_delay)
-                    await self._async_send_am09_action(DysonAm09Code.HEAT_DOWN)
+            # COOL_ON toggles between cool and heat, and HEAT_UP only selects
+            # heat while the unit is cooling, so a mode select is sent solely
+            # when the unit is not already in the requested mode. Sending one
+            # anyway would toggle straight back out of it.
+            if needs_mode_select:
+                await self._async_send_am09_action(
+                    DysonAm09Code.COOL_ON
+                    if hvac_mode is HVACMode.COOL
+                    else DysonAm09Code.HEAT_UP
+                )
+            self._last_active_mode = hvac_mode
 
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
