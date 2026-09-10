@@ -86,6 +86,8 @@ def __serialize_prices(
             {
                 "price": price,
                 "timestamp": str(time_range.start_including),
+                "start": str(time_range.start_including),
+                "end": str(time_range.end_excluding),
             }
             for price_data in prices
             for time_range, price in price_data.prices.items()

@@ -139,15 +139,32 @@ async def test_service_dates_normalized_to_hass_timezone(
                 {
                     "price": 0.45193447944,
                     "timestamp": "2026-04-10 04:00:00+00:00",
+                    "start": "2026-04-10 04:00:00+00:00",
+                    "end": "2026-04-11 04:00:00+00:00",
                 }
             ],
         ),
         (
             ENERGY_SERVICE_NAME,
             [
-                {"price": 0.12572, "timestamp": "2026-04-10 21:00:00+00:00"},
-                {"price": 0.125925, "timestamp": "2026-04-10 22:00:00+00:00"},
-                {"price": 0.1120525, "timestamp": "2026-04-10 23:00:00+00:00"},
+                {
+                    "price": 0.12572,
+                    "timestamp": "2026-04-10 21:00:00+00:00",
+                    "start": "2026-04-10 21:00:00+00:00",
+                    "end": "2026-04-10 22:00:00+00:00",
+                },
+                {
+                    "price": 0.125925,
+                    "timestamp": "2026-04-10 22:00:00+00:00",
+                    "start": "2026-04-10 22:00:00+00:00",
+                    "end": "2026-04-10 23:00:00+00:00",
+                },
+                {
+                    "price": 0.1120525,
+                    "timestamp": "2026-04-10 23:00:00+00:00",
+                    "start": "2026-04-10 23:00:00+00:00",
+                    "end": "2026-04-11 00:00:00+00:00",
+                },
             ],
         ),
     ],
@@ -177,6 +194,8 @@ async def test_service_filters_datetime_range(
     )
 
     assert response == {"prices": expected_prices}
+    assert response["prices"]
+    assert all(item["timestamp"] == item["start"] for item in response["prices"])
 
     method = (
         mock_energyzero.get_gas_prices
