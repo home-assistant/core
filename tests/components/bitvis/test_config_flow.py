@@ -146,21 +146,28 @@ async def test_user_form_error_and_recovery(
     assert result["result"].unique_id == TEST_DEVICE_MAC
 
 
-async def test_user_form_duplicate(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    "input_host",
+    [
+        pytest.param(USER_HOST, id="same-host"),
+        pytest.param("192.168.1.101", id="different-host"),
+    ],
+)
+async def test_user_form_duplicate_mac(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, input_host: str
 ) -> None:
-    """Test duplicate detection by MAC address."""
+    """Test duplicate detection is based on MAC address, not host."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch_config_flow_connectivity(USER_HOST):
+    with patch_config_flow_connectivity(input_host):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: mock_config_entry.data[CONF_HOST],
+                CONF_HOST: input_host,
             },
         )
 
@@ -168,27 +175,30 @@ async def test_user_form_duplicate(
     assert result["reason"] == "already_configured"
 
 
-async def test_user_form_duplicate_host(
-    hass: HomeAssistant, mock_ipv6_config_entry: MockConfigEntry
+async def test_user_form_reused_ip_new_device(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test duplicate detection uses the configured host."""
-    ipv6_host = mock_ipv6_config_entry.data[CONF_HOST]
-    mock_ipv6_config_entry.add_to_hass(hass)
+    """Test a new device can be added at an IP already stored on another entry."""
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch_config_flow_connectivity(ipv6_host):
+    with patch_config_flow_connectivity(USER_HOST, mac_address=SECOND_DEVICE_MAC):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: ipv6_host,
+                CONF_HOST: USER_HOST,
             },
         )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: USER_HOST,
+        CONF_PORT: DEFAULT_PORT,
+    }
+    assert result["result"].unique_id == SECOND_DEVICE_MAC
 
 
 @pytest.mark.parametrize(
@@ -227,17 +237,46 @@ async def test_zeroconf_abort(
 async def test_zeroconf_duplicate(
     hass: HomeAssistant, mock_zeroconf_config_entry: MockConfigEntry
 ) -> None:
-    """Test that a duplicate zeroconf discovery is aborted."""
+    """Test that a duplicate zeroconf discovery is aborted by MAC address."""
     mock_zeroconf_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
-    )
+    with patch_config_flow_connectivity(ZEROCONF_HOST):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_reused_ip_new_device(
+    hass: HomeAssistant, mock_zeroconf_config_entry: MockConfigEntry
+) -> None:
+    """Test zeroconf can add a new device at an IP already stored on another entry."""
+    mock_zeroconf_config_entry.add_to_hass(hass)
+
+    with patch_config_flow_connectivity(ZEROCONF_HOST, mac_address=SECOND_DEVICE_MAC):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: ZEROCONF_HOST,
+        CONF_PORT: DEFAULT_PORT,
+    }
+    assert result["result"].unique_id == SECOND_DEVICE_MAC
 
 
 @pytest.mark.parametrize(

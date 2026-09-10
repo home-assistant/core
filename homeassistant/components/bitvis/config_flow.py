@@ -163,7 +163,6 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is not None:
             host = normalize_host(user_input[CONF_HOST])
-            self._async_abort_entries_match({CONF_HOST: host})
             return await self._async_create_entry_from_host(host, DEFAULT_NAME)
 
         return self.async_show_form(
@@ -180,8 +179,6 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
 
         host = discovery_info.host
         self._host = host
-
-        self._async_abort_entries_match({CONF_HOST: host})
 
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="already_in_progress")
