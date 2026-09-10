@@ -243,7 +243,6 @@ async def async_setup_entry(
         mass.subscribe(handle_dashboards_updated, EventType.DASHBOARDS_UPDATED)
     )
 
-    # add all dashboard endpoints already known at setup
     add_dashboards()
 
 
@@ -953,8 +952,7 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         """Fetch the provider icon for an active party/music_quiz session."""
         session = self.mass.dashboard.get_session(self.dashboard_id)
         if session is None or session.dashboard not in DASHBOARD_ICON_TYPES:
-            # now_playing (or no session): let the base class fetch/proxy
-            # media_image_url itself, same as the regular player entity
+            # let the base class fetch/proxy media_image_url itself
             return await super().async_get_media_image()
         return await self._fetch_provider_icon(session.dashboard.value)
 
