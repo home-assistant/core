@@ -1,5 +1,7 @@
 """The Bitvis Power Hub integration."""
 
+from typing import TYPE_CHECKING
+
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -26,6 +28,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: BitvisConfigEntry) -> bool:
     """Set up Bitvis Power Hub from a config entry."""
     async_get_listener_registry(hass)
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
     coordinator = BitvisDataUpdateCoordinator(
         hass,
         entry,
@@ -45,8 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BitvisConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: BitvisConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
-    if unload_ok and hasattr(entry, "runtime_data"):
+    if unload_ok:
         await entry.runtime_data.async_stop()
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        hass.data.pop(DATA_LISTENER_REGISTRY, None)
+        if not hass.config_entries.async_loaded_entries(DOMAIN):
+            hass.data.pop(DATA_LISTENER_REGISTRY, None)
     return unload_ok

@@ -21,6 +21,8 @@ from .const import DATA_LISTENER_REGISTRY, DOMAIN, MODEL_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
+type BitvisConfigEntry = ConfigEntry[BitvisDataUpdateCoordinator]
+
 
 def _uptime_to_boot_time(uptime_s: int) -> datetime:
     """Convert uptime in seconds to an absolute boot datetime."""
@@ -193,9 +195,3 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
     async def _async_update_data(self) -> BitvisData:
         """Return current data (updates are push-based via UDP datagrams)."""
         return self.data
-
-
-class BitvisConfigEntry(ConfigEntry[BitvisDataUpdateCoordinator]):
-    """Config entry for a Bitvis Power Hub with a MAC unique_id."""
-
-    unique_id: str
