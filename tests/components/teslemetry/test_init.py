@@ -2053,6 +2053,110 @@ async def test_local_command_survives_site_info_push_before_next_poll(
     assert hass.states.get("number.energy_site_backup_reserve").state == "80"
 
 
+async def test_local_command_survives_poll_started_before_it(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_powerwall_local_config: AsyncMock,
+) -> None:
+    """A poll already in flight when a command lands must not revert it.
+
+    Regression test: ``local_config()`` is awaited, so a poll that starts
+    before a command and only returns its pre-command snapshot afterwards used
+    to unconditionally overwrite ``_local_config`` with that stale read,
+    silently reverting the command the user just saw take.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    release = asyncio.Event()
+
+    async def blocking_local_config() -> dict[str, Any]:
+        await release.wait()
+        return {"backup_reserve_percent": 20.0}
+
+    mock_powerwall_local_config.side_effect = blocking_local_config
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.NUMBER]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # The poll starts and blocks mid-read, before the command is issued.
+        freezer.tick(ENERGY_CONFIG_INTERVAL)
+        async_fire_time_changed(hass)
+        await asyncio.sleep(0)
+        assert mock_powerwall_local_config.call_count == 1
+
+        # The command lands, and completes, while that read is still in flight.
+        with patch(
+            "aiopowerwall.energysite.PowerwallEnergySite.backup",
+            return_value=COMMAND_OK,
+        ):
+            await hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+                blocking=True,
+            )
+        assert hass.states.get("number.energy_site_backup_reserve").state == "80"
+
+        # Only now does the poll's pre-command snapshot resolve.
+        release.set()
+        await hass.async_block_till_done()
+
+    # The command's value must survive the stale read, not revert to it.
+    assert hass.states.get("number.energy_site_backup_reserve").state == "80"
+
+
+async def test_command_on_cloud_owned_key_not_clobbered_by_stale_merge(
+    hass: HomeAssistant,
+) -> None:
+    """A command on a key ``merge_site_info`` ignores must not be reverted by it.
+
+    Regression test: ``TeslemetryEnergyInfoNumberSensorEntity`` called
+    ``async_set_local_value`` for every key it manages, including
+    ``off_grid_vehicle_charging_reserve_percent`` -- a key ``merge_site_info``
+    never overlays because it is not in ``LOCAL_SITE_INFO_KEYS``. Re-running the
+    merge published the entity's own stale cloud value right back at it,
+    clobbering the optimistic value assigned a moment earlier.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.NUMBER]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with patch(
+            "aiopowerwall.energysite.PowerwallEnergySite.off_grid_vehicle_charging_reserve",
+            return_value=COMMAND_OK,
+        ):
+            await hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {
+                    ATTR_ENTITY_ID: "number.energy_site_off_grid_reserve",
+                    ATTR_VALUE: 88,
+                },
+                blocking=True,
+            )
+
+    # The cloud side never carries this key, so a clobber shows up as the
+    # optimistic value reverting to unknown, not to some other stale number.
+    assert hass.states.get("number.energy_site_off_grid_reserve").state == "88"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_cloud_push_between_local_ticks_keeps_owned_key(
     hass: HomeAssistant,

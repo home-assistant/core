@@ -16,7 +16,11 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
-from tesla_fleet_api.router import merge_live_status, merge_site_info
+from tesla_fleet_api.router import (
+    LOCAL_SITE_INFO_KEYS,
+    merge_live_status,
+    merge_site_info,
+)
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 
 from homeassistant.core import HomeAssistant
@@ -349,6 +353,18 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
     rather than through the update path, so it never touches the stream-owned
     success/error state; a key the gateway does not serve, or a failed poll,
     falls back to the cloud value.
+
+    Only the keys in ``LOCAL_SITE_INFO_KEYS`` are locally owned. A command on one
+    of those keys writes straight into ``_local_config`` via
+    :meth:`async_set_local_value`, so the entity shows the new value immediately
+    rather than waiting up to :data:`ENERGY_CONFIG_INTERVAL` for the next poll to
+    confirm it; a command on any other key is cloud-owned and must not touch this
+    cache at all. Because the LAN read is awaited, a poll already in flight when a
+    command lands would otherwise resolve with its pre-command snapshot and
+    overwrite the value the command just set; :meth:`_async_local_poll` detects
+    that with a generation counter and discards that stale read rather than
+    publishing it, leaving the command's value in place until the next,
+    uncontended poll confirms it.
     """
 
     config_entry: TeslemetryConfigEntry
@@ -372,6 +388,9 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self._tariff_content_v2: dict[str, Any] | None = None
         self._local: PowerwallEnergySite | None = None
         self._local_config: dict[str, Any] | None = None
+        # Bumped by async_set_local_value; lets _async_local_poll tell whether a
+        # command landed while its own read was in flight.
+        self._local_config_generation = 0
         self._local_poll_in_progress = False
         self.data = product
 
@@ -401,16 +420,24 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         if self._local is None or self._local_poll_in_progress:
             return
         self._local_poll_in_progress = True
+        generation = self._local_config_generation
         try:
             try:
-                self._local_config = await self._local.local_config()
+                local_config = await self._local.local_config()
             except PowerwallError as e:
-                self._local_config = None
+                local_config = None
                 LOGGER.debug(
                     "Local config poll for %s failed, using cloud values: %s",
                     self.api.energy_site_id,
                     e,
                 )
+            if self._local_config_generation != generation:
+                # async_set_local_value ran while this read was in flight, so
+                # `local_config` is a pre-command snapshot older than the value
+                # it just wrote. Discard it rather than publish it over that
+                # value; the next, uncontended tick will confirm the real state.
+                return
+            self._local_config = local_config
             self.data = self._merged()
             self.async_update_listeners()
         finally:
@@ -419,19 +446,26 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
     def async_set_local_value(self, key: str, value: Any) -> None:
         """Update the cached local config after a successful local command.
 
-        A locally-owned key (see ``LOCAL_SITE_INFO_KEYS``) is only refreshed by
-        :meth:`_async_local_poll` on its own cadence, so without this a
-        site-info or tariff push arriving before the next poll would re-merge
-        the pre-command value still cached in ``_local_config`` over the
-        command that just succeeded, visibly reverting it. The command's own
-        value is the freshest known state for that key until the next poll
-        confirms (or corrects) it, which is sooner than falling back to the
-        composed cloud view: the cloud side never saw a command that was
-        routed straight to the LAN gateway.
+        Only a locally-owned key (``LOCAL_SITE_INFO_KEYS``) belongs in this
+        cache; any other key is cloud-owned and this is a no-op for it, since
+        ``merge_site_info`` never overlays it and stashing it here would just
+        get discarded as soon as the next merge runs.
+
+        A locally-owned key is only refreshed by :meth:`_async_local_poll` on
+        its own cadence, so without this a site-info or tariff push arriving
+        before the next poll would re-merge the pre-command value still cached
+        in ``_local_config`` over the command that just succeeded, visibly
+        reverting it. The command's own value is the freshest known state for
+        that key until the next poll confirms (or corrects) it, which is sooner
+        than falling back to the composed cloud view: the cloud side never saw
+        a command that was routed straight to the LAN gateway. Bumping the
+        generation counter here is what lets a poll already in flight recognize
+        its own result as stale; see :meth:`_async_local_poll`.
         """
-        if self._local is None:
+        if self._local is None or key not in LOCAL_SITE_INFO_KEYS:
             return
         self._local_config = {**(self._local_config or {}), key: value}
+        self._local_config_generation += 1
         self.data = self._merged()
         self.async_update_listeners()
 
