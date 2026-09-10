@@ -137,18 +137,18 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode.
 
-        AM09 has no dedicated OFF code, only a power toggle (ON), so leaving
+        AM09 has no dedicated OFF code, only a power toggle (POWER), so leaving
         HEAT/COOL relies on the assumed state matching the physical device.
         """
         if hvac_mode == self._attr_hvac_mode:
             return
 
         if hvac_mode is HVACMode.OFF:
-            await self._async_send_am09_action(DysonAm09Code.ON)
+            await self._async_send_am09_action(DysonAm09Code.POWER)
         else:
             came_from_off = self._attr_hvac_mode is HVACMode.OFF
             if came_from_off:
-                await self._async_send_am09_action(DysonAm09Code.ON)
+                await self._async_send_am09_action(DysonAm09Code.POWER)
                 await asyncio.sleep(self._step_delay)
             if hvac_mode is HVACMode.COOL:
                 await self._async_send_am09_action(DysonAm09Code.COOL_ON)

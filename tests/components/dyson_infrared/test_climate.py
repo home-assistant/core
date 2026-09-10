@@ -96,7 +96,7 @@ async def test_set_hvac_mode_cool_sends_cool_on_command(
     )
 
     assert mock_infrared_emitter_entity.send_command_calls == [
-        DysonAm09Code.ON,
+        DysonAm09Code.POWER,
         DysonAm09Code.COOL_ON,
     ]
 
@@ -111,7 +111,7 @@ async def test_set_hvac_mode_off_sends_toggle_command(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     climate_entity_id: str,
 ) -> None:
-    """Test switching to off sends the ON (toggle) code."""
+    """Test switching to off sends the POWER (toggle) code."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
@@ -127,7 +127,7 @@ async def test_set_hvac_mode_off_sends_toggle_command(
         blocking=True,
     )
 
-    assert mock_infrared_emitter_entity.send_command_calls == [DysonAm09Code.ON]
+    assert mock_infrared_emitter_entity.send_command_calls == [DysonAm09Code.POWER]
 
     state = hass.states.get(climate_entity_id)
     assert state
@@ -149,7 +149,7 @@ async def test_set_hvac_mode_heat_leaves_temperature_unchanged(
     )
 
     assert mock_infrared_emitter_entity.send_command_calls == [
-        DysonAm09Code.ON,
+        DysonAm09Code.POWER,
         DysonAm09Code.HEAT_UP,
         DysonAm09Code.HEAT_DOWN,
     ]
@@ -166,7 +166,7 @@ async def test_set_hvac_mode_between_cool_and_heat_does_not_repower(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     climate_entity_id: str,
 ) -> None:
-    """Test switching directly between COOL and HEAT does not resend the ON toggle or compensate the target temperature."""
+    """Test switching directly between COOL and HEAT does not resend the POWER toggle or compensate the target temperature."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
@@ -385,7 +385,7 @@ async def test_set_hvac_mode_heat_retains_temperature_across_power_cycle(
     )
 
     assert mock_infrared_emitter_entity.send_command_calls == [
-        DysonAm09Code.ON,
+        DysonAm09Code.POWER,
         DysonAm09Code.HEAT_UP,
         DysonAm09Code.HEAT_DOWN,
     ]
