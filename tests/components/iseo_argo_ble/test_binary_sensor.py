@@ -14,6 +14,7 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.iseo_argo_ble.const import (
     ATTR_ENABLED,
+    CONF_SAVED_VALIDITY,
     DOMAIN,
     SERVICE_DELETE_CREDENTIAL,
     SERVICE_SET_CREDENTIAL_ENABLED,
@@ -198,6 +199,38 @@ async def test_restore_survives_a_reload_without_a_window(
 
     assert mock_iseo_client.set_user_disabled.await_args.kwargs["validity"] is None
     assert hass.states.get(ALICE_ENTITY_ID).state == STATE_ON
+
+
+@pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")
+async def test_suspending_an_already_suspended_credential_saves_nothing(
+    hass: HomeAssistant,
+    mock_admin_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test the expired sentinel is never stored as if it were the original.
+
+    A credential already suspended when the list was read only ever shows the
+    lock's expired profile. Saving that would let a later restore hand it back
+    as though it were the real window.
+    """
+    mock_iseo_client.read_users.return_value = [
+        replace(user, disabled=True, validity=None)
+        if user.uuid_hex == "1111111111111111111111111111aaaa"
+        else user
+        for user in mock_iseo_client.read_users.return_value
+    ]
+    await setup_integration(hass, mock_admin_config_entry)
+
+    await _set_enabled(hass, ALICE_ENTITY_ID, False)
+
+    assert CONF_SAVED_VALIDITY not in mock_admin_config_entry.data or (
+        "1111111111111111111111111111aaaa"
+        not in mock_admin_config_entry.data[CONF_SAVED_VALIDITY]
+    )
+
+    # ...so a restore still refuses rather than guessing.
+    with pytest.raises(ServiceValidationError):
+        await _set_enabled(hass, ALICE_ENTITY_ID, True)
 
 
 @pytest.mark.usefixtures("mock_derive_private_key", "mock_ble_device")

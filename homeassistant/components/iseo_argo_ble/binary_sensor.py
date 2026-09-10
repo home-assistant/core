@@ -254,10 +254,14 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
         """Keep or drop this credential's stored validity window."""
         entry = self.coordinator.config_entry
         saved = dict(entry.data.get(CONF_SAVED_VALIDITY, {}))
-        if suspended:
+        if suspended and self._validity_is_original:
             # Store the window even when it is None: "no restriction" is a
             # window worth putting back, and a missing key has to keep meaning
-            # "we never saw the original".
+            # "we never saw the original". Suspending a credential that was
+            # already suspended stores nothing, because what is held then is
+            # the lock's expired sentinel — saving it would let a later
+            # restore hand back an expired profile, or grant unrestricted
+            # access, as though it were the real window.
             saved[self._uuid_hex] = (
                 None if self._validity is None else self._validity.hex()
             )
