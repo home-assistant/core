@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
     ) -> None:
         """Refresh the BLEDevice from the local adapter only."""
         scanner = async_scanner_by_source(hass, service_info.source)
-        if isinstance(scanner, BaseHaRemoteScanner):
+        if scanner is None or isinstance(scanner, BaseHaRemoteScanner):
             return
         device.set_ble_device(service_info.device)
 
