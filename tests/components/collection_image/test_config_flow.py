@@ -32,6 +32,7 @@ def _data_from_uri(uri: str) -> dict:
         "media": {
             "media_content_id": uri,
             "media_content_type": "",
+            "metadata": {"a": "b"},
         }
     }
 
@@ -95,6 +96,18 @@ async def test_config_flow_error(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("title") is None
     assert result.get("data") is None
+
+    media_key = next(
+        key
+        for key in result["data_schema"].schema
+        if getattr(key, "schema", key) == "media"
+    )
+    assert media_key.description["suggested_value"]["media_content_id"] == uri
+    assert (
+        media_key.description["suggested_value"]["metadata"]
+        == data["media"]["metadata"]
+    )
+
     assert result.get("errors") == {"media": error}
     assert result.get("description_placeholders") == placeholders
     assert len(mock_setup_entry.mock_calls) == 0

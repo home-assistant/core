@@ -9,7 +9,8 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_get_device_and_config_entry
 
 from .const import DOMAIN
 from .renault_vehicle import RenaultVehicleProxy
@@ -177,25 +178,14 @@ async def ac_set_schedules(service_call: ServiceCall) -> None:
 
 def get_vehicle_proxy(service_call: ServiceCall) -> RenaultVehicleProxy:
     """Get vehicle from service_call data."""
-    device_registry = dr.async_get(service_call.hass)
-    device_id = service_call.data[RenaultServiceArgument.VEHICLE]
-    device_entry = device_registry.async_get(device_id)
-    if device_entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device_id",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    loaded_entries: list[RenaultConfigEntry] = [
-        entry
-        for entry in service_call.hass.config_entries.async_loaded_entries(DOMAIN)
-        if entry.entry_id in device_entry.config_entries
-    ]
-    for entry in loaded_entries:
-        for vin, vehicle in entry.runtime_data.vehicles.items():
-            if (DOMAIN, vin) in device_entry.identifiers:
-                return vehicle
+    device_id: str = service_call.data[RenaultServiceArgument.VEHICLE]
+    entry: RenaultConfigEntry
+    device_entry, entry = async_get_device_and_config_entry(
+        service_call.hass, DOMAIN, device_id
+    )
+    for vin, vehicle in entry.runtime_data.vehicles.items():
+        if (DOMAIN, vin) in device_entry.identifiers:
+            return vehicle
     raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="no_config_entry_for_device",

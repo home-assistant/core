@@ -1,6 +1,6 @@
 {
   "domain": "alarm_control_panel",
-  "name": "Alarm Control Panel",
+  "name": "Alarm control panel",
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/alarm_control_panel",
   "integration_type": "entity",

@@ -49,6 +49,8 @@ from . import SmtpConfigEntry
 from .const import (
     CONF_ENCRYPTION,
     CONF_OLD_RECIPIENT,
+    CONF_REPLY_TO,
+    CONF_REPLY_TO_NAME,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DEFAULT_ENCRYPTION,
@@ -76,7 +78,14 @@ OPTIONS_SCHEMA = vol.Schema(
                 )
             ),
             vol.Coerce(int),
-        )
+        ),
+        vol.Optional(CONF_REPLY_TO): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.EMAIL,
+                autocomplete="email",
+            ),
+        ),
+        vol.Optional(CONF_REPLY_TO_NAME): cv.string,
     }
 )
 
