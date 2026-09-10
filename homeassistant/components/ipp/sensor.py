@@ -39,13 +39,7 @@ class IPPSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Printer], StateType | datetime]
     attributes_fn: Callable[[Printer], dict[Any, StateType]] = lambda _: {}
-
-
-@dataclass(frozen=True, kw_only=True)
-class IPPPageCountSensorEntityDescription(SensorEntityDescription):
-    """Describes IPP page count sensor entity."""
-
-    ipp_attribute: str
+    exists_fn: Callable[[Printer], bool] = lambda _: True
 
 
 def _get_marker_attributes_fn(
@@ -88,41 +82,54 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
     ),
 )
 
-PAGE_COUNT_SENSORS: tuple[IPPPageCountSensorEntityDescription, ...] = (
-    IPPPageCountSensorEntityDescription(
+PAGE_COUNT_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
+    IPPSensorEntityDescription(
         key="pages_completed",
         translation_key="pages_completed",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ipp_attribute="printer-pages-completed",
+        exists_fn=lambda printer: printer.counters.pages_completed is not None,
+        value_fn=lambda printer: printer.counters.pages_completed,
     ),
-    IPPPageCountSensorEntityDescription(
+    IPPSensorEntityDescription(
         key="impressions_completed",
         translation_key="impressions_completed",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ipp_attribute="printer-impressions-completed",
+        exists_fn=lambda printer: printer.counters.impressions_completed is not None,
+        value_fn=lambda printer: printer.counters.impressions_completed,
     ),
-    IPPPageCountSensorEntityDescription(
+    IPPSensorEntityDescription(
         key="media_sheets_completed",
         translation_key="media_sheets_completed",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ipp_attribute="printer-media-sheets-completed",
+        exists_fn=lambda printer: printer.counters.media_sheets_completed is not None,
+        value_fn=lambda printer: printer.counters.media_sheets_completed,
     ),
-    IPPPageCountSensorEntityDescription(
+    IPPSensorEntityDescription(
         key="impressions_completed_monochrome",
         translation_key="impressions_completed_monochrome",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ipp_attribute="printer-impressions-completed-col/monochrome",
+        exists_fn=lambda printer: (
+            "monochrome" in printer.counters.impressions_completed_col
+        ),
+        value_fn=lambda printer: printer.counters.impressions_completed_col.get(
+            "monochrome"
+        ),
     ),
-    IPPPageCountSensorEntityDescription(
+    IPPSensorEntityDescription(
         key="impressions_completed_full_color",
         translation_key="impressions_completed_full_color",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ipp_attribute="printer-impressions-completed-col/full-color",
+        exists_fn=lambda printer: (
+            "full-color" in printer.counters.impressions_completed_col
+        ),
+        value_fn=lambda printer: printer.counters.impressions_completed_col.get(
+            "full-color"
+        ),
     ),
 )
 
@@ -142,7 +149,7 @@ async def async_setup_entry(
         for description in PRINTER_SENSORS
     ]
 
-    for index, marker in enumerate(coordinator.data.printer.markers):
+    for index, marker in enumerate(coordinator.data.markers):
         sensors.append(
             IPPSensor(
                 coordinator,
@@ -169,9 +176,9 @@ async def async_setup_entry(
         )
 
     sensors.extend(
-        IPPPageCountSensor(coordinator, description)
+        IPPSensor(coordinator, description)
         for description in PAGE_COUNT_SENSORS
-        if description.ipp_attribute in coordinator.data.page_counts
+        if description.exists_fn(coordinator.data)
     )
 
     async_add_entities(sensors, True)
@@ -186,24 +193,10 @@ class IPPSensor(IPPEntity, SensorEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
-        return self.entity_description.attributes_fn(self.coordinator.data.printer)
+        return self.entity_description.attributes_fn(self.coordinator.data)
 
     @property
     @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data.printer)
-
-
-class IPPPageCountSensor(IPPEntity, SensorEntity):
-    """Defines an IPP page count sensor."""
-
-    entity_description: IPPPageCountSensorEntityDescription
-
-    @property
-    @override
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return self.coordinator.data.page_counts.get(
-            self.entity_description.ipp_attribute
-        )
+        return self.entity_description.value_fn(self.coordinator.data)

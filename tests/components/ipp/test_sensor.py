@@ -1,18 +1,19 @@
 """Tests for the IPP sensor platform."""
 
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from pyipp import IPPError
+from freezegun.api import FrozenDateTimeFactory
+from pyipp import Counters, Printer
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.ipp.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time("2019-11-11 09:10:32+00:00")
@@ -65,33 +66,20 @@ async def test_missing_entry_unique_id(
     assert entity.unique_id == f"{mock_config_entry.entry_id}_printer"
 
 
-@pytest.mark.parametrize(
-    "execute_response",
-    [
-        {"printers": [{}]},  # Empty printer dict
-        {"printers": []},  # Empty printers list
-        {},  # Missing printers key
-        {
-            "printers": [
-                {
-                    "printer-pages-completed": "",
-                    "printer-impressions-completed": "",
-                    "printer-media-sheets-completed": "",
-                    "printer-impressions-completed-col": "",
-                }
-            ]
-        },  # Out-of-band values (unknown / no-value) decoded by pyipp
-    ],
-)
 async def test_no_page_count_sensors_when_unsupported(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    mock_printer: Printer,
     mock_ipp: MagicMock,
-    execute_response: dict[str, Any],
 ) -> None:
     """Test that page count sensors are not created when printer doesn't support them."""
-    mock_ipp.execute.return_value = execute_response
+    mock_printer.counters = Counters(
+        impressions_completed=None,
+        impressions_completed_col={},
+        pages_completed=None,
+        media_sheets_completed=None,
+    )
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -112,29 +100,20 @@ async def test_no_page_count_sensors_when_unsupported(
         )
 
 
-async def test_page_count_sensors_with_partial_attributes(
+async def test_page_count_sensors_with_partial_counters(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    mock_printer: Printer,
     mock_ipp: MagicMock,
 ) -> None:
-    """Test only the reported page counts get sensors.
-
-    Attributes and collection members the printer reports as out-of-band
-    values are decoded as empty strings by pyipp and must be skipped.
-    """
-    mock_ipp.execute.return_value = {
-        "printers": [
-            {
-                "printer-pages-completed": "",
-                "printer-impressions-completed": 2468,
-                "printer-impressions-completed-col": {
-                    "monochrome": 1500,
-                    "full-color": "",
-                },
-            }
-        ],
-    }
+    """Test only the counters the printer reports get sensors."""
+    mock_printer.counters = Counters(
+        impressions_completed=2468,
+        impressions_completed_col={"monochrome": 1500},
+        pages_completed=None,
+        media_sheets_completed=None,
+    )
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -161,34 +140,21 @@ async def test_page_count_sensors_with_partial_attributes(
     assert state.state == "1500"
 
 
-@pytest.mark.parametrize(
-    ("execute_side_effect", "execute_response", "expected_state"),
-    [
-        pytest.param(IPPError("boom"), None, "1234", id="error-retains-previous"),
-        pytest.param(None, {"printers": [{}]}, STATE_UNKNOWN, id="empty-clears"),
-    ],
-)
-async def test_page_counts_after_fetch_issue(
+async def test_page_count_unknown_when_counter_missing(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     init_integration: MockConfigEntry,
-    mock_ipp: MagicMock,
-    execute_side_effect: IPPError | None,
-    execute_response: dict[str, Any] | None,
-    expected_state: str,
+    mock_printer: Printer,
 ) -> None:
-    """Test page count sensor values after a failed or empty fetch.
-
-    A failed request keeps the previous values, while a successful response
-    without page count attributes clears them.
-    """
+    """Test a page count sensor becomes unknown when the printer stops reporting it."""
     assert hass.states.get("sensor.test_ha_1000_series_pages_completed").state == "1234"
 
-    mock_ipp.execute.side_effect = execute_side_effect
-    mock_ipp.execute.return_value = execute_response
-    await init_integration.runtime_data.async_refresh()
+    mock_printer.counters.pages_completed = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (
         hass.states.get("sensor.test_ha_1000_series_pages_completed").state
-        == expected_state
+        == STATE_UNKNOWN
     )

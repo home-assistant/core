@@ -3,6 +3,15 @@
   dict({
     'data': dict({
       'booted_at': '2019-11-11T09:10:02+00:00',
+      'counters': dict({
+        'impressions_completed': 2468,
+        'impressions_completed_col': dict({
+          'full-color': 968,
+          'monochrome': 1500,
+        }),
+        'media_sheets_completed': 1234,
+        'pages_completed': 1234,
+      }),
       'info': dict({
         'command_set': 'ESCPL2,BDC,D4,D4PX,ESCPR7,END4,GENEP,URF',
         'location': None,
@@ -96,13 +105,6 @@
         'verify_ssl': True,
       }),
       'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251',
-    }),
-    'page_counts': dict({
-      'printer-impressions-completed': 2468,
-      'printer-impressions-completed-col/full-color': 968,
-      'printer-impressions-completed-col/monochrome': 1500,
-      'printer-media-sheets-completed': 1234,
-      'printer-pages-completed': 1234,
     }),
   })
 # ---
