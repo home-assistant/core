@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 from bleak import BleakError
 
 from homeassistant.components.bluetooth import SOURCE_LOCAL, BaseHaRemoteScanner
-from homeassistant.components.ryse import _async_local_ble_device
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -35,9 +34,12 @@ async def test_setup_passes_resolved_ble_device(
 ) -> None:
     """Test setup passes the Home Assistant-resolved BLEDevice to ryseble."""
     ble_device = MagicMock()
+    scanner_device = MagicMock()
+    scanner_device.scanner = MagicMock()
+    scanner_device.ble_device = ble_device
     with patch(
-        "homeassistant.components.ryse._async_local_ble_device",
-        return_value=ble_device,
+        "homeassistant.components.ryse.async_scanner_devices_by_address",
+        return_value=[scanner_device],
     ):
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -53,8 +55,8 @@ async def test_setup_without_ble_device(
 ) -> None:
     """Test setup is retried when the device is not seen by the bluetooth stack."""
     with patch(
-        "homeassistant.components.ryse._async_local_ble_device",
-        return_value=None,
+        "homeassistant.components.ryse.async_scanner_devices_by_address",
+        return_value=[],
     ):
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -95,7 +97,11 @@ async def test_setup_retries_on_ble_error(
     mock_device.unpair.assert_awaited_once()
 
 
-def test_local_ble_device_ignores_proxy_scanners(hass: HomeAssistant) -> None:
+async def test_setup_uses_local_adapter_not_proxy(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ryse_ble_device: MagicMock,
+) -> None:
     """Test setup resolves the BLEDevice from a local adapter, not a proxy."""
     local_device = MagicMock()
     proxy_scanner_device = MagicMock()
@@ -109,7 +115,12 @@ def test_local_ble_device_ignores_proxy_scanners(hass: HomeAssistant) -> None:
         "homeassistant.components.ryse.async_scanner_devices_by_address",
         return_value=[proxy_scanner_device, local_scanner_device],
     ):
-        assert _async_local_ble_device(hass, "AA:BB:CC:DD:EE:FF") is local_device
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_ryse_ble_device.assert_called_once_with(local_device)
 
 
 async def test_ble_device_callback_keeps_local_route(

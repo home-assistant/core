@@ -96,12 +96,17 @@ def mock_ryse_ble_device(mock_device: MagicMock) -> Generator[MagicMock]:
 
 @pytest.fixture
 def mock_ble_device_from_address() -> Generator[MagicMock]:
-    """Patch the bluetooth lookup so the device is always discoverable locally."""
+    """Patch the public scanner API so setup finds a local BLEDevice."""
+    local_device = MagicMock()
+    scanner_device = MagicMock()
+    scanner_device.scanner = MagicMock()
+    scanner_device.ble_device = local_device
     with patch(
-        "homeassistant.components.ryse._async_local_ble_device",
-        return_value=MagicMock(),
-    ) as mock_from_address:
-        yield mock_from_address
+        "homeassistant.components.ryse.async_scanner_devices_by_address",
+        return_value=[scanner_device],
+    ) as mock:
+        mock.ble_device = local_device
+        yield mock
 
 
 @pytest.fixture

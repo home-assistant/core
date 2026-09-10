@@ -11,7 +11,7 @@
       "service_uuid": "a72f2800-b0bd-498b-b4cd-4a3901388238"
     }
   ],
-  "codeowners": ["@axis-labs-inc"],
+  "codeowners": ["@mohamedkallel82"],
   "config_flow": true,
   "dependencies": ["bluetooth"],
   "documentation": "https://www.home-assistant.io/integrations/ryse",
