@@ -18,7 +18,7 @@ from homeassistant.helpers import aiohttp_client
 
 from .coordinator import AnovaConfigEntry, AnovaCoordinator, AnovaData
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
