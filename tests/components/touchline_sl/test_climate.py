@@ -105,7 +105,7 @@ async def test_migrate_device_identifiers(
     mock_config_entry.add_to_hass(hass)
 
     # Create the module device as it would have existed in a previous run.
-    device_registry.async_get_or_create(
+    module_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "deadbeef")},
     )
@@ -114,7 +114,7 @@ async def test_migrate_device_identifiers(
     old_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "1")},
-        via_device=(DOMAIN, "deadbeef"),
+        via_device_id=module_device.id,
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

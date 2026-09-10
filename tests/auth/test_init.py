@@ -32,6 +32,8 @@ from tests.common import (
     flush_store,
 )
 
+INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
+
 
 @pytest.fixture
 def mock_hass(hass: HomeAssistant) -> HomeAssistant:
@@ -1338,7 +1340,7 @@ async def test_reject_token_with_invalid_json_payload(mock_hass) -> None:
     """Test rejecting access tokens with invalid json payload."""
     jws = jwt.PyJWS()
     token_with_invalid_json = jws.encode(
-        b"invalid", b"invalid", "HS256", {"alg": "HS256", "typ": "JWT"}
+        b"invalid", INVALID_SIGNING_KEY, "HS256", {"alg": "HS256", "typ": "JWT"}
     )
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     assert manager.async_validate_access_token(token_with_invalid_json) is None
@@ -1348,7 +1350,7 @@ async def test_reject_token_with_not_dict_json_payload(mock_hass) -> None:
     """Test rejecting access tokens with not a dict json payload."""
     jws = jwt.PyJWS()
     token_not_a_dict_json = jws.encode(
-        b'["invalid"]', b"invalid", "HS256", {"alg": "HS256", "typ": "JWT"}
+        b'["invalid"]', INVALID_SIGNING_KEY, "HS256", {"alg": "HS256", "typ": "JWT"}
     )
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     assert manager.async_validate_access_token(token_not_a_dict_json) is None

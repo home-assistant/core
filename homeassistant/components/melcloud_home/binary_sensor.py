@@ -97,17 +97,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud Home binary sensors."""
+    coordinator = entry.runtime_data.coordinator
 
     async_setup_unit_entities(
-        entry.runtime_data,
+        coordinator,
         async_add_entities,
         lambda units: (
-            ATABinarySensor(entry.runtime_data, entity_description, unit)
+            ATABinarySensor(coordinator, entity_description, unit)
             for entity_description in ATA_SENSORS
             for unit in units
         ),
         lambda units: (
-            ATWBinarySensor(entry.runtime_data, entity_description, unit)
+            ATWBinarySensor(coordinator, entity_description, unit)
             for entity_description in ATW_SENSORS
             for unit in units
         ),

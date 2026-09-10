@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import web
 from aioimmich.assets.models import AssetType
-from aioimmich.exceptions import ImmichError, ImmichForbiddenError
+from aioimmich.exceptions import ImmichError, ImmichForbiddenError, ImmichNotFoundError
 import pytest
 
 from homeassistant.components.immich.const import DOMAIN
@@ -130,6 +130,7 @@ async def test_browse_media_get_root(
     root_media_source = await source.async_browse_media(item)
 
     assert root_media_source
+    assert root_media_source.title == "Immich"
     assert root_media_source.can_search is False
     assert len(root_media_source.children) == 1
     media_file = root_media_source.children[0]
@@ -144,6 +145,7 @@ async def test_browse_media_get_root(
     root_media_source = await source.async_browse_media(item)
 
     assert root_media_source
+    assert root_media_source.title == "Someone"
     assert root_media_source.can_search is True
     assert len(root_media_source.children) == 4
 
@@ -226,6 +228,7 @@ async def test_browse_media_collections(
     root_media_source = await source.async_browse_media(item)
 
     assert root_media_source
+    assert root_media_source.title == collection
     assert root_media_source.can_search is True
     assert len(root_media_source.children) == len(children)
     for idx, child in enumerate(children):
@@ -363,11 +366,12 @@ async def test_browse_media_collection_items_error(
 
 
 @pytest.mark.parametrize(
-    ("collection", "collection_id", "children"),
+    ("collection", "collection_id", "title", "children"),
     [
         (
             "albums",
             "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
+            "My Album",
             [
                 {
                     "original_file_name": "filename.jpg",
@@ -388,6 +392,7 @@ async def test_browse_media_collection_items_error(
             ],
         ),
         (
+            "favorites",
             "favorites",
             "favorites",
             [
@@ -412,6 +417,7 @@ async def test_browse_media_collection_items_error(
         (
             "people",
             "6176838a-ac5a-4d1f-9a35-91c591d962d8",
+            "Me",
             [
                 {
                     "original_file_name": "20250714_201122.jpg",
@@ -433,7 +439,8 @@ async def test_browse_media_collection_items_error(
         ),
         (
             "tags",
-            "6176838a-ac5a-4d1f-9a35-91c591d962d8",
+            "67301cb8-cb73-4e8a-99e9-475cb3f7e7b5",
+            "Halloween",
             [
                 {
                     "original_file_name": "20110306_025024.jpg",
@@ -461,6 +468,7 @@ async def test_browse_media_collection_get_items(
     mock_config_entry: MockConfigEntry,
     collection: str,
     collection_id: str,
+    title: str,
     children: list[dict],
 ) -> None:
     """Test browse_media returning albums."""
@@ -480,6 +488,7 @@ async def test_browse_media_collection_get_items(
     root_media_source = await source.async_browse_media(item)
 
     assert root_media_source
+    assert root_media_source.title == title
     assert len(root_media_source.children) == len(children)
 
     for idx, child in enumerate(children):
@@ -498,6 +507,52 @@ async def test_browse_media_collection_get_items(
             f"/immich/{mock_config_entry.unique_id}/"
             f"{child['asset_id']}/thumbnail/{child['thumb_mime_type']}"
         )
+
+
+@pytest.mark.parametrize(
+    ("collection", "mocked_get_fn"),
+    [
+        pytest.param("albums", ("albums", "async_get_album_info"), id="albums"),
+        pytest.param("people", ("people", "async_get_person_by_id"), id="people"),
+        pytest.param("tags", ("tags", "async_get_tag_by_id"), id="tags"),
+    ],
+)
+async def test_browse_media_title_of_unknown_collection_item(
+    hass: HomeAssistant,
+    mock_immich: Mock,
+    mock_config_entry: MockConfigEntry,
+    collection: str,
+    mocked_get_fn: tuple[str, str],
+) -> None:
+    """Test browse_media falls back to the collection name for unknown items."""
+    assert await async_setup_component(hass, "media_source", {})
+
+    with patch("homeassistant.components.immich.PLATFORMS", []):
+        await setup_integration(hass, mock_config_entry)
+
+    getattr(
+        getattr(mock_immich, mocked_get_fn[0]), mocked_get_fn[1]
+    ).side_effect = ImmichNotFoundError(
+        {
+            "message": "Not found or no permission",
+            "error": "Bad Request",
+            "statusCode": 400,
+            "correlationId": "e0hlizyl",
+        }
+    )
+
+    source = await async_get_media_source(hass)
+
+    item = MediaSourceItem(
+        hass,
+        DOMAIN,
+        f"{mock_config_entry.unique_id}|{collection}|unknown-id",
+        None,
+    )
+    root_media_source = await source.async_browse_media(item)
+
+    assert root_media_source.title == collection
+    assert len(root_media_source.children) == 0
 
 
 async def test_media_view(

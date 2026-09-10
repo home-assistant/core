@@ -72,7 +72,7 @@ from .const import (
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHELLY_EMIT_EVENT_PATTERN,
-    SHELLY_WALL_DISPLAY_MODELS,
+    SHELLY_WALL_DISPLAY_MODEL_PREFIX,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     VIRTUAL_COMPONENTS,
     VIRTUAL_COMPONENTS_MAP,
@@ -565,7 +565,7 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
-    if model in SHELLY_WALL_DISPLAY_MODELS:
+    if model.startswith(SHELLY_WALL_DISPLAY_MODEL_PREFIX):
         return WALL_DISPLAY_RELEASE_URL
 
     if beta:
@@ -917,7 +917,7 @@ def remove_stale_blu_trv_devices(
         return
 
     dev_reg = dr.async_get(hass)
-    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
     config = rpc_device.config
     blutrv_keys = get_rpc_key_ids(config, BLU_TRV_IDENTIFIER)
     trv_addrs = [config[f"{BLU_TRV_IDENTIFIER}:{key}"]["addr"] for key in blutrv_keys]
@@ -943,7 +943,7 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     dev_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
 
-    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
 
     for device in devices:
         if not device.via_device_id:

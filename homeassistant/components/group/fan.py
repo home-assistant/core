@@ -11,7 +11,6 @@ from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
-    ATTR_PERCENTAGE_STEP,
     DOMAIN as FAN_DOMAIN,
     PLATFORM_SCHEMA as FAN_PLATFORM_SCHEMA,
     SERVICE_OSCILLATE,
@@ -21,17 +20,18 @@ from homeassistant.components.fan import (
     SERVICE_TURN_ON,
     FanEntity,
     FanEntityFeature,
+    FanEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -166,7 +166,9 @@ class FanGroup(GroupEntity, FanEntity):
             for values in self._fans.values():
                 values.discard(entity_id)
         else:
-            features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            features = new_state.attributes.get(
+                EntityStateAttribute.SUPPORTED_FEATURES, 0
+            )
             for feature in SUPPORTED_FLAGS:
                 if features & feature:
                     self._fans[feature].add(entity_id)
@@ -286,14 +288,25 @@ class FanGroup(GroupEntity, FanEntity):
         percentage_states = self._async_states_by_support_flag(
             FanEntityFeature.SET_SPEED
         )
-        self._percentage = reduce_attribute(percentage_states, ATTR_PERCENTAGE)
+        self._percentage = reduce_attribute(
+            percentage_states, FanEntityStateAttribute.PERCENTAGE
+        )
         if (
             percentage_states
-            and percentage_states[0].attributes.get(ATTR_PERCENTAGE_STEP)
-            and attribute_equal(percentage_states, ATTR_PERCENTAGE_STEP)
+            and percentage_states[0].attributes.get(
+                FanEntityStateAttribute.PERCENTAGE_STEP
+            )
+            and attribute_equal(
+                percentage_states, FanEntityStateAttribute.PERCENTAGE_STEP
+            )
         ):
             self._speed_count = (
-                round(100 / percentage_states[0].attributes[ATTR_PERCENTAGE_STEP])
+                round(
+                    100
+                    / percentage_states[0].attributes[
+                        FanEntityStateAttribute.PERCENTAGE_STEP
+                    ]
+                )
                 or 100
             )
         else:

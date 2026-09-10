@@ -56,9 +56,12 @@ async def test_load_unload_config_entry(
 async def test_device_info(
     snapshot: SnapshotAssertion,
     device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test device registry integration."""
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
     assert device_entry == snapshot
 
@@ -303,7 +306,9 @@ async def test_classic_api_setup(
     mock_growatt_classic_api.login.assert_called()
 
     # Verify device was created
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "TLX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
     assert device_entry == snapshot
 
@@ -829,15 +834,23 @@ async def test_dynamic_device_added(
     mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that new devices are dynamically added when discovered during a scan."""
     # Initially only MIN123456 device exists
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+        )
         is not None
     )
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "NEW456789")}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "NEW456789"), mock_config_entry.entry_id
+        )
+        is None
+    )
 
     # Mock a new device appearing in the device list
     mock_growatt_v1_api.device_list.return_value = {
@@ -858,7 +871,9 @@ async def test_dynamic_device_added(
 
     # New device should now be in the device registry
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "NEW456789")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "NEW456789"), mock_config_entry.entry_id
+        )
         is not None
     )
     # New device should be in runtime_data
@@ -867,9 +882,8 @@ async def test_dynamic_device_added(
     # Verify multiple entity types to confirm end-to-end dynamic device support
     assert hass.states.get("switch.new456789_charge_from_grid") is not None
     # Additional check: verify entities exist in the entity registry
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    new_device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "NEW456789")}
+    new_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "NEW456789"), mock_config_entry.entry_id
     )
     new_device_entities = er.async_entries_for_device(
         entity_registry, new_device_entry.id, include_disabled_entities=True
@@ -889,7 +903,9 @@ async def test_stale_device_removed(
     """Test that stale devices are removed from the device registry during a scan."""
     # Initially MIN123456 device exists with entities in the state machine
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+        )
         is not None
     )
     assert hass.states.get("switch.min123456_charge_from_grid") is not None
@@ -903,7 +919,12 @@ async def test_stale_device_removed(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # The device should be removed from HA
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+        )
+        is None
+    )
     # The coordinator should be removed from runtime_data
     assert "MIN123456" not in mock_config_entry.runtime_data.devices
     # Orphaned entities must also be gone from the entity registry and state machine
@@ -937,7 +958,9 @@ async def test_device_scan_error_is_silent(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     # Existing device should still be present
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+        )
         is not None
     )
 
@@ -975,11 +998,18 @@ async def test_dynamic_device_refresh_fails_is_skipped(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # New device should NOT be added — its refresh failed
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "NEW456789")}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "NEW456789"), mock_config_entry.entry_id
+        )
+        is None
+    )
     assert "NEW456789" not in mock_config_entry.runtime_data.devices
     # Existing device must be unaffected
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+        )
         is not None
     )
 
@@ -1018,7 +1048,9 @@ async def test_classic_api_device_scan(
 
     # New device should be added via the classic scan path
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "TLX999999")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "TLX999999"), mock_config_entry_classic.entry_id
+        )
         is not None
     )
     assert "TLX999999" in mock_config_entry_classic.runtime_data.devices
@@ -1045,7 +1077,9 @@ async def test_classic_api_stale_device_removed(
 
     # Verify device exists after setup
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "TLX123456"), mock_config_entry_classic.entry_id
+        )
         is not None
     )
     assert "TLX123456" in mock_config_entry_classic.runtime_data.devices
@@ -1059,6 +1093,11 @@ async def test_classic_api_stale_device_removed(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # The device should be removed from HA
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "TLX123456"), mock_config_entry_classic.entry_id
+        )
+        is None
+    )
     # The coordinator should be removed from runtime_data
     assert "TLX123456" not in mock_config_entry_classic.runtime_data.devices

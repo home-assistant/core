@@ -3,6 +3,7 @@
 import logging
 from unittest.mock import MagicMock
 
+from pyhik.constants import SENSOR_MAP
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -91,8 +92,8 @@ async def test_binary_sensor_device_info(
     """Test binary sensors are linked to device."""
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_ID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_ID), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.name == TEST_DEVICE_NAME
@@ -153,14 +154,14 @@ async def test_binary_sensor_nvr_device(
     )
     assert nvr_device is not None
 
-    channel_1_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_1")}
+    channel_1_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_ID}_1"), mock_config_entry.entry_id
     )
     assert channel_1_device is not None
     assert channel_1_device.via_device_id == nvr_device.id
 
-    channel_2_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_2")}
+    channel_2_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_ID}_2"), mock_config_entry.entry_id
     )
     assert channel_2_device is not None
     assert channel_2_device.via_device_id == nvr_device.id
@@ -247,6 +248,25 @@ async def test_binary_sensor_device_class_unknown(
 
     # Verify warning was logged for unknown sensor type
     assert "Unknown Hikvision sensor type 'Unknown Event'" in caplog.text
+
+
+async def test_binary_sensor_videoloss_silently_skipped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test pyhik's videoloss watchdog event is skipped without warning."""
+    mock_hikcamera.return_value.current_event_states = {
+        SENSOR_MAP["videoloss"]: [(False, 1)],
+    }
+
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
+
+    states = hass.states.async_entity_ids("binary_sensor")
+    assert len(states) == 0
+    assert "Unknown Hikvision sensor type" not in caplog.text
 
 
 async def test_yaml_import_creates_deprecation_issue(

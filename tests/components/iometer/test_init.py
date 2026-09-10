@@ -28,7 +28,7 @@ from . import (
     setup_platform,
 )
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_new_firmware_version(
@@ -47,7 +47,7 @@ async def test_new_firmware_version(
     assert device_entry is not None
     assert device_entry.sw_version == "build-58/build-65"
 
-    status_data = json.loads(await async_load_fixture(hass, "status.json", DOMAIN))
+    status_data = await async_load_json_object_fixture(hass, "status.json", DOMAIN)
     status_data["device"]["core"]["version"] = "build-62"
     status_data["device"]["bridge"]["version"] = "build-69"
     get_status_callback(mock_iometer_client)(Status.from_json(json.dumps(status_data)))

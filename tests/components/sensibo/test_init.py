@@ -98,14 +98,14 @@ async def test_device_remove_devices(
 
     device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, load_int.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=load_int.entry_id,
         identifiers={(DOMAIN, "remove-device-id")},
     )
-    response = await client.remove_device(dead_device_entry.id, load_int.entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
 
@@ -140,7 +140,9 @@ async def test_automatic_device_addition_and_removal(
     assert state
     assert entity_registry.async_get(entity_id)
     for device_id in device_ids:
-        assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        assert device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), load_int.entry_id
+        )
 
     # Remove one of the devices
     new_device_list = [
@@ -162,7 +164,9 @@ async def test_automatic_device_addition_and_removal(
     assert not state
     assert not entity_registry.async_get(entity_id)
     for device_id in device_ids:
-        assert not device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        assert not device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), load_int.entry_id
+        )
 
     # Add the device back
     mock_client.async_get_devices.return_value = get_data[2]
@@ -176,4 +180,6 @@ async def test_automatic_device_addition_and_removal(
     assert state
     assert entity_registry.async_get(entity_id)
     for device_id in device_ids:
-        assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        assert device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), load_int.entry_id
+        )

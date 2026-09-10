@@ -1,11 +1,11 @@
 """Helpers for the Music Assistant integration."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Generator
+from contextlib import contextmanager
 import functools
 from typing import TYPE_CHECKING, Any
 
-from music_assistant_models.auth import UserRole
-from music_assistant_models.errors import MusicAssistantError
+from music_assistant_models.errors import MusicAssistantError, UserNotFoundError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
@@ -36,6 +36,22 @@ def catch_musicassistant_error[**_P, _R](
     return wrapper
 
 
+@contextmanager
+def catch_user_not_found(username: str | None) -> Generator[None]:
+    """Convert a server UserNotFoundError into a translated invalid_username error."""
+    if username is None:
+        yield
+        return
+    try:
+        yield
+    except UserNotFoundError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_username",
+            translation_placeholders={"username": username},
+        ) from err
+
+
 @callback
 def get_music_assistant_client(
     hass: HomeAssistant, config_entry_id: str
@@ -47,46 +63,3 @@ def get_music_assistant_client(
     if entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError("Entry not loaded")
     return entry.runtime_data.mass
-
-
-async def _async_get_available_mass_usernames(mass: MusicAssistantClient) -> list[str]:
-    """Get available Music Assistant usernames which can be used in Home Assistant."""
-    users = await mass.auth.list_users()
-    return [
-        user.username for user in users if user.enabled and user.role != UserRole.GUEST
-    ]
-
-
-async def async_resolve_mass_username(
-    hass: HomeAssistant, mass: MusicAssistantClient, user_id: str
-) -> str | None:
-    """Resolve the Music Assistant username for the Home Assistant user."""
-    available_usernames = await _async_get_available_mass_usernames(mass)
-    if (user := await hass.auth.async_get_user(user_id)) is None:
-        return None
-    for cred in user.credentials:
-        if cred.auth_provider_type == "homeassistant":
-            username: str = cred.data["username"]
-            break
-    else:
-        return None
-    username = username.strip().lower()
-    if username in available_usernames:
-        return username
-    return None
-
-
-async def async_verify_mass_username_availability(
-    mass: MusicAssistantClient, username: str
-) -> None:
-    """Verify Music Assistant username availability for service calls."""
-    available_usernames = await _async_get_available_mass_usernames(mass)
-    if username not in available_usernames:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_username",
-            translation_placeholders={
-                "username": username,
-                "available_usernames": ", ".join(available_usernames),
-            },
-        )
