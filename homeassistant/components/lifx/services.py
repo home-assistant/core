@@ -217,7 +217,7 @@ LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
 LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        ATTR_TRANSITION: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3600)),
+        ATTR_TRANSITION: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=3600)),
         vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.In(
             ThemeLibrary.get_available_themes()
         ),
