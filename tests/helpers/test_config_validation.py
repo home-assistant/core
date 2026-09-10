@@ -375,6 +375,8 @@ def test_time_period() -> None:
         {"wrong_key": -10},
         {"negative": True},
         {"negative": "later", "minutes": 5},
+        {"negative": True, "minutes": -5},
+        {"negative": False, "minutes": -5},
         "12.5:30",
         "12:30.5",
         "12.5:30:30",
