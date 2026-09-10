@@ -35,7 +35,7 @@
     'supported_features': 0,
     'translation_key': 'air_quality_score',
     'unique_id': '80:65:99:34:F9:B4_air_quality_score',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_all_entities[sensor.kitchen_shelfy_air_quality_score-state]
@@ -43,6 +43,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Shelfy Air quality score',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_shelfy_air_quality_score',
