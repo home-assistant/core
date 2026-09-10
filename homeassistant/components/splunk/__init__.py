@@ -226,8 +226,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     last_failure_level = logging.NOTSET
 
     # Each firing runs as its own task, so a slower send can complete after a
-    # newer one. Sequence numbers taken at dispatch let a completion detect
-    # that it has been superseded and skip mutating the failure state.
+    # newer one. Sequence numbers taken at dispatch let a stale success detect
+    # that it has been superseded and skip clearing a newer failure. Failures
+    # always apply regardless of order, since a failure is a fact about a
+    # send that genuinely failed.
     next_sequence = 0
     last_applied_sequence = 0
 
@@ -291,37 +293,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             level = logging.WARNING
             log_message, log_args = "Splunk response error: %s", (err.message,)
         except Exception:
-            # Logged here, not after the gate below, so exc_info is captured
-            # while this exception is still the one being handled.
-            if sequence > last_applied_sequence:
-                last_applied_sequence = sequence
-                if last_failure_category != "unexpected_error":
-                    _LOGGER.exception("Unexpected error sending event to Splunk")
-                last_failure_category = "unexpected_error"
-                last_failure_level = max(last_failure_level, logging.ERROR)
+            # Logged here, not after the failure branch below, so exc_info is
+            # captured while this exception is still the one being handled.
+            if last_failure_category != "unexpected_error":
+                _LOGGER.exception("Unexpected error sending event to Splunk")
+            last_failure_category = "unexpected_error"
+            last_failure_level = max(last_failure_level, logging.ERROR)
+            last_applied_sequence = max(last_applied_sequence, sequence)
             return
         else:
             category = None
 
-        # A slower send can complete after a newer one has already updated
-        # the failure state; only the newest-dispatched completion may apply.
+        # A failure is a fact about this send regardless of dispatch order, so
+        # it is applied unconditionally. A stale success must never clear a
+        # newer failure, so only success is subject to the sequence gate
+        # below.
+        if category is not None:
+            if last_failure_category != category:
+                _LOGGER.log(level, log_message, *log_args)
+            last_failure_category = category
+            last_failure_level = max(last_failure_level, level)
+            last_applied_sequence = max(last_applied_sequence, sequence)
+            return
+
         if sequence <= last_applied_sequence:
             return
         last_applied_sequence = sequence
 
-        if category is None:
-            if last_failure_category is not None:
-                _LOGGER.log(
-                    last_failure_level, "Sending events to Splunk has recovered"
-                )
-            last_failure_category = None
-            last_failure_level = logging.NOTSET
-            return
-
-        if last_failure_category != category:
-            _LOGGER.log(level, log_message, *log_args)
-        last_failure_category = category
-        last_failure_level = max(last_failure_level, level)
+        if last_failure_category is not None:
+            _LOGGER.log(last_failure_level, "Sending events to Splunk has recovered")
+        last_failure_category = None
+        last_failure_level = logging.NOTSET
 
     # Store the event listener cancellation callback
     entry.async_on_unload(

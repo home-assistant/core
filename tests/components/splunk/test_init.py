@@ -661,6 +661,73 @@ async def test_event_listener_out_of_order_completion_preserves_failure(
     )
 
 
+async def test_event_listener_out_of_order_failure_after_success(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a slow failure finishing after a fast success is not discarded.
+
+    An older send that fails slowly can complete after a newer send has
+    already succeeded. That success advances the sequence gate, but the
+    late failure must still be recorded and logged: it is a fact about a
+    send that genuinely failed, not stale good news that can be dropped.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async def delayed_queue(data: str, send: bool = True) -> bool:
+        if "slow-failure" in data:
+            await asyncio.sleep(0.1)
+            raise SplunkPayloadError(0, "Bad request", HTTPStatus.BAD_REQUEST)
+        return True
+
+    mock_hass_splunk.queue.side_effect = delayed_queue
+
+    with caplog.at_level(logging.DEBUG):
+        # Dispatched first but resolves last.
+        hass.states.async_set("sensor.test", "slow-failure")
+        # Dispatched second but resolves first.
+        hass.states.async_set("sensor.test", "fast-success")
+        await hass.async_block_till_done()
+
+    # The late failure must still be logged even though a newer send already
+    # succeeded and advanced the sequence gate.
+    assert any("Splunk payload error" in record.message for record in caplog.records)
+
+    caplog.clear()
+    mock_hass_splunk.queue.side_effect = SplunkPayloadError(
+        0, "Bad request", HTTPStatus.BAD_REQUEST
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        hass.states.async_set("sensor.test", "still-failing")
+        await hass.async_block_till_done()
+
+    # The failure category recorded by the late-arriving failure must have
+    # survived, so a same-category failure is suppressed.
+    assert not any(
+        "Splunk payload error" in record.message for record in caplog.records
+    )
+
+    caplog.clear()
+    mock_hass_splunk.queue.side_effect = None
+
+    with caplog.at_level(logging.DEBUG):
+        hass.states.async_set("sensor.test", "recovered")
+        await hass.async_block_till_done()
+
+    recovery_records = [
+        record
+        for record in caplog.records
+        if "Sending events to Splunk has recovered" in record.message
+    ]
+    assert len(recovery_records) == 1
+
+
 async def test_yaml_filter_only_no_deprecation_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
