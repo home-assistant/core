@@ -73,16 +73,52 @@ async def test_button_press(
     mock_my_pv_client.send_command.assert_awaited_once_with("reboot_device", None)
 
 
+async def test_button_press_send_command_returns_false(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test for HomeAssistantError when send_command returns False."""
+
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.BUTTON]):
+        mock_config_entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_my_pv_client.send_command.return_value = False
+    with (
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {"entity_id": "button.my_pv_ac_elwa_2_restart"},
+            blocking=True,
+        )
+    mock_my_pv_client.send_command.assert_awaited_once_with("reboot_device", None)
+
+    mock_my_pv_client.send_command.reset_mock()
+    mock_my_pv_client.send_command.return_value = True
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {"entity_id": "button.my_pv_ac_elwa_2_restart"},
+        blocking=True,
+    )
+    mock_my_pv_client.send_command.assert_awaited_once_with("reboot_device", None)
+
+
 @pytest.mark.parametrize(
     ("error"), [(MyPVConnectionError()), (MyPVAuthenticationError())]
 )
-async def test_button_press_error(
+async def test_button_press_send_command_throws_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
     error,
 ) -> None:
-    """Test successful press of a button."""
+    """Test for HomeAssistantError when send_command throws error."""
 
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.BUTTON]):
         mock_config_entry.add_to_hass(hass)
