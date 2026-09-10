@@ -419,7 +419,6 @@ async def test_clean_segments_command(
         in mqtt_mock.async_publish.mock_calls
     )
     await hass.async_block_till_done()
-    now = dt_util.utcnow()
     message = """{
         "battery_level": 54,
         "state": "cleaning",
@@ -448,7 +447,8 @@ async def test_clean_segments_command(
 
     async_fire_time_changed(
         hass,
-        now + timedelta(seconds=mqttvacuum.SEGMENTS_CHANGED_DEBOUNCE_SECONDS + 1),
+        dt_util.utcnow()
+        + timedelta(seconds=mqttvacuum.SEGMENTS_CHANGED_DEBOUNCE_SECONDS + 1),
     )
     await hass.async_block_till_done()
     # We expect a repair issue now as the available segments are still changed
@@ -519,7 +519,8 @@ async def test_transient_clean_segments_change_does_not_create_repair(
     await hass.async_block_till_done()
     async_fire_time_changed(
         hass,
-        now + timedelta(seconds=mqttvacuum.SEGMENTS_CHANGED_DEBOUNCE_SECONDS + 1),
+        dt_util.utcnow()
+        + timedelta(seconds=mqttvacuum.SEGMENTS_CHANGED_DEBOUNCE_SECONDS + 1),
     )
     await hass.async_block_till_done()
 
