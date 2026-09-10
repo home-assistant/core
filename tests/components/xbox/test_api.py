@@ -25,11 +25,7 @@ REPLACEMENT_TOKEN: dict[str, Any] = {
 
 
 async def test_token_replaced_without_refresh_is_used() -> None:
-    """Test a token replaced without a refresh is picked up.
-
-    Reauth writes a new token to the config entry without the entry being
-    reloaded. No refresh runs, so the replacement still has to be read from
-    the entry instead of the token captured when this object was created.
+    """Test a replacement token is used before the scheduled reload completes."""
     """
 
     oauth_session = AsyncMock()
