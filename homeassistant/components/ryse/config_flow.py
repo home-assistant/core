@@ -172,13 +172,14 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
         latest advertisement still has the PAIR flag set and came from a local
         adapter; ryseble's BlueZ agent cannot pair through a Bluetooth proxy.
         """
-        latest = self._local_service_info(service_info)
-        if latest is None:
+        latest = self._latest_service_info(service_info)
+        local = self._local_service_info(latest)
+        if local is None:
             return "not_local_source"
         if not is_pairing_mode(latest.manufacturer_data):
             return "not_in_pairing_mode"
 
-        device = RyseBLEDevice(latest.device)
+        device = RyseBLEDevice(local.device)
         try:
             if await device.pair():
                 return None
