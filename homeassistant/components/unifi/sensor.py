@@ -263,11 +263,6 @@ def async_device_wan_latency_value_fn(
         # Checked by async_device_wan_latency_supported_fn
         assert target
 
-    # A monitor that got no response omits "latency_average" entirely, which
-    # aiounifi types as NotRequired. Defaulting it to 0 reported a failed probe
-    # as 0 ms - the one value that reads as a perfect result rather than as
-    # missing data, which inverts the meaning of the sensor. Return None so the
-    # state becomes unknown instead.
     return target.get("latency_average")
 
 
