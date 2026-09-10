@@ -1,6 +1,7 @@
 """Test the homelink config flow."""
 
 from http import HTTPStatus
+from unittest.mock import AsyncMock
 
 from homelink.settings import COGNITO_CLIENT_ID
 import pytest
@@ -193,6 +194,7 @@ async def test_reauth_successful(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reauth flow."""
+    mock_config_entry.runtime_data = AsyncMock()
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
