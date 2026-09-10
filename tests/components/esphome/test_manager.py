@@ -2385,6 +2385,7 @@ async def test_entry_missing_bluetooth_mac_address(
 
 async def test_device_adds_friendly_name(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
     caplog: pytest.LogCaptureFixture,
@@ -2395,8 +2396,7 @@ async def test_device_adds_friendly_name(
         device_info={"name": "nofriendlyname", "friendly_name": ""},
     )
     await hass.async_block_till_done()
-    dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    dev = dev_reg.async_get_device_by_connection(
+    dev = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, device.entry.unique_id), device.entry.entry_id
     )
     assert dev.name == "Nofriendlyname"
@@ -2418,7 +2418,7 @@ async def test_device_adds_friendly_name(
     )
     await device.mock_connect()
     await hass.async_block_till_done()
-    dev = dev_reg.async_get_device_by_connection(
+    dev = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, device.entry.unique_id), device.entry.entry_id
     )
     assert dev.name == "I have a friendly name"
@@ -2477,11 +2477,11 @@ async def test_assist_in_progress_issue_deleted(
 async def test_sub_device_creation(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test sub devices are created in device registry."""
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Define areas
     areas = [
@@ -2548,11 +2548,11 @@ async def test_sub_device_creation(
 
 async def test_sub_device_cleanup(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test sub devices are removed when they no longer exist."""
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Initial sub devices
     sub_devices_initial = [
@@ -2645,11 +2645,11 @@ async def test_sub_device_cleanup(
 
 async def test_sub_device_with_empty_name(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test sub devices with empty names are handled correctly."""
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Define sub devices with empty names
     sub_devices = [
@@ -2690,11 +2690,11 @@ async def test_sub_device_with_empty_name(
 async def test_sub_device_references_main_device_area(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test sub devices can reference the main device's area."""
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Define areas - note we don't include area_id=0 in the areas list
     areas = [

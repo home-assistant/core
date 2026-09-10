@@ -13,6 +13,7 @@ AUTH_RETRIES = 2
 
 ATTR_EVENT_SCORE = "event_score"
 ATTR_EVENT_ID = "event_id"
+ATTR_EVENT_SOURCE = "event_source"
 ATTR_SMART_DETECT_TYPES = "smart_detect_types"
 ATTR_WIDTH = "width"
 ATTR_HEIGHT = "height"
@@ -84,8 +85,11 @@ PLATFORMS = [
 # rest enumerate from the private bootstrap, which is absent in this mode.
 PUBLIC_ONLY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
     Platform.CAMERA,
+    Platform.EVENT,
     Platform.LIGHT,
+    Platform.SENSOR,
 ]
 
 # Stored local-user credentials do not imply the mode: they are kept on a

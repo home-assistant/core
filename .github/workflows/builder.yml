@@ -278,7 +278,7 @@ jobs:
     name: Run E2E tests on base images
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
-    uses: ./.github/workflows/e2e-tests.yml
+    uses: $/.github/workflows/e2e-tests.yml
     with:
       version: ${{ needs.init.outputs.version }}
       image_prefixes: ${{ needs.init.outputs.architectures }}
@@ -287,7 +287,7 @@ jobs:
     name: Run E2E tests on machine images
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_machine"]
-    uses: ./.github/workflows/e2e-tests.yml
+    uses: $/.github/workflows/e2e-tests.yml
     with:
       version: ${{ needs.init.outputs.version }}
       image_prefixes: ${{ needs.init.outputs.machines }}

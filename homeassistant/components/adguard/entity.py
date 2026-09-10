@@ -61,14 +61,7 @@ class AdGuardHomeEntity(Entity):
 
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (  # type: ignore[arg-type]
-                    DOMAIN,
-                    self.adguard.host,
-                    self.adguard.port,
-                    self.adguard.base_path,
-                )
-            },
+            identifiers={(DOMAIN, self._entry.entry_id)},
             manufacturer="AdGuard Team",
             name="AdGuard Home",
             sw_version=self.data.version,

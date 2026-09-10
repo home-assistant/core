@@ -277,12 +277,13 @@ async def test_init_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    side_effect,
-    error,
+    side_effect: APIConnectionError | BadRequestError,
+    error: str,
 ) -> None:
     """Test initialization errors."""
     with patch(
         "openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
         side_effect=side_effect,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
@@ -298,6 +299,7 @@ async def test_init_auth_error(
     """Test auth error during init errors."""
     with patch(
         "openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
         side_effect=AuthenticationError(
             response=httpx.Response(
                 status_code=500, request=httpx.Request(method="GET", url="test")
