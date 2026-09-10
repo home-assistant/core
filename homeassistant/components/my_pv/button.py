@@ -1,7 +1,6 @@
 # pylint: disable=duplicate-code
 """Creates Button entities for the my-PV Home Assistant integration."""
 
-import logging
 from typing import Any, override
 
 from homeassistant.components.button import (
@@ -17,8 +16,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import MyPVConfigEntry
 from .const import DOMAIN
 from .entity import MyPVBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
