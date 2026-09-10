@@ -1935,8 +1935,7 @@ async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
     ]
 
 
-# grid_status and island_status deliberately differ from the cloud fixture so
-# a reroute through the local snapshot is visible in test assertions.
+# A paired site's local live_status reading.
 _LOCAL_LIVE_STATUS = {
     "response": {
         "solar_power": 2000,
@@ -1958,8 +1957,7 @@ _LOCAL_LIVE_STATUS = {
     }
 }
 
-# entity_id -> state once the merge overlays the local snapshot. Power/energy
-# keys convert W/Wh to kW/kWh; the two enums pass through.
+# Expected entity states once _LOCAL_LIVE_STATUS is merged over the cloud fixture.
 _LOCAL_LIVE_STATES = {
     "sensor.energy_site_solar_power": "2.0",
     "sensor.energy_site_energy_left": "20.0",
