@@ -547,6 +547,10 @@ class Entity(
     # If entity is added to an entity platform
     _platform_state = EntityPlatformState.NOT_ADDED
 
+    # Whether async_added_to_hass has started for the current add attempt. Read by
+    # EntityPlatform to run async_will_remove_from_hass if adding the entity fails.
+    _added_to_hass_started = False
+
     # Attributes to exclude from recording, only set by base components, e.g. light
     _entity_component_unrecorded_attributes: frozenset[str] = frozenset()
     # Additional integration specific attributes to exclude from recording, set by
@@ -1419,6 +1423,7 @@ class Entity(
         self.platform_data = platform.platform_data
         self.parallel_updates = parallel_updates
         self._platform_state = EntityPlatformState.ADDING
+        self._added_to_hass_started = False
 
     def _call_on_remove_callbacks(self) -> None:
         """Call callbacks registered by async_on_remove."""
@@ -1441,6 +1446,7 @@ class Entity(
     async def add_to_platform_finish(self) -> None:
         """Finish adding an entity to a platform."""
         await self.async_internal_added_to_hass()
+        self._added_to_hass_started = True
         await self.async_added_to_hass()
         self._platform_state = EntityPlatformState.ADDED
         self.async_write_ha_state()
