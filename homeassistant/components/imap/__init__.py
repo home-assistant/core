@@ -231,6 +231,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "sender": message.sender,
             "subject": message.subject,
             "parts": get_parts(message.email_message),
+            "date": message.date.isoformat() if message.date else None,
             "uid": uid,
         }
 

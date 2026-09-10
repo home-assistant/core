@@ -28,6 +28,7 @@ from .const import (
     TEST_FETCH_RESPONSE_INVALID_DATE1,
     TEST_FETCH_RESPONSE_INVALID_DATE2,
     TEST_FETCH_RESPONSE_INVALID_DATE3,
+    TEST_FETCH_RESPONSE_MISSING_DATE,
     TEST_FETCH_RESPONSE_MULTIPART,
     TEST_FETCH_RESPONSE_MULTIPART_BASE64,
     TEST_FETCH_RESPONSE_MULTIPART_BASE64_INVALID,
@@ -987,6 +988,7 @@ async def test_services(
     assert response["text"] == "*Multi* part Test body\n"
     assert response["sender"] == "john.doe@example.com"
     assert response["subject"] == "Test subject"
+    assert response["date"] == "2023-03-24T13:52:00+01:00"
     assert response["uid"] == "1"
     assert response["parts"] == message_parts
 
@@ -1096,3 +1098,42 @@ async def test_services(
         assert exc.value.translation_domain == DOMAIN
         assert exc.value.translation_key == patch_error_translation_key[service][1]
         assert exc.value.translation_placeholders == {"error": "Bla"}
+
+
+@pytest.mark.parametrize(
+    "imap_fetch",
+    [
+        TEST_FETCH_RESPONSE_MISSING_DATE,
+        TEST_FETCH_RESPONSE_INVALID_DATE1,
+        TEST_FETCH_RESPONSE_INVALID_DATE2,
+        TEST_FETCH_RESPONSE_INVALID_DATE3,
+    ],
+)
+async def test_service_fetch_missing_date(
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+) -> None:
+    """Test fetching a message that has no or an invalid date successfully."""
+
+    config = MOCK_CONFIG.copy()
+    config_entry = MockConfigEntry(domain=DOMAIN, data=config)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Make sure we have had one update (when polling)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+
+    # Test fetch service with text response
+    mock_imap_protocol.reset_mock()
+    data = {"entry": config_entry.entry_id, "uid": "1"}
+    response = await hass.services.async_call(
+        DOMAIN, "fetch", data, blocking=True, return_response=True
+    )
+    mock_imap_protocol.fetch.assert_called_with("1", "BODY.PEEK[]")
+    assert response["text"] == "Test body\r\n"
+    assert response["sender"] == "john.doe@example.com"
+    assert response["subject"] == "Test subject"
+    assert response["date"] is None
+    assert response["uid"] == "1"
+    assert response["parts"] == {}
