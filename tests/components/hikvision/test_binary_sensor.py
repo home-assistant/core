@@ -220,6 +220,7 @@ async def test_binary_sensor_state_on(
         None,
         None,
         "2024-01-01T12:00:00Z",
+        None,
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -378,6 +379,7 @@ async def test_binary_sensor_update_callback(
         None,
         None,
         "2024-01-01T12:00:00Z",
+        None,
     )
 
     # Get the registered callback and call it

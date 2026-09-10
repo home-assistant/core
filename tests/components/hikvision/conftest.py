@@ -121,6 +121,7 @@ def mock_hikcamera(mock_hik_get_channels: MagicMock) -> Generator[MagicMock]:
             None,
             None,
             "2024-01-01T00:00:00Z",
+            None,
         )
         camera.get_event_triggers.return_value = {}
         camera.stream_connected = True
