@@ -50,6 +50,8 @@ from .storage.entity_store_validation import (
     EntityStoreValidationSuccess,
     validate_entity_data,
 )
+from .storage.entity_suggestions import async_get_entity_suggestions
+from .storage.entity_suggestions.const import SuggestionFilter
 from .storage.expose_controller import validate_expose_data
 from .storage.serialize import get_serialized_schema
 from .storage.time_server import validate_time_server_data
@@ -71,6 +73,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_query_telegrams)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
+    websocket_api.async_register_command(hass, ws_get_entity_suggestions)
     websocket_api.async_register_command(hass, ws_validate_entity)
     websocket_api.async_register_command(hass, ws_create_entity)
     websocket_api.async_register_command(hass, ws_update_entity)
@@ -252,6 +255,36 @@ async def ws_get_knx_project(
         msg["id"],
         knxproject,
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/get_entity_suggestions",
+        vol.Optional("platform"): vol.In(SUPPORTED_PLATFORMS_UI),
+        vol.Optional("group_id"): str,
+        vol.Optional("include_configured", default=True): bool,
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_get_entity_suggestions(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get entity suggestions."""
+    result = await async_get_entity_suggestions(
+        hass,
+        knx,
+        SuggestionFilter(
+            platform=msg.get("platform"),
+            group_id=msg.get("group_id"),
+            include_configured=msg["include_configured"],
+        ),
+    )
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.require_admin
