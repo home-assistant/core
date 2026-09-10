@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -110,13 +110,18 @@ async def test_button_press_send_command_returns_false(
 
 
 @pytest.mark.parametrize(
-    ("error"), [(MyPVConnectionError()), (MyPVAuthenticationError())]
+    ("error", "expected_ha_error"),
+    [
+        (MyPVConnectionError(), HomeAssistantError),
+        (MyPVAuthenticationError(), ConfigEntryAuthFailed),
+    ],
 )
 async def test_button_press_send_command_throws_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
-    error,
+    error: MyPVConnectionError,
+    expected_ha_error,
 ) -> None:
     """Test for HomeAssistantError when send_command throws error."""
 
@@ -128,7 +133,7 @@ async def test_button_press_send_command_throws_error(
 
     mock_my_pv_client.send_command.side_effect = error
     with (
-        pytest.raises(HomeAssistantError),
+        pytest.raises(expected_ha_error),
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
