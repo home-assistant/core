@@ -176,16 +176,31 @@
       "stats_area": {
         "default": "mdi:floor-plan"
       },
+      "stats_area_mower": {
+        "default": "mdi:floor-plan"
+      },
       "stats_time": {
+        "default": "mdi:timer-outline"
+      },
+      "stats_time_mower": {
         "default": "mdi:timer-outline"
       },
       "total_stats_area": {
         "default": "mdi:floor-plan"
       },
+      "total_stats_area_mower": {
+        "default": "mdi:floor-plan"
+      },
       "total_stats_cleanings": {
         "default": "mdi:counter"
       },
+      "total_stats_cleanings_mower": {
+        "default": "mdi:counter"
+      },
       "total_stats_time": {
+        "default": "mdi:timer-outline"
+      },
+      "total_stats_time_mower": {
         "default": "mdi:timer-outline"
       }
     },

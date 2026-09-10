@@ -39,6 +39,7 @@ class PoolSenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 aiohttp_client.async_get_clientsession(self.hass),
                 user_input[CONF_EMAIL],
                 user_input[CONF_PASSWORD],
+                None,
             )
             api_key_valid = await poolsense.test_poolsense_credentials()
 

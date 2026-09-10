@@ -15,7 +15,7 @@ from homeassistant.components.fully_kiosk.const import (
     SERVICE_START_APPLICATION,
 )
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
@@ -140,7 +140,8 @@ async def test_service_unloaded_entry(
             {ATTR_DEVICE_ID: [device_entry.id], ATTR_URL: "https://nabucasa.com"},
             blocking=True,
         )
-    assert "Test device is not loaded" in str(excinfo)
+    assert excinfo.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert excinfo.value.translation_key == "service_config_entry_not_loaded"
     mock_fully_kiosk.loadUrl.assert_not_called()
 
     with pytest.raises(HomeAssistantError) as excinfo:
@@ -150,7 +151,8 @@ async def test_service_unloaded_entry(
             {ATTR_DEVICE_ID: [device_entry.id], ATTR_APPLICATION: "de.ozerov.fully"},
             blocking=True,
         )
-    assert "Test device is not loaded" in str(excinfo)
+    assert excinfo.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert excinfo.value.translation_key == "service_config_entry_not_loaded"
     mock_fully_kiosk.startApplication.assert_not_called()
 
 
@@ -168,7 +170,9 @@ async def test_service_bad_device_id(
             blocking=True,
         )
 
-    assert "Device 'bad-device_id' not found in device registry" in str(excinfo)
+    assert excinfo.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert excinfo.value.translation_key == "service_device_not_found"
+    assert excinfo.value.translation_placeholders == {"device_id": "bad-device_id"}
 
 
 async def test_service_called_with_non_fkb_target_devices(
@@ -203,4 +207,9 @@ async def test_service_called_with_non_fkb_target_devices(
             blocking=True,
         )
 
-    assert f"Device '{device_entry.id}' is not a fully_kiosk device" in str(excinfo)
+    assert excinfo.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert excinfo.value.translation_key == "service_device_wrong_domain"
+    assert excinfo.value.translation_placeholders == {
+        "device_name": device_entry.name,
+        "domain": DOMAIN,
+    }

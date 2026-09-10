@@ -22,6 +22,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -223,6 +224,28 @@ async def test_alarm_control_panel_disarming(
     mock_satel.disarm.assert_awaited_once_with(MOCK_CODE, [1])
 
     mock_satel.clear_alarm.assert_awaited_once_with(MOCK_CODE, [1])
+
+
+async def test_alarm_control_panel_disarming_requires_code(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test disarming fails when the access code is missing."""
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            SERVICE_ALARM_DISARM,
+            {ATTR_ENTITY_ID: "alarm_control_panel.home"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "missing_alarm_access_code"
+    mock_satel.disarm.assert_not_awaited()
+    mock_satel.clear_alarm.assert_not_awaited()
 
 
 async def test_alarm_panel_last_reported(

@@ -70,8 +70,8 @@ from ipaddress import ip_address
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import web
+from probatio import to_field_list
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
@@ -137,12 +137,11 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             "authorization_endpoint": f"{url_prefix}/auth/authorize",
             "token_endpoint": f"{url_prefix}/auth/token",
             "revocation_endpoint": f"{url_prefix}/auth/revoke",
-            # Home Assistant already accepts URL-based client_ids via
-            # IndieAuth without prior registration, which is compatible with
-            # draft-ietf-oauth-client-id-metadata-document. This flag
-            # advertises that support to encourage clients to use it. The
-            # metadata document is not actually fetched as IndieAuth doesn't
-            # require it.
+            # Home Assistant accepts URL-based client_ids via IndieAuth without
+            # prior registration, and discovers allowed redirect URIs from link
+            # tags or a Client ID Metadata Document served at the client_id URL.
+            # This flag advertises that support
+            # (draft-ietf-oauth-client-id-metadata-document).
             "client_id_metadata_document_supported": True,
             "response_types_supported": ["code"],
             "service_documentation": (
@@ -259,7 +258,7 @@ def _prepare_result_json(result: AuthFlowResult) -> dict[str, Any]:
     if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = voluptuous_serialize.convert(schema)
+        data["data_schema"] = to_field_list(schema)
 
     return data
 

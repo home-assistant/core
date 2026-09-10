@@ -91,8 +91,8 @@ async def test_device_setup(
     assert len(mock_hub_configuration.mock_calls) == 1
     assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
-    device_entries = device_registry.devices.get_devices_for_config_entry_id(
-        mock_config_entry.entry_id
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
     assert len(device_entries) > len(mock_hub_configuration.destinations)
 

@@ -10,6 +10,8 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
+TOKEN_SIGNING_KEY = "envoy-test-signing-key-0123456789"
+
 
 async def setup_integration(
     hass: HomeAssistant,
@@ -31,6 +33,6 @@ def envoy_token(days_to_expiry: int = 365) -> str:
             "name": "envoy",
             "exp": (dt_util.utcnow() + timedelta(days=days_to_expiry)).timestamp(),
         },
-        key="secret",
+        key=TOKEN_SIGNING_KEY,
         algorithm="HS256",
     )

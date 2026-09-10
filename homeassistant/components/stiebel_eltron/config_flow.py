@@ -3,13 +3,15 @@
 import logging
 from typing import Any, override
 
-from modbus_connection import ModbusError
-from modbus_connection.pymodbus import connect_tcp
+from modbus_connection import ModbusTcpParams
 from pystiebeleltron import StiebelEltronModbusError, get_controller_model
 import voluptuous as vol
 
+from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -36,15 +38,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def check_controller_model(host: str, port: int) -> str | None:
+async def check_controller_model(
+    hass: HomeAssistant, host: str, port: int
+) -> str | None:
     """Check if the controller model is valid."""
     try:
-        connection = await connect_tcp(host, port=port)
-        try:
-            await get_controller_model(connection.for_unit(UNIT_ID))
-        finally:
-            await connection.close()
-    except StiebelEltronModbusError, ModbusError:
+        async with async_get_temporary_unit(
+            hass, ModbusTcpParams(host=host, port=port), UNIT_ID
+        ) as unit:
+            await get_controller_model(unit)
+    # HomeAssistantError: another integration already holds this host and port
+    # with link settings that cannot be honoured on one connection.
+    except StiebelEltronModbusError, HomeAssistantError:
         _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
         return "cannot_connect"
     except Exception:
@@ -69,7 +74,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
 
-        error = await check_controller_model(discovery_info.ip, DEFAULT_PORT)
+        error = await check_controller_model(self.hass, discovery_info.ip, DEFAULT_PORT)
         if error is not None:
             return self.async_abort(reason=error)
 
@@ -104,7 +109,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
             error = await check_controller_model(
-                user_input[CONF_HOST], user_input[CONF_PORT]
+                self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
             )
             if error is not None:
                 errors["base"] = error
@@ -129,7 +134,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
             error = await check_controller_model(
-                user_input[CONF_HOST], user_input[CONF_PORT]
+                self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
             )
             if error is not None:
                 errors["base"] = error

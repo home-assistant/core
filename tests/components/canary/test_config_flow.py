@@ -96,10 +96,9 @@ async def test_user_form_single_instance_allowed(
     await init_integration(hass, skip_entry_setup=True)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=USER_INPUT,
+        DOMAIN, context={"source": SOURCE_USER}
     )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 

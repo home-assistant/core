@@ -407,7 +407,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if mode is BluetoothScanningMode.AUTO and not details.get(ADAPTER_PASSIVE_SCAN):
         mode = BluetoothScanningMode.ACTIVE
     scanner = HaScanner(mode, adapter, address)
-    scanner.async_setup()
+    entry.async_on_unload(scanner.async_setup())
     if entry.title == address:
         hass.config_entries.async_update_entry(
             entry, title=adapter_title(adapter, details)

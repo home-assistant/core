@@ -1,5 +1,6 @@
 """Config flow for Vizio."""
 
+from collections.abc import Mapping
 import copy
 import logging
 from typing import Any, override
@@ -17,6 +18,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     SOURCE_ZEROCONF,
     ConfigFlow,
     ConfigFlowResult,
@@ -236,78 +239,108 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         self._pair_challenge: PairChallenge | None = None
         self._data: dict[str, Any] | None = None
 
+    def _async_show_source_form(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Show the input form for the source that started the flow."""
+        if self.source == SOURCE_REAUTH:
+            return self.async_show_form(step_id="reauth_confirm", errors=errors)
+        if self.source == SOURCE_RECONFIGURE:
+            assert self._data
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_HOST, default=self._data[CONF_HOST]): str}
+                ),
+                errors=errors,
+            )
+        schema = self._user_schema or _get_config_schema()
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    def _async_finish_flow(self) -> ConfigFlowResult:
+        """Save the validated config for the flow's source."""
+        assert self._data
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=self._data
+            )
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=self._data
+            )
+        return self.async_create_entry(title=self._data[CONF_NAME], data=self._data)
+
+    async def _async_validate_and_continue(self) -> ConfigFlowResult:
+        """Validate the device and continue to saving or pairing.
+
+        Shared by the user, reauth, and reconfigure flows: resolve the API
+        port, detect the device class, verify the device identity via its
+        serial number, then save directly (speaker, or TV with a working
+        access token) or start PIN pairing (TV without a working token).
+        """
+        assert self._data
+        # A host entered without a port would target 443; probe for the
+        # API port. No-op for a host that already carries one.
+        try:
+            host = self._data[CONF_HOST] = await async_resolve_host(
+                self._data[CONF_HOST],
+                session=async_get_clientsession(self.hass, False),
+            )
+        except VizioError:
+            return self._async_show_source_form({CONF_HOST: "cannot_determine_port"})
+
+        # Zeroconf discovery and existing entries already carry a device
+        # class; detect it only when the flow has none yet.
+        if CONF_DEVICE_CLASS not in self._data:
+            self._data[CONF_DEVICE_CLASS] = await _async_detect_device_class(
+                self.hass, host
+            )
+        device_class = self._data[CONF_DEVICE_CLASS]
+
+        unique_id = await _async_get_unique_id(self.hass, host, device_class)
+        if not unique_id:
+            return self._async_show_source_form({CONF_HOST: "cannot_connect"})
+        if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_mismatch()
+        elif self.unique_id is None and (
+            await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True)
+            is not None
+        ):
+            return self._async_show_source_form(
+                {CONF_HOST: "existing_config_entry_found"}
+            )
+
+        token = self._data.get(CONF_ACCESS_TOKEN)
+        if device_class == MediaPlayerDeviceClass.TV and not token:
+            return await self.async_step_pair_tv()
+        if await _async_validate_config(self.hass, host, token, device_class):
+            return self._async_finish_flow()
+        if device_class == MediaPlayerDeviceClass.TV and self.source in (
+            SOURCE_REAUTH,
+            SOURCE_RECONFIGURE,
+        ):
+            # The stored token is no longer accepted: pair again
+            return await self.async_step_pair_tv()
+        return self._async_show_source_form({"base": "cannot_connect"})
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors: dict[str, str] = {}
-
         if user_input is not None:
-            # Store current values in case setup fails and user needs to edit
+            # Store current values in case validation fails and user needs to edit
             self._user_schema = _get_config_schema(user_input)
-            # A host entered without a port would target 443; probe for the
-            # API port. No-op for a host that already carries one.
-            try:
-                user_input[CONF_HOST] = await async_resolve_host(
-                    user_input[CONF_HOST],
-                    session=async_get_clientsession(self.hass, False),
-                )
-            except VizioError:
-                errors[CONF_HOST] = "cannot_determine_port"
+            if self._must_show_form and self.context["source"] == SOURCE_ZEROCONF:
+                # Discovery should always display the config form before trying to
+                # create entry so that user can update default config options
+                self._must_show_form = False
+            else:
+                self._data = copy.deepcopy(user_input)
+                return await self._async_validate_and_continue()
 
-        if user_input is not None and not errors:
-            # Zeroconf discovery provides the device class; detect it otherwise
-            if CONF_DEVICE_CLASS not in user_input:
-                user_input[CONF_DEVICE_CLASS] = await _async_detect_device_class(
-                    self.hass, user_input[CONF_HOST]
-                )
-            if self.unique_id is None:
-                unique_id = await _async_get_unique_id(
-                    self.hass, user_input[CONF_HOST], user_input[CONF_DEVICE_CLASS]
-                )
-
-                # Check if unique ID was found, set unique ID, and abort if a flow with
-                # the same unique ID is already in progress
-                if not unique_id:
-                    errors[CONF_HOST] = "cannot_connect"
-                elif (
-                    await self.async_set_unique_id(
-                        unique_id=unique_id, raise_on_progress=True
-                    )
-                    is not None
-                ):
-                    errors[CONF_HOST] = "existing_config_entry_found"
-
-            if not errors:
-                if self._must_show_form and self.context["source"] == SOURCE_ZEROCONF:
-                    # Discovery should always display the config form before trying to
-                    # create entry so that user can update default config options
-                    self._must_show_form = False
-                elif user_input[
-                    CONF_DEVICE_CLASS
-                ] == MediaPlayerDeviceClass.SPEAKER or user_input.get(
-                    CONF_ACCESS_TOKEN
-                ):
-                    # Ensure config is valid for a device
-                    if not await _async_validate_config(
-                        self.hass,
-                        user_input[CONF_HOST],
-                        user_input.get(CONF_ACCESS_TOKEN),
-                        user_input[CONF_DEVICE_CLASS],
-                    ):
-                        errors["base"] = "cannot_connect"
-
-                    if not errors:
-                        return self.async_create_entry(
-                            title=user_input[CONF_NAME], data=user_input
-                        )
-                else:
-                    self._data = copy.deepcopy(user_input)
-                    return await self.async_step_pair_tv()
-
-        schema = self._user_schema or _get_config_schema()
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self._async_show_source_form()
 
     @override
     async def async_step_zeroconf(
@@ -354,6 +387,32 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthorization when the stored access token is rejected."""
+        self._data = dict(entry_data)
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth; continuing may put a pairing PIN on the TV screen."""
+        if user_input is not None:
+            return await self._async_validate_and_continue()
+        return self._async_show_source_form()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device host."""
+        if self._data is None:
+            self._data = dict(self._get_reconfigure_entry().data)
+        if user_input is not None:
+            self._data[CONF_HOST] = user_input[CONF_HOST]
+            return await self._async_validate_and_continue()
+        return self._async_show_source_form()
+
     async def async_step_pair_tv(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -374,11 +433,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
                     device_id=DEVICE_ID, device_name=self._data[CONF_NAME]
                 )
             except VizioError:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=_get_config_schema(self._data),
-                    errors={"base": "cannot_connect"},
-                )
+                return self._async_show_source_form({"base": "cannot_connect"})
             return await self.async_step_pair_tv()
 
         # Complete pairing process if PIN has been provided
@@ -397,6 +452,8 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_PIN] = "complete_pairing_failed"
             else:
                 self._data[CONF_ACCESS_TOKEN] = auth_token
+                if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+                    return self._async_finish_flow()
                 self._must_show_form = True
                 return await self.async_step_pairing_complete()
 

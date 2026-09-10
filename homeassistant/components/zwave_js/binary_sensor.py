@@ -39,6 +39,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
@@ -684,10 +685,16 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         if description:
             self.entity_description = description
 
-        # Entity class attributes
-        self._attr_name = self.generate_name(
-            alternate_value_name=self.info.primary_value.metadata.states[self.state_key]
-        )
+        # Notification sensors are named after their notification state. A
+        # description may set its own name to override that.
+        if not hasattr(self, "entity_description") or (
+            self.entity_description.name is UNDEFINED
+        ):
+            self._attr_name = self.generate_name(
+                alternate_value_name=self.info.primary_value.metadata.states[
+                    self.state_key
+                ]
+            )
         self._attr_unique_id = f"{self._attr_unique_id}.{self.state_key}"
 
     @property
@@ -870,6 +877,33 @@ OPENING_STATE_NOTIFICATION_SCHEMA = ZWaveValueDiscoverySchema(
 
 
 DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
+    # Zooz ZSE43 Tilt/Shock Sensor. Its vibration sensor is reported
+    # through the Home Security "Cover status" notification, so expose
+    # that notification as a vibration sensor.
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        manufacturer_id={0x027A},
+        product_id={0xE003},
+        product_type={0x7000},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Home Security"},
+            property_key={"Cover status"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={3},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - State Id 3 (product cover removed)
+            key=NOTIFICATION_HOME_SECURITY,
+            name="Vibration",
+            states={3},
+            device_class=BinarySensorDeviceClass.VIBRATION,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
     NewZWaveDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         primary_value=ZWaveValueDiscoverySchema(

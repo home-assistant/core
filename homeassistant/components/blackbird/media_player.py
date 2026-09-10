@@ -4,7 +4,7 @@ import logging
 from typing import override
 
 from pyblackbird import get_blackbird
-from serial import SerialException
+from serialx import SerialException
 import voluptuous as vol
 
 from homeassistant.components.media_player import (

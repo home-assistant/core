@@ -34,14 +34,17 @@ class NetgearDeviceEntity(CoordinatorEntity[NetgearTrackerCoordinator]):
         self._attr_unique_id = self._mac
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            default_name=self._device_name,
-            default_model=device["device_model"],
+            name=self._device_name,
             via_device_id=dr.async_get_device_id_by_identifier(
                 coordinator.hass,
                 (DOMAIN, coordinator.router.unique_id),
                 config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
+        # Offline devices restored at startup have no model yet; only set it when known
+        # so a previously stored model is not overwritten with None.
+        if (device_model := device["device_model"]) is not None:
+            self._attr_device_info["model"] = device_model
 
     def get_device_name(self):
         """Return the name of the given device or the MAC if we don't know."""

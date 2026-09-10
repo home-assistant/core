@@ -10,7 +10,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -29,13 +28,7 @@ _PLATFORMS = (Platform.SENSOR,)
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoogleDriveConfigEntry) -> bool:
     """Set up Google Drive from a config entry."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     auth = AsyncConfigEntryAuth(
         async_get_clientsession(hass),
