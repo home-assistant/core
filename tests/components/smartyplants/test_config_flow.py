@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock
 
-from pysmartyplants import SmartyPlantsAuthError, SmartyPlantsConnectionError
+from pysmartyplants import (
+    SmartyPlantsAuthError,
+    SmartyPlantsConnectionError,
+    SmartyPlantsForbiddenError,
+)
 import pytest
 
 from homeassistant.components.smartyplants.const import CONF_WEBHOOK_SECRET, DOMAIN
@@ -88,6 +92,7 @@ async def test_flow_without_webhook_secret(
     [
         (SmartyPlantsAuthError, "invalid_auth"),
         (SmartyPlantsConnectionError, "cannot_connect"),
+        (SmartyPlantsForbiddenError, "forbidden"),
     ],
 )
 async def test_flow_errors_then_recovers(

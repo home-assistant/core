@@ -6,10 +6,9 @@ rules:
   appropriate-polling:
     status: done
     comment: |
-      Polled every minute. The backend caches each account's payload and
-      answers an unchanged poll with a 304 carrying no body, so a poll that
-      finds nothing new costs very little. A configured webhook delivers
-      changes immediately and makes the poll a fallback.
+      Polled every minute. The backend serves each account's payload from a
+      cache, so a poll that finds nothing new is cheap to answer. A configured
+      webhook delivers changes immediately and makes the poll a fallback.
   brands: done
   common-modules: done
   config-flow-test-coverage: done

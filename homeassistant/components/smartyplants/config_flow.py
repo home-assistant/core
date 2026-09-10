@@ -6,6 +6,7 @@ from pysmartyplants import (
     SmartyPlantsAuthError,
     SmartyPlantsClient,
     SmartyPlantsConnectionError,
+    SmartyPlantsForbiddenError,
 )
 import voluptuous as vol
 
@@ -41,6 +42,10 @@ class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
             account_id = await client.async_verify()
         except SmartyPlantsAuthError:
             return "invalid_auth", None
+        except SmartyPlantsForbiddenError:
+            # The key is accepted but this caller is not allowed to use it,
+            # which a different key will not fix.
+            return "forbidden", None
         except SmartyPlantsConnectionError:
             return "cannot_connect", None
         return None, account_id
