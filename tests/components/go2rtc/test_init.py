@@ -1537,11 +1537,10 @@ async def test_preload_no_change_when_already_disabled(
     rest_client.preload.disable.assert_not_called()
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_integration", "init_test_integration")
 async def test_shared_stream_source(
     hass: HomeAssistant,
     rest_client: AsyncMock,
-    init_test_integration: MockCamera,
 ) -> None:
     """The managed server restreams the camera, so consumers share one upstream."""
     source = await async_get_shared_stream_source(hass, "camera.test")
