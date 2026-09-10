@@ -15,16 +15,26 @@ _COMMAND_GA = "2/2/2"  # KNX -> HA action (inbound)
 _ENTITY_ID = "switch.test"
 
 
+def _link_data(**overrides: Any) -> dict[str, Any]:
+    """Build entity link data for a switch, with optional KNX option overrides."""
+    return {
+        "knx": {
+            "ga_status": {"write": _STATUS_GA},
+            "ga_command": {"state": _COMMAND_GA},
+        }
+        | overrides
+    }
+
+
 async def _create_switch_link(
-    ws_client: Any, channels: dict[str, dict[str, Any]]
+    ws_client: Any, data: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """Create a switch entity link via websocket and return the result."""
     await ws_client.send_json_auto_id(
         {
-            "type": "knx/create_entity_link",
-            "platform": "switch",
+            "type": "knx/update_entity_link",
             "entity_id": _ENTITY_ID,
-            "channels": channels,
+            "data": data if data is not None else _link_data(),
         }
     )
     res = await ws_client.receive_json()
@@ -40,10 +50,7 @@ async def test_switch_link_outbound(
     """Test a Home Assistant state change is sent to the status group address."""
     await knx.setup_integration()
     ws_client = await hass_ws_client(hass)
-    result = await _create_switch_link(
-        ws_client, {"switch": {"write": _STATUS_GA, "state": _COMMAND_GA}}
-    )
-    assert result["entity_id"] == _ENTITY_ID
+    await _create_switch_link(ws_client)
 
     hass.states.async_set(_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
@@ -62,9 +69,7 @@ async def test_switch_link_inbound(
     """Test an incoming command telegram drives the entity via a service call."""
     await knx.setup_integration()
     ws_client = await hass_ws_client(hass)
-    await _create_switch_link(
-        ws_client, {"switch": {"write": _STATUS_GA, "state": _COMMAND_GA}}
-    )
+    await _create_switch_link(ws_client)
     turn_on = async_mock_service(hass, "switch", SERVICE_TURN_ON)
     turn_off = async_mock_service(hass, "switch", SERVICE_TURN_OFF)
 
@@ -86,9 +91,7 @@ async def test_switch_link_status_feedback(
     """Test a bus-driven change is fed back on the (distinct) status GA, not looped."""
     await knx.setup_integration()
     ws_client = await hass_ws_client(hass)
-    await _create_switch_link(
-        ws_client, {"switch": {"write": _STATUS_GA, "state": _COMMAND_GA}}
-    )
+    await _create_switch_link(ws_client)
     async_mock_service(hass, "switch", SERVICE_TURN_ON)
 
     # the command itself does not echo (the service call hasn't changed state yet)
@@ -102,23 +105,125 @@ async def test_switch_link_status_feedback(
     await knx.assert_write(_STATUS_GA, True)
 
 
+async def test_switch_link_skips_unchanged_state(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test attribute-only updates do not repeat the status telegram."""
+    await knx.setup_integration()
+    ws_client = await hass_ws_client(hass)
+    await _create_switch_link(ws_client)
+
+    hass.states.async_set(_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    await knx.assert_write(_STATUS_GA, True)
+
+    hass.states.async_set(_ENTITY_ID, STATE_ON, {"unrelated": 1})
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
+
+
+async def test_switch_link_responds_to_read(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a GroupValueRead on the status GA is answered."""
+    await knx.setup_integration()
+    ws_client = await hass_ws_client(hass)
+    await _create_switch_link(ws_client)
+
+    hass.states.async_set(_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    await knx.assert_write(_STATUS_GA, True)
+
+    await knx.receive_read(_STATUS_GA)
+    await knx.assert_response(_STATUS_GA, True)
+
+
+async def test_switch_link_invert(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test invert applies to both directions."""
+    await knx.setup_integration()
+    ws_client = await hass_ws_client(hass)
+    await _create_switch_link(ws_client, _link_data(invert=True))
+    turn_off = async_mock_service(hass, "switch", SERVICE_TURN_OFF)
+
+    hass.states.async_set(_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    await knx.assert_write(_STATUS_GA, False)
+
+    await knx.receive_write(_COMMAND_GA, True)
+    await hass.async_block_till_done()
+    assert len(turn_off) == 1
+
+
+async def test_switch_link_passive_command_address(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test passive command group addresses also drive the entity."""
+    await knx.setup_integration()
+    ws_client = await hass_ws_client(hass)
+    await _create_switch_link(
+        ws_client,
+        {
+            "knx": {
+                "ga_status": {"write": _STATUS_GA},
+                "ga_command": {"state": _COMMAND_GA, "passive": ["3/3/3"]},
+            }
+        },
+    )
+    turn_on = async_mock_service(hass, "switch", SERVICE_TURN_ON)
+
+    await knx.receive_write("3/3/3", True)
+    await hass.async_block_till_done()
+    assert len(turn_on) == 1
+
+
+async def test_switch_link_loaded_from_store(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test links persisted in the config store are set up during integration setup."""
+    hass.states.async_set(_ENTITY_ID, STATE_OFF)
+    await knx.setup_integration(config_store_fixture="config_store_entity_link.json")
+    turn_on = async_mock_service(hass, "switch", SERVICE_TURN_ON)
+
+    # send_on_init: the state present at setup is sent to the status address
+    await knx.assert_write(_STATUS_GA, False)
+
+    await knx.receive_write(_COMMAND_GA, True)
+    await hass.async_block_till_done()
+    assert len(turn_on) == 1
+
+
 async def test_switch_link_rejects_self_loop(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test a channel with equal status and command group addresses is rejected."""
+    """Test a link with equal status and command group addresses is rejected."""
     await knx.setup_integration()
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json_auto_id(
         {
             "type": "knx/validate_entity_link",
-            "platform": "switch",
             "entity_id": _ENTITY_ID,
-            "channels": {"switch": {"write": _STATUS_GA, "state": _STATUS_GA}},
+            "data": {
+                "knx": {
+                    "ga_status": {"write": _STATUS_GA},
+                    "ga_command": {"state": _STATUS_GA},
+                }
+            },
         }
     )
     res = await ws_client.receive_json()
     assert res["success"], res
     assert res["result"]["success"] is False
-    assert res["result"]["errors"][0]["path"] == ["channels", "switch"]
+    assert res["result"]["errors"]

@@ -1,17 +1,16 @@
 """Channel registry for KNX entity links.
 
 A channel maps one controllable aspect of a Home Assistant entity (e.g. a switch's on/off
-state) to a KNX datapoint with a fixed DPT and a predictable Home Assistant service call.
-Channel behaviour is defined statically per platform here; the UI only picks the group
-addresses. This keeps encode/decode symmetric (no value templates).
+state) to a pair of KNX group addresses with a fixed DPT and a predictable Home Assistant
+service call. Channel behaviour is defined statically per platform here; the UI only picks
+the group addresses. This keeps encode/decode symmetric (no value templates).
 """
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
-from xknx import XKNX
-from xknx.remote_value import GroupAddressesType, RemoteValue, RemoteValueSwitch
+from xknx.dpt import DPTBase, DPTSwitch
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -22,6 +21,8 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import State
+
+from .storage.const import CONF_GA_COMMAND, CONF_GA_STATUS
 
 
 @dataclass(slots=True)
@@ -35,30 +36,19 @@ class LinkServiceCall:
 
 @dataclass(frozen=True)
 class ChannelDefinition:
-    """Static definition of an entity-link channel role for a platform.
+    """Static definition of an entity-link channel for a platform.
 
-    ``remote_value_factory`` is called with the status group address (HA state -> KNX) and
-    the command group addresses (KNX -> HA action).
+    `status_key` and `command_key` name the group address fields of the platform schema.
     """
 
-    remote_value_factory: Callable[[XKNX, str | None, list[str]], RemoteValue]
-    read_state: Callable[[State], Any | None]
+    status_key: str
+    command_key: str
+    dpt: type[DPTBase]
+    from_state: Callable[[State], Any | None]
     to_service_call: Callable[[str, Any], LinkServiceCall | None]
 
 
-def _switch_remote_value(
-    xknx: XKNX, status_ga: str | None, command_gas: list[str]
-) -> RemoteValueSwitch:
-    return RemoteValueSwitch(
-        xknx,
-        group_address=status_ga,
-        # validated group address strings are accepted by xknx as GroupAddressesType
-        group_address_state=cast(GroupAddressesType, command_gas) or None,
-        sync_state=False,
-    )
-
-
-def _switch_read_state(state: State) -> bool | None:
+def _switch_from_state(state: State) -> bool | None:
     if state.state == STATE_ON:
         return True
     if state.state == STATE_OFF:
@@ -74,12 +64,14 @@ def _switch_service_call(entity_id: str, value: bool) -> LinkServiceCall:
     )
 
 
-CHANNELS: dict[Platform, dict[str, ChannelDefinition]] = {
-    Platform.SWITCH: {
-        "switch": ChannelDefinition(
-            remote_value_factory=_switch_remote_value,
-            read_state=_switch_read_state,
+CHANNELS: dict[Platform, tuple[ChannelDefinition, ...]] = {
+    Platform.SWITCH: (
+        ChannelDefinition(
+            status_key=CONF_GA_STATUS,
+            command_key=CONF_GA_COMMAND,
+            dpt=DPTSwitch,
+            from_state=_switch_from_state,
             to_service_call=_switch_service_call,
         ),
-    },
+    ),
 }

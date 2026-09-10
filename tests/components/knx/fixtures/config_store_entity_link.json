@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "minor_version": 5,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {},
+    "expose": {},
+    "time_server": {},
+    "entity_links": {
+      "switch.test": {
+        "knx": {
+          "ga_status": { "write": "1/1/1" },
+          "ga_command": { "state": "2/2/2", "passive": [] },
+          "invert": false,
+          "respond_to_read": true,
+          "send_on_init": true,
+          "cooldown": 0.0,
+          "periodic_send": 0.0
+        }
+      }
+    }
+  }
+}

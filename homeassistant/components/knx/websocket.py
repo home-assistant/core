@@ -41,7 +41,10 @@ from .const import (
 from .dpt import get_supported_dpts
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
-from .storage.entity_link_schema import CONF_CHANNELS, validate_entity_link_data
+from .storage.entity_link_schema import (
+    LINK_SCHEMA_FOR_PLATFORM,
+    validate_entity_link_data,
+)
 from .storage.entity_store_schema import (
     CREATE_ENTITY_BASE_SCHEMA,
     UPDATE_ENTITY_BASE_SCHEMA,
@@ -91,7 +94,6 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_entity_links)
     websocket_api.async_register_command(hass, ws_get_entity_link_config)
     websocket_api.async_register_command(hass, ws_validate_entity_link)
-    websocket_api.async_register_command(hass, ws_create_entity_link)
     websocket_api.async_register_command(hass, ws_update_entity_link)
     websocket_api.async_register_command(hass, ws_delete_entity_link)
 
@@ -236,6 +238,7 @@ def ws_get_base_data(
             "dpt_metadata": get_supported_dpts(),
             "project_info": _project_info,
             "supported_platforms": sorted(SUPPORTED_PLATFORMS_UI),
+            "entity_link_platforms": sorted(LINK_SCHEMA_FOR_PLATFORM),
         },
     )
 
@@ -857,9 +860,8 @@ def ws_validate_expose(
 
 
 _ENTITY_LINK_DATA_SCHEMA: dict[str | vol.Marker, Any] = {
-    vol.Required(CONF_PLATFORM): str,
     vol.Required(CONF_ENTITY_ID): str,
-    vol.Required(CONF_CHANNELS): dict,  # validation done in handler
+    vol.Required(CONF_DATA): dict,  # validation done in handler
 }
 
 
@@ -919,14 +921,9 @@ def ws_get_entity_link_config(
     msg: dict,
 ) -> None:
     """Get a single entity link configuration from config store."""
-    try:
-        config = knx.config_store.get_entity_link_config(msg[CONF_ENTITY_ID])
-    except ConfigStoreException as err:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
-        )
-        return
-    connection.send_result(msg["id"], config)
+    connection.send_result(
+        msg["id"], knx.config_store.get_entity_link_config(msg[CONF_ENTITY_ID])
+    )
 
 
 @websocket_api.require_admin
@@ -956,39 +953,6 @@ def ws_validate_entity_link(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/create_entity_link",
-        **_ENTITY_LINK_DATA_SCHEMA,
-    }
-)
-@websocket_api.async_response
-@provide_knx
-async def ws_create_entity_link(
-    hass: HomeAssistant,
-    knx: KNXModule,
-    connection: websocket_api.ActiveConnection,
-    msg: dict,
-) -> None:
-    """Create an entity link in config store and load it."""
-    try:
-        validated_data = validate_entity_link_data(msg)
-    except EntityStoreValidationException as exc:
-        connection.send_result(msg["id"], exc.validation_error)
-        return
-    try:
-        entity_id = await knx.config_store.create_entity_link(validated_data)
-    except ConfigStoreException as err:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
-        )
-        return
-    connection.send_result(
-        msg["id"], EntityStoreValidationSuccess(success=True, entity_id=entity_id)
-    )
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
         vol.Required("type"): "knx/update_entity_link",
         **_ENTITY_LINK_DATA_SCHEMA,
     }
@@ -1001,14 +965,16 @@ async def ws_update_entity_link(
     connection: websocket_api.ActiveConnection,
     msg: dict,
 ) -> None:
-    """Update an entity link in config store."""
+    """Create or update an entity link in config store and load it."""
     try:
         validated_data = validate_entity_link_data(msg)
     except EntityStoreValidationException as exc:
         connection.send_result(msg["id"], exc.validation_error)
         return
     try:
-        await knx.config_store.update_entity_link(validated_data)
+        await knx.config_store.update_entity_link(
+            validated_data["entity_id"], validated_data["data"]
+        )
     except ConfigStoreException as err:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
