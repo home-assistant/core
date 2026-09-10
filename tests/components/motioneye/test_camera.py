@@ -245,9 +245,12 @@ async def test_get_stream_from_camera(
 ) -> None:
     """Test getting a stream."""
 
-    async def stream_handler(request: web.Request) -> web.Response:
-        assert request.headers["Authorization"] == "Basic Y2FtZXJhX3VzZXI6Y2FtZXJhX3Bhc3N3b3Jk"
-        return web.Response(body="")
+async def stream_handler(request: web.Request) -> web.Response:
+    assert (
+        request.headers["Authorization"]
+        == "Basic Y2FtZXJhX3VzZXI6Y2FtZXJhX3Bhc3N3b3Jk"
+    )
+    return web.Response(body="")
 
     app = web.Application()
     app.add_routes([web.get("/", stream_handler)])
