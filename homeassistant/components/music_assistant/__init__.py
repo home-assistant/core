@@ -38,7 +38,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
-from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DOMAIN, LOGGER
+from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DASHBOARD_DEVICE_MODEL, DOMAIN, LOGGER
 from .helpers import get_music_assistant_client
 from .services import register_actions
 
@@ -240,12 +240,19 @@ async def async_setup_entry(  # noqa: C901
         mass.subscribe(handle_player_config_updated, EventType.PLAYER_CONFIG_UPDATED)
     )
 
-    # check if any playerconfigs have been removed while we were disconnected
+    # check if any playerconfigs have been removed while we were disconnected.
+    # dashboard devices are excluded: their MA-side registration is
+    # connection-scoped, so the dashboard cache may still be empty right
+    # after a reconnect even though the endpoint is still very much alive -
+    # they're reconciled by manual device removal instead, guarded in
+    # async_remove_config_entry_device below.
     all_player_configs = await mass.config.get_player_configs()
     player_ids = {player.player_id for player in all_player_configs}
     dev_reg = dr.async_get(hass)
     dev_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
     for device in dev_entries:
+        if device.model == DASHBOARD_DEVICE_MODEL:
+            continue
         for identifier in device.identifiers:
             if identifier[0] == DOMAIN and identifier[1] not in player_ids:
                 dev_reg.async_remove_device(device.id)
@@ -297,7 +304,9 @@ async def async_remove_config_entry_device(
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
-    player_id = next(
+    # identifier value is a player_id for a player device, or a dashboard_id
+    # for a dashboard display device
+    identifier_value = next(
         (
             identifier[1]
             for identifier in device_entry.identifiers
@@ -305,16 +314,20 @@ async def async_remove_config_entry_device(
         ),
         None,
     )
-    if player_id is None:
+    if identifier_value is None:
         # this should not be possible at all, but guard it anyways
         return False
     mass = get_music_assistant_client(hass, config_entry.entry_id)
-    if mass.players.get(player_id) is None:
-        # player is already removed on the server, this is an orphaned device
+    if mass.dashboard.get(identifier_value) is not None:
+        # the display endpoint is still live, refuse removal
+        return False
+    if mass.players.get(identifier_value) is None:
+        # player (or dashboard endpoint) is already gone from the server,
+        # this is an orphaned device
         return True
     # try to remove the player from the server
     try:
-        await mass.config.remove_player_config(player_id)
+        await mass.config.remove_player_config(identifier_value)
     except ActionUnavailable:
         return False
     else:

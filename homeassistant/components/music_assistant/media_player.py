@@ -10,6 +10,7 @@ from music_assistant_client.helpers import LinkedUser
 from music_assistant_models.auth import AuthProviderType
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
+    DashboardType,
     EventType,
     MediaType,
     PlayerFeature,
@@ -26,7 +27,9 @@ from music_assistant_models.player_queue import PlayerQueue
 from homeassistant.components import media_source, tts
 from homeassistant.components.media_player import (
     ATTR_MEDIA_EXTRA,
+    BrowseError,
     BrowseMedia,
+    MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
@@ -59,9 +62,10 @@ from .const import (
     ATTR_RADIO_MODE,
     ATTR_REPEAT_MODE,
     ATTR_SHUFFLE_ENABLED,
+    DEFAULT_NAME,
     DOMAIN,
 )
-from .entity import MusicAssistantEntity
+from .entity import MusicAssistantDashboardEntity, MusicAssistantEntity
 from .helpers import catch_musicassistant_error, catch_user_not_found
 from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
@@ -127,6 +131,11 @@ MASS_ICON_TO_MDI: Mapping[str, str] = {
 }
 
 
+# the only media_content_type this platform's dashboard players accept
+MEDIA_CONTENT_TYPE_DASHBOARD = "dashboard"
+NOW_PLAYING_ID_PREFIX = f"{DashboardType.NOW_PLAYING.value}/"
+
+
 def _get_mdi_icon(icon: str) -> str:
     """Return an MDI icon for a Music Assistant icon."""
     if icon.startswith("mdi:"):
@@ -150,6 +159,49 @@ async def async_setup_entry(
 
     # register callback to add players when they are discovered
     entry.runtime_data.platform_handlers.setdefault(Platform.MEDIA_PLAYER, add_player)
+
+    # dashboard display devices are only known through the dashboard cache,
+    # which is populated on connect and kept fresh via DASHBOARDS_UPDATED.
+    # known_dashboard_ids is scoped to this setup call, so a reload starts
+    # fresh and always (re)creates entities for whatever is in the cache.
+    known_dashboard_ids: set[str] = set()
+    entity_registry = er.async_get(hass)
+
+    def add_dashboards() -> None:
+        """Add dashboard players for endpoints not yet known to HA.
+
+        An id already seen this run is skipped only while it still has a
+        registered entity - if its entity was removed in the meantime (e.g.
+        a stale device deleted via the UI), it's treated as new again so a
+        later re-registration doesn't leave it without an entity.
+        """
+        new_entities: list[MusicAssistantDashboardPlayer] = []
+        for dashboard in mass.dashboard.dashboards:
+            if dashboard.dashboard_id in known_dashboard_ids and (
+                entity_registry.async_get_entity_id(
+                    Platform.MEDIA_PLAYER,
+                    DOMAIN,
+                    f"{dashboard.dashboard_id}_dashboard",
+                )
+            ):
+                continue
+            known_dashboard_ids.add(dashboard.dashboard_id)
+            new_entities.append(
+                MusicAssistantDashboardPlayer(mass, dashboard.dashboard_id)
+            )
+        if new_entities:
+            async_add_entities(new_entities)
+
+    def handle_dashboards_updated(event: MassEvent) -> None:
+        """Handle the dashboard endpoint cache being refreshed."""
+        add_dashboards()
+
+    entry.async_on_unload(
+        mass.subscribe(handle_dashboards_updated, EventType.DASHBOARDS_UPDATED)
+    )
+
+    # add all dashboard endpoints already known at setup
+    add_dashboards()
 
 
 class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
@@ -768,3 +820,211 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         if PlayerFeature.SELECT_SOUND_MODE in self.player.supported_features:
             supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         self._attr_supported_features = supported_features
+
+
+class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEntity):
+    """Representation of a Music Assistant dashboard display device."""
+
+    _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.TV
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        self._update_from_session()
+        self.async_on_remove(
+            self.mass.subscribe(
+                self.__on_session_updated, EventType.DASHBOARD_SESSIONS_UPDATED
+            )
+        )
+
+    async def __on_session_updated(self, event: MassEvent) -> None:
+        """Handle the dashboard's active session changing."""
+        self._update_from_session()
+        self.async_write_ha_state()
+
+    @catch_musicassistant_error
+    @override
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Show a dashboard on this display."""
+        if media_type != MEDIA_CONTENT_TYPE_DASHBOARD:
+            raise ServiceValidationError(
+                "Music Assistant dashboard players only accept media_content_type "
+                f"'{MEDIA_CONTENT_TYPE_DASHBOARD}', got '{media_type}'"
+            )
+        dashboard_type, player_id = self._parse_play_media_id(media_id)
+        await self.mass.dashboard.show(self.dashboard_id, dashboard_type, player_id)
+
+    @catch_musicassistant_error
+    @override
+    async def async_turn_off(self) -> None:
+        """Hide the dashboard from this display."""
+        await self.mass.dashboard.hide(self.dashboard_id)
+
+    @override
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Browse the dashboards this display can show."""
+        if media_content_id in (None, ""):
+            return self._build_root_listing()
+        if media_content_id == "now_playing":
+            return self._build_now_playing_listing()
+        raise BrowseError(f"Media not found: {media_content_id}")
+
+    def _update_from_session(self) -> None:
+        """Update state and media attributes from the active session."""
+        session = self.mass.dashboard.get_session(self.dashboard_id)
+        if session is None:
+            self._attr_state = MediaPlayerState.IDLE
+            self._attr_media_content_type = None
+            self._attr_media_content_id = None
+            self._attr_media_title = None
+            return
+        self._attr_state = MediaPlayerState.PLAYING
+        self._attr_media_content_type = MEDIA_CONTENT_TYPE_DASHBOARD
+        if session.dashboard == DashboardType.PARTY:
+            self._attr_media_content_id = DashboardType.PARTY.value
+            self._attr_media_title = "Party"
+        elif session.dashboard == DashboardType.MUSIC_QUIZ:
+            self._attr_media_content_id = DashboardType.MUSIC_QUIZ.value
+            self._attr_media_title = "Music quiz"
+        else:
+            player_id = session.player_id or ""
+            self._attr_media_content_id = f"{NOW_PLAYING_ID_PREFIX}{player_id}"
+            player = self.mass.players.get(player_id) if player_id else None
+            player_label = player.name if player is not None else player_id
+            self._attr_media_title = f"Now playing: {player_label}"
+
+    def _parse_play_media_id(
+        self, media_content_id: str
+    ) -> tuple[DashboardType, str | None]:
+        """Validate a play_media content id and split it into a type and player id."""
+        dashboard = self.mass.dashboard.get(self.dashboard_id)
+        if TYPE_CHECKING:
+            assert dashboard is not None
+
+        player_id: str | None = None
+        if media_content_id.startswith(NOW_PLAYING_ID_PREFIX):
+            dashboard_type = DashboardType.NOW_PLAYING
+            player_id = media_content_id.removeprefix(NOW_PLAYING_ID_PREFIX)
+        else:
+            dashboard_type = DashboardType(media_content_id)
+
+        valid_types = sorted(
+            supported.value
+            for supported in dashboard.supported_types
+            if supported != DashboardType.UNKNOWN
+        )
+        if dashboard_type == DashboardType.UNKNOWN:
+            raise ServiceValidationError(
+                f"Unknown dashboard '{media_content_id}', expected one of "
+                f"{', '.join(valid_types)} or {NOW_PLAYING_ID_PREFIX}<player_id>"
+            )
+        if dashboard_type not in dashboard.supported_types:
+            raise ServiceValidationError(
+                f"Display '{self.name}' does not support '{dashboard_type.value}', "
+                f"expected one of {', '.join(valid_types)}"
+            )
+        if dashboard_type == DashboardType.NOW_PLAYING:
+            player = self.mass.players.get(player_id) if player_id else None
+            if player is None or not player.expose_to_ha:
+                exposed = sorted(
+                    player.player_id
+                    for player in self.mass.players
+                    if player.expose_to_ha
+                )
+                raise ServiceValidationError(
+                    f"Unknown or unexposed player '{player_id}', expected one of "
+                    f"{', '.join(exposed)}"
+                )
+        return dashboard_type, player_id
+
+    def _build_root_listing(self) -> BrowseMedia:
+        """Build the root browse listing, filtered to this display's dashboards."""
+        dashboard = self.mass.dashboard.get(self.dashboard_id)
+        if TYPE_CHECKING:
+            assert dashboard is not None
+
+        children: list[BrowseMedia] = []
+        if DashboardType.PARTY in dashboard.supported_types:
+            children.append(
+                BrowseMedia(
+                    media_class=MediaClass.APP,
+                    media_content_id=DashboardType.PARTY.value,
+                    media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
+                    title="Party",
+                    can_play=True,
+                    can_expand=False,
+                )
+            )
+        if DashboardType.MUSIC_QUIZ in dashboard.supported_types:
+            children.append(
+                BrowseMedia(
+                    media_class=MediaClass.APP,
+                    media_content_id=DashboardType.MUSIC_QUIZ.value,
+                    media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
+                    title="Music quiz",
+                    can_play=True,
+                    can_expand=False,
+                )
+            )
+        if DashboardType.NOW_PLAYING in dashboard.supported_types:
+            children.append(
+                BrowseMedia(
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_id="now_playing",
+                    media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
+                    title="Now playing",
+                    can_play=False,
+                    can_expand=True,
+                    children_media_class=MediaClass.APP,
+                )
+            )
+
+        return BrowseMedia(
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="",
+            media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
+            title=DEFAULT_NAME,
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
+    def _build_now_playing_listing(self) -> BrowseMedia:
+        """Build the now playing folder, one playable child per exposed player."""
+        players = sorted(
+            (player for player in self.mass.players if player.expose_to_ha),
+            key=lambda player: player.name,
+        )
+        return BrowseMedia(
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="now_playing",
+            media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
+            title="Now playing",
+            can_play=False,
+            can_expand=True,
+            children_media_class=MediaClass.APP,
+            children=[
+                BrowseMedia(
+                    media_class=MediaClass.APP,
+                    media_content_id=f"{NOW_PLAYING_ID_PREFIX}{player.player_id}",
+                    media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
+                    title=player.name,
+                    can_play=True,
+                    can_expand=False,
+                )
+                for player in players
+            ],
+        )

@@ -7,10 +7,11 @@ from music_assistant_models.event import MassEvent
 from music_assistant_models.player import Player, PlayerOption
 
 from homeassistant.const import EntityCategory
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DASHBOARD_DEVICE_MODEL, DOMAIN
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
@@ -129,3 +130,55 @@ class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Callback for player option updates."""
+
+
+class MusicAssistantDashboardEntity(Entity):
+    """Base entity for a Music Assistant dashboard display device."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(self, mass: MusicAssistantClient, dashboard_id: str) -> None:
+        """Initialize MusicAssistantDashboardEntity."""
+        self.mass = mass
+        self.dashboard_id = dashboard_id
+        # this is only ever constructed for a dashboard_id known to the cache
+        dashboard = mass.dashboard.get(dashboard_id)
+        if TYPE_CHECKING:
+            assert dashboard is not None
+        self._attr_unique_id = f"{dashboard_id}_dashboard"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, dashboard_id)},
+            name=dashboard.name,
+            manufacturer="Music Assistant",
+            model=DASHBOARD_DEVICE_MODEL,
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return availability of entity."""
+        return self.mass.dashboard.get(self.dashboard_id) is not None and bool(
+            self.mass.connection.connected
+        )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        self.async_on_remove(
+            self.mass.subscribe(
+                self.__on_dashboards_updated, EventType.DASHBOARDS_UPDATED
+            )
+        )
+
+    async def __on_dashboards_updated(self, event: MassEvent) -> None:
+        """Refresh availability, and the device name if it was re-registered."""
+        if (
+            (dashboard := self.mass.dashboard.get(self.dashboard_id)) is not None
+            and self.device_entry is not None
+            and self.device_entry.name != dashboard.name
+        ):
+            dr.async_get(self.hass).async_update_device(
+                self.device_entry.id, name=dashboard.name
+            )
+        self.async_write_ha_state()
