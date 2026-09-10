@@ -5,12 +5,13 @@ import logging
 
 from httpx import RequestError
 from wolf_comm.models import Device
+from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, WolfClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -33,6 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> 
 
     try:
         devices = await wolf_client.fetch_system_list()
+    except InvalidAuth as exception:
+        raise ConfigEntryAuthFailed(f"Invalid credentials: {exception}") from exception
     except (FetchFailed, RequestError) as exception:
         raise ConfigEntryNotReady(
             f"Error communicating with API: {exception}"
