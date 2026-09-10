@@ -41,7 +41,7 @@ Additional sources:
 - Check for common mistakes, anti-patterns, edge cases, and error handling requirements
 - Validate that implementations follow Home Assistant conventions
 
-Quality scale rules are cumulative: Bronze rules apply to all integrations with a quality scale, Silver rules apply to Silver+ integrations, and so on. Always consider the integration's target quality level when determining which rules to enforce.
+Quality scale rules are cumulative: Bronze rules apply to every integration whose `quality_scale` names a tier (`bronze`, `silver`, `gold` or `platinum`), Silver rules apply to Silver+ integrations, and so on. Any other accepted value, `legacy` for instance, is not a tier and is held to no rule. Always consider the integration's target quality level when determining which rules to enforce.
 
 ## 5. Report findings
 Report only the rules that have issues. Do not list rules that pass or that are validly exempt. For each rule with an issue, provide:
