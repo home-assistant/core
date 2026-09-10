@@ -105,7 +105,7 @@
           "exponential_backoff": "Waiting for restart delay",
           "heat_cool_delay": "Waiting for heating to cooling delay",
           "indoor_unit_connected": "Indoor unit not connected",
-          "inside_temperature": "Room not warmer than target",
+          "inside_temperature": "Room warmer than target",
           "none": "Not blocked",
           "outside_air_temperature": "Outside temperature too low",
           "water_temperature": "Water not warmer than cooling curve",
