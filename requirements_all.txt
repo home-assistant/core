@@ -3555,7 +3555,7 @@ zha-quirks==2.2.2
 zha==2.2.2
 
 # homeassistant.components.zhong_hong
-zhong-hong-hvac==1.0.19
+zhong-hong-hvac==1.0.21
 
 # homeassistant.components.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.1.0
