@@ -22,11 +22,11 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 from tests.components.infrared import EMITTER_ENTITY_ID as MOCK_INFRARED_ENTITY_ID
 from tests.components.infrared.common import MockInfraredEmitterEntity
 
@@ -295,3 +295,33 @@ async def test_custom_command_step_delay_is_used_when_stepping(
 
     # Stepping speed 5 to 8 sends three commands, delayed only between them.
     assert mock_sleep.call_args_list == [call(1.5), call(1.5)]
+
+
+FAN_ENTITY_ID = "fan.dyson_fan_via_test_ir_emitter_dyson_fan"
+
+
+@pytest.mark.usefixtures("mock_make_dyson_cool_command", "mock_infrared_emitter_entity")
+async def test_restores_state_after_restart(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the assumed on/speed/oscillation state survives a restart."""
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                FAN_ENTITY_ID,
+                STATE_ON,
+                {ATTR_PERCENTAGE: 80, ATTR_OSCILLATING: True},
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PERCENTAGE] == 80
+    assert state.attributes[ATTR_OSCILLATING] is True

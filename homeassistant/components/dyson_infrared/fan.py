@@ -5,12 +5,19 @@ from typing import Any, override
 
 from infrared_protocols.codes.dyson.cool import DysonCoolCode
 
-from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    FanEntity,
+    FanEntityFeature,
+)
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CONF_COMMAND_STEP_DELAY,
@@ -19,7 +26,7 @@ from .const import (
     DOMAIN,
 )
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -39,7 +46,7 @@ async def async_setup_entry(
     )
 
 
-class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
+class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity, RestoreEntity):
     """Representation of a Dyson infrared fan entity."""
 
     _attr_translation_key = "fan"
@@ -72,6 +79,21 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
             identifiers={(DOMAIN, unique_id)},
             name=name,
         )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the assumed state, as infrared cannot read it back from the fan."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+        if last_state is None or last_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return
+
+        self._attr_is_on = last_state.state == STATE_ON
+        if (percentage := last_state.attributes.get(ATTR_PERCENTAGE)) is not None:
+            self._attr_percentage = int(percentage)
+        if (oscillating := last_state.attributes.get(ATTR_OSCILLATING)) is not None:
+            self._attr_oscillating = bool(oscillating)
 
     @property
     @override

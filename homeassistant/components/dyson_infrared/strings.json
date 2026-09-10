@@ -52,6 +52,9 @@
     }
   },
   "exceptions": {
+    "target_temperature_outside_heat": {
+      "message": "The Dyson AM09 can only set a target temperature while heating, so it cannot be set together with the \"{hvac_mode}\" mode."
+    },
     "unknown_device_type": {
       "message": "The configuration entry has an unsupported device type \"{device_type}\". Delete the entry and set it up again."
     }
