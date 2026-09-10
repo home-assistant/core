@@ -1,16 +1,40 @@
 """Test the httpx client helper."""
 
-from unittest.mock import Mock, patch
+from collections.abc import Callable, Generator
+from functools import partial
+from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 import pytest
 
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import httpx_client as client
 from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSL_ALPN_HTTP11_HTTP2
 
-from tests.common import MockModule, extract_stack_to_frame, mock_integration
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    extract_stack_to_frame,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
+
+
+@pytest.fixture
+def mock_comp_flow() -> Generator[None]:
+    """Mock a config flow for the comp integration."""
+
+    class MockConfigFlow:
+        """Mock the comp config flow."""
+
+        VERSION = 1
+        MINOR_VERSION = 1
+
+    with mock_config_flow("comp", MockConfigFlow):
+        yield
 
 
 async def test_get_async_client_with_ssl(hass: HomeAssistant) -> None:
@@ -296,3 +320,125 @@ async def test_warning_close_session_custom(
         "at custom_components/hue/light.py, line 23: await session.aclose(). "
         "Please report it to the author of the 'hue' custom integration"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "client_factory",
+        "listener_delta_after_setup",
+        "closed_after_unload",
+        "listener_delta_after_unload",
+        "closed_after_close_event",
+    ),
+    [
+        pytest.param(
+            client.create_async_httpx_client, 1, True, 0, True, id="created_client"
+        ),
+        pytest.param(client.get_async_client, 1, False, 1, True, id="shared_client"),
+        pytest.param(
+            partial(client.create_async_httpx_client, auto_cleanup=False),
+            0,
+            False,
+            0,
+            False,
+            id="no_auto_cleanup",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_comp_flow")
+async def test_httpx_client_cleanup_on_entry_unload(
+    hass: HomeAssistant,
+    client_factory: Callable[[HomeAssistant], httpx.AsyncClient],
+    listener_delta_after_setup: int,
+    closed_after_unload: bool,
+    listener_delta_after_unload: int,
+    closed_after_close_event: bool,
+) -> None:
+    """Test cleanup of a client created during config entry setup."""
+    baseline = hass.bus.async_listeners().get(EVENT_HOMEASSISTANT_CLOSE, 0)
+    created: list[httpx.AsyncClient] = []
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        created.append(client_factory(hass))
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    entry = MockConfigEntry(domain="comp")
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert (
+        hass.bus.async_listeners().get(EVENT_HOMEASSISTANT_CLOSE, 0)
+        == baseline + listener_delta_after_setup
+    )
+    assert not created[0].is_closed
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert created[0].is_closed is closed_after_unload
+    assert (
+        hass.bus.async_listeners().get(EVENT_HOMEASSISTANT_CLOSE, 0)
+        == baseline + listener_delta_after_unload
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+    await hass.async_block_till_done()
+    assert created[0].is_closed is closed_after_close_event
+
+
+@pytest.mark.usefixtures("mock_comp_flow")
+async def test_get_async_client_survives_entry_unload(hass: HomeAssistant) -> None:
+    """Test the shared client is not entry-bound even when first created in setup."""
+    shared: list[httpx.AsyncClient] = []
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        shared.append(client.get_async_client(hass))
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    entry = MockConfigEntry(domain="comp")
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert shared[0] is hass.data[client.DATA_ASYNC_CLIENT][(True, SSL_ALPN_HTTP11)]
+    assert not shared[0].is_closed
+    assert client.get_async_client(hass) is shared[0]
+
+
+async def test_create_async_httpx_client_outside_entry_cleanup(
+    hass: HomeAssistant,
+) -> None:
+    """Test a client created outside entry setup is closed on homeassistant_close."""
+    baseline = hass.bus.async_listeners().get(EVENT_HOMEASSISTANT_CLOSE, 0)
+
+    httpx_client = client.create_async_httpx_client(hass)
+    assert hass.bus.async_listeners().get(EVENT_HOMEASSISTANT_CLOSE, 0) == baseline + 1
+    assert not httpx_client.is_closed
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+    await hass.async_block_till_done()
+    assert httpx_client.is_closed
