@@ -10007,6 +10007,44 @@ async def test_async_get_returns_restored_composite(
     )
 
 
+async def test_is_composite_device_main_and_child(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A plain main device and a child device are not composites."""
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    assert parent.is_composite_device is False
+    assert child_device.is_composite_device is False
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_is_composite_device_restored_composite(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A restored composite reports is_composite_device True."""
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    hass_storage[dr.STORAGE_KEY] = _composite_device_storage(entry_a, entry_b)
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    device_registry = dr.async_get(hass)
+
+    composite = device_registry.async_get(COMPOSITE_ID)
+    assert composite is not None
+    assert composite.is_composite_device is True
+    # The split devices the composite was restored from are not composites
+    split_a = _get_device_for_config_entry(
+        device_registry, entry_a.entry_id, identifiers={("domain_a", "1")}
+    )
+    assert split_a.is_composite_device is False
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_restored_composite_preserves_primary_config_entry(
     hass: HomeAssistant, hass_storage: dict[str, Any]
