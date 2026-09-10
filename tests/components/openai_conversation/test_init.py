@@ -1,7 +1,7 @@
 """Tests for the OpenAI integration."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import attr
 import httpx
