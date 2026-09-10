@@ -1,5 +1,7 @@
 """Config flow for ISEO Argo BLE Lock."""
 
+import asyncio
+from contextlib import AsyncExitStack
 import logging
 from typing import Any, override
 import uuid as uuid_module
@@ -259,14 +261,25 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     subtype=DEFAULT_USER_SUBTYPE,
                     ble_device=ble_device,
                 )
+                # Reconfiguring runs against a loaded entry whose lock entity
+                # is still polling and still answering unlock. The lock takes
+                # one connection at a time, so a second one opening mid-scan
+                # aborts the enrolment; hold the entry's own mutex to keep
+                # them out of each other's way.
+                ble_lock = self._async_entry_ble_lock() if reconfiguring else None
                 try:
-                    await client.setup_gateway(
-                        name="Home Assistant",
-                        admin_uuid_bytes=bytes.fromhex(self._admin_uuid_hex)
-                        if enable_admin
-                        else None,
-                        admin_identity_priv=self._admin_priv if enable_admin else None,
-                    )
+                    async with AsyncExitStack() as stack:
+                        if ble_lock is not None:
+                            await stack.enter_async_context(ble_lock)
+                        await client.setup_gateway(
+                            name="Home Assistant",
+                            admin_uuid_bytes=bytes.fromhex(self._admin_uuid_hex)
+                            if enable_admin
+                            else None,
+                            admin_identity_priv=self._admin_priv
+                            if enable_admin
+                            else None,
+                        )
                     if reconfiguring:
                         return self._async_update_iseo_entry()
                     return self._async_create_iseo_entry(with_admin=enable_admin)
@@ -305,6 +318,12 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             title=self._device_name or f"ISEO Lock ({self._address})",
             data=data,
         )
+
+    def _async_entry_ble_lock(self) -> asyncio.Lock | None:
+        """Return the loaded entry's BLE mutex, if it has one."""
+        entry = self._get_reconfigure_entry()
+        data = getattr(entry, "runtime_data", None)
+        return None if data is None else data.ble_lock
 
     def _async_update_iseo_entry(self) -> ConfigFlowResult:
         """Add the admin identity to the config entry being reconfigured."""
