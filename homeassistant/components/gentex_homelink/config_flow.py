@@ -67,7 +67,6 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 self._get_reauth_entry(),
                 data_updates=data,
                 title=entry_title,
-                reason="reauth_successful",
             )
         self._abort_if_unique_id_configured()
         return self.async_create_entry(data=data, title=entry_title)
