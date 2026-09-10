@@ -298,7 +298,7 @@ def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
 
 
 @_device_info_fields
-@attr.s(auto_attribs=True, eq=False, repr=False, slots=True)
+@attr.s(auto_attribs=True, eq=False, repr=False, slots=True, weakref_slot=False)
 class DeviceInfo(_DeviceInfoMapping):
     """Entity device information for device registry."""
 
@@ -333,7 +333,7 @@ class DeviceInfo(_DeviceInfoMapping):
 
 
 @_device_info_fields
-@attr.s(auto_attribs=True, eq=False, repr=False, slots=True)
+@attr.s(auto_attribs=True, eq=False, repr=False, slots=True, weakref_slot=False)
 class ChildDeviceInfo(_DeviceInfoMapping):
     """Entity device information for a child device in the device registry.
 
