@@ -8,7 +8,14 @@ import pytest
 from homeassistant.components.matrix import MatrixBot
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
-from .conftest import TEST_DEVICE_ID, TEST_MXID, TEST_PASSWORD, TEST_TOKEN
+from .conftest import (
+    TEST_DEVICE_ID,
+    TEST_MXID,
+    TEST_OTHER_MXID,
+    TEST_OTHER_TOKEN,
+    TEST_PASSWORD,
+    TEST_TOKEN,
+)
 
 
 @dataclass
@@ -125,6 +132,33 @@ bad_configured_token_no_password = LoginTestParameters(
     expected_token_stored=False,
 )
 
+configured_token_for_other_user = LoginTestParameters(
+    password=None,
+    configured_access_token=TEST_OTHER_TOKEN,
+    access_token={},
+    expected_login_state=False,
+    expected_caplog_messages={
+        "Restoring login from configured access token",
+        f"The access token belongs to '{TEST_OTHER_MXID}', not to the configured"
+        f" username '{TEST_MXID}'",
+    },
+    unexpected_caplog_messages={"Logging in using password"},
+    expected_expection=ConfigEntryAuthFailed,
+    expected_token_stored=False,
+)
+
+stored_token_for_other_user = LoginTestParameters(
+    password=TEST_PASSWORD,
+    access_token={TEST_MXID: TEST_OTHER_TOKEN},
+    expected_login_state=True,
+    expected_caplog_messages={
+        "Restoring login from stored access token",
+        f"The access token belongs to '{TEST_OTHER_MXID}', not to the configured"
+        f" username '{TEST_MXID}'",
+        "Logging in using password",
+    },
+)
+
 
 @pytest.mark.parametrize(
     "params",
@@ -137,6 +171,8 @@ bad_configured_token_no_password = LoginTestParameters(
         configured_token_no_password,
         configured_token_overrides_stored_token,
         bad_configured_token_no_password,
+        configured_token_for_other_user,
+        stored_token_for_other_user,
     ],
 )
 async def test_login(

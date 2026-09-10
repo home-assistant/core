@@ -74,6 +74,9 @@ TEST_MXID = "@user:example.com"
 TEST_DEVICE_ID = "FAKEID"
 TEST_PASSWORD = "password"
 TEST_TOKEN = "access_token"
+TEST_OTHER_MXID = "@other_user:example.com"
+TEST_OTHER_TOKEN = "other_access_token"
+TEST_TOKEN_OWNERS = {TEST_TOKEN: TEST_MXID, TEST_OTHER_TOKEN: TEST_OTHER_MXID}
 
 NIO_IMPORT_PREFIX = "homeassistant.components.matrix.nio."
 
@@ -116,11 +119,11 @@ class _MockAsyncClient(AsyncClient):
         self.access_token = ""
 
     async def whoami(self):
-        if self.access_token == TEST_TOKEN:
-            self.user_id = TEST_MXID
+        if (user_id := TEST_TOKEN_OWNERS.get(self.access_token)) is not None:
+            self.user_id = user_id
             self.device_id = TEST_DEVICE_ID
             return WhoamiResponse(
-                user_id=TEST_MXID, device_id=TEST_DEVICE_ID, is_guest=False
+                user_id=user_id, device_id=TEST_DEVICE_ID, is_guest=False
             )
         self.access_token = ""
         return WhoamiError(

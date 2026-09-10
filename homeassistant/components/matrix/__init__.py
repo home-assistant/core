@@ -472,12 +472,21 @@ class MatrixBot:
                     ""  # Force a soft-logout if the homeserver didn't.
                 )
             elif isinstance(response, WhoamiResponse):
-                _LOGGER.debug(
-                    "Successfully restored login from access token:"
-                    " user_id '%s', device_id '%s'",
-                    response.user_id,
-                    response.device_id,
-                )
+                if response.user_id != self._mx_id:
+                    _LOGGER.warning(
+                        "The access token belongs to '%s', not to the configured"
+                        " username '%s'",
+                        response.user_id,
+                        self._mx_id,
+                    )
+                    self._client.access_token = ""
+                else:
+                    _LOGGER.debug(
+                        "Successfully restored login from access token:"
+                        " user_id '%s', device_id '%s'",
+                        response.user_id,
+                        response.device_id,
+                    )
 
         # If the token login did not succeed
         if not self._client.logged_in and self._password is not None:
