@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, call
 from music_assistant_models.dashboard import DashboardDevice, DashboardSession
 from music_assistant_models.enums import DashboardType, EventType
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
@@ -13,9 +14,18 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TITLE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_PLAY_MEDIA,
+    MediaPlayerEntityFeature,
 )
-from homeassistant.components.music_assistant.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_UNAVAILABLE
+from homeassistant.components.music_assistant.const import ATTR_URL, DOMAIN
+from homeassistant.components.music_assistant.services import SERVICE_PLAY_ANNOUNCEMENT
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -23,6 +33,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .common import (
     setup_dashboards,
     setup_integration_from_fixtures,
+    snapshot_music_assistant_entities,
     trigger_subscription_callback,
 )
 
@@ -31,6 +42,22 @@ from tests.typing import WebSocketGenerator
 KITCHEN_ENTITY_ID = "media_player.kitchen_display"
 HALLWAY_ENTITY_ID = "media_player.hallway_display"
 UNMAPPED_ENTITY_ID = "media_player.unmapped_player_display"
+
+
+def _dashboards_event_data(music_assistant_client: MagicMock) -> list[dict]:
+    """Build the DASHBOARDS_UPDATED event payload for the cache's current state."""
+    return [
+        dashboard.to_dict()
+        for dashboard in music_assistant_client.dashboard._dashboards.values()
+    ]
+
+
+def _sessions_event_data(music_assistant_client: MagicMock) -> list[dict]:
+    """Build the DASHBOARD_SESSIONS_UPDATED event payload for the cache's current state."""
+    return [
+        session.to_dict()
+        for session in music_assistant_client.dashboard._sessions.values()
+    ]
 
 
 async def _play_media(
@@ -60,7 +87,7 @@ async def test_dashboard_player_entities_from_cache(
     config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
 
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "chromecast_kitchen"), config_entry.entry_id
+        (DOMAIN, "chromecast_kitchen_dashboard"), config_entry.entry_id
     )
     assert device
     assert device.manufacturer == "Music Assistant"
@@ -79,6 +106,12 @@ async def test_dashboard_player_entities_from_cache(
     assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == "dashboard"
     assert state.attributes[ATTR_MEDIA_CONTENT_ID] == "now_playing/00:00:00:00:00:01"
     assert state.attributes[ATTR_MEDIA_TITLE] == "Now playing: Test Player 1"
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
 
     # fully_kiosk_hallway has no active session
     hallway_state = hass.states.get(HALLWAY_ENTITY_ID)
@@ -204,7 +237,7 @@ async def test_dashboard_play_media_now_playing_missing_player(
     setup_dashboards(music_assistant_client)
     await setup_integration_from_fixtures(hass, music_assistant_client)
 
-    with pytest.raises(ServiceValidationError, match="player"):
+    with pytest.raises(ServiceValidationError, match="requires a player"):
         await _play_media(hass, HALLWAY_ENTITY_ID, "now_playing")
 
 
@@ -383,7 +416,10 @@ async def test_dashboard_dynamic_add_and_unavailable(
         supported_types={DashboardType.PARTY},
     )
     await trigger_subscription_callback(
-        hass, music_assistant_client, EventType.DASHBOARDS_UPDATED
+        hass,
+        music_assistant_client,
+        EventType.DASHBOARDS_UPDATED,
+        data=_dashboards_event_data(music_assistant_client),
     )
 
     new_state = hass.states.get("media_player.new_display")
@@ -394,7 +430,10 @@ async def test_dashboard_dynamic_add_and_unavailable(
     # entity stays but becomes unavailable
     del music_assistant_client.dashboard._dashboards["new_display"]
     await trigger_subscription_callback(
-        hass, music_assistant_client, EventType.DASHBOARDS_UPDATED
+        hass,
+        music_assistant_client,
+        EventType.DASHBOARDS_UPDATED,
+        data=_dashboards_event_data(music_assistant_client),
     )
 
     new_state = hass.states.get("media_player.new_display")
@@ -424,7 +463,10 @@ async def test_dashboard_session_mirroring(
         )
     )
     await trigger_subscription_callback(
-        hass, music_assistant_client, EventType.DASHBOARD_SESSIONS_UPDATED
+        hass,
+        music_assistant_client,
+        EventType.DASHBOARD_SESSIONS_UPDATED,
+        data=_sessions_event_data(music_assistant_client),
     )
     state = hass.states.get(HALLWAY_ENTITY_ID)
     assert state.state == "playing"
@@ -441,7 +483,10 @@ async def test_dashboard_session_mirroring(
         )
     )
     await trigger_subscription_callback(
-        hass, music_assistant_client, EventType.DASHBOARD_SESSIONS_UPDATED
+        hass,
+        music_assistant_client,
+        EventType.DASHBOARD_SESSIONS_UPDATED,
+        data=_sessions_event_data(music_assistant_client),
     )
     state = hass.states.get(HALLWAY_ENTITY_ID)
     assert state.state == "playing"
@@ -451,8 +496,181 @@ async def test_dashboard_session_mirroring(
     # the session ends
     del music_assistant_client.dashboard._sessions["fully_kiosk_hallway"]
     await trigger_subscription_callback(
-        hass, music_assistant_client, EventType.DASHBOARD_SESSIONS_UPDATED
+        hass,
+        music_assistant_client,
+        EventType.DASHBOARD_SESSIONS_UPDATED,
+        data=_sessions_event_data(music_assistant_client),
     )
     state = hass.states.get(HALLWAY_ENTITY_ID)
     assert state.state == "idle"
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is None
+
+
+async def test_dashboard_browse_media_unknown_content_id(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test browsing an id that isn't a known dashboard or the now_playing folder."""
+    setup_dashboards(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": KITCHEN_ENTITY_ID,
+            "media_content_type": "dashboard",
+            "media_content_id": "not_a_real_id",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response["error"]["code"] == "unknown_error"
+
+
+async def test_dashboard_browse_media_display_gone_from_cache(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test browsing a display that dropped out of the dashboard cache.
+
+    The browse websocket command fetches the entity directly and does not
+    filter on availability, so this can be hit on a still-registered but
+    unavailable display.
+    """
+    setup_dashboards(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    client = await hass_ws_client(hass)
+
+    del music_assistant_client.dashboard._dashboards["chromecast_kitchen"]
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": KITCHEN_ENTITY_ID,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response["error"]["code"] == "unknown_error"
+
+
+async def test_dashboard_browse_media_now_playing_folder_unsupported(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test browsing the now_playing folder directly on a display that lacks it."""
+    setup_dashboards(music_assistant_client)
+    music_assistant_client.dashboard._dashboards["party_only_display"] = (
+        DashboardDevice(
+            dashboard_id="party_only_display",
+            name="Party Only Display",
+            supported_types={DashboardType.PARTY},
+        )
+    )
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.party_only_display",
+            "media_content_type": "dashboard",
+            "media_content_id": "now_playing",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response["error"]["code"] == "unknown_error"
+
+
+async def test_dashboard_media_player_snapshot(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test dashboard display media player entities against a snapshot."""
+    setup_dashboards(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    snapshot_music_assistant_entities(
+        hass, entity_registry, snapshot, Platform.MEDIA_PLAYER
+    )
+
+
+async def test_platform_entity_service_rejects_display(
+    hass: HomeAssistant, music_assistant_client: MagicMock
+) -> None:
+    """Test a player-only platform entity service fails cleanly on a display.
+
+    These services (play_media, play_announcement, transfer_queue,
+    get_queue) are registered for every music_assistant media_player
+    entity; a display doesn't implement them and must be rejected up
+    front, not crash with an AttributeError.
+    """
+    setup_dashboards(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_ANNOUNCEMENT,
+            {
+                ATTR_ENTITY_ID: KITCHEN_ENTITY_ID,
+                ATTR_URL: "http://blah.com/announcement.mp3",
+            },
+            blocking=True,
+        )
+
+
+async def test_platform_entity_service_skips_display_indirect_target(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test a display targeted indirectly is skipped rather than rejected.
+
+    Naming the display's entity directly raises (see
+    test_platform_entity_service_rejects_display); targeting it indirectly,
+    e.g. through a device or area that also holds a supported entity, must
+    instead silently skip it while still servicing the supported one.
+    """
+    setup_dashboards(music_assistant_client)
+    config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    player_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:01"), config_entry.entry_id
+    )
+    display_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "chromecast_kitchen_dashboard"), config_entry.entry_id
+    )
+    assert player_device
+    assert display_device
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_ANNOUNCEMENT,
+        {
+            ATTR_DEVICE_ID: [player_device.id, display_device.id],
+            ATTR_URL: "http://blah.com/announcement.mp3",
+        },
+        blocking=True,
+    )
+
+    assert music_assistant_client.send_command.call_args == call(
+        "players/cmd/play_announcement",
+        require_schema=None,
+        player_id="00:00:00:00:00:01",
+        url="http://blah.com/announcement.mp3",
+        pre_announce=None,
+        volume_level=None,
+        pre_announce_url=None,
+        message=None,
+        tts_engine=None,
+    )

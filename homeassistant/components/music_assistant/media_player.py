@@ -62,7 +62,6 @@ from .const import (
     ATTR_RADIO_MODE,
     ATTR_REPEAT_MODE,
     ATTR_SHUFFLE_ENABLED,
-    DEFAULT_NAME,
     DOMAIN,
 )
 from .entity import MusicAssistantDashboardEntity, MusicAssistantEntity
@@ -72,6 +71,7 @@ from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
 if TYPE_CHECKING:
     from music_assistant_client.client import MusicAssistantClient
+    from music_assistant_models.dashboard import DashboardDevice
     from music_assistant_models.player import Player
 
 SUPPORTED_FEATURES_BASE = (
@@ -844,11 +844,6 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
             )
         )
 
-    async def __on_session_updated(self, event: MassEvent) -> None:
-        """Handle the dashboard's active session changing."""
-        self._update_from_session()
-        self.async_write_ha_state()
-
     @catch_musicassistant_error
     @override
     async def async_play_media(
@@ -876,11 +871,23 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Browse the dashboards this display can show."""
+        # the browse websocket path fetches the entity directly and doesn't
+        # filter on availability, so the display may already be gone here
+        dashboard = self.mass.dashboard.get(self.dashboard_id)
+        if dashboard is None:
+            raise BrowseError(f"Display '{self.dashboard_id}' is not available")
         if media_content_id in (None, ""):
-            return self._build_root_listing()
-        if media_content_id == "now_playing":
+            return self._build_root_listing(dashboard)
+        if media_content_id == DashboardType.NOW_PLAYING.value:
+            if DashboardType.NOW_PLAYING not in dashboard.supported_types:
+                raise BrowseError(f"Media not found: {media_content_id}")
             return self._build_now_playing_listing()
         raise BrowseError(f"Media not found: {media_content_id}")
+
+    async def __on_session_updated(self, event: MassEvent) -> None:
+        """Handle the dashboard's active session changing."""
+        self._update_from_session()
+        self.async_write_ha_state()
 
     def _update_from_session(self) -> None:
         """Update state and media attributes from the active session."""
@@ -899,20 +906,46 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         elif session.dashboard == DashboardType.MUSIC_QUIZ:
             self._attr_media_content_id = DashboardType.MUSIC_QUIZ.value
             self._attr_media_title = "Music quiz"
-        else:
+        elif session.dashboard == DashboardType.NOW_PLAYING:
             player_id = session.player_id or ""
             self._attr_media_content_id = f"{NOW_PLAYING_ID_PREFIX}{player_id}"
             player = self.mass.players.get(player_id) if player_id else None
             player_label = player.name if player is not None else player_id
             self._attr_media_title = f"Now playing: {player_label}"
+        else:
+            # a dashboard type this client doesn't recognize; the server
+            # already normalized it to DashboardType.UNKNOWN
+            self._attr_media_content_id = session.dashboard.value
+            self._attr_media_title = session.dashboard.value
+
+    def _valid_content_ids(self, dashboard: DashboardDevice) -> list[str]:
+        """List this display's playable content ids, for error messages."""
+        ids = [
+            supported.value
+            for supported in dashboard.supported_types
+            if supported not in (DashboardType.UNKNOWN, DashboardType.NOW_PLAYING)
+        ]
+        if DashboardType.NOW_PLAYING in dashboard.supported_types:
+            # not directly playable on its own; it always needs a player segment
+            ids.append(f"{NOW_PLAYING_ID_PREFIX}<player_id>")
+        return sorted(ids)
 
     def _parse_play_media_id(
         self, media_content_id: str
     ) -> tuple[DashboardType, str | None]:
         """Validate a play_media content id and split it into a type and player id."""
         dashboard = self.mass.dashboard.get(self.dashboard_id)
-        if TYPE_CHECKING:
-            assert dashboard is not None
+        if dashboard is None:
+            raise ServiceValidationError(
+                f"Display '{self.dashboard_id}' is not available"
+            )
+        valid_ids = self._valid_content_ids(dashboard)
+
+        if media_content_id == DashboardType.NOW_PLAYING.value:
+            raise ServiceValidationError(
+                f"'{DashboardType.NOW_PLAYING.value}' requires a player, expected "
+                f"{NOW_PLAYING_ID_PREFIX}<player_id>"
+            )
 
         player_id: str | None = None
         if media_content_id.startswith(NOW_PLAYING_ID_PREFIX):
@@ -921,41 +954,26 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         else:
             dashboard_type = DashboardType(media_content_id)
 
-        valid_types = sorted(
-            supported.value
-            for supported in dashboard.supported_types
-            if supported != DashboardType.UNKNOWN
-        )
         if dashboard_type == DashboardType.UNKNOWN:
             raise ServiceValidationError(
                 f"Unknown dashboard '{media_content_id}', expected one of "
-                f"{', '.join(valid_types)} or {NOW_PLAYING_ID_PREFIX}<player_id>"
+                f"{', '.join(valid_ids)}"
             )
         if dashboard_type not in dashboard.supported_types:
             raise ServiceValidationError(
-                f"Display '{self.name}' does not support '{dashboard_type.value}', "
-                f"expected one of {', '.join(valid_types)}"
+                f"Display '{dashboard.name}' does not support "
+                f"'{dashboard_type.value}', expected one of {', '.join(valid_ids)}"
             )
         if dashboard_type == DashboardType.NOW_PLAYING:
             player = self.mass.players.get(player_id) if player_id else None
             if player is None or not player.expose_to_ha:
-                exposed = sorted(
-                    player.player_id
-                    for player in self.mass.players
-                    if player.expose_to_ha
-                )
                 raise ServiceValidationError(
-                    f"Unknown or unexposed player '{player_id}', expected one of "
-                    f"{', '.join(exposed)}"
+                    f"Unknown or unexposed player '{player_id}'"
                 )
         return dashboard_type, player_id
 
-    def _build_root_listing(self) -> BrowseMedia:
+    def _build_root_listing(self, dashboard: DashboardDevice) -> BrowseMedia:
         """Build the root browse listing, filtered to this display's dashboards."""
-        dashboard = self.mass.dashboard.get(self.dashboard_id)
-        if TYPE_CHECKING:
-            assert dashboard is not None
-
         children: list[BrowseMedia] = []
         if DashboardType.PARTY in dashboard.supported_types:
             children.append(
@@ -983,7 +1001,7 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
             children.append(
                 BrowseMedia(
                     media_class=MediaClass.DIRECTORY,
-                    media_content_id="now_playing",
+                    media_content_id=DashboardType.NOW_PLAYING.value,
                     media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
                     title="Now playing",
                     can_play=False,
@@ -996,7 +1014,7 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
             media_class=MediaClass.DIRECTORY,
             media_content_id="",
             media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
-            title=DEFAULT_NAME,
+            title=dashboard.name,
             can_play=False,
             can_expand=True,
             children=children,
@@ -1010,7 +1028,7 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         )
         return BrowseMedia(
             media_class=MediaClass.DIRECTORY,
-            media_content_id="now_playing",
+            media_content_id=DashboardType.NOW_PLAYING.value,
             media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
             title="Now playing",
             can_play=False,
