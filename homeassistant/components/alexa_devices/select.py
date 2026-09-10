@@ -66,23 +66,25 @@ async def async_setup_entry(
         new_devices = current_devices - known_devices
         if new_devices:
             known_devices.update(new_devices)
-            select_entities = [
-                AmazonSelectEntity(coordinator, serial_num, select_desc)
-                for select_desc in SELECTS
-                for serial_num in new_devices
-                if select_desc.is_available_fn(coordinator.data[serial_num])
-            ]
-            select_service_entites = [
-                AmazonSelectServiceEntity(coordinator, select_desc)
-                for select_desc in SERVICE_SELECTS
-                for serial_num in new_devices
-                if select_desc.is_available_fn(coordinator.data[serial_num])
-            ]
-            async_add_entities(select_entities)
-            async_add_entities(select_service_entites)
+            async_add_entities(
+                [
+                    AmazonSelectEntity(coordinator, serial_num, select_desc)
+                    for select_desc in SELECTS
+                    for serial_num in new_devices
+                    if select_desc.is_available_fn(coordinator.data[serial_num])
+                ]
+            )
 
     _check_device()
     entry.async_on_unload(coordinator.async_add_listener(_check_device))
+
+    # Service entities
+    async_add_entities(
+        [
+            AmazonSelectServiceEntity(coordinator, select_desc)
+            for select_desc in SERVICE_SELECTS
+        ]
+    )
 
 
 class AmazonSelectEntity(AmazonEntity, SelectEntity):

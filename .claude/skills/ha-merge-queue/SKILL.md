@@ -27,7 +27,7 @@ verify every finalist with the per-PR checks below.
 
 ## Verify each finalist
 
-Check all five. A PR fails the shortlist if any one fails.
+Check all six conditions. A PR fails the shortlist if any of checks 1 through 5 fail.
 
 Paginate every list response before deciding. Check runs, reviews and review threads are all
 paged, typically 30 per page, and a full-suite Home Assistant PR runs to 40-odd check runs —
@@ -90,12 +90,27 @@ Compare the returned count against the reported total and keep fetching until th
    discount one for the category it appears to fall into; an unaddressed defect is a
    blocker whether or not anyone is arguing about it.
 
+6. **Peer-Review Checklist Verification (Priority Boost)** — inspect the PR body text for
+   the template checkbox: `- [x] I have reviewed two other [open pull requests][prs] in this repository.`
+   - **Checked (`[x]`):** Give this PR higher priority in ranking to reward contributors helping
+     clear the review backlog.
+   - **Unchecked (`[ ]` or missing):** Keep in queue with standard priority (do not disqualify).
+
 ## Report
 
-Rank by how little work each PR needs: `clean` first, then `blocked` with everything else
-green. For each PR give the number as a full markdown link, the integration or core area,
-one line on what it does, and its blocking state. Plenty of `home-assistant/core` PRs touch
-helpers, the framework, the recorder or repo tooling and have no integration at all — name
+Rank and order candidates primarily by their status readiness (`clean` first, then `blocked`
+with everything else green), and **secondarily by peer-review participation**:
+
+1. **Clean PRs** with the `[x] I have reviewed two other open pull requests...` checkbox checked.
+2. **Clean PRs** without the checkbox checked.
+3. **Blocked/Near-miss PRs** with the `[x] I have reviewed two other open pull requests...` checkbox checked.
+4. **Blocked/Near-miss PRs** without the checkbox checked.
+
+For each PR give the number as a full markdown link, the integration or core area,
+one line on what it does, its blocking state, and explicitly note if the author checked the
+peer-review box (e.g., "⭐ *Contributor reviewed 2 PRs*").
+
+Plenty of `home-assistant/core` PRs touch helpers, the framework, the recorder or repo tooling and have no integration at all — name
 what they touch instead, rather than dropping them or inventing one.
 
 Then list the near-misses separately, each with the one action that unblocks it. The

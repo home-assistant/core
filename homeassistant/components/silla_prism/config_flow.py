@@ -50,14 +50,16 @@ class PrismConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(base_topic)
                 self._abort_if_unique_id_configured()
 
+                # Nothing the user can enter in this form brings the broker
+                # back, so this is a dead end rather than a form error.
                 if not await async_wait_for_mqtt_client(self.hass):
-                    errors["base"] = "mqtt_unavailable"
-                elif not await self._async_probe(base_topic):
-                    errors["base"] = "no_device"
-                else:
+                    return self.async_abort(reason="mqtt_unavailable")
+
+                if await self._async_probe(base_topic):
                     return self.async_create_entry(
                         title="Silla Prism", data={CONF_BASE_TOPIC: base_topic}
                     )
+                errors["base"] = "no_device"
 
         return self.async_show_form(
             step_id="user",

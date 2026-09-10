@@ -1,7 +1,7 @@
 """Select for Midea."""
 
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
 from midealocal.const import DeviceType
 
@@ -21,6 +21,8 @@ class MideaSelectEntityDescription(SelectEntityDescription):
     models: list[DeviceType]
     options_attribute: str
     """Device property name returning the list of valid option strings."""
+    requires_power: bool = False
+    """Entity is only operable while the device's ``power`` attribute is on."""
 
 
 SELECTS: list[MideaSelectEntityDescription] = [
@@ -47,18 +49,21 @@ SELECTS: list[MideaSelectEntityDescription] = [
         translation_key="wind_lr_angle",
         models=[DeviceType.AC],
         options_attribute="wind_lr_angles",
+        requires_power=True,
     ),
     MideaSelectEntityDescription(
         key="wind_ud_angle",
         translation_key="wind_ud_angle",
         models=[DeviceType.AC],
         options_attribute="wind_ud_angles",
+        requires_power=True,
     ),
     MideaSelectEntityDescription(
         key="rate_select",
         translation_key="rate_select",
         models=[DeviceType.AC],
         options_attribute="rate_selects",
+        requires_power=True,
     ),
     MideaSelectEntityDescription(
         key="silent_level",
@@ -128,9 +133,21 @@ class MideaSelect(MideaEntity, SelectEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return entity availability."""
+        if not super().available:
+            return False
+        if self.entity_description.requires_power:
+            return bool(self._device.get_attribute("power"))
+        return True
+
+    @property
+    @override
     def options(self) -> list[str]:
         """Return the list of valid options."""
-        return getattr(self._device, self.entity_description.options_attribute)
+        return cast(
+            list[str], getattr(self._device, self.entity_description.options_attribute)
+        )
 
     @property
     @override

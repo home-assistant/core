@@ -5,7 +5,7 @@ from copy import deepcopy
 from enum import StrEnum
 from functools import cache
 import importlib
-from typing import Any, Literal, Required, TypedDict, cast, override
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast, override
 from uuid import UUID
 
 import voluptuous as vol
@@ -19,6 +19,9 @@ from homeassistant.util.yaml import dumper
 from . import config_validation as cv
 
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
+
+if TYPE_CHECKING:
+    from homeassistant.components.sensor import SensorStateClass
 
 
 def _get_selector_type_and_class(config: Any) -> tuple[str, type[Selector]]:
@@ -61,11 +64,12 @@ class Selector[_T: Mapping[str, Any]]:
     # context for filtering for example. The selector defines
     # which context keys it supports and what selector types
     # are allowed for each key.
-    allowed_context_keys: dict[str, set[str]] = {}
+    allowed_context_keys: dict[str, set[str]]
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
         """Instantiate a selector."""
         self.config = self.CONFIG_SCHEMA(config)
+        self.allowed_context_keys = {}
 
     @override
     def __eq__(self, other: object) -> bool:
@@ -424,11 +428,6 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
 
     selector_type = "attribute"
 
-    allowed_context_keys = {
-        # Filters the available attributes based on the selected entity
-        "filter_entity": {"entity"}
-    }
-
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Required("entity_id"): cv.entity_id,
@@ -441,6 +440,10 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
     def __init__(self, config: AttributeSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
+        self.allowed_context_keys = {
+            # Filters the available attributes based on the selected entity
+            "filter_entity": {"entity"}
+        }
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
@@ -1351,11 +1354,6 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
-    allowed_context_keys = {
-        # Filters the available media based on the selected entity
-        "filter_entity": {EntitySelector.selector_type}
-    }
-
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("accept"): [str],
@@ -1370,15 +1368,20 @@ class MediaSelector(Selector[MediaSelectorConfig]):
             vol.Required("media_content_id"): str,
             # Although marked as optional in frontend, this field is required
             vol.Required("media_content_type"): str,
-            vol.Remove("metadata"): dict,
+            # Data used by frontend for decoration.
+            vol.Optional("metadata"): dict,
         }
     )
 
     def __init__(self, config: MediaSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
+        self.allowed_context_keys = {
+            # Filters the available media based on the selected entity
+            "filter_entity": {EntitySelector.selector_type}
+        }
 
-    def __call__(self, data: Any) -> dict[str, str] | list[dict[str, str]]:
+    def __call__(self, data: Any) -> dict[str, Any] | list[dict[str, Any]]:
         """Validate the passed selection."""
         item_schema_dict = {
             key: value
@@ -1393,7 +1396,7 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         item_schema = vol.Schema(item_schema_dict)
 
         if not self.config["multiple"]:
-            media: dict[str, str] = item_schema(data)
+            media: dict[str, Any] = item_schema(data)
             return media
 
         # Backwards compatibility for places that now accept multiple items
@@ -1965,6 +1968,57 @@ class SerialPortSelector(Selector[SerialPortSelectorConfig]):
         return serial
 
 
+class StateClassSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a sensor state class selector config."""
+
+    multiple: bool
+    state_classes: Sequence[str | SensorStateClass]
+
+
+@SELECTORS.register("state_class")
+class StateClassSelector(Selector[StateClassSelectorConfig]):
+    """Selector for sensor state class."""
+
+    selector_type = "state_class"
+
+    @staticmethod
+    def _valid_state_classes(options: list[str]) -> list[str]:
+        """Validate state classes and raise if invalid."""
+        vol.In(_enum_options(Platform.SENSOR, "SensorStateClass"))(options)
+        return options
+
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                vol.Optional("multiple", default=False): cv.boolean,
+                vol.Optional("state_classes"): vol.All(
+                    cv.ensure_list, [str], [_valid_state_classes]
+                ),
+            },
+        ),
+    )
+
+    def __init__(self, config: StateClassSelectorConfig | None = None) -> None:
+        """Instantiate a state class selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        state_classes_filter = self.config.get("state_classes")
+        valid_options = [
+            option
+            for option in _enum_options(Platform.SENSOR, "SensorStateClass")
+            if state_classes_filter is None or option in state_classes_filter
+        ]
+        options_schema = vol.In(valid_options)
+
+        if not self.config["multiple"]:
+            return options_schema(vol.Schema(str)(data))
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [options_schema(vol.Schema(str)(val)) for val in data]
+
+
 class StateSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a state selector config."""
 
@@ -1980,15 +2034,6 @@ class StateSelector(Selector[StateSelectorConfig]):
 
     selector_type = "state"
 
-    allowed_context_keys = {
-        # Filters the available states based on the selected entity
-        "filter_entity": {EntitySelector.selector_type},
-        # Filters the available states based on the selected target
-        "filter_target": {"target"},
-        # Only show the attribute values of a specific attribute
-        "filter_attribute": {AttributeSelector.selector_type},
-    }
-
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("entity_id"): cv.entity_id,
@@ -2001,6 +2046,14 @@ class StateSelector(Selector[StateSelectorConfig]):
     def __init__(self, config: StateSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
+        self.allowed_context_keys = {
+            # Filters the available states based on the selected entity
+            "filter_entity": {EntitySelector.selector_type},
+            # Filters the available states based on the selected target
+            "filter_target": {"target"},
+            # Only show the attribute values of a specific attribute
+            "filter_attribute": {AttributeSelector.selector_type},
+        }
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""

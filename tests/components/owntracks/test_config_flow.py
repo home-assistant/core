@@ -131,7 +131,14 @@ async def test_unload(hass: HomeAssistant) -> None:
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"
     ) as mock_forward:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
         )
 
     assert len(mock_forward.mock_calls) == 1
@@ -168,7 +175,14 @@ async def test_with_cloud_sub(hass: HomeAssistant) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -197,7 +211,14 @@ async def test_with_cloud_sub_not_connected(hass: HomeAssistant) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
         )
 
     assert result["type"] is FlowResultType.ABORT

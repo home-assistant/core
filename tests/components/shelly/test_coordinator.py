@@ -25,7 +25,12 @@ from homeassistant.components.shelly.const import (
     BLEScannerMode,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceRegistry
@@ -509,6 +514,21 @@ async def test_rpc_connection_error_during_unload(
 
     assert "Error during shutdown for device" in caplog.text
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_block_shutdown_on_ha_stop(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the device is shut down when Home Assistant stops."""
+    await init_integration(hass, 1)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert "Stopping RPC device coordinator for Test name" in caplog.text
+    mock_block_device.shutdown.assert_called()
 
 
 async def test_rpc_click_event(

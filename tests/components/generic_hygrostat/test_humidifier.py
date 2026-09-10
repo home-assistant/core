@@ -1272,6 +1272,48 @@ async def test_humidity_change_dry_trigger_off_long_enough_3(
     assert call.data["entity_id"] == ENT_SWITCH
 
 
+@pytest.mark.usefixtures("setup_comp_7")
+async def test_humidity_change_dry_trigger_off_not_long_enough_keep_alive(
+    hass: HomeAssistant,
+) -> None:
+    """Test a keep-alive interval does not bypass the minimum cycle duration."""
+    calls = await _setup_switch(hass, True)
+    # Settle on a humidity that asks for no change, so the device is left running
+    _setup_sensor(hass, 45)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Dry enough to want the dehumidifier off, but it only just came on
+    _setup_sensor(hass, 30)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+@pytest.mark.usefixtures("setup_comp_7")
+async def test_humidity_change_dry_trigger_on_not_long_enough_keep_alive(
+    hass: HomeAssistant,
+) -> None:
+    """Test a keep-alive interval does not bypass the minimum cycle duration."""
+    calls = await _setup_switch(hass, False)
+    # Settle on a humidity that asks for no change, so the device is left stopped
+    _setup_sensor(hass, 35)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Wet enough to want the dehumidifier on, but it only just went off
+    _setup_sensor(hass, 45)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
 @pytest.fixture
 async def setup_comp_8(hass: HomeAssistant) -> None:
     """Initialize components."""

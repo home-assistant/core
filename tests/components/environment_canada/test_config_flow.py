@@ -180,7 +180,15 @@ async def test_lat_lon_not_specified(hass: HomeAssistant) -> None:
         del fake_config[CONF_LATITUDE]
         del fake_config[CONF_LONGITUDE]
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=fake_config
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=fake_config,
         )
         await hass.async_block_till_done()
         assert result["type"] is FlowResultType.CREATE_ENTRY

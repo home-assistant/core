@@ -3,7 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unique_id_mismatch": "The reauthorized account does not match the original Yoto account. Please log in with the same account."
     },
     "create_entry": {
@@ -135,9 +134,6 @@
     },
     "invalid_media_id": {
       "message": "Not a Yoto media identifier: {media_id}"
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "play_failed": {
       "message": "Failed to play Yoto media: {error}"

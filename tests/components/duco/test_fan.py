@@ -68,8 +68,6 @@ async def test_fan_set_state(
     expected_duco_state: str,
 ) -> None:
     """Test that fan service calls map to the correct Duco ventilation state."""
-    mock_duco_client.async_set_ventilation_state = AsyncMock()
-
     await hass.services.async_call(
         FAN_DOMAIN,
         service,
@@ -77,9 +75,11 @@ async def test_fan_set_state(
         blocking=True,
     )
 
-    mock_duco_client.async_set_ventilation_state.assert_called_once_with(
+    mock_duco_client.async_set_ventilation_state.assert_awaited_once_with(
         1, expected_duco_state
     )
+    mock_duco_client.async_get_node_info.assert_awaited_once_with(1)
+    assert mock_duco_client.async_get_nodes.await_count == 1
 
 
 @pytest.mark.usefixtures("init_integration")

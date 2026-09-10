@@ -614,6 +614,25 @@ async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
     assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
 
+async def test_async_remove_reports_the_original_error(hass: HomeAssistant) -> None:
+    """Test a failing removal surfaces its own exception."""
+
+    class MockEntityFailingRemoval(entity.Entity):
+        """Entity that cannot be removed cleanly."""
+
+        async def async_will_remove_from_hass(self) -> None:
+            """Fail while being removed."""
+            raise ValueError("Boom")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntityFailingRemoval()
+    ent.entity_id = "test.test"
+    await platform.async_add_entities([ent])
+
+    with pytest.raises(ValueError, match="Boom"):
+        await ent.async_remove()
+
+
 async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> None:
     """Test in flight polling is ignored after removing."""
     result = []
