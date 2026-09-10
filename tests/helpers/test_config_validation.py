@@ -373,6 +373,8 @@ def test_time_period() -> None:
         "12:34:56:78",
         {},
         {"wrong_key": -10},
+        {"negative": True},
+        {"negative": "later", "minutes": 5},
         "12.5:30",
         "12:30.5",
         "12.5:30:30",
@@ -405,6 +407,10 @@ def test_time_period() -> None:
         ({"minutes": "1.5"}, timedelta(minutes=1, seconds=30)),
         ({"hours": -1.5}, -1 * timedelta(hours=1, minutes=30)),
         ({"days": "-1.5"}, -1 * timedelta(days=1, hours=12)),
+        ({"negative": True, "minutes": 5}, -1 * timedelta(minutes=5)),
+        ({"negative": False, "minutes": 5}, timedelta(minutes=5)),
+        ({"negative": "true", "hours": 1, "minutes": 30}, -1 * timedelta(minutes=90)),
+        ({"negative": True, "minutes": 0}, timedelta(0)),
     )
     for value, result in options:
         assert schema(value) == result
