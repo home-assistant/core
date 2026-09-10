@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from httpx import RequestError
 import pytest
 from wolf_comm.models import Device
-from wolf_comm.token_auth import InvalidAuth
+from wolf_comm.token_auth import InvalidAuth, PortalUnavailable
 from wolf_comm.wolf_client import FetchFailed, ParameterReadError
 
 from homeassistant.components.wolflink.const import DOMAIN, MANUFACTURER
@@ -446,6 +446,32 @@ async def test_setup_fetch_parameters_fails(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert not hass.states.async_entity_ids("sensor")
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        pytest.param(
+            PortalUnavailable, ConfigEntryState.SETUP_RETRY, id="portal_unavailable"
+        ),
+        pytest.param(InvalidAuth, ConfigEntryState.SETUP_ERROR, id="invalid_auth"),
+    ],
+)
+async def test_setup_fetch_system_list_fails(
+    hass: HomeAssistant,
+    mock_wolflink: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test fetch_system_list errors put the entry in the correct error state."""
+    mock_wolflink.fetch_system_list.side_effect = side_effect
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is expected_state
 
 
 async def test_system_share_id_forwarded_to_state_list(

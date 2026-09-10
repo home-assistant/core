@@ -158,3 +158,35 @@ async def test_reauth_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(PasswordToLong, "password_too_long", id="password_too_long"),
+        pytest.param(PortalUnavailable, "cannot_connect", id="portal_unavailable"),
+        pytest.param(RequestError("boom"), "cannot_connect", id="cannot_connect"),
+        pytest.param(Exception("boom"), "unknown", id="unknown"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_wolflink: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauth error handling keeps the form open with the correct error."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_wolflink.fetch_system_list.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PASSWORD: "wrong-password"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
