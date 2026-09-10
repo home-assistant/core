@@ -1075,6 +1075,18 @@ async def test_selector_serializer(
         },
         "additionalProperties": False,
     }
+    assert selector_serializer(selector.DurationSelector({"mode": "signed"})) == {
+        "type": "object",
+        "properties": {
+            "days": {"type": "number"},
+            "hours": {"type": "number"},
+            "minutes": {"type": "number"},
+            "seconds": {"type": "number"},
+            "milliseconds": {"type": "number"},
+            "negative": {"type": "boolean"},
+        },
+        "additionalProperties": False,
+    }
     assert selector_serializer(selector.EntitySelector()) == {
         "type": "string",
         "format": "entity_id",
