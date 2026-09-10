@@ -1,10 +1,13 @@
 """Test Music Assistant dashboard display media player entities."""
 
+from base64 import b64encode
 import dataclasses
-from unittest.mock import MagicMock, call
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, call
 
 from music_assistant_models.dashboard import DashboardDevice, DashboardSession
 from music_assistant_models.enums import DashboardType, EventType
+from music_assistant_models.player import PlayerMedia
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -42,6 +45,30 @@ from tests.typing import WebSocketGenerator
 KITCHEN_ENTITY_ID = "media_player.kitchen_display"
 HALLWAY_ENTITY_ID = "media_player.hallway_display"
 UNMAPPED_ENTITY_ID = "media_player.unmapped_player_display"
+
+PROVIDER_ICON_BYTES = b"<svg/>"
+PROVIDER_ICON_CONTENT_TYPE = "image/svg+xml"
+PROVIDER_ICON_DATA_URI = (
+    f"data:{PROVIDER_ICON_CONTENT_TYPE};base64,"
+    f"{b64encode(PROVIDER_ICON_BYTES).decode()}"
+)
+
+
+def _mock_provider_icon(music_assistant_client: MagicMock) -> None:
+    """Make providers/icon return a real data URI; other commands keep returning None."""
+
+    async def send_command(command: str, **kwargs: Any) -> Any:
+        if command == "providers/icon":
+            return PROVIDER_ICON_DATA_URI
+        return None
+
+    music_assistant_client.send_command = AsyncMock(side_effect=send_command)
+
+
+def _get_dashboard_entity(hass: HomeAssistant, entity_id: str) -> Any:
+    """Return the dashboard entity instance for direct image method calls."""
+    entity_component = hass.data["entity_components"][MEDIA_PLAYER_DOMAIN]
+    return entity_component.get_entity(entity_id)
 
 
 def _dashboards_event_data(music_assistant_client: MagicMock) -> list[dict]:
@@ -324,12 +351,16 @@ async def test_dashboard_browse_media_root(
     assert party_child["media_class"] == "app"
     assert party_child["can_play"] is True
     assert party_child["can_expand"] is False
+    assert party_child["thumbnail"].startswith(
+        f"/api/media_player_proxy/{KITCHEN_ENTITY_ID}/browse_media/dashboard/party?"
+    )
 
     now_playing_child = result["children"][1]
     assert now_playing_child["media_content_id"] == "now_playing"
     assert now_playing_child["media_class"] == "directory"
     assert now_playing_child["can_play"] is False
     assert now_playing_child["can_expand"] is True
+    assert now_playing_child["thumbnail"] is None
 
     # fully_kiosk_hallway supports party/now_playing/music_quiz (+ UNKNOWN,
     # which is always excluded)
@@ -342,11 +373,16 @@ async def test_dashboard_browse_media_root(
     )
     response = await client.receive_json()
     assert response["success"]
-    assert [child["title"] for child in response["result"]["children"]] == [
+    hallway_children = response["result"]["children"]
+    assert [child["title"] for child in hallway_children] == [
         "Party",
         "Music quiz",
         "Now playing",
     ]
+    music_quiz_child = hallway_children[1]
+    assert music_quiz_child["thumbnail"].startswith(
+        f"/api/media_player_proxy/{HALLWAY_ENTITY_ID}/browse_media/dashboard/music_quiz?"
+    )
 
 
 async def test_dashboard_browse_media_now_playing_folder(
@@ -366,6 +402,12 @@ async def test_dashboard_browse_media_now_playing_folder(
         expose_to_ha=False,
     )
     music_assistant_client.players._players["hidden-player"] = hidden_player
+
+    # give Test Player 1 an image so its browse thumbnail is populated
+    art_url = "https://example.com/art.jpg"
+    music_assistant_client.players._players[
+        "00:00:00:00:00:01"
+    ].current_media = PlayerMedia(uri="spotify://track/x", image_url=art_url)
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -399,6 +441,45 @@ async def test_dashboard_browse_media_now_playing_folder(
         child for child in children if child["title"] == "Test Player 1"
     )
     assert test_player_1_child["media_content_id"] == "now_playing/00:00:00:00:00:01"
+    assert test_player_1_child["thumbnail"] == art_url
+
+    # players without current media get no thumbnail
+    other_child = next(child for child in children if child["title"] != "Test Player 1")
+    assert other_child["thumbnail"] is None
+
+
+async def test_dashboard_async_get_browse_image(
+    hass: HomeAssistant, music_assistant_client: MagicMock
+) -> None:
+    """Test async_get_browse_image decodes the provider icon data URI and caches it."""
+    setup_dashboards(music_assistant_client)
+    _mock_provider_icon(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
+    data, content_type = await entity.async_get_browse_image("dashboard", "party")
+    assert data == PROVIDER_ICON_BYTES
+    assert content_type == PROVIDER_ICON_CONTENT_TYPE
+
+    # a second fetch for the same provider domain must not re-hit the server
+    await entity.async_get_browse_image("dashboard", "party")
+    icon_calls = [
+        icon_call
+        for icon_call in music_assistant_client.send_command.call_args_list
+        if icon_call.args[:1] == ("providers/icon",)
+    ]
+    assert len(icon_calls) == 1
+
+
+async def test_dashboard_async_get_browse_image_no_icon(
+    hass: HomeAssistant, music_assistant_client: MagicMock
+) -> None:
+    """Test async_get_browse_image returns (None, None) when the server has no icon."""
+    setup_dashboards(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
+    assert await entity.async_get_browse_image("dashboard", "party") == (None, None)
 
 
 async def test_dashboard_dynamic_add_and_unavailable(
@@ -504,6 +585,98 @@ async def test_dashboard_session_mirroring(
     state = hass.states.get(HALLWAY_ENTITY_ID)
     assert state.state == "idle"
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is None
+
+
+async def test_dashboard_session_media_image_party_and_music_quiz(
+    hass: HomeAssistant, music_assistant_client: MagicMock
+) -> None:
+    """Test party/music_quiz sessions serve the provider icon, hashed by session type."""
+    setup_dashboards(music_assistant_client)
+    _mock_provider_icon(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    entity = _get_dashboard_entity(hass, HALLWAY_ENTITY_ID)
+    assert entity.media_image_hash is None
+    assert await entity.async_get_media_image() == (None, None)
+
+    music_assistant_client.dashboard._sessions["fully_kiosk_hallway"] = (
+        DashboardSession(
+            dashboard_id="fully_kiosk_hallway",
+            name="Hallway Display",
+            dashboard=DashboardType.PARTY,
+        )
+    )
+    await trigger_subscription_callback(
+        hass,
+        music_assistant_client,
+        EventType.DASHBOARD_SESSIONS_UPDATED,
+        data=_sessions_event_data(music_assistant_client),
+    )
+    party_hash = entity.media_image_hash
+    assert party_hash is not None
+    data, content_type = await entity.async_get_media_image()
+    assert data == PROVIDER_ICON_BYTES
+    assert content_type == PROVIDER_ICON_CONTENT_TYPE
+
+    # the icon is served through the media proxy, not a direct media_image_url
+    state = hass.states.get(HALLWAY_ENTITY_ID)
+    assert state.attributes["entity_picture"].startswith(
+        f"/api/media_player_proxy/{HALLWAY_ENTITY_ID}?"
+    )
+
+    music_assistant_client.dashboard._sessions["fully_kiosk_hallway"] = (
+        DashboardSession(
+            dashboard_id="fully_kiosk_hallway",
+            name="Hallway Display",
+            dashboard=DashboardType.MUSIC_QUIZ,
+        )
+    )
+    await trigger_subscription_callback(
+        hass,
+        music_assistant_client,
+        EventType.DASHBOARD_SESSIONS_UPDATED,
+        data=_sessions_event_data(music_assistant_client),
+    )
+    assert entity.media_image_hash != party_hash
+
+    del music_assistant_client.dashboard._sessions["fully_kiosk_hallway"]
+    await trigger_subscription_callback(
+        hass,
+        music_assistant_client,
+        EventType.DASHBOARD_SESSIONS_UPDATED,
+        data=_sessions_event_data(music_assistant_client),
+    )
+    assert entity.media_image_hash is None
+    assert await entity.async_get_media_image() == (None, None)
+
+
+async def test_dashboard_now_playing_session_media_image(
+    hass: HomeAssistant, music_assistant_client: MagicMock
+) -> None:
+    """Test a now_playing session mirrors its player's artwork, refreshed on QUEUE_UPDATED."""
+    setup_dashboards(music_assistant_client)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    # chromecast_kitchen's seeded now_playing session targets Test Player 1,
+    # which starts without any media
+    state = hass.states.get(KITCHEN_ENTITY_ID)
+    assert state.attributes.get("entity_picture") is None
+
+    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
+    # not a party/music_quiz session, so no proxied provider icon either
+    assert entity.media_image_hash is None
+
+    art_url = "https://example.com/art.jpg"
+    music_assistant_client.players._players[
+        "00:00:00:00:00:01"
+    ].current_media = PlayerMedia(uri="spotify://track/x", image_url=art_url)
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.QUEUE_UPDATED, "00:00:00:00:00:01"
+    )
+
+    state = hass.states.get(KITCHEN_ENTITY_ID)
+    # a non-MA-hosted url is remotely accessible, so entity_picture is the raw url
+    assert state.attributes["entity_picture"] == art_url
 
 
 async def test_dashboard_browse_media_unknown_content_id(
