@@ -83,6 +83,44 @@ async def test_close_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) ->
     assert call.data == {"entity_id": f"{DOMAIN}.garage_door"}
 
 
+async def test_open_cover_intent_does_not_match_other_domains(
+    hass: HomeAssistant,
+) -> None:
+    """Test HassOpenCover does not match an entity of another domain."""
+    await cover_intent.async_setup_intents(hass)
+
+    hass.states.async_set("light.garage_door", "off")
+
+    with pytest.raises(intent.MatchFailedError) as err:
+        await intent.async_handle(
+            hass,
+            "test",
+            cover_intent.INTENT_OPEN_COVER,
+            {"name": {"value": "garage door"}},
+        )
+
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.DOMAIN
+
+
+async def test_close_cover_intent_does_not_match_other_domains(
+    hass: HomeAssistant,
+) -> None:
+    """Test HassCloseCover does not match an entity of another domain."""
+    await cover_intent.async_setup_intents(hass)
+
+    hass.states.async_set("light.garage_door", "on")
+
+    with pytest.raises(intent.MatchFailedError) as err:
+        await intent.async_handle(
+            hass,
+            "test",
+            cover_intent.INTENT_CLOSE_COVER,
+            {"name": {"value": "garage door"}},
+        )
+
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.DOMAIN
+
+
 @pytest.mark.parametrize(
     ("slots"),
     [
