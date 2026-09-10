@@ -30,7 +30,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IseoConfigEntry
-from .const import ADMIN_SETTLE_DELAY, CONF_ADMIN_UUID, CONF_SAVED_VALIDITY, DOMAIN
+from .const import (
+    ADMIN_SETTLE_DELAY,
+    CONF_ADMIN_UUID,
+    CONF_SAVED_VALIDITY,
+    DEFAULT_USER_SUBTYPE,
+    DOMAIN,
+)
 from .coordinator import IseoUserCoordinator
 
 PARALLEL_UPDATES = 1
@@ -344,6 +350,20 @@ class IseoCredentialSensor(CoordinatorEntity[IseoUserCoordinator], BinarySensorE
         There is no undo from Home Assistant: whoever held it has to be
         enrolled again with the Master Card.
         """
+        if (
+            self._user_type == USER_TYPE_BT
+            and self._inner_subtype == DEFAULT_USER_SUBTYPE
+        ):
+            # Erasing a gateway takes master-level authorisation, which the
+            # lock only grants from a physical Master Card scan. Administrator
+            # rights are not enough, so the erase would sit there unanswered
+            # until it timed out. Suspending one still works.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_delete_gateway_credential",
+                translation_placeholders={"name": self._credential_name},
+            )
+
         async with self._admin_session() as client:
             await client.erase_user_by_uuid(
                 uuid_bytes=bytes.fromhex(self._uuid_hex),

@@ -71,6 +71,9 @@
     "cannot_connect": {
       "message": "Could not connect to the lock."
     },
+    "cannot_delete_gateway_credential": {
+      "message": "Home Assistant cannot delete the gateway credential {name}. The lock only erases a gateway after a Master Card is scanned on it, so remove this one in the Argo app instead."
+    },
     "credential_not_on_lock": {
       "message": "The lock no longer has the credential {name}. It was likely removed in the Argo app."
     },
