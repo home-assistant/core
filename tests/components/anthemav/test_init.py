@@ -97,6 +97,26 @@ async def test_config_entry_not_ready_when_connect_hangs(
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_device_init_timeout_not_reported_as_connect_timeout(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anthemav: AsyncMock,
+) -> None:
+    """Test a post-connect TimeoutError isn't misreported as a connect timeout."""
+    mock_anthemav.protocol.wait_for_device_initialised = AsyncMock(
+        side_effect=TimeoutError
+    )
+    with patch("anthemav.Connection.create", return_value=mock_anthemav):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert (
+            mock_config_entry.reason
+            != "Timed out connecting to Anthem AVR at 1.1.1.1:14999"
+        )
+
+
 async def test_anthemav_dispatcher_signal(
     hass: HomeAssistant,
     mock_connection_create: AsyncMock,

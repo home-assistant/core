@@ -46,22 +46,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
         async_dispatcher_send(hass, f"{ANTHEMAV_UPDATE_SIGNAL}_{entry.entry_id}")
 
     try:
-        # See CONNECT_TIMEOUT_SECONDS for why this needs a timeout.
-        async with asyncio.timeout(CONNECT_TIMEOUT_SECONDS):
-            avr = await anthemav.Connection.create(
-                host=entry.data[CONF_HOST],
-                port=entry.data[CONF_PORT],
-                update_callback=async_anthemav_update_callback,
-            )
+        try:
+            # See CONNECT_TIMEOUT_SECONDS for why this needs a timeout.
+            async with asyncio.timeout(CONNECT_TIMEOUT_SECONDS):
+                avr = await anthemav.Connection.create(
+                    host=entry.data[CONF_HOST],
+                    port=entry.data[CONF_PORT],
+                    update_callback=async_anthemav_update_callback,
+                )
+        except TimeoutError as err:
+            raise ConfigEntryNotReady(
+                f"Timed out connecting to Anthem AVR at "
+                f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+            ) from err
 
         # Wait for the zones to be initialised based on the model
         await avr.protocol.wait_for_device_initialised(DEVICE_TIMEOUT_SECONDS)
-    except TimeoutError as err:
-        # Raised only by the asyncio.timeout() above; the connection never completed.
-        raise ConfigEntryNotReady(
-            f"Timed out connecting to Anthem AVR at "
-            f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
-        ) from err
     except (OSError, DeviceError) as err:
         raise ConfigEntryNotReady from err
 
