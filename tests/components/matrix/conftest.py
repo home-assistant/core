@@ -15,6 +15,7 @@ from nio import (
     JoinResponse,
     LocalProtocolError,
     LoginError,
+    LoginInfoResponse,
     LoginResponse,
     Response,
     RoomResolveAliasError,
@@ -94,6 +95,11 @@ class _MockAsyncClient(AsyncClient):
         if room_id in TEST_JOINABLE_ROOMS.values():
             return JoinResponse(room_id=room_id)
         return JoinError(message="Not allowed to join this room.")
+
+    login_flows: list[str] = ["m.login.password"]
+
+    async def login_info(self, *args, **kwargs):
+        return LoginInfoResponse(self.login_flows)
 
     async def login(self, *args, **kwargs):
         if kwargs.get("password") == TEST_PASSWORD or kwargs.get("token") == TEST_TOKEN:

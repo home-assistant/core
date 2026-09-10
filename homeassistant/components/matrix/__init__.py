@@ -16,6 +16,7 @@ from nio.responses import (
     JoinError,
     JoinResponse,
     LoginError,
+    LoginInfoError,
     Response,
     RoomResolveAliasResponse,
     UploadError,
@@ -427,6 +428,16 @@ class MatrixBot:
             True,  # private=True
         )
 
+    async def _password_login_supported(self) -> bool:
+        """Return whether the homeserver offers password login."""
+        response = await self._client.login_info()
+        if isinstance(response, LoginInfoError):
+            _LOGGER.debug(
+                "Could not retrieve the supported login flows: %s", response.message
+            )
+            return True
+        return "m.login.password" in response.flows
+
     async def _login(self) -> None:
         """Log in to the Matrix homeserver.
 
@@ -481,6 +492,14 @@ class MatrixBot:
                 )
 
         if not self._client.logged_in:
+            if (
+                self._password is not None
+                and not await self._password_login_supported()
+            ):
+                raise ConfigEntryAuthFailed(
+                    "The homeserver does not offer password login, configure the"
+                    " 'access_token' option instead"
+                )
             raise ConfigEntryAuthFailed("Login failed, the credentials are invalid")
 
         # A configured access token is managed by the user, so only persist

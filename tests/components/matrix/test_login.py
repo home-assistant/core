@@ -164,6 +164,21 @@ async def test_login(
     assert mock_save_json.called == params.expected_token_stored
 
 
+async def test_login_password_not_supported(
+    matrix_bot: MatrixBot, mock_save_json: MagicMock
+) -> None:
+    """Test the error raised when the homeserver has no password login flow."""
+    await matrix_bot._client.logout()
+    matrix_bot._password = "WrongPassword"
+    matrix_bot._access_tokens = {}
+    matrix_bot._client.login_flows = ["m.login.sso", "m.login.token"]
+    mock_save_json.reset_mock()
+
+    with pytest.raises(ConfigEntryAuthFailed, match="does not offer password login"):
+        await matrix_bot._login()
+    mock_save_json.assert_not_called()
+
+
 async def test_get_auth_tokens(matrix_bot: MatrixBot, mock_load_json) -> None:
     """Test loading access_tokens from a mocked file."""
 
