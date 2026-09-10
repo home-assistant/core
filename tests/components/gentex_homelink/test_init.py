@@ -1,9 +1,8 @@
 """Test that the integration is initialized correctly."""
 
 import http
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp import RequestInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -107,7 +106,7 @@ async def test_oauth_implementation_not_available(
     [
         (
             OAuth2TokenRequestReauthError(
-                request_info=RequestInfo("", "POST", {}, ""),
+                request_info=Mock(),
                 status=http.HTTPStatus.UNAUTHORIZED,
                 domain=DOMAIN,
             ),
@@ -115,7 +114,7 @@ async def test_oauth_implementation_not_available(
         ),
         (
             OAuth2TokenRequestError(
-                request_info=RequestInfo("", "POST", {}, ""),
+                request_info=Mock(),
                 status=http.HTTPStatus.INTERNAL_SERVER_ERROR,
                 domain=DOMAIN,
             ),
