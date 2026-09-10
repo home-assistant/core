@@ -1,6 +1,8 @@
 """Tests for the storage helper."""
 
 import asyncio
+from collections.abc import AsyncGenerator
+from compression import zstd
 from datetime import timedelta
 import json
 import os
@@ -1382,3 +1384,212 @@ async def test_load_empty_returns_none_and_read_only(
     await store.async_save({"new": "data"})
     assert hass_storage[MOCK_KEY]["data"] == MOCK_DATA
     assert hass_storage[MOCK_KEY]["version"] == 99
+
+
+def _storage_file(hass: HomeAssistant, name: str) -> Path:
+    """Return the path of a file in the .storage dir."""
+    return Path(hass.config.config_dir) / storage.STORAGE_DIR / name
+
+
+def _write_store_file(path: Path, data: dict[str, Any], compress: bool) -> None:
+    """Write a store envelope to disk the way a previous run would have."""
+    payload = json.dumps(
+        {
+            "version": MOCK_VERSION,
+            "minor_version": 1,
+            "key": MOCK_KEY,
+            "data": data,
+        }
+    ).encode()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(zstd.compress(payload) if compress else payload)
+
+
+@pytest.fixture
+async def disk_hass(tmpdir: py.path.local) -> AsyncGenerator[HomeAssistant]:
+    """Yield a Home Assistant instance backed by a real config directory."""
+    loop = asyncio.get_running_loop()
+    config_dir = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+        yield hass
+        await hass.async_stop(force=True)
+
+
+@pytest.mark.parametrize(
+    ("atomic_writes", "serialize_in_event_loop"),
+    [
+        pytest.param(False, True, id="default"),
+        pytest.param(True, True, id="atomic_writes"),
+        pytest.param(False, False, id="serialize_in_executor"),
+    ],
+)
+async def test_compress_save_load_round_trip(
+    disk_hass: HomeAssistant, atomic_writes: bool, serialize_in_event_loop: bool
+) -> None:
+    """Test that a compressed store saves a .zst file and loads back correctly."""
+    store = storage.Store(
+        disk_hass,
+        MOCK_VERSION,
+        MOCK_KEY,
+        compress=True,
+        atomic_writes=atomic_writes,
+        serialize_in_event_loop=serialize_in_event_loop,
+    )
+    await store.async_save(MOCK_DATA)
+
+    zst_file = _storage_file(disk_hass, MOCK_KEY + ".zst")
+    plain_file = _storage_file(disk_hass, MOCK_KEY)
+
+    assert zst_file.is_file()
+    assert not plain_file.exists()
+
+    on_disk = json.loads(zstd.decompress(zst_file.read_bytes()))
+    assert on_disk["data"] == MOCK_DATA
+
+    assert await store.async_load() == MOCK_DATA
+
+
+async def test_compress_migrates_plain_to_compressed(disk_hass: HomeAssistant) -> None:
+    """Test that saving with compress=True removes an existing plain file."""
+    plain_store = storage.Store(disk_hass, MOCK_VERSION, MOCK_KEY)
+    await plain_store.async_save(MOCK_DATA)
+
+    plain_file = _storage_file(disk_hass, MOCK_KEY)
+    assert plain_file.is_file()
+
+    compressed_store = storage.Store(disk_hass, MOCK_VERSION, MOCK_KEY, compress=True)
+
+    # Before the first compressed write the plain file is still the fallback.
+    assert await compressed_store.async_load() == MOCK_DATA
+
+    # Saving with compress=True should write .zst and remove the plain file.
+    await compressed_store.async_save(MOCK_DATA2)
+
+    assert _storage_file(disk_hass, MOCK_KEY + ".zst").is_file()
+    assert not plain_file.exists()
+    assert await compressed_store.async_load() == MOCK_DATA2
+
+
+async def test_compress_falls_back_with_initialized_manager(
+    disk_hass: HomeAssistant,
+) -> None:
+    """Test the plain fallback is used when the store manager knows the files.
+
+    The manager caches by filename, so it reports the .zst as non-existent.
+    That must not short-circuit the load, because the uncompressed file the
+    store falls back to is still on disk.
+    """
+    await disk_hass.async_add_executor_job(
+        _write_store_file, _storage_file(disk_hass, MOCK_KEY), MOCK_DATA, False
+    )
+    await storage.get_internal_store_manager(disk_hass).async_initialize()
+
+    store = storage.Store(disk_hass, MOCK_VERSION, MOCK_KEY, compress=True)
+    assert await store.async_load() == MOCK_DATA
+
+
+async def test_compress_no_file_at_all(disk_hass: HomeAssistant) -> None:
+    """Test a compressed store with neither file on disk loads as empty."""
+    await storage.get_internal_store_manager(disk_hass).async_initialize()
+
+    store = storage.Store(disk_hass, MOCK_VERSION, MOCK_KEY, compress=True)
+    assert await store.async_load() is None
+
+
+@pytest.mark.parametrize(
+    ("corrupt_name", "absent_name"),
+    [
+        pytest.param(MOCK_KEY + ".zst", MOCK_KEY, id="compressed_file"),
+        pytest.param(MOCK_KEY, MOCK_KEY + ".zst", id="uncompressed_fallback"),
+    ],
+)
+async def test_compress_corrupt_file(
+    disk_hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    corrupt_name: str,
+    absent_name: str,
+) -> None:
+    """Test that the corrupt file is the one renamed, not the compressed path."""
+    corrupt_file = _storage_file(disk_hass, corrupt_name)
+
+    def _write_corrupt() -> None:
+        corrupt_file.parent.mkdir(parents=True, exist_ok=True)
+        corrupt_file.write_bytes(b"this is not valid zstd data")
+
+    await disk_hass.async_add_executor_job(_write_corrupt)
+    assert not _storage_file(disk_hass, absent_name).exists()
+
+    store = storage.Store(disk_hass, MOCK_VERSION, MOCK_KEY, compress=True)
+    assert await store.async_load() is None
+    assert "Unrecoverable error decoding storage" in caplog.text
+    assert not corrupt_file.exists()
+
+    storage_path = corrupt_file.parent
+    files = await disk_hass.async_add_executor_job(os.listdir, storage_path)
+    assert [f for f in files if ".corrupt" in f] == [
+        f for f in files if f.startswith(corrupt_name + ".corrupt")
+    ]
+
+    issue_registry = ir.async_get(disk_hass)
+    issues = [
+        entry
+        for entry in issue_registry.issues.values()
+        if entry.translation_key == "storage_corruption"
+    ]
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders["original_path"] == str(corrupt_file)
+
+
+async def test_compress_store_manager_preload(disk_hass: HomeAssistant) -> None:
+    """Test that a compressed store is preloaded when its plain key is asked for."""
+    await disk_hass.async_add_executor_job(
+        _write_store_file,
+        _storage_file(disk_hass, MOCK_KEY + ".zst"),
+        MOCK_DATA,
+        True,
+    )
+
+    store_manager = storage.get_internal_store_manager(disk_hass)
+    await store_manager.async_initialize()
+    # Callers such as bootstrap only know the plain key.
+    await store_manager.async_preload([MOCK_KEY])
+
+    result = store_manager.async_fetch(MOCK_KEY + ".zst")
+    assert result is not None
+    exists, cached_data = result
+    assert exists is True
+    assert cached_data["data"] == MOCK_DATA  # type: ignore[index]
+
+
+async def test_compress_store_manager_cache(disk_hass: HomeAssistant) -> None:
+    """Test that compressed stores are served from the store manager cache."""
+    await disk_hass.async_add_executor_job(
+        _write_store_file,
+        _storage_file(disk_hass, MOCK_KEY + ".zst"),
+        MOCK_DATA,
+        True,
+    )
+
+    store_manager = storage.get_internal_store_manager(disk_hass)
+    await store_manager.async_initialize()
+    await store_manager.async_preload([MOCK_KEY + ".zst"])
+
+    store = storage.Store(disk_hass, MOCK_VERSION, MOCK_KEY, compress=True)
+    assert await store.async_load() == MOCK_DATA
+
+
+async def test_compress_async_remove(disk_hass: HomeAssistant) -> None:
+    """Test that removing a compressed store removes both files."""
+    zst_file = _storage_file(disk_hass, MOCK_KEY + ".zst")
+    plain_file = _storage_file(disk_hass, MOCK_KEY)
+    await disk_hass.async_add_executor_job(_write_store_file, zst_file, MOCK_DATA, True)
+    await disk_hass.async_add_executor_job(
+        _write_store_file, plain_file, MOCK_DATA, False
+    )
+
+    store = storage.Store(disk_hass, MOCK_VERSION, MOCK_KEY, compress=True)
+    await store.async_remove()
+
+    assert not zst_file.exists()
+    assert not plain_file.exists()
