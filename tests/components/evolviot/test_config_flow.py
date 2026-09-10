@@ -269,6 +269,13 @@ async def test_pairing_validation_unknown_error(hass: HomeAssistant) -> None:
         pytest.param(
             {
                 CONF_ACCESS_TOKEN: "mock-access-token",
+                CONF_REFRESH_TOKEN: None,
+            },
+            id="null",
+        ),
+        pytest.param(
+            {
+                CONF_ACCESS_TOKEN: "mock-access-token",
                 CONF_REFRESH_TOKEN: "",
             },
             id="empty",
@@ -283,7 +290,7 @@ async def test_pairing_validation_unknown_error(hass: HomeAssistant) -> None:
     ],
 )
 async def test_pairing_invalid_refresh_token(
-    hass: HomeAssistant, token_data: dict[str, str]
+    hass: HomeAssistant, token_data: dict[str, str | None]
 ) -> None:
     """Test a token response without a usable refresh token."""
     with (

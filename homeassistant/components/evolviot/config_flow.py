@@ -26,8 +26,10 @@ def _pair_schema() -> vol.Schema:
 
 def _refresh_token_from_response(token_data: dict[str, Any]) -> str:
     """Return the refresh token from a token response."""
-    refresh_token = str(token_data.get(CONF_REFRESH_TOKEN, "")).strip()
-    if not refresh_token:
+    refresh_token = token_data.get(CONF_REFRESH_TOKEN)
+    if not isinstance(refresh_token, str) or not (
+        refresh_token := refresh_token.strip()
+    ):
         raise EvolvIOTApiError("Token response did not include refresh token")
     return refresh_token
 
