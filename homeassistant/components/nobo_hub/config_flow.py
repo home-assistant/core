@@ -326,10 +326,12 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             await hub.close()
 
     @staticmethod
-    def _format_hub(ip, serial_prefix):
+    def _format_hub(ip: str, serial_prefix: str) -> str:
         return f"{serial_prefix}XXX ({ip})"
 
-    def _hubs(self):
+    def _hubs(self) -> dict[str, str]:
+        if TYPE_CHECKING:
+            assert self._discovered_hubs
         return {
             ip: self._format_hub(ip, serial_prefix)
             for ip, serial_prefix in self._discovered_hubs.items()
@@ -348,7 +350,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
 class NoboHubConnectError(HomeAssistantError):
     """Error with connecting to Nobø Ecohub."""
 
-    def __init__(self, msg) -> None:
+    def __init__(self, msg: str) -> None:
         """Instantiate error."""
         super().__init__()
         self.msg = msg
@@ -357,7 +359,9 @@ class NoboHubConnectError(HomeAssistantError):
 class OptionsFlowHandler(OptionsFlowWithReload):
     """Handles options flow for the component."""
 
-    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
 
         if user_input is not None:

@@ -44,6 +44,7 @@ from .const import (
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
+    CONF_IGNORE_LOCAL_MAC,
     CONF_IGNORE_WIRED_BUG,
     CONF_MORE_OPTIONS,
     CONF_SITE_ID,
@@ -227,12 +228,19 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_VERIFY_SSL: bool(direct_connect_domain),
         }
 
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.data.get(CONF_HOST) in (source_ip, direct_connect_domain):
-                return self.async_abort(reason="already_configured")
-
+        # MAC first: an entry keyed by it gets its host refreshed here, and the
+        # host match below would otherwise abort before that can happen.
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates=self.config, reload_on_update=False)
+
+        # A console answers on every VLAN interface but discovery reports only
+        # one of them, so match every address it announced for itself.
+        known_hosts = {source_ip, *discovery_info.get("announced_ips", ())}
+        if direct_connect_domain:
+            known_hosts.add(direct_connect_domain)
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data.get(CONF_HOST) in known_hosts:
+                return self.async_abort(reason="already_configured")
 
         self.context["title_placeholders"] = {
             CONF_NAME: (
@@ -359,6 +367,10 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                                 vol.Optional(
                                     CONF_IGNORE_WIRED_BUG,
                                     default=self.hub.config.option_ignore_wired_bug,
+                                ): bool,
+                                vol.Optional(
+                                    CONF_IGNORE_LOCAL_MAC,
+                                    default=self.hub.config.option_ignore_local_mac,
                                 ): bool,
                                 vol.Optional(
                                     CONF_DPI_RESTRICTIONS,

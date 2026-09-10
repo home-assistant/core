@@ -8,11 +8,11 @@ from typing import Any
 
 import attr
 import attrs
+from probatio import to_field_list
 from syrupy.extensions.amber import AmberDataSerializer, AmberSnapshotExtension
 from syrupy.location import PyTestLocation
 from syrupy.types import PropertyFilter, PropertyMatcher, PropertyPath, SerializableData
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import State
@@ -35,6 +35,17 @@ class _ANY:
 ANY = _ANY()
 
 __all__ = ["HomeAssistantSnapshotExtension"]
+
+# DeviceEntry attributes that are internal bookkeeping and should not appear in snapshots.
+# Underscore attributes (_cache, _suggested_area and the transient _pending_move /
+# _composite_subentries) are excluded separately. The composite-device migration
+# attributes below can be removed in HA Core 2027.8.
+_INTERNAL_DEVICE_ENTRY_ATTRIBUTES = (
+    "composite_device_id",
+    "composite_primary_config_entry",
+    "has_composite_identifiers",
+    "split_at",
+)
 
 
 class AreaRegistryEntrySnapshot(dict):
@@ -93,6 +104,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serializable_data = cls._serializable_area_registry_entry(data)
         elif isinstance(data, dr.DeviceEntry):
             serializable_data = cls._serializable_device_registry_entry(data)
+        elif isinstance(data, dr.ChildDeviceEntry):
+            serializable_data = cls._serializable_child_device_registry_entry(data)
         elif isinstance(data, er.RegistryEntry):
             serializable_data = cls._serializable_entity_registry_entry(data)
         elif isinstance(data, ir.IssueEntry):
@@ -106,7 +119,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         }:
             serializable_data = cls._serializable_conversation_result(data)
         elif isinstance(data, vol.Schema):
-            serializable_data = voluptuous_serialize.convert(data)
+            serializable_data = to_field_list(data)
         elif isinstance(data, ConfigEntry):
             serializable_data = cls._serializable_config_entry(data)
         elif dataclasses.is_dataclass(type(data)):
@@ -150,21 +163,44 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         cls, data: dr.DeviceEntry
     ) -> SerializableData:
         """Prepare a Home Assistant device registry entry for serialization."""
+        # Exclude internal attributes (caches, transient move state, and the
+        # composite-device migration bookkeeping) from the snapshot
         serialized = DeviceRegistryEntrySnapshot(
-            attrs.asdict(data)
-            | {
-                "config_entries": ANY,
-                "config_entries_subentries": ANY,
-                "id": ANY,
-            }
+            attr.asdict(
+                data,
+                retain_collection_types=True,
+                filter=lambda attribute, _: (
+                    not attribute.name.startswith("_")
+                    and attribute.name not in _INTERNAL_DEVICE_ENTRY_ATTRIBUTES
+                ),
+            )
+            | {"id": ANY}
         )
         if serialized["via_device_id"] is not None:
             serialized["via_device_id"] = ANY
-        if serialized["primary_config_entry"] is not None:
-            serialized["primary_config_entry"] = ANY
-        serialized.pop("_cache")
-        # This can be removed when suggested_area is removed from DeviceEntry
-        serialized.pop("_suggested_area")
+
+        serialized["config_entry_id"] = ANY
+        serialized["config_subentry_id"] = ANY
+
+        return cls._remove_created_and_modified_at(serialized)
+
+    @classmethod
+    def _serializable_child_device_registry_entry(
+        cls, data: dr.ChildDeviceEntry
+    ) -> SerializableData:
+        """Prepare a Home Assistant child device registry entry for serialization."""
+        serialized = DeviceRegistryEntrySnapshot(
+            attr.asdict(
+                data,
+                retain_collection_types=True,
+                filter=lambda attribute, _: not attribute.name.startswith("_"),
+            )
+            | {"id": ANY}
+        )
+        serialized["config_entry_id"] = ANY
+        serialized["config_subentry_id"] = ANY
+        serialized["parent_device_id"] = ANY
+
         return cls._remove_created_and_modified_at(serialized)
 
     @classmethod

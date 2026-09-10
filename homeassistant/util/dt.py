@@ -351,9 +351,10 @@ def get_age(date: dt.datetime, precision: int = 1) -> str:
 
     The age can be in second, minute, hour, day, month and year.
 
-    depth number of units will be returned, with the last unit rounded
+    precision is the number of units to return, with the last unit rounded.
+    precision=0 returns all units (no early rounding, except for sub-second values).
 
-    The date must be in the past or a ValueException will be raised.
+    The date must be in the past or a ValueError will be raised.
     """
 
     delta = (now() - date).total_seconds()
@@ -366,13 +367,14 @@ def get_age(date: dt.datetime, precision: int = 1) -> str:
 
 
 def get_time_remaining(date: dt.datetime, precision: int = 1) -> str:
-    """Take a datetime and return its "age" as a string.
+    """Take a datetime and return its "time remaining" as a string.
 
-    The age can be in second, minute, hour, day, month and year.
+    The time remaining can be in second, minute, hour, day, month and year.
 
-    depth number of units will be returned, with the last unit rounded
+    precision is the number of units to return, with the last unit rounded.
+    precision=0 returns all units (no early rounding, except for sub-second values).
 
-    The date must be in the future or a ValueException will be raised.
+    The date must be in the future or a ValueError will be raised.
     """
 
     delta = (date - now()).total_seconds()
@@ -382,6 +384,20 @@ def get_time_remaining(date: dt.datetime, precision: int = 1) -> str:
     if rounded_delta < 0:
         raise ValueError("Time value is in the past")
 
+    return _get_timestring(rounded_delta, precision)
+
+
+def timedelta_string(delta: dt.timedelta, precision: int = 1) -> str:
+    """Return a string representation of a timedelta.
+
+    The result can be in seconds, minutes, hours, days, months and years.
+
+    precision is the number of units to return, with the last unit rounded.
+    precision=0 returns all units (no early rounding, except for sub-second values).
+
+    Negative timedeltas are treated as their absolute value.
+    """
+    rounded_delta = round(abs(delta.total_seconds()))
     return _get_timestring(rounded_delta, precision)
 
 

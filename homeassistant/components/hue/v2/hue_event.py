@@ -45,7 +45,9 @@ async def async_setup_hue_events(bridge: HueBridge):
             return
 
         hue_device = btn_controller.get_device(hue_resource.id)
-        device = dev_reg.async_get_device(identifiers={(DOMAIN, hue_device.id)})
+        device = dev_reg.async_get_device_by_identifier(
+            (DOMAIN, hue_device.id), conf_entry.entry_id
+        )
 
         # Fire event
         data = {
@@ -72,7 +74,9 @@ async def async_setup_hue_events(bridge: HueBridge):
         LOGGER.debug("Received relative_rotary event: %s", hue_resource)
 
         hue_device = btn_controller.get_device(hue_resource.id)
-        device = dev_reg.async_get_device(identifiers={(DOMAIN, hue_device.id)})
+        device = dev_reg.async_get_device_by_identifier(
+            (DOMAIN, hue_device.id), conf_entry.entry_id
+        )
 
         # Fire event
         data = {

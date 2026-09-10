@@ -2,6 +2,8 @@
 
 import asyncio
 from datetime import datetime, timedelta
+import json
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -12,18 +14,25 @@ from uiprotect.data import (
     Event,
     EventType,
     ModelType,
-    PublicBootstrap,
+    SmartDetectAudioType,
     SmartDetectObjectType,
 )
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
+    ATTR_EVENT_SOURCE,
+    ATTR_SMART_DETECT_TYPES,
     DEFAULT_ATTRIBUTION,
     EVENT_TYPE_PACKAGE_DETECTED,
 )
-from homeassistant.components.unifiprotect.event import EVENT_DESCRIPTIONS
-from homeassistant.const import ATTR_ATTRIBUTION, Platform
+from homeassistant.components.unifiprotect.event import (
+    _MAX_TRACKED_EVENTS,
+    EVENT_DESCRIPTIONS,
+)
+from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, Platform
 from homeassistant.core import Event as HAEvent, HomeAssistant, callback
+from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .utils import (
@@ -33,6 +42,7 @@ from .utils import (
     ids_from_device_description,
     init_entry,
     remove_entities,
+    setup_public_camera,
 )
 
 # Short delay for testing
@@ -56,11 +66,11 @@ async def test_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.EVENT, 0, 0)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
 
 
 async def test_doorbell_ring(
@@ -73,18 +83,12 @@ async def test_doorbell_ring(
     """Test a doorbell ring event fired from the public events websocket."""
 
     # Ring is delivered over the public events websocket, which is only
-    # subscribed once update_public() has primed the public bootstrap.
-    ufp.api.has_public_bootstrap = True
-    ufp.api.public_bootstrap = Mock(
-        spec=PublicBootstrap,
-        relays={},
-        sirens={},
-        arm_mode=None,
-        arm_profiles={},
-    )
+    # subscribed once update_public() has primed the public bootstrap; the
+    # entity's availability also requires the public camera to resolve.
+    setup_public_camera(ufp)
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -133,7 +137,8 @@ async def test_doorbell_ring(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    # Only the start of an event is dispatched; an update must be ignored.
+    # Updates are dispatched too, but the entity fires each event id only
+    # once, so a repeat dispatch of the same ring event must be suppressed.
     ufp.events_msg(
         ProtectEvent(
             id="test_ring_event",
@@ -151,28 +156,34 @@ async def test_doorbell_ring(
     unsub()
 
 
+@pytest.mark.parametrize(
+    ("event_type", "overlapping_event_type"),
+    [
+        pytest.param(EventType.SMART_DETECT, EventType.SMART_DETECT_LINE, id="zone"),
+        pytest.param(EventType.SMART_DETECT_LINE, EventType.SMART_DETECT, id="line"),
+        pytest.param(
+            EventType.SMART_DETECT_LOITER, EventType.SMART_DETECT, id="loiter"
+        ),
+    ],
+)
 async def test_package_detected(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    event_type: EventType,
+    overlapping_event_type: EventType,
 ) -> None:
     """Test a package detection event fired from the public events websocket."""
 
     # Package detection is delivered over the public events websocket, which is
-    # only subscribed once update_public() has primed the public bootstrap.
-    ufp.api.has_public_bootstrap = True
-    ufp.api.public_bootstrap = Mock(
-        spec=PublicBootstrap,
-        relays={},
-        sirens={},
-        arm_mode=None,
-        arm_profiles={},
-    )
+    # only subscribed once update_public() has primed the public bootstrap; the
+    # entity's availability also requires the public camera to resolve.
+    setup_public_camera(ufp)
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -186,12 +197,13 @@ async def test_package_detected(
     unsub = async_track_state_change_event(hass, entity_id, _capture_event)
 
     # Package detection arrives on the public events websocket as a
-    # smartDetectZone detection event with the package object type. Protect
-    # records it already-ended; the event entity fires on the detection start.
+    # smartDetectZone, smartDetectLine, or smartDetectLoiterZone detection
+    # event with the package object type. Protect records it already-ended;
+    # the event entity fires on the detection start.
     ufp.events_msg(
         ProtectEvent(
             id="test_package_event",
-            type=EventType.SMART_DETECT,
+            type=event_type,
             channel=ProtectEventChannel.DETECTION,
             device_id=doorbell.id,
             device_mac=doorbell.mac,
@@ -208,6 +220,7 @@ async def test_package_detected(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_package_event"
+    assert state.attributes[ATTR_EVENT_SOURCE] == event_type.value
     assert state.attributes["event_type"] == EVENT_TYPE_PACKAGE_DETECTED
 
     # A non-package detection must not fire the package entity.
@@ -227,11 +240,12 @@ async def test_package_detected(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    # Only the start of a detection is dispatched; an update must be ignored.
+    # Updates are dispatched too, but the entity fires each (event id, object
+    # type, event source) once, so the same source must be suppressed.
     ufp.events_msg(
         ProtectEvent(
             id="test_package_event",
-            type=EventType.SMART_DETECT,
+            type=event_type,
             channel=ProtectEventChannel.DETECTION,
             device_id=doorbell.id,
             device_mac=doorbell.mac,
@@ -243,6 +257,27 @@ async def test_package_detected(
     )
     await hass.async_block_till_done()
     assert len(events) == 1
+
+    # The same event and object can fire again for a distinct Protect source.
+    ufp.events_msg(
+        ProtectEvent(
+            id="test_package_event",
+            type=overlapping_event_type,
+            channel=ProtectEventChannel.DETECTION,
+            device_id=doorbell.id,
+            device_mac=doorbell.mac,
+            start=fixed_now - timedelta(seconds=1),
+            end=fixed_now,
+            smart_detect_types=(SmartDetectObjectType.PACKAGE,),
+        ),
+        EventChange.STARTED,
+    )
+    await hass.async_block_till_done()
+    assert len(events) == 2
+    assert (
+        events[-1].data["new_state"].attributes[ATTR_EVENT_SOURCE]
+        == overlapping_event_type.value
+    )
 
     # Subscriptions are keyed by device_id alone: an event still dispatches when
     # it carries no device_mac and the device is absent from the private
@@ -262,8 +297,8 @@ async def test_package_detected(
         EventChange.STARTED,
     )
     await hass.async_block_till_done()
-    assert len(events) == 2
-    assert events[1].data["new_state"].attributes[ATTR_EVENT_ID] == (
+    assert len(events) == 3
+    assert events[2].data["new_state"].attributes[ATTR_EVENT_ID] == (
         "test_package_event_no_private_device"
     )
 
@@ -282,7 +317,7 @@ async def test_package_detected(
         EventChange.STARTED,
     )
     await hass.async_block_till_done()
-    assert len(events) == 2
+    assert len(events) == 3
 
     # A non-smart-detect event that happens to carry a matching object type is
     # routed by type, so it must not reach the smart-detect entity.
@@ -300,7 +335,7 @@ async def test_package_detected(
         EventChange.STARTED,
     )
     await hass.async_block_till_done()
-    assert len(events) == 2
+    assert len(events) == 3
 
     unsub()
 
@@ -315,7 +350,7 @@ async def test_doorbell_nfc_scanned(
     """Test a doorbell NFC scanned event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -390,7 +425,7 @@ async def test_doorbell_nfc_scanned_ulpusr_deactivated(
     """Test a doorbell NFC scanned event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -466,7 +501,7 @@ async def test_doorbell_nfc_scanned_no_ulpusr(
     """Test a doorbell NFC scanned event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -534,7 +569,7 @@ async def test_doorbell_nfc_scanned_no_keyring(
     """Test a doorbell NFC scanned event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -595,7 +630,7 @@ async def test_doorbell_fingerprint_identified(
     """Test a doorbell fingerprint identified event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -663,7 +698,7 @@ async def test_doorbell_fingerprint_identified_user_deactivated(
     """Test a doorbell fingerprint identified event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -732,7 +767,7 @@ async def test_doorbell_fingerprint_identified_no_user(
     """Test a doorbell fingerprint identified event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -793,7 +828,7 @@ async def test_doorbell_fingerprint_not_identified(
     """Test a doorbell fingerprint identified event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -851,7 +886,7 @@ async def test_vehicle_detection_basic(
     """Test basic vehicle detection event with thumbnails."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -925,7 +960,7 @@ async def test_vehicle_detection_with_lpr_ufp6(
     """Test vehicle detection with license plate recognition (UFP 6.0+ format)."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -1009,7 +1044,7 @@ async def test_vehicle_detection_with_lpr_legacy(
     """Test vehicle detection with license plate recognition (legacy format)."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -1082,7 +1117,7 @@ async def test_vehicle_detection_multiple_thumbnails(
     """Test vehicle detection with multiple thumbnails - should pick best LPR."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -1183,7 +1218,7 @@ async def test_vehicle_detection_no_thumbnails(
     """Test vehicle detection event without thumbnails - should not fire."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -1241,7 +1276,7 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     """Test that timer resets when new thumbnails arrive for same event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -1352,7 +1387,7 @@ async def test_vehicle_detection_new_event_cancels_timer(
     """Test that new event cancels timer for previous event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -1479,7 +1514,7 @@ async def test_vehicle_detection_timer_cleanup_on_remove(
     """Test that pending timer is cancelled when entity is removed."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[3]
@@ -1544,7 +1579,7 @@ async def test_vehicle_detection_refire_on_lpr_data(
     """Test that event refires when LPR data arrives after initial detection."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -1655,7 +1690,7 @@ async def test_vehicle_detection_no_refire_same_data(
     """Test that event does NOT refire when same data arrives again."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
     events: list[HAEvent] = []
 
     @callback
@@ -1740,3 +1775,664 @@ async def test_aiport_no_event_entities(
     # AI Port should not create any camera-specific event entities
     # (doorbell, motion, etc.)
     assert_entity_counts(hass, Platform.EVENT, 0, 0)
+
+
+async def test_motion_detection_event(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """The motion event entity fires from the public events websocket."""
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "motion_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    motion_event = ProtectEvent(
+        id="motion-1",
+        type=EventType.MOTION,
+        channel=ProtectEventChannel.DETECTION,
+        device_id=doorbell.id,
+        device_mac=doorbell.mac,
+        start=fixed_now - timedelta(seconds=1),
+        end=fixed_now,
+    )
+    ufp.events_msg(
+        motion_event,
+        EventChange.STARTED,
+    )
+    ufp.events_msg(motion_event, EventChange.UPDATED)
+    await hass.async_block_till_done()
+    unsub()
+
+    assert len(events) == 1
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["event_type"] == "motion"
+    assert state.attributes[ATTR_EVENT_ID] == "motion-1"
+    assert ATTR_EVENT_SOURCE not in state.attributes
+
+
+@pytest.mark.parametrize(
+    "event_type",
+    [
+        pytest.param(EventType.SMART_DETECT, id="zone"),
+        pytest.param(EventType.SMART_DETECT_LINE, id="line"),
+        pytest.param(EventType.SMART_DETECT_LOITER, id="loiter"),
+    ],
+)
+async def test_smart_detection_event(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+    event_type: EventType,
+) -> None:
+    """The smart-detection event entity fires per object type with the full type set.
+
+    smartDetectZone, smartDetectLine, and smartDetectLoiterZone events all carry
+    smart detections, so a standalone line-crossing or loitering event must fire
+    the entity too.
+    """
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "smart_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    ufp.events_msg(
+        ProtectEvent(
+            id="smart-1",
+            type=event_type,
+            channel=ProtectEventChannel.DETECTION,
+            device_id=doorbell.id,
+            device_mac=doorbell.mac,
+            start=fixed_now - timedelta(seconds=1),
+            end=fixed_now,
+            smart_detect_types=(
+                SmartDetectObjectType.PERSON,
+                SmartDetectObjectType.VEHICLE,
+            ),
+        ),
+        EventChange.STARTED,
+    )
+    await hass.async_block_till_done()
+    unsub()
+
+    # One fire per surfaced type, each carrying the full co-detected set.
+    states = [event.data["new_state"] for event in events]
+    assert [state.attributes["event_type"] for state in states] == [
+        "person",
+        "vehicle",
+    ]
+    assert [state.attributes[ATTR_EVENT_ID] for state in states] == ["smart-1"] * 2
+    assert [state.attributes[ATTR_EVENT_SOURCE] for state in states] == [
+        event_type.value
+    ] * 2
+    assert [state.attributes[ATTR_SMART_DETECT_TYPES] for state in states] == [
+        ["person", "vehicle"]
+    ] * 2
+
+
+async def test_smart_detection_event_dedup_by_source(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """The same object and event id fire once for each raw Protect event source."""
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "smart_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    common = {
+        "id": "smart-1",
+        "channel": ProtectEventChannel.DETECTION,
+        "device_id": doorbell.id,
+        "device_mac": doorbell.mac,
+        "start": fixed_now - timedelta(seconds=1),
+        "end": fixed_now,
+        "smart_detect_types": (SmartDetectObjectType.PERSON,),
+    }
+    for event_type, change in (
+        (EventType.SMART_DETECT, EventChange.STARTED),
+        (EventType.SMART_DETECT_LINE, EventChange.STARTED),
+        (EventType.SMART_DETECT_LINE, EventChange.UPDATED),
+        (EventType.SMART_DETECT_LOITER, EventChange.STARTED),
+    ):
+        ufp.events_msg(ProtectEvent(type=event_type, **common), change)
+    await hass.async_block_till_done()
+    unsub()
+
+    states = [event.data["new_state"] for event in events]
+    assert [state.attributes[ATTR_EVENT_SOURCE] for state in states] == [
+        EventType.SMART_DETECT.value,
+        EventType.SMART_DETECT_LINE.value,
+        EventType.SMART_DETECT_LOITER.value,
+    ]
+    assert [state.attributes["event_type"] for state in states] == ["person"] * 3
+    assert [state.attributes[ATTR_EVENT_ID] for state in states] == ["smart-1"] * 3
+
+
+async def test_smart_detection_event_late_type(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """A late object type fires once without refiring an earlier type."""
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "smart_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    base = {
+        "id": "smart-late",
+        "type": EventType.SMART_DETECT_LINE,
+        "channel": ProtectEventChannel.DETECTION,
+        "device_id": doorbell.id,
+        "device_mac": doorbell.mac,
+        "start": fixed_now - timedelta(seconds=1),
+    }
+    ufp.events_msg(
+        ProtectEvent(
+            **base,
+            end=None,
+            smart_detect_types=(SmartDetectObjectType.PERSON,),
+        ),
+        EventChange.STARTED,
+    )
+    for end in (None, fixed_now):
+        ufp.events_msg(
+            ProtectEvent(
+                **base,
+                end=end,
+                smart_detect_types=(
+                    SmartDetectObjectType.PERSON,
+                    SmartDetectObjectType.VEHICLE,
+                ),
+            ),
+            EventChange.UPDATED,
+        )
+    await hass.async_block_till_done()
+    unsub()
+
+    states = [event.data["new_state"] for event in events]
+    assert [state.attributes["event_type"] for state in states] == [
+        "person",
+        "vehicle",
+    ]
+    assert [state.attributes[ATTR_EVENT_SOURCE] for state in states] == [
+        EventType.SMART_DETECT_LINE.value
+    ] * 2
+    assert states[0].attributes[ATTR_SMART_DETECT_TYPES] == ["person"]
+    assert states[1].attributes[ATTR_SMART_DETECT_TYPES] == ["person", "vehicle"]
+
+
+async def test_sound_detection_event(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """The sound-detection event entity fires for audio types (slugged event type)."""
+    doorbell.feature_flags.smart_detect_audio_types = [SmartDetectAudioType.SMOKE]
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "sound_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    ufp.events_msg(
+        ProtectEvent(
+            id="audio-1",
+            type=EventType.SMART_AUDIO_DETECT,
+            channel=ProtectEventChannel.DETECTION,
+            device_id=doorbell.id,
+            device_mac=doorbell.mac,
+            start=fixed_now - timedelta(seconds=1),
+            end=fixed_now,
+            smart_detect_types=(SmartDetectObjectType.SMOKE,),
+        ),
+        EventChange.STARTED,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["event_type"] == "smoke"
+    assert state.attributes[ATTR_EVENT_ID] == "audio-1"
+    assert ATTR_EVENT_SOURCE not in state.attributes
+
+
+async def test_sound_detection_event_late_type(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Audio types arrive on a later update, not at start; fire once when they appear."""
+    doorbell.feature_flags.smart_detect_audio_types = [SmartDetectAudioType.SMOKE]
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "sound_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    base = {
+        "id": "audio-1",
+        "type": EventType.SMART_AUDIO_DETECT,
+        "channel": ProtectEventChannel.DETECTION,
+        "device_id": doorbell.id,
+        "device_mac": doorbell.mac,
+        "start": fixed_now - timedelta(seconds=1),
+    }
+    # Start carries no type yet -> nothing fires.
+    ufp.events_msg(
+        ProtectEvent(**base, end=None, smart_detect_types=()), EventChange.STARTED
+    )
+    await hass.async_block_till_done()
+    assert events == []
+
+    # The type appears on a later update -> fires once.
+    ufp.events_msg(
+        ProtectEvent(
+            **base, end=None, smart_detect_types=(SmartDetectObjectType.SMOKE,)
+        ),
+        EventChange.UPDATED,
+    )
+    await hass.async_block_till_done()
+
+    # A further update for the same type is deduped (no re-fire).
+    ufp.events_msg(
+        ProtectEvent(
+            **base, end=fixed_now, smart_detect_types=(SmartDetectObjectType.SMOKE,)
+        ),
+        EventChange.UPDATED,
+    )
+    await hass.async_block_till_done()
+    unsub()
+
+    fired = [event.data["new_state"].attributes["event_type"] for event in events]
+    assert fired == ["smoke"]
+
+
+async def test_sound_detection_absent_without_audio_types(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Object smart-detect without audio support creates no sound-detection entity."""
+    doorbell.feature_flags.smart_detect_audio_types = []
+    await init_entry(hass, ufp, [doorbell])
+
+    smart = next(d for d in EVENT_DESCRIPTIONS if d.key == "smart_detection")
+    sound = next(d for d in EVENT_DESCRIPTIONS if d.key == "sound_detection")
+    _, smart_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, smart
+    )
+    _, sound_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, sound
+    )
+
+    # object detection stays, audio (sound) detection is gated out
+    assert entity_registry.async_get(smart_id) is not None
+    assert entity_registry.async_get(sound_id) is None
+
+
+async def test_detection_event_removed_change_ignored(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """A REMOVED (eviction) change does not fire a detection event."""
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "smart_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    ufp.events_msg(
+        ProtectEvent(
+            id="ev-removed",
+            type=EventType.SMART_DETECT,
+            channel=ProtectEventChannel.DETECTION,
+            device_id=doorbell.id,
+            device_mac=doorbell.mac,
+            start=fixed_now - timedelta(seconds=1),
+            end=fixed_now,
+            smart_detect_types=(SmartDetectObjectType.PERSON,),
+        ),
+        EventChange.REMOVED,
+    )
+    await hass.async_block_till_done()
+    unsub()
+
+    assert events == []
+
+
+async def test_doorbell_ring_dedup_across_dispatches(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """A ring fires once even though start, update and end are all dispatched."""
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[0]
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    base = {
+        "id": "ring-1",
+        "type": EventType.RING,
+        "channel": ProtectEventChannel.DETECTION,
+        "device_id": doorbell.id,
+        "device_mac": doorbell.mac,
+        "start": fixed_now - timedelta(seconds=1),
+    }
+    for change, end in (
+        (EventChange.STARTED, None),
+        (EventChange.UPDATED, None),
+        (EventChange.ENDED, fixed_now),
+    ):
+        ufp.events_msg(ProtectEvent(**base, end=end), change)
+        await hass.async_block_till_done()
+    unsub()
+
+    assert len(events) == 1
+
+
+def test_detection_event_types_have_translations() -> None:
+    """Every category detection event type has a strings.json state label.
+
+    Guards against a uiprotect enum addition slugging into ``event_types`` (and
+    firing) without a matching translation label.
+    """
+    strings = json.loads(
+        (
+            Path(__file__).parents[3]
+            / "homeassistant/components/unifiprotect/strings.json"
+        ).read_text()
+    )
+    event_states = strings["entity"]["event"]
+    for key in ("motion_detection", "smart_detection", "sound_detection"):
+        description = next(d for d in EVENT_DESCRIPTIONS if d.key == key)
+        labels = event_states[key]["state_attributes"]["event_type"]["state"]
+        missing = [t for t in description.event_types or () if t not in labels]
+        assert not missing, f"{key} missing event_type labels: {missing}"
+
+
+async def test_smart_detection_event_interleaved_dedup(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Two overlapping same-source event ids remain independently deduplicated."""
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "smart_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    common = {
+        "type": EventType.SMART_DETECT,
+        "channel": ProtectEventChannel.DETECTION,
+        "device_id": doorbell.id,
+        "device_mac": doorbell.mac,
+        "start": fixed_now - timedelta(seconds=1),
+        "end": None,
+    }
+    # Event A and B overlap; A re-dispatches after B started.
+    ufp.events_msg(
+        ProtectEvent(
+            id="evt-a", smart_detect_types=(SmartDetectObjectType.PERSON,), **common
+        ),
+        EventChange.STARTED,
+    )
+    ufp.events_msg(
+        ProtectEvent(
+            id="evt-b", smart_detect_types=(SmartDetectObjectType.PERSON,), **common
+        ),
+        EventChange.STARTED,
+    )
+    ufp.events_msg(
+        ProtectEvent(
+            id="evt-a", smart_detect_types=(SmartDetectObjectType.PERSON,), **common
+        ),
+        EventChange.UPDATED,
+    )
+    await hass.async_block_till_done()
+    unsub()
+
+    states = [event.data["new_state"] for event in events]
+    assert [state.attributes[ATTR_EVENT_ID] for state in states] == [
+        "evt-a",
+        "evt-b",
+    ]
+    assert [state.attributes["event_type"] for state in states] == ["person"] * 2
+    assert [state.attributes[ATTR_EVENT_SOURCE] for state in states] == [
+        EventType.SMART_DETECT.value
+    ] * 2
+
+
+async def test_detection_event_dedup_is_bounded(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """The fire-dedup tracker is bounded; distinct events keep firing."""
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "motion_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    for index in range(20):
+        ufp.events_msg(
+            ProtectEvent(
+                id=f"motion-{index}",
+                type=EventType.MOTION,
+                channel=ProtectEventChannel.DETECTION,
+                device_id=doorbell.id,
+                device_mac=doorbell.mac,
+                start=fixed_now - timedelta(seconds=1),
+                end=fixed_now,
+            ),
+            EventChange.STARTED,
+        )
+    await hass.async_block_till_done()
+    unsub()
+
+    assert len(events) == 20
+
+
+async def test_detection_event_dedup_evicts_oldest(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Exceeding the dedup cap evicts the oldest event id, letting it refire.
+
+    An unbounded tracker would also pass ``test_detection_event_dedup_is_bounded``
+    (it only sends distinct ids), so this replays an id that should have aged out.
+    """
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "motion_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+
+    def _send(index: int) -> None:
+        ufp.events_msg(
+            ProtectEvent(
+                id=f"motion-{index}",
+                type=EventType.MOTION,
+                channel=ProtectEventChannel.DETECTION,
+                device_id=doorbell.id,
+                device_mac=doorbell.mac,
+                start=fixed_now - timedelta(seconds=1),
+                end=fixed_now,
+            ),
+            EventChange.STARTED,
+        )
+
+    # A (cap + 1)th distinct id evicts the oldest tracked id ("motion-0").
+    for index in range(_MAX_TRACKED_EVENTS + 1):
+        _send(index)
+    await hass.async_block_till_done()
+    assert len(events) == _MAX_TRACKED_EVENTS + 1
+
+    # Replaying the evicted id fires again; a bug that never evicts would dedup it.
+    _send(0)
+    await hass.async_block_till_done()
+    unsub()
+
+    assert len(events) == _MAX_TRACKED_EVENTS + 2
+
+
+async def test_event_entities_unavailable_on_events_ws_disconnect(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+) -> None:
+    """Public event entities follow the events websocket they fire from."""
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    ring = next(d for d in EVENT_DESCRIPTIONS if d.key == "doorbell")
+    _, ring_id = await ids_from_device_description(hass, Platform.EVENT, doorbell, ring)
+    motion = next(d for d in EVENT_DESCRIPTIONS if d.key == "motion_detection")
+    _, motion_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, motion
+    )
+    assert hass.states.get(ring_id).state != STATE_UNAVAILABLE
+    assert hass.states.get(motion_id).state != STATE_UNAVAILABLE
+
+    assert ufp.events_ws_state_subscription is not None
+    ufp.events_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ring_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(motion_id).state == STATE_UNAVAILABLE
+
+    ufp.events_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ring_id).state != STATE_UNAVAILABLE
+    assert hass.states.get(motion_id).state != STATE_UNAVAILABLE

@@ -67,6 +67,7 @@ from homeassistant.helpers.condition import (
     MAX_HISTORY_PRIMING_LOOKBACK,
     Condition,
     ConditionChecker,
+    ConditionConfig,
     EntityConditionBase,
     EntityNumericalConditionWithUnitBase,
     _async_get_condition_platform,
@@ -2800,10 +2801,14 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
 _MODERN_SUN_CONDITIONS = (
     "sun.elevation",
     "sun.is_ascending",
+    "sun.is_blue_hour",
     "sun.is_descending",
     "sun.is_evening_twilight",
+    "sun.is_golden_hour",
+    "sun.is_midnight_sun",
     "sun.is_morning_twilight",
     "sun.is_night",
+    "sun.is_polar_night",
     "sun.is_set",
     "sun.is_up",
 )
@@ -3130,7 +3135,7 @@ async def test_async_get_all_descriptions_with_bad_description(
 
     assert (
         "Unable to parse conditions.yaml for the sun integration: "
-        "expected a dictionary for dictionary value @ data['_']['fields']"
+        "expected a mapping at '_.fields'"
     ) in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
@@ -3243,7 +3248,7 @@ async def _setup_numerical_condition(
     condition_options: dict[str, Any],
     target_config: dict[str, Any],
     domain_specs: Mapping[str, DomainSpec] | None = None,
-    valid_unit: str | None | UndefinedType = UNDEFINED,
+    valid_unit: str | UndefinedType | None = UNDEFINED,
     primary_entities_only: bool = True,
 ) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
@@ -3506,7 +3511,7 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
 )
 async def test_numerical_condition_valid_unit(
     hass: HomeAssistant,
-    valid_unit: str | None | UndefinedType,
+    valid_unit: str | UndefinedType | None,
     entity_unit: str | None,
     expected: bool,
 ) -> None:
@@ -6354,3 +6359,128 @@ async def test_async_unload_invokes_async_unload_hook(
 
     unload_hook.assert_called_once()
     assert checker._unloaded is True
+
+
+async def test_state_condition_empty_state_value(hass: HomeAssistant) -> None:
+    """Test that async_from_config does not raise an error for an empty state value."""
+    hass.states.async_set("sensor.temperature", "100")
+
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.temperature",
+        "state": [],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert not test.async_check()
+
+
+def _make_condition(
+    hass: HomeAssistant, domain_specs: Mapping[str, DomainSpec]
+) -> EntityConditionBase:
+    """Create a minimal EntityConditionBase subclass with the given domain specs."""
+
+    class _SimpleCondition(EntityConditionBase):
+        """Minimal concrete condition for testing entity_filter."""
+
+        _domain_specs = domain_specs
+
+        def is_valid_state(self, entity_state: State) -> bool:
+            """Accept any state."""
+            return True
+
+    config = ConditionConfig(
+        target={CONF_ENTITY_ID: []}, options={ATTR_BEHAVIOR: BEHAVIOR_ANY}
+    )
+    return _SimpleCondition(hass, config)
+
+
+async def test_condition_entity_filter_by_domain_only(hass: HomeAssistant) -> None:
+    """Test entity_filter includes entities matching domain, excludes others."""
+    cond = _make_condition(hass, {"sensor": DomainSpec(), "switch": DomainSpec()})
+
+    entities = {
+        "sensor.temp",
+        "sensor.humidity",
+        "switch.light",
+        "light.bedroom",
+        "cover.garage",
+    }
+    result = cond.entity_filter(entities)
+    assert result == {"sensor.temp", "sensor.humidity", "switch.light"}
+
+
+async def test_condition_entity_filter_by_device_class(hass: HomeAssistant) -> None:
+    """Test entity_filter filters by device_class when specified."""
+    cond = _make_condition(hass, {"sensor": DomainSpec(device_class="humidity")})
+
+    hass.states.async_set("sensor.humidity_1", "50", {ATTR_DEVICE_CLASS: "humidity"})
+    hass.states.async_set(
+        "sensor.temperature_1", "22", {ATTR_DEVICE_CLASS: "temperature"}
+    )
+    hass.states.async_set("sensor.no_class", "10", {})
+
+    entities = {"sensor.humidity_1", "sensor.temperature_1", "sensor.no_class"}
+    result = cond.entity_filter(entities)
+    assert result == {"sensor.humidity_1"}
+
+
+async def test_condition_entity_filter_device_class_unknown_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test entity_filter excludes entities not in state machine or registry."""
+    cond = _make_condition(hass, {"sensor": DomainSpec(device_class="humidity")})
+
+    entities = {"sensor.nonexistent"}
+    result = cond.entity_filter(entities)
+    assert result == set()
+
+
+async def test_condition_entity_filter_multiple_domains_with_device_class(
+    hass: HomeAssistant,
+) -> None:
+    """Test entity_filter with multiple domains, some with device_class filtering."""
+    cond = _make_condition(
+        hass,
+        {
+            "climate": DomainSpec(value_source="current_humidity"),
+            "sensor": DomainSpec(device_class="humidity"),
+            "weather": DomainSpec(value_source="humidity"),
+        },
+    )
+
+    hass.states.async_set("sensor.humidity", "60", {ATTR_DEVICE_CLASS: "humidity"})
+    hass.states.async_set(
+        "sensor.temperature", "20", {ATTR_DEVICE_CLASS: "temperature"}
+    )
+    hass.states.async_set("climate.hvac", "heat", {})
+    hass.states.async_set("weather.home", "sunny", {})
+    hass.states.async_set("light.bedroom", "on", {})
+
+    entities = {
+        "sensor.humidity",
+        "sensor.temperature",
+        "climate.hvac",
+        "weather.home",
+        "light.bedroom",
+    }
+    result = cond.entity_filter(entities)
+    # sensor.temperature excluded (wrong device_class), light.bedroom excluded
+    # (no matching domain).
+    assert result == {"sensor.humidity", "climate.hvac", "weather.home"}
+
+
+async def test_condition_entity_filter_no_device_class_means_match_all_in_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test that DomainSpec without device_class matches all entities in the domain."""
+    cond = _make_condition(hass, {"cover": DomainSpec()})
+
+    hass.states.async_set("cover.door", "open", {ATTR_DEVICE_CLASS: "door"})
+    hass.states.async_set("cover.garage", "closed", {ATTR_DEVICE_CLASS: "garage"})
+    hass.states.async_set("cover.plain", "open", {})
+
+    entities = {"cover.door", "cover.garage", "cover.plain"}
+    result = cond.entity_filter(entities)
+    assert result == entities

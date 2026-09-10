@@ -1,0 +1,11 @@
+{
+  "domain": "hortimax",
+  "name": "Ridder HortiMaX Pro",
+  "codeowners": ["@wildekek"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hortimax",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["aiohortos==0.3.1"]
+}

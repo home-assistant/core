@@ -6,8 +6,8 @@ import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
 import anthropic
+from probatio import to_openapi
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
@@ -271,7 +271,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         ] = bool
 
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
+            if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
 
             if user_input[CONF_RECOMMENDED]:
@@ -577,7 +577,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     "format": {
                         "type": "json_schema",
                         "schema": {
-                            **convert(location_schema),
+                            **to_openapi(location_schema),
                             "additionalProperties": False,
                         },
                     }

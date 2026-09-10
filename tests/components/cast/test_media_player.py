@@ -822,7 +822,6 @@ async def test_device_registry(
     chromecast, _ = await async_setup_media_player_cast(hass, info)
     chromecast.cast_type = pychromecast.const.CAST_TYPE_CHROMECAST
     _, conn_status_cb, _ = get_status_callbacks(chromecast)
-    cast_entry = hass.config_entries.async_entries("cast")[0]
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
@@ -845,7 +844,7 @@ async def test_device_registry(
     chromecast.disconnect.assert_not_called()
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, cast_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
 
     await hass.async_block_till_done()
@@ -1053,6 +1052,7 @@ async def test_entity_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1066,6 +1066,7 @@ async def test_entity_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1125,6 +1126,7 @@ async def test_entity_browse_media_audio_only(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -2287,6 +2289,7 @@ async def test_cast_platform_browse_media(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "/api/brands/integration/spotify/logo.png",
         "children_media_class": None,
     }
@@ -2312,6 +2315,7 @@ async def test_cast_platform_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": None,
         "thumbnail": None,
         "children": [],

@@ -32,7 +32,7 @@ LLM_INTENTS = (INTENT_LIST_ADD_ITEM, INTENT_LIST_COMPLETE_ITEM, INTENT_LIST_REMO
 class TodoGetItemsTool(Tool):
     """LLM Tool allowing querying a to-do list."""
 
-    name = "todo_get_items"
+    name = "todo__get_items"
     description = (
         "Query a to-do list to find out what items are on it. "
         "Use this to answer questions like "
@@ -115,7 +115,7 @@ def async_get_tools(
 
     tools: list[Tool] = [TodoGetItemsTool(names)]
     tools.extend(
-        IntentTool(handler.intent_type, handler)
+        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler)
         for handler in intent.async_get(hass)
         if handler.intent_type in LLM_INTENTS
     )

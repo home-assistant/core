@@ -1,6 +1,5 @@
 """Support for vacuum cleaner robots (botvacs)."""
 
-import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
@@ -13,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
-    ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -29,9 +27,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.frame import ReportBehavior, report_usage
-from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -51,7 +46,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=20)
 
-ATTR_BATTERY_ICON = "battery_icon"
 ATTR_CLEANED_AREA = "cleaned_area"
 ATTR_FAN_SPEED = "fan_speed"
 ATTR_FAN_SPEED_LIST = "fan_speed_list"
@@ -72,8 +66,6 @@ SERVICE_STOP = "stop"
 DEFAULT_NAME = "Vacuum cleaner robot"
 
 ISSUE_SEGMENTS_CHANGED = "segments_changed"
-
-_BATTERY_DEPRECATION_IGNORED_PLATFORMS = ("template",)
 
 
 # mypy: disallow-any-generics
@@ -173,8 +165,6 @@ class StateVacuumEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
     "supported_features",
-    "battery_level",
-    "battery_icon",
     "fan_speed",
     "fan_speed_list",
     "activity",
@@ -192,8 +182,6 @@ class StateVacuumEntity(
         {VacuumEntityCapabilityAttribute.FAN_SPEED_LIST}
     )
 
-    _attr_battery_icon: str
-    _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
     _attr_fan_speed_list: list[str]
     _attr_activity: VacuumActivity | None = None
@@ -202,120 +190,11 @@ class StateVacuumEntity(
     _segments_not_configured_issue_created: bool = False
     _segments_changed_last_seen: list[dict[str, Any]] | None = None
 
-    __vacuum_legacy_battery_level: bool = False
-    __vacuum_legacy_battery_icon: bool = False
-    __vacuum_legacy_battery_feature: bool = False
-
-    @override
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Post initialisation processing."""
-        super().__init_subclass__(**kwargs)
-        if any(
-            method in cls.__dict__
-            for method in ("_attr_battery_level", "battery_level")
-        ):
-            # Integrations should use a separate battery sensor.
-            cls.__vacuum_legacy_battery_level = True
-        if any(
-            method in cls.__dict__ for method in ("_attr_battery_icon", "battery_icon")
-        ):
-            # Integrations should use a separate battery sensor.
-            cls.__vacuum_legacy_battery_icon = True
-
-    @override
-    def __setattr__(self, name: str, value: Any) -> None:
-        """Set attribute.
-
-        Deprecation warning if setting battery icon or battery level
-        attributes directly unless already reported.
-        """
-        if name in {"_attr_battery_level", "_attr_battery_icon"}:
-            self._report_deprecated_battery_properties(name[6:])
-        return super().__setattr__(name, value)
-
-    @callback
-    @override
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Start adding an entity to a platform."""
-        super().add_to_platform_start(hass, platform, parallel_updates)
-        if self.__vacuum_legacy_battery_level:
-            self._report_deprecated_battery_properties("battery_level")
-        if self.__vacuum_legacy_battery_icon:
-            self._report_deprecated_battery_properties("battery_icon")
-
     @callback
     @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._async_check_segments_issues()
-
-    @callback
-    def _report_deprecated_battery_properties(self, property: str) -> None:
-        """Report on deprecated use of battery properties.
-
-        Integrations should implement a sensor instead.
-        """
-        if (
-            self.platform
-            and self.platform.platform_name
-            not in _BATTERY_DEPRECATION_IGNORED_PLATFORMS
-        ):
-            # Don't report usage until after entity added to hass, after init
-            report_usage(
-                f"is setting the {property} which has been deprecated."
-                f" Integration {self.platform.platform_name} should implement a sensor"
-                " instead with a correct device class and link it to the same device",
-                core_integration_behavior=ReportBehavior.IGNORE,
-                custom_integration_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2026.8",
-                integration_domain=self.platform.platform_name,
-                exclude_integrations={DOMAIN},
-            )
-
-    @callback
-    def _report_deprecated_battery_feature(self) -> None:
-        """Report on deprecated use of battery supported features.
-
-        Integrations should remove the battery supported feature when migrating
-        battery level and icon to a sensor.
-        """
-        if (
-            self.platform
-            and self.platform.platform_name
-            not in _BATTERY_DEPRECATION_IGNORED_PLATFORMS
-        ):
-            # Don't report usage until after entity added to hass, after init
-            report_usage(
-                f"is setting the battery supported feature which has been deprecated."
-                f" Integration {self.platform.platform_name}"
-                " should remove this as part of migrating"
-                " the battery level and icon to a sensor",
-                core_behavior=ReportBehavior.LOG,
-                core_integration_behavior=ReportBehavior.IGNORE,
-                custom_integration_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2026.8",
-                integration_domain=self.platform.platform_name,
-                exclude_integrations={DOMAIN},
-            )
-
-    @cached_property
-    def battery_level(self) -> int | None:
-        """Return the battery level of the vacuum cleaner."""
-        return self._attr_battery_level
-
-    @property
-    def battery_icon(self) -> str:
-        """Return the battery icon for the vacuum cleaner."""
-        charging = bool(self.activity == VacuumActivity.DOCKED)
-
-        return icon_for_battery_level(
-            battery_level=self.battery_level, charging=charging
-        )
 
     @property
     @override
@@ -341,13 +220,6 @@ class StateVacuumEntity(
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}
         supported_features = self.supported_features
-
-        if VacuumEntityFeature.BATTERY in supported_features:
-            if self.__vacuum_legacy_battery_feature is False:
-                self._report_deprecated_battery_feature()
-                self.__vacuum_legacy_battery_feature = True
-            data[ATTR_BATTERY_LEVEL] = self.battery_level
-            data[ATTR_BATTERY_ICON] = self.battery_icon
 
         if VacuumEntityFeature.FAN_SPEED in supported_features:
             data[VacuumEntityStateAttribute.FAN_SPEED] = self.fan_speed

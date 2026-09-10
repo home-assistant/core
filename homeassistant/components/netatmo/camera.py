@@ -284,6 +284,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             self.device.events
         )
 
+        self.async_write_ha_state()
+
     def process_events(self, event_list: list[NaEvent]) -> dict:
         """Add meta data to events."""
         events = {}

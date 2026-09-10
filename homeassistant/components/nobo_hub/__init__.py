@@ -12,7 +12,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -29,7 +29,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
 
 type NoboHubConfigEntry = ConfigEntry[nobo]
 
@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
                 entry, data={**entry.data, CONF_IP_ADDRESS: new_ip}
             )
 
-    async def _async_close(event):
+    async def _async_close(event: Event) -> None:
         """Close the Nobø Ecohub socket connection when HA stops."""
         await hub.stop()
 
@@ -137,9 +137,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
             device_registry, entry.entry_id
         ):
             if device.identifiers.isdisjoint(expected_identifiers):
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=entry.entry_id
-                )
+                device_registry.async_remove_device(device.id)
 
     _cleanup_devices(hub)
     hub.register_callback(_cleanup_devices)

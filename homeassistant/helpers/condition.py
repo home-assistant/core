@@ -960,7 +960,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
     """Condition for numerical state comparisons with above/below thresholds."""
 
     _schema = NUMERICAL_CONDITION_SCHEMA
-    _valid_unit: str | None | UndefinedType = UNDEFINED
+    _valid_unit: str | UndefinedType | None = UNDEFINED
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize the numerical condition."""
@@ -1051,7 +1051,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
 
 def make_entity_numerical_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
-    valid_unit: str | None | UndefinedType = UNDEFINED,
+    valid_unit: str | UndefinedType | None = UNDEFINED,
     *,
     primary_entities_only: bool = True,
 ) -> type[EntityNumericalConditionBase]:
@@ -1727,6 +1727,7 @@ def state(
         req_state = [req_state]
 
     is_state = False
+    state_value: Any = None
     for req_state_value in req_state:
         state_value = req_state_value
         if (

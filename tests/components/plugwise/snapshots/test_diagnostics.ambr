@@ -25,12 +25,12 @@
     '08963fec7c53423ca5680aa4cb502c63': dict({
       'active_preset': 'away',
       'available_schedules': list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
       'climate_mode': 'auto',
       'control_state': 'idle',
@@ -67,12 +67,12 @@
     '12493538af164a409c6a1c79e38afe1c': dict({
       'active_preset': 'away',
       'available_schedules': list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
       'climate_mode': 'heat',
       'control_state': 'idle',
@@ -132,6 +132,7 @@
     '446ac08dd04d4eff8ac57489757b7314': dict({
       'active_preset': 'no_frost',
       'available_schedules': list([
+        'off',
       ]),
       'climate_mode': 'heat',
       'control_state': 'idle',
@@ -145,7 +146,7 @@
         'vacation',
         'no_frost',
       ]),
-      'select_schedule': None,
+      'select_schedule': 'off',
       'sensors': dict({
         'temperature': 15.6,
       }),
@@ -283,12 +284,12 @@
     '82fa13f017d240daa0d0ea1775420f24': dict({
       'active_preset': 'asleep',
       'available_schedules': list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
       'climate_mode': 'auto',
       'control_state': 'idle',
@@ -438,12 +439,12 @@
     'c50f167537524366a5af7aa3942feb1e': dict({
       'active_preset': 'home',
       'available_schedules': list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
       'climate_mode': 'auto',
       'control_state': 'heating',

@@ -10,11 +10,12 @@ from uiprotect.data import (
     DeviceState,
     IRLEDMode,
     Light,
+    Permission,
     RingSetting,
     Sensor,
 )
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.number import (
     CAMERA_NUMBERS,
     LIGHT_NUMBERS,
@@ -437,6 +438,35 @@ async def test_number_sense_sensitivity_public_value(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "42"
+
+
+async def test_number_sense_sensitivity_ignores_local_permissions(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A read-only local user keeps the motion sensitivity number.
+
+    It writes through the API key, so the local user's write bit must not gate it.
+    Its read-only mirror stays until the deprecation runs out.
+    """
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "sensor:read:*"})
+    ]
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, sensor_all, SENSE_NUMBERS[0]
+    )
+    assert entity_registry.async_get(entity_id) is not None
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{sensor_all.mac}_sensitivity"
+        )
+        is not None
+    )
 
 
 async def test_number_sense_sensitivity_set(

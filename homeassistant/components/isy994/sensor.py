@@ -38,7 +38,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    _LOGGER,
+    LOGGER,
     TOTAL_INCREASING_DEVICE_CLASSES,
     UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
@@ -183,12 +183,12 @@ async def async_setup_entry(
     devices = isy_data.devices
 
     for node in isy_data.nodes[Platform.SENSOR]:
-        _LOGGER.debug("Loading %s", node.name)
+        LOGGER.debug("Loading %s", node.name)
         entities.append(ISYSensorEntity(node, devices.get(node.primary_node)))
 
     aux_sensors_list = isy_data.aux_properties[Platform.SENSOR]
     for node, control in aux_sensors_list:
-        _LOGGER.debug("Loading %s %s", node.name, COMMAND_FRIENDLY_NAME.get(control))
+        LOGGER.debug("Loading %s %s", node.name, COMMAND_FRIENDLY_NAME.get(control))
         enabled_default = control not in AUX_DISABLED_BY_DEFAULT_EXACT and not any(
             control.startswith(match) for match in AUX_DISABLED_BY_DEFAULT_MATCH
         )

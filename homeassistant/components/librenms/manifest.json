@@ -1,0 +1,13 @@
+{
+  "domain": "librenms",
+  "name": "LibreNMS",
+  "codeowners": ["@mib1185"],
+  "config_flow": true,
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/librenms",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "loggers": ["aiolibrenms"],
+  "quality_scale": "bronze",
+  "requirements": ["aiolibrenms==0.0.3"]
+}

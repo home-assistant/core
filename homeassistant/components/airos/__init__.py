@@ -184,8 +184,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
         mac_adress = dr.format_mac(entry.unique_id)
 
         device_registry = dr.async_get(hass)
-        if device_entry := device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac_adress)}
+        if device_entry := device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac_adress), entry.entry_id
         ):
             old_device_id = next(
                 (

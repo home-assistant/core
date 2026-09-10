@@ -19,6 +19,7 @@ from tests.common import MockConfigEntry
 async def test_sensors(
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
@@ -38,8 +39,6 @@ async def test_sensors(
         mock_utcnow.return_value = datetime(2023, 1, 2, 8, 0, 0, tzinfo=dt_util.UTC)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
 
     # Check electric sensors
     entry = entity_registry.async_get(

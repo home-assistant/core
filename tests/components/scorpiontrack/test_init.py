@@ -39,7 +39,9 @@ async def test_device_is_registered(
     """Test the ScorpionTrack vehicle device is registered."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={("scorpiontrack", "101_1")})
+    device = device_registry.async_get_device_by_identifier(
+        ("scorpiontrack", "101_1"), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.name == "AB12 CDE"
     assert device.manufacturer == "Volkswagen"

@@ -2,9 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "already_configured_as_subentry": "This Steam account is already configured as a sub-entry.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured_as_subentry": "This Steam account is already configured as a sub-entry."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -83,6 +81,38 @@
     }
   },
   "entity": {
+    "image": {
+      "app_icon": {
+        "name": "App icon"
+      },
+      "avatar": {
+        "name": "Avatar"
+      },
+      "header_capsule": {
+        "name": "Header capsule"
+      },
+      "library_capsule": {
+        "name": "Library capsule"
+      },
+      "library_hero": {
+        "name": "Library hero capsule"
+      },
+      "library_logo": {
+        "name": "Library logo"
+      },
+      "main_capsule": {
+        "name": "Main capsule"
+      },
+      "page_background": {
+        "name": "Page background"
+      },
+      "small_capsule": {
+        "name": "Small capsule"
+      },
+      "vertical_capsule": {
+        "name": "Vertical capsule"
+      }
+    },
     "sensor": {
       "account": {
         "state": {

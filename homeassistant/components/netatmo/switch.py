@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_SWITCH
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
-from .entity import NetatmoModuleEntity
+from .entity import NetatmoReachabilityEntity
 from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ async def async_setup_entry(
     )
 
 
-class NetatmoSwitch(NetatmoModuleEntity, SwitchEntity):
+class NetatmoSwitch(NetatmoReachabilityEntity, SwitchEntity):
     """Representation of a Netatmo switch device."""
 
     _attr_name = None
@@ -70,7 +70,9 @@ class NetatmoSwitch(NetatmoModuleEntity, SwitchEntity):
     @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_is_on = self.device.on
+        if self.device.reachable is not False:
+            self._attr_is_on = self.device.on
+        self.async_write_ha_state()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

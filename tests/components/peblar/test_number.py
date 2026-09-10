@@ -7,6 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
+    ATTR_MAX,
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
@@ -38,8 +39,8 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Ensure all entities are correctly assigned to the Peblar EV charger
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "23-45-A4O-MOF")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "23-45-A4O-MOF"), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -265,3 +266,55 @@ async def test_restore_state(
     # Check if state is restored and value is set correctly
     assert (state := hass.states.get("number.peblar_ev_charger_charge_limit"))
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("mock_peblar", "expected_max"),
+    [
+        ({"UserDefinedChargeLimitCurrent": 10}, 16),
+        ({"CurrentCtrlFixedChargeCurrentLimit": 10}, 10),
+        ({"HwMaxCurrent": 10}, 10),
+    ],
+    ids=["user limit is not a ceiling", "installation limit", "hardware rating"],
+    indirect=["mock_peblar"],
+)
+@pytest.mark.parametrize("init_integration", [Platform.NUMBER], indirect=True)
+@pytest.mark.usefixtures("init_integration", "entity_registry_enabled_by_default")
+async def test_charge_limit_maximum(
+    hass: HomeAssistant,
+    expected_max: int,
+) -> None:
+    """Test the ceiling on the charge limit.
+
+    The charger accepts up to its hardware rating and reduces anything
+    above the installation limit. The user's own charge limit is the value
+    being set here, so it must not narrow the range it is chosen from.
+    """
+    state = hass.states.get("number.peblar_ev_charger_charge_limit")
+    assert state
+    assert state.attributes[ATTR_MAX] == expected_max
+
+
+@pytest.mark.parametrize(
+    "mock_peblar",
+    [{"UserDefinedChargeLimitCurrent": 10}],
+    indirect=True,
+)
+@pytest.mark.parametrize("init_integration", [Platform.NUMBER], indirect=True)
+@pytest.mark.usefixtures("init_integration", "entity_registry_enabled_by_default")
+async def test_charge_limit_can_be_raised_again(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+) -> None:
+    """A charger left on a low limit can still be turned back up."""
+    mocked_method = mock_peblar.rest_api.return_value.ev_interface
+    mocked_method.reset_mock()
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.peblar_ev_charger_charge_limit", ATTR_VALUE: 16},
+        blocking=True,
+    )
+
+    mocked_method.assert_any_call(charge_current_limit=16000)

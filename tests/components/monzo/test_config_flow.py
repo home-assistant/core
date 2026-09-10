@@ -1,7 +1,10 @@
 """Tests for config flow."""
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientConnectionError
+from monzopy import AuthorisationExpiredError
 import pytest
 
 from homeassistant.components.monzo.application_credentials import (
@@ -10,6 +13,7 @@ from homeassistant.components.monzo.application_credentials import (
 )
 from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -64,19 +68,44 @@ async def test_full_flow(
             "user_id": "600",
         },
     )
-    with patch(
-        "homeassistant.components.monzo.async_setup_entry", return_value=True
-    ) as mock_setup:
+    approval_granted = asyncio.Event()
+    check_count = 0
+
+    async def check_approval() -> list[dict]:
+        nonlocal check_count
+        check_count += 1
+        if check_count == 1:
+            raise AuthorisationExpiredError
+        await approval_granted.wait()
+        return []
+
+    approval_api = AsyncMock()
+    approval_api.user_account.accounts.side_effect = check_approval
+    with (
+        patch(
+            "homeassistant.components.monzo.async_setup_entry", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.monzo.config_flow.async_generate_id",
+            return_value="generated-webhook-id",
+        ),
+        patch(
+            "homeassistant.components.monzo.config_flow.MonzoAPI",
+            return_value=approval_api,
+        ),
+        patch("homeassistant.components.monzo.config_flow.asyncio.sleep", AsyncMock()),
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
         assert len(mock_setup.mock_calls) == 0
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "await_approval_confirmation"
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "wait_for_approval"
+        assert result["progress_action"] == "wait_for_approval"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"confirm": True}
-        )
+        approval_granted.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
@@ -88,6 +117,90 @@ async def test_full_flow(
     assert "token" in result["result"].data
     assert result["result"].data["token"]["access_token"] == "mock-access-token"
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
+    assert result["result"].data[CONF_WEBHOOK_ID] == "generated-webhook-id"
+
+
+@pytest.mark.parametrize(
+    ("approval_error", "step_id"),
+    [
+        pytest.param(TimeoutError(), "approval_timeout", id="timeout"),
+        pytest.param(
+            ClientConnectionError(), "connection_error", id="connection-error"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_approval_error_retry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    approval_error: Exception,
+    step_id: str,
+) -> None:
+    """Test retrying after checking approval fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "user_id": "600",
+        },
+    )
+    approval_checked = asyncio.Event()
+
+    async def fail_approval_check() -> None:
+        await approval_checked.wait()
+        raise approval_error
+
+    approval_granted = asyncio.Event()
+
+    async def approve() -> None:
+        await approval_granted.wait()
+
+    with (
+        patch("homeassistant.components.monzo.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.monzo.config_flow.MonzoFlowHandler._async_wait_for_approval",
+            side_effect=fail_approval_check,
+        ) as approval_check,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        approval_checked.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == step_id
+
+        approval_check.side_effect = approve
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        approval_granted.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -186,15 +299,29 @@ async def test_config_reauth_profile(
         },
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    approval_granted = asyncio.Event()
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "await_approval_confirmation"
-    assert polling_config_entry.data["token"]["access_token"] == "mock-access-token"
+    async def check_approval() -> list[dict]:
+        await approval_granted.wait()
+        return []
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"confirm": True}
-    )
+    approval_api = AsyncMock()
+    approval_api.user_account.accounts.side_effect = check_approval
+    with patch(
+        "homeassistant.components.monzo.config_flow.MonzoAPI",
+        return_value=approval_api,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "wait_for_approval"
+        assert polling_config_entry.data["token"]["access_token"] == (
+            "mock-access-token"
+        )
+
+        approval_granted.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert result

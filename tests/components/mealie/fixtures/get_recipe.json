@@ -51,7 +51,26 @@
       "slug": "original-sachertorte"
     }
   ],
-  "tools": [],
+  "tools": [
+    {
+      "id": "1170e609-20d3-45b8-b0c7-3a4cfa614e88",
+      "name": "Backofen",
+      "slug": "backofen",
+      "onHand": false
+    },
+    {
+      "id": "9ab522ad-c3be-4dad-8b4f-d9d53817f4d0",
+      "name": "Magimix blender",
+      "slug": "magimix-blender",
+      "onHand": false
+    },
+    {
+      "id": "b4ca27dc-9bf6-48be-ad10-3e7056cb24bc",
+      "name": "Alluminio",
+      "slug": "alluminio",
+      "onHand": false
+    }
+  ],
   "rating": null,
   "orgURL": "https://www.sacher.com/en/original-sacher-torte/recipe/",
   "dateAdded": "2024-06-29",
@@ -295,6 +314,8 @@
   },
   "assets": [],
   "notes": [],
-  "extras": {},
+  "extras": {
+    "Energy Consumption": "5"
+  },
   "comments": []
 }

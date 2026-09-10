@@ -2,7 +2,6 @@
 
 from collections.abc import Mapping
 import ipaddress
-import logging
 import socket
 from typing import Any, Self, override
 from urllib.parse import ParseResult, urlparse
@@ -50,10 +49,9 @@ from .const import (
     ERROR_UNKNOWN,
     ERROR_UPNP_NOT_CONFIGURED,
     FRITZ_AUTH_EXCEPTIONS,
+    LOGGER,
 )
 from .coordinator import FritzConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -104,8 +102,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
             return ERROR_CANNOT_CONNECT
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
 
         self._model = connection.call_action("DeviceInfo:1", "GetInfo")["NewModelName"]

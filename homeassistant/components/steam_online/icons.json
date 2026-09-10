@@ -1,5 +1,10 @@
 {
   "entity": {
+    "image": {
+      "avatar": {
+        "default": "mdi:account-circle"
+      }
+    },
     "sensor": {
       "account": {
         "default": "mdi:steam"

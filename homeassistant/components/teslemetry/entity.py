@@ -4,9 +4,11 @@ from abc import abstractmethod
 from typing import Any, override
 
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import StateType
@@ -136,7 +138,7 @@ class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
 class TeslemetryEnergyLiveEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy Site Live entities."""
 
-    api: EnergySite
+    api: EnergySite | EnergySiteRouter
 
     def __init__(
         self,
@@ -157,7 +159,7 @@ class TeslemetryEnergyLiveEntity(TeslemetryPollingEntity):
 class TeslemetryEnergyInfoEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy Site Info Entities."""
 
-    api: EnergySite
+    api: EnergySite | EnergySiteRouter
 
     def __init__(
         self,
@@ -196,7 +198,7 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Wall Connector Entities."""
 
     _attr_has_entity_name = True
-    api: EnergySite
+    api: EnergySite | EnergySiteRouter
 
     def __init__(
         self,
@@ -224,7 +226,11 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
             manufacturer="Tesla",
             configuration_url="https://teslemetry.com/console",
             name="Wall Connector",
-            via_device=(DOMAIN, str(data.id)),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                data.live_coordinator.hass,
+                (DOMAIN, str(data.id)),
+                config_entry_id=data.live_coordinator.config_entry.entry_id,
+            ),
             serial_number=din.rsplit("-", maxsplit=1)[-1],
             model=model,
         )

@@ -611,19 +611,22 @@ class Person(
         self._in_zones = in_zones or []
 
         # A legacy scanner (one that doesn't report in_zones) reports "home"
-        # without coordinates. Use the home zone's coordinates for backwards
-        # compatibility with legacy zone conditions and triggers. Modern
-        # trackers report in_zones and keep their own (possibly absent)
-        # coordinates.
+        # without zone membership or coordinates. Synthesize home-zone
+        # membership and borrow the home zone's coordinates so zone counting,
+        # conditions and triggers keep working as they did before the in_zones
+        # model was introduced. Modern trackers report in_zones and keep their
+        # own (possibly absent) coordinates.
         if (
             in_zones is None
             and state.state == STATE_HOME
-            and self._latitude is None
-            and self._longitude is None
             and (home_zone := self.hass.states.get(ENTITY_ID_HOME)) is not None
         ):
-            self._latitude = home_zone.attributes.get(EntityStateAttribute.LATITUDE)
-            self._longitude = home_zone.attributes.get(EntityStateAttribute.LONGITUDE)
+            self._in_zones = [ENTITY_ID_HOME]
+            if self._latitude is None and self._longitude is None:
+                self._latitude = home_zone.attributes.get(EntityStateAttribute.LATITUDE)
+                self._longitude = home_zone.attributes.get(
+                    EntityStateAttribute.LONGITUDE
+                )
 
     @callback
     def _update_extra_state_attributes(self) -> None:

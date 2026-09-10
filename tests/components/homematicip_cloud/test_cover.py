@@ -507,8 +507,25 @@ async def test_hmip_cover_shutter_group(
         "cover", "close_cover", {"entity_id": entity_id}, blocking=True
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 5
-    assert hmip_device.mock_calls[-1][0] == "set_shutter_level_async"
-    assert hmip_device.mock_calls[-1][1] == (1,)
+    assert hmip_device.mock_calls[-1][0] == "set_slats_level_async"
+    assert hmip_device.mock_calls[-1][2] == {"slatsLevel": 1, "shutterLevel": 1}
+    await async_manipulate_test_data(hass, hmip_device, "shutterLevel", 1)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == CoverState.CLOSED
+    assert ha_state.attributes[ATTR_CURRENT_POSITION] == 0
+
+    # set_cover_position with position=0 must route through the same
+    # slats-safe call as close_cover, otherwise the FBL slats regression
+    # (#114266) would still hit users moving the slider to fully closed.
+    await hass.services.async_call(
+        "cover",
+        "set_cover_position",
+        {"entity_id": entity_id, "position": "0"},
+        blocking=True,
+    )
+    assert len(hmip_device.mock_calls) == service_call_counter + 7
+    assert hmip_device.mock_calls[-1][0] == "set_slats_level_async"
+    assert hmip_device.mock_calls[-1][2] == {"slatsLevel": 1, "shutterLevel": 1}
     await async_manipulate_test_data(hass, hmip_device, "shutterLevel", 1)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == CoverState.CLOSED
@@ -517,7 +534,7 @@ async def test_hmip_cover_shutter_group(
     await hass.services.async_call(
         "cover", "stop_cover", {"entity_id": entity_id}, blocking=True
     )
-    assert len(hmip_device.mock_calls) == service_call_counter + 7
+    assert len(hmip_device.mock_calls) == service_call_counter + 9
     assert hmip_device.mock_calls[-1][0] == "set_shutter_stop_async"
     assert hmip_device.mock_calls[-1][1] == ()
 

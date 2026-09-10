@@ -47,8 +47,8 @@ async def test_device_registry(
     """Test device is registered correctly."""
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot

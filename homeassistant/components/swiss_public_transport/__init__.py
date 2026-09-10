@@ -128,9 +128,7 @@ async def async_migrate_entry(
             device_registry, config_entry_id=config_entry.entry_id
         )
         for dev in device_entries:
-            device_registry.async_update_device(
-                dev.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_registry.async_remove_device(dev.id)
 
         entity_id = entity_registry.async_get_entity_id(
             Platform.SENSOR, DOMAIN, "None_departure"
