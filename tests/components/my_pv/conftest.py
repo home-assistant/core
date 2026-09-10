@@ -16,6 +16,8 @@ SETUP_CONFIGURATION = {
     "ww1target": {"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
 }
 
+COMMAND_CONFIGURATION = {"reboot_device": {"type": "any"}}
+
 DATA_CONFIGURATION = {
     "cur_eth_mode": {
         "options": {"0": "LAN", "1": "WLAN", "2": "AP"},
@@ -61,6 +63,10 @@ DATA_VALUE = {
 
 def _setup_configuration_lookup(key):
     return SETUP_CONFIGURATION.get(key)
+
+
+def _command_configuration_lookup(key):
+    return COMMAND_CONFIGURATION.get(key)
 
 
 def _data_value_lookup(key):
