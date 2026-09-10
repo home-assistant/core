@@ -147,8 +147,7 @@ class Searcher:
             self._add(ItemType.DEVICE, device.id)
 
             # Config entries for devices in this area
-            if device_entry := self._device_registry.async_get(device.id):
-                self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
+            self._add(ItemType.CONFIG_ENTRY, device.config_entry_id)
 
             # Automations and scripts referencing this device
             self._async_add_automations_and_scripts_for_device(device)
@@ -623,7 +622,10 @@ class Searcher:
                 self._add(ItemType.AREA, area_id)
                 self._async_resolve_up_area(area_id)
 
-            self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
+            if device_entry.is_composite_device:
+                self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
+            else:
+                self._add(ItemType.CONFIG_ENTRY, device_entry.config_entry_id)
             for config_entry_id in device_entry.config_entries:
                 if entry := self.hass.config_entries.async_get_entry(config_entry_id):
                     self._add(ItemType.INTEGRATION, entry.domain)
