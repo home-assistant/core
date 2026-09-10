@@ -2135,7 +2135,9 @@ def _synthesize_current_hour_from_short_term(
     current_hour_start_ts = current_hour_start.timestamp()
     current_hour_end_ts = (current_hour_start + Statistics.duration).timestamp()
 
-    if start_time.timestamp() >= current_hour_end_ts:
+    # Match the long-term query bound: only include the partial hour when its
+    # start is >= the requested start_time (not merely before the hour ends).
+    if start_time.timestamp() > current_hour_start_ts:
         return {}
     if end_time is not None and end_time.timestamp() <= current_hour_start_ts:
         return {}
@@ -2172,10 +2174,10 @@ def _synthesize_current_hour_from_short_term(
         statistic_id = metadata_by_id_row["statistic_id"]
         unit_class = metadata_by_id_row["unit_class"]
         state_unit = unit = metadata_by_id_row["unit_of_measurement"]
-        if ha_state := hass.states.get(statistic_id):
-            state_unit = ha_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if state_obj := hass.states.get(statistic_id):
+            state_unit = state_obj.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         convert = _get_statistic_to_display_unit_converter(
-            unit_class, unit, state_unit, units, allow_none=False
+            unit_class, unit, state_unit, units
         )
 
         stats_row: StatisticsRow = {

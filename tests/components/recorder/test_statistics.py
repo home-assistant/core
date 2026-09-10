@@ -4728,6 +4728,17 @@ async def test_statistics_during_period_fills_current_hour_from_short_term(
         ]
     }
 
+    # Mid-hour start must not synthesize a bucket that starts before start_time.
+    mid_hour_start = hour_14 + timedelta(minutes=30)
+    mid_hour_stats = statistics_during_period(
+        hass,
+        mid_hour_start,
+        period="hour",
+        statistic_ids={statistic_id},
+        types={"sum"},
+    )
+    assert mid_hour_stats == {}
+
 
 @pytest.mark.freeze_time("2024-03-15 00:12:00+00:00")
 @pytest.mark.usefixtures("recorder_mock")
