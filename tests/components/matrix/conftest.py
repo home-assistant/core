@@ -1,9 +1,11 @@
 """Define fixtures available for all tests."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from pathlib import Path
 import re
 import tempfile
+from typing import Any
 from unittest.mock import patch
 
 from nio import (
@@ -41,6 +43,7 @@ from homeassistant.components.matrix.const import DOMAIN
 from homeassistant.components.matrix.notify import CONF_DEFAULT_ROOM
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PLATFORM,
@@ -173,6 +176,17 @@ MOCK_CONFIG_DATA = {
         CONF_DEFAULT_ROOM: TEST_DEFAULT_ROOM,
     },
 }
+
+
+def config_with_credentials(credentials: dict[str, str]) -> dict[str, Any]:
+    """Return MOCK_CONFIG_DATA with the password replaced by the given credentials."""
+    config = deepcopy(MOCK_CONFIG_DATA)
+    del config[DOMAIN][CONF_PASSWORD]
+    config[DOMAIN] |= credentials
+    return config
+
+
+MOCK_CONFIG_DATA_ACCESS_TOKEN = config_with_credentials({CONF_ACCESS_TOKEN: TEST_TOKEN})
 
 MOCK_WORD_COMMANDS = {
     TEST_ROOM_A_ID: {

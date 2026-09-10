@@ -28,6 +28,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -67,6 +68,8 @@ CONF_EXPRESSION: Final = "expression"
 CONF_REACTION: Final = "reaction"
 
 CONF_USERNAME_REGEX = "^@[^:]*:.*"
+
+CREDENTIALS_MESSAGE = "Specify either 'password' or 'access_token', not both."
 
 EVENT_MATRIX_COMMAND = "matrix_command"
 
@@ -108,17 +111,25 @@ COMMAND_SCHEMA = vol.All(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOMESERVER): cv.url,
-                vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-                vol.Required(CONF_USERNAME): cv.matches_regex(CONF_USERNAME_REGEX),
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_ROOMS, default=[]): vol.All(
-                    cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
-                ),
-                vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA],
-            }
+        DOMAIN: vol.All(
+            vol.Schema(
+                {
+                    vol.Required(CONF_HOMESERVER): cv.url,
+                    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+                    vol.Required(CONF_USERNAME): cv.matches_regex(CONF_USERNAME_REGEX),
+                    vol.Exclusive(
+                        CONF_PASSWORD, "credentials", CREDENTIALS_MESSAGE
+                    ): cv.string,
+                    vol.Exclusive(
+                        CONF_ACCESS_TOKEN, "credentials", CREDENTIALS_MESSAGE
+                    ): cv.string,
+                    vol.Optional(CONF_ROOMS, default=[]): vol.All(
+                        cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
+                    ),
+                    vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA],
+                }
+            ),
+            cv.has_at_least_one_key(CONF_PASSWORD, CONF_ACCESS_TOKEN),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -141,7 +152,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         config[CONF_HOMESERVER],
         config[CONF_VERIFY_SSL],
         config[CONF_USERNAME],
-        config[CONF_PASSWORD],
+        config.get(CONF_PASSWORD),
+        config.get(CONF_ACCESS_TOKEN),
         config[CONF_ROOMS],
         config[CONF_COMMANDS],
     )
@@ -163,7 +175,8 @@ class MatrixBot:
         homeserver: str,
         verify_ssl: bool,
         username: str,
-        password: str,
+        password: str | None,
+        access_token: str | None,
         listening_rooms: list[RoomAnyID],
         commands: list[ConfigCommand],
     ) -> None:
@@ -177,6 +190,7 @@ class MatrixBot:
         self._verify_tls = verify_ssl
         self._mx_id = username
         self._password = password
+        self._configured_access_token = access_token
 
         self._client = AsyncClient(
             homeserver=self._homeserver, user=self._mx_id, ssl=self._verify_tls
@@ -416,14 +430,21 @@ class MatrixBot:
     async def _login(self) -> None:
         """Log in to the Matrix homeserver.
 
-        Attempts to use the stored access token.
+        Attempts to use the configured access token, or else the one stored
+        from a previous session.
         If that fails, then tries using the password.
-        If that also fails, raises LocalProtocolError.
+        If that also fails, raises ConfigEntryAuthFailed.
         """
 
-        # If we have an access token
-        if (token := self._access_tokens.get(self._mx_id)) is not None:
+        token: str | None = None
+        if self._configured_access_token is not None:
+            token = self._configured_access_token
+            _LOGGER.debug("Restoring login from configured access token")
+        elif isinstance(stored_token := self._access_tokens.get(self._mx_id), str):
+            token = stored_token
             _LOGGER.debug("Restoring login from stored access token")
+
+        if token is not None:
             self._client.restore_login(
                 user_id=self._client.user_id,
                 device_id=self._client.device_id,
@@ -448,7 +469,7 @@ class MatrixBot:
                 )
 
         # If the token login did not succeed
-        if not self._client.logged_in:
+        if not self._client.logged_in and self._password is not None:
             response = await self._client.login(password=self._password)
             _LOGGER.debug("Logging in using password")
 
@@ -460,11 +481,12 @@ class MatrixBot:
                 )
 
         if not self._client.logged_in:
-            raise ConfigEntryAuthFailed(
-                "Login failed, both token and username/password are invalid"
-            )
+            raise ConfigEntryAuthFailed("Login failed, the credentials are invalid")
 
-        await self._store_auth_token(self._client.access_token)
+        # A configured access token is managed by the user, so only persist
+        # tokens that were obtained here.
+        if self._client.access_token != self._configured_access_token:
+            await self._store_auth_token(self._client.access_token)
 
     async def _handle_room_send(
         self, target_room: RoomAnyID, message_type: str, content: dict
