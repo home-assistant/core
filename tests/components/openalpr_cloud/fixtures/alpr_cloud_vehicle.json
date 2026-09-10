@@ -1,0 +1,87 @@
+{
+  "plate": {
+    "data_type": "alpr_results",
+    "epoch_time": 1483953071942,
+    "img_height": 640,
+    "img_width": 480,
+    "results": [
+      {
+        "plate": "H786P0J",
+        "confidence": 90.436699,
+        "region_confidence": 0,
+        "region": "",
+        "plate_index": 0,
+        "processing_time_ms": 16.495636,
+        "candidates": [
+          {
+            "matches_template": 0,
+            "plate": "H786P0J",
+            "confidence": 90.436699
+          },
+          {
+            "matches_template": 0,
+            "plate": "H786POJ",
+            "confidence": 88.046814
+          }
+        ],
+        "coordinates": [
+          {
+            "y": 384,
+            "x": 156
+          },
+          {
+            "y": 384,
+            "x": 289
+          },
+          {
+            "y": 409,
+            "x": 289
+          },
+          {
+            "y": 409,
+            "x": 156
+          }
+        ],
+        "matches_template": 0,
+        "requested_topn": 10
+      }
+    ],
+    "version": 2,
+    "processing_time_ms": 115.687286,
+    "regions_of_interest": []
+  },
+  "color": [
+    {
+      "value": "silver",
+      "confidence": 90.1
+    },
+    {
+      "value": "white",
+      "confidence": 5.2
+    }
+  ],
+  "make": [
+    {
+      "value": "toyota",
+      "confidence": 80.3
+    },
+    {
+      "value": "lexus",
+      "confidence": 10.1
+    }
+  ],
+  "makemodel": [
+    {
+      "value": "toyota_camry",
+      "confidence": 70.4
+    }
+  ],
+  "image_bytes": "",
+  "img_width": 480,
+  "credits_monthly_used": 5791,
+  "img_height": 640,
+  "total_processing_time": 120.71599999762839,
+  "credits_monthly_total": 10000000000,
+  "image_bytes_prefix": "data:image/jpeg;base64,",
+  "credit_cost": 1
+}

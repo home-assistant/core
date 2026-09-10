@@ -1,11 +1,12 @@
 """The tests for the openalpr cloud platform."""
 
-from unittest.mock import PropertyMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import camera, image_processing as ip
 from homeassistant.components.openalpr_cloud.image_processing import OPENALPR_API_URL
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -38,9 +39,30 @@ async def setup_openalpr_cloud(hass: HomeAssistant) -> None:
     }
 
     with patch(
-        "homeassistant.components.openalpr_cloud.image_processing."
-        "OpenAlprCloudEntity.should_poll",
-        new_callable=PropertyMock(return_value=False),
+        "homeassistant.components.openalpr_cloud.image_processing.OpenAlprCloudEntity._attr_should_poll",
+        new=False,
+    ):
+        await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def setup_openalpr_cloud_vehicle_details(hass: HomeAssistant) -> None:
+    """Set up openalpr cloud with vehicle details enabled."""
+    config = {
+        ip.DOMAIN: {
+            "platform": "openalpr_cloud",
+            "source": {"entity_id": "camera.demo_camera", "name": "test local"},
+            "region": "eu",
+            "api_key": "sk_abcxyz123456",
+            "vehicle_details": True,
+        },
+        "camera": {"platform": "demo"},
+    }
+
+    with patch(
+        "homeassistant.components.openalpr_cloud.image_processing.OpenAlprCloudEntity._attr_should_poll",
+        new=False,
     ):
         await async_setup_component(hass, ip.DOMAIN, config)
         await hass.async_block_till_done()
@@ -55,6 +77,13 @@ async def alpr_events(hass: HomeAssistant) -> list[Event]:
 PARAMS = {
     "secret_key": "sk_abcxyz123456",
     "tasks": "plate",
+    "return_image": 0,
+    "country": "eu",
+}
+
+PARAMS_VEHICLE = {
+    "secret_key": "sk_abcxyz123456",
+    "tasks": "plate,color,make,makemodel",
     "return_image": 0,
     "country": "eu",
 }
@@ -157,6 +186,8 @@ async def test_openalpr_process_image(
     assert len(alpr_events) == 5
     assert state.attributes.get("vehicles") == 1
     assert state.state == "H786P0J"
+    assert "vehicle_details" not in state.attributes
+    assert "manufacturer" not in state.attributes
 
     event_data = [
         event.data for event in alpr_events if event.data.get("plate") == "H786P0J"
@@ -165,11 +196,145 @@ async def test_openalpr_process_image(
     assert event_data[0]["plate"] == "H786P0J"
     assert event_data[0]["confidence"] == 90.436699
     assert event_data[0]["entity_id"] == "image_processing.test_local"
+    assert "manufacturer" not in event_data[0]
 
 
+@pytest.mark.usefixtures("setup_openalpr_cloud_vehicle_details")
+async def test_openalpr_process_image_with_vehicle_details(
+    alpr_events: list[Event],
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Set up and scan a picture with vehicle details enabled."""
+    aioclient_mock.post(
+        OPENALPR_API_URL,
+        params=PARAMS_VEHICLE,
+        text=await async_load_fixture(
+            hass, "alpr_cloud_vehicle.json", "openalpr_cloud"
+        ),
+        status=200,
+    )
+
+    with patch(
+        "homeassistant.components.camera.async_get_image",
+        return_value=camera.Image("image/jpeg", b"image"),
+    ):
+        common.async_scan(hass, entity_id="image_processing.test_local")
+        await hass.async_block_till_done()
+
+    state = hass.states.get("image_processing.test_local")
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert state.state == "H786P0J"
+    assert state.attributes.get("color") == "Silver"
+    assert state.attributes.get("manufacturer") == "Toyota"
+    assert state.attributes.get("model") == "Camry"
+    assert state.attributes.get("vehicle_details") == [
+        {
+            "plate": "H786P0J",
+            "confidence": 90.436699,
+            "color": "Silver",
+            "manufacturer": "Toyota",
+            "model": "Camry",
+        }
+    ]
+
+    event_data = [
+        event.data for event in alpr_events if event.data.get("plate") == "H786P0J"
+    ]
+    assert len(event_data) == 1
+    assert event_data[0]["color"] == "Silver"
+    assert event_data[0]["manufacturer"] == "Toyota"
+    assert event_data[0]["model"] == "Camry"
+
+
+@pytest.mark.usefixtures("setup_openalpr_cloud_vehicle_details", "alpr_events")
+async def test_openalpr_process_image_with_vehicle_details_low_confidence(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Vehicle attributes at 0 confidence are treated as no detection."""
+    aioclient_mock.post(
+        OPENALPR_API_URL,
+        params=PARAMS_VEHICLE,
+        text=await async_load_fixture(
+            hass, "alpr_cloud_vehicle_low_confidence.json", "openalpr_cloud"
+        ),
+        status=200,
+    )
+
+    with patch(
+        "homeassistant.components.camera.async_get_image",
+        return_value=camera.Image("image/jpeg", b"image"),
+    ):
+        common.async_scan(hass, entity_id="image_processing.test_local")
+        await hass.async_block_till_done()
+
+    state = hass.states.get("image_processing.test_local")
+
+    assert state.state == "H786P0J"
+    assert "color" in state.attributes
+    assert state.attributes["color"] is None
+    assert "manufacturer" in state.attributes
+    assert state.attributes["manufacturer"] is None
+    assert "model" in state.attributes
+    assert state.attributes["model"] is None
+    assert state.attributes.get("vehicle_details") == [
+        {
+            "plate": "H786P0J",
+            "confidence": 90.436699,
+            "color": None,
+            "manufacturer": None,
+            "model": None,
+        }
+    ]
+
+
+@pytest.mark.usefixtures("setup_openalpr_cloud_vehicle_details")
+async def test_openalpr_process_image_vehicle_details_respect_threshold(
+    alpr_events: list[Event],
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Vehicle details are not exposed for a plate below the confidence threshold.
+
+    The best plate (70.25) is below the default 80 threshold, so it is filtered
+    out of the reported plates. Its vehicle details must not leak into the
+    entity's state attributes or the found_plate event for a plate that is not
+    reported.
+    """
+    aioclient_mock.post(
+        OPENALPR_API_URL,
+        params=PARAMS_VEHICLE,
+        text=await async_load_fixture(
+            hass, "alpr_cloud_vehicle_below_threshold.json", "openalpr_cloud"
+        ),
+        status=200,
+    )
+
+    with patch(
+        "homeassistant.components.camera.async_get_image",
+        return_value=camera.Image("image/jpeg", b"image"),
+    ):
+        common.async_scan(hass, entity_id="image_processing.test_local")
+        await hass.async_block_till_done()
+
+    state = hass.states.get("image_processing.test_local")
+
+    # Best plate is below the 80 threshold -> no plate is reported as state.
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("plates") == {}
+    assert state.attributes.get("vehicle_details") == []
+    assert "color" not in state.attributes
+    assert "manufacturer" not in state.attributes
+    assert "model" not in state.attributes
+    # No found_plate event fired for the filtered-out plate.
+    assert len(alpr_events) == 0
+
+
+@pytest.mark.usefixtures("setup_openalpr_cloud")
 async def test_openalpr_process_image_api_error(
-    alpr_events,
-    setup_openalpr_cloud,
+    alpr_events: list[Event],
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -192,13 +357,13 @@ async def test_openalpr_process_image_api_error(
     assert len(alpr_events) == 0
 
 
+@pytest.mark.usefixtures("setup_openalpr_cloud")
 async def test_openalpr_process_image_api_timeout(
-    alpr_events,
-    setup_openalpr_cloud,
+    alpr_events: list[Event],
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Set up and scan a picture and test api error."""
+    """Set up and scan a picture and test api timeout."""
     aioclient_mock.post(OPENALPR_API_URL, params=PARAMS, exc=TimeoutError())
 
     with patch(
