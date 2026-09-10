@@ -250,6 +250,22 @@ async def async_get_stream_source(hass: HomeAssistant, entity_id: str) -> str | 
     return await camera.stream_source()
 
 
+async def async_get_shared_stream_source(
+    hass: HomeAssistant, entity_id: str
+) -> str | None:
+    """Fetch a stream source for a camera entity that consumers can share.
+
+    Prefers a restream from the camera's provider, which multiplexes consumers
+    onto one upstream connection, and falls back to the camera's own source.
+    """
+    camera = get_camera_from_entity_id(hass, entity_id)
+    if (provider := camera.webrtc_provider) and (
+        source := await provider.async_get_shared_stream_source(camera)
+    ) is not None:
+        return source
+    return await camera.stream_source()
+
+
 async def async_get_mjpeg_stream(
     hass: HomeAssistant, request: web.Request, entity_id: str
 ) -> web.StreamResponse | None:

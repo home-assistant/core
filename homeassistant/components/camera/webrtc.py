@@ -156,6 +156,15 @@ class CameraWebRTCProvider(ABC):
         """Get an image from the camera."""
         return None
 
+    async def async_get_shared_stream_source(self, camera: Camera) -> str | None:
+        """Return a stream source that several local consumers can share.
+
+        The provider multiplexes them onto its single upstream connection to the
+        camera. None means the provider cannot restream this camera, and the
+        caller should use the camera's own stream source.
+        """
+        return None
+
     async def async_register_camera(self, camera: Camera) -> None:
         """Will be called when the provider is registered for a camera."""
         return  # This is an optional method so we need a default here.
