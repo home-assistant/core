@@ -111,7 +111,7 @@ async def test_update_failed(
     """Test data is not destroyed on update failure."""
     entry = await init_integration(hass, aioclient_mock)
     await async_setup_component(hass, HA_DOMAIN, {})
-    assert hass.states.get(CLIMATE_ID).state == HVACMode.HEAT
+    assert hass.states.get(CLIMATE_ID).state == HVACMode.AUTO
     coordinator = entry.runtime_data
     with patch("pyatag.AtagOne.update", side_effect=TimeoutError) as updater:
         await coordinator.async_refresh()

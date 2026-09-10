@@ -2087,7 +2087,7 @@ pyaprilaire==0.9.1
 pyaqvify==0.0.12
 
 # homeassistant.components.atag
-pyatag==0.3.5.3
+pyatag==0.3.7.1
 
 # homeassistant.components.netatmo
 pyatmo==9.9.0
