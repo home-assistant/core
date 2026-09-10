@@ -64,11 +64,12 @@ class Selector[_T: Mapping[str, Any]]:
     # context for filtering for example. The selector defines
     # which context keys it supports and what selector types
     # are allowed for each key.
-    allowed_context_keys: dict[str, set[str]] = {}
+    allowed_context_keys: dict[str, set[str]]
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
         """Instantiate a selector."""
         self.config = self.CONFIG_SCHEMA(config)
+        self.allowed_context_keys = {}
 
     @override
     def __eq__(self, other: object) -> bool:
@@ -427,11 +428,6 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
 
     selector_type = "attribute"
 
-    allowed_context_keys = {
-        # Filters the available attributes based on the selected entity
-        "filter_entity": {"entity"}
-    }
-
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Required("entity_id"): cv.entity_id,
@@ -444,6 +440,10 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
     def __init__(self, config: AttributeSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
+        self.allowed_context_keys = {
+            # Filters the available attributes based on the selected entity
+            "filter_entity": {"entity"}
+        }
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
@@ -1354,11 +1354,6 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
-    allowed_context_keys = {
-        # Filters the available media based on the selected entity
-        "filter_entity": {EntitySelector.selector_type}
-    }
-
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("accept"): [str],
@@ -1381,6 +1376,10 @@ class MediaSelector(Selector[MediaSelectorConfig]):
     def __init__(self, config: MediaSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
+        self.allowed_context_keys = {
+            # Filters the available media based on the selected entity
+            "filter_entity": {EntitySelector.selector_type}
+        }
 
     def __call__(self, data: Any) -> dict[str, Any] | list[dict[str, Any]]:
         """Validate the passed selection."""
@@ -2035,15 +2034,6 @@ class StateSelector(Selector[StateSelectorConfig]):
 
     selector_type = "state"
 
-    allowed_context_keys = {
-        # Filters the available states based on the selected entity
-        "filter_entity": {EntitySelector.selector_type},
-        # Filters the available states based on the selected target
-        "filter_target": {"target"},
-        # Only show the attribute values of a specific attribute
-        "filter_attribute": {AttributeSelector.selector_type},
-    }
-
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("entity_id"): cv.entity_id,
@@ -2056,6 +2046,14 @@ class StateSelector(Selector[StateSelectorConfig]):
     def __init__(self, config: StateSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
+        self.allowed_context_keys = {
+            # Filters the available states based on the selected entity
+            "filter_entity": {EntitySelector.selector_type},
+            # Filters the available states based on the selected target
+            "filter_target": {"target"},
+            # Only show the attribute values of a specific attribute
+            "filter_attribute": {AttributeSelector.selector_type},
+        }
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
