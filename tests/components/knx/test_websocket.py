@@ -630,18 +630,18 @@ async def test_knx_get_entity_link_schema_unsupported_platform(
 
 
 _LINK_ENTITY_ID = "switch.test"
-_LINK_CHANNELS = {"switch": {"write": "1/1/1", "state": "2/2/2"}}
-# what is stored/returned: the schema applies the `passive` default
-_LINK_CHANNELS_STORED = {"switch": {"write": "1/1/1", "state": "2/2/2", "passive": []}}
+_LINK_KNX = {
+    "ga_status": {"write": "1/1/1"},
+    "ga_command": {"state": "2/2/2"},
+}
 
 
-def _link_payload(command: str, **kwargs: Any) -> dict[str, Any]:
-    """Build an entity link websocket payload."""
+def _link_message(command: str, **kwargs: Any) -> dict[str, Any]:
+    """Build an entity link websocket message."""
     return {
         "type": command,
-        "platform": Platform.SWITCH.value,
         "entity_id": _LINK_ENTITY_ID,
-        "channels": _LINK_CHANNELS,
+        "data": {"knx": _LINK_KNX},
     } | kwargs
 
 
@@ -659,39 +659,50 @@ async def test_knx_entity_link_crud(
     assert res["success"], res
     assert res["result"] == {}
 
-    await client.send_json_auto_id(_link_payload("knx/create_entity_link"))
-    res = await client.receive_json()
-    assert res["success"], res
-    assert res["result"] == {"success": True, "entity_id": _LINK_ENTITY_ID}
-
-    await client.send_json_auto_id({"type": "knx/get_entity_links"})
-    res = await client.receive_json()
-    assert res["success"], res
-    assert res["result"][_LINK_ENTITY_ID]["channels"] == _LINK_CHANNELS_STORED
-
-    await client.send_json_auto_id(
-        {"type": "knx/get_entity_link_config", "entity_id": _LINK_ENTITY_ID}
-    )
-    res = await client.receive_json()
-    assert res["success"], res
-    assert res["result"]["platform"] == Platform.SWITCH.value
-    assert res["result"]["channels"] == _LINK_CHANNELS_STORED
-
-    updated_channels = {"switch": {"write": "1/1/2", "state": "2/2/2"}}
-    updated_stored = {"switch": {"write": "1/1/2", "state": "2/2/2", "passive": []}}
-    await client.send_json_auto_id(
-        _link_payload("knx/update_entity_link", channels=updated_channels)
-    )
+    await client.send_json_auto_id(_link_message("knx/update_entity_link"))
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"] == {"success": True, "entity_id": None}
 
+    await client.send_json_auto_id({"type": "knx/get_entity_links"})
+    res = await client.receive_json()
+    assert res["success"], res
+    stored = res["result"][_LINK_ENTITY_ID]["knx"]
+    assert stored["ga_status"] == {"write": "1/1/1"}
+    assert stored["ga_command"] == {"state": "2/2/2", "passive": []}
+    # schema defaults are applied on store
+    assert stored["respond_to_read"] is True
+    assert stored["invert"] is False
+
     await client.send_json_auto_id(
         {"type": "knx/get_entity_link_config", "entity_id": _LINK_ENTITY_ID}
     )
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["channels"] == updated_stored
+    assert res["result"]["knx"]["ga_status"] == {"write": "1/1/1"}
+
+    # the same command upserts
+    await client.send_json_auto_id(
+        _link_message(
+            "knx/update_entity_link",
+            data={
+                "knx": {
+                    "ga_status": {"write": "1/1/2"},
+                    "ga_command": {"state": "2/2/2"},
+                },
+                "notes": "kitchen",
+            },
+        )
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+
+    await client.send_json_auto_id(
+        {"type": "knx/get_entity_link_config", "entity_id": _LINK_ENTITY_ID}
+    )
+    res = await client.receive_json()
+    assert res["result"]["knx"]["ga_status"] == {"write": "1/1/2"}
+    assert res["result"]["notes"] == "kitchen"
 
     await client.send_json_auto_id(
         {"type": "knx/delete_entity_link", "entity_id": _LINK_ENTITY_ID}
@@ -701,42 +712,68 @@ async def test_knx_entity_link_crud(
 
     await client.send_json_auto_id({"type": "knx/get_entity_links"})
     res = await client.receive_json()
-    assert res["success"], res
     assert res["result"] == {}
 
 
-async def test_knx_create_entity_link_duplicate(
+async def test_knx_get_entity_link_config_unknown(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test creating a second entity link for the same entity is rejected."""
+    """Test an entity without a link returns an empty default configuration."""
     await knx.setup_integration()
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id(_link_payload("knx/create_entity_link"))
+    await client.send_json_auto_id(
+        {"type": "knx/get_entity_link_config", "entity_id": _LINK_ENTITY_ID}
+    )
     res = await client.receive_json()
     assert res["success"], res
-
-    await client.send_json_auto_id(_link_payload("knx/create_entity_link"))
-    res = await client.receive_json()
-    assert not res["success"], res
-    assert res["error"]["message"] == f"Entity link already exists: {_LINK_ENTITY_ID}"
+    assert res["result"] == {"knx": {}}
 
 
-async def test_knx_create_entity_link_invalid(
+async def test_knx_delete_entity_link_unknown(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test deleting an entity link that does not exist."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "knx/delete_entity_link", "entity_id": _LINK_ENTITY_ID}
+    )
+    res = await client.receive_json()
+    assert not res["success"], res
+    assert (
+        res["error"]["message"]
+        == f"Entity not found in entity link configuration: {_LINK_ENTITY_ID}"
+    )
+
+
+@pytest.mark.parametrize(
+    "command", ["knx/update_entity_link", "knx/validate_entity_link"]
+)
+async def test_knx_entity_link_invalid_data(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    command: str,
 ) -> None:
     """Test invalid data is reported as a validation result, not a websocket error."""
     await knx.setup_integration()
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
-        _link_payload(
-            "knx/create_entity_link",
-            channels={"switch": {"write": "1/1/1", "state": "1/1/1"}},
+        _link_message(
+            command,
+            data={
+                "knx": {
+                    "ga_status": {"write": "1/1/1"},
+                    "ga_command": {"state": "1/1/1"},  # self-loop
+                }
+            },
         )
     )
     res = await client.receive_json()
@@ -744,10 +781,26 @@ async def test_knx_create_entity_link_invalid(
     assert res["result"]["success"] is False
     assert res["result"]["errors"]
 
-    # nothing was stored
     await client.send_json_auto_id({"type": "knx/get_entity_links"})
     res = await client.receive_json()
     assert res["result"] == {}
+
+
+async def test_knx_entity_link_unsupported_entity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test linking an entity of a platform without link support is rejected."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        _link_message("knx/validate_entity_link", entity_id="sensor.test")
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
 
 
 async def test_knx_validate_entity_link(
@@ -759,7 +812,7 @@ async def test_knx_validate_entity_link(
     await knx.setup_integration()
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id(_link_payload("knx/validate_entity_link"))
+    await client.send_json_auto_id(_link_message("knx/validate_entity_link"))
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"] == {"success": True, "entity_id": None}
@@ -768,41 +821,6 @@ async def test_knx_validate_entity_link(
     await client.send_json_auto_id({"type": "knx/get_entity_links"})
     res = await client.receive_json()
     assert res["result"] == {}
-
-
-@pytest.mark.parametrize(
-    "command",
-    ["knx/get_entity_link_config", "knx/delete_entity_link"],
-)
-async def test_knx_entity_link_unknown_entity_id(
-    hass: HomeAssistant,
-    knx: KNXTestKit,
-    hass_ws_client: WebSocketGenerator,
-    command: str,
-) -> None:
-    """Test entity link commands for an entity without a link."""
-    await knx.setup_integration()
-    client = await hass_ws_client(hass)
-
-    await client.send_json_auto_id({"type": command, "entity_id": _LINK_ENTITY_ID})
-    res = await client.receive_json()
-    assert not res["success"], res
-    assert res["error"]["message"] == f"Entity link not found: {_LINK_ENTITY_ID}"
-
-
-async def test_knx_update_entity_link_unknown(
-    hass: HomeAssistant,
-    knx: KNXTestKit,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test updating an entity link that does not exist."""
-    await knx.setup_integration()
-    client = await hass_ws_client(hass)
-
-    await client.send_json_auto_id(_link_payload("knx/update_entity_link"))
-    res = await client.receive_json()
-    assert not res["success"], res
-    assert res["error"]["message"] == f"Entity link not found: {_LINK_ENTITY_ID}"
 
 
 async def test_knx_get_expose_groups(

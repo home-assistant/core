@@ -12,15 +12,20 @@ from ..entity_link import KnxEntityLink
 class KNXEntityLinkStoreConfigModel(TypedDict):
     """Represent a stored KNX entity link configuration."""
 
-    entity_id: str
-    platform: str
-    channels: dict[str, dict[str, Any]]  # role: group address configuration
+    knx: dict[str, Any]  # platform specific link configuration
     notes: NotRequired[str]
 
 
 type KNXEntityLinkStoreModel = dict[
     str, KNXEntityLinkStoreConfigModel
 ]  # entity_id: config
+
+
+class KNXEntityLinkDataModel(TypedDict):
+    """Represent a loaded KNX entity link config for validation."""
+
+    entity_id: str
+    data: KNXEntityLinkStoreConfigModel
 
 
 class EntityLinkController:
@@ -58,11 +63,10 @@ class EntityLinkController:
         """Create or replace an entity link."""
         self.remove_link(entity_id)
         link = KnxEntityLink(
-            hass,
-            xknx,
-            link_config["entity_id"],
-            link_config["platform"],
-            link_config["channels"],
+            hass=hass,
+            xknx=xknx,
+            entity_id=entity_id,
+            config=link_config["knx"],
         )
         self._links[entity_id] = link
         link.async_register()

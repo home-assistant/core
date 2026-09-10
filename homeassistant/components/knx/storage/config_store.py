@@ -290,28 +290,19 @@ class KNXConfigStore:
     @callback
     def get_entity_link_config(self, entity_id: str) -> KNXEntityLinkStoreConfigModel:
         """Return the configuration of a single KNX entity link."""
-        try:
-            return self.data["entity_links"][entity_id]
-        except KeyError as err:
-            raise ConfigStoreException(f"Entity link not found: {entity_id}") from err
+        return self.data["entity_links"].get(
+            entity_id, KNXEntityLinkStoreConfigModel(knx={})
+        )
 
-    async def create_entity_link(self, config: KNXEntityLinkStoreConfigModel) -> str:
-        """Create a new KNX entity link and return its entity_id."""
-        entity_id = config["entity_id"]
-        if entity_id in self.data["entity_links"]:
-            raise ConfigStoreException(f"Entity link already exists: {entity_id}")
-        self._start_entity_link(entity_id, config)
-        self.data["entity_links"][entity_id] = config
-        await self._store.async_save(self.data)
-        return entity_id
-
-    async def update_entity_link(self, config: KNXEntityLinkStoreConfigModel) -> None:
-        """Update an existing KNX entity link."""
-        entity_id = config["entity_id"]
-        if entity_id not in self.data["entity_links"]:
-            raise ConfigStoreException(f"Entity link not found: {entity_id}")
-        self._start_entity_link(entity_id, config)
-        self.data["entity_links"][entity_id] = config
+    async def update_entity_link(
+        self, entity_id: str, link_config: KNXEntityLinkStoreConfigModel
+    ) -> None:
+        """Create or update a KNX entity link and load it."""
+        knx_module = self.hass.data[KNX_MODULE_KEY]
+        knx_module.ui_entity_link_controller.update_link(
+            self.hass, knx_module.xknx, entity_id, link_config
+        )
+        self.data["entity_links"][entity_id] = link_config
         await self._store.async_save(self.data)
 
     async def delete_entity_link(self, entity_id: str) -> None:
@@ -321,18 +312,10 @@ class KNXConfigStore:
         try:
             del self.data["entity_links"][entity_id]
         except KeyError as err:
-            raise ConfigStoreException(f"Entity link not found: {entity_id}") from err
+            raise ConfigStoreException(
+                f"Entity not found in entity link configuration: {entity_id}"
+            ) from err
         await self._store.async_save(self.data)
-
-    @callback
-    def _start_entity_link(
-        self, entity_id: str, config: KNXEntityLinkStoreConfigModel
-    ) -> None:
-        """Create/replace the runtime link before persisting its config."""
-        knx_module = self.hass.data[KNX_MODULE_KEY]
-        knx_module.ui_entity_link_controller.update_link(
-            self.hass, knx_module.xknx, entity_id, config
-        )
 
     @callback
     def get_time_server_config(self) -> KNXTimeServerStoreModel:
