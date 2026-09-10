@@ -224,7 +224,7 @@ async def test_energy_update_cycle_fails(
     mock_melcloud_client.get_energy_telemetry.side_effect = exception
     freezer.tick(ENERGY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert energy_coordinator.data["ata-unit-uuid-1"] is None
     assert energy_coordinator.data["atw-unit-uuid-1"] is None
@@ -233,7 +233,7 @@ async def test_energy_update_cycle_fails(
     mock_melcloud_client.get_energy_telemetry.side_effect = None
     freezer.tick(ENERGY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert energy_coordinator.data["ata-unit-uuid-1"] is not None
     assert energy_coordinator.data["atw-unit-uuid-1"] is not None

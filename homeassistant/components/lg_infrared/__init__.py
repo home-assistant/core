@@ -11,6 +11,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.EVENT,
     Platform.MEDIA_PLAYER,
+    Platform.SELECT,
     Platform.SWITCH,
 ]
 

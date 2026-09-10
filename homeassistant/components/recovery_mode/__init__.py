@@ -18,6 +18,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "Home Assistant is running in recovery mode. Check [the error"
             " log](/config/logs) to see what went wrong."
         ),
-        "Recovery Mode",
+        "Recovery mode",
     )
     return True

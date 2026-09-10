@@ -120,5 +120,13 @@
     "set_value": {
       "service": "mdi:form-textbox"
     }
+  },
+  "triggers": {
+    "event": {
+      "trigger": "mdi:z-wave"
+    },
+    "value_updated": {
+      "trigger": "mdi:update"
+    }
   }
 }
