@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 from voluptuous.error import MultipleInvalid
@@ -26,7 +27,10 @@ from homeassistant.components.recorder.db_schema import (
 )
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.purge import purge_old_data
-from homeassistant.components.recorder.queries import select_event_type_ids
+from homeassistant.components.recorder.queries import (
+    find_states_to_purge,
+    select_event_type_ids,
+)
 from homeassistant.components.recorder.services import (
     SERVICE_PURGE,
     SERVICE_PURGE_ENTITIES,
@@ -61,6 +65,22 @@ TEST_EVENT_TYPES = (
     "EVENT_TEST_PURGE_WITH_EVENT_DATA",
     "EVENT_TEST_WITH_EVENT_DATA",
 )
+
+
+def test_find_states_to_purge_orders_by_last_updated_ts() -> None:
+    """Test states to purge are ordered by last_updated_ts."""
+    query = find_states_to_purge(1724206320.099243, 4000)
+
+    compiled_query = " ".join(
+        str(
+            query.compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={"literal_binds": True},
+            )
+        ).split()
+    )
+
+    assert "ORDER BY states.last_updated_ts ASC LIMIT 4000" in compiled_query
 
 
 @pytest.fixture
