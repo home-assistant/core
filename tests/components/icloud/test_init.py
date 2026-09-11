@@ -19,6 +19,7 @@ from homeassistant.components.icloud.config_flow import (
 )
 from homeassistant.components.icloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -403,3 +404,42 @@ async def test_2fa_required_exception_at_login_starts_reauth(
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
+
+
+async def test_password_reauth_reports_a_rejected_session(
+    hass: HomeAssistant, service_auth_required: Mock
+) -> None:
+    """Test that a session iCloud keeps rejecting does not break the flow.
+
+    PyiCloudService validates the persisted session while it is constructed,
+    so the password form runs into the same rejection before the password is
+    ever tried. The user has to be told, not shown an unknown error.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+    # The stored session is what iCloud is rejecting, so constructing the
+    # service from the reauth form runs into it again.
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response)),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flows[0]["flow_id"], {CONF_PASSWORD: "new-password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}

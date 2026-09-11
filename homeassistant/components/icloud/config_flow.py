@@ -7,6 +7,9 @@ from typing import TYPE_CHECKING, Any, override
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
+    PyiCloud2FARequiredException,
+    PyiCloudAPIResponseException,
+    PyiCloudAuthRequiredException,
     PyiCloudException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
@@ -170,6 +173,23 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Error logging into iCloud service: %s", error)
                 self.api = None
                 errors = {CONF_PASSWORD: "invalid_auth"}
+                return self._show_setup_form(user_input, errors, step_id)
+            except (
+                PyiCloud2FARequiredException,
+                PyiCloudAuthRequiredException,
+                PyiCloudAPIResponseException,
+            ) as error:
+                # PyiCloudService validates the stored session while it is
+                # constructed, so a session iCloud is rejecting fails here
+                # before the password is tried. Report it rather than letting
+                # it escape the flow.
+                _LOGGER.error(
+                    "Stored iCloud session for %s was rejected: %s",
+                    self._username,
+                    error,
+                )
+                self.api = None
+                errors = {"base": "unknown"}
                 return self._show_setup_form(user_input, errors, step_id)
 
         if self._requires_2fa:
