@@ -335,7 +335,15 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             if port:
                 self.port = port
                 match_dict[CONF_PORT] = port
-            self._async_abort_entries_match(match_dict)
+            for entry in self._async_current_entries(include_ignore=False):
+                if all(
+                    item in entry.data.items() or item in entry.options.items()
+                    for item in match_dict.items()
+                ):
+                    return self.async_abort(
+                        reason="host_already_configured",
+                        description_placeholders={"host": host, "name": entry.title},
+                    )
 
             self.host = host
             credentials = await get_credentials(self.hass)
