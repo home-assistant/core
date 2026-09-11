@@ -197,6 +197,8 @@ class EcovacsActiveMapSelectEntity(
             self._attr_current_option = self._id_to_option.get(event.map_id)
             self.async_write_ha_state()
 
+        if TYPE_CHECKING:
+            assert isinstance(self._capability.major, CapabilitySet)
         self._subscribe(self._capability.major.event, on_major_map)
 
     @override
