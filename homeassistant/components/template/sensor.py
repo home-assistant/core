@@ -16,6 +16,8 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorExtraStoredData,
     SensorStateClass,
 )
@@ -30,7 +32,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -68,6 +70,12 @@ SENSOR_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
+)
+
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(SensorEntityCapabilityAttribute, SensorEntityStateAttribute),
+    device_class=True,
+    allowed_attributes=(SensorEntityCapabilityAttribute.OPTIONS,),
 )
 
 SENSOR_YAML_SCHEMA = vol.All(
@@ -145,13 +153,13 @@ def validate_datetime(
                 return result
 
             if (parsed_timestamp := dt_util.parse_datetime(result)) is None:
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity, attribute, result, "expected a valid timestamp"
                 )
                 return None
 
             if kwargs.get("require_tzinfo", True) and parsed_timestamp.tzinfo is None:
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     attribute,
                     result,
@@ -164,7 +172,7 @@ def validate_datetime(
         if (parsed_date := dt_util.parse_date(result)) is not None:
             return parsed_date
 
-        template_validators.log_validation_result_error(
+        tcv.log_validation_result_error(
             entity, attribute, result, "expected a valid date"
         )
         return None
@@ -179,6 +187,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
     _state_option = CONF_STATE
     _restore_state_extra_data = SensorExtraStoredData
     _restore_state_properties = ("_attr_native_value",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -212,7 +221,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
             if not isinstance(result, bool) and isinstance(result, (int, float)):
                 return result
 
-            return template_validators.number(self, CONF_STATE)(result)
+            return tcv.number(self, CONF_STATE)(result)
 
         if result is None or self.device_class not in (
             SensorDeviceClass.DATE,

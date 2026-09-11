@@ -1264,6 +1264,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="stick_cleaner_operating_state",
                 options=list(STICK_CLEANER_STATUS.values()),
                 device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: STICK_CLEANER_STATUS.get(value, value),
             )
         ]
     },

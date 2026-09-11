@@ -1,5 +1,13 @@
 {
   "entity": {
+    "select": {
+      "light_mode": {
+        "default": "mdi:lightbulb-auto"
+      },
+      "light_schedule_frequency": {
+        "default": "mdi:calendar-refresh"
+      }
+    },
     "sensor": {
       "chlorine": {
         "default": "mdi:gauge"
@@ -28,6 +36,12 @@
         "default": "mdi:clock-end"
       },
       "filtration_interval_start": {
+        "default": "mdi:clock-start"
+      },
+      "light_schedule_end": {
+        "default": "mdi:clock-end"
+      },
+      "light_schedule_start": {
         "default": "mdi:clock-start"
       }
     }

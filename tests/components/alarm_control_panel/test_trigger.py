@@ -8,15 +8,18 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
+from homeassistant.components.alarm_control_panel.trigger import TRIGGERS
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -28,6 +31,17 @@ from tests.components.common import (
 async def target_alarm_control_panels(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create alarm control panel entities for different targets."""
     return await target_entities(hass, "alarm_control_panel")
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "armed": TargetSupport.STANDARD,
+    "armed_away": TargetSupport.STANDARD,
+    "armed_home": TargetSupport.STANDARD,
+    "armed_night": TargetSupport.STANDARD,
+    "armed_vacation": TargetSupport.STANDARD,
+    "disarmed": TargetSupport.STANDARD,
+    "triggered": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -57,6 +71,11 @@ async def test_alarm_control_panel_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

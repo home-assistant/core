@@ -1,0 +1,1012 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'account': dict({
+      'address_groups': list([
+        dict({
+          'address': dict({
+            'addition': '',
+            'city': '**REDACTED**',
+            'id': '1234AB1',
+            'number': '**REDACTED**',
+            'street': '**REDACTED**',
+            'sunrise': '2026-08-29T04:39:24+00:00',
+            'sunset': '2026-08-29T18:30:23+00:00',
+            'zipcode': '**REDACTED**',
+          }),
+          'connections': list([
+            dict({
+              'contracts': list([
+                dict({
+                  'end_date': None,
+                  'label': 'Stroom tegen uurprijzen',
+                  'meta': dict({
+                    'agreement_date': '2026-08-29',
+                    'contract_type': 'smart',
+                    'deposit_type': 'fixed',
+                    'end_reason': None,
+                    'expected_delivery': 4470,
+                    'expected_production': 2520,
+                    'external_contract_id': '**REDACTED**',
+                    'gas_price_ceiling_contract_end_date': None,
+                    'gas_price_ceiling_contract_start_date': None,
+                    'monthly_advanced_deposit_amount': 930000000,
+                    'original_end_date': None,
+                    'proposition_reference': 'vast-voorschot-e-2025-12-kwart',
+                    'show_in_contract_screen': True,
+                    'start_reason': None,
+                  }),
+                  'start_date': '2026-09-17T22:00:00+00:00',
+                  'type': 'electricity',
+                  'uuid': '**REDACTED**',
+                }),
+              ]),
+              'ean': '**REDACTED**',
+              'features': list([
+                dict({
+                  'code': 'E004',
+                  'label': 'Verbruikshistorie',
+                  'start_date': '2026-08-29',
+                }),
+              ]),
+              'market_segment': 'electricity',
+              'uuid': '**REDACTED**',
+            }),
+            dict({
+              'contracts': list([
+                dict({
+                  'end_date': None,
+                  'label': 'Gas tegen dagprijzen',
+                  'meta': dict({
+                    'agreement_date': '2026-08-29',
+                    'contract_type': 'smart',
+                    'deposit_type': 'fixed',
+                    'end_reason': None,
+                    'expected_delivery': 2171,
+                    'expected_production': None,
+                    'external_contract_id': '**REDACTED**',
+                    'gas_price_ceiling_contract_end_date': None,
+                    'gas_price_ceiling_contract_start_date': None,
+                    'monthly_advanced_deposit_amount': 3500000000,
+                    'original_end_date': None,
+                    'proposition_reference': 'vast-voorschot-g-2024-11',
+                    'show_in_contract_screen': True,
+                    'start_reason': None,
+                  }),
+                  'start_date': '2026-09-17T22:00:00+00:00',
+                  'type': 'gas',
+                  'uuid': '**REDACTED**',
+                }),
+              ]),
+              'ean': '**REDACTED**',
+              'features': list([
+              ]),
+              'market_segment': 'gas',
+              'uuid': '**REDACTED**',
+            }),
+          ]),
+          'is_representative': True,
+          'organization_uuid': '00000000-0000-4000-8000-000000000008',
+          'uuid': '**REDACTED**',
+        }),
+      ]),
+      'user_account': dict({
+        'email': '**REDACTED**',
+        'first_name': '**REDACTED**',
+        'full_name': '**REDACTED**',
+        'initials': '',
+        'is_representative': False,
+        'uuid': '**REDACTED**',
+      }),
+    }),
+    'connections': list([
+      dict({
+        'contracts': list([
+          dict({
+            'end_date': None,
+            'label': 'Stroom tegen uurprijzen',
+            'meta': dict({
+              'agreement_date': '2026-08-29',
+              'contract_type': 'smart',
+              'deposit_type': 'fixed',
+              'end_reason': None,
+              'expected_delivery': 4470,
+              'expected_production': 2520,
+              'external_contract_id': '**REDACTED**',
+              'gas_price_ceiling_contract_end_date': None,
+              'gas_price_ceiling_contract_start_date': None,
+              'monthly_advanced_deposit_amount': 930000000,
+              'original_end_date': None,
+              'proposition_reference': 'vast-voorschot-e-2025-12-kwart',
+              'show_in_contract_screen': True,
+              'start_reason': None,
+            }),
+            'start_date': '2026-09-17T22:00:00+00:00',
+            'type': 'electricity',
+            'uuid': '**REDACTED**',
+          }),
+        ]),
+        'ean': '**REDACTED**',
+        'features': list([
+          dict({
+            'code': 'E004',
+            'label': 'Verbruikshistorie',
+            'start_date': '2026-08-29',
+          }),
+        ]),
+        'market_segment': 'electricity',
+        'uuid': '**REDACTED**',
+      }),
+      dict({
+        'contracts': list([
+          dict({
+            'end_date': None,
+            'label': 'Gas tegen dagprijzen',
+            'meta': dict({
+              'agreement_date': '2026-08-29',
+              'contract_type': 'smart',
+              'deposit_type': 'fixed',
+              'end_reason': None,
+              'expected_delivery': 2171,
+              'expected_production': None,
+              'external_contract_id': '**REDACTED**',
+              'gas_price_ceiling_contract_end_date': None,
+              'gas_price_ceiling_contract_start_date': None,
+              'monthly_advanced_deposit_amount': 3500000000,
+              'original_end_date': None,
+              'proposition_reference': 'vast-voorschot-g-2024-11',
+              'show_in_contract_screen': True,
+              'start_reason': None,
+            }),
+            'start_date': '2026-09-17T22:00:00+00:00',
+            'type': 'gas',
+            'uuid': '**REDACTED**',
+          }),
+        ]),
+        'ean': '**REDACTED**',
+        'features': list([
+        ]),
+        'market_segment': 'gas',
+        'uuid': '**REDACTED**',
+      }),
+    ]),
+    'electricity_prices': dict({
+      'chart': dict({
+        'range': dict({
+          'end_date': '2026-08-30T23:59:59+02:00',
+          'start_date': '2026-08-28T15:00:00+02:00',
+        }),
+        'series': dict({
+          'prices': list([
+            dict({
+              'end_date': '2026-08-28T14:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1496060,
+              }),
+              'price_tax_included': dict({
+                'amount': 2604541,
+              }),
+              'start_date': '2026-08-28T13:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-28T15:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1544823,
+              }),
+              'price_tax_included': dict({
+                'amount': 2653304,
+              }),
+              'start_date': '2026-08-28T14:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-28T16:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1850016,
+              }),
+              'price_tax_included': dict({
+                'amount': 2958497,
+              }),
+              'start_date': '2026-08-28T15:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-28T17:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2123385,
+              }),
+              'price_tax_included': dict({
+                'amount': 3231866,
+              }),
+              'start_date': '2026-08-28T16:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-28T18:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2281199,
+              }),
+              'price_tax_included': dict({
+                'amount': 3389680,
+              }),
+              'start_date': '2026-08-28T17:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 896,
+              }),
+              'tariff_group': 'high',
+            }),
+            dict({
+              'end_date': '2026-08-28T19:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2335679,
+              }),
+              'price_tax_included': dict({
+                'amount': 3444160,
+              }),
+              'start_date': '2026-08-28T18:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 747,
+              }),
+              'tariff_group': 'high',
+            }),
+            dict({
+              'end_date': '2026-08-28T20:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2210867,
+              }),
+              'price_tax_included': dict({
+                'amount': 3319348,
+              }),
+              'start_date': '2026-08-28T19:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 633,
+              }),
+              'tariff_group': 'high',
+            }),
+            dict({
+              'end_date': '2026-08-28T21:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2156509,
+              }),
+              'price_tax_included': dict({
+                'amount': 3264990,
+              }),
+              'start_date': '2026-08-28T20:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 689,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-28T22:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1922253,
+              }),
+              'price_tax_included': dict({
+                'amount': 3030734,
+              }),
+              'start_date': '2026-08-28T21:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 712,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-28T23:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1753819,
+              }),
+              'price_tax_included': dict({
+                'amount': 2862300,
+              }),
+              'start_date': '2026-08-28T22:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 729,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-29T00:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1551176,
+              }),
+              'price_tax_included': dict({
+                'amount': 2659657,
+              }),
+              'start_date': '2026-08-28T23:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 781,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-29T01:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1409061,
+              }),
+              'price_tax_included': dict({
+                'amount': 2517542,
+              }),
+              'start_date': '2026-08-29T00:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 776,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T02:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1320550,
+              }),
+              'price_tax_included': dict({
+                'amount': 2429031,
+              }),
+              'start_date': '2026-08-29T01:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 776,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T03:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1314863,
+              }),
+              'price_tax_included': dict({
+                'amount': 2423344,
+              }),
+              'start_date': '2026-08-29T02:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 672,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T04:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1358635,
+              }),
+              'price_tax_included': dict({
+                'amount': 2467116,
+              }),
+              'start_date': '2026-08-29T03:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 675,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T05:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1380899,
+              }),
+              'price_tax_included': dict({
+                'amount': 2489380,
+              }),
+              'start_date': '2026-08-29T04:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 678,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T06:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1425215,
+              }),
+              'price_tax_included': dict({
+                'amount': 2533696,
+              }),
+              'start_date': '2026-08-29T05:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 674,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-29T07:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 934530,
+              }),
+              'price_tax_included': dict({
+                'amount': 2043011,
+              }),
+              'start_date': '2026-08-29T06:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 748,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T08:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 263010,
+              }),
+              'price_tax_included': dict({
+                'amount': 1371491,
+              }),
+              'start_date': '2026-08-29T07:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 993,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T09:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 201571,
+              }),
+              'price_tax_included': dict({
+                'amount': 1310052,
+              }),
+              'start_date': '2026-08-29T08:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T10:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 192921,
+              }),
+              'price_tax_included': dict({
+                'amount': 1301402,
+              }),
+              'start_date': '2026-08-29T09:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T11:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 184481,
+              }),
+              'price_tax_included': dict({
+                'amount': 1292962,
+              }),
+              'start_date': '2026-08-29T10:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T12:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 180760,
+              }),
+              'price_tax_included': dict({
+                'amount': 1289241,
+              }),
+              'start_date': '2026-08-29T11:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T13:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 193737,
+              }),
+              'price_tax_included': dict({
+                'amount': 1302218,
+              }),
+              'start_date': '2026-08-29T12:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T14:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 235664,
+              }),
+              'price_tax_included': dict({
+                'amount': 1344145,
+              }),
+              'start_date': '2026-08-29T13:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T15:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 483442,
+              }),
+              'price_tax_included': dict({
+                'amount': 1591923,
+              }),
+              'start_date': '2026-08-29T14:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-29T16:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1434290,
+              }),
+              'price_tax_included': dict({
+                'amount': 2542771,
+              }),
+              'start_date': '2026-08-29T15:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-29T17:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2031334,
+              }),
+              'price_tax_included': dict({
+                'amount': 3139815,
+              }),
+              'start_date': '2026-08-29T16:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-29T18:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2450386,
+              }),
+              'price_tax_included': dict({
+                'amount': 3558867,
+              }),
+              'start_date': '2026-08-29T17:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 815,
+              }),
+              'tariff_group': 'high',
+            }),
+            dict({
+              'end_date': '2026-08-29T19:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2473105,
+              }),
+              'price_tax_included': dict({
+                'amount': 3581586,
+              }),
+              'start_date': '2026-08-29T18:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 681,
+              }),
+              'tariff_group': 'high',
+            }),
+            dict({
+              'end_date': '2026-08-29T20:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2279566,
+              }),
+              'price_tax_included': dict({
+                'amount': 3388047,
+              }),
+              'start_date': '2026-08-29T19:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 612,
+              }),
+              'tariff_group': 'high',
+            }),
+            dict({
+              'end_date': '2026-08-29T21:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2118696,
+              }),
+              'price_tax_included': dict({
+                'amount': 3227177,
+              }),
+              'start_date': '2026-08-29T20:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 614,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-29T22:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1934685,
+              }),
+              'price_tax_included': dict({
+                'amount': 3043166,
+              }),
+              'start_date': '2026-08-29T21:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 648,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-29T23:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1617181,
+              }),
+              'price_tax_included': dict({
+                'amount': 2725662,
+              }),
+              'start_date': '2026-08-29T22:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 677,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-30T00:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1442064,
+              }),
+              'price_tax_included': dict({
+                'amount': 2550545,
+              }),
+              'start_date': '2026-08-29T23:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 756,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-30T01:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1243382,
+              }),
+              'price_tax_included': dict({
+                'amount': 2351863,
+              }),
+              'start_date': '2026-08-30T00:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 780,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T02:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1125377,
+              }),
+              'price_tax_included': dict({
+                'amount': 2233858,
+              }),
+              'start_date': '2026-08-30T01:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 824,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T03:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1022527,
+              }),
+              'price_tax_included': dict({
+                'amount': 2131008,
+              }),
+              'start_date': '2026-08-30T02:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 835,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T04:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1064363,
+              }),
+              'price_tax_included': dict({
+                'amount': 2172844,
+              }),
+              'start_date': '2026-08-30T03:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 846,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T05:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1064695,
+              }),
+              'price_tax_included': dict({
+                'amount': 2173176,
+              }),
+              'start_date': '2026-08-30T04:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 860,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T06:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 915775,
+              }),
+              'price_tax_included': dict({
+                'amount': 2024256,
+              }),
+              'start_date': '2026-08-30T05:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 853,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T07:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 395443,
+              }),
+              'price_tax_included': dict({
+                'amount': 1503924,
+              }),
+              'start_date': '2026-08-30T06:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 889,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T08:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 203296,
+              }),
+              'price_tax_included': dict({
+                'amount': 1311777,
+              }),
+              'start_date': '2026-08-30T07:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T09:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 198910,
+              }),
+              'price_tax_included': dict({
+                'amount': 1307391,
+              }),
+              'start_date': '2026-08-30T08:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T10:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 198185,
+              }),
+              'price_tax_included': dict({
+                'amount': 1306666,
+              }),
+              'start_date': '2026-08-30T09:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T11:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 190622,
+              }),
+              'price_tax_included': dict({
+                'amount': 1299103,
+              }),
+              'start_date': '2026-08-30T10:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T12:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 187415,
+              }),
+              'price_tax_included': dict({
+                'amount': 1295896,
+              }),
+              'start_date': '2026-08-30T11:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T13:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 187627,
+              }),
+              'price_tax_included': dict({
+                'amount': 1296108,
+              }),
+              'start_date': '2026-08-30T12:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T14:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 198547,
+              }),
+              'price_tax_included': dict({
+                'amount': 1307028,
+              }),
+              'start_date': '2026-08-30T13:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T15:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 205777,
+              }),
+              'price_tax_included': dict({
+                'amount': 1314258,
+              }),
+              'start_date': '2026-08-30T14:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T16:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 886251,
+              }),
+              'price_tax_included': dict({
+                'amount': 1994732,
+              }),
+              'start_date': '2026-08-30T15:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': 'low',
+            }),
+            dict({
+              'end_date': '2026-08-30T17:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2100213,
+              }),
+              'price_tax_included': dict({
+                'amount': 3208694,
+              }),
+              'start_date': '2026-08-30T16:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 898,
+              }),
+              'tariff_group': 'normal',
+            }),
+            dict({
+              'end_date': '2026-08-30T18:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2427095,
+              }),
+              'price_tax_included': dict({
+                'amount': 3535576,
+              }),
+              'start_date': '2026-08-30T17:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 584,
+              }),
+              'tariff_group': 'high',
+            }),
+            dict({
+              'end_date': '2026-08-30T19:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2539080,
+              }),
+              'price_tax_included': dict({
+                'amount': 3647561,
+              }),
+              'start_date': '2026-08-30T18:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 409,
+              }),
+              'tariff_group': 'high',
+            }),
+            dict({
+              'end_date': '2026-08-30T20:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2536055,
+              }),
+              'price_tax_included': dict({
+                'amount': 3644536,
+              }),
+              'start_date': '2026-08-30T19:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 314,
+              }),
+              'tariff_group': 'high',
+            }),
+            dict({
+              'end_date': '2026-08-30T21:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2396089,
+              }),
+              'price_tax_included': dict({
+                'amount': 3504570,
+              }),
+              'start_date': '2026-08-30T20:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 348,
+              }),
+              'tariff_group': 'high',
+            }),
+            dict({
+              'end_date': '2026-08-30T22:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 2233071,
+              }),
+              'price_tax_included': dict({
+                'amount': 3341552,
+              }),
+              'start_date': '2026-08-30T21:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 374,
+              }),
+              'tariff_group': 'high',
+            }),
+          ]),
+        }),
+      }),
+    }),
+    'entry_data': dict({
+      'email': '**REDACTED**',
+      'token': '**REDACTED**',
+    }),
+    'gas_prices': dict({
+      'chart': dict({
+        'range': dict({
+          'end_date': '2026-08-30T23:59:59+02:00',
+          'start_date': '2026-08-28T19:00:00+02:00',
+        }),
+        'series': dict({
+          'prices': list([
+            dict({
+              'end_date': '2026-08-30T04:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 8761816,
+              }),
+              'price_tax_included': dict({
+                'amount': 16029802,
+              }),
+              'start_date': '2026-08-29T04:00:00+00:00',
+              'sustainability_score': None,
+              'tariff_group': None,
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, cast, override
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from chip.clusters.Types import Nullable
+from matter_server.common import custom_clusters
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, Platform
@@ -718,5 +719,45 @@ DISCOVERY_SCHEMAS = [
             clusters.DoorLock.Attributes.OperatingMode,
             clusters.DoorLock.Attributes.SupportedOperatingModes,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoSwitchType",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="switch_type",
+            options=["switch", "button"],
+            device_to_ha={
+                0: "button",
+                1: "switch",
+            }.get,
+            ha_to_device={
+                "button": 0,
+                "switch": 1,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(custom_clusters.WagoCluster.Attributes.SwitchType,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoDirectlyConnected",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="switch_connection_mode",
+            options=["directly_connected", "matter_only"],
+            device_to_ha={
+                True: "directly_connected",
+                False: "matter_only",
+            }.get,
+            ha_to_device={
+                "directly_connected": True,
+                "matter_only": False,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(custom_clusters.WagoCluster.Attributes.DirectlyConnected,),
+        vendor_id=(5428,),
     ),
 ]

@@ -13,6 +13,7 @@ AUTH_RETRIES = 2
 
 ATTR_EVENT_SCORE = "event_score"
 ATTR_EVENT_ID = "event_id"
+ATTR_EVENT_SOURCE = "event_source"
 ATTR_SMART_DETECT_TYPES = "smart_detect_types"
 ATTR_WIDTH = "width"
 ATTR_HEIGHT = "height"
@@ -78,6 +79,23 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.TEXT,
 ]
+
+# Platforms forwarded in public-API-only (API-key) mode. Only entities that are
+# fully backed by the public Integration API work without a local user; the
+# rest enumerate from the private bootstrap, which is absent in this mode.
+PUBLIC_ONLY_PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.EVENT,
+    Platform.LIGHT,
+    Platform.SENSOR,
+]
+
+# Stored local-user credentials do not imply the mode: they are kept on a
+# switch to API-key-only so switching back is lossless.
+CONF_CONNECTION_MODE = "connection_mode"
+CONNECTION_MODE_API_KEY_ONLY = "api_key_only"
 
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
