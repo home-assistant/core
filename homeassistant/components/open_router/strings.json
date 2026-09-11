@@ -23,7 +23,6 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "AI task",
@@ -44,7 +43,6 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "[%key:component::open_router::config_subentries::ai_task_data::abort::entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "Conversation agent",

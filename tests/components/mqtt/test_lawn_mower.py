@@ -741,8 +741,8 @@ async def test_mqtt_payload_not_a_valid_activity_warning(
 
     assert (
         "Invalid activity for lawn_mower.test_lawn_mower: 'painting' "
-        "(valid activities: ['error', 'paused', 'mowing', 'docked', 'returning'])"
-        in caplog.text
+        "(valid activities: ['error', 'paused', 'mowing', 'docked', 'returning', "
+        "'idle'])" in caplog.text
     )
 
 
