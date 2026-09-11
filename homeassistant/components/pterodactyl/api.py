@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 
-from pydactyl import PterodactylClient
+from pydactyl import AsyncPterodactylClient
 from pydactyl.exceptions import BadRequestError, PterodactylApiError
 from requests.exceptions import ConnectionError, HTTPError
 
@@ -60,7 +60,7 @@ class PterodactylCommand(StrEnum):
 class PterodactylAPI:
     """Wrapper for Pterodactyl's API."""
 
-    pterodactyl: PterodactylClient | None
+    pterodactyl: AsyncPterodactylClient | None
     game_servers: list[PterodactylGameServer]
 
     def __init__(self, hass: HomeAssistant, host: str, api_key: str) -> None:
@@ -71,18 +71,18 @@ class PterodactylAPI:
         self.pterodactyl = None
         self.game_servers = []
 
-    def get_game_servers(self) -> list[str]:
+    async def get_game_servers(self) -> list[str]:
         """Get all game servers."""
-        paginated_response = self.pterodactyl.client.servers.list_servers()  # type: ignore[union-attr]
+        paginated_response = await self.pterodactyl.client.servers.list_servers()  # type: ignore[union-attr]
 
-        return paginated_response.collect()
+        return await paginated_response.collect_async()
 
     async def async_init(self):
         """Initialize the Pterodactyl API."""
-        self.pterodactyl = PterodactylClient(self.host, self.api_key)
+        self.pterodactyl = AsyncPterodactylClient(self.host, self.api_key)
 
         try:
-            game_servers = await self.hass.async_add_executor_job(self.get_game_servers)
+            game_servers = await self.get_game_servers()
         except (
             BadRequestError,
             PterodactylApiError,
@@ -106,16 +106,18 @@ class PterodactylAPI:
 
             _LOGGER.debug("Pterodactyl game servers: %s", self.game_servers)
 
-    def get_server_data(
+    async def get_server_data(
         self, game_server: PterodactylGameServer
     ) -> tuple[dict, dict | None]:
         """Get all data from the Pterodactyl game server."""
-        server = self.pterodactyl.client.servers.get_server(game_server.identifier)  # type: ignore[union-attr]
+        server = await self.pterodactyl.client.servers.get_server(  # type: ignore[union-attr]
+            game_server.identifier
+        )
 
         game_server.is_suspended = server["is_suspended"]
 
         if not game_server.is_suspended:
-            utilization = self.pterodactyl.client.servers.get_server_utilization(  # type: ignore[union-attr]
+            utilization = await self.pterodactyl.client.servers.get_server_utilization(  # type: ignore[union-attr]
                 game_server.identifier
             )
         else:
@@ -129,9 +131,7 @@ class PterodactylAPI:
 
         for game_server in self.game_servers:
             try:
-                server, utilization = await self.hass.async_add_executor_job(
-                    self.get_server_data, game_server
-                )
+                server, utilization = await self.get_server_data(game_server)
             except (BadRequestError, PterodactylApiError, ConnectionError) as error:
                 raise PterodactylConnectionError(error) from error
             except HTTPError as error:
@@ -188,8 +188,7 @@ class PterodactylAPI:
     ) -> None:
         """Send a command to the Pterodactyl game server."""
         try:
-            await self.hass.async_add_executor_job(
-                self.pterodactyl.client.servers.send_power_action,  # type: ignore[union-attr]
+            await self.pterodactyl.client.servers.send_power_action(  # type: ignore[union-attr]
                 identifier,
                 command,
             )

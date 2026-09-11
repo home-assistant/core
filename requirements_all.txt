@@ -2000,7 +2000,7 @@ py-canary==0.5.4
 py-cpuinfo==9.0.0
 
 # homeassistant.components.pterodactyl
-py-dactyl==2.0.4
+py-dactyl==2.1.3
 
 # homeassistant.components.dormakaba_dkey
 py-dormakaba-dkey==1.0.6
