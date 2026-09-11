@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_API, setup_subaru_config_entry
+from .conftest import MOCK_API, MOCK_API_FETCH, advance_time_to_next_fetch
 
 from tests.common import MockConfigEntry
 
@@ -98,12 +98,12 @@ async def test_unlock_specific_door_invalid(hass: HomeAssistant, ev_entry) -> No
 
 
 async def test_lock_unavailable_on_fetch_failure(
-    hass: HomeAssistant, subaru_config_entry: MockConfigEntry
+    hass: HomeAssistant, ev_entry: MockConfigEntry
 ) -> None:
-    """Test lock goes unavailable when the coordinator fails to fetch data."""
-    await setup_subaru_config_entry(
-        hass, subaru_config_entry, fetch_effect=SubaruException("403 Error")
-    )
+    """Test lock goes unavailable when a fetch fails after setup."""
+    with patch(MOCK_API_FETCH, side_effect=SubaruException("403 Error")):
+        advance_time_to_next_fetch(hass)
+        await hass.async_block_till_done()
 
     state = hass.states.get(DEVICE_ID)
     assert state.state == STATE_UNAVAILABLE
