@@ -1,0 +1,12 @@
+{
+  "domain": "axle",
+  "name": "Axle Energy",
+  "codeowners": ["@Herbertmt978"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/axle",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["aioaxlevpp==0.1.0"],
+  "single_config_entry": true
+}

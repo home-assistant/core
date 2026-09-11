@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "Generate a Home Assistant token in your Axle account settings."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "end": {
+        "name": "Event end"
+      },
+      "import_export": {
+        "name": "Import / Export",
+        "state": {
+          "export": "Export",
+          "import": "Import"
+        }
+      },
+      "start": {
+        "name": "Event start"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed. Check your Axle API key."
+    },
+    "cannot_connect": {
+      "message": "Unable to retrieve grid events from Axle."
+    }
+  }
+}

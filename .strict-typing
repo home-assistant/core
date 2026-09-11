@@ -109,6 +109,7 @@ homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.axis.*
+homeassistant.components.axle.*
 homeassistant.components.azure_storage.*
 homeassistant.components.backblaze_b2.*
 homeassistant.components.backup.*
