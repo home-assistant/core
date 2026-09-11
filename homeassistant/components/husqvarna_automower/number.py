@@ -166,8 +166,8 @@ async def async_setup_entry(
 
     def _async_update_work_area_cutting_heights(
         mower_id: str,
-        enabled_area_ids: set[int],
-        disabled_area_ids: set[int],
+        local_cutting_height_area_ids: set[int],
+        global_cutting_height_area_ids: set[int],
     ) -> None:
         """Create or remove cutting height entities after a setting transition."""
         work_areas = coordinator.data[mower_id].work_areas
@@ -185,12 +185,12 @@ async def async_setup_entry(
 
         async_add_entities(
             WorkAreaNumberEntity(mower_id, coordinator, description, work_area_id)
-            for work_area_id in enabled_area_ids
+            for work_area_id in local_cutting_height_area_ids
             if description.exists_fn(work_areas[work_area_id])
             and f"{mower_id}_{work_area_id}_{description.key}" not in entries
         )
 
-        for work_area_id in disabled_area_ids:
+        for work_area_id in global_cutting_height_area_ids:
             unique_id = f"{mower_id}_{work_area_id}_{description.key}"
             if entry := entries.get(unique_id):
                 entity_registry.async_remove(entry.entity_id)
