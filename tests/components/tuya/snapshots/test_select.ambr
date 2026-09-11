@@ -243,6 +243,69 @@
     'state': 'power_on',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.ac_charging_control_box_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charge_now',
+        'charge_pct',
+        'charge_energy',
+        'charge_schedule',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ac_charging_control_box_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charger_work_mode',
+    'unique_id': 'tuya.qyy1auihjyoogvb7zdccqwork_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.ac_charging_control_box_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC charging control box Charging mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charge_now',
+        'charge_pct',
+        'charge_energy',
+        'charge_schedule',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ac_charging_control_box_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charge_now',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.aqi_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2860,6 +2923,69 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'last',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.ev_charger_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charge_now',
+        'charge_pct',
+        'charge_energy',
+        'charge_schedule',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ev_charger_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charger_work_mode',
+    'unique_id': 'tuya.lr7th3bpx7masmsdzdccqwork_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.ev_charger_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'EV Charger Charging mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charge_now',
+        'charge_pct',
+        'charge_energy',
+        'charge_schedule',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ev_charger_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charge_now',
   })
 # ---
 # name: test_platform_setup_and_discovery[select.framboisier_indicator_light_mode-entry]

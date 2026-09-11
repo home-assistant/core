@@ -54,7 +54,7 @@
     'state': '75',
   })
 # ---
-# name: test_all_entities[sensor.nursery_yoto_card_slot-entry]
+# name: test_all_entities[sensor.nursery_yoto_content_source-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -75,7 +75,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.nursery_yoto_card_slot',
+    'entity_id': 'sensor.nursery_yoto_content_source',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -83,12 +83,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Card slot',
+    'object_id_base': 'Content source',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Card slot',
+    'original_name': 'Content source',
     'platform': 'yoto',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -98,11 +98,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.nursery_yoto_card_slot-state]
+# name: test_all_entities[sensor.nursery_yoto_content_source-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Card slot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Content source',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'physical',
@@ -111,7 +111,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nursery_yoto_card_slot',
+    'entity_id': 'sensor.nursery_yoto_content_source',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
