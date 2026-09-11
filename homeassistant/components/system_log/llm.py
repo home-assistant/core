@@ -74,8 +74,9 @@ class SystemLogGetEntriesTool(Tool):
     name = "system_log__get_entries"
     description = (
         "Retrieve recent system log errors and warnings from Home Assistant. "
-        "Can filter by log level, domain or logger name, and choose whether "
-        "to include full exception tracebacks."
+        "This inspects the in-memory system log, which only records WARNING, ERROR, "
+        "and CRITICAL events (not DEBUG or INFO). Can filter by log level, integration "
+        "or logger name, and choose whether to include full exception tracebacks."
     )
     parameters = vol.Schema(
         {
