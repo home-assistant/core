@@ -24,7 +24,14 @@ from .bot import (
     TelegramNotificationService,
     initialize_bot,
 )
+
+# The ATTR_* below are unused here, but re-exported for the telegram integration.
 from .const import (
+    ATTR_CHAT_ID,  # noqa: F401
+    ATTR_DISABLE_NOTIF,  # noqa: F401
+    ATTR_DISABLE_WEB_PREV,  # noqa: F401
+    ATTR_MESSAGE_TAG,  # noqa: F401
+    ATTR_MESSAGE_THREAD_ID,  # noqa: F401
     ATTR_PARSER,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
