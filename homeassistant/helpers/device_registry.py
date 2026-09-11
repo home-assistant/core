@@ -59,7 +59,7 @@ from .json import (
     find_paths_unserializable_data,
     json_fragment,
 )
-from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
+from .registry import BaseRegistry, BaseRegistryItems, ContextSource, RegistryIndexType
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -537,6 +537,11 @@ class DeviceEntry(BaseDeviceEntry):
         return {self.config_entry_id: {self.config_subentry_id}}
 
     @property
+    def context_source(self) -> ContextSource | None:
+        """Kind of node the device's name context continues to."""
+        return ContextSource.AREA if self.area_id is not None else None
+
+    @property
     @override
     def is_composite_device(self) -> bool:
         """Return if this entry is a restored composite device.
@@ -567,6 +572,7 @@ class DeviceEntry(BaseDeviceEntry):
             "config_entry_id": self.config_entry_id,
             "config_subentry_id": self.config_subentry_id,
             "connections": list(self.connections),
+            "context_source": self.context_source,
             "created_at": self.created_at.timestamp(),
             "disabled_by": self.disabled_by,
             "entry_type": self.entry_type,
@@ -686,6 +692,13 @@ class ChildDeviceEntry(BaseDeviceEntry):
             return set() if name == "connections" else None
 
     @property
+    def context_source(self) -> ContextSource:
+        """Kind of node the child device's name context continues to."""
+        if self.area_id is not None:
+            return ContextSource.AREA
+        return ContextSource.PARENT_DEVICE
+
+    @property
     @override
     def dict_repr(self) -> dict[str, Any]:
         """Return a dict representation of the entry."""
@@ -694,6 +707,7 @@ class ChildDeviceEntry(BaseDeviceEntry):
             "area_id": self.area_id,
             "config_entry_id": self.config_entry_id,
             "config_subentry_id": self.config_subentry_id,
+            "context_source": self.context_source,
             "created_at": self.created_at.timestamp(),
             "disabled_by": self.disabled_by,
             "id": self.id,

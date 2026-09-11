@@ -1159,7 +1159,10 @@ class Entity(
                 name = original_name
             else:
                 name = er.async_get_full_entity_name(
-                    self.hass, entry, original_name=original_name
+                    self.hass,
+                    entry,
+                    original_name=original_name,
+                    follow_context=False,
                 )
             self._cached_friendly_name = (original_name, name)
 

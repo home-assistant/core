@@ -263,6 +263,7 @@
       'configuration_url': None,
       'connections': list([
       ]),
+      'context_source': None,
       'disabled_by': None,
       'entry_type': None,
       'hw_version': None,
@@ -291,6 +292,7 @@
           'categories': dict({
           }),
           'config_subentry_id': None,
+          'context_source': 'device',
           'disabled_by': None,
           'entity_category': None,
           'entity_id': 'media_player.test_player',

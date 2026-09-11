@@ -10345,6 +10345,7 @@ async def test_child_device_create(
         "area_id": None,
         "config_entry_id": mock_config_entry.entry_id,
         "config_subentry_id": None,
+        "context_source": dr.ContextSource.PARENT_DEVICE,
         "created_at": child_device.created_at.timestamp(),
         "disabled_by": None,
         "id": child_device.id,
@@ -11939,6 +11940,30 @@ async def test_effective_area_id(
     )
     device_registry.async_update_device(updated_parent.id, area_id="attic")
     assert dr.async_get_effective_area_id(hass, child_device) == "attic"
+
+
+@pytest.mark.usefixtures("hass")
+async def test_context_source(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the context source of devices and child devices."""
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    # Without an area of its own, a main device's context ends at itself
+    # and a child device's context continues to its parent
+    assert parent.context_source is None
+    assert child_device.context_source is dr.ContextSource.PARENT_DEVICE
+
+    # With an area of its own, the context continues to the area
+    parent = device_registry.async_update_device(parent.id, area_id="garage")
+    assert parent.context_source is dr.ContextSource.AREA
+    child_device = device_registry.async_update_child_device(
+        child_device.id, area_id="garden"
+    )
+    assert child_device.context_source is dr.ContextSource.AREA
 
 
 @pytest.mark.usefixtures("hass")

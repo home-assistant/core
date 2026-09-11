@@ -243,6 +243,14 @@ async def test_google_entity_registry_sync(
 
         assert len(mock_sync.mock_calls) == 3
 
+        hass.bus.async_fire(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            {"action": "update", "entity_id": entry.entity_id, "changes": ["area_id"]},
+        )
+        await hass.async_block_till_done()
+
+        assert len(mock_sync.mock_calls) == 4
+
         # Entity registry updated with non-relevant changes
         hass.bus.async_fire(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
@@ -250,7 +258,7 @@ async def test_google_entity_registry_sync(
         )
         await hass.async_block_till_done()
 
-        assert len(mock_sync.mock_calls) == 3
+        assert len(mock_sync.mock_calls) == 4
 
         # When hass is not started yet we wait till started
         hass.set_state(CoreState.starting)
@@ -260,7 +268,7 @@ async def test_google_entity_registry_sync(
         )
         await hass.async_block_till_done()
 
-        assert len(mock_sync.mock_calls) == 3
+        assert len(mock_sync.mock_calls) == 4
 
 
 @pytest.mark.usefixtures("mock_cloud_login")
@@ -327,8 +335,10 @@ async def test_google_device_registry_sync(
 
         entity_registry.async_update_entity(entity_entry.entity_id, area_id=None)
 
+        mock_sync.reset_mock()
+
         # Device registry updated with relevant changes
-        # but entity has area ID so not impacted
+        # and the entity inherits the device area
         hass.bus.async_fire(
             dr.EVENT_DEVICE_REGISTRY_UPDATED,
             {
