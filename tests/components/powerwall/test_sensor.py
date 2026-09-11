@@ -32,7 +32,11 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry, entity_registry: er.EntityRegistry) -> None:
+async def test_sensors(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test creation of the sensors."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
