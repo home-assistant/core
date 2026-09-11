@@ -6,7 +6,10 @@ import operator
 from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
+from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
+    PyiCloud2FARequiredException,
+    PyiCloudAPIResponseException,
     PyiCloudAuthRequiredException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
@@ -61,6 +64,29 @@ if TYPE_CHECKING:
     from .media_source import PhotoCache
 
 _LOGGER = logging.getLogger(__name__)
+
+# pyicloud only raises PyiCloud2FARequiredException for a 409 whose body is JSON
+# with authType == "hsa2". Every other authentication rejection falls through to
+# Session._raise_error(), which rewrites the reason to "Authentication required
+# for Account." and raises a plain PyiCloudAPIResponseException carrying the HTTP
+# status in .code. The status is therefore what has to be inspected, not the type.
+#
+# GENERAL_AUTH_ERROR (500) is excluded on purpose: pyicloud groups it with the
+# authentication statuses, but a 500 is just as likely to be a transient iCloud
+# failure, and asking the user to reauthenticate for those would be wrong.
+_AUTH_REQUIRED_STATUSES = frozenset(
+    {
+        AppleAuthError.TWO_FACTOR_REQUIRED,
+        AppleAuthError.LOGIN_TOKEN_EXPIRED,
+        AppleAuthError.FIND_MY_REAUTH_REQUIRED,
+    }
+)
+
+
+def _is_auth_error(err: PyiCloudAPIResponseException) -> bool:
+    """Return True if the account has to authenticate again to recover."""
+    return isinstance(err.code, int) and err.code in _AUTH_REQUIRED_STATUSES
+
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
@@ -117,14 +143,23 @@ class IcloudAccount:
 
         except PyiCloudFailedLoginException:
             # PyiCloudService authenticates while constructing, so this means
-            # the stored password was rejected. A 2FA challenge does not raise
-            # here; it sets requires_2fa on the service and is handled below.
+            # the stored password was rejected.
             self._handle_auth_required(requires_2fa=False)
             return
 
-        except PyiCloudAuthRequiredException:
-            # self.api was never assigned, so there is no service to ask
-            # whether a code is what is missing. Treat it as a login failure.
+        except PyiCloud2FARequiredException, PyiCloudAuthRequiredException:
+            # A 2FA challenge can also surface as an exception here rather than
+            # as requires_2fa, because authenticate() raises out of
+            # _get_mfa_auth_options() before the flag is set. Either way
+            # self.api was never assigned, so there is no session for the reauth
+            # flow to send a code through; ask for the password, which starts a
+            # fresh login and re-issues the challenge.
+            self._handle_auth_required(requires_2fa=False)
+            return
+
+        except PyiCloudAPIResponseException as err:
+            if not _is_auth_error(err):
+                raise
             self._handle_auth_required(requires_2fa=False)
             return
 
@@ -135,6 +170,13 @@ class IcloudAccount:
         try:
             # Gets device owners infos
             user_info = self.api.devices.user_info
+        except PyiCloud2FARequiredException as err:
+            # iCloud issues the challenge when the session is refreshed to read
+            # the devices rather than while logging in, and does not set
+            # requires_2fa for it, so ask for a code explicitly. The session is
+            # kept so the reauth flow can send the code through it.
+            self._handle_auth_required(requires_2fa=True)
+            raise ConfigEntryNotReady from err
         except (PyiCloudFailedLoginException, PyiCloudAuthRequiredException) as err:
             # Reading the devices refreshes the session, and a stored token
             # that iCloud has since invalidated is only rejected here, not
@@ -152,6 +194,16 @@ class IcloudAccount:
             PyiCloudServiceUnavailable,
         ) as err:
             _LOGGER.error("No iCloud device found")
+            raise ConfigEntryNotReady from err
+        except PyiCloudAPIResponseException as err:
+            # Has to stay below the clause above: PyiCloudServiceNotActivatedException
+            # is a subclass of this one and would otherwise never be reached.
+            if not _is_auth_error(err):
+                raise
+            # Drop the session instead of keeping it for a code: it has just
+            # failed to refresh, so a reauth flow sending a code through it
+            # would fail as well.
+            self._handle_auth_required(requires_2fa=False)
             raise ConfigEntryNotReady from err
 
         if user_info is None:

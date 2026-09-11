@@ -2,9 +2,13 @@
 
 from unittest.mock import Mock, PropertyMock, patch
 
+from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
+    PyiCloud2FARequiredException,
+    PyiCloudAPIResponseException,
     PyiCloudAuthRequiredException,
     PyiCloudFailedLoginException,
+    PyiCloudServiceNotActivatedException,
 )
 import pytest
 from requests import Response
@@ -191,6 +195,164 @@ async def test_invalid_token_on_first_fetch_starts_reauth(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+async def test_2fa_required_exception_on_first_fetch_starts_reauth(
+    hass: HomeAssistant, service_2fa: Mock
+) -> None:
+    """Test that a 2FA challenge raised by the first fetch asks for a code.
+
+    The challenge arrives when the session is refreshed to read the devices,
+    which raises instead of setting requires_2fa, so the exception is the only
+    signal that a code is what is missing.
+    """
+    service_2fa.return_value.requires_2fa = False
+    type(service_2fa.return_value).devices = PropertyMock(
+        side_effect=PyiCloud2FARequiredException(USERNAME, Mock(spec=Response))
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+@pytest.mark.parametrize(
+    "status",
+    [
+        AppleAuthError.TWO_FACTOR_REQUIRED,
+        AppleAuthError.LOGIN_TOKEN_EXPIRED,
+        AppleAuthError.FIND_MY_REAUTH_REQUIRED,
+    ],
+)
+async def test_auth_response_on_first_fetch_starts_reauth(
+    hass: HomeAssistant, service_2fa: Mock, status: AppleAuthError
+) -> None:
+    """Test that an authentication status on the first fetch starts reauth.
+
+    pyicloud only raises a dedicated exception for a 409 carrying an hsa2 body.
+    Any other rejection arrives as a plain PyiCloudAPIResponseException, so the
+    status has to be inspected rather than the exception type.
+    """
+    service_2fa.return_value.requires_2fa = False
+    type(service_2fa.return_value).devices = PropertyMock(
+        side_effect=PyiCloudAPIResponseException(
+            "Authentication required for Account.", status
+        )
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+async def test_other_api_error_on_first_fetch_does_not_start_reauth(
+    hass: HomeAssistant, service_2fa: Mock
+) -> None:
+    """Test that a non-authentication API error does not ask the user to log in.
+
+    Reauthenticating cannot fix a server-side failure, so prompting for it would
+    send the user after credentials that are not the problem.
+    """
+    service_2fa.return_value.requires_2fa = False
+    type(service_2fa.return_value).devices = PropertyMock(
+        side_effect=PyiCloudAPIResponseException("Service temporarily unavailable", 503)
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+async def test_service_not_activated_is_not_treated_as_auth_error(
+    hass: HomeAssistant, service_2fa: Mock
+) -> None:
+    """Test that an inactive iCloud service does not ask the user to log in.
+
+    PyiCloudServiceNotActivatedException subclasses PyiCloudAPIResponseException,
+    so it has to keep being handled as a missing service rather than falling
+    into the authentication handling.
+    """
+    service_2fa.return_value.requires_2fa = False
+    type(service_2fa.return_value).devices = PropertyMock(
+        side_effect=PyiCloudServiceNotActivatedException("Not activated", 400)
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+async def test_2fa_required_exception_at_login_starts_reauth(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a 2FA challenge raised while logging in starts reauth.
+
+    authenticate() can raise out of the MFA options request before requires_2fa
+    is ever set, leaving no service to ask what is missing.
+    """
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service_mock.side_effect = PyiCloud2FARequiredException(
+            USERNAME, Mock(spec=Response)
+        )
+
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+        )
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
