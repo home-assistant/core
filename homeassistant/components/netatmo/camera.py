@@ -208,6 +208,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     event_type,
                 )
                 self._webhook_connection = True
+                if self.device_type != "NDB":
+                    self._webhook_on = False
                 self._attr_motion_detection_enabled = False
             elif event_type == EVENT_TYPE_ON:
                 _LOGGER.debug(
