@@ -224,11 +224,6 @@ def mock_rejseplanen_coordinator(hass: HomeAssistant) -> Generator[Mock]:
     ) as mock_api_class:
         mock_api = mock_api_class.return_value
 
-        def get_filtered_departures(stop_id, *args, **kwargs):
-            return make_mock_departures(int(stop_id))
-
-        mock_api.get_filtered_departures = Mock(side_effect=get_filtered_departures)
-
         async def get_departures_async(stop_ids, *args, **kwargs):
             all_departures = []
             for stop_id in stop_ids:

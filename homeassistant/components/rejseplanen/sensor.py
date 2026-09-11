@@ -12,16 +12,18 @@ from typing import override
 import zoneinfo
 
 from py_rejseplan.dataclasses.departure import Departure
+import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import UnitOfTime
+from homeassistant.const import CONF_AUTHENTICATION, CONF_NAME, UnitOfTime
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -41,6 +43,23 @@ PARALLEL_UPDATES = 0
 
 # Buffer time after departure for cleanup
 DEPARTURE_CLEANUP_BUFFER = timedelta(seconds=15)
+
+DEFAULT_NAME = "Next departure"
+
+BUS_TYPES = ["BUS", "EXB", "TB"]
+TRAIN_TYPES = ["LET", "S", "REG", "IC", "LYN", "TOG"]
+METRO_TYPES = ["M"]
+
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_AUTHENTICATION): cv.string,
+        vol.Required(CONF_STOP_ID): vol.All(cv.ensure_list, [cv.positive_int]),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DEPARTURE_TYPE, default=[]): vol.All(
+            cv.ensure_list, [vol.In([*BUS_TYPES, *TRAIN_TYPES, *METRO_TYPES])]
+        ),
+    }
+)
 
 
 @dataclass(kw_only=True, frozen=True)
