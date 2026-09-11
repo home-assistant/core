@@ -134,6 +134,13 @@ class OmadaSiteController:
         for processed in self._device_entity_registrations:
             processed.discard(mac)
 
+        for switch_mac, switch_coordinator in list(
+            self._switch_port_coordinators.items()
+        ):
+            if dr.format_mac(switch_mac) == mac:
+                del self._switch_port_coordinators[switch_mac]
+                await switch_coordinator.async_shutdown()
+
         async with self._gateway_coordinator_lock:
             coordinator = self._gateway_coordinator
             if coordinator is None or dr.format_mac(coordinator.mac) != mac:
