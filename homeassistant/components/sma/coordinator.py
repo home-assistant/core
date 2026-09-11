@@ -14,7 +14,6 @@ from pysma import (
     SmaSunSpecException,
     SmaTimeoutException,
     SMAWebConnect,
-    SmaWriteException,
 )
 from pysma.helpers import DeviceInfo
 from pysma.sensor import Sensors
@@ -22,7 +21,7 @@ from pysma.sensor import Sensors
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -78,14 +77,39 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
     @override
     async def _async_setup(self) -> None:
         """Setup the SMA Data Update Coordinator."""
+        try:
+            self._sma_device_info = await self.sma.device_info()
+            self._sensors = await self.sma.get_sensors()
+        except (
+            SmaReadException,
+            SmaConnectionException,
+        ) as err:
+            await self.async_close_sma_session()
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except SmaAuthenticationException as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
 
-        # Optionally, check if the SMA Modbus connection is successful
-        # Do a discovery to see if we can handle a the device
+        # Modbus is an optional, secondary connection that can take up to
+        # ~10s to time out when unsupported
+        # So, making it a background, just to be sure.:)
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_discover_modbus(),
+            "sma_modbus_discovery",
+        )
+
+    async def _async_discover_modbus(self) -> None:
+        """Connect to and discover the SMA Modbus controls, if available."""
         try:
             await self.sma_modbus.connect()
             await self.sma_modbus.discover()
 
-            # Assign the control schemas currently supported by this device
             self._sma_modbus_controls = {
                 control: schema
                 for control in ModbusControl
@@ -94,29 +118,13 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
 
             self._sma_modbus_connected = True
         except (SmaConnectionException, SmaTimeoutException) as err:
-            _LOGGER.warning("SMA Modbus connection failed: %s", err)
-            # Maybe raise an issue, let's see
+            _LOGGER.debug("SMA Modbus connection failed: %s", err)
+            return
         except SmaSunSpecException as err:
-            _LOGGER.warning("SMA Modbus SunSpec connection failed: %s", err)
-            # Maybe raise an issue, let's see
-
-        # try:
-        #     self._sma_device_info = await self.sma.device_info()
-        #     self._sensors = await self.sma.get_sensors()
-        # except (
-        #     SmaReadException,
-        #     SmaConnectionException,
-        # ) as err:
-        #     await self.async_close_sma_session()
-        #     raise ConfigEntryNotReady(
-        #         translation_domain=DOMAIN,
-        #         translation_key="cannot_connect",
-        #     ) from err
-        # except SmaAuthenticationException as err:
-        #     raise ConfigEntryAuthFailed(
-        #         translation_domain=DOMAIN,
-        #         translation_key="invalid_auth",
-        #     ) from err
+            _LOGGER.debug("SMA Modbus SunSpec discovery failed: %s", err)
+            return
+        else:
+            await self.async_request_refresh()
 
     @override
     async def _async_update_data(self) -> SMACoordinatorData:
@@ -127,31 +135,20 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
             SmaReadException,
             SmaConnectionException,
         ) as err:
-            if not self._sma_modbus_connected:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="cannot_connect",
-                ) from err
-            _LOGGER.warning(
-                "SMA WebConnect read failed, continuing with Modbus-only data: %s",
-                err,
-            )
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
         except SmaAuthenticationException as err:
-            if not self._sma_modbus_connected:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_auth",
-                ) from err
-            _LOGGER.warning(
-                "SMA WebConnect authentication failed, continuing with Modbus-only data: %s",
-                err,
-            )
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
 
         modbus_controls: dict[ModbusControl, float | None] = {}
         if self._sma_modbus_connected:
             for control in self._sma_modbus_controls:
                 try:
-                    # See if we can gather the coroutines and do an asyncio.gather() here
                     modbus_controls[control] = await self.sma_modbus.get_control(
                         control
                     )
@@ -170,23 +167,6 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
             sensors=self._sensors,
             modbus_controls=modbus_controls,
         )
-
-    async def perform_action(self, control: str, value: float) -> None:
-        """Perform an action on the SMA device."""
-        try:
-            await self.sma_modbus.set_control(control, value)
-        except (SmaConnectionException, SmaTimeoutException) as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="modbus_action_failed",
-                translation_placeholders={"control": control, "value": value},
-            ) from err
-        except SmaWriteException as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="modbus_write_failed",
-                translation_placeholders={"control": control, "value": value},
-            ) from err
 
     async def async_close_sma_session(self) -> None:
         """Close the SMA session."""
