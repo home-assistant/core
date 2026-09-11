@@ -134,11 +134,9 @@ MASS_ICON_TO_MDI: Mapping[str, str] = {
 }
 
 
-# the only media_content_type this platform's dashboard players accept
 MEDIA_CONTENT_TYPE_DASHBOARD = "dashboard"
 NOW_PLAYING_ID_PREFIX = f"{DashboardType.NOW_PLAYING.value}/"
-# dashboard types whose media image is a provider icon rather than player artwork;
-# their DashboardType value doubles as the provider domain for providers/icon
+# the DashboardType value doubles as the provider domain for providers/icon
 DASHBOARD_ICON_TYPES = frozenset({DashboardType.PARTY, DashboardType.MUSIC_QUIZ})
 DASHBOARD_ICON_PROVIDER_DOMAINS = frozenset(
     icon_type.value for icon_type in DASHBOARD_ICON_TYPES
@@ -209,10 +207,8 @@ async def async_setup_entry(
     # register callback to add players when they are discovered
     entry.runtime_data.platform_handlers.setdefault(Platform.MEDIA_PLAYER, add_player)
 
-    # dashboard display devices are only known through the dashboard cache,
-    # which is populated on connect and kept fresh via DASHBOARDS_UPDATED.
     # known_dashboard_ids is scoped to this setup call, so a reload starts
-    # fresh and always (re)creates entities for whatever is in the cache.
+    # fresh and re-adds whatever is in the dashboard cache.
     known_dashboard_ids: set[str] = set()
     entity_registry = er.async_get(hass)
 
@@ -873,8 +869,7 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
     def __init__(self, mass: MusicAssistantClient, dashboard_id: str) -> None:
         """Initialize MusicAssistantDashboardPlayer."""
         super().__init__(mass, dashboard_id)
-        # decoded provider icons (bytes, content_type), keyed by provider
-        # domain (party/music_quiz); a failed fetch is cached as None
+        # decoded provider icons per domain; a failed fetch is cached as None
         self._provider_icon_cache: dict[str, tuple[bytes, str] | None] = {}
 
     @override
@@ -887,9 +882,7 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
                 self.__on_session_updated, EventType.DASHBOARD_SESSIONS_UPDATED
             )
         )
-        # the now_playing session's target player can change per session, so
-        # these are unscoped (no player id filter); __on_player_or_queue_updated
-        # matches the current session's player itself
+        # unscoped: the now_playing session's target player changes per session
         self.async_on_remove(
             self.mass.subscribe(
                 self.__on_player_or_queue_updated, EventType.PLAYER_UPDATED
@@ -928,8 +921,7 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Browse the dashboards this display can show."""
-        # the browse websocket path fetches the entity directly and doesn't
-        # filter on availability, so the display may already be gone here
+        # the browse websocket path doesn't filter on availability
         dashboard = self.mass.dashboard.get(self.dashboard_id)
         if dashboard is None:
             raise BrowseError(f"Display '{self.dashboard_id}' is not available")
@@ -948,9 +940,8 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         session = self.mass.dashboard.get_session(self.dashboard_id)
         if session is not None and session.dashboard in DASHBOARD_ICON_TYPES:
             return session.dashboard.value
-        # now_playing (or no session): fall back to the base class, which
-        # hashes media_image_url - needed for the media_image_local proxy
-        # path to engage for MA-hosted (non-remotely-accessible) artwork
+        # fall back to the base class hash of media_image_url, so its
+        # proxy path serves MA-hosted (non-remotely-accessible) artwork
         return super().media_image_hash
 
     @override
@@ -1032,8 +1023,7 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
             self._attr_media_title = f"Now playing: {player_label}"
             self._update_session_player_image(player)
         else:
-            # a dashboard type this client doesn't recognize; the server
-            # already normalized it to DashboardType.UNKNOWN
+            # a dashboard type this client doesn't recognize (UNKNOWN)
             self._attr_media_content_id = session.dashboard.value
             self._attr_media_title = session.dashboard.value
             self._clear_media_image()
