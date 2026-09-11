@@ -41,6 +41,27 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
+async def test_diagnostic_entities_disabled_by_default(
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test diagnostic sensors are disabled by default."""
+    entries = er.async_entries_for_config_entry(
+        entity_registry, init_integration.entry_id
+    )
+    disabled = {
+        entry.unique_id.removeprefix(f"{init_integration.entry_id}_")
+        for entry in entries
+        if entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    }
+    assert disabled == {
+        "calc_boiler_temperature",
+        "exhaust_temperature",
+        "fan_speed",
+        "ionization_current",
+    }
+
+
 @pytest.mark.parametrize(
     ("register", "entity_id"),
     [
