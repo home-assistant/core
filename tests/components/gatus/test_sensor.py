@@ -50,6 +50,7 @@ def _to_endpoint_statuses(raw_data: list[dict[str, Any]]) -> list[EndpointStatus
                     status=r.get("status"),
                     duration=r.get("duration"),
                     certificate_expiration=r.get("certificateExpiration"),
+                    dns_rcode=r.get("dnsRcode"),
                 )
                 for r in ep.get("results", [])
             ],
@@ -195,4 +196,32 @@ async def test_sensor_missing_certificate_expiration(
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.backend_service_certificate_expiration")
+    assert state is None
+
+
+async def test_sensor_missing_dns_rcode(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a result missing DNS rcode creates no entity."""
+    mock_gatus_client.get_endpoints_statuses.return_value = [
+        EndpointStatus(
+            key="backend_service",
+            name="Backend Service",
+            group=None,
+            results=[
+                Result(
+                    success=True,
+                    status=200,
+                    duration=12500000,
+                    dns_rcode=None,
+                )
+            ],
+        )
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.backend_service_dns_response_code")
     assert state is None

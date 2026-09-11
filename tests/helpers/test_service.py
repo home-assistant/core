@@ -1512,6 +1512,57 @@ async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> 
     }
 
 
+@pytest.mark.parametrize(
+    ("target", "expected"),
+    [
+        pytest.param(
+            {"entity": {"domain": "light"}},
+            {"entity": [{"domain": ["light"]}]},
+            id="normalized",
+        ),
+        pytest.param(
+            {"entity": [{"domain": "light"}]},
+            {"entity": [{"domain": ["light"]}]},
+            id="already_normalized",
+        ),
+    ],
+)
+async def test_set_service_schema_target(
+    hass: HomeAssistant,
+    target: dict[str, Any],
+    expected: dict[str, Any],
+) -> None:
+    """Test the target of a registered description is normalized."""
+    await async_setup_component(hass, LOGGER_DOMAIN, {LOGGER_DOMAIN: {}})
+    hass.services.async_register(LOGGER_DOMAIN, "new_service", lambda x: None, None)
+
+    service.async_set_service_schema(
+        hass, LOGGER_DOMAIN, "new_service", {"target": target}
+    )
+
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert descriptions[LOGGER_DOMAIN]["new_service"]["target"] == expected
+
+
+async def test_set_service_schema_invalid_target(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a target nothing can read is left out of the description."""
+    await async_setup_component(hass, LOGGER_DOMAIN, {LOGGER_DOMAIN: {}})
+    hass.services.async_register(LOGGER_DOMAIN, "new_service", lambda x: None, None)
+
+    service.async_set_service_schema(
+        hass, LOGGER_DOMAIN, "new_service", {"target": {"entity": ["light"]}}
+    )
+
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "target" not in descriptions[LOGGER_DOMAIN]["new_service"]
+    assert (
+        "Invalid target in the description of service logger.new_service" in caplog.text
+    )
+
+
 async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
     """Test registering a service with mixed case.
 

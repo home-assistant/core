@@ -10,6 +10,7 @@ from matter_ble_proxy import AdvertisementData
 import pytest
 
 from homeassistant.components.bluetooth import (
+    BluetoothCallbackReplay,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
 )
@@ -92,10 +93,11 @@ async def test_scan_source_start_registers_passive_callback(
         await source.start(MagicMock())
 
     register.assert_called_once()
-    args, _ = register.call_args
+    args, kwargs = register.call_args
     assert args[0] is hass
     assert args[2] is None
     assert args[3] is BluetoothScanningMode.PASSIVE
+    assert kwargs["replay"] is BluetoothCallbackReplay.NEWEST_FIRST
     assert source._cancel is cancel
 
 
@@ -135,7 +137,7 @@ async def test_scan_source_callback_forwards_advertisement(
     forwarded: list[AdvertisementData] = []
     captured: dict[str, object] = {}
 
-    def fake_register(hass_, cb, _matcher, _mode):
+    def fake_register(hass_, cb, _matcher, _mode, **_kwargs):
         captured["cb"] = cb
         return MagicMock()
 
@@ -168,7 +170,7 @@ async def test_scan_source_drops_replayed_history(
     forwarded: list[AdvertisementData] = []
     captured: dict[str, object] = {}
 
-    def fake_register(hass_, cb, _matcher, _mode):
+    def fake_register(hass_, cb, _matcher, _mode, **_kwargs):
         captured["cb"] = cb
         return MagicMock()
 
@@ -196,7 +198,7 @@ async def test_scan_source_callback_swallows_exceptions(
     """A raising user callback is logged but does not bubble out of HA."""
     captured: dict[str, object] = {}
 
-    def fake_register(hass_, cb, _matcher, _mode):
+    def fake_register(hass_, cb, _matcher, _mode, **_kwargs):
         captured["cb"] = cb
         return MagicMock()
 

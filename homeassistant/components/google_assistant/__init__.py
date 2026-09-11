@@ -30,7 +30,7 @@ from .const import (  # noqa: F401
     SOURCE_CLOUD,
 )
 from .http import GoogleAssistantView, GoogleConfig
-from .services import async_register_services
+from .services import async_setup_services
 
 from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, isort:skip
 
@@ -102,7 +102,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     hass.data[DOMAIN][DATA_CONFIG] = yaml_config[DOMAIN]
 
     if CONF_SERVICE_ACCOUNT in yaml_config[DOMAIN]:
-        async_register_services(hass)
+        async_setup_services(hass)
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(

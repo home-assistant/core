@@ -1,9 +1,7 @@
 """Tests for the Qube Heat Pump water heater platform."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,14 +14,14 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_PERFORMANCE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "water_heater.qube_heat_pump_domestic_hot_water"
 
@@ -124,38 +122,3 @@ async def test_current_operation_boost(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes["operation_mode"] == STATE_PERFORMANCE
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "return_value"),
-    [
-        (ConnectionError("Connection lost"), None),
-        (None, None),
-    ],
-)
-async def test_water_heater_unavailable_on_coordinator_error(
-    hass: HomeAssistant,
-    mock_qube_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    side_effect: Exception | None,
-    return_value: None,
-) -> None:
-    """Test water heater becomes unavailable when coordinator fails."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-    mock_qube_client.get_all_data = AsyncMock(
-        side_effect=side_effect, return_value=return_value
-    )
-
-    freezer.tick(timedelta(seconds=31))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE

@@ -339,6 +339,43 @@ async def test_thermostat_occupied_setback(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500"])
+async def test_thermostat_temperature_offset(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test thermostat temperature offset number entity."""
+
+    entity_id = "number.floor_heating_thermostat_temperature_offset"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.0"
+
+    # Setting value to 0.3 °C writes 3 to LocalTemperatureCalibration (scale x10),
+    # a value only reachable with the 0.1 °C step
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": 0.3,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.Thermostat.Attributes.LocalTemperatureCalibration,
+        ),
+        value=3,
+    )
+
+
 @pytest.mark.parametrize("node_fixture", ["aqara_multi_state_p100"])
 async def test_boolean_state_configuration_current_sensitivity_level(
     hass: HomeAssistant,

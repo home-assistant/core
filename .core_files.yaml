@@ -118,6 +118,7 @@ components: &components
   - homeassistant/components/sun/**
   - homeassistant/components/system_health/**
   - homeassistant/components/tag/**
+  - homeassistant/components/telegram_bot/**
   - homeassistant/components/template/**
   - homeassistant/components/timer/**
   - homeassistant/components/trace/**

@@ -13,7 +13,11 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_load_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 
 async def test_all_entities(
@@ -36,8 +40,8 @@ async def test_max_output_when_unlocked(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test max_output value stays within its own bound once output is unlocked."""
-    fixture_data = json.loads(
-        await async_load_fixture(hass, "current_state.json", DOMAIN)
+    fixture_data = await async_load_json_object_fixture(
+        hass, "current_state.json", DOMAIN
     )
     fixture_data["globalSettings"]["maxOutputUnlocked"] = True
     mock_zinvolt_client.get_battery_status.return_value = BatteryState.from_json(

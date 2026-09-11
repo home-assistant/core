@@ -71,6 +71,11 @@ GO_CONFIG = frozenset(
     }
 )
 
+OUTDOOR_CAPABILITIES = ModelCapabilities(
+    config=COMMON_LEGACY_CONFIG,
+    actions=frozenset({CO2_CALIBRATION}),
+)
+
 MODEL_CAPABILITIES: tuple[tuple[str, ModelCapabilities], ...] = (
     (
         "I-9PSL",
@@ -86,13 +91,8 @@ MODEL_CAPABILITIES: tuple[tuple[str, ModelCapabilities], ...] = (
             actions=frozenset({CO2_CALIBRATION, LED_BAR_TEST}),
         ),
     ),
-    (
-        "O-1",
-        ModelCapabilities(
-            config=COMMON_LEGACY_CONFIG,
-            actions=frozenset({CO2_CALIBRATION}),
-        ),
-    ),
+    ("O-1", OUTDOOR_CAPABILITIES),
+    ("0-1PS", OUTDOOR_CAPABILITIES),
     (
         "DIY",
         ModelCapabilities(

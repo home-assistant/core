@@ -433,7 +433,7 @@ async def async_extract_config_entry_ids(
         if (
             device := dev_reg.async_get(device_id, include_composite_devices=False)
         ) is not None:
-            config_entry_ids.update(device.config_entries)
+            config_entry_ids.add(device.config_entry_id)
 
     for entity_id in referenced.referenced | referenced.indirectly_referenced:
         entry = ent_reg.async_get(entity_id)
@@ -612,7 +612,16 @@ def async_set_service_schema(
     }
 
     if "target" in schema:
-        description["target"] = schema["target"]
+        # Match validation applied to descriptions loaded from services.yaml.
+        try:
+            description["target"] = TargetSelector.CONFIG_SCHEMA(schema["target"])
+        except vol.Invalid as err:
+            _LOGGER.warning(
+                "Invalid target in the description of service %s.%s, ignoring it: %s",
+                domain,
+                service,
+                err,
+            )
 
     if (
         response := hass.services.supports_response(domain, service)
