@@ -372,6 +372,6 @@ async def get_media_info(media_library, search_id, search_type):
                 None,
             )
             if channel:
-                thumbnail = media_library.thumbnail_url(channel["thumbnail"])
+                thumbnail = media_library.thumbnail_url(channel.get("thumbnail"))
 
     return thumbnail, title, media

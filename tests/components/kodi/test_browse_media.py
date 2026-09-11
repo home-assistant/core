@@ -17,6 +17,10 @@ CHANNELS = {
             "label": "ZDF HD",
             "thumbnail": "image://pvrchannel_tv%40zdf/",
         },
+        {
+            "channelid": 850,
+            "label": "3sat HD",
+        },
     ]
 }
 
@@ -26,7 +30,9 @@ def create_media_library() -> MagicMock:
     library = MagicMock()
     library.get_channels = AsyncMock(return_value=CHANNELS)
     library.thumbnail_url = MagicMock(
-        side_effect=lambda thumbnail: f"http://1.1.1.1:8080/image/{thumbnail}"
+        side_effect=lambda thumbnail: (
+            f"http://1.1.1.1:8080/image/{thumbnail}" if thumbnail else None
+        )
     )
     return library
 
@@ -54,6 +60,15 @@ async def test_channel_asked_for_by_id_carries_its_thumbnail() -> None:
     thumbnail, _, _ = await get_media_info(library, "902", MediaType.CHANNEL)
 
     assert thumbnail == "http://1.1.1.1:8080/image/image://pvrchannel_tv%40zdf/"
+
+
+async def test_channel_without_a_thumbnail_has_no_picture() -> None:
+    """Kodi does not promise a thumbnail for every channel."""
+    library = create_media_library()
+
+    thumbnail, _, _ = await get_media_info(library, "850", MediaType.CHANNEL)
+
+    assert thumbnail is None
 
 
 async def test_channel_no_longer_in_the_group_has_no_thumbnail() -> None:
