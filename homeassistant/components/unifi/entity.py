@@ -222,14 +222,20 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     @callback
     def _async_coordinator_updated(self) -> None:
         """Skip coordinator updates that changed a different object."""
-        changed_obj_id = self.coordinator.data
+        coordinator_data = self.coordinator.data
+        if coordinator_data is None:
+            event = ItemEvent.CHANGED
+            changed_obj_id = None
+        else:
+            event, changed_obj_id = coordinator_data
+
         own_obj_id = self._obj_id.partition("_")[0]
         if changed_obj_id is not None and changed_obj_id not in (
             self._obj_id,
             own_obj_id,
         ):
             return
-        self._async_process_update()
+        self._async_process_update(event)
 
     @callback
     def _async_process_update(self, event: ItemEvent = ItemEvent.CHANGED) -> None:
@@ -287,7 +293,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     async def async_refresh_after_control(self) -> None:
         """Refresh handler data after a control call when polling."""
         if self.coordinator.update_interval is not None:
-            await self.coordinator.async_request_refresh()
+            await self.coordinator.async_refresh()
 
     @callback
     def async_initiate_state(self) -> None:

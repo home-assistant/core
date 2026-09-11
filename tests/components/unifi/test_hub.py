@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import aiounifi
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.message import MessageKey
 import pytest
 
@@ -209,7 +210,7 @@ async def test_websocket_updates_notify_coordinator(
             },
         )
 
-    set_updated_data.assert_called_once_with("00:00:00:00:00:01")
+    set_updated_data.assert_called_once_with((ItemEvent.ADDED, "00:00:00:00:00:01"))
 
 
 @pytest.mark.parametrize(
