@@ -1235,7 +1235,7 @@ guntamatic==1.12.0
 guppy3==3.1.7
 
 # homeassistant.components.iaqualink
-h2==4.3.0
+h2==4.4.1
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.2.2
