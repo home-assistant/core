@@ -32,7 +32,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -> None:
+async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry, entity_registry: er.EntityRegistry) -> None:
     """Test creation of the sensors."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
@@ -114,7 +114,7 @@ async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) 
 
     state = hass.states.get("sensor.mysite_charge")
     assert state.state == "47.34587394586"
-    entity_entry = er.async_get(hass).async_get("sensor.mysite_charge")
+    entity_entry = entity_registry.async_get("sensor.mysite_charge")
     assert entity_entry is not None
     assert entity_entry.options["sensor"]["suggested_display_precision"] == 0
     expected_attributes = {
