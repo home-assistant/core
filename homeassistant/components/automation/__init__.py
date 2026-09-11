@@ -522,7 +522,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
         self._validation_findings = validation_findings
-        self._validation_issue_ids: set[str] = set()
+        self._validation_issue_ids: set[tuple[str, str]] = set()
 
     @property
     @override

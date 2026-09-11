@@ -12,7 +12,14 @@ from homeassistant.const import (
     CONF_PLATFORM,
     EVENT_STATE_REPORTED,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -89,6 +96,8 @@ async def async_validate_trigger_config(
             issue_reporter(
                 ValidationFinding(
                     finding_type=COMPOSITE_DEVICE_ID_ISSUE,
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                    translation_key=COMPOSITE_DEVICE_ID_ISSUE,
                     issue_key=device_id,
                     placeholders={
                         "device_id": device_id,

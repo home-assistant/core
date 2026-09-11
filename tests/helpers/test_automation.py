@@ -213,11 +213,15 @@ async def test_move_options_fields_to_top_level(config, expected_config) -> None
 # interpret their contents, so any finding type/key is fine for these tests.
 _TRIGGER_FINDING = ValidationFinding(
     finding_type="mock_trigger_finding",
+    translation_domain="homeassistant",
+    translation_key="mock_trigger_finding",
     issue_key="trigger_key",
     placeholders={"detail": "trigger"},
 )
 _CONDITION_FINDING = ValidationFinding(
     finding_type="mock_condition_finding",
+    translation_domain="homeassistant",
+    translation_key="mock_condition_finding",
     issue_key="condition_key",
     placeholders={"detail": "condition"},
 )
@@ -399,6 +403,8 @@ def _sample_finding() -> ValidationFinding:
     """Build a representative validation finding."""
     return ValidationFinding(
         finding_type="event_trigger_composite_device_id",
+        translation_domain="homeassistant",
+        translation_key="event_trigger_composite_device_id",
         issue_key=_SAMPLE_DEVICE_ID,
         placeholders={
             "device_id": _SAMPLE_DEVICE_ID,
@@ -410,8 +416,8 @@ def _sample_finding() -> ValidationFinding:
 def test_create_and_clear_validation_issue_with_edit(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """A finding is filed under homeassistant, attributed to the owner via issue_domain."""
-    issue_id = async_create_validation_issue(
+    """A finding is filed under its translation_domain, attributed via issue_domain."""
+    translation_domain, issue_id = async_create_validation_issue(
         hass,
         _sample_finding(),
         issue_domain="automation",
@@ -420,13 +426,14 @@ def test_create_and_clear_validation_issue_with_edit(
         entity_id="automation.test",
         edit_url="/config/automation/edit/1234",
     )
+    assert translation_domain == "homeassistant"
     assert (
         issue_id
         == f"automation_event_trigger_composite_device_id_1234_{_SAMPLE_DEVICE_ID}"
     )
 
-    # Filed under the homeassistant domain (where the translations live), attributed to
-    # the owning integration via issue_domain.
+    # Filed under the finding's translation_domain (where the translations live),
+    # attributed to the owning integration via issue_domain.
     issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
     assert issue is not None
     assert issue.issue_domain == "automation"
@@ -437,7 +444,7 @@ def test_create_and_clear_validation_issue_with_edit(
     assert issue.translation_placeholders["device_id"] == _SAMPLE_DEVICE_ID
     assert issue.translation_placeholders["name"] == "Test automation"
 
-    async_clear_validation_issues(hass, [issue_id])
+    async_clear_validation_issues(hass, [(translation_domain, issue_id)])
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id) is None
 
 
@@ -445,7 +452,7 @@ def test_create_validation_issue_without_edit(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """The no-edit translation key is used for owners without a deep link."""
-    issue_id = async_create_validation_issue(
+    _, issue_id = async_create_validation_issue(
         hass,
         _sample_finding(),
         issue_domain="template",

@@ -4860,6 +4860,8 @@ async def test_event_trigger_composite_device_id_idless_no_edit(
 
 _MOCK_CONDITION_FINDING = ValidationFinding(
     finding_type="mock_condition_finding",
+    translation_domain="homeassistant",
+    translation_key="mock_condition_finding",
     issue_key="mock_key",
     placeholders={"detail": "mock"},
 )
