@@ -64,7 +64,6 @@ an authorization code.
 }
 """
 
-from collections.abc import Callable
 from http import HTTPStatus
 from ipaddress import ip_address
 from typing import TYPE_CHECKING, Any, cast
@@ -75,7 +74,7 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
-from homeassistant.auth.models import AuthFlowContext, AuthFlowResult, Credentials
+from homeassistant.auth.models import AuthFlowContext, AuthFlowResult
 from homeassistant.components import onboarding
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import async_user_not_allowed_do_auth
@@ -105,9 +104,7 @@ if TYPE_CHECKING:
 
 
 @callback
-def async_setup(
-    hass: HomeAssistant, store_result: Callable[[str, Credentials], str]
-) -> None:
+def async_setup(hass: HomeAssistant, store_result: StoreResultType) -> None:
     """Component to allow users to login."""
     hass.http.register_view(WellKnownOAuthInfoView)
     hass.http.register_view(WellKnownProtectedResourceView)
@@ -143,6 +140,7 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             # This flag advertises that support
             # (draft-ietf-oauth-client-id-metadata-document).
             "client_id_metadata_document_supported": True,
+            "code_challenge_methods_supported": ["S256"],
             "response_types_supported": ["code"],
             "service_documentation": (
                 "https://developers.home-assistant.io/docs/auth_api"
@@ -307,7 +305,7 @@ class LoginFlowBaseView(HomeAssistantView):
             return self.json_message("Invalid redirect URI", HTTPStatus.FORBIDDEN)
 
         result.pop("data")
-        result.pop("context")
+        context = result.pop("context")
 
         result_obj = result.pop("result")
 
@@ -323,7 +321,12 @@ class LoginFlowBaseView(HomeAssistantView):
 
         process_success_login(request)
         # We overwrite the Credentials object with the string code to retrieve it.
-        result["result"] = self._store_result(client_id, result_obj)  # type: ignore[typeddict-item]
+        result["result"] = self._store_result(
+            client_id,
+            result_obj,
+            code_challenge=context.get("code_challenge"),
+            code_challenge_method=context.get("code_challenge_method"),
+        )  # type: ignore[typeddict-item]
 
         return self.json(result)
 
@@ -346,6 +349,10 @@ class LoginFlowIndexView(LoginFlowBaseView):
                     [vol.Any(str, None)], vol.Length(2, 2), vol.Coerce(tuple)
                 ),
                 vol.Required("redirect_uri"): str,
+                vol.Optional("code_challenge"): vol.All(
+                    str, vol.Length(min=43, max=128)
+                ),
+                vol.Optional("code_challenge_method"): vol.In(["S256"]),
                 vol.Optional(
                     "type", default="authorize"
                 ): str,  # not used, kept for backwards compatibility
@@ -361,15 +368,32 @@ class LoginFlowIndexView(LoginFlowBaseView):
         if not indieauth.verify_client_id(client_id):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
+        code_challenge = data.get("code_challenge")
+        code_challenge_method = data.get("code_challenge_method")
+        if code_challenge_method is not None and not code_challenge:
+            return self.json_message(
+                "code_challenge required when code_challenge_method is provided",
+                HTTPStatus.BAD_REQUEST,
+            )
+        if code_challenge and not code_challenge_method:
+            return self.json_message(
+                "Transform algorithm not supported", HTTPStatus.BAD_REQUEST
+            )
+
         handler: tuple[str, str] = tuple(data["handler"])
+
+        flow_context = AuthFlowContext(
+            ip_address=ip_address(request.remote),  # type: ignore[arg-type]
+            redirect_uri=redirect_uri,
+        )
+        if code_challenge and code_challenge_method:
+            flow_context["code_challenge"] = code_challenge
+            flow_context["code_challenge_method"] = code_challenge_method
 
         try:
             result = await self._flow_mgr.async_init(
                 handler,
-                context=AuthFlowContext(
-                    ip_address=ip_address(request.remote),  # type: ignore[arg-type]
-                    redirect_uri=redirect_uri,
-                ),
+                context=flow_context,
             )
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)

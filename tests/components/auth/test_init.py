@@ -189,7 +189,9 @@ def test_auth_code_store_expiration(
     code = store(client_id, mock_credential)
 
     freezer.move_to(now + timedelta(minutes=9, seconds=59))
-    assert retrieve(client_id, code) == mock_credential
+    entry = retrieve(client_id, code)
+    assert entry is not None
+    assert entry.credentials == mock_credential
 
 
 def test_auth_code_store_requires_credentials(mock_credential) -> None:
@@ -761,3 +763,298 @@ async def test_ws_refresh_token_set_expiry_error(
         "code": "invalid_token_id",
         "message": "Received invalid token",
     }
+
+
+RFC7636_VERIFIER = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+RFC7636_CHALLENGE = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
+
+
+async def test_auth_code_pkce_success(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test login flow and token exchange with PKCE S256."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+            "code_challenge": RFC7636_CHALLENGE,
+            "code_challenge_method": "S256",
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+    code = step["result"]
+
+    # Exchange code for tokens with code_verifier
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": CLIENT_ID,
+            "grant_type": "authorization_code",
+            "code": code,
+            "code_verifier": RFC7636_VERIFIER,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    tokens = await resp.json()
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
+
+
+async def test_auth_code_pkce_missing_code_verifier(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test token exchange fails when code_verifier is missing for PKCE code."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+            "code_challenge": RFC7636_CHALLENGE,
+            "code_challenge_method": "S256",
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+    code = step["result"]
+
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": CLIENT_ID,
+            "grant_type": "authorization_code",
+            "code": code,
+        },
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    result = await resp.json()
+    assert result["error"] == "invalid_request"
+    assert result["error_description"] == "Code verifier required"
+
+
+@pytest.mark.parametrize(
+    "invalid_verifier",
+    [
+        "wrong_verifier_123456789012345678901234567890123",  # valid length, wrong content
+        "short",  # < 43 chars
+        "a" * 129,  # > 128 chars
+        "non_ascii_verifier_with_unicode_characters_✓_123456",  # non-ascii
+    ],
+    ids=["wrong", "too_short", "too_long", "non_ascii"],
+)
+async def test_auth_code_pkce_invalid_code_verifier(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    invalid_verifier: str,
+) -> None:
+    """Test token exchange fails when code_verifier is invalid."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+            "code_challenge": RFC7636_CHALLENGE,
+            "code_challenge_method": "S256",
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+    code = step["result"]
+
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": CLIENT_ID,
+            "grant_type": "authorization_code",
+            "code": code,
+            "code_verifier": invalid_verifier,
+        },
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    result = await resp.json()
+    assert result["error"] == "invalid_grant"
+    assert result["error_description"] == "Invalid code verifier"
+
+
+async def test_auth_code_without_challenge_succeeds(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test token exchange succeeds when flow was started without code_challenge and no verifier sent."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+    code = step["result"]
+
+    # Exchange without code_verifier succeeds
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": CLIENT_ID,
+            "grant_type": "authorization_code",
+            "code": code,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    tokens = await resp.json()
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
+
+
+async def test_auth_code_unexpected_verifier_rejected(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test token exchange fails when client sends code_verifier but no code_challenge was registered."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+    code = step["result"]
+
+    # Exchange with code_verifier when no challenge was registered should fail
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": CLIENT_ID,
+            "grant_type": "authorization_code",
+            "code": code,
+            "code_verifier": RFC7636_VERIFIER,
+        },
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    result = await resp.json()
+    assert result["error"] == "invalid_request"
+    assert "no code challenge was present" in result["error_description"]
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected_message"),
+    [
+        (
+            {
+                "code_challenge_method": "S256",
+            },
+            "code_challenge required when code_challenge_method is provided",
+        ),
+        (
+            {
+                "code_challenge": RFC7636_CHALLENGE,
+            },
+            "Transform algorithm not supported",
+        ),
+        (
+            {
+                "code_challenge": RFC7636_CHALLENGE,
+                "code_challenge_method": "plain",
+            },
+            "Message format incorrect",
+        ),
+        (
+            {
+                "code_challenge": "short",
+                "code_challenge_method": "S256",
+            },
+            "Message format incorrect",
+        ),
+    ],
+    ids=[
+        "method_without_challenge",
+        "challenge_without_method",
+        "unsupported_plain_method",
+        "challenge_too_short",
+    ],
+)
+async def test_login_flow_pkce_validation(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    payload: dict[str, str],
+    expected_message: str,
+) -> None:
+    """Test PKCE parameter validation in login_flow."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+            **payload,
+        },
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    result = await resp.json()
+    assert expected_message in result["message"]

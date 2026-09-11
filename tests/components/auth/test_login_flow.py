@@ -426,6 +426,7 @@ async def test_well_known_auth_info(
         "token_endpoint": f"{expected_url_prefix}/auth/token",
         "revocation_endpoint": f"{expected_url_prefix}/auth/revoke",
         "client_id_metadata_document_supported": True,
+        "code_challenge_methods_supported": ["S256"],
         "response_types_supported": ["code"],
         "service_documentation": "https://developers.home-assistant.io/docs/auth_api",
     }
