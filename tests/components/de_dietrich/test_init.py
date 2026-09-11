@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import diematic_modbus
+from diematic_modbus import UpdateReport
 from modbus_connection import ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 import pytest
@@ -29,6 +31,126 @@ async def test_setup_retry_when_identity_unavailable(
         "homeassistant.components.de_dietrich.async_get_unit",
         side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
             unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_retry_when_detection_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test setup is retried when detection cannot reach the boiler."""
+    mock_connection.for_unit(DEFAULT_UNIT_ID).fail_requests(ModbusTimeoutError("boom"))
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.de_dietrich.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_retry_when_detection_raises_modbus_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test setup is retried when detection raises a Modbus error."""
+    mock_config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.de_dietrich.async_get_unit",
+            side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+                unit_id
+            ),
+        ),
+        patch(
+            "homeassistant.components.de_dietrich.diematic_modbus.async_detect",
+            side_effect=ModbusTimeoutError("boom"),
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_retry_when_coordinator_identity_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test setup retries when the coordinator cannot read the identity."""
+    unit = mock_connection.for_unit(DEFAULT_UNIT_ID)
+    detection = await diematic_modbus.async_detect(unit)
+    unit.fail_read(679, ModbusTimeoutError("identity unavailable"))
+    mock_config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.de_dietrich.async_get_unit",
+            side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+                unit_id
+            ),
+        ),
+        patch(
+            "homeassistant.components.de_dietrich.diematic_modbus.async_detect",
+            return_value=detection,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "failed",
+    [
+        pytest.param({}, id="no_error_details"),
+        pytest.param(
+            {"sensors": ModbusTimeoutError("component unavailable")},
+            id="with_error_details",
+        ),
+    ],
+)
+async def test_setup_retry_when_no_component_answers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+    failed: dict[str, ModbusTimeoutError],
+) -> None:
+    """Test setup retries when no component returns an update."""
+    unit = mock_connection.for_unit(DEFAULT_UNIT_ID)
+    detection = await diematic_modbus.async_detect(unit)
+    assert detection.device is not None
+    mock_config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.de_dietrich.async_get_unit",
+            side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+                unit_id
+            ),
+        ),
+        patch(
+            "homeassistant.components.de_dietrich.diematic_modbus.async_detect",
+            return_value=detection,
+        ),
+        patch.object(
+            type(detection.device),
+            "async_update",
+            return_value=UpdateReport(
+                updated=frozenset(),
+                failed=failed,
+            ),
         ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -136,3 +258,12 @@ async def test_base_layout_device_info(
     assert device.model is None
     assert device.serial_number is None
     assert device.sw_version is None
+
+
+async def test_unload_entry(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test unloading the config entry unloads the sensor platform."""
+    assert await hass.config_entries.async_unload(init_integration.entry_id)
+    assert init_integration.state is ConfigEntryState.NOT_LOADED
