@@ -845,7 +845,7 @@ defusedxml==0.7.1
 deluge-client==1.10.2
 
 # homeassistant.components.lametric
-demetriek==1.4.0
+demetriek==1.4.1
 
 # homeassistant.components.denon_rs232
 denon-rs232==4.2.2
