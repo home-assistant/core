@@ -158,7 +158,6 @@ NON_MIGRATED_INTEGRATIONS = {
     "webhook",
     "webostv",
     "zone",
-    "zwave_js",
 }
 
 

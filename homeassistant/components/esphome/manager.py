@@ -103,9 +103,18 @@ from .encryption_key_storage import async_get_encryption_key_storage
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
+from .outgoing_connection import async_register_outgoing_target
 
 DEVICE_CONFLICT_ISSUE_FORMAT = "device_conflict-{}"
 UNPACK_UINT32_BE = struct.Struct(">I").unpack_from
+
+
+@callback
+def _mac_unique_id(entry: ESPHomeConfigEntry) -> str | None:
+    """Dial-in routing is keyed by MAC; pre-2023 name unique ids have none."""
+    if (unique_id := entry.unique_id) is not None and ":" in unique_id:
+        return unique_id
+    return None
 
 
 @callback
@@ -115,8 +124,13 @@ def async_create_api_client(
     zeroconf_instance: zeroconf.HaZeroconf,
     *,
     noise_psk: str | None,
+    declare_outgoing_target: bool = False,
 ) -> APIClient:
-    """Create an APIClient for a config entry."""
+    """Create an APIClient for a config entry.
+
+    Only the entry's long-lived session declares itself a dial-back target;
+    key management sessions must never be remembered by the device.
+    """
     return APIClient(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
@@ -125,6 +139,10 @@ def async_create_api_client(
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
+        # The library drops the declaration without a real key; the MAC
+        # gate is ours, a route needs a MAC unique id
+        outgoing_connection_target=declare_outgoing_target
+        and _mac_unique_id(entry) is not None,
     )
 
 
@@ -577,6 +595,36 @@ class ESPHomeManager:
             self._async_on_log, self._log_level
         )
 
+    @callback
+    def _async_register_outgoing_target(self, reconnect_logic: ReconnectLogic) -> None:
+        """Register this entry's MAC with the shared dial-in listener.
+
+        Runs once at setup; a dynamically provisioned key takes effect on
+        the reload that follows it: the device drops the keyless session
+        and the reauth flow reloads the entry with the stored key.
+        """
+        entry = self.entry
+        # Read the flag off the client so the route matches the hello; the
+        # flag implies a MAC unique id, which is the routing key
+        if (
+            not self.cli.outgoing_connection_target
+            or (mac := _mac_unique_id(entry)) is None
+        ):
+            _LOGGER.debug("%s: Not routing dial-ins; not a target", entry.title)
+            return
+        try:
+            unregister = async_register_outgoing_target(self.hass, mac, reconnect_logic)
+        except Exception:
+            # Dial-in is an optional extra; it must not fail the entry
+            _LOGGER.exception("%s: Could not set up dial-in routing", entry.title)
+            return
+        if unregister is None:
+            # Shutting down; the device is on its own until the next reload
+            _LOGGER.debug("%s: Dial-in routing not started", entry.title)
+            return
+        # async_on_unload also runs when setup fails or is cancelled
+        entry.async_on_unload(unregister)
+
     async def _on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
         entry = self.entry
@@ -850,7 +898,10 @@ class ESPHomeManager:
         """
         unique_id = self.entry.unique_id
         cli = async_create_api_client(
-            self.hass, self.entry, self.zeroconf_instance, noise_psk=ZERO_NOISE_PSK
+            self.hass,
+            self.entry,
+            self.zeroconf_instance,
+            noise_psk=ZERO_NOISE_PSK,
         )
         device_name = self.entry.data.get(CONF_DEVICE_NAME, self.host)
         try:
@@ -1173,6 +1224,11 @@ class ESPHomeManager:
                 )
 
         await reconnect_logic.start()
+
+        # After start(), the last call that can raise, so a failed setup
+        # cannot leak the route; before the BLE wait below so a dial-in can
+        # satisfy the first connect during a short wake window
+        self._async_register_outgoing_target(reconnect_logic)
 
         # Wait for a cached BLE proxy to register its scanner before finishing setup.
         if (

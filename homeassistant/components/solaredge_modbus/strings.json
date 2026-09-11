@@ -6,7 +6,6 @@
       "ev_charger": "[%key:component::solaredge_modbus::config::error::ev_charger%]",
       "no_serial_number": "[%key:component::solaredge_modbus::config::error::no_serial_number%]",
       "no_solaredge_device": "[%key:component::solaredge_modbus::config::error::no_solaredge_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_device": "The inverter answering on that connection and device ID is a different one than this entry is set up for."
     },
     "error": {
