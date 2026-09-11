@@ -432,6 +432,13 @@ class VehicleSubentryFlowHandler(VehiclePairingFlow, ConfigSubentryFlow):
             ),
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Re-run Bluetooth pairing for an already added vehicle."""
+        self._vin = self._get_reconfigure_subentry().data[CONF_VIN]
+        return await self.async_step_scan()
+
     @callback
     @override
     def _async_finish_pairing(self) -> SubentryFlowResult:
@@ -439,6 +446,12 @@ class VehicleSubentryFlowHandler(VehiclePairingFlow, ConfigSubentryFlow):
         if TYPE_CHECKING:
             assert self._address is not None
             assert self._vin is not None
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data_updates={CONF_ADDRESS: self._address},
+            )
         return self.async_create_entry(
             title=self._title or self._vin,
             data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
