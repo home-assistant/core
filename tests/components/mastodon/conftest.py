@@ -45,7 +45,7 @@ def mock_mastodon_client() -> Generator[AsyncMock]:
             load_fixture("account.json", DOMAIN)
         )
         client.mastodon_api_version = 2
-        client.media_post.return_value = MediaAttachment(id=1)
+        client.media_post.side_effect = [MediaAttachment(id=1), MediaAttachment(id=2)]
         client.status_post.return_value = Status.from_json(
             load_fixture("status_post.json", DOMAIN)
         )
