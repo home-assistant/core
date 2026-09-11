@@ -530,7 +530,7 @@ async def test_select_sound_mode(
         SERVICE_SELECT_SOUND_MODE,
         {
             ATTR_ENTITY_ID: "media_player.theater_soundbar_living",
-            ATTR_SOUND_MODE: "surround",
+            ATTR_SOUND_MODE: "adaptive_sound",
         },
         blocking=True,
     )
@@ -541,12 +541,14 @@ async def test_select_sound_mode(
         MAIN,
         argument=[
             "/sec/networkaudio/soundmode",
-            {"x.com.samsung.networkaudio.soundmode": "surround"},
+            {"x.com.samsung.networkaudio.soundmode": "adaptive sound"},
         ],
     )
     assert (
-        hass.states.get("media_player.theater_soundbar_living").attributes["sound_mode"]
-        == "surround"
+        hass.states.get("media_player.theater_soundbar_living").attributes[
+            ATTR_SOUND_MODE
+        ]
+        == "adaptive_sound"
     )
 
 

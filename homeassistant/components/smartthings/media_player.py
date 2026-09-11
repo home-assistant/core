@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN, NETWORK_AUDIO_SOUND_MODE_VENDOR_IDS, NETWORK_AUDIO_SOUND_MODES
+from .const import MAIN
 from .entity import SmartThingsEntity
 
 MEDIA_SOURCE_ID_TO_HA_KEY: dict[str, str] = {
@@ -70,6 +70,17 @@ REPEAT_MODE_TO_HA = {
 
 HA_REPEAT_MODE_TO_SMARTTHINGS = {v: k for k, v in REPEAT_MODE_TO_HA.items()}
 
+NETWORK_AUDIO_VENDOR_IDS = ["VD-NetworkAudio-002S"]
+
+SOUND_MODE_TO_HA = {
+    "standard": "standard",
+    "surround": "surround",
+    "game": "game",
+    "adaptive sound": "adaptive_sound",
+}
+
+HA_TO_SOUND_MODE = {v: k for k, v in SOUND_MODE_TO_HA.items()}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -122,7 +133,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         self._source_to_smartthings_id: dict[str, str] = {}
 
         if self._supports_samsung_network_audio_sound_mode():
-            self._attr_sound_mode_list = NETWORK_AUDIO_SOUND_MODES
+            self._attr_sound_mode_list = list(SOUND_MODE_TO_HA.values())
 
     @override
     def _update_attr(self) -> None:
@@ -164,7 +175,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     def _supports_samsung_network_audio_sound_mode(self) -> bool:
         """Return True if the device is a Samsung network audio soundbar."""
         ocf = self.device.device.ocf
-        return ocf is not None and ocf.vendor_id in NETWORK_AUDIO_SOUND_MODE_VENDOR_IDS
+        return ocf is not None and ocf.vendor_id in NETWORK_AUDIO_VENDOR_IDS
 
     def _determine_features(self) -> MediaPlayerEntityFeature:
         flags = (
@@ -335,7 +346,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Command.EXECUTE,
             argument=[
                 "/sec/networkaudio/soundmode",
-                {"x.com.samsung.networkaudio.soundmode": sound_mode},
+                {"x.com.samsung.networkaudio.soundmode": HA_TO_SOUND_MODE[sound_mode]},
             ],
         )
         self._attr_sound_mode = sound_mode
