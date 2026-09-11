@@ -1,9 +1,9 @@
 """Support for Wyoming speech-to-text services."""
 
 import asyncio
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, AsyncIterator
 import logging
-from typing import override
+from typing import Protocol, override, runtime_checkable
 
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
@@ -22,20 +22,33 @@ from .models import WyomingConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
+@runtime_checkable
+class _ClosableAsyncIterator(Protocol):
+    """Async iterator that can be closed."""
+
+    async def aclose(self) -> None:
+        """Close the iterator."""
+
+
 async def _async_upload_audio(
     client: AsyncTcpClient, stream: AsyncIterable[bytes]
 ) -> None:
     """Upload an audio stream to a Wyoming service."""
-    async for audio_bytes in stream:
-        chunk = AudioChunk(
-            rate=SAMPLE_RATE,
-            width=SAMPLE_WIDTH,
-            channels=SAMPLE_CHANNELS,
-            audio=audio_bytes,
-        )
-        await client.write_event(chunk.event())
+    stream_iterator: AsyncIterator[bytes] = aiter(stream)
+    try:
+        async for audio_bytes in stream_iterator:
+            chunk = AudioChunk(
+                rate=SAMPLE_RATE,
+                width=SAMPLE_WIDTH,
+                channels=SAMPLE_CHANNELS,
+                audio=audio_bytes,
+            )
+            await client.write_event(chunk.event())
 
-    await client.write_event(AudioStop().event())
+        await client.write_event(AudioStop().event())
+    finally:
+        if isinstance(stream_iterator, _ClosableAsyncIterator):
+            await stream_iterator.aclose()
 
 
 async def _async_receive_result(client: AsyncTcpClient) -> stt.SpeechResult:
@@ -167,30 +180,17 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
                         tasks, return_when=asyncio.FIRST_COMPLETED
                     )
 
-                    if upload_task in done:
-                        upload_task.result()
-
                     if receive_task in done:
                         return receive_task.result()
 
+                    upload_task.result()
                     return await receive_task
                 finally:
-                    current_task = asyncio.current_task()
-                    was_cancelled = (
-                        current_task is not None and current_task.cancelling()
-                    )
                     for task in tasks:
                         if not task.done():
                             task.cancel()
 
                     await asyncio.gather(*tasks, return_exceptions=True)
-
-                    if not was_cancelled:
-                        for task in tasks:
-                            if not task.cancelled() and (
-                                task_exception := task.exception()
-                            ):
-                                raise task_exception
 
         except OSError, WyomingError:
             _LOGGER.exception("Error processing audio stream")

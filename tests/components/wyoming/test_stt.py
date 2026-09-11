@@ -111,7 +111,19 @@ async def test_early_transcript_stops_audio_stream(
     entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
     assert entity is not None
 
+    audio_write_started = asyncio.Event()
     stream_closed = asyncio.Event()
+
+    class EarlyTranscriptClient(MockAsyncTcpClient):
+        async def write_event(self, event: Event) -> None:
+            await super().write_event(event)
+            if AudioChunk.is_type(event.type):
+                audio_write_started.set()
+                await asyncio.Event().wait()
+
+        async def read_event(self) -> Event | None:
+            await audio_write_started.wait()
+            return await super().read_event()
 
     async def audio_stream() -> AsyncGenerator[bytes]:
         try:
@@ -120,7 +132,7 @@ async def test_early_transcript_stops_audio_stream(
         finally:
             stream_closed.set()
 
-    mock_client = MockAsyncTcpClient([Transcript(text="Hello world").event()])
+    mock_client = EarlyTranscriptClient([Transcript(text="Hello world").event()])
     with patch(
         "homeassistant.components.wyoming.stt.AsyncTcpClient",
         mock_client,
@@ -133,6 +145,38 @@ async def test_early_transcript_stops_audio_stream(
     assert stream_closed.is_set()
     assert any(AudioChunk.is_type(event.type) for event in mock_client.written)
     assert not any(AudioStop.is_type(event.type) for event in mock_client.written)
+
+
+@pytest.mark.usefixtures("init_wyoming_stt")
+async def test_early_transcript_preserved_after_upload_error(
+    hass: HomeAssistant, metadata: stt.SpeechMetadata
+) -> None:
+    """Test an upload error does not replace a completed transcript."""
+    entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
+    assert entity is not None
+
+    async def audio_stream() -> AsyncGenerator[bytes]:
+        yield b"chunk1"
+
+    mock_client = MockAsyncTcpClient([Transcript(text="Hello world").event()])
+    original_write_event = mock_client.write_event
+
+    async def write_event(event: Event) -> None:
+        await original_write_event(event)
+        if AudioChunk.is_type(event.type):
+            raise OSError("Connection closed")
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.stt.AsyncTcpClient",
+            mock_client,
+        ),
+        patch.object(mock_client, "write_event", side_effect=write_event),
+    ):
+        result = await entity.async_process_audio_stream(metadata, audio_stream())
+
+    assert result.result == stt.SpeechResultState.SUCCESS
+    assert result.text == "Hello world"
 
 
 @pytest.mark.usefixtures("init_wyoming_stt")
