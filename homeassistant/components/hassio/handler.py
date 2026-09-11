@@ -87,8 +87,20 @@ class HassIO:
             )
 
             if response.status != HTTPStatus.OK:
-                error = await response.json(encoding="utf-8")
-                if error.get(ATTR_RESULT) == "error":
+                try:
+                    error = await response.json(encoding="utf-8")
+                except (aiohttp.ContentTypeError, ValueError) as err:
+                    error_text = await response.text(encoding="utf-8")
+                    _LOGGER.error(
+                        "Request to %s method %s returned with code %d: %s",
+                        command,
+                        method,
+                        response.status,
+                        error_text,
+                    )
+                    raise HassioAPIError(error_text) from err
+
+                if isinstance(error, dict) and error.get(ATTR_RESULT) == "error":
                     raise HassioAPIError(error.get(ATTR_MESSAGE))
 
                 _LOGGER.error(
@@ -99,15 +111,22 @@ class HassIO:
                 )
                 raise HassioAPIError
 
-            if return_text:
+            if return_text or (
+                response.content_type and response.content_type.startswith("text/")
+            ):
                 return await response.text(encoding="utf-8")
 
-            return await response.json(encoding="utf-8")
+            try:
+                return await response.json(encoding="utf-8")
+            except aiohttp.ContentTypeError:
+                return await response.text(encoding="utf-8")
+            except ValueError:
+                return await response.text(encoding="utf-8")
 
         except TimeoutError:
             _LOGGER.error("Timeout on %s request", command)
 
-        except aiohttp.ClientError as err:
+        except (aiohttp.ClientError, ValueError) as err:
             _LOGGER.error("Client error on %s request %s", command, err)
 
         raise HassioAPIError
