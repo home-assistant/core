@@ -134,6 +134,7 @@ def make_mock_departures(stop_id: int) -> list[Departure]:
         )
         future_dep.date = base_time.date()
         future_dep.track = "2B"
+        future_dep.rtTrack = "2B"
         future_dep.final_stop = "North Station"
         future_dep.messages = ["Delayed"]
         future_dep.rtTime = (

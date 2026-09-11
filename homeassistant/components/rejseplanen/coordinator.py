@@ -14,7 +14,10 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    TimestampDataUpdateCoordinator,
+    UpdateFailed,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_STOP_ID, DOMAIN, SCAN_INTERVAL_MINUTES
@@ -25,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 type RejseplanenConfigEntry = ConfigEntry[RejseplanenDataUpdateCoordinator]
 
 
-class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
+class RejseplanenDataUpdateCoordinator(TimestampDataUpdateCoordinator[DepartureBoard]):
     """Class to manage fetching data from the Rejseplanen API."""
 
     config_entry: RejseplanenConfigEntry
@@ -41,7 +44,6 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             auth_key=config_entry.data[CONF_API_KEY],
             session=async_get_clientsession(hass),
         )
-        self.last_update_success_time: datetime | None = None
         self.stop_ids = {
             subentry.data[CONF_STOP_ID]
             for subentry in config_entry.get_subentries_of_type("stop")
@@ -59,12 +61,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
     async def _async_update_data(self) -> DepartureBoard:
         """Update data via library."""
         try:
-            stop_ids = {
-                subentry.data[CONF_STOP_ID]
-                for subentry in self.config_entry.subentries.values()
-                if subentry.subentry_type == "stop"
-            }
-            board = await self._fetch_data(stop_ids)
+            return await self._fetch_data(self.stop_ids)
         except HTTPError as error:  # runtime errors from the API
             if error.status_code in (401, 403):
                 raise ConfigEntryAuthFailed("API key expired or revoked") from error
@@ -79,9 +76,6 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             raise UpdateFailed(
                 f"Type error fetching data for stop {self.stop_ids}: {error}"
             ) from error
-
-        self.last_update_success_time = dt_util.now()
-        return board
 
     async def _fetch_data(self, stop_ids: set[int]) -> DepartureBoard:
         """Fetch data from Rejseplanen API."""

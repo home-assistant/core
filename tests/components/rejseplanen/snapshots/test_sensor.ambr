@@ -53,7 +53,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2',
   })
 # ---
 # name: test_sensor_snapshot[sensor.gym_departing_from_track-entry]
@@ -105,7 +105,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2B',
   })
 # ---
 # name: test_sensor_snapshot[sensor.gym_departing_in-entry]
@@ -158,7 +158,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2024-01-01T11:12:00+00:00',
   })
 # ---
 # name: test_sensor_snapshot[sensor.gym_line-entry]
@@ -210,7 +210,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'A',
   })
 # ---
 # name: test_sensor_snapshot[sensor.gym_number_of_departures-entry]
@@ -262,7 +262,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1',
   })
 # ---
 # name: test_sensor_snapshot[sensor.gym_towards-entry]
@@ -314,7 +314,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'North',
   })
 # ---
 # name: test_sensor_snapshot[sensor.work_delayed_by-entry]
@@ -371,7 +371,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2',
   })
 # ---
 # name: test_sensor_snapshot[sensor.work_departing_from_track-entry]
@@ -423,7 +423,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1A',
   })
 # ---
 # name: test_sensor_snapshot[sensor.work_departing_in-entry]
@@ -476,7 +476,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2024-01-01T11:07:00+00:00',
   })
 # ---
 # name: test_sensor_snapshot[sensor.work_line-entry]
@@ -528,7 +528,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Bus 207',
   })
 # ---
 # name: test_sensor_snapshot[sensor.work_number_of_departures-entry]
@@ -580,7 +580,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '2',
   })
 # ---
 # name: test_sensor_snapshot[sensor.work_towards-entry]
@@ -632,6 +632,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'End Point St.',
   })
 # ---
