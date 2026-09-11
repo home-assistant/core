@@ -164,7 +164,7 @@ async def test_dhcp_flow_simple(
     assert gateway_device.manufacturer == "Intergas"
     assert gateway_device.connections == {("mac", "00:04:a3:de:ad:ff")}
 
-    devices = device_registry.devices.get_devices_for_config_entry_id(entry_id)
+    devices = dr.async_entries_for_config_entry(device_registry, entry_id)
     assert len(devices) == 3
     boiler_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "c0ffeec0ffee"), entry_id
@@ -212,8 +212,8 @@ async def test_dhcp_flow_migrates_existing_entry_without_unique_id(
     assert gateway_device.manufacturer == "Intergas"
     assert gateway_device.connections == {("mac", "00:04:a3:de:ad:ff")}
 
-    devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_config_entry.entry_id
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
     assert len(devices) == 3
     boiler_device = device_registry.async_get_device_by_identifier(

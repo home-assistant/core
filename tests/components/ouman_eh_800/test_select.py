@@ -10,6 +10,7 @@ from ouman_eh_800_api import (
     OperationMode,
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
+    OumanClientError,
     PumpSummerStopControl,
     RelayControl,
     RelayPumpSummerStop,
@@ -125,6 +126,12 @@ async def test_async_select_option(
             HomeAssistantError,
             "Error communicating with API",
             id="communication_failure",
+        ),
+        pytest.param(
+            OumanClientError("Endpoint ID missing from response"),
+            HomeAssistantError,
+            "Unexpected response from device",
+            id="unexpected_response",
         ),
     ],
 )

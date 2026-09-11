@@ -2,15 +2,14 @@
 
 from unittest.mock import PropertyMock, patch
 
-from homeassistant.components.abode import ATTR_DEVICE_ID
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
     AlarmControlPanelState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
@@ -20,31 +19,20 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
+from tests.common import snapshot_platform
+
 DEVICE_ID = "alarm_control_panel.abode_alarm"
 
 
-async def test_entity_registry(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+async def test_all_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, ALARM_DOMAIN)
+    """Test all entities."""
+    config_entry = await setup_platform(hass, ALARM_DOMAIN)
 
-    entry = entity_registry.async_get(DEVICE_ID)
-    # Abode alarm device unique_id is the MAC address
-    assert entry.unique_id == "001122334455"
-
-
-async def test_attributes(hass: HomeAssistant) -> None:
-    """Test the alarm control panel attributes are correct."""
-    await setup_platform(hass, ALARM_DOMAIN)
-
-    state = hass.states.get(DEVICE_ID)
-    assert state.state == AlarmControlPanelState.DISARMED
-    assert state.attributes.get(ATTR_DEVICE_ID) == "area_1"
-    assert not state.attributes.get("battery_backup")
-    assert not state.attributes.get("cellular_backup")
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Abode Alarm"
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 3
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_set_alarm_away(hass: HomeAssistant) -> None:

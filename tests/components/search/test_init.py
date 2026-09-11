@@ -1143,10 +1143,10 @@ async def test_search_pre_migration_composite_device(
 
     # Simulate a migration split: both devices carry the pre-migration composite id
     composite_device_id = "composite00000000000000000000ab"
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=composite_device_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=composite_device_id
     )
 

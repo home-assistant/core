@@ -3,7 +3,7 @@
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import Literal, final, override
+from typing import Final, Literal, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -20,7 +20,7 @@ from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "binary_sensor"
+DOMAIN: Final = "binary_sensor"
 DATA_COMPONENT: HassKey[EntityComponent[BinarySensorEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA

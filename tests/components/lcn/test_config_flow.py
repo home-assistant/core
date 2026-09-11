@@ -70,7 +70,15 @@ async def test_step_user(hass: HomeAssistant) -> None:
     ):
         data = CONNECTION_DATA.copy()
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=data,
         )
 
         assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
@@ -89,9 +97,18 @@ async def test_step_user_existing_host(
     entry.add_to_hass(hass)
 
     with patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"):
-        config_data = entry.data.copy()
+        # The connection details of the existing entry, as the form asks for them
+        config_data = {key: entry.data[key] for key in CONNECTION_DATA}
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=config_data,
         )
 
         assert result["type"] is data_entry_flow.FlowResultType.ABORT
@@ -118,7 +135,15 @@ async def test_step_user_error(
         data = CONNECTION_DATA.copy()
         data.update({CONF_HOST: "pchk"})
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=data,
         )
 
         assert result["type"] is data_entry_flow.FlowResultType.FORM

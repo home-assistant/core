@@ -6,6 +6,7 @@ from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
     ExpiredAccessTokenError,
+    InteractionRequiredError,
     InvalidGrantError,
     SelfAssertedError,
     SmartMeterUnavailableError,
@@ -53,7 +54,12 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="consent_required",
         ) from err
-    except (ExpiredAccessTokenError, InvalidGrantError, SelfAssertedError) as err:
+    except (
+        ExpiredAccessTokenError,
+        InteractionRequiredError,
+        InvalidGrantError,
+        SelfAssertedError,
+    ) as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="auth_expired",

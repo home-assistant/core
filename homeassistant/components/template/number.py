@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -65,14 +65,15 @@ NUMBER_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=NumberEntityCapabilityAttribute, device_class=True
+)
+
 NUMBER_YAML_SCHEMA = NUMBER_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(
     make_template_entity_common_schema(
-        NUMBER_DOMAIN,
-        DEFAULT_NAME,
-        NumberEntityCapabilityAttribute,
-        block_device_class=True,
+        NUMBER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -134,6 +135,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, RestoreNumber):
     _state_option = CONF_STATE
     _restore_state_extra_data = NumberExtraStoredData
     _restore_state_properties = ("_attr_native_value",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -150,16 +152,14 @@ class AbstractTemplateNumber(AbstractTemplateEntity, RestoreNumber):
 
         self.setup_state_template(
             "_attr_native_value",
-            template_validators.number(self, CONF_STATE),
+            tcv.number(self, CONF_STATE),
         )
         for option, attribute in (
             (CONF_STEP, "_attr_native_step"),
             (CONF_MIN, "_attr_native_min_value"),
             (CONF_MAX, "_attr_native_max_value"),
         ):
-            self.setup_template(
-                option, attribute, template_validators.number(self, option)
-            )
+            self.setup_template(option, attribute, tcv.number(self, option))
 
         self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
 

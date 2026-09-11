@@ -85,6 +85,7 @@ async def test_update_failed(
 async def test_calendar_parse_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test CalendarParseError using respx."""
     respx.get(CALENDER_URL).mock(
@@ -92,6 +93,7 @@ async def test_calendar_parse_error(
     )
     await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert "The remote calendar feed contains invalid data:" in caplog.text
 
 
 @respx.mock

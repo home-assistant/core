@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from pydrawise.schema import Controller, User, Zone
+import pytest
 
 from homeassistant.components.hydrawise.const import DOMAIN, MAIN_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -161,3 +162,34 @@ async def test_auto_remove_devices(
         device_registry, mock_added_config_entry.entry_id
     )
     assert len(all_devices) == 0
+
+
+async def test_zones_of_one_controller_go_missing(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+    zones: list[Zone],
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a controller answering without its zones does not crash the update.
+
+    The controller is still there, so the entities of its zones are still
+    subscribed when the refresh that drops them arrives.
+    """
+    assert hass.states.get("binary_sensor.zone_one_watering") is not None
+
+    mock_pydrawise.get_zones.return_value = []
+
+    freezer.tick(MAIN_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_pydrawise.get_zones.return_value = zones
+
+    freezer.tick(MAIN_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.zone_one_watering") is not None
+    assert "KeyError" not in caplog.text

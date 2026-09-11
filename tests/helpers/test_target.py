@@ -513,6 +513,7 @@ async def test_extract_referenced_entity_ids(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     target_selection = selection_class(selector_config)

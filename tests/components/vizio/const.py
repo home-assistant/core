@@ -22,6 +22,7 @@ from homeassistant.components.vizio.const import (
     CONF_APPS,
     CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
     CONF_CONFIG,
+    CONF_DEVICE_TYPE,
     CONF_INCLUDE_OR_EXCLUDE,
     CONF_MESSAGE,
     CONF_NAME_SPACE,
@@ -165,6 +166,13 @@ MOCK_SPEAKER_CONFIG = {
     CONF_NAME: NAME,
     CONF_HOST: HOST,
     CONF_DEVICE_CLASS: MediaPlayerDeviceClass.SPEAKER,
+}
+
+MOCK_CRAVE_CONFIG = {
+    CONF_NAME: NAME,
+    CONF_HOST: HOST,
+    CONF_DEVICE_CLASS: MediaPlayerDeviceClass.SPEAKER,
+    CONF_DEVICE_TYPE: "crave360",
 }
 
 MOCK_INCLUDE_APPS = {
