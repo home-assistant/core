@@ -1,5 +1,6 @@
 """iCloud account."""
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 import operator
@@ -133,8 +134,8 @@ class IcloudAccount:
     def setup(self) -> None:
         """Set up an iCloud account, leaving it with a fetch scheduled.
 
-        _setup() only arms the timer if it reaches update_devices(), so the
-        paths that return before then are given one here.
+        Every path out of _setup() has to end with a timer, including the ones
+        that return before update_devices() arms it.
         """
         self._setup()
         if self._unsub_fetch is None:
@@ -184,19 +185,24 @@ class IcloudAccount:
         if user_info is None:
             raise ConfigEntryNotReady("No user info found in iCloud devices response")
 
+        self._read_account_names(user_info)
+
+        self._devices = {}
+        self.update_devices()
+
+    def _read_account_names(self, user_info: Mapping[str, Any]) -> None:
+        """Store the account owner and family member names."""
         self._owner_fullname = (
             f"{user_info.get('firstName')} {user_info.get('lastName')}"
         )
 
         self._family_members_fullname = {}
-        if user_info.get("membersInfo") is not None:
-            for prs_id, member in user_info.get("membersInfo").items():
+        members_info = user_info.get("membersInfo")
+        if members_info is not None:
+            for prs_id, member in members_info.items():
                 self._family_members_fullname[prs_id] = (
                     f"{member['firstName']} {member['lastName']}"
                 )
-
-        self._devices = {}
-        self.update_devices()
 
     def update_devices(self) -> None:
         """Update iCloud devices."""
@@ -222,6 +228,14 @@ class IcloudAccount:
             self._schedule_next_fetch()
             return
 
+        if self._owner_fullname is None and api_devices.user_info is not None:
+            # setup() returns before reading these when iCloud asks for a
+            # verification code, and keep_alive() only runs a full setup again
+            # when there is no session at all, so the first poll after the
+            # challenge is what fills them in. A family device cannot be built
+            # without them.
+            self._read_account_names(api_devices.user_info)
+
         # Gets devices infos
         new_device = False
         for device in api_devices:
@@ -231,11 +245,11 @@ class IcloudAccount:
 
             if device_id is None or device_name is None:
                 # status() reports every requested field, using None for the
-                # ones iCloud left out, so an unusable device has to be
-                # rejected rather than left to raise. Skipping it keeps the
-                # devices already collected, which would otherwise stay in
-                # _devices without signal_device_new ever being dispatched
-                # for them, so their entities were never created.
+                # ones iCloud left out, so an unusable device arrives looking
+                # like any other rather than raising. It has to be rejected
+                # here to keep a None identity out of the entity and device
+                # registries; a later poll picks the device up if iCloud
+                # starts reporting it properly.
                 _LOGGER.warning("Skipping iCloud device with no id or name")
                 continue
 

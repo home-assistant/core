@@ -16,6 +16,7 @@ from requests import Response
 
 from homeassistant.components.icloud.account import IcloudAccount
 from homeassistant.components.icloud.const import (
+    ATTR_OWNER_NAME,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
@@ -27,7 +28,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.storage import Store
 
-from .const import DEVICE, MOCK_CONFIG, USER_INFO, USERNAME
+from .const import (
+    DEVICE,
+    MEMBER_1_FULL_NAME,
+    MEMBER_1_PERSON_ID,
+    MOCK_CONFIG,
+    USER_INFO,
+    USERNAME,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -580,3 +588,43 @@ async def test_other_api_error_while_polling_keeps_retrying(
     await hass.async_block_till_done()
 
     assert service.authenticate.call_count > 1
+
+
+async def test_family_device_after_setup_time_2fa(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an account challenged during setup still builds its devices.
+
+    setup() returns before reading the account's owner and family names when
+    iCloud asks for a verification code, and keep_alive() only runs a full
+    setup again when there is no session at all. The names therefore have to
+    be filled in by the poll that follows the challenge, or a family device
+    can never be built.
+    """
+    service, status = polling_service
+    status["prsId"] = MEMBER_1_PERSON_ID
+    service.requires_2fa = True
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.iphone_battery") is None
+
+    # The user enters the code.
+    service.requires_2fa = False
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.iphone_battery")
+    assert state is not None
+    assert state.state == "80"
+    assert state.attributes[ATTR_OWNER_NAME] == MEMBER_1_FULL_NAME
