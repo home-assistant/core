@@ -163,7 +163,13 @@ class LibrenmsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    )
+                }
+            ),
             description_placeholders={"name": self._name},
             errors=errors,
         )
