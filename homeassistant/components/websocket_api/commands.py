@@ -62,8 +62,8 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.json import (
     JSON_DUMP,
     ExtendedJSONEncoder,
+    cached_json_bytes,
     find_paths_unserializable_data,
-    json_bytes,
     json_fragment,
 )
 from homeassistant.helpers.service import (
@@ -541,7 +541,7 @@ async def _async_get_all_condition_descriptions_json(hass: HomeAssistant) -> byt
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
             return cast(bytes, cached_json_payload)
-    json_payload = json_bytes(
+    json_payload = cached_json_bytes(
         {
             condition: description
             for condition, description in descriptions.items()
@@ -588,7 +588,7 @@ async def _async_get_all_service_descriptions_json(hass: HomeAssistant) -> bytes
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
             return cast(bytes, cached_json_payload)
-    json_payload = json_bytes(descriptions)
+    json_payload = cached_json_bytes(descriptions)
     hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
     return json_payload
 
@@ -613,7 +613,7 @@ async def _async_get_all_trigger_descriptions_json(hass: HomeAssistant) -> bytes
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
             return cast(bytes, cached_json_payload)
-    json_payload = json_bytes(
+    json_payload = cached_json_bytes(
         {
             trigger: description
             for trigger, description in descriptions.items()
@@ -1114,7 +1114,6 @@ async def handle_test_condition(
         vol.Required("condition"): cv.CONDITION_SCHEMA,
     }
 )
-@decorators.require_admin
 @decorators.async_response
 async def handle_subscribe_condition(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]

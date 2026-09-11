@@ -4,14 +4,17 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.power.condition import CONDITIONS
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfPower
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     assert_numerical_condition_unit_conversion,
     parametrize_numerical_condition_above_below_all,
     parametrize_numerical_condition_above_below_any,
@@ -31,6 +34,11 @@ _WATT_THRESHOLD = {
         "type": "above",
         "value": {"number": 50, "unit_of_measurement": "W"},
     }
+}
+
+
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_value": TargetSupport.STANDARD,
 }
 
 
@@ -55,6 +63,11 @@ async def test_power_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

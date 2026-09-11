@@ -196,9 +196,9 @@ async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
 @pytest.mark.parametrize(
     ("source_entity_id", "expected_helper_device_id", "expected_events"),
     [
-        ("sensor.test_unique_indoor_humidity", None, ["update"]),
-        ("sensor.test_unique_indoor_temperature", "humidity_device_id", []),
-        ("sensor.test_unique_outdoor_temperature", "humidity_device_id", []),
+        ("sensor.mock_title", None, ["update"]),
+        ("sensor.mock_title_2", "humidity_device_id", []),
+        ("sensor.mock_title_3", "humidity_device_id", []),
     ],
     indirect=["expected_helper_device_id"],
 )
@@ -218,7 +218,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     assert await hass.config_entries.async_setup(mold_indicator_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )
@@ -239,7 +241,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     mock_unload_entry.assert_not_called()
 
     # Check that the helper entity is linked to the expected source device
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert mold_indicator_entity_entry.device_id == expected_helper_device_id
 
     # Check that the device is removed
@@ -255,9 +259,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
 @pytest.mark.parametrize(
     ("source_entity_id", "expected_helper_device_id", "expected_events"),
     [
-        ("sensor.test_unique_indoor_humidity", None, ["update"]),
-        ("sensor.test_unique_indoor_temperature", "humidity_device_id", []),
-        ("sensor.test_unique_outdoor_temperature", "humidity_device_id", []),
+        ("sensor.mock_title", None, ["update"]),
+        ("sensor.mock_title_2", "humidity_device_id", []),
+        ("sensor.mock_title_3", "humidity_device_id", []),
     ],
     indirect=["expected_helper_device_id"],
 )
@@ -277,7 +281,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     assert await hass.config_entries.async_setup(mold_indicator_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )
@@ -298,7 +304,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     mock_unload_entry.assert_not_called()
 
     # Check that the helper entity is linked to the expected source device
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert mold_indicator_entity_entry.device_id == expected_helper_device_id
 
     # Check that the source device is not removed
@@ -323,9 +331,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
         "expected_events",
     ),
     [
-        ("sensor.test_unique_indoor_humidity", 1, None, ["update"]),
-        ("sensor.test_unique_indoor_temperature", 0, "humidity_device_id", []),
-        ("sensor.test_unique_outdoor_temperature", 0, "humidity_device_id", []),
+        ("sensor.mock_title", 1, None, ["update"]),
+        ("sensor.mock_title_2", 0, "humidity_device_id", []),
+        ("sensor.mock_title_3", 0, "humidity_device_id", []),
     ],
     indirect=["expected_helper_device_id"],
 )
@@ -346,7 +354,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     assert await hass.config_entries.async_setup(mold_indicator_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )
@@ -368,7 +378,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     assert len(mock_unload_entry.mock_calls) == unload_entry_calls
 
     # Check that the helper entity is linked to the expected source device
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert mold_indicator_entity_entry.device_id == expected_helper_device_id
 
     # Check that the mold_indicator config entry is not in the device
@@ -385,9 +397,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
 @pytest.mark.parametrize(
     ("source_entity_id", "unload_entry_calls", "expected_events"),
     [
-        ("sensor.test_unique_indoor_humidity", 1, ["update"]),
-        ("sensor.test_unique_indoor_temperature", 0, []),
-        ("sensor.test_unique_outdoor_temperature", 0, []),
+        ("sensor.mock_title", 1, ["update"]),
+        ("sensor.mock_title_2", 0, []),
+        ("sensor.mock_title_3", 0, []),
     ],
 )
 async def test_async_handle_source_entity_changes_source_entity_moved_other_device(
@@ -411,7 +423,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     assert await hass.config_entries.async_setup(mold_indicator_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )
@@ -438,7 +452,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     indoor_humidity_entity_entry = entity_registry.async_get(
         indoor_humidity_entity_entry.entity_id
     )
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )
@@ -459,9 +475,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
 @pytest.mark.parametrize(
     ("source_entity_id", "config_key"),
     [
-        ("sensor.test_unique_indoor_humidity", CONF_INDOOR_HUMIDITY),
-        ("sensor.test_unique_indoor_temperature", CONF_INDOOR_TEMP),
-        ("sensor.test_unique_outdoor_temperature", CONF_OUTDOOR_TEMP),
+        ("sensor.mock_title", CONF_INDOOR_HUMIDITY),
+        ("sensor.mock_title_2", CONF_INDOOR_TEMP),
+        ("sensor.mock_title_3", CONF_OUTDOOR_TEMP),
     ],
 )
 async def test_async_handle_source_entity_new_entity_id(
@@ -479,7 +495,9 @@ async def test_async_handle_source_entity_new_entity_id(
     assert await hass.config_entries.async_setup(mold_indicator_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )
@@ -550,7 +568,9 @@ async def test_migration_1_1(
     # is linked to the source device
     source_device = device_registry.async_get(indoor_humidity_device.id)
     assert mold_indicator_config_entry.entry_id not in source_device.config_entries
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )

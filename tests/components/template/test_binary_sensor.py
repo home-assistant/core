@@ -31,6 +31,7 @@ from .conftest import (
     RESTORE_STATE_UPDATED_ATTRIBUTES,
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_attributes_template,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -1536,7 +1537,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get("binary_sensor.my_template")
+    template_entity = entity_registry.async_get("binary_sensor.mock_title_my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 
@@ -1552,3 +1553,45 @@ async def test_flow_preview(
         {"name": "My template", "state": "{{ 'on' }}"},
     )
     assert state["state"] == "on"
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass, TEST_BINARY_SENSOR, style, {"state": "{{ True }}"}, caplog
+    )
+
+
+@pytest.mark.parametrize("attribute", ["device_class"])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_BINARY_SENSOR,
+        style,
+        1,
+        {
+            "state": "{{ 'disarmed' }}",
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_BINARY_SENSOR.entity_id}: {attribute}"
+    assert error in caplog.text

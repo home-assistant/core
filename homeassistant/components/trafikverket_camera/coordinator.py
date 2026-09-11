@@ -73,8 +73,10 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
             return CameraData(data=camera_data, image=None)
 
         image_url = camera_data.photourl
-        if camera_data.fullsizephoto:
-            image_url = f"{camera_data.photourl}?type=fullsize"
+        if camera_data.has_fullsizephoto:
+            if TYPE_CHECKING:
+                assert camera_data.photourlfullsize is not None
+            image_url = camera_data.photourlfullsize
 
         async with self.session.get(
             image_url, timeout=aiohttp.ClientTimeout(total=10)

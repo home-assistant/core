@@ -61,6 +61,7 @@ async def test_js_webcomponent(hass: HomeAssistant) -> None:
             "name": "todo-mvc",
             "embed_iframe": True,
             "trust_external": True,
+            "handle_safe_area": False,
         },
     }
     assert panel.frontend_url_path == "nice_url"
@@ -81,6 +82,7 @@ async def test_module_webcomponent(hass: HomeAssistant) -> None:
             "embed_iframe": True,
             "trust_external_script": True,
             "require_admin": True,
+            "handle_safe_area": True,
         }
     }
 
@@ -102,6 +104,7 @@ async def test_module_webcomponent(hass: HomeAssistant) -> None:
             "name": "todo-mvc",
             "embed_iframe": True,
             "trust_external": True,
+            "handle_safe_area": True,
         },
     }
     assert panel.frontend_url_path == "nice_url"
@@ -136,6 +139,7 @@ async def test_latest_and_es5_build(hass: HomeAssistant) -> None:
             "module_url": "/local/latest.js",
             "embed_iframe": False,
             "trust_external": False,
+            "handle_safe_area": False,
         },
     }
     assert panel.frontend_url_path == "nice_url"
@@ -169,6 +173,7 @@ async def test_register_config_panel(hass: HomeAssistant) -> None:
         embed_iframe=True,
         require_admin=True,
         config_panel_domain="test",
+        handle_safe_area=True,
     )
 
     panels = hass.data.get(frontend.DATA_PANELS, [])
@@ -183,6 +188,7 @@ async def test_register_config_panel(hass: HomeAssistant) -> None:
             "name": "custom-frontend",
             "embed_iframe": True,
             "trust_external": False,
+            "handle_safe_area": True,
         },
     }
     assert panel.frontend_url_path == "config_panel"

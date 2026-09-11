@@ -28,15 +28,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_account_mismatch": "The reauthentication account does not match the original account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_account_mismatch": "The reconfiguration account does not match the original account",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_account_mismatch": "The reconfiguration account does not match the original account"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -48,6 +41,89 @@
       "reauth_confirm": {
         "description": "The {name} integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "config_subentries": {
+    "energy_site": {
+      "abort": {
+        "all_sites_added": "Every accessible energy site with a Powerwall on your Teslemetry account has already been added for local control.",
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
+        "no_powerwall": "Local control requires a Powerwall, and no energy site with one is currently accessible on your Teslemetry account."
+      },
+      "entry_type": "Energy site",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_password": "[%key:common::config_flow::error::invalid_auth%]",
+        "key_not_approved": "Your Powerwall system rejected Home Assistant's key because it has not been approved. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
+        "key_not_registered": "Home Assistant's key is no longer registered on your Powerwall system. Restart setup to register it again.",
+        "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again."
+      },
+      "initiate_flow": {
+        "user": "Add local energy site"
+      },
+      "step": {
+        "credentials": {
+          "data": {
+            "host": "[%key:common::config_flow::data::host%]",
+            "password": "[%key:common::config_flow::data::password%]"
+          },
+          "description": "Enter your Powerwall system's local network address and its Wi-Fi password. Only the last 5 characters of the password are needed - find them on the QR label behind the front cover of your Powerwall 3, or behind the Backup Gateway door on Powerwall 2.",
+          "title": "Connect to your Powerwall system"
+        },
+        "pair": {
+          "description": "Flick the On/Off switch on your primary Powerwall off and back on to approve Home Assistant's access, then continue. This only needs to be done once. Removing this integration later does not revoke this access on your Powerwall or Backup Gateway.",
+          "title": "Approve the local access key"
+        },
+        "user": {
+          "data": {
+            "site_id": "Energy site"
+          },
+          "description": "Choose the Teslemetry energy site whose Powerwall you want to control over your local network.",
+          "title": "Add local energy site"
+        }
+      }
+    },
+    "vehicle": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "entry_not_loaded": "The Teslemetry configuration entry is not loaded. Please ensure it is set up correctly before adding a vehicle.",
+        "no_vehicles": "Every vehicle in your Teslemetry account has already been added over Bluetooth."
+      },
+      "entry_type": "Bluetooth vehicle",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "device_not_found": "No matching Tesla vehicle was found nearby over Bluetooth. Make sure the vehicle is awake and within range, then try again.",
+        "pair_failed": "The vehicle rejected the key. Make sure it is not in valet mode and does not already have the maximum number of keys, then try again.",
+        "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen."
+      },
+      "initiate_flow": {
+        "user": "Add Bluetooth vehicle"
+      },
+      "progress": {
+        "pair": "Approve Home Assistant's virtual key on the vehicle's touchscreen. Waiting for the vehicle to accept the key."
+      },
+      "step": {
+        "instructions": {
+          "description": "Select **Submit**, then place your key card against the center console card reader of vehicle {vin} to approve Home Assistant's virtual key. This only needs to be done once.",
+          "title": "Approve the virtual key"
+        },
+        "scan": {
+          "description": "Home Assistant will look for vehicle {vin} over Bluetooth to enable local command control. Make sure the vehicle is awake and within Bluetooth range of a Home Assistant Bluetooth adapter, then continue.",
+          "title": "Set up Bluetooth control"
+        },
+        "user": {
+          "data": {
+            "vin": "Vehicle"
+          },
+          "data_description": {
+            "vin": "The account vehicle to enable local Bluetooth control for."
+          },
+          "description": "Select which of your Teslemetry account vehicles to add over Bluetooth for local command control.",
+          "title": "Add Bluetooth vehicle"
+        }
       }
     }
   },
@@ -172,9 +248,6 @@
       },
       "offroad_lightbar_present": {
         "name": "Offroad lightbar"
-      },
-      "passenger_seat_belt": {
-        "name": "Passenger seat belt"
       },
       "pin_to_drive_enabled": {
         "name": "PIN to Drive enabled"
@@ -903,6 +976,9 @@
       "lateral_acceleration": {
         "name": "Lateral acceleration"
       },
+      "lifetime_energy_gained_regen": {
+        "name": "Lifetime energy gained regen"
+      },
       "lifetime_energy_used": {
         "name": "Lifetime energy used"
       },
@@ -923,6 +999,9 @@
       },
       "longitudinal_acceleration": {
         "name": "Longitudinal acceleration"
+      },
+      "miles_since_reset": {
+        "name": "Miles since reset"
       },
       "module_temp_max": {
         "name": "Module temperature maximum"
@@ -994,6 +1073,9 @@
           "off": "[%key:common::state::off%]",
           "start_at": "Start at"
         }
+      },
+      "self_driving_miles_since_reset": {
+        "name": "Self-driving miles since reset"
       },
       "sentry_mode": {
         "name": "Sentry mode",
@@ -1164,17 +1246,11 @@
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature"
     },
-    "invalid_device": {
-      "message": "Invalid device ID: {device_id}"
-    },
     "missing_scope": {
       "message": "Missing required scope: {scope}"
     },
     "no_cable": {
       "message": "Insert cable to lock, charge cable will lock automatically when connected"
-    },
-    "no_config_entry_for_device": {
-      "message": "No config entry for device ID: {device_id}"
     },
     "no_energy_site_data_for_device": {
       "message": "No energy site data for device ID: {device_id}"
@@ -1188,9 +1264,6 @@
     "not_ready_connection_error": {
       "message": "Unable to connect to Teslemetry"
     },
-    "oauth_implementation_not_available": {
-      "message": "OAuth implementation not available, try reauthenticating"
-    },
     "set_scheduled_charging_time": {
       "message": "Scheduled charging time is required when enabling"
     },
@@ -1199,6 +1272,9 @@
     },
     "set_scheduled_departure_preconditioning": {
       "message": "Preconditioning departure time is required when enabling"
+    },
+    "stream_disconnected": {
+      "message": "Disconnected from the Teslemetry stream"
     },
     "token_data_malformed": {
       "message": "Token data malformed, try reauthenticating"

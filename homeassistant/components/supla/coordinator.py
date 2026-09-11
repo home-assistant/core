@@ -28,6 +28,7 @@ class SuplaCoordinator(DataUpdateCoordinator[dict[int, dict]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=None,
             name=f"supla-{server_name}",
             update_interval=SCAN_INTERVAL,
         )

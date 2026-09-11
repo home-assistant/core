@@ -122,6 +122,14 @@ async def test_missing_organisation_is_an_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
+    mock_hortos_client.authenticate.return_value = tokens
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == ORGANISATION_ID
+
 
 @pytest.mark.usefixtures("mock_hortos_client", "mock_setup_entry")
 async def test_duplicate_organisation_aborts(

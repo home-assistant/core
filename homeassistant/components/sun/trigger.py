@@ -1,8 +1,9 @@
 """Provides triggers for the sun."""
 
 from datetime import datetime, timedelta
-from typing import Any, cast, override
+from typing import Any, Final, Literal, cast, override
 
+import astral.sun
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -49,20 +50,31 @@ from homeassistant.util import dt as dt_util
 from .const import (
     DOMAIN,
     ELEVATION_ASTRONOMICAL,
+    ELEVATION_BLUE_HOUR_HIGH,
+    ELEVATION_BLUE_HOUR_LOW,
     ELEVATION_CIVIL,
+    ELEVATION_GOLDEN_HOUR_HIGH,
+    ELEVATION_GOLDEN_HOUR_LOW,
+    ELEVATION_HORIZON,
     ELEVATION_NAUTICAL,
     STATE_ATTR_ELEVATION,
 )
 
 # Names of solar events supported by the astral.sun module
-_SUN_EVENT_SOLAR_NOON = "noon"
-_SUN_EVENT_SOLAR_MIDNIGHT = "midnight"
+_SUN_EVENT_SOLAR_NOON: Final = "noon"
+_SUN_EVENT_SOLAR_MIDNIGHT: Final = "midnight"
 _SUN_EVENT_DAWN = "dawn"
 _SUN_EVENT_DUSK = "dusk"
 
 _TWILIGHT_CIVIL = "civil"
 _TWILIGHT_NAUTICAL = "nautical"
 _TWILIGHT_ASTRONOMICAL = "astronomical"
+
+CONF_PERIOD = "period"
+_PERIOD_ANY = "any"
+_PERIOD_MORNING = "morning"
+_PERIOD_EVENING = "evening"
+_PERIODS = (_PERIOD_ANY, _PERIOD_MORNING, _PERIOD_EVENING)
 
 CONF_OFFSET_TYPE = "offset_type"
 OFFSET_TYPE_BEFORE = "before"
@@ -153,9 +165,15 @@ _EVENT_TRIGGER_SCHEMA = vol.Schema(
 
 
 class SunEventTrigger(Trigger):
-    """Trigger that fires at a solar event time."""
+    """Trigger that fires at a solar event time.
+
+    ``_event`` is the astral event the trigger schedules on. ``trigger.description``
+    defaults to ``sun event {_event}``; a subclass whose scheduling is not a single
+    astral event sets ``_context`` to name itself there instead.
+    """
 
     _event: str
+    _context: str | None = None
     _schema: vol.Schema = _EVENT_TRIGGER_SCHEMA
 
     @override
@@ -175,8 +193,13 @@ class SunEventTrigger(Trigger):
             offset = -offset
         self._offset = offset
 
-    def _get_next_event(self, utc_point_in_time: datetime) -> datetime:
-        """Return the next time this solar event occurs."""
+    def _get_next_event(self, utc_point_in_time: datetime) -> datetime | None:
+        """Return the next time this solar event occurs.
+
+        Subclasses may return ``None`` when the event never occurs at the current
+        location (e.g. a midnight sun trigger outside the polar regions), in which
+        case the trigger stays armed but unscheduled until the location changes.
+        """
         return get_astral_event_next(
             self._hass, self._event, utc_point_in_time, self._offset
         )
@@ -196,15 +219,20 @@ class SunEventTrigger(Trigger):
 
         @callback
         def schedule_next_event() -> None:
+            next_event = self._get_next_event(dt_util.utcnow())
+            if next_event is None:
+                return
             unsubs["event"] = async_track_point_in_utc_time(
-                self._hass, handle_event, self._get_next_event(dt_util.utcnow())
+                self._hass, handle_event, next_event
             )
 
         @callback
         def handle_event(_now: datetime) -> None:
             unsubs["event"] = None
             schedule_next_event()
-            run_action(self._action_payload(), f"sun event {self._event}")
+            run_action(
+                self._action_payload(), f"sun event {self._context or self._event}"
+            )
 
         @callback
         def handle_config(_event: Event) -> None:
@@ -302,6 +330,230 @@ class DuskTrigger(SunDawnDuskTrigger):
     _event = _SUN_EVENT_DUSK
 
 
+_GOLDEN_BLUE_HOUR_TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_OPTIONS, default=dict): {
+            vol.Optional(CONF_PERIOD, default=_PERIOD_ANY): vol.In(_PERIODS),
+            **_OFFSET_OPTIONS,
+        }
+    }
+)
+
+
+class _GoldenBlueHourTrigger(SunEventTrigger):
+    """Trigger that fires at a golden or blue hour boundary crossing.
+
+    Each boundary is a solar elevation the sun crosses twice a day: once while
+    rising (the morning crossing) and once while descending (the evening one).
+    The rising crossing is found as a ``dawn`` at the boundary elevation and the
+    descending crossing as a ``dusk``; ``period`` selects morning, evening, or
+    both (firing at whichever comes next). There is no single astral ``_event``;
+    scheduling is done in ``_get_next_event`` and ``_context`` names the trigger.
+    """
+
+    _rising_elevation: float
+    _setting_elevation: float
+    _schema = _GOLDEN_BLUE_HOUR_TRIGGER_SCHEMA
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the trigger."""
+        super().__init__(hass, config)
+        self._period: str = self._options[CONF_PERIOD]
+
+    @override
+    def _get_next_event(self, utc_point_in_time: datetime) -> datetime | None:
+        observer = get_astral_observer(self._hass)
+        crossings: list[tuple[str, float]] = []
+        if self._period in (_PERIOD_ANY, _PERIOD_MORNING):
+            crossings.append((_SUN_EVENT_DAWN, self._rising_elevation))
+        if self._period in (_PERIOD_ANY, _PERIOD_EVENING):
+            crossings.append((_SUN_EVENT_DUSK, self._setting_elevation))
+
+        next_events: list[datetime] = []
+        for event, elevation in crossings:
+            try:
+                next_events.append(
+                    get_observer_astral_event_next(
+                        observer,
+                        event,
+                        utc_point_in_time,
+                        self._offset,
+                        # astral takes a depression (degrees below the horizon),
+                        # i.e. the negated elevation.
+                        depression=-elevation,
+                    )
+                )
+            except ValueError:
+                # The sun never reaches this boundary at the current latitude
+                # (e.g. during a polar night); ignore this crossing.
+                continue
+        if next_events:
+            return min(next_events)
+        return None
+
+    @override
+    def _action_payload(self) -> dict[str, Any]:
+        return {CONF_PERIOD: self._period}
+
+
+class GoldenHourStartedTrigger(_GoldenBlueHourTrigger):
+    """Trigger that fires when golden hour starts."""
+
+    _context = "golden_hour_started"
+    _rising_elevation = ELEVATION_GOLDEN_HOUR_LOW
+    _setting_elevation = ELEVATION_GOLDEN_HOUR_HIGH
+
+
+class GoldenHourEndedTrigger(_GoldenBlueHourTrigger):
+    """Trigger that fires when golden hour ends."""
+
+    _context = "golden_hour_ended"
+    _rising_elevation = ELEVATION_GOLDEN_HOUR_HIGH
+    _setting_elevation = ELEVATION_GOLDEN_HOUR_LOW
+
+
+class BlueHourStartedTrigger(_GoldenBlueHourTrigger):
+    """Trigger that fires when blue hour starts."""
+
+    _context = "blue_hour_started"
+    _rising_elevation = ELEVATION_BLUE_HOUR_LOW
+    _setting_elevation = ELEVATION_BLUE_HOUR_HIGH
+
+
+class BlueHourEndedTrigger(_GoldenBlueHourTrigger):
+    """Trigger that fires when blue hour ends."""
+
+    _context = "blue_hour_ended"
+    _rising_elevation = ELEVATION_BLUE_HOUR_HIGH
+    _setting_elevation = ELEVATION_BLUE_HOUR_LOW
+
+
+# A midnight sun or polar night - the sun's daily extreme staying above / below
+# the horizon - only happens inside the polar circles. Under the same apparent
+# elevation vs ELEVATION_HORIZON test the sun entity uses for its above/below
+# horizon state, a midnight sun first becomes possible at ~65.4° of latitude (a
+# polar night higher still), so below this the scan never finds a crossing and is
+# skipped. 65.0° stays a safe margin under that minimum.
+_MIN_POLAR_LATITUDE = 65.0
+
+
+def _next_polar_transition(
+    observer: astral.Observer,
+    event: Literal["noon", "midnight"],
+    utc_point_in_time: datetime,
+    target_above: bool,
+    offset: timedelta,
+) -> datetime | None:
+    """Return the next solar noon/midnight that starts or ends a polar period.
+
+    A midnight sun or polar night begins/ends at the solar midnight/noon whose
+    elevation crosses the horizon. ``event`` is ``midnight`` (the midnight sun is
+    bounded by the sun's daily low) or ``noon`` (the polar night by its daily
+    high); ``target_above`` selects the crossing direction - ``True`` for the day
+    the extreme first rises above the horizon, ``False`` for the day it first
+    drops below. Returns ``None`` when no such crossing exists, which is the case
+    at any latitude that never has a midnight sun or polar night: there the sun
+    rises and sets every day, so the solar midnight stays below and the solar noon
+    above the horizon and neither ever crosses it.
+    """
+    # Outside the polar circles neither event can occur; skip the ~year-long scan
+    # (which would otherwise run in the event loop on every scheduling attempt).
+    if abs(observer.latitude) < _MIN_POLAR_LATITUDE:
+        return None
+
+    event_func = getattr(astral.sun, event)
+    # The fire time is event_time + offset, so a crossing only matters once its
+    # event_time passes utc_point_in_time - offset (the same threshold the
+    # fire-time guard applies below). Anchoring the scan there - two days back for
+    # the first crossing's prior sample - covers the relevant crossings for either
+    # offset sign: a positive ("after") offset reaches back to a crossing whose
+    # delayed fire is still pending, a negative ("before") offset forward to one
+    # whose advanced fire has not yet arrived. The window stays bounded regardless
+    # of the offset magnitude.
+    anchor = utc_point_in_time - offset
+    local_date = dt_util.as_local(anchor).date() - timedelta(days=2)
+    prev_above: bool | None = None
+    # A couple of days of prior samples plus a bit over a year, so the next annual
+    # crossing is always reached (e.g. when rescheduling from inside a period).
+    for _ in range(400):
+        event_time: datetime = event_func(observer, local_date)
+        above = astral.sun.elevation(observer, event_time) > ELEVATION_HORIZON
+        if (
+            prev_above is not None
+            and above == target_above
+            and above != prev_above
+            and (fire_time := event_time + offset) > utc_point_in_time
+        ):
+            return fire_time
+        prev_above = above
+        local_date += timedelta(days=1)
+    return None
+
+
+class _MidnightSunPolarNightTrigger(SunEventTrigger):
+    """Trigger for the start or end of the midnight sun or polar night.
+
+    The transition happens at the solar noon or midnight whose elevation crosses
+    the horizon: the midnight sun starts/ends when the sun's daily low (solar
+    midnight) rises above/drops below the horizon, and the polar night when its
+    daily high (solar noon) drops below/rises above it.
+
+    The daily solar extreme is used rather than the actual sunrise/sunset event
+    because astral's rise/set calculations are numerically unstable where the sun
+    only grazes the horizon, and a polar night has no sunrise/sunset event at all
+    (its sun clears the horizon around noon, not at a normal sunrise). Firing at
+    the extreme places the event where the sun is unambiguously up or down.
+
+    ``_event`` is the astral solar extreme scanned for the crossing; ``_context``
+    names the trigger for ``trigger.description``.
+    """
+
+    _event: Literal["noon", "midnight"]
+    _target_above: bool
+
+    @override
+    def _get_next_event(self, utc_point_in_time: datetime) -> datetime | None:
+        return _next_polar_transition(
+            get_astral_observer(self._hass),
+            self._event,
+            utc_point_in_time,
+            self._target_above,
+            self._offset,
+        )
+
+
+class MidnightSunStartedTrigger(_MidnightSunPolarNightTrigger):
+    """Trigger that fires when the midnight sun period starts."""
+
+    _event = _SUN_EVENT_SOLAR_MIDNIGHT
+    _context = "midnight_sun_started"
+    _target_above = True
+
+
+class MidnightSunEndedTrigger(_MidnightSunPolarNightTrigger):
+    """Trigger that fires when the midnight sun period ends."""
+
+    _event = _SUN_EVENT_SOLAR_MIDNIGHT
+    _context = "midnight_sun_ended"
+    _target_above = False
+
+
+class PolarNightStartedTrigger(_MidnightSunPolarNightTrigger):
+    """Trigger that fires when the polar night period starts."""
+
+    _event = _SUN_EVENT_SOLAR_NOON
+    _context = "polar_night_started"
+    _target_above = False
+
+
+class PolarNightEndedTrigger(_MidnightSunPolarNightTrigger):
+    """Trigger that fires when the polar night period ends."""
+
+    _event = _SUN_EVENT_SOLAR_NOON
+    _context = "polar_night_ended"
+    _target_above = True
+
+
 _LEGACY_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
     vol.Required(CONF_EVENT): cv.sun_event,
     vol.Optional(CONF_OFFSET, default=timedelta(0)): cv.time_period,
@@ -342,6 +594,14 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "solar_midnight": SolarMidnightTrigger,
     "dawn": DawnTrigger,
     "dusk": DuskTrigger,
+    "golden_hour_started": GoldenHourStartedTrigger,
+    "golden_hour_ended": GoldenHourEndedTrigger,
+    "blue_hour_started": BlueHourStartedTrigger,
+    "blue_hour_ended": BlueHourEndedTrigger,
+    "midnight_sun_started": MidnightSunStartedTrigger,
+    "midnight_sun_ended": MidnightSunEndedTrigger,
+    "polar_night_started": PolarNightStartedTrigger,
+    "polar_night_ended": PolarNightEndedTrigger,
     "elevation_changed": SunElevationChangedTrigger,
     "elevation_crossed_threshold": SunElevationCrossedTrigger,
 }

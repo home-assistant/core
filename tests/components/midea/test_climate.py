@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
-from midealocal.devices.c3.const import DeviceAttributes as C3Attributes
+from midealocal.devices.c3 import DeviceAttributes as C3Attributes
 from midealocal.devices.cc import DeviceAttributes as CCAttributes
 from midealocal.devices.cf import DeviceAttributes as CFAttributes
 from midealocal.devices.fb import DeviceAttributes as FBAttributes
@@ -147,8 +147,12 @@ async def test_midea_ac_climate_setup_and_services(
         {ATTR_TEMPERATURE: 23.1, "hvac_mode": HVACMode.COOL},
         [
             (
-                "set_target_temperature",
-                {"target_temperature": 23.1, "mode": 2, "zone": None},
+                "set_raw_target_temperature",
+                {
+                    "target_temperature": 23.1,
+                    "hvac_mode": HVACMode.COOL,
+                    "zone": None,
+                },
             )
         ],
         device,
@@ -174,7 +178,7 @@ async def test_midea_ac_climate_setup_and_services(
         entity_entry.entity_id,
         SERVICE_SET_SWING_MODE,
         {ATTR_SWING_MODE: SWING_VERTICAL},
-        [("set_swing", {"swing_vertical": True, "swing_horizontal": False})],
+        [("set_raw_swing_mode", SWING_VERTICAL)],
         device,
     )
     await _assert_service_calls(
@@ -260,7 +264,6 @@ async def test_midea_cc_climate_setup_and_services(
         attributes={
             CCAttributes.power: True,
             CCAttributes.mode: 5,
-            CCAttributes.fan_speed: "High",
             CCAttributes.temperature_precision: 0.5,
             CCAttributes.swing: True,
         },
@@ -272,7 +275,7 @@ async def test_midea_cc_climate_setup_and_services(
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
     assert state.state == HVACMode.AUTO
-    assert state.attributes[ATTR_FAN_MODE] == "High"
+    assert state.attributes[ATTR_FAN_MODE] == "high"
     assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.OFF,
         HVACMode.FAN_ONLY,
@@ -289,8 +292,8 @@ async def test_midea_cc_climate_setup_and_services(
         hass,
         entity_entry.entity_id,
         SERVICE_SET_FAN_MODE,
-        {ATTR_FAN_MODE: "Low"},
-        [("set_attribute", CCAttributes.fan_speed, "Low")],
+        {ATTR_FAN_MODE: "low"},
+        [("set_raw_fan_mode", "low")],
         device,
     )
     await _assert_service_calls(
@@ -352,8 +355,8 @@ async def test_midea_cf_climate_setup_and_services(
         {"hvac_mode": HVACMode.HEAT},
         [
             (
-                "set_target_temperature",
-                {"target_temperature": 20.0, "mode": 3},
+                "set_raw_target_temperature",
+                {"target_temperature": 20.0, "hvac_mode": HVACMode.HEAT},
             )
         ],
         device,
@@ -408,8 +411,12 @@ async def test_midea_c3_climate_setup_and_services(
         {ATTR_TEMPERATURE: 21.4, "hvac_mode": HVACMode.COOL},
         [
             (
-                "set_target_temperature",
-                {"target_temperature": 21.4, "mode": 2, "zone": 0},
+                "set_raw_target_temperature",
+                {
+                    "target_temperature": 21.4,
+                    "hvac_mode": HVACMode.COOL,
+                    "zone": 0,
+                },
             )
         ],
         device,
@@ -427,7 +434,7 @@ async def test_midea_c3_climate_setup_and_services(
         zone1.entity_id,
         SERVICE_SET_HVAC_MODE,
         {"hvac_mode": HVACMode.HEAT},
-        [("set_mode", 0, 3)],
+        [("set_raw_hvac_mode", HVACMode.HEAT, 0)],
         device,
     )
 
@@ -597,8 +604,8 @@ async def test_ac_set_temperature_without_hvac_mode(
         {ATTR_TEMPERATURE: 23.0},
         [
             (
-                "set_target_temperature",
-                {"target_temperature": 23.0, "mode": None, "zone": None},
+                "set_raw_target_temperature",
+                {"target_temperature": 23.0, "hvac_mode": None, "zone": None},
             )
         ],
         device,
@@ -1133,8 +1140,8 @@ async def test_cf_set_hvac_mode_falls_back_to_min_temp(
         {"hvac_mode": HVACMode.HEAT},
         [
             (
-                "set_target_temperature",
-                {"target_temperature": 16.0, "mode": 3},
+                "set_raw_target_temperature",
+                {"target_temperature": 16.0, "hvac_mode": HVACMode.HEAT},
             )
         ],
         device,
@@ -1193,8 +1200,12 @@ async def test_fb_set_temperature_with_heat_mode_turns_on_when_off(
         [
             ("set_attribute", FBAttributes.power, True),
             (
-                "set_target_temperature",
-                {"target_temperature": 25.0, "mode": 1, "zone": None},
+                "set_raw_target_temperature",
+                {
+                    "target_temperature": 25.0,
+                    "hvac_mode": HVACMode.HEAT,
+                    "zone": None,
+                },
             ),
         ],
         device,
@@ -1258,11 +1269,11 @@ async def test_cc_fan_and_swing_invalid_types_return_none(
         attributes={
             CCAttributes.power: True,
             CCAttributes.mode: 5,
-            CCAttributes.fan_speed: 1,
             CCAttributes.temperature_precision: 0.5,
             CCAttributes.swing: "on",
         },
     )
+    device.raw_fan_mode = None
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
@@ -1302,8 +1313,12 @@ async def test_c3_zone2_service_calls_address_zone_two(
         {ATTR_TEMPERATURE: 24.0, "hvac_mode": HVACMode.COOL},
         [
             (
-                "set_target_temperature",
-                {"target_temperature": 24.0, "mode": 2, "zone": 1},
+                "set_raw_target_temperature",
+                {
+                    "target_temperature": 24.0,
+                    "hvac_mode": HVACMode.COOL,
+                    "zone": 1,
+                },
             )
         ],
         device,
@@ -1313,7 +1328,7 @@ async def test_c3_zone2_service_calls_address_zone_two(
         zone2.entity_id,
         SERVICE_SET_HVAC_MODE,
         {"hvac_mode": HVACMode.HEAT},
-        [("set_mode", 1, 3)],
+        [("set_raw_hvac_mode", HVACMode.HEAT, 1)],
         device,
     )
     await _assert_service_calls(
@@ -1402,7 +1417,6 @@ async def test_fb_invalid_attribute_types_return_none(
                 attributes={
                     CCAttributes.power: True,
                     CCAttributes.mode: 5,
-                    CCAttributes.fan_speed: "High",
                     CCAttributes.temperature_precision: 0.5,
                     CCAttributes.swing: True,
                 },

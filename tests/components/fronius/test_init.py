@@ -39,6 +39,18 @@ async def test_unload_config_entry(
     assert not hass.data.get(DOMAIN)
 
 
+async def test_migrate_config_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test migration adds the default Modbus port to old config entries."""
+    mock_responses(aioclient_mock)
+    entry = await setup_fronius_integration(hass)
+
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert entry.data["modbus_port"] == 502
+
+
 async def test_logger_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -164,7 +176,7 @@ async def test_device_remove_devices(
         (DOMAIN, "12345678"), config_entry.entry_id
     )
     client = await hass_ws_client(hass)
-    response = await client.remove_device(inverter_1.id, config_entry.entry_id)
+    response = await client.remove_device(inverter_1.id)
     assert response["success"]
 
     assert not device_registry.async_get_device_by_identifier(
