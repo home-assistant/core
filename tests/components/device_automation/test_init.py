@@ -1243,6 +1243,50 @@ async def test_automation_with_dynamically_validated_trigger(
     module.async_attach_trigger.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("fake_integration")
+async def test_automation_with_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device automation targeting a child device of the domain's config entry."""
+    module_cache = hass.data[loader.DATA_COMPONENTS]
+    module = module_cache["fake_integration.device_trigger"]
+    module.async_attach_trigger = AsyncMock()
+    module.async_validate_trigger_config = AsyncMock(wraps=lambda hass, config: config)
+
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.add_to_hass(hass)
+    parent_device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("fake_integration", "parent")},
+    )
+    child_device_entry = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("fake_integration", "child")},
+        parent_device_id=parent_device_entry.id,
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {
+                    "platform": "device",
+                    "device_id": child_device_entry.id,
+                    "domain": "fake_integration",
+                },
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    module.async_validate_trigger_config.assert_awaited_once()
+    module.async_attach_trigger.assert_awaited_once()
+
+
 async def test_automation_with_integration_without_device_trigger(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

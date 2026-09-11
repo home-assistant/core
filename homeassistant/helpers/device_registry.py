@@ -4593,26 +4593,80 @@ def async_get_device_id_by_identifier(
     return device.id
 
 
+@overload
+def async_get_device_and_config_entry_for_domain(
+    hass: HomeAssistant,
+    device_id: str,
+    *,
+    domain: str,
+    include_child_devices: Literal[False],
+    include_main_devices: bool = True,
+) -> tuple[DeviceEntry | None, ConfigEntry | None]: ...
+
+
+@overload
+def async_get_device_and_config_entry_for_domain(
+    hass: HomeAssistant,
+    device_id: str,
+    *,
+    domain: str,
+    include_child_devices: Literal[True] = True,
+    include_main_devices: Literal[False],
+) -> tuple[ChildDeviceEntry | None, ConfigEntry | None]: ...
+
+
+@overload
+def async_get_device_and_config_entry_for_domain(
+    hass: HomeAssistant,
+    device_id: str,
+    *,
+    domain: str,
+    include_child_devices: Literal[True] = True,
+    include_main_devices: Literal[True] = True,
+) -> tuple[AnyDeviceEntry | None, ConfigEntry | None]: ...
+
+
 @callback
 def async_get_device_and_config_entry_for_domain(
-    hass: HomeAssistant, device_id: str, *, domain: str
-) -> tuple[DeviceEntry | None, ConfigEntry | None]:
+    hass: HomeAssistant,
+    device_id: str,
+    *,
+    domain: str,
+    include_child_devices: bool = True,
+    include_main_devices: bool = True,
+) -> tuple[AnyDeviceEntry | None, ConfigEntry | None]:
     """Get the device and the config entry of the domain owning it.
 
-    Returns (None, None) for an unknown device id or if the device is a child
-    device, and (device, None) when no config entry of the domain owns the
-    device. A returned pair is consistent: for a pre-migration composite
-    device id, the device is the domain's split device, not the composite; if
-    several splits belong to config entries of the domain, which pair is
-    returned is undefined. When no split matches the domain, the restored
-    composite is returned as the device.
+    Returns (None, None) for an unknown device id, and (device, None) when no
+    config entry of the domain owns the device.
+
+    With include_child_devices=False a child-device id resolves to None.
+
+    With include_main_devices=False a main-device id resolves to None. A
+    composite-device id then resolves to None as well, because both the splits
+    of a composite and the restored composite itself are main devices.
+
+    A returned pair is consistent: for a pre-migration composite device id, the
+    device is the domain's split device, not the composite; if several splits
+    belong to config entries of the domain, which pair is returned is undefined.
+    When no split matches the domain, the restored composite is returned as the
+    device.
     """
     registry = async_get(hass)
-    if (device := registry._devices.get(device_id)) is not None:  # noqa: SLF001
+    device: AnyDeviceEntry | None = None
+    if include_main_devices:
+        device = registry._devices.get(device_id)  # noqa: SLF001
+    if device is None and include_child_devices:
+        device = registry.async_get(
+            device_id, include_main_devices=False, include_composite_devices=False
+        )
+    if device is not None:
         config_entry = hass.config_entries.async_get_entry(device.config_entry_id)
         if config_entry is not None and config_entry.domain == domain:
             return device, config_entry
         return device, None
+    if not include_main_devices:
+        return None, None
     for split in registry.async_get_devices_for_composite_device_id(device_id):
         config_entry = hass.config_entries.async_get_entry(split.config_entry_id)
         if config_entry is not None and config_entry.domain == domain:
