@@ -31,19 +31,13 @@ LOGGER = logging.getLogger(__name__)
 TZ_CPH = zoneinfo.ZoneInfo("Europe/Copenhagen")
 
 
-@pytest.fixture
-def fixed_now():
-    """Fixture for a fixed datetime."""
-    return datetime(2024, 1, 1, 12, 0, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Copenhagen"))
-
-
+@pytest.mark.freeze_time("2024-01-01 11:00:00+00:00")
 async def test_sensor_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_api: AsyncMock,
     snapshot: SnapshotAssertion,
-    patch_sensor_now: FrozenDateTimeFactory,
 ) -> None:
     """Snapshot test of the sensors."""
     mock_config_entry.add_to_hass(hass)
@@ -54,9 +48,8 @@ async def test_sensor_snapshot(
 
 
 @pytest.mark.parametrize("stop_id", [123456, 456789, 999999])
-def test_get_current_departures(
-    stop_id: int, patch_sensor_now: FrozenDateTimeFactory
-) -> None:
+@pytest.mark.freeze_time("2024-01-01 11:00:00+00:00")
+def test_get_current_departures(stop_id: int) -> None:
     """Test the _get_current_departures helper function."""
 
     departures = make_mock_departures(stop_id)
@@ -77,8 +70,9 @@ def test_get_current_departures(
         assert dep in result
 
 
+@pytest.mark.freeze_time("2024-01-01 11:00:00+00:00")
 def test_get_next_departure_cleanup_time_with_mock_api(
-    patch_sensor_now: FrozenDateTimeFactory, mock_api: AsyncMock
+    mock_api: AsyncMock,
 ) -> None:
     """Test _get_next_departure_cleanup_time using the mock_api for departures."""
 
@@ -112,8 +106,9 @@ def test_get_next_departure_cleanup_time_with_mock_api(
     assert cleanup_time is None
 
 
+@pytest.mark.freeze_time("2024-01-01 11:00:00+00:00")
 def test_get_next_departure_cleanup_time_with_mock_api_edge_cases(
-    patch_sensor_now, mock_api
+    mock_api: AsyncMock,
 ) -> None:
     """Test _get_next_departure_cleanup_time using the mock_api for departures in edge cases."""
 
@@ -132,8 +127,8 @@ def test_get_next_departure_cleanup_time_with_mock_api_edge_cases(
 
 
 @pytest.mark.parametrize("departure_index", [0, 1])
+@pytest.mark.freeze_time("2024-01-01 11:00:00+00:00")
 def test_get_departure_timestamp_with_mock_api(
-    patch_sensor_now: FrozenDateTimeFactory,
     mock_api: AsyncMock,
     departure_index: int,
 ) -> None:
@@ -187,9 +182,10 @@ def test_get_delay_minutes_no_realtime(mock_api) -> None:
     assert result == 0
 
 
-def test_get_next_departure_cleanup_time_all_in_buffer(patch_sensor_now) -> None:
+@pytest.mark.freeze_time("2024-01-01 11:00:00+00:00")
+def test_get_next_departure_cleanup_time_all_in_buffer() -> None:
     """Test returns None when departures are past but within the cleanup buffer."""
-    # patch_sensor_now: dt_util.now returns 12:00:00 CET.
+    # Frozen now is 12:00:00 CET.
     # 11:59:50 CET is 10 seconds before now but inside the 15-second buffer,
     # so _get_current_departures includes them, but none are > now.
     departures = make_mock_departures(123456)  # Returns 2 departures

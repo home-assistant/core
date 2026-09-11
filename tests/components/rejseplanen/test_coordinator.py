@@ -1,6 +1,5 @@
 """Tests for the Rejseplanen coordinator and setup entry."""
 
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from py_rejseplan.enums import TransportClass
@@ -9,7 +8,6 @@ from py_rejseplan.exceptions.connection_error import ConnectionError
 from py_rejseplan.exceptions.http_error import HTTPError
 import pytest
 
-from homeassistant.components.rejseplanen.helpers import COPENHAGEN_TZ
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -114,6 +112,7 @@ async def test_coordinator_get_filtered_departures_no_data(
     assert result == []
 
 
+@pytest.mark.freeze_time("2024-01-01 10:00:00+00:00")
 async def test_coordinator_get_filtered_departures_with_data(
     hass: HomeAssistant,
     setup_integration: None,
@@ -125,24 +124,19 @@ async def test_coordinator_get_filtered_departures_with_data(
     mock_board = MagicMock()
     mock_board.departures = make_mock_departures(456789)
     coordinator.data = mock_board
-    fixed_utc = datetime(2024, 1, 1, 11, 0, 0, tzinfo=COPENHAGEN_TZ)
 
-    with patch(
-        "homeassistant.components.rejseplanen.coordinator.dt_util.utcnow",
-        return_value=fixed_utc,
-    ):
-        result = coordinator.get_filtered_departures(stop_id=456789)
-        assert len(result) == 3
+    result = coordinator.get_filtered_departures(stop_id=456789)
+    assert len(result) == 3
 
-        result = coordinator.get_filtered_departures(stop_id=123456)
-        assert len(result) == 0
+    result = coordinator.get_filtered_departures(stop_id=123456)
+    assert len(result) == 0
 
-        result = coordinator.get_filtered_departures(
-            stop_id=456789, departure_type_filter=int(TransportClass.ICL)
-        )
-        assert len(result) == 1
+    result = coordinator.get_filtered_departures(
+        stop_id=456789, departure_type_filter=int(TransportClass.ICL)
+    )
+    assert len(result) == 1
 
-        result = coordinator.get_filtered_departures(
-            stop_id=456789, direction_filter=["South"]
-        )
-        assert len(result) == 1
+    result = coordinator.get_filtered_departures(
+        stop_id=456789, direction_filter=["South"]
+    )
+    assert len(result) == 1

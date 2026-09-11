@@ -4,7 +4,6 @@ from collections.abc import AsyncGenerator, Generator
 from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
-import zoneinfo
 
 from py_rejseplan.api.departures import DeparturesAPIClient
 from py_rejseplan.dataclasses.departure import Departure
@@ -258,24 +257,4 @@ async def mock_setup_integration(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        yield
-
-
-@pytest.fixture
-def patch_sensor_now():
-    """Patch datetime.now() and dt_util.now() in the sensor module to return a fixed datetime."""
-    fixed_now = datetime(
-        2024, 1, 1, 12, 0, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Copenhagen")
-    )
-    # Patch both datetime.now and dt_util.now in the sensor module
-    with (
-        patch(
-            "homeassistant.components.rejseplanen.sensor.datetime", wraps=datetime
-        ) as mock_dt,
-        patch(
-            "homeassistant.components.rejseplanen.sensor.dt_util.now",
-            return_value=fixed_now,
-        ),
-    ):
-        mock_dt.now.return_value = fixed_now
         yield
