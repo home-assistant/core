@@ -1,6 +1,6 @@
 """Base entity for Liebherr integration."""
 
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from typing import Any
 
 from pyliebherrhomeapi import (
@@ -52,10 +52,11 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
             model_id=device.device_name,
         )
 
-    async def _async_send_command(
+    async def _async_send_command[ControlT: DeviceControl](
         self,
         command: Coroutine[Any, Any, None],
-        optimistic_control: DeviceControl | None = None,
+        control: ControlT | None = None,
+        updater: Callable[[ControlT], ControlT] | None = None,
     ) -> None:
         """Send a command and optimistically apply its successful result."""
         try:
@@ -65,8 +66,9 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from err
-        if optimistic_control is not None:
-            self.coordinator.async_apply_control(optimistic_control)
+        if control is not None:
+            assert updater is not None
+            self.coordinator.async_apply_control(control, updater)
 
 
 class LiebherrZoneEntity(LiebherrEntity):

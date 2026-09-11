@@ -214,5 +214,6 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
                 target=target,
                 unit=unit,
             ),
-            replace(temp_control, target=target, unit=unit),
+            temp_control,
+            lambda control: replace(control, target=target, unit=unit),
         )

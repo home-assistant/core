@@ -1,6 +1,8 @@
 """Test the Liebherr number platform."""
 
+import asyncio
 import copy
+from dataclasses import replace
 from unittest.mock import MagicMock, patch
 
 from pyliebherrhomeapi import (
@@ -28,7 +30,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .conftest import MOCK_DEVICE, SSEStreamHelper
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -135,6 +137,102 @@ async def test_set_temperature(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "6"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_preserves_sse_update_during_command(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    sse_helper: SSEStreamHelper,
+) -> None:
+    """Test an SSE update received during a command is preserved."""
+    command_started = asyncio.Event()
+    release_command = asyncio.Event()
+
+    async def set_temperature(**kwargs: object) -> None:
+        command_started.set()
+        await release_command.wait()
+
+    mock_liebherr_client.set_temperature.side_effect = set_temperature
+    service_call = hass.async_create_task(
+        hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                ATTR_VALUE: 6,
+            },
+            blocking=True,
+        )
+    )
+    await command_started.wait()
+
+    temperature_control = MOCK_DEVICE_STATE.get_temperature_controls()[1]
+    mock_liebherr_client.get_device_state.side_effect = lambda *args, **kwargs: (
+        DeviceState(
+            device=MOCK_DEVICE,
+            controls=[replace(temperature_control, value=7)],
+        )
+    )
+    coordinator = mock_config_entry.runtime_data.coordinators[MOCK_DEVICE.device_id]
+    sse_updated = asyncio.Event()
+    remove_listener = coordinator.async_add_listener(sse_updated.set)
+    push_task = hass.async_create_task(sse_helper.async_push())
+    await sse_updated.wait()
+    remove_listener()
+    release_command.set()
+    await asyncio.gather(service_call, push_task)
+
+    cached_control = coordinator.data.get_temperature_controls()[1]
+    assert cached_control.value == 7
+    assert cached_control.target == 6
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_preserves_sse_disconnect_during_command(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    sse_helper: SSEStreamHelper,
+) -> None:
+    """Test an SSE disconnect during a command keeps the entity unavailable."""
+    command_started = asyncio.Event()
+    release_command = asyncio.Event()
+
+    async def set_temperature(**kwargs: object) -> None:
+        command_started.set()
+        await release_command.wait()
+
+    mock_liebherr_client.set_temperature.side_effect = set_temperature
+    service_call = hass.async_create_task(
+        hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                ATTR_VALUE: 6,
+            },
+            blocking=True,
+        )
+    )
+    await command_started.wait()
+
+    mock_liebherr_client.get_device_state.side_effect = LiebherrConnectionError
+    coordinator = mock_config_entry.runtime_data.coordinators[MOCK_DEVICE.device_id]
+    disconnected = asyncio.Event()
+    remove_listener = coordinator.async_add_listener(disconnected.set)
+    push_task = hass.async_create_task(sse_helper.async_push())
+    await disconnected.wait()
+    remove_listener()
+    release_command.set()
+    await asyncio.gather(service_call, push_task)
+
+    assert not coordinator.last_update_success
+    assert coordinator.data.get_temperature_controls()[1].target == 6
+    state = hass.states.get("number.test_fridge_top_zone_setpoint")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")

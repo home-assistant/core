@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, replace
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from pyliebherrhomeapi import (
     BioFreshPlusControl,
@@ -27,6 +27,13 @@ from .entity import ZONE_POSITION_MAP, LiebherrEntity
 PARALLEL_UPDATES = 1
 
 type SelectControl = IceMakerControl | HydroBreezeControl | BioFreshPlusControl
+
+
+def _replace_mode(control: SelectControl, mode: StrEnum) -> SelectControl:
+    """Replace the current mode of a select control."""
+    if isinstance(control, IceMakerControl):
+        return replace(control, ice_maker_mode=mode)
+    return replace(control, current_mode=mode)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -235,15 +242,12 @@ class LiebherrSelectEntity(LiebherrEntity, SelectEntity):
         mode = self.entity_description.mode_enum(option)
         control = self._select_control
         if TYPE_CHECKING:
-            assert control is not None
-        optimistic_control: SelectControl
-        if isinstance(control, IceMakerControl):
-            optimistic_control = replace(control, ice_maker_mode=mode)
-        elif isinstance(control, HydroBreezeControl):
-            optimistic_control = replace(control, current_mode=mode)
-        else:
-            optimistic_control = replace(control, current_mode=mode)
+            assert isinstance(
+                control,
+                IceMakerControl | HydroBreezeControl | BioFreshPlusControl,
+            )
         await self._async_send_command(
             self.entity_description.set_fn(self.coordinator, self._zone_id, mode),
-            optimistic_control,
+            control,
+            lambda control: _replace_mode(cast(SelectControl, control), mode),
         )

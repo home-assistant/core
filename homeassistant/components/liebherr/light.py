@@ -124,7 +124,8 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
                 device_id=self.coordinator.device_id,
                 target=target,
             ),
-            replace(control, value=target),
+            control,
+            lambda control: replace(control, value=target),
         )
 
     @override
@@ -138,5 +139,6 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
                 device_id=self.coordinator.device_id,
                 target=0,
             ),
-            replace(control, value=0),
+            control,
+            lambda control: replace(control, value=0),
         )

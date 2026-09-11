@@ -1,9 +1,10 @@
 """DataUpdateCoordinator for Liebherr integration."""
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 import logging
-from typing import override
+from typing import cast, override
 
 from pyliebherrhomeapi import (
     DeviceControl,
@@ -161,9 +162,24 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
         self.async_set_updated_data(new_state)
 
     @callback
-    def async_apply_control(self, control: DeviceControl) -> None:
-        """Optimistically apply a control after a successful command."""
-        self.async_set_updated_data(self._merged_state([control]))
+    def async_apply_control[ControlT: DeviceControl](
+        self, control: ControlT, updater: Callable[[ControlT], ControlT]
+    ) -> None:
+        """Optimistically update the latest cached version of a control."""
+        assert self.data is not None
+        key = (type(control), control.name, getattr(control, "zone_id", None))
+        for cached_control in self.data.controls:
+            cached_key = (
+                type(cached_control),
+                cached_control.name,
+                getattr(cached_control, "zone_id", None),
+            )
+            if cached_key == key:
+                self.data = self._merged_state(
+                    [updater(cast(ControlT, cached_control))]
+                )
+                self.async_update_listeners()
+                return
 
     def _merged_state(self, controls: list[DeviceControl]) -> DeviceState:
         """Return coordinator state with control updates merged."""

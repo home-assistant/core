@@ -216,7 +216,9 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
         if TYPE_CHECKING:
             assert control is not None
         await self._async_send_command(
-            self._async_call_set_fn(value), replace(control, value=value)
+            self._async_call_set_fn(value),
+            control,
+            lambda control: replace(control, value=value),
         )
 
 
