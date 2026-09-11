@@ -1,7 +1,6 @@
 """Tests for the llm helpers."""
 
 from decimal import Decimal
-from typing import override
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from probatio import to_openapi
@@ -164,14 +163,66 @@ async def test_call_non_intent_tool_preserves_blank_arguments(
 
 
 @pytest.mark.parametrize("namespaced", [False, True])
+async def test_intent_tool_omits_blank_arguments(
+    hass: HomeAssistant, llm_context: llm.LLMContext, namespaced: bool
+) -> None:
+    """Test direct and namespaced intent tools omit blank arguments."""
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "test_intent"
+        slot_schema = {
+            vol.Optional("name"): intent.non_empty_string,
+            vol.Optional("response"): cv.string,
+            vol.Optional("count"): vol.Coerce(int),
+            vol.Optional("enabled"): cv.boolean,
+        }
+
+    intent_tool = llm.IntentTool("test_intent", MyIntentHandler())
+    tool: llm.Tool = (
+        llm.NamespacedTool("test_api", intent_tool) if namespaced else intent_tool
+    )
+    tool_args = {
+        "name": "",
+        "response": " \t",
+        "other": None,
+        "count": 0,
+        "enabled": False,
+    }
+    tool_input = llm.ToolInput(tool.name, tool_args)
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+    intent_response = intent.IntentResponse("*")
+
+    with patch(
+        "homeassistant.helpers.intent.async_handle", return_value=intent_response
+    ) as mock_intent_handle:
+        await instance.async_call_tool(tool_input)
+
+    assert mock_intent_handle.await_args.kwargs["slots"] == {
+        "count": {"value": 0},
+        "enabled": {"value": False},
+    }
+    assert tool_input.tool_args is tool_args
+    assert tool_args == {
+        "name": "",
+        "response": " \t",
+        "other": None,
+        "count": 0,
+        "enabled": False,
+    }
+    assert to_openapi(
+        intent_tool.parameters, custom_serializer=llm.selector_serializer
+    )["properties"]["name"] == {"type": "string"}
+
+
 async def test_assist_api(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
-    namespaced: bool,
 ) -> None:
-    """Test calling a direct or namespaced IntentTool through the Assist API."""
+    """Test calling an IntentTool through the Assist API."""
     assert await async_setup_component(hass, "homeassistant", {})
 
     test_context = Context()
@@ -183,10 +234,8 @@ async def test_assist_api(
         device_id=None,
     )
     schema = {
-        vol.Required("area"): cv.string,
+        vol.Optional("area"): cv.string,
         vol.Optional("floor"): cv.string,
-        vol.Optional("name"): cv.string,
-        vol.Optional("response"): cv.string,
         vol.Optional("preferred_area_id"): cv.string,
         vol.Optional("preferred_floor_id"): cv.string,
     }
@@ -195,35 +244,19 @@ async def test_assist_api(
         intent_type = "test_intent"
         slot_schema = schema
 
-        @override
-        async def async_handle(
-            self, intent_obj: intent.Intent
-        ) -> intent.IntentResponse:
-            self.async_validate_slots(intent_obj.slots)
-            return intent_obj.create_response()
-
     intent_handler = MyIntentHandler()
-    intent.async_register(hass, intent_handler)
 
-    intent_tool = llm.IntentTool("test_intent", intent_handler)
-    assert intent_tool.name == "test_intent"
-    assert intent_tool.description == "Execute Home Assistant test_intent intent"
-    assert intent_tool.parameters == vol.Schema(
+    tool = llm.IntentTool("test_intent", intent_handler)
+    assert tool.name == "test_intent"
+    assert tool.description == "Execute Home Assistant test_intent intent"
+    assert tool.parameters == vol.Schema(
         {
-            vol.Required("area"): cv.string,
+            vol.Optional("area"): cv.string,
             vol.Optional("floor"): cv.string,
-            vol.Optional("name"): cv.string,
-            vol.Optional("response"): cv.string,
             # No preferred_area_id, preferred_floor_id
         }
     )
-    assert str(intent_tool) == "<IntentTool - test_intent>"
-    assert to_openapi(
-        intent_tool.parameters, custom_serializer=llm.selector_serializer
-    )["properties"]["name"] == {"type": "string"}
-    tool: llm.Tool = (
-        llm.NamespacedTool("test_api", intent_tool) if namespaced else intent_tool
-    )
+    assert str(tool) == "<IntentTool - test_intent>"
 
     api = next(api for api in llm.async_get_apis(hass) if api.id == "assist")
     instance = llm.APIInstance(
@@ -243,13 +276,8 @@ async def test_assist_api(
     intent_response.async_set_speech_slots({"hello": 1})
     intent_response.async_set_reprompt("Do it again")
     tool_input = llm.ToolInput(
-        tool_name=tool.name,
-        tool_args={
-            "area": "kitchen",
-            "floor": "",
-            "name": " \t",
-            "response": None,
-        },
+        tool_name="test_intent",
+        tool_args={"area": "kitchen", "floor": "ground_floor"},
     )
 
     with patch(
@@ -263,6 +291,7 @@ async def test_assist_api(
         intent_type="test_intent",
         slots={
             "area": {"value": "kitchen"},
+            "floor": {"value": "ground_floor"},
         },
         text_input=None,
         context=test_context,
@@ -270,12 +299,6 @@ async def test_assist_api(
         assistant="conversation",
         device_id=None,
     )
-    assert tool_input.tool_args == {
-        "area": "kitchen",
-        "floor": "",
-        "name": " \t",
-        "response": None,
-    }
     assert response == {
         "data": {
             "failed": [],
@@ -324,6 +347,7 @@ async def test_assist_api(
         intent_type="test_intent",
         slots={
             "area": {"value": "kitchen"},
+            "floor": {"value": "ground_floor"},
             "preferred_area_id": {"value": area.id},
             "preferred_floor_id": {"value": floor.floor_id},
         },
@@ -355,9 +379,6 @@ async def test_assist_api(
             "hello": 1,
         },
     }
-
-    with pytest.raises(intent.InvalidSlotInfo):
-        await instance.async_call_tool(llm.ToolInput(tool.name, {"area": " "}))
 
 
 async def test_assist_api_get_timer_tools(

@@ -259,7 +259,7 @@ class IntentTool(Tool):
         slots = {
             key: {"value": val}
             for key, val in tool_input.tool_args.items()
-            if val is not None and not (isinstance(val, str) and not val.strip())
+            if not intent.is_blank_slot_value(val)
         }
 
         if self.extra_slots and llm_context.device_id:

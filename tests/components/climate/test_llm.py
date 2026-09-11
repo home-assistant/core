@@ -1,15 +1,21 @@
 """Tests for the climate LLM tools platform."""
 
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components import llm as llm_component
-from homeassistant.components.climate import ClimateEntityFeature, llm as climate_llm
+from homeassistant.components.climate import (
+    ATTR_TEMPERATURE,
+    DOMAIN,
+    SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
+    llm as climate_llm,
+)
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+
+from tests.common import async_mock_service
 
 ENTITY_ID = "climate.test"
 
@@ -60,21 +66,25 @@ async def test_set_temperature_omits_empty_optional_targets(
 ) -> None:
     """Test empty optional targets do not invalidate a climate LLM tool call."""
     api = await llm.async_get_api(hass, "assist", _llm_context())
+    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_TEMPERATURE)
 
-    with patch("homeassistant.core.ServiceRegistry.async_call") as mock_service_call:
-        response = await api.async_call_tool(
-            llm.ToolInput(
-                "climate__HassClimateSetTemperature",
-                {
-                    "area": "",
-                    "floor": "",
-                    "name": "Test climate",
-                    "temperature": 25,
-                },
-            )
+    response = await api.async_call_tool(
+        llm.ToolInput(
+            "climate__HassClimateSetTemperature",
+            {
+                "area": "",
+                "floor": "",
+                "name": "Test climate",
+                "temperature": 25,
+            },
         )
+    )
 
-    mock_service_call.assert_awaited_once()
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": ENTITY_ID,
+        ATTR_TEMPERATURE: 25,
+    }
     assert response["response_type"] == "action_done"
 
 
