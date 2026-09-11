@@ -85,6 +85,10 @@
     },
     "firmware": {
       "name": "Firmware"
+    },
+    "release_notes_messages": {
+      "battery_powered_update": "Battery powered devices can sometimes take multiple hours to update and you may need to wake the device for the update to begin.",
+      "do_not_interrupt": "Do not restart, remove power from, or otherwise interrupt the device while the update is in progress."
     }
   },
   "exceptions": {
