@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant.components.libre_hardware_monitor.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -93,3 +94,15 @@ async def test_migration_to_unique_ids(
         legacy_config_entry_v1.entry_id
     )
     assert updated_config_entry.version == 2
+
+
+@pytest.mark.usefixtures("mock_deprecated_lhm_client")
+async def test_deprecated_version_blocks_setup(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that a deprecated LHM version prevents setup with an error."""
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_domain == DOMAIN
+    assert mock_config_entry.error_reason_translation_key == "deprecated_version"
