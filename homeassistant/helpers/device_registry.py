@@ -427,6 +427,16 @@ class BaseDeviceEntry:
         return self.config_entry_id
 
     @property
+    def is_composite_device(self) -> bool:
+        """Return if this entry is a restored composite device.
+
+        A restored composite is synthesized by async_get for a pre-migration
+        composite device id and never stored; a plain main or child device is
+        never a composite.
+        """
+        return False
+
+    @property
     def disabled(self) -> bool:
         """Return if entry is disabled."""
         return self.disabled_by is not None
@@ -525,6 +535,16 @@ class DeviceEntry(BaseDeviceEntry):
                 for entry_id, subentries in self._composite_subentries.items()
             }
         return {self.config_entry_id: {self.config_subentry_id}}
+
+    @property
+    @override
+    def is_composite_device(self) -> bool:
+        """Return if this entry is a restored composite device.
+
+        A restored composite is synthesized by async_get for a pre-migration
+        composite device id and never stored.
+        """
+        return self._composite_subentries is not None
 
     @property
     @override
