@@ -390,7 +390,7 @@ def _report_deprecated_config_entries_property(
     report_usage(
         f"accesses `{class_name}.{name}`, which is deprecated because a device "
         f"belongs to a single config entry; use {replacement} instead",
-        breaks_in_ha_version="2027.8.0",
+        breaks_in_ha_version="2027.10.0",
         core_behavior=ReportBehavior.ERROR,
         core_integration_behavior=ReportBehavior.ERROR,
         custom_integration_behavior=ReportBehavior.LOG,
@@ -430,7 +430,7 @@ class BaseDeviceEntry:
         """Return the config entries this device belongs to.
 
         Deprecated compatibility shim: a device now belongs to a single config
-        entry, available as config_entry_id. It can be removed in HA Core 2027.8.
+        entry, available as config_entry_id. It can be removed in HA Core 2027.10.
         """
         if not self.is_composite_device:
             _report_deprecated_config_entries_property(
@@ -444,7 +444,7 @@ class BaseDeviceEntry:
 
         Deprecated compatibility shim: a device now belongs to a single config
         entry and subentry, available as config_entry_id and config_subentry_id.
-        It can be removed in HA Core 2027.8.
+        It can be removed in HA Core 2027.10.
         """
         if not self.is_composite_device:
             _report_deprecated_config_entries_property(
@@ -461,7 +461,7 @@ class BaseDeviceEntry:
 
         Deprecated compatibility shim: a device now belongs to a single config
         entry, available as config_entry_id, which is its primary config entry.
-        It can be removed in HA Core 2027.8.
+        It can be removed in HA Core 2027.10.
         """
         if not self.is_composite_device:
             _report_deprecated_config_entries_property(
@@ -616,7 +616,7 @@ class DeviceEntry(BaseDeviceEntry):
             "name_by_user": self.name_by_user,
             "name": self.name,
             "parent_device_id": None,
-            # primary_config_entry is deprecated, it can be removed in HA Core 2027.8.
+            # primary_config_entry is deprecated, it can be removed in HA Core 2027.10.
             "primary_config_entry": self.config_entry_id,
             "serial_number": self.serial_number,
             "sw_version": self.sw_version,
@@ -651,7 +651,7 @@ class DeviceEntry(BaseDeviceEntry):
                 "name": self.name,
                 "has_composite_identifiers": (self.has_composite_identifiers),
                 # primary_config_entry is deprecated, it can be removed in HA Core
-                # 2027.8.
+                # 2027.10.
                 "primary_config_entry": self.config_entry_id,
                 "serial_number": self.serial_number,
                 "sw_version": self.sw_version,
@@ -815,7 +815,7 @@ class DeletedDeviceEntry:
         """Return the config entries this device belonged to.
 
         Deprecated compatibility shim; empty for orphaned deleted devices. It can be
-        removed in HA Core 2027.8.
+        removed in HA Core 2027.10.
         """
         _report_deprecated_config_entries_property(
             self, "config_entries", "config_entry_id"
@@ -827,7 +827,7 @@ class DeletedDeviceEntry:
         """Return the config subentries this device belonged to.
 
         Deprecated compatibility shim; empty for orphaned deleted devices. It can be
-        removed in HA Core 2027.8.
+        removed in HA Core 2027.10.
         """
         _report_deprecated_config_entries_property(
             self, "config_entries_subentries", "config_entry_id", "config_subentry_id"
