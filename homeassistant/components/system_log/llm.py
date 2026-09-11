@@ -28,8 +28,7 @@ def _filter_log_entries(
     predicates: list[Callable[[dict[str, Any]], bool]] = []
 
     if level:
-        level_lower = level.lower()
-        predicates.append(lambda entry: entry["level"].lower() == level_lower)
+        predicates.append(lambda entry: entry["level"].lower() == level)
 
     if logger:
         logger_lower = logger.strip().lower()
