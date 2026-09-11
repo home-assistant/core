@@ -212,7 +212,7 @@ def mock_omada_client(mock_omada_site_client: AsyncMock) -> Generator[MagicMock]
                     "currentVersion": "6.2.10.17",
                     "latestVersion": "6.3.0.45 Build 20260903171910",
                     "releaseLog": "Release notes for Omada SDN Controller.",
-                    "releaseUrl": "https://example.com/controller-release-notes",
+                    "releaseUrl": "https://example.com/controller-update.tar.gz",
                     "downloadLink": "https://example.com/controller-update.tar.gz",
                 }
             }
