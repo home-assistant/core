@@ -15,13 +15,16 @@ from tplink_omada_client.devices import (
 )
 from tplink_omada_client.exceptions import OmadaClientException
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
+    from .controller import OmadaSiteController
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +33,11 @@ POLL_GATEWAY = 300
 POLL_CLIENTS = 300
 POLL_DEVICES = 300
 POLL_UPGRADE = 60
+
+# Number of consecutive empty device-list updates required before removing
+# device entries, to tolerate transient empty responses from the controller.
+# Device polls run every five minutes, so this is about one hour of emptiness.
+EMPTY_DEVICE_LIMIT = 12
 
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
@@ -131,11 +139,17 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "DeviceList", POLL_CLIENTS)
+        self.consecutive_empty_updates = 0
 
     @override
     async def poll_update(self) -> dict[str, OmadaListDevice]:
         """Poll the site's current registered Omada devices."""
-        return {d.mac: d for d in await self.omada_client.get_devices()}
+        devices = {d.mac: d for d in await self.omada_client.get_devices()}
+        if devices:
+            self.consecutive_empty_updates = 0
+        else:
+            self.consecutive_empty_updates += 1
+        return devices
 
 
 class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
@@ -157,6 +171,30 @@ class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
             c.mac: c
             async for c in self.omada_client.get_connected_clients()
             if isinstance(c, OmadaWirelessClient)
+        }
+
+
+class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
+    """Coordinator for getting details about all wireless clients known to the controller."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaSiteClient,
+    ) -> None:
+        """Initialize my coordinator."""
+        super().__init__(
+            hass, config_entry, omada_client, "KnownClientsList", poll_delay=None
+        )
+
+    @override
+    async def poll_update(self) -> dict[str, OmadaWirelessClient]:
+        """Poll the site's all-time known wireless clients."""
+        return {
+            client.mac: client
+            async for client in self.omada_client.get_known_clients()
+            if isinstance(client, OmadaWirelessClient)
         }
 
 
@@ -224,3 +262,89 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         self._config_entry.async_create_background_task(
             self.hass, self.async_request_refresh(), "Omada Firmware Update Refresh"
         )
+
+
+def _unique_id_to_mac(unique_id: str | None) -> str | None:
+    """Extract the client MAC address from a tracker unique ID."""
+    if not unique_id or not unique_id.startswith("scanner_"):
+        return None
+    # The format is scanner_<site_id>_<mac>. Strip the prefix and split from the
+    # right so site_ids that contain underscores are handled correctly.
+    remainder = unique_id.removeprefix("scanner_")
+    site_id, sep, mac = remainder.rpartition("_")
+    if not sep or not site_id or not mac:
+        return None
+    return dr.format_mac(mac)
+
+
+async def async_cleanup_client_trackers(
+    hass: HomeAssistant,
+    controller: OmadaSiteController,
+) -> None:
+    """Remove stale client tracker entities for the Omada integration."""
+    if not controller.known_clients_coordinator.last_update_success:
+        return
+
+    known_clients = controller.known_clients_coordinator.data or {}
+    entity_registry = er.async_get(hass)
+    entry_id = controller.known_clients_coordinator.config_entry.entry_id
+    known_macs = {dr.format_mac(mac) for mac in known_clients}
+
+    for entity in er.async_entries_for_config_entry(entity_registry, entry_id):
+        if entity.domain != DEVICE_TRACKER_DOMAIN:
+            continue
+
+        client_mac = _unique_id_to_mac(entity.unique_id)
+        if client_mac is None:
+            continue
+
+        if (
+            client_mac not in known_macs
+            and entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        ):
+            entity_registry.async_remove(entity.entity_id)
+
+
+async def async_cleanup_devices(
+    hass: HomeAssistant,
+    controller: OmadaSiteController,
+) -> None:
+    """Remove devices from the registry when Omada no longer reports them."""
+    if not controller.devices_coordinator.last_update_success:
+        return
+
+    devices = controller.devices_coordinator.data
+    if not devices:
+        # A successful but empty response is likely a transient controller glitch,
+        # and removal also deletes the device's entities from the registry, so only
+        # clean once the empty list is confirmed over consecutive updates.
+        if (
+            controller.devices_coordinator.consecutive_empty_updates
+            < EMPTY_DEVICE_LIMIT
+        ):
+            return
+
+    device_registry = dr.async_get(hass)
+    entry_id = controller.devices_coordinator.config_entry.entry_id
+    known_devices = {dr.format_mac(mac) for mac in devices}
+
+    for device_entry in dr.async_entries_for_config_entry(device_registry, entry_id):
+        mac = next(
+            (
+                fmt
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+                and len(fmt := dr.format_mac(identifier[1])) == 17
+                and fmt.count(":") == 5
+            ),
+            None,
+        )
+
+        if mac and mac not in known_devices:
+            _LOGGER.debug(
+                "Removing stale Omada device %s from entry %s",
+                mac,
+                entry_id,
+            )
+            controller.async_mark_device_removed(mac)
+            device_registry.async_remove_device(device_entry.id)

@@ -7,6 +7,7 @@ from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
@@ -15,6 +16,7 @@ from .coordinator import (
     OmadaClientsCoordinator,
     OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
+    OmadaKnownClientsCoordinator,
     OmadaSwitchPortCoordinator,
 )
 
@@ -42,9 +44,14 @@ class OmadaSiteController:
         self._clients_coordinator = OmadaClientsCoordinator(
             hass, config_entry, omada_client
         )
+        self._known_clients_coordinator = OmadaKnownClientsCoordinator(
+            hass, config_entry, omada_client
+        )
+        self._device_entity_registrations: list[set[str]] = []
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
+        await self._known_clients_coordinator.async_config_entry_first_refresh()
         await self._devices_coordinator.async_config_entry_first_refresh()
 
         devices = self._devices_coordinator.data.values()
@@ -74,20 +81,22 @@ class OmadaSiteController:
         """
         # Track which devices have been processed already
         processed_devices: set[str] = set()
+        self._device_entity_registrations.append(processed_devices)
 
         async def _async_register_entities() -> None:
             """Register entities for devices that match the filter."""
             devices_to_process = [
                 device
                 for device in self._devices_coordinator.data.values()
-                if device_filter(device) and device.mac not in processed_devices
+                if device_filter(device)
+                and dr.format_mac(device.mac) not in processed_devices
             ]
 
             if not devices_to_process:
                 return
 
             for device in devices_to_process:
-                processed_devices.add(device.mac)
+                processed_devices.add(dr.format_mac(device.mac))
                 await entity_callback(device)
 
         @callback
@@ -100,6 +109,12 @@ class OmadaSiteController:
 
         # Call once on initial setup
         await _async_register_entities()
+
+    def async_mark_device_removed(self, mac: str) -> None:
+        """Allow entities for a removed device to be re-registered if it reappears."""
+        mac = dr.format_mac(mac)
+        for processed in self._device_entity_registrations:
+            processed.discard(mac)
 
     @property
     def omada_client(self) -> OmadaSiteClient:
@@ -131,3 +146,8 @@ class OmadaSiteController:
     def clients_coordinator(self) -> OmadaClientsCoordinator:
         """Gets the coordinator for site's clients."""
         return self._clients_coordinator
+
+    @property
+    def known_clients_coordinator(self) -> OmadaKnownClientsCoordinator:
+        """Gets the coordinator for all wireless clients known to the controller."""
+        return self._known_clients_coordinator
