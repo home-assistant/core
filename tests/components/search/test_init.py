@@ -1362,96 +1362,49 @@ async def test_search_child_devices(
     }
 
 
-@pytest.fixture(name="disabled_entity_ids")
-async def disabled_entity_ids_fixture(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    floor_registry: fr.FloorRegistry,
-) -> dict[ItemType, str]:
-    """Set up a device in an area on a floor, owning enabled and disabled entities.
-
-    Returns the searchable id per item type.
-    """
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    floor = floor_registry.async_create("First floor")
-    area = area_registry.async_create("Kitchen", floor_id=floor.floor_id)
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id, identifiers={("test", "1")}
-    )
-    device_registry.async_update_device(device.id, area_id=area.id)
-
-    entity_registry.async_get_or_create(
-        "light",
-        "test",
-        "enabled",
-        suggested_object_id="enabled",
-        config_entry=config_entry,
-        device_id=device.id,
-    )
-    entity_registry.async_get_or_create(
-        "light",
-        "test",
-        "disabled",
-        suggested_object_id="disabled",
-        config_entry=config_entry,
-        device_id=device.id,
-        disabled_by=er.RegistryEntryDisabler.USER,
-    )
-    # A disabled entity that overrides its area instead of inheriting it from the
-    # device is reached through the area index, which has no disabled filter.
-    disabled_area_override_entity = entity_registry.async_get_or_create(
-        "light",
-        "test",
-        "disabled_area_override",
-        suggested_object_id="disabled_area_override",
-        config_entry=config_entry,
-        device_id=device.id,
-        disabled_by=er.RegistryEntryDisabler.USER,
-    )
-    entity_registry.async_update_entity(
-        disabled_area_override_entity.entity_id, area_id=area.id
-    )
-
-    return {
-        ItemType.FLOOR: floor.floor_id,
-        ItemType.AREA: area.id,
-        ItemType.DEVICE: device.id,
-    }
-
-
-ALL_ENTITIES = {"light.enabled", "light.disabled", "light.disabled_area_override"}
+ALL_ENTITIES = {
+    "light.enabled",
+    "light.disabled",
+    "light.disabled_area_override",
+    "light.child_enabled",
+    "light.child_disabled",
+}
+PARENT_DEVICE_DEFAULT = {"light.enabled", "light.child_enabled"}
+AREA_DEFAULT = {"light.enabled", "light.disabled_area_override", "light.child_enabled"}
 
 
 @pytest.mark.parametrize(
-    ("item_type", "expected_default"),
+    ("item_type", "item_key", "expected_default", "expected_included"),
     [
-        pytest.param(ItemType.DEVICE, {"light.enabled"}, id="device"),
         pytest.param(
-            ItemType.AREA,
-            {"light.enabled", "light.disabled_area_override"},
-            id="area",
+            ItemType.DEVICE, "device", PARENT_DEVICE_DEFAULT, ALL_ENTITIES, id="device"
         ),
         pytest.param(
-            ItemType.FLOOR,
-            {"light.enabled", "light.disabled_area_override"},
-            id="floor",
+            ItemType.DEVICE,
+            "child_device",
+            {"light.child_enabled"},
+            {"light.child_enabled", "light.child_disabled"},
+            id="child_device",
         ),
+        pytest.param(ItemType.AREA, "area", AREA_DEFAULT, ALL_ENTITIES, id="area"),
+        pytest.param(ItemType.FLOOR, "floor", AREA_DEFAULT, ALL_ENTITIES, id="floor"),
     ],
 )
 async def test_search_include_disabled_entities(
     hass: HomeAssistant,
-    disabled_entity_ids: dict[ItemType, str],
+    search_item_ids: dict[str, str],
     item_type: ItemType,
+    item_key: str,
     expected_default: set[str],
+    expected_included: set[str],
 ) -> None:
-    """Test disabled entities are only returned when explicitly requested."""
-    item_id = disabled_entity_ids[item_type]
+    """Test disabled entities are only returned when explicitly requested.
+
+    A child device is searched both directly and through the area and floor it
+    inherits from its parent. Searching the child does not return the parent's
+    entities, because the parent is only resolved up.
+    """
+    item_id = search_item_ids[item_key]
 
     searcher = Searcher(hass, {})
     assert (
@@ -1459,15 +1412,19 @@ async def test_search_include_disabled_entities(
     )
 
     searcher = Searcher(hass, {}, include_disabled_entities=True)
-    assert searcher.async_search(item_type, item_id)[ItemType.ENTITY] == ALL_ENTITIES
+    assert (
+        searcher.async_search(item_type, item_id)[ItemType.ENTITY] == expected_included
+    )
 
 
 @pytest.mark.parametrize(
     ("extra_msg", "expected"),
     [
-        pytest.param({}, {"light.enabled"}, id="key_omitted"),
+        pytest.param({}, PARENT_DEVICE_DEFAULT, id="key_omitted"),
         pytest.param(
-            {"include_disabled_entities": False}, {"light.enabled"}, id="explicit_false"
+            {"include_disabled_entities": False},
+            PARENT_DEVICE_DEFAULT,
+            id="explicit_false",
         ),
         pytest.param(
             {"include_disabled_entities": True}, ALL_ENTITIES, id="explicit_true"
@@ -1477,7 +1434,7 @@ async def test_search_include_disabled_entities(
 async def test_search_related_include_disabled_entities_websocket(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    disabled_entity_ids: dict[ItemType, str],
+    search_item_ids: dict[str, str],
     extra_msg: dict[str, bool],
     expected: set[str],
 ) -> None:
@@ -1487,7 +1444,7 @@ async def test_search_related_include_disabled_entities_websocket(
         {
             "type": "search/related",
             "item_type": "device",
-            "item_id": disabled_entity_ids[ItemType.DEVICE],
+            "item_id": search_item_ids["device"],
         }
         | extra_msg
     )
