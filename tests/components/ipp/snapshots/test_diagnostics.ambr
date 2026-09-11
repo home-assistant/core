@@ -3,6 +3,15 @@
   dict({
     'data': dict({
       'booted_at': '2019-11-11T09:10:02+00:00',
+      'counters': dict({
+        'impressions_completed': 2468,
+        'impressions_completed_col': dict({
+          'full-color': 968,
+          'monochrome': 1500,
+        }),
+        'media_sheets_completed': 1234,
+        'pages_completed': 1234,
+      }),
       'info': dict({
         'command_set': 'ESCPL2,BDC,D4,D4PX,ESCPR7,END4,GENEP,URF',
         'location': None,

@@ -311,6 +311,9 @@ aioimaplib==2.0.1
 # homeassistant.components.immich
 aioimmich==0.17.0
 
+# homeassistant.components.ipp
+aioipp==0.18.1
+
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
 
@@ -2320,9 +2323,6 @@ pyintesishome==2.5.0
 
 # homeassistant.components.ipma
 pyipma==3.0.10
-
-# homeassistant.components.ipp
-pyipp==0.17.2
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0

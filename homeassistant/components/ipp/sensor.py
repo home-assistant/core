@@ -39,6 +39,7 @@ class IPPSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Printer], StateType | datetime]
     attributes_fn: Callable[[Printer], dict[Any, StateType]] = lambda _: {}
+    exists_fn: Callable[[Printer], bool] = lambda _: True
 
 
 def _get_marker_attributes_fn(
@@ -78,6 +79,57 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda printer: printer.booted_at,
+    ),
+)
+
+PAGE_COUNT_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
+    IPPSensorEntityDescription(
+        key="pages_completed",
+        translation_key="pages_completed",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        exists_fn=lambda printer: printer.counters.pages_completed is not None,
+        value_fn=lambda printer: printer.counters.pages_completed,
+    ),
+    IPPSensorEntityDescription(
+        key="impressions_completed",
+        translation_key="impressions_completed",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        exists_fn=lambda printer: printer.counters.impressions_completed is not None,
+        value_fn=lambda printer: printer.counters.impressions_completed,
+    ),
+    IPPSensorEntityDescription(
+        key="media_sheets_completed",
+        translation_key="media_sheets_completed",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        exists_fn=lambda printer: printer.counters.media_sheets_completed is not None,
+        value_fn=lambda printer: printer.counters.media_sheets_completed,
+    ),
+    IPPSensorEntityDescription(
+        key="impressions_completed_monochrome",
+        translation_key="impressions_completed_monochrome",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        exists_fn=lambda printer: (
+            "monochrome" in printer.counters.impressions_completed_col
+        ),
+        value_fn=lambda printer: printer.counters.impressions_completed_col.get(
+            "monochrome"
+        ),
+    ),
+    IPPSensorEntityDescription(
+        key="impressions_completed_full_color",
+        translation_key="impressions_completed_full_color",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        exists_fn=lambda printer: (
+            "full-color" in printer.counters.impressions_completed_col
+        ),
+        value_fn=lambda printer: printer.counters.impressions_completed_col.get(
+            "full-color"
+        ),
     ),
 )
 
@@ -122,6 +174,12 @@ async def async_setup_entry(
                 ),
             )
         )
+
+    sensors.extend(
+        IPPSensor(coordinator, description)
+        for description in PAGE_COUNT_SENSORS
+        if description.exists_fn(coordinator.data)
+    )
 
     async_add_entities(sensors, True)
 
