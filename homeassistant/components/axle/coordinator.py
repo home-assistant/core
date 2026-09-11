@@ -7,7 +7,7 @@ from aioaxlevpp import AxleAuthenticationError, AxleClient, AxleError, GridEvent
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL
@@ -41,7 +41,7 @@ class AxleCoordinator(DataUpdateCoordinator[GridEvent | None]):
         try:
             event = await self.client.get_event()
         except AxleAuthenticationError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from err
         except AxleError as err:

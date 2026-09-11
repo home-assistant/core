@@ -92,9 +92,7 @@ async def test_opted_out(
     assert hass.states.get("sensor.axle_energy_import_export").state == "unknown"
 
 
-@pytest.mark.parametrize(
-    "error", [AxleAuthenticationError(), AxleConnectionError(), AxleError()]
-)
+@pytest.mark.parametrize("error", [AxleConnectionError(), AxleError()])
 async def test_recovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -136,3 +134,28 @@ async def test_polling(
     await hass.async_block_till_done()
     mock_client.get_event.assert_awaited_once()
     assert hass.states.get("sensor.axle_energy_import_export").state == "import"
+
+
+async def test_authentication_failure_stops_polling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Stop polling rejected credentials and allow recovery after reload."""
+    await setup(hass, mock_config_entry)
+    mock_client.get_event.side_effect = AxleAuthenticationError()
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.axle_energy_import_export").state == "unavailable"
+    mock_client.get_event.reset_mock()
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_client.get_event.assert_not_called()
+    assert not hass.config_entries.flow.async_progress()
+    mock_client.get_event.side_effect = None
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.axle_energy_import_export").state == "export"
