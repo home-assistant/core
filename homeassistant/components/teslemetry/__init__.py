@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from functools import partial
+import inspect
 from pathlib import Path
 from typing import Any, Final, cast
 
@@ -14,12 +15,14 @@ from tesla_fleet_api.exceptions import (
     Forbidden,
     InvalidToken,
     LoginRequired,
+    NotOnWhitelistFault,
     PrivateKeyError,
     SubscriptionRequired,
     TeslaFleetError,
 )
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamAuthenticationError
 from teslemetry_stream.const import SseTopic
@@ -62,6 +65,7 @@ from .const import (
     CLIENT_ID,
     CONF_VIN,
     DOMAIN,
+    ISSUE_TYPE_BLE_KEY_REJECTED,
     LOGGER,
     POWERWALL_KEY_FILE,
     RSA_PARENT_KEY,
@@ -305,10 +309,51 @@ _BLE_KEY_ERRORS: Final = (
 )
 
 
+class _KeyRejectionWatcher:
+    """Proxy a BLE vehicle backend to observe a genuine key-whitelist rejection.
+
+    VehicleRouter fails over to its cloud secondary on any primary exception,
+    including NotOnWhitelistFault, so a revoked key would otherwise never
+    surface anywhere. This watches for it as commands pass through the real
+    backend instead of adding a separate probe or poll.
+    """
+
+    def __init__(
+        self,
+        vehicle: VehicleBluetooth,
+        on_rejected: Callable[[], None],
+        on_accepted: Callable[[], None],
+    ) -> None:
+        """Initialize the watcher."""
+        self._vehicle = vehicle
+        self._on_rejected = on_rejected
+        self._on_accepted = on_accepted
+
+    def __getattr__(self, name: str) -> Any:
+        """Forward attribute access to the wrapped vehicle, watching calls."""
+        attr = getattr(self._vehicle, name)
+        if not callable(attr):
+            return attr
+
+        async def _watched(*args: Any, **kwargs: Any) -> Any:
+            try:
+                result = attr(*args, **kwargs)
+                if inspect.isawaitable(result):
+                    result = await result
+            except NotOnWhitelistFault:
+                self._on_rejected()
+                raise
+            self._on_accepted()
+            return result
+
+        return _watched
+
+
 async def _async_resolve_vehicle_api(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
     vin: str,
+    vehicle_name: str,
     cloud_vehicle: Vehicle,
 ) -> Vehicle | VehicleRouter:
     """Return the API a vehicle's platforms should call."""
@@ -345,7 +390,35 @@ async def _async_resolve_vehicle_api(
         bluetooth_vehicle.set_device(device)
         return True
 
-    return VehicleRouter(bluetooth_vehicle, cloud_vehicle, health=_in_range)
+    issue_id = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{vin}"
+
+    @callback
+    def _on_rejected() -> None:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_TYPE_BLE_KEY_REJECTED,
+            translation_placeholders={"vehicle": vehicle_name},
+            data={
+                "entry_id": entry.entry_id,
+                "vin": vin,
+                "issue_type": ISSUE_TYPE_BLE_KEY_REJECTED,
+                "vehicle": vehicle_name,
+            },
+        )
+
+    @callback
+    def _on_accepted() -> None:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+    watched_vehicle = _KeyRejectionWatcher(
+        bluetooth_vehicle, _on_rejected, _on_accepted
+    )
+
+    return VehicleRouter(watched_vehicle, cloud_vehicle, health=_in_range)
 
 
 def _find_energy_subentry_id(entry: TeslemetryConfigEntry, site_id: int) -> str | None:
@@ -604,6 +677,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 hass,
                 entry,
                 vin,
+                product["display_name"] or vin,
                 vehicle,
             )
 
