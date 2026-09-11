@@ -16,7 +16,7 @@ from librehardwaremonitor_api.model import (
     LibreHardwareMonitorData,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
@@ -83,6 +83,9 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             raise UpdateFailed("No sensor data available, will retry") from err
 
         if lhm_data.is_deprecated_version:
+            if self.config_entry.state is ConfigEntryState.LOADED:
+                # if user downgrades while HA is running, reload integration to surface ConfigEntryError
+                self.hass.config_entries.async_schedule_reload(self._entry_id)
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="deprecated_version",

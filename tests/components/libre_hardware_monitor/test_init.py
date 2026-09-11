@@ -1,8 +1,16 @@
 """Tests for the LibreHardwareMonitor init."""
 
+from dataclasses import replace
+from datetime import timedelta
+from unittest.mock import AsyncMock
+
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.libre_hardware_monitor.const import DOMAIN
+from homeassistant.components.libre_hardware_monitor.const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -10,7 +18,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import init_integration
 from .conftest import VALID_CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_lhm_client")
@@ -102,6 +110,30 @@ async def test_deprecated_version_blocks_setup(
 ) -> None:
     """Test that a deprecated LHM version prevents setup with an error."""
     await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_domain == DOMAIN
+    assert mock_config_entry.error_reason_translation_key == "deprecated_version"
+
+
+async def test_downgrade_to_deprecated_version_fails_entry(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that downgrading to a deprecated LHM version while running fails the entry."""
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value, is_deprecated_version=True
+    )
+
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.error_reason_translation_domain == DOMAIN
