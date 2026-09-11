@@ -260,6 +260,15 @@ async def test_cleanup_helpers_remove_unknown_clients(
         config_entry=mock_config_entry,
     )
 
+    # Device tracker whose parsed suffix is not a MAC — skipped, not removed
+    malformed_mac = entity_registry.async_get_or_create(
+        domain="device_tracker",
+        platform=DOMAIN,
+        unique_id="scanner_Default_not-a-mac",
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
     await async_cleanup_client_trackers(hass, controller)
 
     assert entity_registry.async_get(unknown_client_entity_1.entity_id) is None
@@ -271,6 +280,7 @@ async def test_cleanup_helpers_remove_unknown_clients(
     assert entity_registry.async_get(sensor_entity.entity_id) is not None
     assert entity_registry.async_get(malformed_no_prefix.entity_id) is not None
     assert entity_registry.async_get(malformed_wrong_parts.entity_id) is not None
+    assert entity_registry.async_get(malformed_mac.entity_id) is not None
 
 
 async def test_cleanup_devices_removes_orphans(

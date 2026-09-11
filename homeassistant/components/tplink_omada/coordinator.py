@@ -274,7 +274,12 @@ def _unique_id_to_mac(unique_id: str | None) -> str | None:
     site_id, sep, mac = remainder.rpartition("_")
     if not sep or not site_id or not mac:
         return None
-    return dr.format_mac(mac)
+
+    # format_mac returns unrecognized input unchanged, so validate the shape.
+    mac = dr.format_mac(mac)
+    if len(mac) != 17 or mac.count(":") != 5:
+        return None
+    return mac
 
 
 async def async_cleanup_client_trackers(
