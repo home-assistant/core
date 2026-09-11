@@ -114,14 +114,22 @@ async def test_migrate_unique_ids(
     config_entry = _mock_config_entry("1.2.3.4")
     config_entry.add_to_hass(hass)
 
-    # Simulate a pre-migration install: device and entities registered
-    # with raw unit IDs.
+    # Simulate a pre-migration install: devices and entities registered
+    # with raw unit IDs, including a device whose unit is not currently
+    # reported by the bridge (e.g. offline).
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "L1.100")},
         manufacturer="CoolAutomation",
         model="CoolMasterNet",
         name="L1.100",
+    )
+    offline_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "L2.200")},
+        manufacturer="CoolAutomation",
+        model="CoolMasterNet",
+        name="L2.200",
     )
     climate_entity = entity_registry.async_get_or_create(
         "climate",
@@ -158,6 +166,12 @@ async def test_migrate_unique_ids(
     assert migrated_device is not None
     assert migrated_device.identifiers == {(DOMAIN, f"{prefix}L1.100")}
 
+    # The device of a unit the bridge is not currently reporting is
+    # migrated too, so the unit reuses it if it returns.
+    migrated_offline_device = device_registry.async_get(offline_device.id)
+    assert migrated_offline_device is not None
+    assert migrated_offline_device.identifiers == {(DOMAIN, f"{prefix}L2.200")}
+
 
 async def test_multiple_bridges_with_same_unit_ids(
     hass: HomeAssistant,
@@ -175,19 +189,15 @@ async def test_multiple_bridges_with_same_unit_ids(
     entry2 = _mock_config_entry("4.3.2.1")
     entry2.add_to_hass(hass)
 
-    # Simulate the pre-migration collision: entry1's entity registered with
-    # a raw unit ID unique ID, and the device claimed by both entries due
-    # to the identifier collision.
+    # Simulate the pre-migration collision: entry1's device and entity are
+    # registered with a raw unit ID, while entry2's entities were silently
+    # dropped by the unique ID collision and were never registered.
     device = device_registry.async_get_or_create(
         config_entry_id=entry1.entry_id,
         identifiers={(DOMAIN, "L1.100")},
         manufacturer="CoolAutomation",
         model="CoolMasterNet",
         name="L1.100",
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=entry2.entry_id,
-        identifiers={(DOMAIN, "L1.100")},
     )
     entity_registry.async_get_or_create(
         "climate",
@@ -221,10 +231,10 @@ async def test_multiple_bridges_with_same_unit_ids(
             == unit_count
         )
 
-    # The formerly shared device now belongs to entry1 alone, with a
-    # config-entry-scoped identifier.
-    shared_device = device_registry.async_get(device.id)
-    assert shared_device is not None
-    assert shared_device.identifiers == {(DOMAIN, f"{entry1.entry_id}-L1.100")}
+    # entry1's pre-existing device was migrated to a config-entry-scoped
+    # identifier; entry2 created its own separate device for the same unit ID.
+    migrated_device = device_registry.async_get(device.id)
+    assert migrated_device is not None
+    assert migrated_device.identifiers == {(DOMAIN, f"{entry1.entry_id}-L1.100")}
     entry2_devices = dr.async_entries_for_config_entry(device_registry, entry2.entry_id)
     assert device.id not in {device_entry.id for device_entry in entry2_devices}

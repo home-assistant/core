@@ -70,27 +70,19 @@ async def _async_migrate_unique_ids(
 
     await er.async_migrate_entries(hass, entry.entry_id, _migrate)
 
-    unit_ids = set(entry.runtime_data.data)
     dev_reg = dr.async_get(hass)
     for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        # Prefix every identifier owned by this entry, including units that
+        # are currently not reported (e.g. offline), so a returning unit
+        # reuses its migrated device instead of creating a duplicate.
         new_identifiers = {
-            (domain, f"{prefix}{ident}")
-            if domain == DOMAIN and ident in unit_ids
-            else (domain, ident)
+            (domain, ident)
+            if domain != DOMAIN or ident.startswith(prefix)
+            else (domain, f"{prefix}{ident}")
             for domain, ident in device.identifiers
         }
         if new_identifiers != device.identifiers:
             dev_reg.async_update_device(device.id, new_identifiers=new_identifiers)
-        elif not any(
-            domain == DOMAIN and ident.startswith(prefix)
-            for domain, ident in device.identifiers
-        ):
-            # The device was claimed by another config entry before unique
-            # IDs were scoped per entry (identifier collision); this entry's
-            # own device will be created on platform setup.
-            dev_reg.async_update_device(
-                device.id, remove_config_entry_id=entry.entry_id
-            )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CoolmasterConfigEntry) -> bool:
