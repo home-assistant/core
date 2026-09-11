@@ -2406,16 +2406,12 @@ class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
     def __init__(self, config: UnitOfMeasurementSelectorConfig | None = None) -> None:
         """Instantiate a unit of measurement selector."""
         super().__init__(config)
-        self.allowed_context_keys = {}
-        if config is not None:
-            if "device_class" not in config:
-                self.allowed_context_keys["filter_device_class"] = {
-                    DeviceClassSelector.selector_type
-                }
-            elif "state_class" not in config:
-                self.allowed_context_keys["filter_state_class"] = {
-                    StateClassSelector.selector_type
-                }
+        self.allowed_context_keys = {
+            # Filters the available units based on the device class
+            "filter_device_class": {DeviceClassSelector.selector_type},
+            # Filters the available units based on the state class
+            "filter_state_class": {StateClassSelector.selector_type},
+        }
 
     def __call__(self, data: Any) -> str | None:
         """Validate the passed selection."""
