@@ -3,9 +3,9 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, time
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
-from demetriek import Device, LaMetricDevice, ScreensaverMode
+from demetriek import DisplayScreensaverTimeBased, LaMetricDevice, ScreensaverMode
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
@@ -22,14 +22,8 @@ from .helpers import lametric_exception_handler
 class LaMetricTimeEntityDescription(TimeEntityDescription):
     """Class describing LaMetric time entities."""
 
-    has_fn: Callable[[Device], bool] = lambda device: True
-    value_fn: Callable[[Device], time | None]
+    value_fn: Callable[[DisplayScreensaverTimeBased], time | None]
     set_value_fn: Callable[[LaMetricDevice, time], Awaitable[Any]]
-
-
-def _has_screensaver_modes(device: Device) -> bool:
-    """Return if the device reports its screensaver modes."""
-    return bool(device.display.screensaver and device.display.screensaver.modes)
 
 
 TIMES = [
@@ -37,12 +31,7 @@ TIMES = [
         key="screensaver_start_time",
         translation_key="screensaver_start_time",
         entity_category=EntityCategory.CONFIG,
-        has_fn=_has_screensaver_modes,
-        value_fn=lambda device: (
-            screensaver.modes.time_based.start_time
-            if (screensaver := device.display.screensaver) and screensaver.modes
-            else None
-        ),
+        value_fn=lambda mode: mode.start_time,
         set_value_fn=lambda api, value: api.display(
             screensaver_mode=ScreensaverMode.TIME_BASED,
             screensaver_start_time=value,
@@ -52,12 +41,7 @@ TIMES = [
         key="screensaver_end_time",
         translation_key="screensaver_end_time",
         entity_category=EntityCategory.CONFIG,
-        has_fn=_has_screensaver_modes,
-        value_fn=lambda device: (
-            screensaver.modes.time_based.end_time
-            if (screensaver := device.display.screensaver) and screensaver.modes
-            else None
-        ),
+        value_fn=lambda mode: mode.end_time,
         set_value_fn=lambda api, value: api.display(
             screensaver_mode=ScreensaverMode.TIME_BASED,
             screensaver_end_time=value,
@@ -73,13 +57,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up LaMetric time based on a config entry."""
     coordinator = entry.runtime_data
+    screensaver = coordinator.data.display.screensaver
+    if not screensaver or not screensaver.modes:
+        return
+
     async_add_entities(
         LaMetricTimeEntity(
             coordinator=coordinator,
             description=description,
         )
         for description in TIMES
-        if description.has_fn(coordinator.data)
     )
 
 
@@ -102,8 +89,16 @@ class LaMetricTimeEntity(LaMetricEntity, TimeEntity):
     @override
     def native_value(self) -> time | None:
         """Return the time value."""
-        if (value := self.entity_description.value_fn(self.coordinator.data)) is None:
+        screensaver = self.coordinator.data.display.screensaver
+        if TYPE_CHECKING:
+            assert screensaver is not None
+            assert screensaver.modes is not None
+
+        if (
+            value := self.entity_description.value_fn(screensaver.modes.time_based)
+        ) is None:
             return None
+
         # The device stores screensaver times in UTC.
         return dt_util.as_local(
             datetime.combine(dt_util.utcnow().date(), value, tzinfo=UTC)

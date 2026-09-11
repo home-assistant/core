@@ -24,13 +24,11 @@ from tests.common import MockConfigEntry, snapshot_platform
 ENTITY_START_TIME = "time.frenck_s_lametric_screensaver_start_time"
 ENTITY_END_TIME = "time.frenck_s_lametric_screensaver_end_time"
 
-pytestmark = [
-    pytest.mark.freeze_time("2025-01-15 12:00:00+00:00"),
-    pytest.mark.usefixtures("init_integration"),
-]
+pytestmark = pytest.mark.freeze_time("2025-01-15 12:00:00+00:00")
 
 
 @pytest.mark.parametrize("init_integration", [Platform.TIME], indirect=True)
+@pytest.mark.usefixtures("init_integration")
 async def test_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -49,6 +47,7 @@ async def test_entities(
     ],
     ids=["start_time", "end_time"],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_set_value(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
@@ -71,6 +70,7 @@ async def test_set_value(
 
 
 @pytest.mark.parametrize("device_fixture", ["device_sa5"])
+@pytest.mark.usefixtures("init_integration")
 async def test_unknown_times(hass: HomeAssistant) -> None:
     """Test devices that have no screensaver times configured."""
     state = hass.states.get("time.spyfly_s_lametric_sky_screensaver_start_time")
@@ -82,9 +82,18 @@ async def test_unknown_times(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("device_fixture", ["device_no_screensaver"])
-async def test_no_screensaver_support(hass: HomeAssistant) -> None:
+async def test_no_screensaver_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lametric: MagicMock,
+) -> None:
     """Test devices that do not report a screensaver get no time entities."""
+    mock_lametric.device.return_value.display.screensaver = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert hass.states.get(ENTITY_START_TIME) is None
     assert hass.states.get(ENTITY_END_TIME) is None
 
@@ -105,6 +114,7 @@ async def test_no_screensaver_support(hass: HomeAssistant) -> None:
     ],
     ids=["error", "connection_error"],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_time_errors(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
