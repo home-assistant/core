@@ -22,7 +22,9 @@ async def async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:
         if existing is not None:
             return existing
         parent = TeslaBluetooth()
-        await parent.get_private_key(hass.config.path(VEHICLE_KEY_FILE))
+        await hass.async_add_executor_job(
+            asyncio.run, parent.get_private_key(hass.config.path(VEHICLE_KEY_FILE))
+        )
         hass.data[BLE_PARENT_KEY] = parent
         return parent
 

@@ -59,6 +59,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
+    BLE_DISCONNECT_TIMEOUT,
     CLIENT_ID,
     CONF_VIN,
     DOMAIN,
@@ -905,7 +906,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) 
         for vehicle in entry.runtime_data.vehicles:
             if isinstance(vehicle.api, VehicleRouter):
                 try:
-                    await vehicle.api.primary.disconnect()
+                    async with asyncio.timeout(BLE_DISCONNECT_TIMEOUT):
+                        await vehicle.api.primary.disconnect()
                 except (BleakError, TeslaFleetError, TimeoutError) as err:
                     # Swallowed so one stuck link cannot block the unload, but
                     # warn: a leaked BLE connection can keep the vehicle awake.

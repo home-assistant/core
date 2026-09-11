@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from copy import deepcopy
 import logging
 import time
@@ -2306,6 +2306,42 @@ async def test_unload_never_connected_bluetooth(hass: HomeAssistant) -> None:
     bluetooth_vehicle.disconnect.assert_awaited_once()
 
 
+async def test_unload_disconnect_timeout(hass: HomeAssistant) -> None:
+    """A hung Bluetooth disconnect cannot block unload past the timeout."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock()
+
+    async def _hang(*args: object, **kwargs: object) -> None:
+        await asyncio.sleep(999)
+
+    bluetooth_vehicle.disconnect = AsyncMock(side_effect=_hang)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        patch("homeassistant.components.teslemetry.BLE_DISCONNECT_TIMEOUT", 0),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    bluetooth_vehicle.disconnect.assert_awaited_once()
+
+
 async def test_ble_parent_shared_and_cached(hass: HomeAssistant) -> None:
     """The BLE parent (holding the private key) is created once and reused."""
     with patch(
@@ -2337,6 +2373,34 @@ async def test_ble_parent_concurrent_first_init(hass: HomeAssistant) -> None:
     assert all(parent is parents[0] for parent in parents)
     mock_parent.assert_called_once()
     mock_parent.return_value.get_private_key.assert_awaited_once()
+
+
+async def test_ble_parent_key_load_runs_off_event_loop(hass: HomeAssistant) -> None:
+    """Loading the private key cannot stall the event loop, even if it blocks."""
+    heartbeats = 0
+
+    async def _heartbeat() -> None:
+        nonlocal heartbeats
+        while True:
+            await asyncio.sleep(0.01)
+            heartbeats += 1
+
+    async def _blocking_get_private_key(path: str) -> None:
+        time.sleep(0.2)  # noqa: ASYNC251 - simulates the library's synchronous work
+
+    with patch(
+        "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+    ) as mock_parent:
+        mock_parent.return_value.get_private_key = AsyncMock(
+            side_effect=_blocking_get_private_key
+        )
+        heartbeat_task = hass.async_create_task(_heartbeat())
+        await async_get_ble_parent(hass)
+        heartbeat_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await heartbeat_task
+
+    assert heartbeats >= 1
 
 
 async def test_router_does_not_fail_over_on_unconfirmed() -> None:
