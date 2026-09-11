@@ -108,6 +108,14 @@ async def test_no_screensaver_support(
     assert hass.states.get(ENTITY_END_TIME) is None
 
 
+@pytest.mark.parametrize("device_fixture", ["device_sa5"])
+@pytest.mark.usefixtures("init_integration")
+async def test_sky_has_no_times(hass: HomeAssistant) -> None:
+    """Test the SKY gets no screensaver time entities."""
+    assert hass.states.get("time.spyfly_s_lametric_sky_screensaver_start_time") is None
+    assert hass.states.get("time.spyfly_s_lametric_sky_screensaver_end_time") is None
+
+
 @pytest.mark.parametrize(
     ("side_effect", "error_message", "expected_state"),
     [

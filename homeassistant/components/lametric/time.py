@@ -17,6 +17,10 @@ from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
 
+# The SKY reports a time based screensaver mode, but is not known to support
+# scheduling it.
+MODEL_SKY = "sa5"
+
 
 @dataclass(frozen=True, kw_only=True)
 class LaMetricTimeEntityDescription(TimeEntityDescription):
@@ -57,6 +61,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up LaMetric time based on a config entry."""
     coordinator = entry.runtime_data
+    if coordinator.data.model == MODEL_SKY:
+        return
+
     screensaver = coordinator.data.display.screensaver
     if not screensaver or not screensaver.modes:
         return
