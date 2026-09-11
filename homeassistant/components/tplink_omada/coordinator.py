@@ -101,13 +101,17 @@ class OmadaControllerStatusCoordinator(DataUpdateCoordinator[OmadaControllerStat
         )
         self.omada_client = omada_client
 
+    @override
     async def _async_update_data(self) -> OmadaControllerStatus:
         """Fetch controller status from the API."""
         try:
             async with asyncio.timeout(10):
                 return await self.omada_client.get_controller_status()
         except OmadaClientException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
 
 class OmadaControllerUpdateCoordinator(
@@ -133,13 +137,17 @@ class OmadaControllerUpdateCoordinator(
         )
         self.omada_client = omada_client
 
+    @override
     async def _async_update_data(self) -> OmadaControllerUpdateInfo:
         """Fetch controller firmware update information from the API."""
         try:
             async with asyncio.timeout(10):
                 return await self.omada_client.check_firmware_updates()
         except OmadaClientException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
 
 class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):

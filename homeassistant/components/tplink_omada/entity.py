@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from tplink_omada_client import OmadaControllerStatus
 from tplink_omada_client.devices import OmadaDevice, OmadaSwitchPortDetails
 
 from homeassistant.helpers import device_registry as dr

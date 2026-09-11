@@ -10,9 +10,9 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
@@ -70,13 +70,10 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
         self._update_coordinator = update_coordinator
         self._omada_client = update_coordinator.omada_client
         self._attr_unique_id = f"{status_coordinator.data.mac}_firmware"
-        self._attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
-
-        if update_coordinator.data.hardware is not None:
-            self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
         self._update_attrs()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register for controller update coordinator changes."""
         await super().async_added_to_hass()
@@ -85,6 +82,12 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
                 self._handle_update_coordinator_update
             )
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._update_coordinator.last_update_success
 
     @callback
     def _handle_update_coordinator_update(self) -> None:
@@ -107,6 +110,9 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
         )
         self._attr_installed_version = installed_version
         self._attr_latest_version = update.latest_version or installed_version
+        self._attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
+        if update.hardware is not None:
+            self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
     @override
     def release_notes(self) -> str | None:
