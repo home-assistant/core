@@ -757,6 +757,26 @@ async def test_cleanup_trackers_on_empty_known_clients(
     assert entity_registry.async_get(tracker.entity_id) is None
 
 
+async def test_cleanup_skipped_when_polling_disabled(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the hourly cleanup does not poll while polling is disabled."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, pref_disable_polling=True)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    site_client = mock_omada_clients_only_client.get_site_client.return_value
+    calls_before = site_client.get_devices.call_count
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert site_client.get_devices.call_count == calls_before
+
+
 async def test_unload_cancels_cleanup_and_interval(
     hass: HomeAssistant,
     mock_omada_clients_only_client: MagicMock,

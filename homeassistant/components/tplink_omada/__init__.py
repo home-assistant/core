@@ -87,12 +87,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     async def _async_cleanup_task() -> None:
         nonlocal _first_cleanup_call
-        if not _first_cleanup_call:
-            # On hourly runs refresh coordinators so cleanup doesn't use stale data.
-            # On the first run data is already fresh from initialize_first_refresh().
+        if _first_cleanup_call:
+            # Data is already fresh from initialize_first_refresh().
+            _first_cleanup_call = False
+        elif entry.pref_disable_polling:
+            # Cleanup decisions need fresh data, so skip the run entirely
+            # instead of polling the controller while polling is disabled.
+            return
+        else:
+            # Refresh coordinators so cleanup doesn't use stale data.
             await controller.devices_coordinator.async_refresh()
             await controller.known_clients_coordinator.async_refresh()
-        _first_cleanup_call = False
         await async_cleanup_devices(
             hass,
             controller,

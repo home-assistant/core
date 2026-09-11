@@ -9,7 +9,6 @@ from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 if TYPE_CHECKING:
@@ -110,14 +109,12 @@ class OmadaSiteController:
                 processed_devices.add(mac)
                 try:
                     await entity_callback(device)
-                except HomeAssistantError as ex:
+                except Exception:
                     # Release the reservation so registration retries on the
                     # next device update.
                     processed_devices.discard(mac)
-                    _LOGGER.debug(
-                        "Failed to register entities for device %s: %s",
-                        device.mac,
-                        ex,
+                    _LOGGER.exception(
+                        "Failed to register entities for device %s", device.mac
                     )
                     continue
 
