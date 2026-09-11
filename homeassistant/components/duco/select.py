@@ -129,9 +129,7 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
         try:
             # SelectEntity exposes string options, and passing the raw API value
             # through keeps newly added Duco states forward-compatible.
-            await self.coordinator.client.async_set_ventilation_state(
-                self._node_id, option
-            )
+            await self.coordinator.async_set_ventilation_state(self._node_id, option)
         except DucoRateLimitError as err:
             _LOGGER.warning("Duco write rate limit exceeded for node %s", self._node_id)
             raise HomeAssistantError(
@@ -143,7 +141,3 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_state",
             ) from err
-
-        # Duco may normalize the requested action on readback, such as
-        # MAN1x2 -> MAN1 or AUTO -> CNT1, so refresh the authoritative state.
-        await self.coordinator.async_refresh()

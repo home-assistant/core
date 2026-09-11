@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_number_state_snapshot[c2][number.bedroom_ac_dry_level-entry]
+# name: test_number_state_snapshot[c2][number.toilet_dry_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.bedroom_ac_dry_level',
+    'entity_id': 'number.toilet_dry_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,24 +41,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_number_state_snapshot[c2][number.bedroom_ac_dry_level-state]
+# name: test_number_state_snapshot[c2][number.toilet_dry_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Dry level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Toilet Dry level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 3,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_ac_dry_level',
+    'entity_id': 'number.toilet_dry_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_number_state_snapshot[c2][number.bedroom_ac_seat_temperature_level-entry]
+# name: test_number_state_snapshot[c2][number.toilet_seat_temperature_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -77,7 +77,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.bedroom_ac_seat_temperature_level',
+    'entity_id': 'number.toilet_seat_temperature_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -100,24 +100,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_number_state_snapshot[c2][number.bedroom_ac_seat_temperature_level-state]
+# name: test_number_state_snapshot[c2][number.toilet_seat_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Seat temperature level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Toilet Seat temperature level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_ac_seat_temperature_level',
+    'entity_id': 'number.toilet_seat_temperature_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.0',
   })
 # ---
-# name: test_number_state_snapshot[c2][number.bedroom_ac_water_temperature_level-entry]
+# name: test_number_state_snapshot[c2][number.toilet_water_temperature_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -136,7 +136,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.bedroom_ac_water_temperature_level',
+    'entity_id': 'number.toilet_water_temperature_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -159,24 +159,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_number_state_snapshot[c2][number.bedroom_ac_water_temperature_level-state]
+# name: test_number_state_snapshot[c2][number.toilet_water_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Water temperature level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Toilet Water temperature level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_ac_water_temperature_level',
+    'entity_id': 'number.toilet_water_temperature_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.0',
   })
 # ---
-# name: test_number_state_snapshot[cd][number.bedroom_ac_vacation_days-entry]
+# name: test_number_state_snapshot[cd][number.heat_pump_water_heater_vacation_days-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -195,7 +195,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.bedroom_ac_vacation_days',
+    'entity_id': 'number.heat_pump_water_heater_vacation_days',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -218,11 +218,11 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_number_state_snapshot[cd][number.bedroom_ac_vacation_days-state]
+# name: test_number_state_snapshot[cd][number.heat_pump_water_heater_vacation_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Vacation days',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Water Heater Vacation days',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 360,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -230,14 +230,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_ac_vacation_days',
+    'entity_id': 'number.heat_pump_water_heater_vacation_days',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '7.0',
   })
 # ---
-# name: test_number_state_snapshot[ed][number.bedroom_ac_flushing_days-entry]
+# name: test_number_state_snapshot[ed][number.water_drinking_appliance_flushing_days-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -256,7 +256,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.bedroom_ac_flushing_days',
+    'entity_id': 'number.water_drinking_appliance_flushing_days',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -279,11 +279,11 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_number_state_snapshot[ed][number.bedroom_ac_flushing_days-state]
+# name: test_number_state_snapshot[ed][number.water_drinking_appliance_flushing_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Flushing days',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Drinking Appliance Flushing days',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 99,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -291,14 +291,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_ac_flushing_days',
+    'entity_id': 'number.water_drinking_appliance_flushing_days',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14.0',
   })
 # ---
-# name: test_number_state_snapshot[ed][number.bedroom_ac_leak_water_protection_value-entry]
+# name: test_number_state_snapshot[ed][number.water_drinking_appliance_leak_water_protection_value-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -317,7 +317,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.bedroom_ac_leak_water_protection_value',
+    'entity_id': 'number.water_drinking_appliance_leak_water_protection_value',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -340,11 +340,11 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_number_state_snapshot[ed][number.bedroom_ac_leak_water_protection_value-state]
+# name: test_number_state_snapshot[ed][number.water_drinking_appliance_leak_water_protection_value-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Leak water protection value',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Drinking Appliance Leak water protection value',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 2550,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -352,14 +352,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_ac_leak_water_protection_value',
+    'entity_id': 'number.water_drinking_appliance_leak_water_protection_value',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '500.0',
   })
 # ---
-# name: test_number_state_snapshot[ed][number.bedroom_ac_water_hardness-entry]
+# name: test_number_state_snapshot[ed][number.water_drinking_appliance_water_hardness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -378,7 +378,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.bedroom_ac_water_hardness',
+    'entity_id': 'number.water_drinking_appliance_water_hardness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -401,24 +401,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_number_state_snapshot[ed][number.bedroom_ac_water_hardness-state]
+# name: test_number_state_snapshot[ed][number.water_drinking_appliance_water_hardness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Water hardness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Drinking Appliance Water hardness',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 65535,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_ac_water_hardness',
+    'entity_id': 'number.water_drinking_appliance_water_hardness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '120.0',
   })
 # ---
-# name: test_number_state_snapshot[fb][number.bedroom_ac_heating_level-entry]
+# name: test_number_state_snapshot[fb][number.electric_heater_heating_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -437,7 +437,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.bedroom_ac_heating_level',
+    'entity_id': 'number.electric_heater_heating_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -460,17 +460,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_number_state_snapshot[fb][number.bedroom_ac_heating_level-state]
+# name: test_number_state_snapshot[fb][number.electric_heater_heating_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Heating level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electric Heater Heating level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_ac_heating_level',
+    'entity_id': 'number.electric_heater_heating_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

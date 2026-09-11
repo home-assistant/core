@@ -1,13 +1,9 @@
 """Shared schemas for config entry and YAML config items."""
 
-from collections.abc import Callable
-from enum import StrEnum
-from itertools import chain
-from typing import TypeVar
-
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_CONDITIONS,
     CONF_DEVICE_ID,
     CONF_ICON,
     CONF_NAME,
@@ -23,8 +19,7 @@ from .const import (
     CONF_DEFAULT_ENTITY_ID,
     CONF_PICTURE,
 )
-
-_AttributeEnum = TypeVar("_AttributeEnum", bound=type[StrEnum])
+from .validators import BlockedTemplateAttributes, validate_attributes
 
 TEMPLATE_ENTITY_AVAILABILITY_SCHEMA = vol.Schema(
     {
@@ -45,42 +40,10 @@ TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA = {
 }
 
 
-def _blocked_attributes(
-    default_name: str,
-    blocked_attributes: tuple[_AttributeEnum, ...] | _AttributeEnum | None,
-    block_device_class: bool,
-) -> Callable[[dict], dict]:
-
-    def validate(obj: dict):
-        if blocked_attributes is None and not block_device_class:
-            return obj
-
-        _blocked_attributes: set[str]
-        if blocked_attributes is None:
-            _blocked_attributes = set()
-        elif isinstance(blocked_attributes, tuple):
-            _blocked_attributes = set(chain(*blocked_attributes))
-        else:
-            _blocked_attributes = set(blocked_attributes)
-
-        if block_device_class:
-            _blocked_attributes.add("device_class")
-
-        if blocked := (_blocked_attributes.intersection(set(obj.keys()))):
-            raise vol.Invalid(
-                f"Unsupported attribute(s) found for {default_name}: {', '.join(blocked)}"
-            )
-
-        return obj
-
-    return validate
-
-
 def make_template_entity_common_schema(
     domain: str,
     default_name: str,
-    blocked_attributes: tuple[_AttributeEnum, ...] | _AttributeEnum | None = None,
-    block_device_class: bool = False,
+    blocked_attributes: BlockedTemplateAttributes | None = None,
 ) -> vol.Schema:
     """Return a schema with default name."""
     return vol.Schema(
@@ -94,12 +57,14 @@ def make_template_entity_common_schema(
             vol.Optional(CONF_PICTURE): cv.template,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
             vol.Optional(CONF_ATTRIBUTES): vol.Schema(
-                vol.All(
-                    {cv.string: cv.template},
-                    _blocked_attributes(
-                        default_name, blocked_attributes, block_device_class
+                vol.Any(
+                    vol.All(
+                        {cv.string: cv.template},
+                        validate_attributes(default_name, blocked_attributes),
                     ),
+                    cv.template,
                 )
             ),
         }

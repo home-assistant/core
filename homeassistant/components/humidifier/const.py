@@ -1,6 +1,7 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
+from typing import Final
 
 MODE_NORMAL = "normal"
 MODE_ECO = "eco"
@@ -33,7 +34,7 @@ ATTR_TARGET_HUMIDITY_STEP = "target_humidity_step"
 DEFAULT_MIN_HUMIDITY = 0
 DEFAULT_MAX_HUMIDITY = 100
 
-DOMAIN = "humidifier"
+DOMAIN: Final = "humidifier"
 
 SERVICE_SET_MODE = "set_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"

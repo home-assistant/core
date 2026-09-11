@@ -614,6 +614,25 @@ async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
     assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
 
+async def test_async_remove_reports_the_original_error(hass: HomeAssistant) -> None:
+    """Test a failing removal surfaces its own exception."""
+
+    class MockEntityFailingRemoval(entity.Entity):
+        """Entity that cannot be removed cleanly."""
+
+        async def async_will_remove_from_hass(self) -> None:
+            """Fail while being removed."""
+            raise ValueError("Boom")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntityFailingRemoval()
+    ent.entity_id = "test.test"
+    await platform.async_add_entities([ent])
+
+    with pytest.raises(ValueError, match="Boom"):
+        await ent.async_remove()
+
+
 async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> None:
     """Test in flight polling is ignored after removing."""
     result = []
@@ -2964,7 +2983,10 @@ async def test_platform_state_no_platform(hass: HomeAssistant) -> None:
 async def test_platform_state_fail_to_add(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test platform state when raising from async_added_to_hass."""
+    """Test platform state when raising from async_added_to_hass.
+
+    The entity must be aborted instead of being left stuck in the ADDING state.
+    """
 
     entry = entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="test"
@@ -2982,14 +3004,107 @@ async def test_platform_state_fail_to_add(
     assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert hass.states.get("test.test") is None
-    assert ent._platform_state is entity.EntityPlatformState.ADDING
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert ent.platform is None
+    # The partial registration is rolled back: the reserved state id is released
+    # and no internal source data leaks.
+    assert hass.states.async_available("test.test")
+    assert "test.test" not in entity.entity_sources(hass)
 
-    entry = entity_registry.async_remove(entry.entity_id)
+    # Removing the registry entry of the aborted entity is a clean no-op
+    entity_registry.async_remove(entry.entity_id)
     await hass.async_block_till_done()
 
-    assert ent._platform_state == entity.EntityPlatformState.REMOVED
-
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
     assert hass.states.get("test.test") is None
+
+
+async def test_platform_state_cancelled_during_add(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the entity is cleaned up if adding it is cancelled.
+
+    Cancellation, e.g. by the surrounding add timeout, raises CancelledError
+    which derives from BaseException; the entity must still be aborted and its
+    partial registration rolled back.
+    """
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    adding = asyncio.Event()
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        async def async_added_to_hass(self) -> None:
+            adding.set()
+            await asyncio.Event().wait()
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    task = asyncio.create_task(
+        platform._async_add_entity(ent, False, entity_registry, None)
+    )
+    # Wait until the entity is committed and blocked inside async_added_to_hass
+    await adding.wait()
+
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert ent.platform is None
+    assert "test.test" not in platform.entities
+    # The partial registration is rolled back: the reserved state id is released
+    # and no internal source data leaks.
+    assert hass.states.async_available("test.test")
+    assert "test.test" not in entity.entity_sources(hass)
+
+
+async def test_platform_state_fail_to_add_rollback_raises(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the entity is aborted even if the finish-failure rollback raises.
+
+    add_to_platform_abort must still run if async_internal_will_remove_from_hass
+    raises during rollback, e.g. because a concurrent registry-driven removal
+    already cleared entity_sources. The rollback failure is logged separately
+    while the original add failure is surfaced.
+    """
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        async def async_added_to_hass(self) -> None:
+            # Simulate a concurrent removal clearing entity_sources, then fail;
+            # the rollback's async_internal_will_remove_from_hass will KeyError.
+            del entity.entity_sources(self.hass)[self.entity_id]
+            raise ValueError("Failed to add entity")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert ent.platform is None
+    assert "test.test" not in platform.entities
+    # The reserved state id is released even though the rollback raised.
+    assert hass.states.async_available("test.test")
+    # The rollback failure is logged separately, and the original add failure
+    # (not the synthetic rollback KeyError) is surfaced as the reason.
+    assert "Error cleaning up entity test.test" in caplog.text
+    assert "Failed to add entity" in caplog.text
 
 
 async def test_platform_state_write_from_init(

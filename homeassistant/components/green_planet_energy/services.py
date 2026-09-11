@@ -11,6 +11,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.selector import ConfigEntrySelector
@@ -177,6 +178,7 @@ async def get_prices(call: ServiceCall) -> ServiceResponse:
     }
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Green Planet Energy."""
 
