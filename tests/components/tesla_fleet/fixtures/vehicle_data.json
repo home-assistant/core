@@ -278,6 +278,70 @@
       "vehicle_self_test_progress": 0,
       "vehicle_self_test_requested": false,
       "webcam_available": true
+    },
+    "charge_schedule_data": {
+      "charge_schedules": [
+        {
+          "id": 1788504061,
+          "name": "Work",
+          "days_of_week": 32,
+          "start_enabled": true,
+          "start_time": 690,
+          "end_enabled": true,
+          "end_time": 930,
+          "one_time": true,
+          "enabled": true,
+          "latitude": 37.412374,
+          "longitude": -122.145867
+        },
+        {
+          "id": 1788552110,
+          "name": "",
+          "days_of_week": 16,
+          "start_enabled": true,
+          "start_time": 1320,
+          "end_enabled": false,
+          "end_time": 360,
+          "one_time": true,
+          "enabled": true,
+          "latitude": 37.412374,
+          "longitude": -122.145867
+        },
+        {
+          "id": 1788552125,
+          "name": "",
+          "days_of_week": 14,
+          "start_enabled": true,
+          "start_time": 1320,
+          "end_enabled": true,
+          "end_time": 360,
+          "one_time": false,
+          "enabled": false,
+          "latitude": 37.412374,
+          "longitude": -122.145867
+        }
+      ],
+      "timestamp": {
+        "seconds": 1788552190,
+        "nanos": 85000000
+      },
+      "charge_schedule_window": {
+        "id": 1788552129,
+        "name": "",
+        "days_of_week": 2,
+        "start_enabled": true,
+        "start_time": 1320,
+        "end_enabled": true,
+        "end_time": 360,
+        "one_time": false,
+        "enabled": true,
+        "latitude": 37.412374,
+        "longitude": -122.145867
+      },
+      "charge_buffer": 6,
+      "max_num_charge_schedules": 100,
+      "next_schedule": true,
+      "show_schedule_complete_state": true
     }
   }
 }

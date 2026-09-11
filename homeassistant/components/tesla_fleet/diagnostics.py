@@ -20,6 +20,10 @@ VEHICLE_REDACT = [
     "drive_state_longitude",
     "drive_state_native_latitude",
     "drive_state_native_longitude",
+    "latitude",
+    "longitude",
+    "charge_schedule_data_charge_schedule_window_latitude",
+    "charge_schedule_data_charge_schedule_window_longitude",
 ]
 
 ENERGY_LIVE_REDACT = ["vin"]
