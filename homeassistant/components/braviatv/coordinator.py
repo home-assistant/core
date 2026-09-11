@@ -305,6 +305,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         coarse_uri = None
         label_uri = None
         is_numeric_search = source_type == SourceType.CHANNEL and query.isnumeric()
+        folded = query.casefold()
         for uri, item in self.source_map.items():
             if item["type"] == source_type:
                 if is_numeric_search:
@@ -312,7 +313,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     if num and int(query) == int(num):
                         return await self.async_source_start(uri, source_type)
                 else:
-                    folded = query.casefold()
                     title = (item.get("title") or "").casefold()
                     name = (item.get("name") or "").casefold()
                     # A generic name wins over a label, so labelling an input with
