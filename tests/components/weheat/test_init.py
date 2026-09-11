@@ -7,8 +7,14 @@ import pytest
 from weheat.abstractions.discovery import HeatPumpDiscovery
 
 from homeassistant.components.weheat import UnauthorizedException
+from homeassistant.components.weheat.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestConnectionError,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -16,7 +22,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from . import setup_integration
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import ClientResponseError
 
 
 async def test_setup(
@@ -41,10 +46,29 @@ async def test_setup(
 @pytest.mark.parametrize(
     ("setup_exception", "expected_setup_state"),
     [
-        (HTTPStatus.BAD_REQUEST, ConfigEntryState.SETUP_ERROR),
-        (HTTPStatus.UNAUTHORIZED, ConfigEntryState.SETUP_ERROR),
-        (HTTPStatus.FORBIDDEN, ConfigEntryState.SETUP_ERROR),
-        (HTTPStatus.GATEWAY_TIMEOUT, ConfigEntryState.SETUP_RETRY),
+        pytest.param(
+            OAuth2TokenRequestReauthError(
+                domain=DOMAIN,
+                request_info=Mock(real_url="http://example.com"),
+                status=HTTPStatus.BAD_REQUEST,
+            ),
+            ConfigEntryState.SETUP_ERROR,
+            id="logging_in_again_is_needed",
+        ),
+        pytest.param(
+            OAuth2TokenRequestError(
+                domain=DOMAIN,
+                request_info=Mock(real_url="http://example.com"),
+                status=HTTPStatus.GATEWAY_TIMEOUT,
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            id="the_login_provider_answered_badly",
+        ),
+        pytest.param(
+            OAuth2TokenRequestConnectionError(domain=DOMAIN),
+            ConfigEntryState.SETUP_RETRY,
+            id="the_login_provider_could_not_be_reached",
+        ),
     ],
 )
 async def test_setup_fail(
@@ -56,14 +80,10 @@ async def test_setup_fail(
     setup_exception: Exception,
     expected_setup_state: ConfigEntryState,
 ) -> None:
-    """Test the Weheat setup with invalid token setup."""
-    with (
-        patch(
-            "homeassistant.components.weheat.OAuth2Session.async_ensure_token_valid",
-            side_effect=ClientResponseError(
-                Mock(real_url="http://example.com"), None, status=setup_exception
-            ),
-        ),
+    """Test the Weheat setup when the token cannot be renewed."""
+    with patch(
+        "homeassistant.components.weheat.OAuth2Session.async_ensure_token_valid",
+        side_effect=setup_exception,
     ):
         await setup_integration(hass, mock_config_entry)
 
