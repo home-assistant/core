@@ -114,6 +114,9 @@ async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) 
 
     state = hass.states.get("sensor.mysite_charge")
     assert state.state == "47.34587394586"
+    entity_entry = er.async_get(hass).async_get("sensor.mysite_charge")
+    assert entity_entry is not None
+    assert entity_entry.options["sensor"]["suggested_display_precision"] == 0
     expected_attributes = {
         "unit_of_measurement": PERCENTAGE,
         "friendly_name": "MySite Charge",
