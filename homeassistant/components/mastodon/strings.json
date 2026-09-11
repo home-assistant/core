@@ -144,6 +144,12 @@
       "message": "Update failed."
     }
   },
+  "issues": {
+    "deprecated_media_path": {
+      "description": "Using an absolute path in `{option}` for the `{action}` action is deprecated and will no longer be supported in a future release.\n\nPlease update your automations and scripts to use the new schema with media source selectors.\n\n## Example automation:\n\n{example_yaml}",
+      "title": "Deprecated absolute path in `{action}` action"
+    }
+  },
   "selector": {
     "fields": {
       "fields": {

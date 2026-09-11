@@ -56,6 +56,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_LOCKED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
@@ -970,6 +971,31 @@ async def test_service_post_media_source_upload_error(
             blocking=True,
         )
     assert err.value.translation_key == "unable_to_upload_media"
+
+
+async def test_service_post_absolute_path_deprecated(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the post service with deprecated absolute path raises an issue."""
+    await setup_integration(hass, mock_config_entry)
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_POST,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_STATUS: "test toot",
+                ATTR_MEDIA: "/image.jpg",
+            },
+            blocking=True,
+        )
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_media_path"
+    )
 
 
 @pytest.mark.parametrize(
