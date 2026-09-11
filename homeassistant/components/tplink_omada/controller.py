@@ -1,12 +1,15 @@
 """Controller for sharing Omada API coordinators between platforms."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
+import logging
 from typing import TYPE_CHECKING
 
 from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 if TYPE_CHECKING:
@@ -19,6 +22,8 @@ from .coordinator import (
     OmadaKnownClientsCoordinator,
     OmadaSwitchPortCoordinator,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OmadaSiteController:
@@ -48,6 +53,7 @@ class OmadaSiteController:
             hass, config_entry, omada_client
         )
         self._device_entity_registrations: list[set[str]] = []
+        self._gateway_coordinator_lock = asyncio.Lock()
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
@@ -79,7 +85,9 @@ class OmadaSiteController:
             entity_callback: Given a discovered Omada device,
                 creates entities for that device.
         """
-        # Track which devices have been processed already
+        # Track which devices have been processed already. Devices are marked
+        # only after successful entity creation so failed registrations retry
+        # on the next device update.
         processed_devices: set[str] = set()
         self._device_entity_registrations.append(processed_devices)
 
@@ -96,8 +104,18 @@ class OmadaSiteController:
                 return
 
             for device in devices_to_process:
+                try:
+                    await entity_callback(device)
+                except HomeAssistantError as ex:
+                    # Leave the device unmarked so registration retries on the
+                    # next device update.
+                    _LOGGER.debug(
+                        "Failed to register entities for device %s: %s",
+                        device.mac,
+                        ex,
+                    )
+                    continue
                 processed_devices.add(dr.format_mac(device.mac))
-                await entity_callback(device)
 
         @callback
         def _handle_devices_update() -> None:
@@ -110,11 +128,18 @@ class OmadaSiteController:
         # Call once on initial setup
         await _async_register_entities()
 
-    def async_mark_device_removed(self, mac: str) -> None:
+    async def async_mark_device_removed(self, mac: str) -> None:
         """Allow entities for a removed device to be re-registered if it reappears."""
         mac = dr.format_mac(mac)
         for processed in self._device_entity_registrations:
             processed.discard(mac)
+
+        async with self._gateway_coordinator_lock:
+            coordinator = self._gateway_coordinator
+            if coordinator is None or dr.format_mac(coordinator.mac) != mac:
+                return
+            self._gateway_coordinator = None
+            await coordinator.async_shutdown()
 
     @property
     def omada_client(self) -> OmadaSiteClient:
@@ -134,17 +159,23 @@ class OmadaSiteController:
 
     async def async_get_gateway_coordinator(self, mac: str) -> OmadaGatewayCoordinator:
         """Get the gateway coordinator, creating or replacing it for the given MAC."""
-        coordinator = self._gateway_coordinator
-        if coordinator is None or coordinator.mac != mac:
-            if coordinator is not None:
-                await coordinator.async_shutdown()
-            coordinator = OmadaGatewayCoordinator(
-                self._hass, self._config_entry, self._omada_client, mac
-            )
-            await coordinator.async_refresh()
-            self._gateway_coordinator = coordinator
+        async with self._gateway_coordinator_lock:
+            coordinator = self._gateway_coordinator
+            if coordinator is None or dr.format_mac(coordinator.mac) != dr.format_mac(
+                mac
+            ):
+                if coordinator is not None:
+                    await coordinator.async_shutdown()
+                coordinator = OmadaGatewayCoordinator(
+                    self._hass, self._config_entry, self._omada_client, mac
+                )
+                self._gateway_coordinator = coordinator
+                await coordinator.async_refresh()
+            elif not coordinator.data:
+                # Retry a previous failed fetch so registration can recover.
+                await coordinator.async_refresh()
 
-        return coordinator
+            return coordinator
 
     @property
     def gateway_coordinator(self) -> OmadaGatewayCoordinator | None:

@@ -346,5 +346,5 @@ async def async_cleanup_devices(
                 mac,
                 entry_id,
             )
-            controller.async_mark_device_removed(mac)
+            await controller.async_mark_device_removed(mac)
             device_registry.async_remove_device(device_entry.id)

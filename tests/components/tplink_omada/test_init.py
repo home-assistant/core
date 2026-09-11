@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from tplink_omada_client.clients import OmadaWirelessClient
-from tplink_omada_client.devices import OmadaListDevice
+from tplink_omada_client.devices import OmadaGateway, OmadaListDevice
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -34,6 +34,7 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_array_fixture,
+    async_load_json_object_fixture,
 )
 
 MOCK_ENTRY_DATA = {
@@ -531,6 +532,90 @@ async def test_gateway_entities_created_when_gateway_appears_later(
 
     assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is not None
     assert hass.states.get("switch.test_router_port_4_internet_connected") is not None
+
+
+async def test_cleanup_recreates_gateway_when_it_reappears(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a gateway removed by cleanup is re-registered when it returns."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    gateway_mac = "AA-BB-CC-DD-EE-FF"
+    site_client = mock_omada_client.get_site_client.return_value
+    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is not None
+
+    # Remove the gateway from the controller's device list and clean up
+    site_client.get_devices = AsyncMock(
+        side_effect=partial(_get_devices_without, hass, gateway_mac)
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, gateway_mac), mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is None
+
+    # Gateway returns — the next interval run re-registers it with fresh data
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    site_client.get_devices = AsyncMock(
+        return_value=[OmadaListDevice(d) for d in devices_data]
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is not None
+
+
+async def test_gateway_registration_retries_after_failed_refresh(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test gateway entity registration retries when the initial fetch fails."""
+    gateway_mac = "AA-BB-CC-DD-EE-FF"
+    site_client = mock_omada_client.get_site_client.return_value
+    site_client.get_devices = AsyncMock(
+        side_effect=partial(_get_devices_without, hass, gateway_mac)
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    gateway_data = await async_load_json_object_fixture(
+        hass, "gateway-TL-ER7212PC.json", DOMAIN
+    )
+    gateway = OmadaGateway(gateway_data)
+    gateway_available = False
+
+    async def _get_gateway(mac: str) -> OmadaGateway:
+        if not gateway_available:
+            raise OmadaClientException("Gateway fetch failed")
+        return gateway
+
+    site_client.get_gateway = AsyncMock(side_effect=_get_gateway)
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    site_client.get_devices = AsyncMock(
+        return_value=[OmadaListDevice(d) for d in devices_data]
+    )
+
+    # The gateway appears but cannot be fetched, so no entities are registered
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is None
+
+    # Once the gateway is fetchable, the next run retries registration
+    gateway_available = True
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is not None
 
 
 @pytest.mark.parametrize(

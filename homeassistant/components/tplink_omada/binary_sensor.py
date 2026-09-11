@@ -23,6 +23,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -46,15 +47,17 @@ async def async_setup_entry(
 
         entities: list[Entity] = []
         gateway = (gateway_coordinator.data or {}).get(device.mac)
-        if gateway:
-            entities.extend(
-                OmadaGatewayPortBinarySensor(
-                    gateway_coordinator, gateway, p.port_number, desc
-                )
-                for p in gateway.port_configs
-                for desc in GATEWAY_PORT_SENSORS
-                if desc.exists_func(p)
+        if gateway is None:
+            raise HomeAssistantError(f"Gateway data for {device.mac} is unavailable")
+
+        entities.extend(
+            OmadaGatewayPortBinarySensor(
+                gateway_coordinator, gateway, p.port_number, desc
             )
+            for p in gateway.port_configs
+            for desc in GATEWAY_PORT_SENSORS
+            if desc.exists_func(p)
+        )
         async_add_entities(entities)
 
     await controller.async_register_device_entities(
