@@ -64,6 +64,7 @@ class AbstractTemplateEntity(Entity):
         self._templates: dict[str, EntityTemplate] = {}
         self._action_scripts: dict[str, Script] = {}
         self._attr_extra_state_attributes = {}
+        self._assumed_attributes: dict[str, str] = {}
 
         self._attribute_templates: dict[str, Template] | None = None
         self._attributes_template: Template | None = None
@@ -200,6 +201,24 @@ class AbstractTemplateEntity(Entity):
             f"{name} {script_id}",
             domain,
         )
+
+    def add_assumed_attribute(self, attr: str, option: str, action_option: str):
+        """Add an optimistic option."""
+        if option not in self._config and action_option in self._config:
+            self._assumed_attributes[option] = attr
+
+    def update_assumed_attribute(self, option: str, value: Any) -> bool:
+        """If the attribute is assumed, update attribute with the new value."""
+        attr = self._assumed_attributes.get(option)
+        if assumed_attribute := attr is not None:
+            setattr(self, attr, value)
+
+        return assumed_attribute
+
+    def write_assumed_attribute(self, option: str, value: Any) -> None:
+        """If the attribute is assumed, write the value to the attribute and update the ha state."""
+        if self.update_assumed_attribute(option, value):
+            self.async_write_ha_state()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
