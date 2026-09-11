@@ -666,6 +666,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             await self.hass.async_add_executor_job(self.turn_on)
             return
 
+        if self.hvac_mode is not None and self.hvac_mode != HVACMode.OFF:
+            return
+
         # If there are only two HVAC modes, and one of those modes is OFF,
         # then we can just turn on the other mode.
         if len(self.hvac_modes) == 2 and HVACMode.OFF in self.hvac_modes:

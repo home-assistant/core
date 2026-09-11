@@ -451,6 +451,10 @@ async def test_turn_on_off_toggle(hass: HomeAssistant) -> None:
     await climate.async_turn_on()
     assert climate.hvac_mode == HVACMode.HEAT
 
+    # Turning on when already on should be a no-op
+    await climate.async_turn_on()
+    assert climate.hvac_mode == HVACMode.HEAT
+
     await climate.async_turn_off()
     assert climate.hvac_mode == HVACMode.OFF
 
@@ -458,6 +462,155 @@ async def test_turn_on_off_toggle(hass: HomeAssistant) -> None:
     assert climate.hvac_mode == HVACMode.HEAT
     await climate.async_toggle()
     assert climate.hvac_mode == HVACMode.OFF
+
+
+@pytest.mark.parametrize(
+    ("supported_modes", "initial_mode"),
+    [
+        pytest.param(
+            [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL],
+            HVACMode.COOL,
+            id="cool_with_heat_cool_supported",
+        ),
+        pytest.param(
+            [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL],
+            HVACMode.HEAT,
+            id="heat_with_heat_cool_supported",
+        ),
+        pytest.param(
+            [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL],
+            HVACMode.HEAT_COOL,
+            id="heat_cool_with_heat_cool_supported",
+        ),
+        pytest.param(
+            [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT],
+            HVACMode.COOL,
+            id="cool_without_heat_cool_supported",
+        ),
+        pytest.param(
+            [
+                HVACMode.OFF,
+                HVACMode.COOL,
+                HVACMode.HEAT,
+                HVACMode.FAN_ONLY,
+                HVACMode.DRY,
+            ],
+            HVACMode.FAN_ONLY,
+            id="fan_only",
+        ),
+        pytest.param(
+            [
+                HVACMode.OFF,
+                HVACMode.COOL,
+                HVACMode.HEAT,
+                HVACMode.FAN_ONLY,
+                HVACMode.DRY,
+            ],
+            HVACMode.DRY,
+            id="dry",
+        ),
+    ],
+)
+async def test_turn_on_already_on(
+    hass: HomeAssistant,
+    supported_modes: list[HVACMode],
+    initial_mode: HVACMode,
+) -> None:
+    """Test that async_turn_on does not alter the mode when entity is already on."""
+
+    class MockClimateEntityTest(MockClimateEntity):
+        """Mock Climate device."""
+
+        def __init__(self, modes: list[HVACMode]) -> None:
+            """Initialize mock climate entity."""
+            super().__init__()
+            self._attr_hvac_modes = modes
+            self._attr_hvac_mode = HVACMode.OFF
+            self.set_hvac_mode_calls: list[HVACMode] = []
+
+        @property
+        def hvac_modes(self) -> list[HVACMode]:
+            """Return hvac modes."""
+            return self._attr_hvac_modes
+
+        @property
+        def hvac_mode(self) -> HVACMode:
+            """Return hvac mode."""
+            return self._attr_hvac_mode
+
+        async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+            """Set new target hvac mode."""
+            self.set_hvac_mode_calls.append(hvac_mode)
+            self._attr_hvac_mode = hvac_mode
+
+    climate = MockClimateEntityTest(supported_modes)
+    climate.hass = hass
+
+    await climate.async_set_hvac_mode(initial_mode)
+    assert climate.hvac_mode == initial_mode
+    assert climate.set_hvac_mode_calls == [initial_mode]
+
+    # Turn on when already on should be an idempotent no-op
+    await climate.async_turn_on()
+    assert climate.hvac_mode == initial_mode
+    assert climate.set_hvac_mode_calls == [initial_mode]
+
+
+@pytest.mark.parametrize(
+    ("supported_modes", "expected_mode"),
+    [
+        pytest.param(
+            [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL],
+            HVACMode.HEAT_COOL,
+            id="picks_heat_cool_from_off",
+        ),
+        pytest.param(
+            [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT],
+            HVACMode.HEAT,
+            id="picks_heat_from_off",
+        ),
+        pytest.param(
+            [HVACMode.OFF, HVACMode.COOL],
+            HVACMode.COOL,
+            id="picks_cool_from_off",
+        ),
+    ],
+)
+async def test_turn_on_from_off(
+    hass: HomeAssistant,
+    supported_modes: list[HVACMode],
+    expected_mode: HVACMode,
+) -> None:
+    """Test that async_turn_on turns on the expected mode when entity is off."""
+
+    class MockClimateEntityTest(MockClimateEntity):
+        """Mock Climate device."""
+
+        def __init__(self, modes: list[HVACMode]) -> None:
+            """Initialize mock climate entity."""
+            super().__init__()
+            self._attr_hvac_modes = modes
+            self._attr_hvac_mode = HVACMode.OFF
+
+        @property
+        def hvac_modes(self) -> list[HVACMode]:
+            """Return hvac modes."""
+            return self._attr_hvac_modes
+
+        @property
+        def hvac_mode(self) -> HVACMode:
+            """Return hvac mode."""
+            return self._attr_hvac_mode
+
+        async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+            """Set new target hvac mode."""
+            self._attr_hvac_mode = hvac_mode
+
+    climate = MockClimateEntityTest(supported_modes)
+    climate.hass = hass
+
+    await climate.async_turn_on()
+    assert climate.hvac_mode == expected_mode
 
 
 async def test_sync_toggle(hass: HomeAssistant) -> None:
