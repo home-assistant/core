@@ -187,17 +187,32 @@ async def test_get_triggers_for_removed_device(
     assert triggers == []
 
 
+@pytest.mark.parametrize(
+    ("other_domain", "other_identifiers"),
+    [
+        pytest.param("other", {("other", "1")}, id="foreign_entry"),
+        pytest.param(
+            hue.DOMAIN,
+            {(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")},
+            id="stale_hue_entry",
+        ),
+    ],
+)
 async def test_get_triggers_for_composite_device_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_bridge_v2: Mock,
     v2_resources_test_data: JsonArrayType,
+    other_domain: str,
+    other_identifiers: set[tuple[str, str]],
 ) -> None:
     """Test the trigger list for a pre-migration composite id echoes that id.
 
     async_get_device_automations keys its results by the requested device id,
     so the returned triggers must reference the composite id, not the split.
+    The triggers come from the loaded bridge, also when the composite spans the
+    not loaded entry of a stale Hue bridge.
     """
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(
@@ -206,10 +221,11 @@ async def test_get_triggers_for_composite_device_id(
     hue_wall_switch_device = device_registry.async_get_device_by_identifier(
         (hue.DOMAIN, WALL_SWITCH_DEVICE_ID), mock_bridge_v2.config_entry.entry_id
     )
-    other_entry = MockConfigEntry(domain="other")
+    other_entry = MockConfigEntry(domain=other_domain)
     other_entry.add_to_hass(hass)
+    assert other_entry.state is not ConfigEntryState.LOADED
     other_device = device_registry.async_get_or_create(
-        config_entry_id=other_entry.entry_id, identifiers={("other", "1")}
+        config_entry_id=other_entry.entry_id, identifiers=other_identifiers
     )
     composite_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
