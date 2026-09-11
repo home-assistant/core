@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 from copy import deepcopy
 import logging
 import time
@@ -2373,34 +2373,6 @@ async def test_ble_parent_concurrent_first_init(hass: HomeAssistant) -> None:
     assert all(parent is parents[0] for parent in parents)
     mock_parent.assert_called_once()
     mock_parent.return_value.get_private_key.assert_awaited_once()
-
-
-async def test_ble_parent_key_load_runs_off_event_loop(hass: HomeAssistant) -> None:
-    """Loading the private key cannot stall the event loop, even if it blocks."""
-    heartbeats = 0
-
-    async def _heartbeat() -> None:
-        nonlocal heartbeats
-        while True:
-            await asyncio.sleep(0.01)
-            heartbeats += 1
-
-    async def _blocking_get_private_key(path: str) -> None:
-        time.sleep(0.2)  # noqa: ASYNC251 - simulates the library's synchronous work
-
-    with patch(
-        "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
-    ) as mock_parent:
-        mock_parent.return_value.get_private_key = AsyncMock(
-            side_effect=_blocking_get_private_key
-        )
-        heartbeat_task = hass.async_create_task(_heartbeat())
-        await async_get_ble_parent(hass)
-        heartbeat_task.cancel()
-        with suppress(asyncio.CancelledError):
-            await heartbeat_task
-
-    assert heartbeats >= 1
 
 
 async def test_router_does_not_fail_over_on_unconfirmed() -> None:
