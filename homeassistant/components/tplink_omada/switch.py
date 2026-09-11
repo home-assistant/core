@@ -97,7 +97,11 @@ async def async_setup_entry(
         gateway_coordinator = await controller.async_get_gateway_coordinator(device.mac)
         gateway = (gateway_coordinator.data or {}).get(device.mac)
         if gateway is None:
-            raise HomeAssistantError(f"Gateway data for {device.mac} is unavailable")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="gateway_unavailable",
+                translation_placeholders={"mac": device.mac},
+            )
 
         entities.extend(
             OmadaDevicePortSwitchEntity[

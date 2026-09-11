@@ -28,6 +28,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
+from .const import DOMAIN
 from .controller import OmadaGatewayCoordinator
 from .entity import OmadaDeviceEntity
 
@@ -48,7 +49,11 @@ async def async_setup_entry(
         entities: list[Entity] = []
         gateway = (gateway_coordinator.data or {}).get(device.mac)
         if gateway is None:
-            raise HomeAssistantError(f"Gateway data for {device.mac} is unavailable")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="gateway_unavailable",
+                translation_placeholders={"mac": device.mac},
+            )
 
         entities.extend(
             OmadaGatewayPortBinarySensor(
