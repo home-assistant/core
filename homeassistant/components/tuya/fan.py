@@ -121,6 +121,11 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
+        # The speed wrappers have no off position, 0% has to hit the switch
+        if percentage == 0 and self._switch_wrapper is not None:
+            await self.async_turn_off()
+            return
+
         await self._async_send_wrapper_updates(self._speed_wrapper, percentage)
 
     @override
