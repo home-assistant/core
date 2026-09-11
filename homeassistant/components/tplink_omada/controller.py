@@ -104,18 +104,22 @@ class OmadaSiteController:
                 return
 
             for device in devices_to_process:
+                mac = dr.format_mac(device.mac)
+                # Reserve the device before awaiting so concurrent
+                # registrations do not process it twice.
+                processed_devices.add(mac)
                 try:
                     await entity_callback(device)
                 except HomeAssistantError as ex:
-                    # Leave the device unmarked so registration retries on the
+                    # Release the reservation so registration retries on the
                     # next device update.
+                    processed_devices.discard(mac)
                     _LOGGER.debug(
                         "Failed to register entities for device %s: %s",
                         device.mac,
                         ex,
                     )
                     continue
-                processed_devices.add(dr.format_mac(device.mac))
 
         @callback
         def _handle_devices_update() -> None:
