@@ -2,16 +2,22 @@
 
 from collections import deque
 from collections.abc import Collection
+from contextlib import suppress
 from functools import cache
 from importlib.metadata import PackageMetadata, files, metadata
 import json
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
 from typing import Any, TypedDict
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.specifiers import SpecifierSet
+from packaging.utils import canonicalize_name
+from packaging.version import InvalidVersion, Version
 from tqdm import tqdm
 
 import homeassistant.util.package as pkg_util
@@ -371,7 +377,8 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     # Check if we are doing format-only validation.
     if not config.requirements:
         for integration in integrations.values():
-            validate_requirements_format(integration)
+            if validate_requirements_format(integration):
+                validate_custom_requirements(integration, config)
         return
 
     # check for incompatible requirements
@@ -430,6 +437,123 @@ def validate_requirements_format(integration: Integration) -> bool:
                     continue
 
     return len(integration.errors) == start_errors
+
+
+@cache
+def _load_requirement_file(path: Path) -> dict[str, SpecifierSet]:
+    """Read a pip requirements file into a map of package name to version specifier."""
+    requirements: dict[str, SpecifierSet] = {}
+    if not path.is_file():
+        return requirements
+
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+
+        # Skip comments and pip options such as "-r requirements.txt"
+        if not line or line.startswith(("#", "-")):
+            continue
+
+        try:
+            requirement = Requirement(line)
+        except InvalidRequirement:
+            continue
+
+        requirements[canonicalize_name(requirement.name)] = requirement.specifier
+
+    return requirements
+
+
+def _probe_versions(*specifier_sets: SpecifierSet) -> set[Version]:
+    """Return the versions worth probing to compare specifier sets.
+
+    A specifier set describes a union of version intervals, so a non-empty
+    intersection of two of them always contains a version that sits on, just
+    below, or just above one of the boundaries either of them mentions.
+    """
+    versions = {Version("0")}
+
+    for specifiers in specifier_sets:
+        for specifier in specifiers:
+            boundary = specifier.version.removesuffix(".*")
+            for suffix in ("", ".dev0", ".post0"):
+                with suppress(InvalidVersion):
+                    versions.add(Version(f"{boundary}{suffix}"))
+
+    return versions
+
+
+def _specifiers_conflict(left: SpecifierSet, right: SpecifierSet) -> bool:
+    """Return if no single version can satisfy both specifier sets."""
+    return not any(
+        left.contains(version, prereleases=True)
+        and right.contains(version, prereleases=True)
+        for version in _probe_versions(left, right)
+    )
+
+
+def validate_custom_requirements(integration: Integration, config: Config) -> None:
+    """Validate a custom integration against the requirements of Home Assistant.
+
+    Custom integrations are installed into the same Python environment as Home
+    Assistant itself. A requirement that rules out the version Home Assistant
+    needs takes the whole installation down with it.
+    """
+    if integration.core:
+        return
+
+    core_requirements = _load_requirement_file(config.root / "requirements.txt")
+    all_requirements = _load_requirement_file(config.root / "requirements_all.txt")
+    constraints = _load_requirement_file(
+        config.root / "homeassistant/package_constraints.txt"
+    )
+
+    for req in integration.requirements:
+        try:
+            requirement = Requirement(req)
+        except InvalidRequirement:
+            continue
+
+        if requirement.marker and not requirement.marker.evaluate():
+            continue
+
+        package = canonicalize_name(requirement.name)
+
+        if package in core_requirements:
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is a dependency of Home Assistant itself and "
+                "must not be listed in the manifest of a custom integration.",
+            )
+            continue
+
+        for source, pinned in (
+            ("Home Assistant depends on", all_requirements.get(package)),
+            ("Home Assistant's package constraints require", constraints.get(package)),
+        ):
+            if pinned is None:
+                continue
+
+            if _specifiers_conflict(requirement.specifier, pinned):
+                integration.add_error(
+                    "requirements",
+                    f"Requirement {req} is incompatible with {package}{pinned}, "
+                    f"which {source}.",
+                )
+                break
+
+            if exact := sorted(
+                specifier.version.removesuffix(".*")
+                for specifier in requirement.specifier
+                if specifier.operator in ("==", "===")
+            ):
+                integration.add_error(
+                    "requirements",
+                    f"Requirement {req} pins a package {source} "
+                    f"({package}{pinned}). Use a minimum version "
+                    f'("{package}>={exact[0]}") instead, so it can follow along '
+                    "when Home Assistant updates it.",
+                )
+                break
 
 
 def validate_requirements(integration: Integration) -> None:
