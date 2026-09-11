@@ -1,0 +1,101 @@
+# serializer version: 1
+# name: test_entities[time][time.frenck_s_lametric_screensaver_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.frenck_s_lametric_screensaver_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Screensaver end time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Screensaver end time',
+    'platform': 'lametric',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'screensaver_end_time',
+    'unique_id': 'SA110405124500W00BS9-screensaver_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[time][time.frenck_s_lametric_screensaver_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "Frenck's LaMetric Screensaver end time",
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.frenck_s_lametric_screensaver_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22:30:00',
+  })
+# ---
+# name: test_entities[time][time.frenck_s_lametric_screensaver_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.frenck_s_lametric_screensaver_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Screensaver start time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Screensaver start time',
+    'platform': 'lametric',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'screensaver_start_time',
+    'unique_id': 'SA110405124500W00BS9-screensaver_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[time][time.frenck_s_lametric_screensaver_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "Frenck's LaMetric Screensaver start time",
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.frenck_s_lametric_screensaver_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16:00:39',
+  })
+# ---

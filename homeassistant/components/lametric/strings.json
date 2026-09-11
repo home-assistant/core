@@ -91,6 +91,14 @@
       "bluetooth": {
         "name": "Bluetooth"
       }
+    },
+    "time": {
+      "screensaver_end_time": {
+        "name": "Screensaver end time"
+      },
+      "screensaver_start_time": {
+        "name": "Screensaver start time"
+      }
     }
   },
   "selector": {

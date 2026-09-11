@@ -35,22 +35,6 @@
       "min": 0
     },
     "height": 8,
-    "screensaver": {
-      "enabled": false,
-      "modes": {
-        "time_based": {
-          "enabled": true,
-          "end_time": "06:30:00",
-          "local_end_time": "07:30:00",
-          "local_start_time": "01:00:39",
-          "start_time": "00:00:39"
-        },
-        "when_dark": {
-          "enabled": false
-        }
-      },
-      "widget": "08b8eac21074f8f7e5a29f2855ba8060"
-    },
     "type": "mixed",
     "width": 37
   },
@@ -58,7 +42,7 @@
   "mode": "auto",
   "model": "LM 37X8",
   "name": "Frenck's LaMetric",
-  "os_version": "2.2.2",
+  "os_version": "1.7.2",
   "serial_number": "SA110405124500W00BS9",
   "wifi": {
     "active": true,
