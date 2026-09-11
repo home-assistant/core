@@ -26,7 +26,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ENABLE_PUSH, DOMAIN
+from .const import CONF_CHARSET, CONF_ENABLE_PUSH, DOMAIN
 from .coordinator import (
     ImapDataUpdateCoordinator,
     ImapMessage,
@@ -44,6 +44,7 @@ CONF_SEEN = "seen"
 CONF_PART = "part"
 CONF_UID = "uid"
 CONF_TARGET_FOLDER = "target_folder"
+CONF_SEARCH_COMMAND = "search_command"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +55,13 @@ _SERVICE_UID_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTRY): cv.string,
         vol.Required(CONF_UID): cv.string,
+    }
+)
+
+SERVICE_SEARCH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTRY): cv.string,
+        vol.Required(CONF_SEARCH_COMMAND): cv.string,
     }
 )
 
@@ -176,6 +184,50 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await client.close()
 
     hass.services.async_register(DOMAIN, "move", async_move, SERVICE_MOVE_SCHEMA)
+
+    async def async_search(call: ServiceCall) -> ServiceResponse:
+        """Process search email service call."""
+        entry_id: str = call.data[CONF_ENTRY]
+        search_command: str = call.data[CONF_SEARCH_COMMAND]
+        if (entry := hass.config_entries.async_get_entry(entry_id)) is None or (
+            entry.state is not ConfigEntryState.LOADED
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_entry",
+            )
+        charset = entry.data[CONF_CHARSET]
+        _LOGGER.debug(
+            "Search for message with search command: %s. Entry: %s",
+            search_command,
+            entry_id,
+        )
+        client = await async_get_imap_client(hass, entry_id)
+        try:
+            response = await client.search(search_command, charset=charset)
+            raise_on_error(response, "search_failed")
+        except (TimeoutError, AioImapException) as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="imap_server_fail",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+        finally:
+            await client.close()
+        return {
+            # Index 0 of of the response lines contains the bytearray of uids of the matching messages
+            "uids": response.lines[0].decode(charset).split()
+            if len(response.lines) == 2
+            else []
+        }
+
+    hass.services.async_register(
+        DOMAIN,
+        "search",
+        async_search,
+        SERVICE_SEARCH_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
 
     async def async_delete(call: ServiceCall) -> None:
         """Process deleting email service call."""
