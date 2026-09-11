@@ -670,7 +670,6 @@ Static Context: An overview of the areas and the devices in this smart home:
 """
     first_part_prompt = (
         "When controlling Home Assistant always call the intent tools. "
-        "Use intent__HassTurnOn to lock and intent__HassTurnOff to unlock a lock. "
         "When controlling a device, prefer passing just name and domain. "
         "When controlling an area, prefer passing just area name and domain."
     )

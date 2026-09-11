@@ -38,6 +38,15 @@ type _IntentSlotsType = dict[
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
 INTENT_TOGGLE = "HassToggle"
+
+# Constrained aliases of HassTurnOn and HassTurnOff so smaller LLMs pick the
+# correct tools.
+INTENT_LOCK = "HassLock"
+INTENT_UNLOCK = "HassUnlock"
+INTENT_OPEN = "HassOpen"
+INTENT_CLOSE = "HassClose"
+INTENT_PRESS = "HassPress"
+
 INTENT_GET_STATE = "HassGetState"
 INTENT_NEVERMIND = "HassNevermind"
 INTENT_SET_POSITION = "HassSetPosition"
@@ -1036,7 +1045,9 @@ class DynamicServiceIntentHandler(IntentHandler):
         if "domain" in slots:
             domains = set(slots["domain"]["value"])
 
-        if "device_class" in slots:
+        if "device_class" in slots and self.device_classes:
+            # Only add constraint if the handler intentionally filters by device
+            # class. LLMs often pass this in wrong.
             device_classes = set(slots["device_class"]["value"])
 
         match_constraints = MatchTargetsConstraints(
