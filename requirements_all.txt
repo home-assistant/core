@@ -603,7 +603,7 @@ asyncpysupla==0.0.5
 asyncsleepiq==1.7.1
 
 # homeassistant.components.sftp_storage
-asyncssh==2.21.0
+asyncssh==2.23.1
 
 # homeassistant.components.aurora
 auroranoaa==0.0.5
