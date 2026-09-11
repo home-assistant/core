@@ -6,7 +6,10 @@ import operator
 from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
+from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
+    PyiCloud2FARequiredException,
+    PyiCloudAPIResponseException,
     PyiCloudAuthRequiredException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
@@ -61,6 +64,28 @@ if TYPE_CHECKING:
     from .media_source import PhotoCache
 
 _LOGGER = logging.getLogger(__name__)
+
+# pyicloud only raises PyiCloud2FARequiredException for a 409 whose body is JSON
+# with authType == "hsa2". Every other authentication rejection falls through to
+# Session._raise_error(), which raises a plain PyiCloudAPIResponseException
+# carrying the HTTP status in .code, so the status is what has to be inspected.
+#
+# GENERAL_AUTH_ERROR (500) is excluded on purpose: pyicloud groups it with the
+# authentication statuses, but a 500 is just as likely to be a transient iCloud
+# failure, and those have to keep being retried rather than parked for the user.
+_AUTH_REQUIRED_STATUSES = frozenset(
+    {
+        AppleAuthError.TWO_FACTOR_REQUIRED,
+        AppleAuthError.LOGIN_TOKEN_EXPIRED,
+        AppleAuthError.FIND_MY_REAUTH_REQUIRED,
+    }
+)
+
+
+def _is_auth_error(err: PyiCloudAPIResponseException) -> bool:
+    """Return True if the account has to authenticate again to recover."""
+    return isinstance(err.code, int) and err.code in _AUTH_REQUIRED_STATUSES
+
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
@@ -393,24 +418,18 @@ class IcloudAccount:
             return
 
         try:
-            self.api.authenticate()
-            self.update_devices()
-        except PyiCloudFailedLoginException, PyiCloudAuthRequiredException:
-            # Neither of these comes back on its own, so ask the user instead
-            # of retrying every couple of minutes forever.
-            if self.api is not None and self.api.requires_2fa:
-                # Keep the session: the reauth flow reuses it to validate the
-                # code, and async_step_reauth sends a None api back to the
-                # password form instead of straight to code entry.
-                _LOGGER.warning(
-                    (
-                        "2FA authentication required for '%s'; Go to the Integrations "
-                        "menu and click on Configure on the discovered Apple iCloud "
-                        "card to enter your verification code"
-                    ),
-                    self._config_entry.data[CONF_USERNAME],
-                )
-            else:
+            try:
+                self.api.authenticate()
+                self.update_devices()
+            except PyiCloudAPIResponseException as err:
+                if not _is_auth_error(err):
+                    # Not an authentication failure. Hand it to the transient
+                    # handling below so it keeps being retried, rather than
+                    # parking the account for credentials that are not at fault.
+                    raise
+                # Reported as a login failure: the status says the session has
+                # to be established again, and there is no code to send through
+                # one that has just been rejected.
                 self.api = None
                 _LOGGER.error(
                     (
@@ -420,9 +439,44 @@ class IcloudAccount:
                     ),
                     self._config_entry.data[CONF_USERNAME],
                 )
-            self._require_reauth()
-            self._fetch_interval = self._max_interval
-            self._schedule_next_fetch()
+                self._require_reauth()
+                self._fetch_interval = self._max_interval
+                self._schedule_next_fetch()
+            except (
+                PyiCloud2FARequiredException,
+                PyiCloudFailedLoginException,
+                PyiCloudAuthRequiredException,
+            ) as err:
+                # None of these comes back on its own, so ask the user instead
+                # of retrying every couple of minutes forever.
+                if isinstance(err, PyiCloud2FARequiredException) or (
+                    self.api is not None and self.api.requires_2fa
+                ):
+                    # Keep the session: the reauth flow reuses it to validate
+                    # the code, and async_step_reauth sends a None api back to
+                    # the password form instead of straight to code entry.
+                    _LOGGER.warning(
+                        (
+                            "2FA authentication required for '%s'; Go to the "
+                            "Integrations menu and click on Configure on the "
+                            "discovered Apple iCloud card to enter your "
+                            "verification code"
+                        ),
+                        self._config_entry.data[CONF_USERNAME],
+                    )
+                else:
+                    self.api = None
+                    _LOGGER.error(
+                        (
+                            "Your iCloud account for '%s' is no longer working; Go "
+                            "to the Integrations menu and click on Configure on the "
+                            "discovered Apple iCloud card to login again"
+                        ),
+                        self._config_entry.data[CONF_USERNAME],
+                    )
+                self._require_reauth()
+                self._fetch_interval = self._max_interval
+                self._schedule_next_fetch()
         except Exception:
             # update_devices() reschedules itself on the errors it handles;
             # this covers the rest, such as a device missing fields.

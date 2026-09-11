@@ -4,9 +4,15 @@ from datetime import timedelta
 from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyicloud.exceptions import PyiCloudFailedLoginException
+from pyicloud.const import AppleAuthError
+from pyicloud.exceptions import (
+    PyiCloud2FARequiredException,
+    PyiCloudAPIResponseException,
+    PyiCloudFailedLoginException,
+)
 from pyicloud.services.findmyiphone import AppleDevice
 import pytest
+from requests import Response
 
 from homeassistant.components.icloud.account import IcloudAccount
 from homeassistant.components.icloud.const import (
@@ -447,3 +453,130 @@ async def test_2fa_challenge_keeps_session_for_reauth(
     await hass.async_block_till_done()
 
     assert config_entry.runtime_data.api is not None
+
+
+async def test_2fa_exception_while_polling_asks_for_a_code(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a 2FA challenge raised while polling asks for a code.
+
+    authenticate() raises out of the MFA options request before requires_2fa is
+    set, so the exception is the only signal that a code is what is missing.
+    Without it the challenge fell through to the transient handling and was
+    retried every couple of minutes without ever asking the user.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.requires_2fa = False
+    service.authenticate.side_effect = PyiCloud2FARequiredException(
+        USERNAME, Mock(spec=Response)
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    # The session is kept so the reauth flow can send the code through it.
+    assert config_entry.runtime_data.api is not None
+
+
+@pytest.mark.parametrize(
+    "status",
+    [
+        AppleAuthError.TWO_FACTOR_REQUIRED,
+        AppleAuthError.LOGIN_TOKEN_EXPIRED,
+        AppleAuthError.FIND_MY_REAUTH_REQUIRED,
+    ],
+)
+async def test_auth_status_while_polling_asks_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+    status: AppleAuthError,
+) -> None:
+    """Test that an authentication status while polling starts reauth.
+
+    pyicloud only raises a dedicated exception for a 409 carrying an hsa2 body,
+    so every other rejection arrives as a plain PyiCloudAPIResponseException and
+    the status has to be inspected rather than the exception type.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.authenticate.side_effect = PyiCloudAPIResponseException(
+        "Authentication required for Account.", status
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert config_entry.runtime_data.api is None
+
+
+async def test_other_api_error_while_polling_keeps_retrying(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a non-authentication API error keeps the loop retrying.
+
+    Reauthenticating cannot fix a server-side failure, so it has to be treated
+    as transient and the next fetch still scheduled.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.authenticate.side_effect = PyiCloudAPIResponseException(
+        "Service temporarily unavailable", 503
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    # The session is kept and the loop keeps going rather than parking.
+    assert config_entry.runtime_data.api is not None
+
+    service.authenticate.side_effect = None
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert service.authenticate.call_count > 1
