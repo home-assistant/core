@@ -1474,7 +1474,7 @@ def async_get_device_and_config_entry(
 
     With include_child_devices=False a child-device id raises as an unknown device.
     With include_main_devices=False a main-device id raises as an unknown device;
-    does a composite-device id, because both the splits of a composite and the
+    as does a composite-device id, because both the splits of a composite and the
     restored composite itself are main devices.
     """
     device: device_registry.AnyDeviceEntry | None
