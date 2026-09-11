@@ -3077,8 +3077,8 @@ async def test_device_info_child_device(
     entity_id = entity_registry.async_get_entity_id(
         "test_domain", config_entry.domain, "power"
     )
-    # The child device's name is the device part of the generated entity id
-    assert entity_id == "test_domain.outlet_1_power"
+    # The generated entity id includes the parent and child device names
+    assert entity_id == "test_domain.power_strip_outlet_1_power"
     entry = entity_registry.async_get(entity_id)
     assert entry is not None
     assert entry.device_id == child_device.id

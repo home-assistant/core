@@ -1,6 +1,6 @@
 {
   "domain": "collection_image",
-  "name": "Collection Image",
+  "name": "Collection image",
   "codeowners": ["@karwosts"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/collection_image",
