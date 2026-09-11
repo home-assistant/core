@@ -132,6 +132,20 @@ class OmadaSiteController:
 
         return self._switch_port_coordinators[switch.mac]
 
+    async def async_get_gateway_coordinator(self, mac: str) -> OmadaGatewayCoordinator:
+        """Get the gateway coordinator, creating or replacing it for the given MAC."""
+        coordinator = self._gateway_coordinator
+        if coordinator is None or coordinator.mac != mac:
+            if coordinator is not None:
+                await coordinator.async_shutdown()
+            coordinator = OmadaGatewayCoordinator(
+                self._hass, self._config_entry, self._omada_client, mac
+            )
+            await coordinator.async_refresh()
+            self._gateway_coordinator = coordinator
+
+        return coordinator
+
     @property
     def gateway_coordinator(self) -> OmadaGatewayCoordinator | None:
         """Gets the coordinator for site's gateway, or None if there is no gateway."""

@@ -502,6 +502,37 @@ async def test_cleanup_recreates_device_when_reappears(
     )
 
 
+async def test_gateway_entities_created_when_gateway_appears_later(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test gateway entities are created when a gateway appears after setup."""
+    gateway_mac = "AA-BB-CC-DD-EE-FF"
+    site_client = mock_omada_client.get_site_client.return_value
+    site_client.get_devices = AsyncMock(
+        side_effect=partial(_get_devices_without, hass, gateway_mac)
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is None
+    assert hass.states.get("switch.test_router_port_4_internet_connected") is None
+
+    # Gateway appears on the controller — the next interval run registers it
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    site_client.get_devices = AsyncMock(
+        return_value=[OmadaListDevice(d) for d in devices_data]
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is not None
+    assert hass.states.get("switch.test_router_port_4_internet_connected") is not None
+
+
 @pytest.mark.parametrize(
     ("empty_updates", "orphan_removed"),
     [

@@ -1,5 +1,6 @@
 """Tests for TP-Link Omada update entities."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -17,10 +18,12 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
+    async_fire_time_changed,
     async_load_json_array_fixture,
     snapshot_platform,
 )
@@ -83,15 +86,15 @@ async def test_firmware_download_in_progress(
     )
     mock_omada_site_client.get_devices.return_value = updated_devices
 
-    # Refresh the devices coordinator so the firmware coordinator
-    # picks up the download state.
+    # Refresh the devices coordinator so the firmware coordinator's
+    # devices listener requests a debounced refresh of the download state.
     await controller.devices_coordinator.async_refresh()
 
-    # The firmware refresh is debounced, so a fire-based trigger
-    # would make this test timing-dependent.
-    update_platform = async_get_platforms(hass, DOMAIN)[0]
-    update_entity = update_platform.entities[entity_id]
-    await update_entity.coordinator.async_refresh()
+    # Advance past the debounce cooldown to run the requested refresh.
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN + 1),
+    )
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify update entity shows in progress

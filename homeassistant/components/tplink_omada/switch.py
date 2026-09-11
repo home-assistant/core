@@ -94,9 +94,9 @@ async def async_setup_entry(
     ) -> None:
         """Create entities for a gateway's ports."""
         entities: list[Entity] = []
-        gateway_coordinator = controller.gateway_coordinator
-        if gateway_coordinator:
-            gateway = gateway_coordinator.data[device.mac]
+        gateway_coordinator = await controller.async_get_gateway_coordinator(device.mac)
+        gateway = (gateway_coordinator.data or {}).get(device.mac)
+        if gateway:
             entities.extend(
                 OmadaDevicePortSwitchEntity[
                     OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus
