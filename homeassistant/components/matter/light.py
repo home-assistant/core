@@ -107,6 +107,7 @@ class MatterLight(MatterEntity, LightEntity):
     _supports_color = False
     _supports_color_temperature = False
     _transitions_disabled = False
+    _off_brightness: int | None = None
     _platform_translation_key = "light"
     _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
     _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
@@ -313,6 +314,13 @@ class MatterLight(MatterEntity, LightEntity):
         if self._transitions_disabled:
             transition = 0
 
+        if brightness is None and self._off_brightness is not None:
+            # The light was turned off with a transition, which left it at the
+            # minimum level. Restore the brightness it had before being turned off.
+            brightness = self._off_brightness
+        # Any turn_on consumes or supersedes the cached value, so clear it.
+        self._off_brightness = None
+
         if self.supported_color_modes is not None:
             if hs_color is not None and ColorMode.HS in self.supported_color_modes:
                 await self._set_hs_color(hs_color, transition)
@@ -335,6 +343,31 @@ class MatterLight(MatterEntity, LightEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
+        transition = kwargs.get(ATTR_TRANSITION, 0)
+        if self._transitions_disabled:
+            transition = 0
+
+        if transition > 0 and self._supports_brightness:
+            # Per the Matter spec, moving to the minimum level turns the
+            # light off, so this fades the light down and then turns it off.
+            min_level = (
+                self.get_matter_attribute_value(
+                    clusters.LevelControl.Attributes.MinLevel
+                )
+                or 1
+            )
+            # Remember the brightness so the next plain turn_on can restore it
+            # instead of coming back at the minimum level we faded down to.
+            self._off_brightness = self._attr_brightness
+            await self.send_device_command(
+                clusters.LevelControl.Commands.MoveToLevelWithOnOff(
+                    level=min_level,
+                    # transition in matter is measured in tenths of a second
+                    transitionTime=int(transition * 10),
+                )
+            )
+            return
+
         await self.send_device_command(
             clusters.OnOff.Commands.Off(),
         )
@@ -412,9 +445,14 @@ class MatterLight(MatterEntity, LightEntity):
             )
 
         # set current values
+        previously_on = self._attr_is_on
         self._attr_is_on = self.get_matter_attribute_value(
             clusters.OnOff.Attributes.OnOff
         )
+        if self._attr_is_on and not previously_on:
+            # The light was turned on (possibly by another fabric), so any cached
+            # brightness from a previous "off with transition" is no longer valid.
+            self._off_brightness = None
 
         if self._supports_brightness:
             self._attr_brightness = self._get_brightness()
