@@ -1,6 +1,7 @@
 """LLM tools for the system_log integration."""
 
-from typing import override
+from collections.abc import Callable
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -9,9 +10,63 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.llm import LLM_API_MANAGEMENT, LLMContext, Tool, ToolInput
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import JsonObjectType, JsonValueType
+from homeassistant.util.json import JsonObjectType
 
 from . import DOMAIN, LogErrorHandler
+
+LOG_LEVELS = ["error", "warning", "critical"]
+DEFAULT_LIMIT = 25
+
+
+def _filter_log_entries(
+    log_entries: list[dict[str, Any]],
+    level: str | None = None,
+    logger: str | None = None,
+    limit: int = DEFAULT_LIMIT,
+) -> list[dict[str, Any]]:
+    """Filter and limit raw log entries."""
+    predicates: list[Callable[[dict[str, Any]], bool]] = []
+
+    if level:
+        level_upper = level.upper()
+        predicates.append(lambda entry: entry["level"].upper() == level_upper)
+
+    if logger:
+        logger_lower = logger.strip().lower()
+        predicates.append(
+            lambda entry: (
+                logger_lower in entry["name"].lower()
+                or logger_lower in str(entry["source"][0]).lower()
+            )
+        )
+
+    if predicates:
+        log_entries = [
+            entry
+            for entry in log_entries
+            if all(predicate(entry) for predicate in predicates)
+        ]
+
+    return log_entries[:limit]
+
+
+def _format_entry(entry: dict[str, Any], include_traceback: bool) -> JsonObjectType:
+    """Format a single raw log entry for LLM consumption."""
+    source = entry["source"]
+    entry_dict: JsonObjectType = {
+        "name": entry["name"],
+        "message": list(entry["message"]),
+        "level": entry["level"],
+        "source": list(source) if isinstance(source, (tuple, list)) else source,
+        "count": entry["count"],
+        "timestamp": dt_util.utc_from_timestamp(entry["timestamp"]).isoformat(),
+        "first_occurred": dt_util.utc_from_timestamp(
+            entry["first_occurred"]
+        ).isoformat(),
+    }
+    if include_traceback and (exception := entry.get("exception")):
+        entry_dict["exception"] = exception
+    return entry_dict
 
 
 class SystemLogGetEntriesTool(Tool):
@@ -27,8 +82,8 @@ class SystemLogGetEntriesTool(Tool):
         {
             vol.Optional(
                 "level",
-                description="Filter by log level (e.g. 'error', 'warning', 'critical'). Case-insensitive.",
-            ): cv.string,
+                description="Filter by log level. Allowed values: 'error', 'warning', 'critical'.",
+            ): vol.All(cv.string, vol.Lower, vol.In(LOG_LEVELS)),
             vol.Optional(
                 "logger",
                 description=(
@@ -38,8 +93,8 @@ class SystemLogGetEntriesTool(Tool):
             ): cv.string,
             vol.Optional(
                 "limit",
-                description="Maximum number of log entries to return (default: 10, max: 50).",
-                default=10,
+                description=f"Maximum number of log entries to return (default: {DEFAULT_LIMIT}, max: 50).",
+                default=DEFAULT_LIMIT,
             ): vol.All(vol.Coerce(int), vol.Range(min=1, max=50)),
             vol.Optional(
                 "include_traceback",
@@ -57,14 +112,6 @@ class SystemLogGetEntriesTool(Tool):
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
         """Query the system log."""
-        if llm_context.context and llm_context.context.user_id:
-            user = await hass.auth.async_get_user(llm_context.context.user_id)
-            if user is None or not user.is_admin:
-                return {
-                    "success": False,
-                    "error": "Unauthorized: Admin access is required to view system logs.",
-                }
-
         handler: LogErrorHandler | None = hass.data.get(DOMAIN)
         if handler is None:
             return {
@@ -73,54 +120,18 @@ class SystemLogGetEntriesTool(Tool):
             }
 
         args = self.parameters(tool_input.tool_args)
-        raw_entries = handler.records.to_list()
-
-        if level_filter := args.get("level"):
-            normalized_level = level_filter.strip().upper()
-            raw_entries = [
-                entry
-                for entry in raw_entries
-                if entry["level"].upper() == normalized_level
-            ]
-
-        if logger_filter := args.get("logger"):
-            normalized_logger = logger_filter.strip().lower()
-            raw_entries = [
-                entry
-                for entry in raw_entries
-                if normalized_logger in entry["name"].lower()
-                or (
-                    isinstance(entry["source"], (tuple, list))
-                    and normalized_logger in str(entry["source"][0]).lower()
-                )
-            ]
-
-        limit: int = args["limit"]
-        raw_entries = raw_entries[:limit]
-
+        filtered_entries = _filter_log_entries(
+            handler.records.to_list(),
+            level=args.get("level"),
+            logger=args.get("logger"),
+            limit=args["limit"],
+        )
         include_traceback: bool = args["include_traceback"]
-        entries: list[JsonValueType] = []
-        for entry in raw_entries:
-            entry_dict: JsonObjectType = {
-                "name": entry["name"],
-                "message": list(entry["message"]),
-                "level": entry["level"],
-                "source": list(entry["source"])
-                if isinstance(entry["source"], (tuple, list))
-                else entry["source"],
-                "count": entry["count"],
-                "timestamp": dt_util.utc_from_timestamp(entry["timestamp"]).isoformat(),
-                "first_occurred": dt_util.utc_from_timestamp(
-                    entry["first_occurred"]
-                ).isoformat(),
-            }
-            if include_traceback and entry.get("exception"):
-                entry_dict["exception"] = entry["exception"]
-            entries.append(entry_dict)
-
         return {
             "success": True,
-            "result": entries,
+            "result": [
+                _format_entry(entry, include_traceback) for entry in filtered_entries
+            ],
         }
 
 

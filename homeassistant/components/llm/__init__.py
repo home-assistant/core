@@ -126,7 +126,11 @@ def _async_report_unprefixed_tools(
 
 
 class AssistAPI(API):
-    """API exposing Assist API to LLMs."""
+    """API exposing Assist API to LLMs.
+
+    The assist API controls and reads entities exposed by the user to an assistant.
+    Its scope is bounded by entity exposure.
+    """
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Init the class."""
@@ -151,7 +155,12 @@ class AssistAPI(API):
 
 
 class ManagementAPI(API):
-    """API exposing Management API to LLMs."""
+    """API exposing Management API to LLMs.
+
+    The management API manages Home Assistant itself (e.g. registries, system logs,
+    automations, and config entries). It is not bounded by entity exposure and is
+    restricted to admin users.
+    """
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Init the class."""
@@ -164,12 +173,25 @@ class ManagementAPI(API):
     @override
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
-        llm_tools = await async_get_tools(self.hass, llm_context, self.id)
+        tools: list[Tool] = []
+        prompt = ""
+
+        if (
+            llm_context.context
+            and llm_context.context.user_id
+            and (
+                user := await self.hass.auth.async_get_user(llm_context.context.user_id)
+            )
+            and user.is_admin
+        ):
+            llm_tools = await async_get_tools(self.hass, llm_context, self.id)
+            tools = llm_tools.tools
+            prompt = llm_tools.prompt or ""
 
         return APIInstance(
             api=self,
-            api_prompt=llm_tools.prompt or "",
+            api_prompt=prompt,
             llm_context=llm_context,
-            tools=llm_tools.tools,
+            tools=tools,
             custom_serializer=selector_serializer,
         )

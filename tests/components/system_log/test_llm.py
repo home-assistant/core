@@ -9,11 +9,9 @@ from homeassistant.components.system_log.llm import (
     SystemLogGetEntriesTool,
     async_get_tools,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser
 
 _LOGGER = logging.getLogger("test_system_log_llm")
 _OTHER_LOGGER = logging.getLogger("custom_integration")
@@ -55,32 +53,6 @@ async def test_system_log_not_loaded(
     assert result == {
         "success": False,
         "error": "System log integration is not loaded.",
-    }
-
-
-async def test_unauthorized_non_admin_user(
-    hass: HomeAssistant, hass_read_only_user: MockUser
-) -> None:
-    """Test tool error when called by a non-admin user."""
-    assert await async_setup_component(hass, system_log.DOMAIN, {})
-    await hass.async_block_till_done()
-
-    user_context = Context(user_id=hass_read_only_user.id)
-    context_with_user = llm.LLMContext(
-        platform="test",
-        context=user_context,
-        language="*",
-        assistant="conversation",
-        device_id=None,
-    )
-
-    tool = SystemLogGetEntriesTool()
-    tool_input = llm.ToolInput(tool_name=tool.name, tool_args={})
-    result = await tool.async_call(hass, tool_input, context_with_user)
-
-    assert result == {
-        "success": False,
-        "error": "Unauthorized: Admin access is required to view system logs.",
     }
 
 
@@ -227,29 +199,3 @@ async def test_limit(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
 
     assert result["success"] is True
     assert len(result["result"]) == 2
-
-
-async def test_admin_user_allowed(
-    hass: HomeAssistant, hass_admin_user: MockUser
-) -> None:
-    """Test tool success when called by an admin user."""
-    assert await async_setup_component(hass, system_log.DOMAIN, {})
-    await hass.async_block_till_done()
-
-    _LOGGER.error("Sample error")
-
-    user_context = Context(user_id=hass_admin_user.id)
-    context_with_admin = llm.LLMContext(
-        platform="test",
-        context=user_context,
-        language="*",
-        assistant="conversation",
-        device_id=None,
-    )
-
-    tool = SystemLogGetEntriesTool()
-    tool_input = llm.ToolInput(tool_name=tool.name, tool_args={})
-    result = await tool.async_call(hass, tool_input, context_with_admin)
-
-    assert result["success"] is True
-    assert len(result["result"]) == 1
