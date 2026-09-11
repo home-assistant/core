@@ -82,7 +82,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         """Initialize the climate device."""
         super().__init__(coordinator, unit_id)
         self._attr_hvac_modes = supported_modes
-        self._attr_unique_id = unit_id
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{unit_id}"
 
     @property
     @override
