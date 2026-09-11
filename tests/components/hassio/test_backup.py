@@ -21,10 +21,13 @@ from uuid import UUID
 
 from aiohasupervisor.exceptions import (
     SupervisorBadRequestError,
+    SupervisorConnectionError,
     SupervisorError,
     SupervisorNotFoundError,
+    SupervisorServiceUnavailableError,
 )
 from aiohasupervisor.models import (
+    SupervisorState,
     backups as supervisor_backups,
     jobs as supervisor_jobs,
     mounts as supervisor_mounts,
@@ -95,6 +98,10 @@ TEST_BACKUP_DETAILS = supervisor_backups.BackupComplete(
     slug=TEST_BACKUP.slug,
     supervisor_version="2024.11.2",
     type=TEST_BACKUP.type,
+)
+
+TEST_BACKUP_DETAILS_NEWER_SUPERVISOR = replace(
+    TEST_BACKUP_DETAILS, supervisor_version="2026.08.0"
 )
 
 TEST_BACKUP_2 = supervisor_backups.Backup(
@@ -2310,7 +2317,7 @@ async def test_agent_receive_remote_backup(
         ),
     ],
 )
-@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration", "supervisor_info")
 async def test_reader_writer_restore(
     hass: HomeAssistant,
     hass_supervisor_ws_client: WebSocketGenerator,
@@ -2377,7 +2384,7 @@ async def test_reader_writer_restore(
     assert response["result"] is None
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration", "supervisor_info")
 async def test_reader_writer_restore_remote_backup(
     hass: HomeAssistant,
     hass_supervisor_ws_client: WebSocketGenerator,
@@ -2474,7 +2481,7 @@ async def test_reader_writer_restore_remote_backup(
     assert response["result"] is None
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration", "supervisor_info")
 async def test_reader_writer_restore_report_progress(
     hass: HomeAssistant,
     hass_supervisor_ws_client: WebSocketGenerator,
@@ -2585,18 +2592,10 @@ async def test_reader_writer_restore_report_progress(
             "password_incorrect",
             "password_incorrect",
         ),
-        (
-            SupervisorBadRequestError(
-                "Backup was made on supervisor version 2025.12.0, can't "
-                "restore on 2024.12.0. Must update supervisor first."
-            ),
-            "home_assistant_error",
-            "unknown_error",
-        ),
         (SupervisorNotFoundError(), "backup_not_found", "backup_not_found"),
     ],
 )
-@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration", "supervisor_info")
 async def test_reader_writer_restore_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -2655,7 +2654,7 @@ async def test_reader_writer_restore_error(
     assert response["error"]["code"] == expected_error_code
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration", "supervisor_info")
 async def test_reader_writer_restore_late_error(
     hass: HomeAssistant,
     hass_supervisor_ws_client: WebSocketGenerator,
@@ -2743,6 +2742,441 @@ async def test_reader_writer_restore_late_error(
             "was made on supervisor version 2025.02.2.dev3105, can't restore on "
             '2025.01.2.dev3105. Must update supervisor first."}]'
         ),
+    }
+
+
+@pytest.mark.parametrize(
+    ("supervisor_error", "expect_reload_and_update"),
+    [
+        pytest.param(
+            SupervisorServiceUnavailableError(
+                "Backup was made on supervisor version 2026.08.0, can't restore "
+                "on 2026.07.5. Update is in-progress, try again after it "
+                "completes."
+            ),
+            False,
+            id="update_in_progress_503",
+        ),
+        pytest.param(
+            SupervisorBadRequestError(
+                "Backup was made on supervisor version 2026.08.0, can't restore on "
+                "2026.07.5. Must update supervisor first."
+            ),
+            True,
+            id="legacy_message_auto_update",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+async def test_reader_writer_restore_retries_after_supervisor_update(
+    hass: HomeAssistant,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    supervisor_info: AsyncMock,
+    supervisor_root_info: AsyncMock,
+    supervisor_error: SupervisorError,
+    expect_reload_and_update: bool,
+) -> None:
+    """Test a restore is retried once Supervisor finishes updating."""
+    client = await hass_supervisor_ws_client()
+    job = Mock(job_id=UUID(TEST_JOB_ID))
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, update_available=True, version_latest="2026.08.0"
+    )
+    supervisor_client.backups.partial_restore.side_effect = [supervisor_error, job]
+    supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    supervisor_client.backups.backup_info.return_value = (
+        TEST_BACKUP_DETAILS_NEWER_SUPERVISOR
+    )
+    supervisor_client.jobs.get_job.return_value = TEST_JOB_DONE
+    supervisor_root_info.side_effect = [
+        SupervisorConnectionError(),
+        replace(supervisor_root_info.return_value, supervisor="2026.07.5"),
+        replace(
+            supervisor_root_info.return_value,
+            supervisor="2026.08.0",
+            state=SupervisorState.STARTUP,
+        ),
+        replace(supervisor_root_info.return_value, supervisor="2026.08.0"),
+    ]
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    with patch(
+        "homeassistant.components.hassio.backup.SUPERVISOR_UPDATE_POLL_INTERVAL", 0
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "backup/restore",
+                "agent_id": "hassio.local",
+                "backup_id": "abc123",
+            }
+        )
+        response = await client.receive_json()
+        assert response["event"] == {
+            "manager_state": "restore_backup",
+            "reason": None,
+            "stage": None,
+            "state": "in_progress",
+        }
+
+        response = await client.receive_json()
+        assert response["event"] == {
+            "manager_state": "restore_backup",
+            "reason": None,
+            "stage": None,
+            "state": "completed",
+        }
+
+    assert supervisor_client.reload_updates.await_count == (
+        1 if expect_reload_and_update else 0
+    )
+    assert supervisor_client.supervisor.update.await_count == (
+        1 if expect_reload_and_update else 0
+    )
+    assert supervisor_client.backups.partial_restore.call_count == 2
+
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+async def test_reader_writer_restore_unrelated_bad_request_raises(
+    hass: HomeAssistant,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test an unrelated bad request error is raised without retrying."""
+    client = await hass_supervisor_ws_client()
+    err = SupervisorBadRequestError("Some other unrelated error")
+    supervisor_client.backups.partial_restore.side_effect = err
+    supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    # Setting up hassio_client already awaits supervisor.info once
+    supervisor_client.supervisor.info.reset_mock()
+
+    await client.send_json_auto_id(
+        {"type": "backup/restore", "agent_id": "hassio.local", "backup_id": "abc123"}
+    )
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "reason": None,
+        "stage": None,
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "reason": "unknown_error",
+        "stage": None,
+        "state": "failed",
+    }
+
+    supervisor_client.supervisor.info.assert_not_awaited()
+    supervisor_client.reload_updates.assert_not_awaited()
+    supervisor_client.supervisor.update.assert_not_awaited()
+    supervisor_client.backups.partial_restore.assert_called_once()
+
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+
+    response = await client.receive_json()
+    assert response["error"] == {"code": "home_assistant_error", "message": str(err)}
+
+
+@pytest.mark.parametrize(
+    ("supervisor_info_overrides", "expected_reload_calls"),
+    [
+        pytest.param({"auto_update": False}, 0, id="auto_update_disabled"),
+        pytest.param({"update_available": False}, 1, id="no_update_available"),
+        pytest.param(
+            {"update_available": True, "version_latest": "2024.11.1"},
+            1,
+            id="update_older_than_backup",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+async def test_reader_writer_restore_legacy_message_no_auto_update(
+    hass: HomeAssistant,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    supervisor_info: AsyncMock,
+    supervisor_info_overrides: dict[str, Any],
+    expected_reload_calls: int,
+) -> None:
+    """Test a legacy update message is raised immediately when Supervisor can't help."""
+    client = await hass_supervisor_ws_client()
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, **supervisor_info_overrides
+    )
+    err = SupervisorBadRequestError(
+        "Backup was made on supervisor version 2026.08.0, can't restore on "
+        "2026.07.5. Must update supervisor first."
+    )
+    supervisor_client.backups.partial_restore.side_effect = err
+    supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {"type": "backup/restore", "agent_id": "hassio.local", "backup_id": "abc123"}
+    )
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "reason": None,
+        "stage": None,
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "reason": "unknown_error",
+        "stage": None,
+        "state": "failed",
+    }
+
+    assert supervisor_client.reload_updates.await_count == expected_reload_calls
+    supervisor_client.supervisor.update.assert_not_awaited()
+    supervisor_client.backups.partial_restore.assert_called_once()
+
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+
+    response = await client.receive_json()
+    assert response["error"] == {"code": "home_assistant_error", "message": str(err)}
+
+
+@pytest.mark.parametrize(
+    ("info_errors", "reload_error", "update_error", "expected_message"),
+    [
+        pytest.param(
+            [SupervisorError("Boom!")],
+            None,
+            None,
+            "Error getting Supervisor info: Boom!",
+            id="info_error",
+        ),
+        pytest.param(
+            [None],
+            SupervisorError("Boom!"),
+            None,
+            "Error reloading Supervisor update information: Boom!",
+            id="reload_error",
+        ),
+        pytest.param(
+            [None, SupervisorError("Boom!")],
+            None,
+            None,
+            "Error getting Supervisor info: Boom!",
+            id="info_error_after_reload",
+        ),
+        pytest.param(
+            [None, None],
+            None,
+            SupervisorError("Boom!"),
+            "Error updating Supervisor: Boom!",
+            id="update_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+async def test_reader_writer_restore_should_retry_error(
+    hass: HomeAssistant,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    supervisor_info: AsyncMock,
+    info_errors: list[Exception | None],
+    reload_error: Exception | None,
+    update_error: Exception | None,
+    expected_message: str,
+) -> None:
+    """Test errors while deciding whether to retry a restore after an update."""
+    client = await hass_supervisor_ws_client()
+    info = replace(
+        supervisor_info.return_value, update_available=True, version_latest="2026.08.0"
+    )
+    supervisor_info.side_effect = [err or info for err in info_errors]
+    supervisor_client.reload_updates.side_effect = reload_error
+    supervisor_client.supervisor.update.side_effect = update_error
+    err = SupervisorBadRequestError(
+        "Backup was made on supervisor version 2026.08.0, can't restore on "
+        "2026.07.5. Must update supervisor first."
+    )
+    supervisor_client.backups.partial_restore.side_effect = err
+    supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {"type": "backup/restore", "agent_id": "hassio.local", "backup_id": "abc123"}
+    )
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "reason": None,
+        "stage": None,
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "reason": "backup_reader_writer_error",
+        "stage": None,
+        "state": "failed",
+    }
+
+    supervisor_client.backups.partial_restore.assert_called_once()
+
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+
+    response = await client.receive_json()
+    assert response["error"] == {
+        "code": "home_assistant_error",
+        "message": expected_message,
+    }
+
+
+@pytest.mark.parametrize(
+    (
+        "backup_info_result",
+        "root_info_side_effect",
+        "expected_reason",
+        "expected_error_code",
+        "expected_message",
+    ),
+    [
+        pytest.param(
+            SupervisorNotFoundError(),
+            None,
+            "backup_not_found",
+            "backup_not_found",
+            "Backup not found",
+            id="backup_not_found",
+        ),
+        pytest.param(
+            SupervisorError("Boom!"),
+            None,
+            "backup_reader_writer_error",
+            "home_assistant_error",
+            "Error getting backup details: Boom!",
+            id="backup_info_error",
+        ),
+        pytest.param(
+            TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
+            [SupervisorError("Boom!")],
+            "backup_reader_writer_error",
+            "home_assistant_error",
+            "Timeout waiting for Supervisor to restart after update",
+            id="restart_timeout",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+async def test_reader_writer_restore_wait_for_update_error(
+    hass: HomeAssistant,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    backup_info_result: Exception | supervisor_backups.BackupComplete,
+    root_info_side_effect: list[Exception] | None,
+    expected_reason: str,
+    expected_error_code: str,
+    expected_message: str,
+) -> None:
+    """Test errors while waiting for Supervisor to finish updating."""
+    client = await hass_supervisor_ws_client()
+    err = SupervisorServiceUnavailableError(
+        "Backup was made on supervisor version 2026.08.0, can't restore on "
+        "2026.07.5. Update is in-progress, try again after it completes."
+    )
+    supervisor_client.backups.partial_restore.side_effect = err
+    supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    # The agent reads the backup details twice before the update check does
+    supervisor_client.backups.backup_info.side_effect = [
+        TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
+        TEST_BACKUP_DETAILS_NEWER_SUPERVISOR,
+        backup_info_result,
+    ]
+    supervisor_client.info.side_effect = root_info_side_effect
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    with (
+        patch(
+            "homeassistant.components.hassio.backup.SUPERVISOR_UPDATE_POLL_INTERVAL", 0
+        ),
+        patch(
+            "homeassistant.components.hassio.backup.SUPERVISOR_UPDATE_RESTART_TIMEOUT",
+            0,
+        ),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "backup/restore",
+                "agent_id": "hassio.local",
+                "backup_id": "abc123",
+            }
+        )
+        response = await client.receive_json()
+        assert response["event"] == {
+            "manager_state": "restore_backup",
+            "reason": None,
+            "stage": None,
+            "state": "in_progress",
+        }
+
+        response = await client.receive_json()
+        assert response["event"] == {
+            "manager_state": "restore_backup",
+            "reason": expected_reason,
+            "stage": None,
+            "state": "failed",
+        }
+
+    supervisor_client.backups.partial_restore.assert_called_once()
+
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+
+    response = await client.receive_json()
+    assert response["error"] == {
+        "code": expected_error_code,
+        "message": expected_message,
     }
 
 
