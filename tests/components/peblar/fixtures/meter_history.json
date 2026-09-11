@@ -1,0 +1,32 @@
+{
+  "Corrupted": false,
+  "CorruptedSession": [true, false],
+  "MetaData": {
+    "MeterHash": "0ac1e2b3c4d5e6f7",
+    "MeterVersion": "1.0.0",
+    "MidCertified": true,
+    "ProductPn": "PBLR-0000",
+    "ProductSn": "23-45-A4O-MOF",
+    "TimeZone": "Europe/Amsterdam"
+  },
+  "Session": [
+    {
+      "AuthToken": "AA:BB:CC:DD",
+      "Checksum": 42,
+      "SessionNumber": 1,
+      "SessionStartEnergymWh": 1000000,
+      "SessionStartTime": 1769083200,
+      "SessionEndEnergymWh": 8500000,
+      "SessionEndTime": 1769108400
+    },
+    {
+      "AuthToken": null,
+      "Checksum": 43,
+      "SessionNumber": 2,
+      "SessionStartEnergymWh": 8500000,
+      "SessionStartTime": 1769169600,
+      "SessionEndEnergymWh": null,
+      "SessionEndTime": null
+    }
+  ]
+}

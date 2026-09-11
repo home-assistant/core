@@ -97,6 +97,9 @@
     "delete_vehicle_token": {
       "service": "mdi:car-off"
     },
+    "get_meter_history": {
+      "service": "mdi:history"
+    },
     "list_rfid_tokens": {
       "service": "mdi:card-account-details"
     },

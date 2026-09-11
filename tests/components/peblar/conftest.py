@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from peblar import (
     PeblarEVInterface,
     PeblarMeter,
+    PeblarMeterHistory,
     PeblarSystem,
     PeblarSystemInformation,
     PeblarUserConfiguration,
@@ -79,6 +80,9 @@ def mock_peblar(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         )
         peblar.system_information.return_value = PeblarSystemInformation.from_dict(
             system_information
+        )
+        peblar.meter_history.return_value = PeblarMeterHistory.from_json(
+            load_fixture("meter_history.json", DOMAIN)
         )
 
         # The event stream parks here until the entry unloads, the way a
