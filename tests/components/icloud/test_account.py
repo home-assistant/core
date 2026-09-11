@@ -700,3 +700,38 @@ async def test_rejected_session_on_device_refresh_asks_the_user(
         if flow["context"]["source"] == "reauth"
     ]
     assert config_entry.runtime_data.api is None
+
+
+async def test_auth_status_on_first_device_refresh_asks_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an authentication status on the first fetch reaches the user.
+
+    iCloud reports most rejections as an API response carrying the status
+    rather than as a dedicated exception, and the first device refresh runs
+    inside setup(), where an unhandled one would leave a dead entry.
+    """
+    service, _ = polling_service
+    type(service).devices = PropertyMock(
+        side_effect=PyiCloudAPIResponseException(
+            "Authentication required for Account.", AppleAuthError.LOGIN_TOKEN_EXPIRED
+        )
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert config_entry.runtime_data.api is None

@@ -153,6 +153,10 @@ class IcloudAccount:
         """
         try:
             self._setup()
+        except PyiCloudAPIResponseException as err:
+            if not _is_auth_error(err):
+                raise
+            self._ask_to_authenticate(err)
         except (
             PyiCloud2FARequiredException,
             PyiCloudFailedLoginException,
@@ -323,9 +327,16 @@ class IcloudAccount:
         self._schedule_next_fetch()
 
     def _ask_to_authenticate(self, err: Exception) -> None:
-        """Ask the user to log in again after iCloud rejected the session."""
-        if isinstance(err, PyiCloud2FARequiredException) or (
-            self.api is not None and self.api.requires_2fa
+        """Ask the user to log in again after iCloud rejected the session.
+
+        The session is only kept when there is a code to send through it. An
+        authentication status on an API response is not that case: it says the
+        session itself has to be established again, and one that has just been
+        rejected cannot carry a code.
+        """
+        if not isinstance(err, PyiCloudAPIResponseException) and (
+            isinstance(err, PyiCloud2FARequiredException)
+            or (self.api is not None and self.api.requires_2fa)
         ):
             # Keep the session: the reauth flow reuses it to validate the code,
             # and async_step_reauth sends a None api back to the password form
@@ -499,19 +510,7 @@ class IcloudAccount:
                     # handling below so it keeps being retried, rather than
                     # parking the account for credentials that are not at fault.
                     raise
-                # Reported as a login failure: the status says the session has
-                # to be established again, and there is no code to send through
-                # one that has just been rejected.
-                self.api = None
-                _LOGGER.error(
-                    (
-                        "Your iCloud account for '%s' is no longer working; Go to the "
-                        "Integrations menu and click on Configure on the discovered "
-                        "Apple iCloud card to login again"
-                    ),
-                    self._config_entry.data[CONF_USERNAME],
-                )
-                self._require_reauth()
+                self._ask_to_authenticate(err)
                 self._fetch_interval = self._max_interval
                 self._schedule_next_fetch()
             except (
