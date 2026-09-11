@@ -8,6 +8,13 @@
     'capabilities': dict({
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'standby',
+        'dhw',
+        'dhw_and_heating',
+        'forced_reduced',
+        'forced_normal',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -33,7 +40,7 @@
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <WaterHeaterEntityFeature: 1>,
+    'supported_features': <WaterHeaterEntityFeature: 3>,
     'translation_key': 'domestic_hot_water',
     'unique_id': 'gateway0_deviceSerialVitodens300W-0',
     'unit_of_measurement': None,
@@ -46,7 +53,15 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Domestic hot water',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 1>,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'standby',
+        'dhw',
+        'dhw_and_heating',
+        'forced_reduced',
+        'forced_normal',
+      ]),
+      <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'dhw',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 3>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
@@ -56,7 +71,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'dhw',
   })
 # ---
 # name: test_all_entities[water_heater.model0_domestic_hot_water_2-entry]
@@ -68,6 +83,13 @@
     'capabilities': dict({
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'standby',
+        'dhw',
+        'dhw_and_heating',
+        'forced_reduced',
+        'forced_normal',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -93,7 +115,7 @@
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <WaterHeaterEntityFeature: 1>,
+    'supported_features': <WaterHeaterEntityFeature: 3>,
     'translation_key': 'domestic_hot_water',
     'unique_id': 'gateway0_deviceSerialVitodens300W-1',
     'unit_of_measurement': None,
@@ -106,7 +128,15 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Domestic hot water',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 1>,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'standby',
+        'dhw',
+        'dhw_and_heating',
+        'forced_reduced',
+        'forced_normal',
+      ]),
+      <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'dhw',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 3>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
@@ -116,6 +146,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'dhw',
   })
 # ---

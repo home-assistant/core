@@ -7,6 +7,7 @@ DOMAIN = "vicare"
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CALENDAR,
     Platform.CLIMATE,
     Platform.FAN,
     Platform.NUMBER,
