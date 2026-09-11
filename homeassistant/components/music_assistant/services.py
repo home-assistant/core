@@ -87,8 +87,7 @@ DEFAULT_OFFSET = 0
 DEFAULT_LIMIT = 25
 DEFAULT_SORT_ORDER = "name"
 
-# these platform entity services are player-only: dashboard display entities
-# (device class TV) don't implement them
+# player-only entity services; dashboard display entities don't implement them
 PLAYER_ENTITY_DEVICE_CLASSES = [MediaPlayerDeviceClass.SPEAKER]
 
 
