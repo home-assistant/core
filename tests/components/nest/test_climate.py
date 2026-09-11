@@ -1155,16 +1155,25 @@ async def test_set_fan_timer_hvac_off(
     )
     await setup_platform()
 
-    with pytest.raises(HomeAssistantError, match="Cannot turn on fan"):
-        await hass.services.async_call(
-            DOMAIN,
-            "set_fan_timer",
-            {
-                "entity_id": "climate.my_thermostat",
-                "duration": {"minutes": 15},
-            },
-            blocking=True,
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        "set_fan_timer",
+        {
+            "entity_id": "climate.my_thermostat",
+            "duration": {"minutes": 15},
+        },
+        blocking=True,
+    )
+
+    assert auth.method == "post"
+    assert auth.url == DEVICE_COMMAND
+    assert auth.json == {
+        "command": "sdm.devices.commands.Fan.SetTimer",
+        "params": {
+            "duration": "900s",
+            "timerMode": "ON",
+        },
+    }
 
 
 async def test_set_fan_timer_no_fan(
@@ -1313,9 +1322,30 @@ async def test_thermostat_set_fan_when_off(
         | ClimateEntityFeature.TURN_ON
     )
 
-    # Fan cannot be turned on when HVAC is off
-    with pytest.raises(ValueError):
-        await common.async_set_fan_mode(hass, FAN_ON, entity_id="climate.my_thermostat")
+    # Turn off fan mode
+    await common.async_set_fan_mode(hass, FAN_OFF, entity_id="climate.my_thermostat")
+    await hass.async_block_till_done()
+
+    assert auth.method == "post"
+    assert auth.url == DEVICE_COMMAND
+    assert auth.json == {
+        "command": "sdm.devices.commands.Fan.SetTimer",
+        "params": {"timerMode": "OFF"},
+    }
+
+    # Turn on fan mode
+    await common.async_set_fan_mode(hass, FAN_ON, entity_id="climate.my_thermostat")
+    await hass.async_block_till_done()
+
+    assert auth.method == "post"
+    assert auth.url == DEVICE_COMMAND
+    assert auth.json == {
+        "command": "sdm.devices.commands.Fan.SetTimer",
+        "params": {
+            "duration": "43200s",
+            "timerMode": "ON",
+        },
+    }
 
 
 async def test_thermostat_fan_empty(
