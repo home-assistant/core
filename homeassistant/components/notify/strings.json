@@ -30,7 +30,7 @@
   },
   "services": {
     "notify": {
-      "description": "Sends a notification message to selected targets.",
+      "description": "Legacy shorthand that sends a notification using the first available notifier. Use `notify.send_message` with a notify entity instead.",
       "fields": {
         "data": {
           "description": "Some integrations provide extended functionality via this field. For more information, refer to the integration documentation.",
@@ -49,7 +49,7 @@
           "name": "Title"
         }
       },
-      "name": "Send a notification"
+      "name": "Send a notification (legacy)"
     },
     "persistent_notification": {
       "description": "Sends a notification that is visible in the notifications panel.",
