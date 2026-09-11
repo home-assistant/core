@@ -1,5 +1,6 @@
 """Test KNX cover."""
 
+import asyncio
 import logging
 from typing import Any
 from unittest.mock import patch
@@ -503,6 +504,39 @@ async def test_cover_position_state_send(hass: HomeAssistant, knx: KNXTestKit) -
         "cover", "close_cover", {"entity_id": "cover.test"}, blocking=True
     )
     await knx.assert_write("1/0/0", True)
+
+
+async def test_cover_position_state_send_restored_position_only_once(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test the restored position is published once, not again after the cooldown.
+
+    The cooldown task compares against the remote value's `last_payload`, which is
+    only updated once the outgoing telegram has been processed. During startup that
+    can lag past the cooldown, and the seeded position would go out a second time.
+    """
+    mock_restore_cache(
+        hass,
+        (State("cover.test", CoverState.OPEN, {ATTR_CURRENT_POSITION: 80}),),
+    )
+    # a short but non-zero cooldown: zero would create no cooldown task at all,
+    # and it is exactly that task which used to send the duplicate
+    with patch("homeassistant.components.knx.cover.POSITION_SEND_COOLDOWN", 0.01):
+        await knx.setup_integration(
+            {
+                CoverSchema.PLATFORM: {
+                    CONF_NAME: "test",
+                    CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                    CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                    CoverConf.POSITION_STATE_SEND: True,
+                }
+            }
+        )
+    await knx.assert_write("1/0/2", (0x33,))
+
+    await asyncio.sleep(0.05)  # past the cooldown
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
 
 
 async def test_cover_position_state_send_inverted(

@@ -185,6 +185,11 @@ class _KnxCover(CoverEntity, RestoreEntity):
             # seed the publisher so it can answer a read before the first travel
             self._published_position = position
             await self._position_publisher.set(position)
+            # Mark the value as current. The cooldown task compares against
+            # `last_payload`, which is only updated once the outgoing telegram has
+            # been processed - during startup that can lag past the cooldown, and
+            # the restored position would then go out a second time.
+            self._position_publisher.initialize_value(position)
 
     @override
     async def async_will_remove_from_hass(self) -> None:
