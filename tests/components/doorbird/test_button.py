@@ -4,7 +4,7 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from .conftest import DoorbirdMockerType
+from .conftest import DoorbirdMockerType, patch_doorbird_api_entry_points
 
 
 async def test_relay_button(
@@ -45,8 +45,14 @@ async def test_reset_favorites_button(
     doorbird_entry = await doorbird_mocker()
     reset_entity_id = "button.mydoorbird_reset_favorites"
     assert hass.states.get(reset_entity_id).state == STATE_UNKNOWN
-    await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: reset_entity_id}, blocking=True
-    )
-    assert hass.states.get(reset_entity_id).state != STATE_UNKNOWN
+    with patch_doorbird_api_entry_points(doorbird_entry.api):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: reset_entity_id},
+            blocking=True,
+        )
+        # Clearing the favorites re-registers the events the other platforms
+        # build their entities from, so the entry is rebuilt.
+        await hass.async_block_till_done()
     assert doorbird_entry.api.delete_favorite.call_count == 3

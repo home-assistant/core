@@ -7,12 +7,17 @@ from typing import override
 import aiohttp
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT, DOMAIN
+from .deprecation import deprecate_entity
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
+from .util import get_mac_address_from_door_station_info
 
 _LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=2)
 _LAST_MOTION_INTERVAL = datetime.timedelta(seconds=30)
@@ -29,30 +34,51 @@ async def async_setup_entry(
     """Set up the DoorBird camera platform."""
     door_bird_data = config_entry.runtime_data
     device = door_bird_data.door_station.device
+    mac_addr = get_mac_address_from_door_station_info(door_bird_data.door_station_info)
+    entity_registry = er.async_get(hass)
 
-    async_add_entities(
-        [
-            DoorBirdCamera(
-                door_bird_data,
-                device.live_image_url,
-                "live",
-                _LIVE_INTERVAL,
-                device.rtsp_live_video_url,
-            ),
-            DoorBirdCamera(
-                door_bird_data,
-                device.history_image_url(1, "doorbell"),
-                "last_ring",
-                _LAST_VISITOR_INTERVAL,
-            ),
-            DoorBirdCamera(
-                door_bird_data,
-                device.history_image_url(1, "motionsensor"),
-                "last_motion",
-                _LAST_MOTION_INTERVAL,
-            ),
-        ]
-    )
+    entities = [
+        DoorBirdCamera(
+            door_bird_data,
+            device.live_image_url,
+            "live",
+            _LIVE_INTERVAL,
+            device.rtsp_live_video_url,
+        )
+    ]
+
+    for camera_id, history_type, event_type, interval in (
+        ("last_ring", "doorbell", DEFAULT_DOORBELL_EVENT, _LAST_VISITOR_INTERVAL),
+        ("last_motion", "motionsensor", DEFAULT_MOTION_EVENT, _LAST_MOTION_INTERVAL),
+    ):
+        issue_id = f"deprecated_camera_{mac_addr}_{camera_id}"
+        if door_bird_data.door_station.image_event_names.get(event_type):
+            keep = deprecate_entity(
+                hass,
+                entity_registry,
+                platform_domain=Platform.CAMERA,
+                entity_unique_id=f"{mac_addr}_{camera_id}",
+                issue_id=issue_id,
+                translation_key=f"deprecated_camera_{camera_id}",
+            )
+        else:
+            # The image replacing this camera is event driven and does not poll,
+            # so without an event to invalidate it the camera has to stay. The
+            # issue would name a replacement that cannot refresh, so it goes too.
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+            keep = True
+
+        if keep:
+            entities.append(
+                DoorBirdCamera(
+                    door_bird_data,
+                    device.history_image_url(1, history_type),
+                    camera_id,
+                    interval,
+                )
+            )
+
+    async_add_entities(entities)
 
 
 class DoorBirdCamera(DoorBirdEntity, Camera):
@@ -109,20 +135,3 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
 
         self._last_update = now
         return self._last_image
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to events."""
-        await super().async_added_to_hass()
-        event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event in self._door_station.events:
-            event_to_entity_id[event] = self.entity_id
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from events."""
-        event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event in self._door_station.events:
-            # If the clear api was called, the events may not be in the dict
-            event_to_entity_id.pop(event, None)
-        await super().async_will_remove_from_hass()

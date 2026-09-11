@@ -21,6 +21,8 @@ class DoorbirdButtonEntityDescription(ButtonEntityDescription):
     """Class to describe a Doorbird Button entity."""
 
     press_action: Callable[[ConfiguredDoorBird, str], Coroutine[Any, Any, bool | None]]
+    # Whether the action replaces the events the other platforms are built from.
+    reloads_entry: bool = False
 
 
 RELAY_ENTITY_DESCRIPTION = DoorbirdButtonEntityDescription(
@@ -38,6 +40,7 @@ BUTTON_DESCRIPTIONS: tuple[DoorbirdButtonEntityDescription, ...] = (
         translation_key="reset_favorites",
         press_action=lambda door_station, _: async_reset_device_favorites(door_station),
         entity_category=EntityCategory.CONFIG,
+        reloads_entry=True,
     ),
 )
 
@@ -86,3 +89,7 @@ class DoorBirdButton(DoorBirdEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Call the press action."""
         await self.entity_description.press_action(self._door_station, self._relay)
+        if self.entity_description.reloads_entry:
+            self.hass.config_entries.async_schedule_reload(
+                self.platform.config_entry.entry_id
+            )
