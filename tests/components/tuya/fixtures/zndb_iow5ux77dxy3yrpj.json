@@ -1,0 +1,129 @@
+{
+  "endpoint": "https://apigw.tuyacn.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "三相电能表 2",
+  "category": "zndb",
+  "product_id": "iow5ux77dxy3yrpj",
+  "product_name": "Three Phase Energy Meter",
+  "online": true,
+  "sub": false,
+  "time_zone": "+8:00",
+  "active_time": "2026-09-02T09:53:06+00:00",
+  "create_time": "2026-09-02T09:53:06+00:00",
+  "update_time": "2026-09-02T09:53:06+00:00",
+  "function": {
+    "alarm_set_2": {
+      "code": "alarm_set_2",
+      "type": "Json",
+      "value": {}
+    },
+    "clear": {
+      "code": "clear",
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW·h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW·h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "phase_a": {
+      "type": "Json",
+      "value": {}
+    },
+    "phase_b": {
+      "type": "Json",
+      "value": {}
+    },
+    "phase_c": {
+      "type": "Json",
+      "value": {}
+    },
+    "power_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": -99999999,
+        "max": 999999999,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": [
+          "ov_pwr_t",
+          "ov_pwr_a",
+          "ov_pwr_b",
+          "ov_pwr_c",
+          "un_pwr_t",
+          "un_pwr_a",
+          "un_pwr_b",
+          "un_pwr_c"
+        ]
+      }
+    },
+    "alarm_set_2": {
+      "type": "Json",
+      "value": {}
+    },
+    "clear": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "forward_energy_total": 0,
+    "reverse_energy_total": 0,
+    "phase_a": {
+      "voltage": 230.1,
+      "electricCurrent": 53.86,
+      "power": 9.548,
+      "reactivePower": 0.0,
+      "apparentPower": 0.0,
+      "powerFactor": 0.77
+    },
+    "phase_b": {
+      "voltage": 231.8,
+      "electricCurrent": 49.202,
+      "power": 9.51,
+      "reactivePower": 0.0,
+      "apparentPower": 0.0,
+      "powerFactor": 0.83
+    },
+    "phase_c": {
+      "voltage": 229.6,
+      "electricCurrent": 50.914,
+      "power": 10.006,
+      "reactivePower": 0.0,
+      "apparentPower": 0.0,
+      "powerFactor": 0.86
+    },
+    "power_total": -99999999,
+    "fault": 0,
+    "alarm_set_2": "[]",
+    "clear": false
+  },
+  "set_up": false,
+  "support_local": true
+}

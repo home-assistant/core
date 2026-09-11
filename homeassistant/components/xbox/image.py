@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.titlehub.models import Title
@@ -107,6 +107,7 @@ class XboxImageEntity(XboxBaseEntity, ImageEntity):
         )
         self._attr_image_last_updated = dt_util.utcnow()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 

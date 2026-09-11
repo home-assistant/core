@@ -1,7 +1,7 @@
 """Config flow for the D-Link Power Plug integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyW215.pyW215 import SmartPlug
 import voluptuous as vol
@@ -22,6 +22,7 @@ class DLinkFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize a D-Link Power Plug flow."""
         self.ip_address: str | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -72,6 +73,7 @@ class DLinkFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

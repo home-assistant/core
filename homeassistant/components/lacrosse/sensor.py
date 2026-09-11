@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import pylacrosse
 from serial import SerialException
@@ -154,6 +154,7 @@ class LaCrosseSensor(SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
@@ -198,6 +199,7 @@ class LaCrosseTemperature(LaCrosseSensor):
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self._temperature
@@ -211,6 +213,7 @@ class LaCrosseHumidity(LaCrosseSensor):
     _attr_device_class = SensorDeviceClass.HUMIDITY
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._humidity
@@ -220,6 +223,7 @@ class LaCrosseBattery(LaCrosseSensor):
     """Implementation of a Lacrosse battery sensor."""
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         if self._low_battery is None:
@@ -229,6 +233,7 @@ class LaCrosseBattery(LaCrosseSensor):
         return "ok"
 
     @property
+    @override
     def icon(self) -> str:
         """Icon to use in the frontend."""
         if self._low_battery is None:

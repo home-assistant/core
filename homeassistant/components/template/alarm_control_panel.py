@@ -2,7 +2,7 @@
 
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -11,18 +11,13 @@ from homeassistant.components.alarm_control_panel import (
     ENTITY_ID_FORMAT,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityStateAttribute,
     AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_CODE,
-    CONF_NAME,
-    CONF_STATE,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import ATTR_CODE, CONF_NAME, CONF_STATE
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -44,7 +39,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -99,11 +94,15 @@ ALARM_CONTROL_PANEL_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=AlarmControlPanelEntityStateAttribute
+)
+
 ALARM_CONTROL_PANEL_YAML_SCHEMA = ALARM_CONTROL_PANEL_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(
-    make_template_entity_common_modern_schema(
-        ALARM_CONTROL_PANEL_DOMAIN, DEFAULT_NAME
+    make_template_entity_common_schema(
+        ALARM_CONTROL_PANEL_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -171,6 +170,8 @@ class AbstractTemplateAlarmControlPanel(
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_STATE
+    _restore_state_properties = ("_attr_alarm_state",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because
     # TemplateEntity calls AbstractTemplateEntity.__init__.
@@ -204,17 +205,6 @@ class AbstractTemplateAlarmControlPanel(
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
 
-    async def _async_handle_restored_state(self) -> None:
-        if (
-            (last_state := await self.async_get_last_state()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            and last_state.state in AlarmControlPanelState
-            # The trigger might have fired already while we waited for stored data,
-            # then we should not restore state
-            and self._attr_alarm_state is None
-        ):
-            self._attr_alarm_state = AlarmControlPanelState(last_state.state)
-
     async def _async_alarm_arm(self, state: Any, script: Script | None, code: Any):
         """Arm the panel to specified state with supplied script."""
 
@@ -227,6 +217,7 @@ class AbstractTemplateAlarmControlPanel(
             self._attr_alarm_state = state
             self.async_write_ha_state()
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the panel to Away."""
         await self._async_alarm_arm(
@@ -235,6 +226,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Arm the panel to Home."""
         await self._async_alarm_arm(
@@ -243,6 +235,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Arm the panel to Night."""
         await self._async_alarm_arm(
@@ -251,6 +244,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Arm the panel to Vacation."""
         await self._async_alarm_arm(
@@ -259,6 +253,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Arm the panel to Custom Bypass."""
         await self._async_alarm_arm(
@@ -267,6 +262,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the panel."""
         await self._async_alarm_arm(
@@ -275,6 +271,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Trigger the panel."""
         await self._async_alarm_arm(
@@ -282,6 +279,15 @@ class AbstractTemplateAlarmControlPanel(
             script=self._action_scripts.get(CONF_TRIGGER_ACTION),
             code=code,
         )
+
+    @override
+    def restore_last_state_state(self, last_state: State) -> bool:
+        """Restore the state from the last state."""
+        if last_state.state in AlarmControlPanelState:
+            self._attr_alarm_state = AlarmControlPanelState(last_state.state)
+            return True
+
+        return False
 
 
 class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlPanel):
@@ -303,11 +309,6 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
 
         AbstractTemplateAlarmControlPanel.__init__(self, name)
 
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        await self._async_handle_restored_state()
-
 
 class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControlPanel):
     """Alarm Control Panel entity based on trigger data."""
@@ -324,8 +325,3 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         TriggerEntity.__init__(self, hass, coordinator, config)
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         AbstractTemplateAlarmControlPanel.__init__(self, name)
-
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        await self._async_handle_restored_state()

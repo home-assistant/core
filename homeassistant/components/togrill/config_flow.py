@@ -1,6 +1,6 @@
 """Config flow for the ToGrill integration."""
 
-from typing import Any
+from typing import Any, override
 
 from bleak.exc import BleakError
 from togrill_bluetooth import SUPPORTED_DEVICES
@@ -8,6 +8,7 @@ from togrill_bluetooth.client import Client
 from togrill_bluetooth.packets import PacketA0Notify
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -70,6 +71,7 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             data=config_data,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -100,6 +102,7 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -113,6 +116,7 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovery_infos[address]
             )
 
+        await bluetooth.async_request_active_scan(self.hass)
         current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, True):
             address = discovery_info.address

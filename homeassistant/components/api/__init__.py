@@ -39,13 +39,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import (
+    HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
     ServiceNotFound,
+    ServiceValidationError,
     TemplateError,
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, recorder, template
+from homeassistant.helpers.http import MIN_COMPRESSED_RESPONSE_SIZE
 from homeassistant.helpers.json import json_dumps, json_fragment
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType
@@ -59,14 +62,12 @@ ATTR_EXTERNAL_URL = "external_url"
 ATTR_INTERNAL_URL = "internal_url"
 ATTR_LOCATION_NAME = "location_name"
 ATTR_INSTALLATION_TYPE = "installation_type"
-ATTR_REQUIRES_API_PASSWORD = "requires_api_password"
 ATTR_UUID = "uuid"
 ATTR_VERSION = "version"
 
 DOMAIN = "api"
 STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
-SERVICE_WAIT_TIMEOUT = 10
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -222,14 +223,16 @@ class APIStatesView(HomeAssistantView):
             states = (
                 state.as_dict_json
                 for state in hass.states.async_all()
-                if entity_perm(state.entity_id, "read")
+                if entity_perm(state.entity_id, POLICY_READ)
             )
+        body = b"".join((b"[", b",".join(states), b"]"))
         response = web.Response(
-            body=b"".join((b"[", b",".join(states), b"]")),
+            body=body,
             content_type=CONTENT_TYPE_JSON,
             zlib_executor_size=32768,
         )
-        response.enable_compression()
+        if len(body) > MIN_COMPRESSED_RESPONSE_SIZE:
+            response.enable_compression()
         return response
 
 
@@ -294,13 +297,16 @@ class APIEntityStateView(HomeAssistantView):
 
         # Read the state back for our response
         status_code = HTTPStatus.CREATED if is_new_state else HTTPStatus.OK
-        state = hass.states.get(entity_id)
-        assert state
-        resp = self.json(state.as_dict(), status_code)
-
-        resp.headers.add("Location", f"/api/states/{entity_id}")
-
-        return resp
+        if (state := hass.states.get(entity_id)) is None:
+            return self.json_message(
+                "Error storing state.", HTTPStatus.INTERNAL_SERVER_ERROR
+            )
+        return web.Response(
+            body=state.as_dict_json,
+            content_type=CONTENT_TYPE_JSON,
+            status=status_code,
+            headers={"Location": f"/api/states/{entity_id}"},
+        )
 
     @ha.callback
     def delete(self, request: web.Request, entity_id: str) -> web.Response:
@@ -435,18 +441,30 @@ class APIDomainServicesView(HomeAssistantView):
 
         try:
             # shield the service call from cancellation on connection drop
+            # and track the task so it cannot be garbage collected mid-run
             response = await shield(
-                hass.services.async_call(
-                    domain,
-                    service,
-                    data,  # type: ignore[arg-type]
-                    blocking=True,
-                    context=context,
-                    return_response=response_requested,
+                hass.async_create_task(
+                    hass.services.async_call(
+                        domain,
+                        service,
+                        data,  # type: ignore[arg-type]
+                        blocking=True,
+                        context=context,
+                        return_response=response_requested,
+                    ),
+                    f"api service call {domain}.{service}",
                 )
             )
         except (vol.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest from ex
+        except ServiceValidationError as ex:
+            return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
+        except Unauthorized:
+            # Handled by the view wrapper, which maps it to 401
+            raise
+        except HomeAssistantError as ex:
+            _LOGGER.error("Error during service call to %s.%s: %s", domain, service, ex)
+            return self.json_message(str(ex), HTTPStatus.INTERNAL_SERVER_ERROR)
         finally:
             cancel_listen()
 

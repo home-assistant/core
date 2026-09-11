@@ -49,4 +49,4 @@ async def test_init_failure(
     ourgroceries_config_entry: MockConfigEntry | None,
 ) -> None:
     """Test an initialization error on integration load."""
-    assert ourgroceries_config_entry.state == status
+    assert ourgroceries_config_entry.state is status

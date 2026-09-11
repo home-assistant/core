@@ -1,7 +1,7 @@
 """Config flow for Hunter Douglas PowerView integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, override
 
 import voluptuous as vol
 
@@ -59,6 +59,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_name: str | None = None
         self.data_schema: dict = {vol.Required(CONF_HOST): str}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -108,6 +109,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return info, None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -116,6 +118,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_name = discovery_info.hostname
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -126,6 +129,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_name = name
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -163,6 +167,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_link()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow.discovered_ip == self.discovered_ip

@@ -1,7 +1,7 @@
 """Config flow for Pico TTS integration."""
 
 import shutil
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -18,6 +18,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class PicoTTSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Pico TTS."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

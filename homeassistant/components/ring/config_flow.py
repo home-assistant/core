@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 import uuid
 
 from ring_doorbell import Auth, AuthenticationError, Requires2FAError
@@ -77,6 +77,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
     user_pass: dict[str, Any] = {}
     hardware_id: str | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -89,13 +90,14 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         if self.hass.config_entries.async_has_entries(DOMAIN):
             device_registry = dr.async_get(self.hass)
-            if device_registry.async_get_device(
+            if device_registry.async_get_devices(
                 identifiers={(DOMAIN, discovery_info.macaddress)}
             ):
                 return self.async_abort(reason="already_configured")
 
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

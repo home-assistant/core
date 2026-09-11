@@ -70,6 +70,40 @@ async def test_light_turn_on_off(
     getattr(mock_api_client, method).assert_called_once_with("dev_light_001")
 
 
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        (SERVICE_TURN_ON, "async_switch_on"),
+        (SERVICE_TURN_OFF, "async_switch_off"),
+    ],
+)
+async def test_light_switch_turn_on_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+    service: str,
+    method: str,
+) -> None:
+    """Test turning on and off a switch as light."""
+    get_device_by_id(mock_api_client, "dev_light_001")["type"] = "switch"
+    with patch(
+        "homeassistant.components.xthings_cloud.PLATFORMS",
+        [Platform.LIGHT, Platform.SWITCH],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    # Ensure it's not also created as a switch
+    assert hass.states.get("switch.bedroom_light") is None
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "light.bedroom_light"},
+        blocking=True,
+    )
+    getattr(mock_api_client, method).assert_called_once_with("dev_light_001")
+
+
 async def test_light_turn_on_brightness(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -91,6 +125,30 @@ async def test_light_turn_on_brightness(
         "dev_light_002", round(128 * 100 / 255)
     )
     mock_api_client.async_brite_on.assert_not_called()
+
+
+async def test_light_switch_turn_on_brightness(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """Test turning on switch with brightness."""
+    get_device_by_id(mock_api_client, "dev_light_002")["type"] = "switch"
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.hallway_light",
+            ATTR_BRIGHTNESS: 128,
+        },
+        blocking=True,
+    )
+    mock_api_client.async_switch_brightness.assert_called_once_with(
+        "dev_light_002", round(128 * 100 / 255)
+    )
+    mock_api_client.async_switch_on.assert_not_called()
 
 
 async def test_light_turn_on_hs_color(

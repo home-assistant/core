@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -43,13 +43,13 @@
 # name: test_setup_lcn_light[light.testmodule_light_output1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'friendly_name': 'TestModule Light_Output1',
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Light_Output1',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
     'entity_id': 'light.testmodule_light_output1',
@@ -66,7 +66,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
@@ -103,12 +103,12 @@
 # name: test_setup_lcn_light[light.testmodule_light_output2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': None,
-      'friendly_name': 'TestModule Light_Output2',
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Light_Output2',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
     'entity_id': 'light.testmodule_light_output2',
@@ -125,7 +125,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
@@ -162,12 +162,12 @@
 # name: test_setup_lcn_light[light.testmodule_light_relay1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': None,
-      'friendly_name': 'TestModule Light_Relay1',
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Light_Relay1',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.testmodule_light_relay1',

@@ -68,7 +68,7 @@
         "state": {
           "lightning": "mdi:weather-lightning-rainy",
           "rain": "mdi:weather-rainy",
-          "rain_snow": "mdi:weather-snoy-rainy",
+          "rain_snow": "mdi:weather-snowy-rainy",
           "snow": "mdi:weather-snowy"
         }
       },

@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey
@@ -27,6 +27,7 @@ from .const import (
     COFFEE_TEMPERATURE_OPTIONS,
     DOMAIN,
     DRYING_TARGET_OPTIONS,
+    FAVORITE_PROGRAMS,
     FLOW_RATE_OPTIONS,
     HOT_WATER_TEMPERATURE_OPTIONS,
     INTENSIVE_LEVEL_OPTIONS,
@@ -419,6 +420,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         self.set_options()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -429,6 +431,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             )
         )
 
+    @override
     def update_native_value(self) -> None:
         """Set the program value."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
@@ -438,11 +441,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             else None
         )
         if (
-            program_key
-            in (
-                ProgramKey.BSH_COMMON_FAVORITE_001,
-                ProgramKey.BSH_COMMON_FAVORITE_002,
-            )
+            program_key in FAVORITE_PROGRAMS
             and (
                 base_program_event := self.appliance.events.get(
                     EventKey.BSH_COMMON_OPTION_BASE_PROGRAM
@@ -455,6 +454,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             PROGRAMS_TRANSLATION_KEYS_MAP.get(program_key) if program_key else None
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select new program."""
         program_key = TRANSLATION_KEYS_PROGRAMS_MAP[option]
@@ -493,6 +493,7 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
             desc,
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
         value = self.entity_description.translation_key_values[option]
@@ -514,6 +515,7 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
                 },
             ) from err
 
+    @override
     def update_native_value(self) -> None:
         """Set the value of the entity."""
         data = self.appliance.settings[cast(SettingKey, self.bsh_key)]
@@ -521,6 +523,7 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
             data.value
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -568,12 +571,14 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
             desc,
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
         await self.async_set_option(
             self.entity_description.translation_key_values[option]
         )
 
+    @override
     def update_native_value(self) -> None:
         """Set the value of the entity."""
         self._attr_current_option = (

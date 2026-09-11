@@ -1,5 +1,7 @@
 """Base entity for Nice G.O."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -35,6 +37,7 @@ class NiceGOEntity(CoordinatorEntity[NiceGOUpdateCoordinator]):
         return self.coordinator.data[self._device_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.data.connected

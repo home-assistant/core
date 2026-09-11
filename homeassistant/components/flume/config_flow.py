@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
 from pyflume import FlumeAuth, FlumeDeviceList
 from requests.exceptions import RequestException
@@ -91,6 +91,7 @@ class FlumeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Init flume config flow."""
         self._reauth_unique_id: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

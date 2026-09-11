@@ -1,7 +1,7 @@
 """Config flow to configure the Kitchen Sink component."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -36,6 +36,7 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
@@ -44,6 +45,7 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:

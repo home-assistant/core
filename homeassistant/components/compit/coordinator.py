@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from compit_inext_api import CompitApiConnector, DeviceInstance
 
@@ -37,6 +38,7 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
             config_entry=config_entry,
         )
 
+    @override
     async def _async_update_data(self) -> dict[int, DeviceInstance]:
         """Update data via library."""
         await self.connector.update_state(device_id=None)  # Update all devices

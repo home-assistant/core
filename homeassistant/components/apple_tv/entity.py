@@ -1,5 +1,7 @@
 """The Apple TV integration."""
 
+from typing import override
+
 from pyatv.interface import AppleTV as AppleTVInterface
 
 from homeassistant.core import callback
@@ -27,6 +29,7 @@ class AppleTVEntity(Entity):
             name=name,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
 

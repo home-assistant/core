@@ -10,12 +10,8 @@ from botocore.exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.aws_s3.const import (
-    CONF_BUCKET,
-    CONF_ENDPOINT_URL,
-    CONF_PREFIX,
-    DOMAIN,
-)
+from homeassistant.components.aws_s3.const import CONF_BUCKET, CONF_ENDPOINT_URL, DOMAIN
+from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -83,7 +79,17 @@ async def test_flow(
     expected_data: dict,
 ) -> None:
     """Test config flow with and without prefix, including prefix normalization."""
-    result = await _async_start_flow(hass, user_input)
+    create_client = AsyncMock(name="create_client")
+    create_client.__aenter__.return_value.head_bucket.return_value = {}
+
+    with patch(
+        "homeassistant.components.aws_s3.config_flow.AioSession.create_client",
+        return_value=create_client,
+    ) as patched_create_client:
+        result = await _async_start_flow(hass, user_input)
+
+        assert patched_create_client.call_args.kwargs["config"].warm_up_loader_caches
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
     assert result["data"] == expected_data

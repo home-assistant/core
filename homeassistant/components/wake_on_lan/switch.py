@@ -2,7 +2,7 @@
 
 import logging
 import subprocess as sp
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 import wakeonlan
@@ -98,10 +98,12 @@ class WolSwitch(SwitchEntity):
         self._attr_unique_id = dr.format_mac(mac_address)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._state
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         service_kwargs: dict[str, Any] = {}
@@ -123,6 +125,7 @@ class WolSwitch(SwitchEntity):
             self._state = True
             self.schedule_update_ha_state()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up script when removing from Home Assistant."""
         if self._off_script is None:
@@ -133,6 +136,7 @@ class WolSwitch(SwitchEntity):
             return
         await self._off_script.async_unload()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off if an off action is present."""
         if self._off_script is not None:

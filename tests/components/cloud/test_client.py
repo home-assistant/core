@@ -104,7 +104,6 @@ async def test_handler_google_actions(hass: HomeAssistant) -> None:
     """Test handler Google Actions."""
     hass.states.async_set("switch.test", "on", {"friendly_name": "Test switch"})
     hass.states.async_set("switch.test2", "on", {"friendly_name": "Test switch 2"})
-    hass.states.async_set("group.all_locks", "on", {"friendly_name": "Evil locks"})
 
     await mock_cloud(
         hass,
@@ -168,7 +167,7 @@ async def test_handler_google_actions_disabled(
     mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
 
     with patch("hass_nabucasa.Cloud.initialize"):
-        assert await async_setup_component(hass, "cloud", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": intent}]}
@@ -190,7 +189,7 @@ async def test_handler_ice_servers(
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
     """Test handler ICE servers."""
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
     # make sure that preferences will not be reset
     await cloud.client.prefs.async_set_username(cloud.username)
@@ -214,7 +213,7 @@ async def test_handler_ice_servers_disabled(
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
     """Test handler ICE servers when user has disabled it."""
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
     # make sure that preferences will not be reset
     await cloud.client.prefs.async_set_username(cloud.username)
@@ -242,7 +241,7 @@ async def test_webhook_msg(
 ) -> None:
     """Test webhook msg."""
     with patch("hass_nabucasa.Cloud.initialize"):
-        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        setup = await async_setup_component(hass, DOMAIN, {"cloud": {}})
         assert setup
     cloud = hass.data[DATA_CLOUD]
 
@@ -319,7 +318,7 @@ async def test_webhook_msg(
 async def test_webhook_msg_local_only(hass: HomeAssistant) -> None:
     """Test a cloudhook for a local_only webhook does not fire the handler."""
     with patch("hass_nabucasa.Cloud.initialize"):
-        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        setup = await async_setup_component(hass, DOMAIN, {"cloud": {}})
         assert setup
     cloud = hass.data[DATA_CLOUD]
 
@@ -378,14 +377,13 @@ async def test_google_config_expose_entity(
     )
 
     cloud_client = hass.data[DATA_CLOUD].client
-    state = State(entity_entry.entity_id, "on")
     gconf = await cloud_client.get_google_config()
 
-    assert gconf.should_expose(state)
+    assert gconf.should_expose(entity_entry.entity_id)
 
     async_expose_entity(hass, "cloud.google_assistant", entity_entry.entity_id, False)
 
-    assert not gconf.should_expose(state)
+    assert not gconf.should_expose(entity_entry.entity_id)
 
 
 @pytest.mark.usefixtures("mock_cloud_setup", "mock_cloud_login")
@@ -455,7 +453,7 @@ async def test_login_recovers_bad_internet(
 async def test_system_msg(hass: HomeAssistant) -> None:
     """Test system msg."""
     with patch("hass_nabucasa.Cloud.initialize"):
-        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        setup = await async_setup_component(hass, DOMAIN, {"cloud": {}})
         assert setup
     cloud = hass.data[DATA_CLOUD]
 
@@ -478,7 +476,7 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
         patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock,
     ):
         hexmock.return_value = "12345678901234567890"
-        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        setup = await async_setup_component(hass, DOMAIN, {"cloud": {}})
         assert setup
     cloud = hass.data[DATA_CLOUD]
 
@@ -600,7 +598,7 @@ async def test_logged_out(
 ) -> None:
     """Test cleanup when logged out from the cloud."""
 
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
     await cloud.login("test-user", "test-pass")
 

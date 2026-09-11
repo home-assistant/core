@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from ProgettiHWSW.input import Input
 
@@ -37,6 +38,7 @@ async def async_setup_entry(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name="binary_sensor",
         update_method=async_update_data,
         update_interval=timedelta(seconds=DEFAULT_POLLING_INTERVAL_SEC),
@@ -63,6 +65,7 @@ class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._sensor = sensor
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get sensor state."""
         return self.coordinator.data[self._sensor.id]

@@ -1,6 +1,7 @@
 """Support for the Swing2Sleep Smarla button entities."""
 
 from dataclasses import dataclass
+from typing import override
 
 from pysmarlaapi.federwiege.services.classes import Property
 
@@ -48,6 +49,7 @@ class SmarlaButton(SmarlaBaseEntity, ButtonEntity):
 
     _property: Property[str]
 
+    @override
     def press(self) -> None:
         """Press the button."""
         self._property.set("Sent from Home Assistant")

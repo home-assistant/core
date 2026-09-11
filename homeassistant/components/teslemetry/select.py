@@ -2,14 +2,15 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from itertools import chain
-from typing import Any
+from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -21,7 +22,11 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import handle_command, handle_vehicle_command
+from .helpers import (
+    async_remove_stale_vehicle_entities,
+    handle_command,
+    handle_vehicle_command,
+)
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 OFF = "off"
@@ -82,7 +87,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         select_fn=lambda api, level: api.remote_seat_heater_request(
             Seat.REAR_LEFT, level
         ),
-        supported_fn=lambda data: data.get("vehicle_config_rear_seat_heaters") != 0,
+        supported_fn=lambda data: bool(data.get("rear_seat_heaters")),
         streaming_listener=lambda x, y: x.listen_SeatHeaterRearLeft(y),
         entity_registry_enabled_default=False,
         options=[
@@ -97,7 +102,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         select_fn=lambda api, level: api.remote_seat_heater_request(
             Seat.REAR_CENTER, level
         ),
-        supported_fn=lambda data: data.get("vehicle_config_rear_seat_heaters") != 0,
+        # Center is heated only on the full-bench configs (1, 3); value 2 is
+        # outboard-only rear heating (no center), seen on classic Model S.
+        supported_fn=lambda data: data.get("rear_seat_heaters") in (1, 3),
         streaming_listener=lambda x, y: x.listen_SeatHeaterRearCenter(y),
         entity_registry_enabled_default=False,
         options=[
@@ -112,7 +119,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         select_fn=lambda api, level: api.remote_seat_heater_request(
             Seat.REAR_RIGHT, level
         ),
-        supported_fn=lambda data: data.get("vehicle_config_rear_seat_heaters") != 0,
+        supported_fn=lambda data: bool(data.get("rear_seat_heaters")),
         streaming_listener=lambda x, y: x.listen_SeatHeaterRearRight(y),
         entity_registry_enabled_default=False,
         options=[
@@ -127,7 +134,13 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         select_fn=lambda api, level: api.remote_seat_heater_request(
             Seat.THIRD_LEFT, level
         ),
-        supported_fn=lambda self: self.get("vehicle_config_third_row_seats") != "None",
+        # Heated third row only on Model X (value 3) that actually has a third
+        # row; some 5-seat Model X also report 3 but have no third row.
+        # third_row_seats is a string ("None" when absent), not a bool.
+        supported_fn=lambda data: (
+            data.get("rear_seat_heaters") == 3
+            and data.get("third_row_seats", "None") != "None"
+        ),
         entity_registry_enabled_default=False,
         options=[
             OFF,
@@ -141,7 +154,13 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         select_fn=lambda api, level: api.remote_seat_heater_request(
             Seat.THIRD_RIGHT, level
         ),
-        supported_fn=lambda self: self.get("vehicle_config_third_row_seats") != "None",
+        # Heated third row only on Model X (value 3) that actually has a third
+        # row; some 5-seat Model X also report 3 but have no third row.
+        # third_row_seats is a string ("None" when absent), not a bool.
+        supported_fn=lambda data: (
+            data.get("rear_seat_heaters") == 3
+            and data.get("third_row_seats", "None") != "None"
+        ),
         entity_registry_enabled_default=False,
         options=[
             OFF,
@@ -162,6 +181,33 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
             HIGH,
         ],
     ),
+    TeslemetrySelectEntityDescription(
+        # remote_seat_cooler_request uses 1-indexed positions (front-left=1,
+        # front-right=2), unlike the 0-indexed Seat enum used for heaters.
+        # Polled state comes from the seat_fan_front_* vehicle_data fields.
+        key="climate_state_seat_fan_front_left",
+        select_fn=lambda api, level: api.remote_seat_cooler_request(1, level),
+        supported_fn=lambda data: bool(data.get("has_seat_cooling")),
+        streaming_listener=lambda x, y: x.listen_ClimateSeatCoolingFrontLeft(y),
+        options=[
+            OFF,
+            LOW,
+            MEDIUM,
+            HIGH,
+        ],
+    ),
+    TeslemetrySelectEntityDescription(
+        key="climate_state_seat_fan_front_right",
+        select_fn=lambda api, level: api.remote_seat_cooler_request(2, level),
+        supported_fn=lambda data: bool(data.get("has_seat_cooling")),
+        streaming_listener=lambda x, y: x.listen_ClimateSeatCoolingFrontRight(y),
+        options=[
+            OFF,
+            LOW,
+            MEDIUM,
+            HIGH,
+        ],
+    ),
 )
 
 
@@ -172,35 +218,56 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry select platform from a config entry."""
 
-    async_add_entities(
-        chain(
-            (
-                TeslemetryVehiclePollingSelectEntity(
-                    vehicle, description, entry.runtime_data.scopes
+    vehicles_metadata = entry.runtime_data.metadata_coordinator.data.get("vehicles", {})
+    entities: list[SelectEntity] = []
+    for description in VEHICLE_DESCRIPTIONS:
+        for vehicle in entry.runtime_data.vehicles:
+            if not description.supported_fn(
+                vehicles_metadata.get(vehicle.vin, {}).get("config", {})
+            ):
+                continue
+            if description.streaming_listener is None:
+                # Polling-only feature; poll may be None (unknown), only an
+                # explicit False marks a stream-only vehicle.
+                if vehicle.poll is not False:
+                    entities.append(
+                        TeslemetryVehiclePollingSelectEntity(
+                            vehicle, description, entry.runtime_data.scopes
+                        )
+                    )
+            elif vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26"):
+                entities.append(
+                    TeslemetryVehiclePollingSelectEntity(
+                        vehicle, description, entry.runtime_data.scopes
+                    )
                 )
-                if vehicle.poll
-                or vehicle.firmware < "2024.26"
-                or description.streaming_listener is None
-                else TeslemetryStreamingSelectEntity(
-                    vehicle, description, entry.runtime_data.scopes
+            else:
+                entities.append(
+                    TeslemetryStreamingSelectEntity(
+                        vehicle, description, entry.runtime_data.scopes
+                    )
                 )
-                for description in VEHICLE_DESCRIPTIONS
-                for vehicle in entry.runtime_data.vehicles
-                if description.supported_fn(vehicle.coordinator.data)
-            ),
-            (
-                TeslemetryOperationSelectEntity(energysite, entry.runtime_data.scopes)
-                for energysite in entry.runtime_data.energysites
-                if energysite.info_coordinator.data.get("components_battery")
-            ),
-            (
-                TeslemetryExportRuleSelectEntity(energysite, entry.runtime_data.scopes)
-                for energysite in entry.runtime_data.energysites
-                if energysite.info_coordinator.data.get("components_battery")
-                and energysite.info_coordinator.data.get("components_solar")
-            ),
-        )
+
+    entities.extend(
+        TeslemetryOperationSelectEntity(energysite, entry.runtime_data.scopes)
+        for energysite in entry.runtime_data.energysites
+        if energysite.info_coordinator.data.get("components_battery")
     )
+    entities.extend(
+        TeslemetryExportRuleSelectEntity(energysite, entry.runtime_data.scopes)
+        for energysite in entry.runtime_data.energysites
+        if energysite.info_coordinator.data.get("components_battery")
+        and energysite.info_coordinator.data.get("components_solar")
+    )
+
+    async_remove_stale_vehicle_entities(
+        hass,
+        entry.entry_id,
+        Platform.SELECT,
+        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
+        {entity.unique_id for entity in entities if entity.unique_id},
+    )
+    async_add_entities(entities)
 
 
 class TeslemetrySelectEntity(TeslemetryRootEntity, SelectEntity):
@@ -210,6 +277,7 @@ class TeslemetrySelectEntity(TeslemetryRootEntity, SelectEntity):
     entity_description: TeslemetrySelectEntityDescription
     _climate: bool = False
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
@@ -238,13 +306,18 @@ class TeslemetryVehiclePollingSelectEntity(
         self.scoped = Scope.VEHICLE_CMDS in scopes
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updated data from the coordinator."""
         self._climate = bool(self.get("climate_state_is_climate_on"))
-        if not isinstance(self._value, int):
-            self._attr_current_option = None
+        value = self._value
+        # Defensive clamp: Tesla could report a level outside the modeled
+        # range, so map it to the nearest known option rather than erroring.
+        if isinstance(value, int):
+            options = self.entity_description.options
+            self._attr_current_option = options[max(0, min(value, len(options) - 1))]
         else:
-            self._attr_current_option = self.entity_description.options[self._value]
+            self._attr_current_option = None
 
 
 class TeslemetryStreamingSelectEntity(
@@ -264,6 +337,7 @@ class TeslemetryStreamingSelectEntity(
         self._attr_current_option = None
         super().__init__(data, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -287,10 +361,13 @@ class TeslemetryStreamingSelectEntity(
 
     def _value_callback(self, value: int | None) -> None:
         """Update the value of the entity."""
-        if value is None:
-            self._attr_current_option = None
+        # Defensive clamp: Tesla could report a level outside the modeled
+        # range, so map it to the nearest known option rather than erroring.
+        if isinstance(value, int):
+            options = self.entity_description.options
+            self._attr_current_option = options[max(0, min(value, len(options) - 1))]
         else:
-            self._attr_current_option = self.entity_description.options[value]
+            self._attr_current_option = None
         self.async_write_ha_state()
 
     def _climate_callback(self, value: bool | None) -> None:
@@ -316,10 +393,12 @@ class TeslemetryOperationSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
         self.scoped = Scope.ENERGY_CMDS in scopes
         super().__init__(data, "default_real_mode")
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_current_option = self._value
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
@@ -348,6 +427,7 @@ class TeslemetryExportRuleSelectEntity(
         self.scoped = Scope.ENERGY_CMDS in scopes
         super().__init__(data, "components_customer_preferred_export_rule")
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -358,6 +438,7 @@ class TeslemetryExportRuleSelectEntity(
                 if state.state in self._attr_options:
                     self._attr_current_option = state.state
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         if value := self._value:
@@ -371,6 +452,7 @@ class TeslemetryExportRuleSelectEntity(
             self._attr_current_option = None  # Unknown
         # In VPP Mode, Export isn't disabled, so use last known state
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_scope(Scope.ENERGY_CMDS)

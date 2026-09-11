@@ -1,7 +1,7 @@
 """Update platform for Tesla Fleet integration."""
 
 import time
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.tesla.vehicle.fleet import VehicleFleet
@@ -58,6 +58,7 @@ class TeslaFleetUpdateEntity(TeslaFleetVehicleEntity, UpdateEntity):
             "vehicle_state_software_update_status",
         )
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -68,6 +69,7 @@ class TeslaFleetUpdateEntity(TeslaFleetVehicleEntity, UpdateEntity):
         self._attr_in_progress = True
         self.async_write_ha_state()
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 

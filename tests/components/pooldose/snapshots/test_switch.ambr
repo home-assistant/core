@@ -39,7 +39,7 @@
 # name: test_all_switches[switch.pool_device_frequency_input-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device Frequency input',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Frequency input',
     }),
     'context': <ANY>,
     'entity_id': 'switch.pool_device_frequency_input',
@@ -89,7 +89,7 @@
 # name: test_all_switches[switch.pool_device_pause_dosing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device Pause dosing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Pause dosing',
     }),
     'context': <ANY>,
     'entity_id': 'switch.pool_device_pause_dosing',
@@ -139,7 +139,7 @@
 # name: test_all_switches[switch.pool_device_pump_monitoring-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device Pump monitoring',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Pump monitoring',
     }),
     'context': <ANY>,
     'entity_id': 'switch.pool_device_pump_monitoring',

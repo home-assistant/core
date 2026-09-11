@@ -1,7 +1,7 @@
 """Support for Devialet Phantom speakers."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from devialet.devialet_api import DevialetApi
 import voluptuous as vol
@@ -50,6 +50,7 @@ class DevialetFlowHandler(ConfigFlow, domain=DOMAIN):
             data={CONF_HOST: self._host, CONF_NAME: client.device_name},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -67,6 +68,7 @@ class DevialetFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

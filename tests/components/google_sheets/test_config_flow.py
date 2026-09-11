@@ -60,7 +60,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "google_sheets", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -127,7 +127,7 @@ async def test_create_sheet_error(
 ) -> None:
     """Test case where creating the spreadsheet fails."""
     result = await hass.config_entries.flow.async_init(
-        "google_sheets", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -302,7 +302,7 @@ async def test_reauth_abort(
     # Simulate failure looking up existing spreadsheet
     mock_open = Mock()
     mock_open.return_value.id = SHEET_ID
-    mock_open.side_effect = GSpreadException()
+    mock_open.side_effect = PermissionError()
     mock_client.return_value.open_by_key = mock_open
 
     aioclient_mock.post(
@@ -341,7 +341,7 @@ async def test_already_configured(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "google_sheets", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

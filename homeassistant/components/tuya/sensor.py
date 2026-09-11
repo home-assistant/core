@@ -1,6 +1,7 @@
 """Support for Tuya sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from tuya_device_handlers.definition.sensor import (
     SensorDefinition,
@@ -30,14 +31,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     EntityCategory,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -54,6 +54,7 @@ from .const import (
 )
 from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
+from .util import get_device_temp_unit_convert
 
 CURRENT_WRAPPER = (ElectricityCurrentRawWrapper, ElectricityCurrentJsonWrapper)
 POWER_WRAPPER = (ElectricityPowerRawWrapper, ElectricityPowerJsonWrapper)
@@ -73,7 +74,7 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
     TuyaSensorEntityDescription(
         key=DPCode.BATTERY_PERCENTAGE,
         translation_key="battery",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -81,7 +82,7 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
     TuyaSensorEntityDescription(
         key=DPCode.BATTERY,  # Used by non-standard contact sensor implementations
         translation_key="battery",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -179,7 +180,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            suggested_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CH2O_VALUE,
@@ -197,7 +198,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            suggested_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM10,
@@ -213,7 +214,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="carbon_monoxide",
             device_class=SensorDeviceClass.CO,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            suggested_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         ),
         *BATTERY_SENSORS,
     ),
@@ -277,6 +278,137 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.WATER_LEVEL, translation_key="water_level_state"
         ),
     ),
+    DeviceCategory.CZ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_CURRENT,
+            translation_key="current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_POWER,
+            translation_key="power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_VOLTAGE,
+            translation_key="voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ADD_ELE,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PRO_ADD_ELE,
+            translation_key="total_production",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.DEVICE_STATE1,
+            translation_key="indexed_meter_status",
+            translation_placeholders={"index": "1"},
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.DEVICE_STATE2,
+            translation_key="indexed_meter_status",
+            translation_placeholders={"index": "2"},
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_CURRENT1,
+            translation_key="indexed_current",
+            translation_placeholders={"index": "1"},
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_CURRENT2,
+            translation_key="indexed_current",
+            translation_placeholders={"index": "2"},
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_POWER1,
+            translation_key="indexed_power",
+            translation_placeholders={"index": "1"},
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_POWER2,
+            translation_key="indexed_power",
+            translation_placeholders={"index": "2"},
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_VOLTAGE1,
+            translation_key="indexed_voltage",
+            translation_placeholders={"index": "1"},
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_VOLTAGE2,
+            translation_key="indexed_voltage",
+            translation_placeholders={"index": "2"},
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_ENERGY1,
+            translation_key="indexed_total_energy",
+            translation_placeholders={"index": "1"},
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_ENERGY2,
+            translation_key="indexed_total_energy",
+            translation_placeholders={"index": "2"},
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TODAY_ACC_ENERGY1,
+            translation_key="indexed_energy_today",
+            translation_placeholders={"index": "1"},
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TODAY_ACC_ENERGY2,
+            translation_key="indexed_energy_today",
+            translation_placeholders={"index": "2"},
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ALL_ENERGY,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+    ),
     DeviceCategory.DGNBJ: (
         TuyaSensorEntityDescription(
             key=DPCode.GAS_SENSOR_VALUE,
@@ -300,21 +432,21 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            suggested_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO_VALUE,
             translation_key="carbon_monoxide",
             device_class=SensorDeviceClass.CO,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            suggested_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            suggested_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.EC_CURRENT,
@@ -533,7 +665,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            suggested_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CH2O_VALUE,
@@ -551,14 +683,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            suggested_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM10,
             translation_key="pm10",
             device_class=SensorDeviceClass.PM10,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            suggested_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
         *BATTERY_SENSORS,
     ),
@@ -568,7 +700,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            suggested_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VOC_VALUE,
@@ -581,7 +713,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            suggested_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VA_HUMIDITY,
@@ -682,7 +814,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            suggested_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP,
@@ -707,7 +839,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="concentration_carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            suggested_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TOTAL_TIME,
@@ -754,7 +886,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            suggested_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         ),
         *BATTERY_SENSORS,
     ),
@@ -806,7 +938,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            suggested_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CH2O_VALUE,
@@ -830,7 +962,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            suggested_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
@@ -843,16 +975,47 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="pm1",
             device_class=SensorDeviceClass.PM1,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            suggested_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM10,
             translation_key="pm10",
             device_class=SensorDeviceClass.PM10,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            suggested_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
         *BATTERY_SENSORS,
+    ),
+    DeviceCategory.QCCDZ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.WORK_STATE,
+            translation_key="charger_status",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FORWARD_ENERGY_TOTAL,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CHARGE_ENERGY_ONCE,
+            translation_key="session_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.POWER_TOTAL,
+            translation_key="total_power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
     ),
     DeviceCategory.QN: (
         TuyaSensorEntityDescription(
@@ -1228,14 +1391,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            suggested_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            suggested_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CH2O_VALUE,
@@ -1346,6 +1509,12 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
             translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EXT_TEMP,
+            translation_key="temperature_external",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -1589,6 +1758,36 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             wrapper_class=VOLTAGE_WRAPPER,
         ),
     ),
+    DeviceCategory.ZNJDQ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_CURRENT,
+            translation_key="current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_POWER,
+            translation_key="power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_VOLTAGE,
+            translation_key="voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ADD_ELE,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+    ),
     DeviceCategory.ZNNBQ: (
         TuyaSensorEntityDescription(
             key=DPCode.REVERSE_ENERGY_TOTAL,
@@ -1666,8 +1865,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     ),
 }
 
-# Socket (duplicate of `kg`)
-SENSORS[DeviceCategory.CZ] = SENSORS[DeviceCategory.KG]
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
@@ -1767,6 +1964,15 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._attr_native_unit_of_measurement = tuya_uom
             return
 
+        # If the device provides TEMP_UNIT_CONVERT and no unit is set, use it.
+        if (
+            device_class is SensorDeviceClass.TEMPERATURE
+            and not tuya_uom
+            and (temp_unit := get_device_temp_unit_convert(self.device)) is not None
+        ):
+            self._attr_native_unit_of_measurement = temp_unit
+            return
+
         # Check mappings for compatible units of measurement for the device class
         if (
             tuya_uom is not None
@@ -1800,10 +2006,12 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],

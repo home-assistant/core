@@ -39,7 +39,7 @@
 # name: test_buttons[button.sync_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sync time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sync time',
     }),
     'context': <ANY>,
     'entity_id': 'button.sync_time',

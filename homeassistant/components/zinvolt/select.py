@@ -1,5 +1,7 @@
 """Select platform for Zinvolt integration."""
 
+from typing import override
+
 from zinvolt.models import SmartMode
 
 from homeassistant.components.select import SelectEntity
@@ -44,10 +46,12 @@ class ZinvoltBatteryMode(ZinvoltEntity, SelectEntity):
         self._attr_unique_id = f"{coordinator.data.battery.serial_number}.mode"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current battery mode."""
         return MODE_MAP.get(self.coordinator.data.battery.smart_mode)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set battery mode."""
         await self.coordinator.client.set_smart_mode(

@@ -1,7 +1,7 @@
 """Entity for conversation integration."""
 
 from abc import abstractmethod
-from typing import Literal, final
+from typing import Literal, final, override
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers.chat_session import async_get_chat_session
@@ -28,12 +28,14 @@ class ConversationEntity(RestoreEntity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state of the entity."""
         if self.__last_activity is None:
             return None
         return self.__last_activity
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_internal_added_to_hass()

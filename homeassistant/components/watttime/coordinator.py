@@ -1,25 +1,26 @@
 """Coordinator for the WattTime integration."""
 
 from datetime import timedelta
+from typing import override
 
 from aiowatttime import Client
-from aiowatttime.emissions import RealTimeEmissionsResponseType
 from aiowatttime.errors import InvalidCredentialsError, WattTimeError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_BALANCING_AUTHORITY_ABBREV, DOMAIN, LOGGER
 
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
+type WattTimeData = dict[str, StateType]
 type WattTimeConfigEntry = ConfigEntry[WattTimeCoordinator]
 
 
-class WattTimeCoordinator(DataUpdateCoordinator[RealTimeEmissionsResponseType]):
+class WattTimeCoordinator(DataUpdateCoordinator[WattTimeData]):
     """Coordinator for WattTime data updates."""
 
     config_entry: WattTimeConfigEntry
@@ -40,12 +41,12 @@ class WattTimeCoordinator(DataUpdateCoordinator[RealTimeEmissionsResponseType]):
         )
         self.client = client
 
-    async def _async_update_data(self) -> RealTimeEmissionsResponseType:
+    @override
+    async def _async_update_data(self) -> WattTimeData:
         """Get the latest realtime emissions data."""
         try:
-            return await self.client.emissions.async_get_realtime_emissions(
-                self.config_entry.data[CONF_LATITUDE],
-                self.config_entry.data[CONF_LONGITUDE],
+            data = await self.client.emissions.async_get_realtime_emissions(
+                self.config_entry.data[CONF_BALANCING_AUTHORITY_ABBREV]
             )
         except InvalidCredentialsError as err:
             raise ConfigEntryAuthFailed("Invalid username/password") from err
@@ -53,3 +54,5 @@ class WattTimeCoordinator(DataUpdateCoordinator[RealTimeEmissionsResponseType]):
             raise UpdateFailed(
                 f"Error while requesting data from WattTime: {err}"
             ) from err
+
+        return {"percent": data["data"][0]["value"]}

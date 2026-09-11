@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -32,7 +31,7 @@
           "port": "[%key:common::config_flow::data::port%]",
           "search": "IMAP search",
           "server": "Server",
-          "ssl_cipher_list": "SSL cipher list (Advanced)",
+          "ssl_cipher_list": "SSL cipher list",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },

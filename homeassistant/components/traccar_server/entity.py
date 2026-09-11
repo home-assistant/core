@@ -1,6 +1,6 @@
 """Base entity for Traccar Server."""
 
-from typing import Any
+from typing import Any, override
 
 from pytraccar import DeviceModel, GeofenceModel, PositionModel
 
@@ -31,6 +31,7 @@ class TraccarServerEntity(CoordinatorEntity[TraccarServerCoordinator]):
         self._attr_unique_id = device["uniqueId"]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self.coordinator.data and self.device_id in self.coordinator.data)
@@ -55,6 +56,7 @@ class TraccarServerEntity(CoordinatorEntity[TraccarServerCoordinator]):
         """Return the attributes."""
         return self.coordinator.data[self.device_id]["attributes"]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         self.async_on_remove(

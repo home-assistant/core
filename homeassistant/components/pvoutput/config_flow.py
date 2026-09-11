@@ -1,7 +1,7 @@
 """Config flow to configure the PVOutput integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pvo import PVOutput, PVOutputAuthenticationError, PVOutputError
 import voluptuous as vol
@@ -30,6 +30,7 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

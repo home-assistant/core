@@ -1,5 +1,7 @@
 """Support for Aqualink temperature sensors."""
 
+from typing import override
+
 from iaqualink.device import AqualinkBinarySensor
 
 from homeassistant.components.binary_sensor import (
@@ -44,6 +46,7 @@ class HassAqualinkBinarySensor(
             self._attr_device_class = BinarySensorDeviceClass.COLD
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the binary sensor is on or not."""
         return self.dev.is_on

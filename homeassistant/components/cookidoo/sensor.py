@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -107,6 +108,7 @@ class CookidooSensorEntity(CookidooBaseEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
 

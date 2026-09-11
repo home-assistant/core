@@ -1,7 +1,7 @@
 """Config flow for Soma."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from api.soma_api import SomaApi
 from requests import RequestException
@@ -25,6 +25,7 @@ class SomaFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Instantiate config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

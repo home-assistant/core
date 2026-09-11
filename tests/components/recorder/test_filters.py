@@ -151,12 +151,4 @@ async def test_an_empty_filter_raises() -> None:
             " has_config before calling this method"
         ),
     ):
-        filters.states_entity_filter()
-    with pytest.raises(
-        RuntimeError,
-        match=(
-            "No filter configuration provided, check"
-            " has_config before calling this method"
-        ),
-    ):
         filters.events_entity_filter()

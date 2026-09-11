@@ -1,5 +1,7 @@
 """Representation of an EnOcean device."""
 
+from typing import override
+
 from enocean_async import EURID, Address, BaseAddress, ERP1Telegram, SenderAddress
 from enocean_async.esp3.packet import ESP3Packet, ESP3PacketType
 
@@ -38,6 +40,7 @@ class EnOceanEntity(Entity):
         except ValueError:
             self.address = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

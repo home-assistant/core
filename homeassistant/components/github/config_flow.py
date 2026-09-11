@@ -1,7 +1,7 @@
 """Config flow for GitHub integration."""
 
 import asyncio
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiogithubapi import (
     GitHubAPI,
@@ -119,12 +119,14 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_REPOSITORY: RepositoryFlowHandler}
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,

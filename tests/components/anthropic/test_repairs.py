@@ -16,11 +16,7 @@ from homeassistant.setup import async_setup_component
 from . import model_list
 
 from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 
@@ -64,7 +60,6 @@ def _get_subentry(
 async def _setup_repairs(hass: HomeAssistant) -> None:
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "repairs", {})
-    await async_process_repairs_platforms(hass)
 
 
 async def test_repair_flow_iterates_subentries(

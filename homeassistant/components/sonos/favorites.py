@@ -3,7 +3,7 @@
 from collections.abc import Iterator
 import logging
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from soco import SoCo
 from soco.data_structures import DidlFavorite
@@ -36,6 +36,7 @@ class SonosFavorites(SonosHouseholdCoordinator):
         favorites = self._favorites.copy()
         return iter(favorites)
 
+    @override
     def setup(self, soco: SoCo) -> None:
         """Override to send a signal on base class setup completion."""
         super().setup(soco)
@@ -50,6 +51,7 @@ class SonosFavorites(SonosHouseholdCoordinator):
         """Return the favorite object with the provided item_id."""
         return next((fav for fav in self._favorites if fav.item_id == item_id), None)
 
+    @override
     async def async_update_entities(
         self, soco: SoCo, update_id: int | None = None
     ) -> None:
@@ -101,6 +103,7 @@ class SonosFavorites(SonosHouseholdCoordinator):
             await self.async_update_entities(speaker.soco, container_id)
 
     @soco_error()
+    @override
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known favorites and return if cache has changed."""
         new_favorites = soco.music_library.get_sonos_favorites(full_album_art_uri=True)

@@ -4,9 +4,9 @@ from homeassistant.components.aws_s3.const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
-    CONF_PREFIX,
     CONF_SECRET_ACCESS_KEY,
 )
+from homeassistant.const import CONF_PREFIX
 
 # What gets persisted in the config entry (empty prefix is not stored)
 CONFIG_ENTRY_DATA = {

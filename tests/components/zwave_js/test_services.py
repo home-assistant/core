@@ -302,6 +302,7 @@ async def test_set_config_parameter(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -608,8 +609,8 @@ async def test_bulk_set_config_parameters(
     integration,
 ) -> None:
     """Test the bulk_set_partial_config_parameters service."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, multisensor_6)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, multisensor_6), integration.entry_id
     )
     assert device
 
@@ -800,6 +801,7 @@ async def test_bulk_set_config_parameters(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -943,6 +945,7 @@ async def test_refresh_value(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     client.async_send_command.return_value = {"result": 2}
     await hass.services.async_call(
@@ -978,8 +981,8 @@ async def test_set_value(
     integration,
 ) -> None:
     """Test set_value service."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_danfoss_lc_13), integration.entry_id
     )
     assert device
 
@@ -1075,6 +1078,7 @@ async def test_set_value(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -1334,12 +1338,12 @@ async def test_multicast_set_value(
     client.async_send_command.reset_mock()
 
     # Test using area ID
-    device_eurotronic = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_eurotronic_spirit_z)}
+    device_eurotronic = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_eurotronic_spirit_z), integration.entry_id
     )
     assert device_eurotronic
-    device_danfoss = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
+    device_danfoss = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_danfoss_lc_13), integration.entry_id
     )
     assert device_danfoss
     area = area_registry.async_get_or_create("test")
@@ -1385,6 +1389,7 @@ async def test_multicast_set_value(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -1582,7 +1587,7 @@ async def test_multicast_set_value_options(
         {
             ATTR_ENTITY_ID: [
                 BULB_6_MULTI_COLOR_LIGHT_ENTITY,
-                "light.repeater",
+                "light.dining_room_repeater",
             ],
             ATTR_COMMAND_CLASS: 51,
             ATTR_PROPERTY: "targetColor",
@@ -1659,16 +1664,15 @@ async def test_ping(
     integration,
 ) -> None:
     """Test ping service."""
-    device_radio_thermostat = device_registry.async_get_device(
-        identifiers={
-            get_device_id(
-                client.driver, climate_radio_thermostat_ct100_plus_different_endpoints
-            )
-        }
+    device_radio_thermostat = device_registry.async_get_device_by_identifier(
+        get_device_id(
+            client.driver, climate_radio_thermostat_ct100_plus_different_endpoints
+        ),
+        integration.entry_id,
     )
     assert device_radio_thermostat
-    device_danfoss = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
+    device_danfoss = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_danfoss_lc_13), integration.entry_id
     )
     assert device_danfoss
 
@@ -1761,6 +1765,7 @@ async def test_ping(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -1816,16 +1821,15 @@ async def test_invoke_cc_api(
     integration,
 ) -> None:
     """Test invoke_cc_api service."""
-    device_radio_thermostat = device_registry.async_get_device(
-        identifiers={
-            get_device_id(
-                client.driver, climate_radio_thermostat_ct100_plus_different_endpoints
-            )
-        }
+    device_radio_thermostat = device_registry.async_get_device_by_identifier(
+        get_device_id(
+            client.driver, climate_radio_thermostat_ct100_plus_different_endpoints
+        ),
+        integration.entry_id,
     )
     assert device_radio_thermostat
-    device_danfoss = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
+    device_danfoss = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_danfoss_lc_13), integration.entry_id
     )
     assert device_danfoss
 
@@ -1983,12 +1987,12 @@ async def test_refresh_notifications(
     integration,
 ) -> None:
     """Test refresh_notifications service."""
-    zen_31_device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, zen_31)}
+    zen_31_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, zen_31), integration.entry_id
     )
     assert zen_31_device
-    multisensor_6_device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, multisensor_6)}
+    multisensor_6_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, multisensor_6), integration.entry_id
     )
     assert multisensor_6_device
 

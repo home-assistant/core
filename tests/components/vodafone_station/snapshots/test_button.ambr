@@ -39,8 +39,8 @@
 # name: test_all_entities[button.vodafone_station_m123456789_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Vodafone Station (m123456789) Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vodafone Station (m123456789) Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.vodafone_station_m123456789_restart',

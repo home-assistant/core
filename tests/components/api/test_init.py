@@ -15,10 +15,16 @@ import voluptuous as vol
 from homeassistant import const, core as ha
 from homeassistant.auth.models import Credentials
 from homeassistant.bootstrap import DATA_LOGGING
+from homeassistant.components.api import DOMAIN
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.loader import Integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import JSON_TYPE
@@ -32,7 +38,7 @@ async def mock_api_client(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Start the Home Assistant HTTP component and return admin API client."""
-    await async_setup_component(hass, "api", {})
+    await async_setup_component(hass, DOMAIN, {})
     return await hass_client()
 
 
@@ -48,6 +54,33 @@ async def test_api_list_state_entities(
     remote_data = [ha.State.from_dict(item).as_dict() for item in json]
     local_data = [state.as_dict() for state in hass.states.async_all()]
     assert remote_data == local_data
+
+
+@pytest.mark.parametrize(
+    ("entity_count", "expect_compression"),
+    [
+        pytest.param(1, False, id="small-body-not-compressed"),
+        pytest.param(50, True, id="large-body-compressed"),
+    ],
+)
+async def test_api_states_compression_threshold(
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    entity_count: int,
+    expect_compression: bool,
+) -> None:
+    """Test that only state list responses above the size threshold are compressed."""
+    for i in range(entity_count):
+        hass.states.async_set(
+            f"test.entity_{i}", "on", {"friendly_name": f"Entity {i}"}
+        )
+
+    resp = await mock_api_client.get(
+        const.URL_API_STATES, headers={"Accept-Encoding": "gzip, deflate"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert ("Content-Encoding" in resp.headers) is expect_compression
 
 
 async def test_api_get_state(hass: HomeAssistant, mock_api_client: TestClient) -> None:
@@ -122,6 +155,18 @@ async def test_api_state_change_with_bad_state(
     )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_api_state_change_internal_error(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test 500 is returned when state cannot be read back after being set."""
+    with patch.object(ha.StateMachine, "async_set"):
+        resp = await mock_api_client.post(
+            "/api/states/test.entity", json={"state": "on"}
+        )
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert await resp.json() == {"message": "Error storing state."}
 
 
 async def test_api_state_change_with_bad_data(
@@ -705,7 +750,7 @@ async def test_api_error_log(
 ) -> None:
     """Test if we can fetch the error log."""
     hass.data[DATA_LOGGING] = "/some/path"
-    await async_setup_component(hass, "api", {})
+    await async_setup_component(hass, DOMAIN, {})
     client = await hass_client_no_auth()
 
     resp = await client.get(const.URL_API_ERROR_LOG)
@@ -824,7 +869,7 @@ async def test_states_view_filters(
     """Test filtering only visible states."""
     assert not hass_read_only_user.is_admin
     hass_read_only_user.mock_policy({"entities": {"entity_ids": {"test.entity": True}}})
-    await async_setup_component(hass, "api", {})
+    await async_setup_component(hass, DOMAIN, {})
     read_only_user_credential = Credentials(
         id="mock-read-only-credential-id",
         auth_provider_type="homeassistant",
@@ -901,6 +946,55 @@ async def test_api_call_service_not_found(
     """Test if the API fails 400 if unknown service."""
     resp = await mock_api_client.post("/api/services/test_domain/test_service")
     assert resp.status == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.parametrize(
+    ("error", "status"),
+    [
+        pytest.param(
+            ServiceValidationError("Bad input"),
+            HTTPStatus.BAD_REQUEST,
+            id="service_validation_error",
+        ),
+        pytest.param(
+            HomeAssistantError("Something failed"),
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            id="home_assistant_error",
+        ),
+    ],
+)
+async def test_api_call_service_raises(
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    error: HomeAssistantError,
+    status: HTTPStatus,
+) -> None:
+    """Test the API returns a JSON error if the service raises."""
+
+    async def handler(service_call: ha.ServiceCall) -> None:
+        """Raise the configured error."""
+        raise error
+
+    hass.services.async_register("test_domain", "test_service", handler)
+
+    resp = await mock_api_client.post("/api/services/test_domain/test_service")
+    assert resp.status == status
+    assert await resp.json() == {"message": str(error)}
+
+
+async def test_api_call_service_unauthorized(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test the API returns 401 if the service denies permission."""
+
+    async def handler(service_call: ha.ServiceCall) -> None:
+        """Deny the call."""
+        raise Unauthorized
+
+    hass.services.async_register("test_domain", "test_service", handler)
+
+    resp = await mock_api_client.post("/api/services/test_domain/test_service")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_api_call_service_bad_data(

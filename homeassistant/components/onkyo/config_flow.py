@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioonkyo import ReceiverInfo
 import voluptuous as vol
@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.selector import (
@@ -46,8 +46,6 @@ from .receiver import async_discover, async_interview
 from .util import get_meaning
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DEVICE = "device"
 
 INPUT_SOURCES_DEFAULT: list[InputSource] = []
 LISTENING_MODES_DEFAULT: list[ListeningMode] = []
@@ -89,6 +87,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
     _receiver_info: ReceiverInfo
     _discovered_infos: dict[str, ReceiverInfo]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -186,6 +185,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -336,6 +336,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: OnkyoConfigEntry) -> OptionsFlowWithReload:
         """Return the options flow."""
         return OnkyoOptionsFlowHandler()

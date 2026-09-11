@@ -1,7 +1,7 @@
 {
   "domain": "bluetooth_adapters",
   "name": "Bluetooth Adapters",
-  "after_dependencies": ["esphome", "shelly", "ruuvi_gateway"],
+  "after_dependencies": ["esphome", "shelly", "ruuvi_gateway", "smlight"],
   "codeowners": ["@bdraco"],
   "dependencies": ["bluetooth"],
   "documentation": "https://www.home-assistant.io/integrations/bluetooth_adapters",

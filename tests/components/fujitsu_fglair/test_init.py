@@ -12,13 +12,17 @@ from homeassistant.components.fujitsu_fglair.const import (
     API_REFRESH,
     API_TIMEOUT,
     CONF_EUROPE,
-    CONF_REGION,
     DOMAIN,
     REGION_DEFAULT,
     REGION_EU,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_USERNAME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 

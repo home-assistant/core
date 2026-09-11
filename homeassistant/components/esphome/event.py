@@ -1,6 +1,7 @@
 """Support for ESPHome event components."""
 
 from functools import partial
+from typing import override
 
 from aioesphomeapi import EntityInfo, Event, EventInfo
 
@@ -17,6 +18,7 @@ class EsphomeEvent(EsphomeEntity[EventInfo, Event], EventEntity):
     """An event implementation for ESPHome."""
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -28,12 +30,14 @@ class EsphomeEvent(EsphomeEntity[EventInfo, Event], EventEntity):
         )
 
     @callback
+    @override
     def _on_state_update(self) -> None:
         self._update_state_from_entry_data()
         self._trigger_event(self._state.event_type)
         self.async_write_ha_state()
 
     @callback
+    @override
     def _on_device_update(self) -> None:
         """Call when device updates or entry data changes."""
         super()._on_device_update()

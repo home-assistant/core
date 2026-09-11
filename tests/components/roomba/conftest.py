@@ -50,10 +50,14 @@ def mock_roomba() -> Generator[AsyncMock]:
                 "softwareVer": "3.2.1",
                 "hardwareRev": "1.0",
                 "bin": {"present": True, "full": False},
+                "signal": {"rssi": -47, "snr": 21, "noise": -68},
             }
         }
     }
     mock_roomba.roomba_connected = True
+    mock_roomba.current_state = "Charging"
+    mock_roomba.error_code = 0
+    mock_roomba.error_message = None
 
     with patch(
         "homeassistant.components.roomba.RoombaFactory.create_roomba",

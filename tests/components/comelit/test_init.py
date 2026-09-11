@@ -114,4 +114,4 @@ async def test_migrate_future_version_returns_false(
 
     await setup_integration(hass, config_entry)
 
-    assert config_entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR

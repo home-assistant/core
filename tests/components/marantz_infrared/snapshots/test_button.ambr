@@ -39,7 +39,7 @@
 # name: test_entities[button.marantz_pm6006_integrated_amplifier_loudness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Marantz PM6006 Integrated Amplifier Loudness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marantz PM6006 Integrated Amplifier Loudness',
     }),
     'context': <ANY>,
     'entity_id': 'button.marantz_pm6006_integrated_amplifier_loudness',
@@ -89,7 +89,7 @@
 # name: test_entities[button.marantz_pm6006_integrated_amplifier_source_direct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Marantz PM6006 Integrated Amplifier Source direct',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marantz PM6006 Integrated Amplifier Source direct',
     }),
     'context': <ANY>,
     'entity_id': 'button.marantz_pm6006_integrated_amplifier_source_direct',
@@ -139,7 +139,7 @@
 # name: test_entities[button.marantz_pm6006_integrated_amplifier_speaker_a_b-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Marantz PM6006 Integrated Amplifier Speaker A/B',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marantz PM6006 Integrated Amplifier Speaker A/B',
     }),
     'context': <ANY>,
     'entity_id': 'button.marantz_pm6006_integrated_amplifier_speaker_a_b',

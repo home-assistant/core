@@ -42,28 +42,63 @@ def setup_product_mock(category, feature_mocks, path=None):
 
 def mock_only_feature(spec, set_spec: bool = True, **kwargs):
     """Mock just the feature, without the product setup."""
+    if issubclass(spec, blebox_uniapi.sensor.BaseSensor):
+        # Autospec would leave is_error as a truthy Mock, making entities unavailable.
+        kwargs.setdefault("is_error", False)
     return mock.create_autospec(spec, set_spec, True, **kwargs)
+
+
+def setup_multi_feature_product(category, features, name, model):
+    """Mock a product exposing several features of the same category."""
+    product = setup_product_mock(category, features)
+    type(product).name = PropertyMock(return_value=name)
+    type(product).model = PropertyMock(return_value=model)
+    type(product).product = PropertyMock(return_value=model)
+    type(product).brand = PropertyMock(return_value="BleBox")
+    type(product).firmware_version = PropertyMock(return_value="1.23")
+    type(product).unique_id = PropertyMock(return_value="aabbcc112233")
+
+    for feature in features:
+        type(feature).product = PropertyMock(return_value=product)
+        type(feature).name = PropertyMock(return_value=None)
+        feature.async_update = AsyncMock()
+
+    return product
 
 
 def mock_feature(category, spec, set_spec: bool = True, **kwargs):
     """Mock a feature along with whole product setup."""
     feature_mock = mock_only_feature(spec, set_spec, **kwargs)
-    feature_mock.async_update = AsyncMock()
     product = setup_product_mock(category, [feature_mock])
 
     type(feature_mock.product).name = PropertyMock(return_value="Some name")
     type(feature_mock.product).type = PropertyMock(return_value="some type")
     type(feature_mock.product).model = PropertyMock(return_value="some model")
+    type(feature_mock.product).product = PropertyMock(return_value="some product")
     type(feature_mock.product).brand = PropertyMock(return_value="BleBox")
     type(feature_mock.product).firmware_version = PropertyMock(return_value="1.23")
+    type(feature_mock.product).hardware_version = PropertyMock(return_value="0.1")
+    type(feature_mock.product).available_firmware_version = PropertyMock(
+        return_value="1.0.1"
+    )
+    type(feature_mock.product).api_version = PropertyMock(return_value=20200229)
+    type(feature_mock.product).last_data = PropertyMock(return_value={"state": 1})
     type(feature_mock.product).unique_id = PropertyMock(return_value="abcd0123ef5678")
     type(feature_mock).product = PropertyMock(return_value=product)
     return feature_mock
 
 
-def mock_config(ip_address="172.100.123.4"):
+def mock_config(ip_address="172.100.123.4", unique_id="abcd0123ef5678"):
     """Return a Mock of the HA entity config."""
-    return MockConfigEntry(domain=DOMAIN, data={CONF_HOST: ip_address, CONF_PORT: 80})
+    return MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: ip_address, CONF_PORT: 80}, unique_id=unique_id
+    )
+
+
+@pytest.fixture(name="config_entry")
+def config_entry_fixture() -> MockConfigEntry:
+    """Return a MockConfigEntry for blebox."""
+    return mock_config()
 
 
 @pytest.fixture(name="config")
@@ -76,6 +111,20 @@ def config_fixture():
 def feature_fixture(request: pytest.FixtureRequest) -> Any:
     """Return an entity wrapper from given fixture name."""
     return request.getfixturevalue(request.param)
+
+
+async def async_setup_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    *,
+    assert_success: bool = False,
+) -> None:
+    """Add and set up the given config entry."""
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.async_setup(config_entry.entry_id)
+    if assert_success:
+        assert result
+    await hass.async_block_till_done()
 
 
 async def async_setup_entities(

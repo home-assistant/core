@@ -1,0 +1,212 @@
+{
+  "config": {
+    "ble": {
+      "rpc": {
+        "enable": false
+      }
+    },
+    "bthome": {},
+    "cb:0": {
+      "autorecovery_delay": 1.0,
+      "autorecovery_enable": false,
+      "id": 0,
+      "name": null,
+      "reaction_delay": 1.0,
+      "undervoltage_limit": 200,
+      "voltage_limit": 250,
+      "voltage_thr": 5
+    },
+    "cloud": {
+      "enable": false,
+      "server": "iot.shelly.cloud:6012/jrpc"
+    },
+    "eth": {
+      "enable": true,
+      "gw": null,
+      "ip": null,
+      "ipv4mode": "dhcp",
+      "nameserver": null,
+      "netmask": null,
+      "server_mode": false
+    },
+    "mqtt": {
+      "client_id": "shellypro1cb-aabbccddeeff",
+      "enable": false,
+      "enable_control": true,
+      "enable_rpc": true,
+      "rpc_ntf": true,
+      "server": "mqtt.test.server",
+      "ssl_ca": null,
+      "status_ntf": false,
+      "topic_prefix": "shellypro1cb-aabbccddeeff",
+      "use_client_cert": false,
+      "user": null
+    },
+    "sys": {
+      "cfg_rev": 23,
+      "debug": {
+        "file_level": null,
+        "file_log": {
+          "enable": false
+        },
+        "level": 2,
+        "mqtt": {
+          "enable": false
+        },
+        "udp": {
+          "addr": null
+        },
+        "websocket": {
+          "enable": false
+        }
+      },
+      "device": {
+        "discoverable": true,
+        "eco_mode": false,
+        "enhanced_security": false,
+        "fw_id": "20260701-130541/2.0.0-beta3-g794ffdf",
+        "mac": "AABBCCDDEEFF",
+        "name": "Test Name",
+        "tls_check_cert_validity_time": true
+      },
+      "location": {
+        "tz": "Europe/Brussels",
+        "lat": 99.8888,
+        "lon": 22.3333
+      },
+      "rpc_udp": {
+        "dst_addr": null,
+        "listen_port": null
+      },
+      "sntp": {
+        "server": "sntp.test.server"
+      },
+      "ui_data": {
+        "device_revision": "1-11"
+      }
+    },
+    "voltmeter:0": {
+      "id": 0,
+      "name": null,
+      "report_thr": 5.0,
+      "xvoltage": {
+        "expr": null,
+        "unit": null
+      }
+    },
+    "wifi": {
+      "ap": {
+        "enable": false,
+        "is_open": true,
+        "range_extender": {
+          "enable": false
+        },
+        "ssid": "ShellyPro1CB-AABBCCDDEEFF"
+      },
+      "roam": {
+        "interval": 60,
+        "rssi_thr": -80
+      },
+      "sta": {
+        "enable": true,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": false,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": "Wifi-Network-Name"
+      },
+      "sta1": {
+        "enable": false,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": true,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": null
+      }
+    },
+    "ws": {
+      "enable": false,
+      "server": null,
+      "ssl_ca": "ca.pem"
+    }
+  },
+  "shelly": {
+    "app": "ProCB",
+    "auth_domain": null,
+    "auth_en": false,
+    "enhanced_security": false,
+    "fw_id": "20260701-130541/2.0.0-beta3-g794ffdf",
+    "gen": 2,
+    "id": "shellypro1cb-aabbccddeeff",
+    "mac": "AABBCCDDEEFF",
+    "model": "SPCB-01VENEU",
+    "name": "Test Name",
+    "provision": "complete",
+    "slot": 0,
+    "ver": "2.0.0-beta3"
+  },
+  "status": {
+    "ble": {},
+    "bthome": {},
+    "cb:0": {
+      "id": 0,
+      "output": true,
+      "safety": false,
+      "source": "init",
+      "temperature": {
+        "tC": 33.8,
+        "tF": 92.8
+      },
+      "total_cycles": 14
+    },
+    "cloud": {
+      "connected": false
+    },
+    "eth": {
+      "ip": null,
+      "ip6": null
+    },
+    "mqtt": {
+      "connected": false
+    },
+    "sys": {
+      "available_updates": {},
+      "btrelay_rev": 0,
+      "cfg_rev": 23,
+      "fs_free": 225280,
+      "fs_size": 524288,
+      "kvs_rev": 0,
+      "last_sync_ts": 1784881248,
+      "mac": "AABBCCDDEEFF",
+      "ram_free": 132656,
+      "ram_min_free": 118048,
+      "ram_size": 267852,
+      "reset_reason": 1,
+      "restart_required": false,
+      "schedule_rev": 0,
+      "time": "11:22",
+      "unixtime": 1784881322,
+      "uptime": 78,
+      "utc_offset": 10800,
+      "webhook_rev": 0
+    },
+    "voltmeter:0": {
+      "id": 0,
+      "voltage": 222.33
+    },
+    "wifi": {
+      "rssi": -52,
+      "ssid": "Wifi-Network-Name",
+      "sta_ip": "192.168.2.24",
+      "sta_ip6": [],
+      "status": "got ip"
+    },
+    "ws": {
+      "connected": false
+    }
+  }
+}

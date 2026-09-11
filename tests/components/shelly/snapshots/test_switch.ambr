@@ -39,7 +39,7 @@
 # name: test_cury_switch_entity[switch.test_name_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Away mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Away mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_away_mode',
@@ -89,7 +89,7 @@
 # name: test_cury_switch_entity[switch.test_name_left_slot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Left slot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Left slot',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_left_slot',
@@ -139,7 +139,7 @@
 # name: test_cury_switch_entity[switch.test_name_left_slot_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Left slot boost',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Left slot boost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_left_slot_boost',
@@ -189,7 +189,7 @@
 # name: test_cury_switch_entity[switch.test_name_right_slot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Right slot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Right slot',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_right_slot',
@@ -239,7 +239,7 @@
 # name: test_cury_switch_entity[switch.test_name_right_slot_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Right slot boost',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Right slot boost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_right_slot_boost',

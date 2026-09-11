@@ -1,5 +1,7 @@
 """Support for the HKO service."""
 
+from typing import override
+
 from homeassistant.components.weather import (
     Forecast,
     WeatherEntity,
@@ -55,20 +57,24 @@ class HKOEntity(CoordinatorEntity[HKOUpdateCoordinator], WeatherEntity):
         )
 
     @property
+    @override
     def condition(self) -> str:
         """Return the current condition."""
         return self.coordinator.data[API_FORECAST][0][API_CONDITION]
 
     @property
+    @override
     def native_temperature(self) -> int:
         """Return the temperature."""
         return self.coordinator.data[API_CURRENT][API_TEMPERATURE]
 
     @property
+    @override
     def humidity(self) -> int:
         """Return the humidity."""
         return self.coordinator.data[API_CURRENT][API_HUMIDITY]
 
+    @override
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the forecast data."""
         return self.coordinator.data[API_FORECAST]

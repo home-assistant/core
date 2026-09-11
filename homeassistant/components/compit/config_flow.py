@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from compit_inext_api import CannotConnect, CompitApiConnector, InvalidAuth
 import voluptuous as vol
@@ -34,6 +34,7 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,

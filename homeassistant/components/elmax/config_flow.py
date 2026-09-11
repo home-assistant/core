@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
 from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
@@ -113,6 +113,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
     _panels_schema: vol.Schema
     _panel_names: dict
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -504,6 +505,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
         return None
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

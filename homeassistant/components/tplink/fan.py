@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from kasa import Device, Module
 
@@ -117,6 +117,7 @@ class TPLinkFanEntity(CoordinatedTPLinkModuleEntity, FanEntity):
         self.fan_module = device.modules[Module.Fan]
 
     @async_refresh_after
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -133,16 +134,19 @@ class TPLinkFanEntity(CoordinatedTPLinkModuleEntity, FanEntity):
         await self.fan_module.set_fan_speed_level(value_in_range)
 
     @async_refresh_after
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.fan_module.set_fan_speed_level(0)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         value_in_range = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
         await self.fan_module.set_fan_speed_level(value_in_range)
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         fan_speed = self.fan_module.fan_speed_level

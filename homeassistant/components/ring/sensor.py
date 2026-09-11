@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic, cast
+from typing import Any, Generic, cast, override
 
 from ring_doorbell import (
     RingCapability,
@@ -89,6 +89,7 @@ class RingSensor(RingEntity[RingDeviceT], SensorEntity):
         self._attr_native_value = self.entity_description.value_fn(self._device)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
 

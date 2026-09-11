@@ -39,6 +39,7 @@ from homeassistant.helpers import (
     entity,
     target as target_helpers,
     template,
+    trace,
 )
 from homeassistant.helpers.condition import (
     async_from_config as async_condition_from_config,
@@ -61,8 +62,8 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.json import (
     JSON_DUMP,
     ExtendedJSONEncoder,
+    cached_json_bytes,
     find_paths_unserializable_data,
-    json_bytes,
     json_fragment,
 )
 from homeassistant.helpers.service import (
@@ -85,6 +86,7 @@ from homeassistant.setup import (
     async_get_setup_timings,
     async_wait_component,
 )
+from homeassistant.util import slugify
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
@@ -125,6 +127,7 @@ def async_register_commands(
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
+    async_reg(hass, handle_slugify)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
     async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
@@ -538,7 +541,7 @@ async def _async_get_all_condition_descriptions_json(hass: HomeAssistant) -> byt
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
             return cast(bytes, cached_json_payload)
-    json_payload = json_bytes(
+    json_payload = cached_json_bytes(
         {
             condition: description
             for condition, description in descriptions.items()
@@ -585,7 +588,7 @@ async def _async_get_all_service_descriptions_json(hass: HomeAssistant) -> bytes
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
             return cast(bytes, cached_json_payload)
-    json_payload = json_bytes(descriptions)
+    json_payload = cached_json_bytes(descriptions)
     hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
     return json_payload
 
@@ -610,7 +613,7 @@ async def _async_get_all_trigger_descriptions_json(hass: HomeAssistant) -> bytes
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
             return cast(bytes, cached_json_payload)
-    json_payload = json_bytes(
+    json_payload = cached_json_bytes(
         {
             trigger: description
             for trigger, description in descriptions.items()
@@ -723,6 +726,17 @@ def handle_ping(
 ) -> None:
     """Handle ping command."""
     connection.send_message(pong_message(msg["id"]))
+
+
+@callback
+@decorators.websocket_command(
+    {vol.Required("type"): "slugify", vol.Required("text"): str}
+)
+def handle_slugify(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle slugify command."""
+    connection.send_result(msg["id"], {"slug": slugify(msg["text"])})
 
 
 @lru_cache
@@ -979,7 +993,24 @@ async def handle_subscribe_trigger(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe trigger command."""
-    trigger_config = await async_validate_trigger_config(hass, msg["trigger"])
+    # Validating the trigger config can fail on bad user input. Handle those
+    # errors here so they are reported to the client without being logged as
+    # unexpected errors by the default websocket error handler.
+    try:
+        trigger_config = await async_validate_trigger_config(hass, msg["trigger"])
+    except vol.Invalid as err:
+        connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+        return
+    except HomeAssistantError as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+        return
 
     @callback
     def forward_triggers(
@@ -1026,14 +1057,53 @@ async def handle_test_condition(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle test condition command."""
-    # Do static + dynamic validation of the condition
-    config = await async_validate_condition_config(hass, msg["condition"])
-    # Test the condition
-    condition = await async_condition_from_config(hass, config)
+    # Validating and instantiating the condition can fail on bad user input.
+    # Handle those errors here so they are reported to the client without being
+    # logged as unexpected errors by the default websocket error handler.
     try:
-        connection.send_result(
-            msg["id"], {"result": condition.async_check(variables=msg.get("variables"))}
+        # Do static + dynamic validation of the condition
+        config = await async_validate_condition_config(hass, msg["condition"])
+        condition = await async_condition_from_config(hass, config)
+    except vol.Invalid as err:
+        connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+        return
+    except HomeAssistantError as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
         )
+        return
+
+    # Template errors (e.g. undefined variables) are recorded in the trace
+    # instead of being logged. Capture the trace and forward them to the client
+    # alongside the result.
+    condition_trace = trace.trace_get()
+    try:
+        with trace.suppress_template_error_logging():
+            check_result = condition.async_check(variables=msg.get("variables"))
+    except HomeAssistantError as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+    else:
+        result: dict[str, Any] = {"result": check_result}
+        if template_errors := [
+            template_error
+            for elements in condition_trace.values()
+            for element in elements
+            for template_error in element.template_errors
+        ]:
+            result["template_errors"] = template_errors
+        connection.send_result(msg["id"], result)
     finally:
         condition.async_unload()
 
@@ -1044,15 +1114,28 @@ async def handle_test_condition(
         vol.Required("condition"): cv.CONDITION_SCHEMA,
     }
 )
-@decorators.require_admin
 @decorators.async_response
 async def handle_subscribe_condition(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe condition command."""
-    condition_config = await async_validate_condition_config(hass, msg["condition"])
+    try:
+        condition_config = await async_validate_condition_config(hass, msg["condition"])
+        condition = await async_condition_from_config(hass, condition_config)
+    except vol.Invalid as err:
+        connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+        return
+    except HomeAssistantError as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+        return
 
-    condition = await async_condition_from_config(hass, condition_config)
     event_data: dict[str, Any] = {}
 
     @callback
@@ -1061,10 +1144,24 @@ async def handle_subscribe_condition(
         nonlocal event_data
         new_event_data: dict[str, Any]
 
+        condition_trace = trace.trace_get()
         try:
-            new_event_data = {"result": condition.async_check()}
+            with trace.suppress_template_error_logging():
+                new_event_data = {"result": condition.async_check()}
         except HomeAssistantError as err:
             new_event_data = {"error": str(err)}
+
+        # Template errors (e.g. undefined variables) are recorded in the trace
+        # instead of being logged. Forward them to the client so they are not
+        # lost, even when the condition still evaluated to a result.
+        if template_errors := [
+            template_error
+            for elements in condition_trace.values()
+            for element in elements
+            for template_error in element.template_errors
+        ]:
+            new_event_data["template_errors"] = template_errors
+
         if new_event_data == event_data:
             return
         event_data = new_event_data

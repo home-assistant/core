@@ -551,7 +551,7 @@ async def test_manual_config(hass: HomeAssistant, mock_plex_calls) -> None:
 
     # Automatic setup
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.MENU
@@ -568,7 +568,7 @@ async def test_manual_config(hass: HomeAssistant, mock_plex_calls) -> None:
 
     # Manual setup
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.MENU
@@ -667,7 +667,7 @@ async def test_manual_config_with_token(
     """Test creating via manual configuration with only token."""
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
+        DOMAIN,
         context={"source": SOURCE_USER},
     )
 

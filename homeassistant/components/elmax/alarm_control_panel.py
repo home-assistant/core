@@ -1,5 +1,7 @@
 """Elmax sensor platform."""
 
+from typing import override
+
 from elmax_api.exceptions import ElmaxApiError
 from elmax_api.model.alarm_status import AlarmArmStatus, AlarmStatus
 from elmax_api.model.command import AreaCommand
@@ -67,6 +69,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
     _pending_state: AlarmControlPanelState | None = None
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if self._attr_alarm_state == AlarmStatus.NOT_ARMED_NOT_ARMABLE:
@@ -92,6 +95,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
         finally:
             await self.coordinator.async_refresh()
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         # Elmax alarm panels do always require a code to be passed for disarm operations
@@ -121,6 +125,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
             await self.coordinator.async_refresh()
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the entity."""
         if self._pending_state is not None:
@@ -134,6 +139,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
         return None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         # Just reset the local pending_state so that it no

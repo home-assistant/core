@@ -31,6 +31,21 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_v1_update_uses_model(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test V1 firmware lookup includes the device model."""
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.UPDATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_v1_airgradient_client.get_latest_firmware_version.assert_awaited_once_with(
+        "84fce612f5b8",
+        model="P-1PSG",
+    )
+
+
 async def test_update_mechanism(
     hass: HomeAssistant,
     mock_airgradient_client: AsyncMock,
@@ -44,7 +59,10 @@ async def test_update_mechanism(
     assert state.state == STATE_ON
     assert state.attributes["installed_version"] == "3.1.1"
     assert state.attributes["latest_version"] == "3.1.4"
-    mock_airgradient_client.get_latest_firmware_version.assert_called_once()
+    mock_airgradient_client.get_latest_firmware_version.assert_awaited_once_with(
+        "84fce612f5b8",
+        model="I-9PSL",
+    )
     mock_airgradient_client.get_latest_firmware_version.reset_mock()
 
     mock_airgradient_client.get_current_measures.return_value.firmware_version = "3.1.4"
@@ -64,7 +82,10 @@ async def test_update_mechanism(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_airgradient_client.get_latest_firmware_version.assert_called_once()
+    mock_airgradient_client.get_latest_firmware_version.assert_awaited_once_with(
+        "84fce612f5b8",
+        model="I-9PSL",
+    )
     state = hass.states.get("update.airgradient_firmware")
     assert state.state == STATE_ON
     assert state.attributes["installed_version"] == "3.1.4"

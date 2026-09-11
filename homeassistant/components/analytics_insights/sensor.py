@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -18,6 +19,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import AnalyticsInsightsConfigEntry
 from .const import DOMAIN
 from .coordinator import AnalyticsData, HomeassistantAnalyticsDataUpdateCoordinator
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -153,6 +156,7 @@ class HomeassistantAnalyticsSensor(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

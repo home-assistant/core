@@ -1,5 +1,7 @@
 """The pi_hole component."""
 
+from typing import override
+
 from hole import Hole
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -26,6 +28,7 @@ class PiHoleEntity(CoordinatorEntity[PiHoleUpdateCoordinator]):
         self._server_unique_id = server_unique_id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
         if (

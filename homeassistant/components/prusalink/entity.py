@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -27,13 +27,22 @@ class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
     entity_description: PrusaLinkEntityDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.entity_description.available_fn(
-            self.coordinator.data
+        # `coordinator.data` can be None when the underlying endpoint
+        # returns no payload — e.g. the job coordinator yields None when
+        # no job is running on pyprusalink >= 3.0.0. Short-circuit to
+        # avoid passing None into `available_fn` lambdas that assume a
+        # dict (.get(), index, etc.).
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self.entity_description.available_fn(self.coordinator.data)
         )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this PrusaLink device."""
         coordinators = self.coordinator.config_entry.runtime_data

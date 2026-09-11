@@ -12,6 +12,7 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.components.todo.const import ATTR_ITEM, ATTR_STATUS, TodoServices
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -31,15 +32,18 @@ from homeassistant.helpers import (
     floor_registry as fr,
     label_registry as lr,
 )
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
-from . import MockTodoListEntity, create_mock_platform
+from . import TEST_DOMAIN, MockTodoListEntity, create_mock_platform
 
-from tests.common import async_mock_service, mock_device_registry
-from tests.components.common import (
-    assert_trigger_gated_by_labs_flag,
-    assert_trigger_options_supported,
+from tests.common import (
+    MockPlatform,
+    async_mock_service,
+    mock_device_registry,
+    mock_platform,
 )
+from tests.components.common import assert_trigger_options_supported
 
 TODO_ENTITY_ID1 = "todo.list_one"
 TODO_ENTITY_ID2 = "todo.list_two"
@@ -96,8 +100,12 @@ def target_todo_lists(
     label_list_one = label_registry.async_create("label_list_one")
     label_list_two = label_registry.async_create("label_list_two")
 
-    device_list_one = dr.DeviceEntry(id="device_list_one")
-    device_list_two = dr.DeviceEntry(id="device_list_two")
+    device_list_one = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device_list_one"
+    )
+    device_list_two = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device_list_two"
+    )
     mock_device_registry(
         hass,
         {
@@ -126,22 +134,6 @@ def service_calls(hass: HomeAssistant) -> list[ServiceCall]:
     return async_mock_service(hass, "test", "item_added")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "todo.item_added",
-        "todo.item_completed",
-        "todo.item_removed",
-    ],
-)
-async def test_todo_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the todo triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -265,7 +257,6 @@ async def _complete_item(hass: HomeAssistant, entity_id: str, item: str) -> None
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_item_change_triggers(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -331,7 +322,6 @@ async def test_item_change_triggers(
         (_remove_item, "loaded_item", "todo.item_removed"),
     ],
 )
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_item_change_triggers_ignore_initial_unknown(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -368,7 +358,7 @@ async def test_item_change_triggers_ignore_initial_unknown(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
+@pytest.mark.usefixtures("target_todo_lists")
 @pytest.mark.parametrize(
     "included_target",
     [
@@ -439,7 +429,7 @@ async def test_item_change_trigger_does_not_fire_for_other_entity(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
+@pytest.mark.usefixtures("target_todo_lists")
 async def test_new_entity_added_to_target_fires_triggers(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -491,7 +481,83 @@ async def test_new_entity_added_to_target_fires_triggers(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_item_change_triggers_after_config_entry_reload(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test triggers still fire after the todo list's config entry is reloaded.
+
+    Reload recreates the entity object without changing the registry entry, so
+    the trigger must re-subscribe rather than keep the old object.
+    """
+    await _setup_automation(hass, {CONF_ENTITY_ID: TODO_ENTITY_ID1})
+
+    config_entry = hass.config_entries.async_entries(TEST_DOMAIN)[0]
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        async_add_entities(
+            [
+                _make_entity(
+                    TODO_ENTITY_ID1,
+                    unique_id="list_one",
+                    items=[
+                        TodoItem(
+                            summary="existing_item",
+                            uid="existing_id",
+                            status=TodoItemStatus.NEEDS_ACTION,
+                        )
+                    ],
+                ),
+                _make_entity(TODO_ENTITY_ID2, unique_id="list_two"),
+            ]
+        )
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _add_item(hass, TODO_ENTITY_ID1, "item_after_reload")
+    _assert_service_calls(
+        service_calls,
+        [{"platform": "todo.item_added", "entity_id": TODO_ENTITY_ID1}],
+    )
+    item_id = service_calls[0].data["item_ids"][0]
+    service_calls.clear()
+
+    await _complete_item(hass, TODO_ENTITY_ID1, item_id)
+    _assert_service_calls(
+        service_calls,
+        [
+            {
+                "platform": "todo.item_completed",
+                "entity_id": TODO_ENTITY_ID1,
+                "item_ids": [item_id],
+            }
+        ],
+    )
+    service_calls.clear()
+
+    await _remove_item(hass, TODO_ENTITY_ID1, item_id)
+    _assert_service_calls(
+        service_calls,
+        [
+            {
+                "platform": "todo.item_removed",
+                "entity_id": TODO_ENTITY_ID1,
+                "item_ids": [item_id],
+            }
+        ],
+    )
+
+
 async def test_trigger_skips_missing_entity(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -515,7 +581,7 @@ async def test_trigger_skips_missing_entity(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
+@pytest.mark.usefixtures("target_todo_lists")
 async def test_entity_rejoining_label_does_not_fire_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -557,7 +623,7 @@ async def test_entity_rejoining_label_does_not_fire_trigger(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
+@pytest.mark.usefixtures("target_todo_lists")
 @pytest.mark.parametrize(
     "trigger_target",
     [

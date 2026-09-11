@@ -10,7 +10,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from propcache.api import cached_property
 import psutil_home_assistant as ha_psutil
@@ -566,8 +566,8 @@ class Recorder(threading.Thread):
         statistic_id: str,
         *,
         new_statistic_id: str | UndefinedType = UNDEFINED,
-        new_unit_class: str | None | UndefinedType = UNDEFINED,
-        new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        new_unit_class: str | UndefinedType | None = UNDEFINED,
+        new_unit_of_measurement: str | UndefinedType | None = UNDEFINED,
         on_done: Callable[[], None] | None = None,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
@@ -668,6 +668,7 @@ class Recorder(threading.Thread):
             )
             return SHUTDOWN_TASK
 
+    @override
     def run(self) -> None:
         """Run the recorder thread."""
         self.is_running = True
@@ -1380,10 +1381,16 @@ class Recorder(threading.Thread):
         self, dbapi_connection: DBAPIConnection, connection_record: Any
     ) -> None:
         """Dbapi specific connection settings."""
-        assert self.engine is not None
+        if (engine := self.engine) is None:
+            # _close_connection disposes the engine and drops our reference to it, but
+            # dispose() only empties the pool: the engine stays usable, so anything
+            # still holding a reference to it can check out a fresh DBAPI connection
+            # and get here. There is no longer an engine of ours to configure it for.
+            _LOGGER.debug("Ignoring connection setup for a closed database connection")
+            return
         if database_engine := setup_connection_for_dialect(
             self,
-            self.engine.dialect.name,
+            engine.dialect.name,
             dbapi_connection,
             not self._completed_first_database_setup,
         ):

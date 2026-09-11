@@ -1,6 +1,6 @@
 """Home Assistant component for accessing the Wallbox Portal API switch."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -57,6 +57,7 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the switch."""
         return super().available and self.coordinator.data[
@@ -72,6 +73,7 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
         }
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the status of pause/resume."""
         return self.coordinator.data[CHARGER_STATUS_DESCRIPTION_KEY] in {
@@ -81,10 +83,12 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
             ChargerStatus.WAITING,
         }
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Pause charger."""
         await self.coordinator.async_pause_charger(True)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Resume charger."""
         await self.coordinator.async_pause_charger(False)

@@ -14,9 +14,15 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -63,10 +69,7 @@ rules:
     comment: |
       Not relevant.
   reconfiguration-flow: done
-  repair-issues:
-    status: exempt
-    comment: |
-      This integration has no user-actionable repair issues to raise.
+  repair-issues: done
   stale-devices: done
   # Platinum
   async-dependency: done

@@ -6,7 +6,7 @@ import re
 import sys
 import traceback
 from types import FrameType
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -275,6 +275,7 @@ class LogErrorHandler(logging.Handler):
         self.fire_event = fire_event
         self.paths_re = paths_re
 
+    @override
     def emit(self, record: logging.LogRecord) -> None:
         """Save error and warning logs.
 

@@ -57,6 +57,13 @@ STANDING_FAN_INFO = Device(
     hubDeviceId="test-hub-id",
 )
 
+BATTERY_CIRCULATOR_FAN_2_PRO_INFO = Device(
+    version="V1.0",
+    deviceId="device-id-1",
+    deviceName="device-1",
+    deviceType="Battery Circulator Fan 2 Pro",
+    hubDeviceId="test-hub-id",
+)
 
 METER_INFO = Device(
     version="V1.0",
@@ -119,5 +126,13 @@ LOCK_ULTRA_INFO = Device(
     deviceId="lock-id-1",
     deviceName="Lock Ultra",
     deviceType="Smart Lock Ultra",
+    hubDeviceId="test-hub-id",
+)
+
+AI_ART_FRAME_DEVICE = Device(
+    version="V1.0",
+    deviceId="AABBCCDDEEFF",
+    deviceName="test-art-frame",
+    deviceType="AI Art Frame",
     hubDeviceId="test-hub-id",
 )

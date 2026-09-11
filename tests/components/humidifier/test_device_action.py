@@ -1,8 +1,8 @@
 """The tests for Humidifier device actions."""
 
+from probatio import to_field_list
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -58,7 +58,9 @@ async def test_get_actions(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+            entity_entry.entity_id,
+            "attributes",
+            {"supported_features": features_state},
         )
     expected_actions = []
     basic_action_types = ["set_humidity", "turn_on", "turn_off", "toggle"]
@@ -228,11 +230,11 @@ async def test_action(
         },
     )
 
-    set_humidity_calls = async_mock_service(hass, "humidifier", "set_humidity")
-    set_mode_calls = async_mock_service(hass, "humidifier", "set_mode")
-    turn_on_calls = async_mock_service(hass, "humidifier", "turn_on")
-    turn_off_calls = async_mock_service(hass, "humidifier", "turn_off")
-    toggle_calls = async_mock_service(hass, "humidifier", "toggle")
+    set_humidity_calls = async_mock_service(hass, DOMAIN, "set_humidity")
+    set_mode_calls = async_mock_service(hass, DOMAIN, "set_mode")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    toggle_calls = async_mock_service(hass, DOMAIN, "toggle")
 
     assert len(set_humidity_calls) == 0
     assert len(set_mode_calls) == 0
@@ -341,7 +343,7 @@ async def test_action_legacy(
         },
     )
 
-    set_mode_calls = async_mock_service(hass, "humidifier", "set_mode")
+    set_mode_calls = async_mock_service(hass, DOMAIN, "set_mode")
 
     hass.bus.async_fire("test_event_set_mode")
     await hass.async_block_till_done()
@@ -471,7 +473,7 @@ async def test_capabilities(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678",
+            entity_entry.entity_id,
             STATE_ON,
             capabilities_state,
         )
@@ -489,7 +491,7 @@ async def test_capabilities(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
+        to_field_list(
             capabilities["extra_fields"], custom_serializer=cv.custom_serializer
         )
         == expected_capabilities
@@ -615,7 +617,7 @@ async def test_capabilities_legacy(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678",
+            entity_entry.entity_id,
             STATE_ON,
             capabilities_state,
         )
@@ -633,7 +635,7 @@ async def test_capabilities_legacy(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
+        to_field_list(
             capabilities["extra_fields"], custom_serializer=cv.custom_serializer
         )
         == expected_capabilities
@@ -674,7 +676,7 @@ async def test_capabilities_missing_entity(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
+        to_field_list(
             capabilities["extra_fields"], custom_serializer=cv.custom_serializer
         )
         == expected_capabilities

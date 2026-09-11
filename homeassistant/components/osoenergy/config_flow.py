@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from apyosoenergyapi import OSOEnergy
 import voluptuous as vol
@@ -25,6 +25,7 @@ class OSOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}

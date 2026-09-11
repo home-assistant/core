@@ -2,17 +2,24 @@
 
 from unittest.mock import AsyncMock
 
-from google_air_quality_api.exceptions import GoogleAirQualityApiError
+from google_air_quality_api.exceptions import (
+    GoogleAirQualityApiError,
+    InvalidCustomLAQIConfigurationError,
+)
 import pytest
 
 from homeassistant.components.google_air_quality.const import (
+    CONF_ENABLE_CUSTOM_LAQI,
     CONF_REFERRER,
+    CUSTOM_LAQI,
+    CUSTOM_LOCAL_AQI_OPTIONS,
     DOMAIN,
     SECTION_API_KEY_OPTIONS,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_COUNTRY,
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
@@ -110,6 +117,7 @@ async def test_form_with_referrer(
 @pytest.mark.parametrize(
     ("api_exception", "expected_error"),
     [
+        (InvalidCustomLAQIConfigurationError(), "mismatch_country_and_laqi"),
         (GoogleAirQualityApiError(), "cannot_connect"),
         (ValueError(), "unknown"),
     ],
@@ -301,6 +309,11 @@ async def test_subentry_flow(
                 CONF_LATITUDE: 30.1,
                 CONF_LONGITUDE: 40.1,
             },
+            CUSTOM_LOCAL_AQI_OPTIONS: {
+                CONF_COUNTRY: "DE",
+                CUSTOM_LAQI: "deu_uba",
+                CONF_ENABLE_CUSTOM_LAQI: False,
+            },
         },
     )
     await hass.async_block_till_done()
@@ -404,3 +417,126 @@ async def test_subentry_flow_entry_not_loaded(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "entry_not_loaded"
+
+
+async def test_create_entry_with_custom_laqi(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_api: AsyncMock,
+) -> None:
+    """Test creating a config entry with custom laqi."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "test-name",
+            CONF_API_KEY: "test-api-key",
+            CONF_LOCATION: {CONF_LATITUDE: 10.1, CONF_LONGITUDE: 20.1},
+            CUSTOM_LOCAL_AQI_OPTIONS: {
+                CONF_COUNTRY: "DE",
+                CONF_ENABLE_CUSTOM_LAQI: True,
+            },
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"][CUSTOM_LOCAL_AQI_OPTIONS] == "missing_custom_laqi_options"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "test-name",
+            CONF_API_KEY: "test-api-key",
+            CONF_LOCATION: {CONF_LATITUDE: 10.1, CONF_LONGITUDE: 20.1},
+            CUSTOM_LOCAL_AQI_OPTIONS: {
+                CONF_COUNTRY: "DE",
+                CUSTOM_LAQI: "deu_lubw",
+                CONF_ENABLE_CUSTOM_LAQI: True,
+            },
+        },
+    )
+    mock_api.async_get_current_conditions.assert_called_once_with(
+        lat=10.1, lon=20.1, region_code="DE", custom_local_aqi="deu_lubw"
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Google Air Quality"
+    assert result["data"] == {
+        CONF_API_KEY: "test-api-key",
+        CONF_REFERRER: None,
+    }
+    assert len(result["subentries"]) == 1
+    subentry = result["subentries"][0]
+    assert subentry["subentry_type"] == "location"
+    assert subentry["title"] == "test-name"
+    assert subentry["data"] == {
+        CONF_LATITUDE: 10.1,
+        CONF_LONGITUDE: 20.1,
+        CUSTOM_LOCAL_AQI_OPTIONS: {
+            CONF_COUNTRY: "DE",
+            CUSTOM_LAQI: "deu_lubw",
+            CONF_ENABLE_CUSTOM_LAQI: True,
+        },
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_subentry_flow_with_custom_laqi(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
+) -> None:
+    """Test creating a location subentry with a custom local AQI."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_api.async_get_current_conditions.call_count == 1
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "location"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Work",
+            CONF_LOCATION: {
+                CONF_LATITUDE: 30.1,
+                CONF_LONGITUDE: 40.1,
+            },
+            CUSTOM_LOCAL_AQI_OPTIONS: {
+                CONF_COUNTRY: "DE",
+                CUSTOM_LAQI: "deu_lubw",
+                CONF_ENABLE_CUSTOM_LAQI: True,
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Work"
+    assert result["data"] == {
+        CONF_LATITUDE: 30.1,
+        CONF_LONGITUDE: 40.1,
+        CUSTOM_LOCAL_AQI_OPTIONS: {
+            CONF_COUNTRY: "DE",
+            CUSTOM_LAQI: "deu_lubw",
+            CONF_ENABLE_CUSTOM_LAQI: True,
+        },
+    }
+
+    # Initial setup: 1 of each API call
+    # Subentry flow validation: 1 current conditions call
+    # Reload with 2 subentries: 2 of each API call
+    assert mock_api.async_get_current_conditions.call_count == 1 + 1 + 2
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert len(entry.subentries) == 2

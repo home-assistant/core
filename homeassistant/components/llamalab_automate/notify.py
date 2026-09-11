@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests
 import voluptuous as vol
@@ -55,6 +55,7 @@ class AutomateNotificationService(BaseNotificationService):
         self._recipient = recipient
         self._device = device
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 

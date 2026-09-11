@@ -19,6 +19,7 @@ class LutronCasetaData:
     bridge: Smartbridge
     bridge_device: dict[str, Any]
     keypad_data: LutronKeypadData
+    config_entry_id: str
 
 
 @dataclass

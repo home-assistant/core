@@ -1,6 +1,7 @@
 """Demo platform that offers fake meteorological data."""
 
 from datetime import timedelta
+from typing import override
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
@@ -236,7 +237,7 @@ class DemoWeather(WeatherEntity):
     ) -> None:
         """Initialize the Demo weather."""
         self._attr_name = f"Test Weather {name}"
-        self._attr_unique_id = f"test-weather-{name.lower()}"
+        self._attr_unique_id = f"test-weather-{name.lower()}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._condition = condition
         self._native_temperature = temperature
         self._native_temperature_unit = temperature_unit
@@ -256,6 +257,7 @@ class DemoWeather(WeatherEntity):
         if self._forecast_twice_daily:
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up a timer updating the forecasts."""
 
@@ -281,45 +283,54 @@ class DemoWeather(WeatherEntity):
         )
 
     @property
+    @override
     def native_temperature(self) -> float:
         """Return the temperature."""
         return self._native_temperature
 
     @property
+    @override
     def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return self._native_temperature_unit
 
     @property
+    @override
     def humidity(self) -> float:
         """Return the humidity."""
         return self._humidity
 
     @property
+    @override
     def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return self._native_wind_speed
 
     @property
+    @override
     def native_wind_speed_unit(self) -> str:
         """Return the wind speed."""
         return self._native_wind_speed_unit
 
     @property
+    @override
     def native_pressure(self) -> float:
         """Return the pressure."""
         return self._native_pressure
 
     @property
+    @override
     def native_pressure_unit(self) -> str:
         """Return the pressure."""
         return self._native_pressure_unit
 
     @property
+    @override
     def condition(self) -> str:
         """Return the weather condition."""
         return CONDITION_MAP[self._condition.lower()]
 
+    @override
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast."""
         if self._forecast_daily is None:
@@ -341,6 +352,7 @@ class DemoWeather(WeatherEntity):
 
         return forecast_data
 
+    @override
     async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast."""
         if self._forecast_hourly is None:
@@ -362,6 +374,7 @@ class DemoWeather(WeatherEntity):
 
         return forecast_data
 
+    @override
     async def async_forecast_twice_daily(self) -> list[Forecast]:
         """Return the twice daily forecast."""
         if self._forecast_twice_daily is None:

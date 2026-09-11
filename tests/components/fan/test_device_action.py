@@ -160,9 +160,9 @@ async def test_action(
         },
     )
 
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
-    turn_on_calls = async_mock_service(hass, "fan", "turn_on")
-    toggle_calls = async_mock_service(hass, "fan", "toggle")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    toggle_calls = async_mock_service(hass, DOMAIN, "toggle")
 
     hass.bus.async_fire("test_event_turn_off")
     await hass.async_block_till_done()
@@ -223,7 +223,7 @@ async def test_action_legacy(
         },
     )
 
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
 
     hass.bus.async_fire("test_event_turn_off")
     await hass.async_block_till_done()

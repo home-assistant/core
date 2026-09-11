@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiontfy import Event, Notification
 from aiontfy.exceptions import (
@@ -82,6 +82,7 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
             self._trigger_event(event, notification.to_dict())
             self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
@@ -166,6 +167,7 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
             await asyncio.sleep(RECONNECT_INTERVAL)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
 

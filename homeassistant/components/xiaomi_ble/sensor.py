@@ -1,6 +1,6 @@
 """Support for xiaomi ble sensors."""
 
-from typing import cast
+from typing import cast, override
 
 from xiaomi_ble import DeviceClass, SensorUpdate, Units
 from xiaomi_ble.parser import ExtendedSensorDeviceClass
@@ -18,15 +18,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfConductivity,
+    UnitOfDensity,
     UnitOfElectricPotential,
     UnitOfMass,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -42,7 +42,7 @@ SENSOR_DESCRIPTIONS = {
     (DeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{DeviceClass.BATTERY}_{Units.PERCENTAGE}",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -57,13 +57,13 @@ SENSOR_DESCRIPTIONS = {
         Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     ): SensorEntityDescription(
         key=f"{DeviceClass.FORMALDEHYDE}_{Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER}",
-        native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{DeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.ILLUMINANCE, Units.LIGHT_LUX): SensorEntityDescription(
@@ -99,7 +99,7 @@ SENSOR_DESCRIPTIONS = {
     (DeviceClass.MOISTURE, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{DeviceClass.MOISTURE}_{Units.PERCENTAGE}",
         device_class=SensorDeviceClass.MOISTURE,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.PRESSURE, Units.PRESSURE_MBAR): SensorEntityDescription(
@@ -135,7 +135,7 @@ SENSOR_DESCRIPTIONS = {
     # E.g. consumable sensor on WX08ZM and M1S-T500
     (ExtendedSensorDeviceClass.CONSUMABLE, Units.PERCENTAGE): SensorEntityDescription(
         key=str(ExtendedSensorDeviceClass.CONSUMABLE),
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Score after brushing with a toothbrush
@@ -283,11 +283,13 @@ class XiaomiBluetoothSensorEntity(
     """Representation of a xiaomi ble sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.processor.coordinator.sleepy_device or super().available

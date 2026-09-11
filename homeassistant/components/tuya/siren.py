@@ -1,6 +1,6 @@
 """Support for Tuya siren."""
 
-from typing import Any
+from typing import Any, override
 
 from tuya_device_handlers.definition.siren import (
     SirenDefinition,
@@ -101,10 +101,12 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         self._dpcode_wrapper = definition.siren_wrapper
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if siren is on."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],
@@ -119,10 +121,12 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
             self.device, updated_status_properties, dp_timestamps
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, False)

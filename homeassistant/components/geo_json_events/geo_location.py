@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_geojson_generic_client.feed_entry import GenericFeedEntry
 
@@ -64,6 +64,7 @@ class GeoJsonLocationEvent(GeolocationEvent):
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
@@ -108,6 +109,7 @@ class GeoJsonLocationEvent(GeolocationEvent):
         self._attr_longitude = feed_entry.coordinates[1]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         if not self._external_id:

@@ -1,5 +1,6 @@
 {
   "__typename": "iometer.reading.v1",
+  "installationId": "658c2b34-2017-45f2-a12b-731235f8bb97",
   "meter": {
     "number": "1ISK0000000000",
     "reading": {
@@ -9,7 +10,10 @@
         { "obis": "01-00:01.08.01*ff", "value": 1904.5, "unit": "Wh" },
         { "obis": "01-00:01.08.02*ff", "value": 9876.21, "unit": "Wh" },
         { "obis": "01-00:02.08.00*ff", "value": 5432.1, "unit": "Wh" },
-        { "obis": "01-00:10.07.00*ff", "value": 100, "unit": "W" }
+        { "obis": "01-00:10.07.00*ff", "value": 100, "unit": "W" },
+        { "obis": "01-00:24.07.00*ff", "value": 33.1, "unit": "W" },
+        { "obis": "01-00:38.07.00*ff", "value": 34.2, "unit": "W" },
+        { "obis": "01-00:4c.07.00*ff", "value": 32.7, "unit": "W" }
       ]
     }
   }

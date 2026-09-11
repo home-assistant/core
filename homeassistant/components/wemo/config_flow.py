@@ -1,7 +1,7 @@
 """Config flow for Wemo."""
 
 from dataclasses import fields
-from typing import Any, get_type_hints
+from typing import Any, get_type_hints, override
 
 import pywemo
 import voluptuous as vol
@@ -28,6 +28,7 @@ class WemoFlow(DiscoveryFlowHandler, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return WemoOptionsFlow()

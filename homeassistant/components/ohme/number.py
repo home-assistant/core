@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from ohme import ApiException, OhmeApiClient
 
@@ -87,10 +87,12 @@ class OhmeNumber(OhmeEntity, NumberEntity):
     entity_description: OhmeNumberDescription
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current value of the number."""
         return self.entity_description.value_fn(self.coordinator.client)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the number value."""
         try:

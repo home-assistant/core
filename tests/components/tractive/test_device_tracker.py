@@ -94,27 +94,6 @@ async def test_source_type_gps(
     )
 
 
-async def test_device_tracker_with_empty_hw_info(
-    hass: HomeAssistant,
-    mock_tractive_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that the device tracker sets up correctly when hw_info is empty."""
-    mock_tractive_client.tracker.return_value.hw_info = AsyncMock(return_value={})
-
-    with patch(
-        "homeassistant.components.tractive.PLATFORMS", [Platform.DEVICE_TRACKER]
-    ):
-        await init_integration(hass, mock_config_entry)
-
-        mock_tractive_client.send_position_event(mock_config_entry)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("device_tracker.tracker_device_id_123")
-    assert state is not None
-    assert state.attributes.get("battery_level") is None
-
-
 async def test_device_tracker_device_assignment(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -128,8 +107,8 @@ async def test_device_tracker_device_assignment(
     ):
         await init_integration(hass, mock_config_entry)
 
-    tracker_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "device_id_123")}
+    tracker_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "device_id_123"), mock_config_entry.entry_id
     )
     assert tracker_device is not None
 

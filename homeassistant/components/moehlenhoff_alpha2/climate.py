@@ -1,6 +1,6 @@
 """Support for Alpha2 room control unit via Alpha2 base."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -57,32 +57,38 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
         return self.coordinator.data["heat_areas"][self.heat_area_id]
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return float(self.heat_area.get("T_TARGET_MIN", 0.0))
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return float(self.heat_area.get("T_TARGET_MAX", 30.0))
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature."""
         return float(self.heat_area.get("T_ACTUAL", 0.0))
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current hvac mode."""
         if self.coordinator.get_cooling():
             return HVACMode.COOL
         return HVACMode.HEAT
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.coordinator.async_set_cooling(hvac_mode == HVACMode.COOL)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation."""
         if not self.heat_area["_HEATCTRL_STATE"]:
@@ -92,10 +98,12 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
         return HVACAction.HEATING
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return float(self.heat_area.get("T_TARGET", 0.0))
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -106,6 +114,7 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
         )
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return the current preset mode."""
         if self.heat_area["HEATAREA_MODE"] == 1:
@@ -114,6 +123,7 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
             return PRESET_NIGHT
         return PRESET_AUTO
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new operation mode."""
         heat_area_mode = 0

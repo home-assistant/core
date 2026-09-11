@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '* Color 1',
         '* Color Gradient',
         '* Colors 1&2',
@@ -113,8 +113,8 @@
 # name: test_snapshots[select.wled_rgb_light_color_palette-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Color palette',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Color palette',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '* Color 1',
         '* Color Gradient',
         '* Colors 1&2',
@@ -203,7 +203,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',
@@ -242,8 +242,8 @@
 # name: test_snapshots[select.wled_rgb_light_live_override-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Live override',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Live override',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',
@@ -264,7 +264,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -300,8 +300,8 @@
 # name: test_snapshots[select.wled_rgb_light_playlist-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Playlist',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Playlist',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
       ]),
     }),
     'context': <ANY>,
@@ -319,7 +319,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -355,8 +355,8 @@
 # name: test_snapshots[select.wled_rgb_light_preset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Preset',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Preset',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
       ]),
     }),
     'context': <ANY>,
@@ -374,7 +374,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '* Color 1',
         '* Color Gradient',
         '* Colors 1&2',
@@ -481,8 +481,8 @@
 # name: test_snapshots[select.wled_rgb_light_segment_1_color_palette-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Segment 1 color palette',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Segment 1 color palette',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '* Color 1',
         '* Color Gradient',
         '* Colors 1&2',

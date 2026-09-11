@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant import config as conf_util, core_config
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
     ATTR_ELEVATION,
     ATTR_ENTITY_ID,
@@ -289,10 +290,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         """Service handler for reloading core config."""
         try:
             conf = await conf_util.async_hass_config_yaml(hass)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
+        except (HomeAssistantError, FileNotFoundError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="core_config_reload_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         # auth only processed during startup
         await core_config.async_process_ha_core_config(hass, conf.get(DOMAIN) or {})
@@ -322,7 +325,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             {
                 vol.Required(ATTR_LATITUDE): cv.latitude,
                 vol.Required(ATTR_LONGITUDE): cv.longitude,
-                vol.Optional(ATTR_ELEVATION): int,
+                vol.Optional(ATTR_ELEVATION): vol.Coerce(int),
             }
         ),
     )
@@ -340,6 +343,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         reload_entries: set[str] = set()
         if ATTR_ENTRY_ID in call.data:
             reload_entries.add(call.data[ATTR_ENTRY_ID])
+        if TargetSelection(call.data).has_any_target:
+            _LOGGER.warning(
+                "Reloading a config entry by target is deprecated and will stop "
+                "working in Home Assistant 2027.4, please specify the config entry "
+                "to reload in the 'entry_id' parameter instead"
+            )
         reload_entries.update(await async_extract_config_entry_ids(call))
         if not reload_entries:
             raise ValueError("There were no matching config entries to reload")
@@ -389,7 +398,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 domain, SERVICE_RELOAD, context=call.context, blocking=True
             )
             for domain, domain_services in services.items()
-            if domain != "notify" and SERVICE_RELOAD in domain_services
+            if domain != NOTIFY_DOMAIN and SERVICE_RELOAD in domain_services
         ] + [
             hass.services.async_call(
                 domain, service, context=call.context, blocking=True
@@ -458,6 +467,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 hass,
                 DOMAIN,
                 "unsupported_local_deps",
+                breaks_in_ha_version="2026.11.0",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,

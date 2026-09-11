@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from io import BytesIO
 import logging
-from typing import Any
+from typing import Any, override
 from uuid import UUID
 
 from aiohttp import ClientError
@@ -88,6 +88,7 @@ class HabiticaBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def _update_data(self) -> _DataT:
         """Fetch data."""
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch the latest party data."""
 
@@ -116,6 +117,7 @@ class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
     _update_interval = timedelta(seconds=30)
     content: ContentData
 
+    @override
     async def _async_setup(self) -> None:
         """Set up Habitica integration."""
 
@@ -148,6 +150,7 @@ class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
                 translation_placeholders={"reason": str(e)},
             ) from e
 
+    @override
     async def _update_data(self) -> HabiticaData:
         """Fetch the latest data."""
 
@@ -204,6 +207,7 @@ class HabiticaPartyCoordinator(HabiticaBaseCoordinator[HabiticaPartyData]):
 
     _update_interval = timedelta(minutes=15)
 
+    @override
     async def _update_data(self) -> HabiticaPartyData:
         """Fetch the latest party data."""
 

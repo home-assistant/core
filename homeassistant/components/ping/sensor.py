@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -129,11 +130,13 @@ class PingSensor(PingEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data.is_alive
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the sensor state."""
         return self.entity_description.value_fn(self.coordinator.data)

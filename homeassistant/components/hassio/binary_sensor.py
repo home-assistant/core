@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiohasupervisor.models import AddonState
 from aiohasupervisor.models.mounts import MountState
@@ -98,6 +99,7 @@ class HassioAddonBinarySensor(HassioAddonEntity, BinarySensorEntity):
     entity_description: HassioAddonBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self)
@@ -109,6 +111,7 @@ class HassioMountBinarySensor(HassioMountEntity, BinarySensorEntity):
     entity_description: HassioMountBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self)

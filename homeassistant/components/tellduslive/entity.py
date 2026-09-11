@@ -2,21 +2,17 @@
 
 from datetime import datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from tellduslive import BATTERY_LOW, BATTERY_OK, BATTERY_UNKNOWN
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_VIA_DEVICE,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_MANUFACTURER, ATTR_MODEL
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import SIGNAL_UPDATE_ENTITY
+from .const import DOMAIN, SIGNAL_UPDATE_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +30,7 @@ class TelldusLiveEntity(Entity):
         self._id = device_id
         self._client = client
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         _LOGGER.debug("Created device %s", self)
@@ -59,16 +56,19 @@ class TelldusLiveEntity(Entity):
         return self.device.state
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return true if unable to access real state of entity."""
         return True
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if device is not offline."""
         return self._client.is_available(self.device_id)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = {}
@@ -99,16 +99,18 @@ class TelldusLiveEntity(Entity):
         )
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         device = self._client.device_info(self.device.device_id)
         device_info = DeviceInfo(
-            identifiers={("tellduslive", self.device.device_id)},
+            identifiers={(DOMAIN, self.device.device_id)},
             name=self.device.name,
         )
         if (model := device.get("model")) is not None:
@@ -116,5 +118,14 @@ class TelldusLiveEntity(Entity):
         if (protocol := device.get("protocol")) is not None:
             device_info[ATTR_MANUFACTURER] = protocol.title()
         if (client := device.get("client")) is not None:
-            device_info[ATTR_VIA_DEVICE] = ("tellduslive", client)
+            config_entry = self.platform.config_entry
+            if TYPE_CHECKING:
+                assert config_entry
+            # The hub is not registered when fetching the client list failed while
+            # device requests succeeded, so link only when the hub device exists.
+            hub_device = dr.async_get(self.hass).async_get_device_by_identifier(
+                (DOMAIN, client), config_entry.entry_id
+            )
+            if hub_device is not None:
+                device_info["via_device_id"] = hub_device.id
         return device_info

@@ -16,7 +16,7 @@ from .common import replace_value_of_zwave_value
 
 DEFAULT_TONE_SELECT_ENTITY = "select.indoor_siren_6_default_tone_2"
 PROTECTION_SELECT_ENTITY = "select.family_room_combo_local_protection_state"
-MULTILEVEL_SWITCH_SELECT_ENTITY = "select.front_door_siren"
+MULTILEVEL_SWITCH_SELECT_ENTITY = "select.outside_front_door_siren"
 
 
 async def test_default_tone_select(

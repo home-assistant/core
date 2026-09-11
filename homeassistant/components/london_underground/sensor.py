@@ -1,7 +1,7 @@
 """Sensor for checking the status of London Underground tube lines."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -113,16 +113,19 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.coordinator.data[self.name]["State"]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return other details about the sensor state."""
         return {"Description": self.coordinator.data[self.name]["Description"]}

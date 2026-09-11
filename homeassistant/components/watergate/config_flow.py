@@ -1,6 +1,7 @@
 """Config flow for Watergate."""
 
 import logging
+from typing import override
 
 import voluptuous as vol
 from watergate_local_api.watergate_api import (
@@ -28,6 +29,7 @@ WATERGATE_SCHEMA = vol.Schema(
 class WatergateConfigFlow(ConfigFlow, domain=DOMAIN):
     """Watergate config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

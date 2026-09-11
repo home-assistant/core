@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pysmarlaapi import Federwiege
 from pysmarlaapi.federwiege.services.classes import Property
@@ -84,27 +84,32 @@ class SmarlaUpdate(SmarlaBaseEntity, UpdateEntity):
         self._attr_latest_version = target
         self._attr_release_summary = notes
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         await super().async_added_to_hass()
         await self._update_status_property.add_listener(self.on_change)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         await super().async_will_remove_from_hass()
         await self._update_status_property.remove_listener(self.on_change)
 
     @property
+    @override
     def in_progress(self) -> bool | None:
         """Return if an update is in progress."""
         status = self._update_status_property.get()
         return status not in (None, UpdateStatus.IDLE, UpdateStatus.FAILED)
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Return the current installed version."""
         return self._property.get()
 
+    @override
     def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install latest update."""
         self._update_property.set(1)

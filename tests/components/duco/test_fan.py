@@ -1,14 +1,13 @@
 """Tests for the Duco fan platform."""
 
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from duco_connectivity import DucoConnectionError, DucoError, DucoRateLimitError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
@@ -21,7 +20,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from . import async_fire_coordinator_update, setup_platform_integration
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 _FAN_ENTITY = "fan.living"
 
@@ -33,11 +34,7 @@ async def init_integration(
     mock_duco_client: AsyncMock,
 ) -> MockConfigEntry:
     """Set up only the fan platform for testing."""
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.duco.PLATFORMS", [Platform.FAN]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-    return mock_config_entry
+    return await setup_platform_integration(hass, mock_config_entry, [Platform.FAN])
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -70,8 +67,6 @@ async def test_fan_set_state(
     expected_duco_state: str,
 ) -> None:
     """Test that fan service calls map to the correct Duco ventilation state."""
-    mock_duco_client.async_set_ventilation_state = AsyncMock()
-
     await hass.services.async_call(
         FAN_DOMAIN,
         service,
@@ -79,9 +74,11 @@ async def test_fan_set_state(
         blocking=True,
     )
 
-    mock_duco_client.async_set_ventilation_state.assert_called_once_with(
+    mock_duco_client.async_set_ventilation_state.assert_awaited_once_with(
         1, expected_duco_state
     )
+    mock_duco_client.async_get_node_info.assert_awaited_once_with(1)
+    assert mock_duco_client.async_get_nodes.await_count == 1
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -147,9 +144,7 @@ async def test_coordinator_update_marks_unavailable(
         side_effect=DucoConnectionError("offline")
     )
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get(_FAN_ENTITY)
     assert state is not None

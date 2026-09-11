@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from goslideapi.goslideapi import (
     AuthenticationFailed,
@@ -55,6 +55,7 @@ class SlideCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry.data[CONF_PASSWORD] if self.api_version == 1 else ""
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Do initialization logic for Slide coordinator."""
         _LOGGER.debug("Initializing Slide coordinator")
@@ -67,6 +68,7 @@ class SlideCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         _LOGGER.debug("Slide coordinator initialized")
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the data from the Slide device."""
         _LOGGER.debug("Start data update")

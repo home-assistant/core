@@ -1,7 +1,7 @@
 """Config flow for the Seko PoolDose integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
@@ -43,17 +43,17 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate the host and return (serial_number, api_versions, errors)."""
         client = PooldoseClient(host, websession=async_get_clientsession(self.hass))
         client_status = await client.connect()
-        if client_status == RequestStatus.HOST_UNREACHABLE:
+        if client_status is RequestStatus.HOST_UNREACHABLE:
             return None, None, {"base": "cannot_connect"}
-        if client_status == RequestStatus.PARAMS_FETCH_FAILED:
+        if client_status is RequestStatus.PARAMS_FETCH_FAILED:
             return None, None, {"base": "params_fetch_failed"}
-        if client_status != RequestStatus.SUCCESS:
+        if client_status is not RequestStatus.SUCCESS:
             return None, None, {"base": "cannot_connect"}
 
         api_status, api_versions = client.check_apiversion_supported()
-        if api_status == RequestStatus.NO_DATA:
+        if api_status is RequestStatus.NO_DATA:
             return None, None, {"base": "api_not_set"}
-        if api_status == RequestStatus.API_VERSION_UNSUPPORTED:
+        if api_status is RequestStatus.API_VERSION_UNSUPPORTED:
             return None, api_versions, {"base": "api_not_supported"}
 
         device_info = client.device_info
@@ -65,6 +65,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return serial_number, None, None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -108,6 +109,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

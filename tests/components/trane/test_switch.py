@@ -49,7 +49,7 @@ async def test_hold_switch_off(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.living_room_hold")
+    state = hass.states.get("switch.living_room_living_room_hold")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -72,7 +72,7 @@ async def test_hold_switch_service(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "switch.living_room_hold"},
+        {ATTR_ENTITY_ID: "switch.living_room_living_room_hold"},
         blocking=True,
     )
 

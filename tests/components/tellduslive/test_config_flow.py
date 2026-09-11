@@ -265,7 +265,7 @@ async def test_discovery_already_configured(
     hass: HomeAssistant, mock_tellduslive
 ) -> None:
     """Test abort if already configured fires from discovery."""
-    MockConfigEntry(domain="tellduslive", data={"host": "some-host"}).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, data={"host": "some-host"}).add_to_hass(hass)
     flow = init_config_flow(hass)
     flow.context = {"source": SOURCE_DISCOVERY}
 

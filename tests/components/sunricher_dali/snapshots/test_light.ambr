@@ -6,9 +6,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max_color_temp_kelvin': 8000,
-      'min_color_temp_kelvin': 1000,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 8000,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1000,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
     }),
@@ -45,19 +45,19 @@
 # name: test_entities[light.cct_0000_03-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'color_temp_kelvin': None,
-      'friendly_name': 'CCT 0000-03',
-      'hs_color': None,
-      'max_color_temp_kelvin': 8000,
-      'min_color_temp_kelvin': 1000,
-      'rgb_color': None,
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CCT 0000-03',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 8000,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1000,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
-      'xy_color': None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'light.cct_0000_03',
@@ -74,7 +74,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -111,13 +111,13 @@
 # name: test_entities[light.dimmer_0000_02-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'friendly_name': 'Dimmer 0000-02',
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer 0000-02',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.dimmer_0000_02',
@@ -134,7 +134,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.HS: 'hs'>,
       ]),
     }),
@@ -171,16 +171,16 @@
 # name: test_entities[light.hs_color_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'friendly_name': 'HS Color Light',
-      'hs_color': None,
-      'rgb_color': None,
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HS Color Light',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
-      'xy_color': None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'light.hs_color_light',
@@ -197,7 +197,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGBW: 'rgbw'>,
       ]),
     }),
@@ -234,17 +234,17 @@
 # name: test_entities[light.rgbw_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'friendly_name': 'RGBW Light',
-      'hs_color': None,
-      'rgb_color': None,
-      'rgbw_color': None,
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RGBW Light',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+      <LightEntityStateAttribute.RGBW_COLOR: 'rgbw_color'>: None,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGBW: 'rgbw'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
-      'xy_color': None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'light.rgbw_light',

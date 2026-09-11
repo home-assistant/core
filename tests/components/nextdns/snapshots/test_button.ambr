@@ -39,7 +39,7 @@
 # name: test_button[button.fake_profile_clear_logs-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Clear logs',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Clear logs',
     }),
     'context': <ANY>,
     'entity_id': 'button.fake_profile_clear_logs',

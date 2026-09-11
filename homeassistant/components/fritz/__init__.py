@@ -1,7 +1,5 @@
 """Support for AVM Fritz!Box functions."""
 
-import logging
-
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -21,12 +19,11 @@ from .const import (
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
+    LOGGER,
     PLATFORMS,
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .services import async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -39,7 +36,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bool:
     """Set up fritzboxtools from config entry."""
-    _LOGGER.debug("Setting up FRITZ!Box Tools component")
+    LOGGER.debug("Setting up FRITZ!Box Tools component")
 
     avm_wrapper = AvmWrapper(
         hass=hass,
@@ -61,13 +58,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
     except FRITZ_AUTH_EXCEPTIONS as ex:
         raise ConfigEntryAuthFailed from ex
     except FRITZ_EXCEPTIONS as ex:
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="error_connecting",
+            translation_placeholders={"error": str(ex)},
+        ) from ex
 
     if (
         "X_AVM-DE_UPnP1" in avm_wrapper.connection.services
         and not (await avm_wrapper.async_get_upnp_configuration())["NewEnable"]
     ):
-        raise ConfigEntryAuthFailed("Missing UPnP configuration")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="error_upnp_disabled",
+        )
 
     await avm_wrapper.async_config_entry_first_refresh()
 

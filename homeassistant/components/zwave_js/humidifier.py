@@ -1,7 +1,7 @@
 """Representation of Z-Wave humidifiers."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.humidity_control import (
@@ -142,6 +142,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         if (value := self._current_mode.value) is None:
@@ -154,6 +155,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
             in self._current_mode.metadata.states
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on device."""
         if (value := self._current_mode.value) is None:
@@ -168,6 +170,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
 
         await self._async_set_value(self._current_mode, new_mode)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off device."""
         if (value := self._current_mode.value) is None:
@@ -186,18 +189,21 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
         await self._async_set_value(self._current_mode, new_mode)
 
     @property
+    @override
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         if not self._setpoint or self._setpoint.value is None:
             return None
         return int(self._setpoint.value)
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self._setpoint:
             await self._async_set_value(self._setpoint, humidity)
 
     @property
+    @override
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
         min_value = DEFAULT_MIN_HUMIDITY
@@ -206,6 +212,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
         return min_value
 
     @property
+    @override
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
         max_value = DEFAULT_MAX_HUMIDITY

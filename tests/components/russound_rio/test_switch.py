@@ -42,7 +42,7 @@ async def test_setting_value(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "switch.backyard_loudness",
+            ATTR_ENTITY_ID: "switch.backyard_backyard_loudness",
         },
         blocking=True,
     )
@@ -55,7 +55,7 @@ async def test_setting_value(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {
-            ATTR_ENTITY_ID: "switch.backyard_loudness",
+            ATTR_ENTITY_ID: "switch.backyard_backyard_loudness",
         },
         blocking=True,
     )

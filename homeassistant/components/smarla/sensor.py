@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pysmarlaapi.federwiege.services.classes import Property
 from pysmarlaapi.federwiege.services.types import SpringStatus
@@ -116,6 +116,7 @@ class SmarlaSensor[_VT](SmarlaBaseEntity, SensorEntity):
     _property: Property[_VT]
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the entity value to represent the entity state."""
         value = self._property.get()

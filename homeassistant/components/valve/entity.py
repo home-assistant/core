@@ -1,11 +1,16 @@
 """Base entity for the Valve platform."""
 
 from dataclasses import dataclass
-from typing import Any, final
+from typing import Any, final, override
 
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import ValveDeviceClass, ValveEntityFeature, ValveState
+from .const import (
+    ValveDeviceClass,
+    ValveEntityFeature,
+    ValveEntityStateAttribute,
+    ValveState,
+)
 
 ATTR_CURRENT_POSITION = "current_position"
 ATTR_IS_CLOSED = "is_closed"
@@ -51,6 +56,7 @@ class ValveEntity(Entity):
         return self._attr_current_valve_position
 
     @property
+    @override
     def device_class(self) -> ValveDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -61,6 +67,7 @@ class ValveEntity(Entity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state of the valve."""
         reports_position = self.reports_position
@@ -81,22 +88,24 @@ class ValveEntity(Entity):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         data: dict[str, Any] = {}
 
         if self.reports_position:
             if (current_valve_position := self.current_valve_position) is None:
-                data[ATTR_IS_CLOSED] = None
+                data[ValveEntityStateAttribute.IS_CLOSED] = None
             else:
-                data[ATTR_IS_CLOSED] = current_valve_position == 0
-            data[ATTR_CURRENT_POSITION] = current_valve_position
+                data[ValveEntityStateAttribute.IS_CLOSED] = current_valve_position == 0
+            data[ValveEntityStateAttribute.CURRENT_POSITION] = current_valve_position
         else:
-            data[ATTR_IS_CLOSED] = self.is_closed
+            data[ValveEntityStateAttribute.IS_CLOSED] = self.is_closed
 
         return data
 
     @property
+    @override
     def supported_features(self) -> ValveEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features

@@ -1,5 +1,7 @@
 """Sensor for the zamg integration."""
 
+from typing import override
+
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import (
     UnitOfPrecipitationDepth,
@@ -54,6 +56,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         )
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
         try:
@@ -70,6 +73,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         return None
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the pressure."""
         try:
@@ -78,6 +82,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
             return None
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the humidity."""
         try:
@@ -86,6 +91,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
             return None
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         try:
@@ -102,6 +108,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         return None
 
     @property
+    @override
     def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         try:

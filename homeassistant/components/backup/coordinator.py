@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -64,6 +65,7 @@ class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
         self._last_event = event
         self.config_entry.async_create_task(self.hass, self.async_refresh())
 
+    @override
     async def _async_update_data(self) -> BackupCoordinatorData:
         """Update backup manager data."""
         return BackupCoordinatorData(

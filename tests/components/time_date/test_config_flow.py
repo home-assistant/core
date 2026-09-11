@@ -7,7 +7,8 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.time_date.const import CONF_DISPLAY_OPTIONS, DOMAIN
+from homeassistant.components.time_date.const import DOMAIN
+from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

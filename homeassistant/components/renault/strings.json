@@ -3,8 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "kamereon_no_account": "Unable to find Kamereon account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The selected Kamereon account ID does not match the previous account ID"
     },
     "error": {
@@ -138,6 +136,10 @@
           "energy_flap_opened": "Energy flap opened",
           "not_in_charge": "Not charging",
           "unavailable": "Unavailable",
+          "v2g_charging_normal": "Vehicle to grid charging",
+          "v2g_charging_waiting": "Vehicle to grid charging waiting",
+          "v2g_discharging": "Vehicle to grid discharging",
+          "v2l_connected": "Vehicle to load connected",
           "waiting_for_a_planned_charge": "Waiting for planned charge",
           "waiting_for_current_charge": "Waiting for current charge"
         }
@@ -153,6 +155,7 @@
         "state": {
           "always": "Always",
           "delayed": "Delayed",
+          "delegated": "Delegated",
           "scheduled": "Scheduled"
         }
       },
@@ -209,9 +212,6 @@
   "exceptions": {
     "battery_soc_unavailable": {
       "message": "Battery state of charge data is currently unavailable"
-    },
-    "invalid_device_id": {
-      "message": "No device with ID {device_id} was found"
     },
     "no_config_entry_for_device": {
       "message": "No loaded config entry was found for device with ID {device_id}"

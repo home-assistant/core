@@ -1,7 +1,7 @@
 """The lookin integration config_flow."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from aiolookin import Device, LookInHttpProtocol, NoUsableService
@@ -25,6 +25,7 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host: str | None = None
         self._name: str | None = None
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -51,6 +52,7 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

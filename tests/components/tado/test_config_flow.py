@@ -110,26 +110,54 @@ async def test_auth_timeout(
     mock_tado_api: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test the auth timeout."""
-    mock_tado_api.device_activation_status.return_value = DeviceActivationStatus.PENDING
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    """Test that retrying after an auth timeout uses a fresh device code."""
+    expired_client = MagicMock()
+    expired_client.device_verification_url.return_value = (
+        "https://login.tado.com/oauth2/device?user_code=EXPIRED"
     )
-    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "timeout"
-
-    mock_tado_api.device_activation_status.return_value = (
-        DeviceActivationStatus.COMPLETED
+    expired_client.device_activation_status.return_value = (
+        DeviceActivationStatus.PENDING
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "timeout"
+    event = threading.Event()
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
+    def mock_tado_api_device_activation() -> None:
+        # Simulate the device activation process
+        event.wait(timeout=5)
+
+    mock_tado_api.device_activation = mock_tado_api_device_activation
+
+    with patch(
+        "homeassistant.components.tado.config_flow.Tado",
+        side_effect=[expired_client, mock_tado_api],
+    ) as mock_tado_create:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+        assert result["step_id"] == "timeout"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "timeout"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+        # The retry must construct a new client and show its device code,
+        # not the expired one from the first attempt
+        assert mock_tado_create.call_count == 2
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["description_placeholders"] == {
+            "url": "https://login.tado.com/oauth2/device?user_code=TEST",
+            "code": "TEST",
+        }
+
+        event.set()
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "home name"
@@ -229,6 +257,43 @@ async def test_options_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_FALLBACK: CONST_OVERLAY_TADO_DEFAULT}
+
+
+async def test_show_progress_polling(
+    hass: HomeAssistant,
+    mock_tado_api: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test progress step re-entry while login task is still running."""
+
+    event = threading.Event()
+
+    def mock_tado_api_device_activation() -> None:
+        event.wait(timeout=5)
+
+    mock_tado_api.device_activation = mock_tado_api_device_activation
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
+    assert result["description_placeholders"]["url"] is not None
+    assert result["description_placeholders"]["code"] == "TEST"
+
+    # Poll again while task is still running — this re-enters async_step_user
+    # with self.tado already set
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["description_placeholders"]["url"] is not None
+    assert result["description_placeholders"]["code"] == "TEST"
+
+    # Now complete the login
+    event.set()
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_homekit(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:

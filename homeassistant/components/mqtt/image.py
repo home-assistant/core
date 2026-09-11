@@ -4,7 +4,7 @@ from base64 import b64decode
 import binascii
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import httpx
 import voluptuous as vol
@@ -118,10 +118,12 @@ class MqttImage(MqttEntity, ImageEntity):
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._topic = {
@@ -181,6 +183,7 @@ class MqttImage(MqttEntity, ImageEntity):
         self.hass.data[DATA_MQTT].state_write_requests.write_state_request(self)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -190,10 +193,12 @@ class MqttImage(MqttEntity, ImageEntity):
             CONF_URL_TOPIC, self._image_from_url_request_received, None
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
         if CONF_IMAGE_TOPIC in self._config:

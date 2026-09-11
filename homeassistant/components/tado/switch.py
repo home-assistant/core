@@ -1,7 +1,7 @@
 """Module for Tado child lock switch entity."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
@@ -57,17 +57,20 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
         self._device_id = self._device_info["shortSerialNo"]
         self._attr_unique_id = f"{zone_id} {coordinator.home_id} child-lock"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.set_child_lock(self._device_id, True)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.set_child_lock(self._device_id, False)
         await self.coordinator.async_request_refresh()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_callback()

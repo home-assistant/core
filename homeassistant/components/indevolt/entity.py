@@ -1,5 +1,7 @@
 """Base entity for Indevolt integration."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -18,6 +20,7 @@ class IndevoltEntity(CoordinatorEntity[IndevoltCoordinator]):
         return self.coordinator.serial_number
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information for registry."""
         coordinator = self.coordinator

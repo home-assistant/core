@@ -126,7 +126,7 @@ async def test_pdu_devices_with_unique_ids(
         hass,
         entity_registry,
         unique_id=f"{unique_id_base}_input.voltage",
-        device_id="sensor.ups1_input_voltage",
+        device_id="sensor.device_location_ups1_input_voltage",
         state_value="122.91",
         expected_attributes={
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
@@ -140,7 +140,7 @@ async def test_pdu_devices_with_unique_ids(
         hass,
         entity_registry,
         unique_id=f"{unique_id_base}_ambient.humidity.status",
-        device_id="sensor.ups1_ambient_humidity_status",
+        device_id="sensor.device_location_ups1_ambient_humidity_status",
         state_value="good",
         expected_attributes={
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
@@ -152,7 +152,7 @@ async def test_pdu_devices_with_unique_ids(
         hass,
         entity_registry,
         unique_id=f"{unique_id_base}_ambient.temperature.status",
-        device_id="sensor.ups1_ambient_temperature_status",
+        device_id="sensor.device_location_ups1_ambient_temperature_status",
         state_value="good",
         expected_attributes={
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
@@ -332,7 +332,7 @@ async def test_pdu_dynamic_outlets(
         hass,
         entity_registry,
         unique_id=f"{unique_id_base}_outlet.1.current",
-        device_id="sensor.ups1_outlet_a1_current",
+        device_id="sensor.device_location_ups1_outlet_a1_current",
         state_value="0",
         expected_attributes={
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
@@ -345,7 +345,7 @@ async def test_pdu_dynamic_outlets(
         hass,
         entity_registry,
         unique_id=f"{unique_id_base}_outlet.24.current",
-        device_id="sensor.ups1_outlet_a24_current",
+        device_id="sensor.device_location_ups1_outlet_a24_current",
         state_value="0.19",
         expected_attributes={
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
@@ -359,3 +359,45 @@ async def test_pdu_dynamic_outlets(
 
     entry = entity_registry.async_get("sensor.ups1_outlet_a25_current")
     assert not entry
+
+
+async def test_outlet_sensors_without_outlet_count(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test outlet sensors are created when outlet.count is missing."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "mock", CONF_PORT: "mock"},
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_pynut = _get_mock_nutclient(
+        list_ups={"ups1": "UPS 1"},
+        list_vars={
+            "ups.status": "OL",
+            "outlet.1.status": "on",
+            "outlet.1.switchable": "yes",
+            "outlet.1.desc": "PowerShare Outlet 1",
+            "outlet.1.current": "0.5",
+            "outlet.2.status": "on",
+            "outlet.2.switchable": "yes",
+            "outlet.2.desc": "PowerShare Outlet 2",
+            "outlet.2.current": "0.25",
+        },
+    )
+
+    with patch(
+        "homeassistant.components.nut.AIONUTClient",
+        return_value=mock_pynut,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    for outlet_num, expected_state in ((1, "0.5"), (2, "0.25")):
+        entity_id = entity_registry.async_get_entity_id(
+            Platform.SENSOR,
+            DOMAIN,
+            f"{config_entry.entry_id}_outlet.{outlet_num}.current",
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == expected_state

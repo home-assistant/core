@@ -1,17 +1,13 @@
 """API for xbox bound to Home Assistant OAuth."""
 
-from aiohttp import ClientError
+from typing import override
+
 from httpx import AsyncClient, HTTPStatusError, RequestError
 from pythonxbox.authentication.manager import AuthenticationManager
 from pythonxbox.authentication.models import OAuth2TokenResponse
 from pythonxbox.common.exceptions import AuthenticationException
 
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestReauthError,
-    OAuth2TokenRequestTransientError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -28,22 +24,12 @@ class AsyncConfigEntryAuth(AuthenticationManager):
         self._oauth_session = oauth_session
         self.oauth = self._get_oauth_token()
 
+    @override
     async def refresh_tokens(self) -> None:
         """Return a valid access token."""
 
         if not self._oauth_session.valid_token:
-            try:
-                await self._oauth_session.async_ensure_token_valid()
-            except OAuth2TokenRequestReauthError as e:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="auth_exception",
-                ) from e
-            except (OAuth2TokenRequestTransientError, ClientError) as e:
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="request_exception",
-                ) from e
+            await self._oauth_session.async_ensure_token_valid()
             self.oauth = self._get_oauth_token()
 
         # This will skip the OAuth refresh and only refresh User and XSTS tokens

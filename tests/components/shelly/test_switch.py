@@ -4,7 +4,7 @@ from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_1PM, MODEL_MOTION
+from aioshelly.const import MODEL_1PM, MODEL_CAMERA, MODEL_MOTION, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -15,7 +15,6 @@ from homeassistant.components.shelly.const import (
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
     MODEL_TOP_EV_CHARGER_EVE01,
-    MODEL_WALL_DISPLAY,
     MOTION_MODELS,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -995,3 +994,154 @@ async def test_rpc_ev_charging_switch(
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-boolean:200-boolean_start_charging"
+
+
+async def test_rpc_circuit_breaker_switch(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test RPC circuit breaker switch entity."""
+    config = deepcopy(mock_rpc_device.config)
+    config["cb:0"] = {"id": 0, "name": None}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["cb:0"] = {"id": 0, "output": False, "safety": False}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2)
+
+    entity_id = "switch.test_name"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-cb:0-cb"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.cb_set.assert_called_once_with(0, True)
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cb:0", "output", True)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.cb_set.assert_called_with(0, False)
+
+
+async def test_rpc_cb_switch_unavailable_when_safety_switch_locked(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC circuit breaker switch is unavailable when safety switch is locked."""
+    config = deepcopy(mock_rpc_device.config)
+    config["cb:0"] = {"id": 0, "name": None}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["cb:0"] = {"id": 0, "output": False, "safety": False}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2)
+
+    entity_id = "switch.test_name"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cb:0", "safety", True)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("exc", "error"),
+    [
+        (
+            RpcCallError(-110, "Remote disabled"),
+            "Circuit breaker for switch.test_name of Test name is tripped and cannot be turned on remotely",
+        ),
+        (
+            RpcCallError(-1, "error"),
+            "RPC call error occurred while calling action"
+            " for switch.test_name of Test name",
+        ),
+    ],
+)
+async def test_rpc_circuit_breaker_turn_on_errors(
+    hass: HomeAssistant,
+    exc: Exception,
+    error: str,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC circuit breaker turn on raises correct errors."""
+    config = deepcopy(mock_rpc_device.config)
+    config["cb:0"] = {"id": 0, "name": None}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["cb:0"] = {"id": 0, "output": False, "safety": False}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    mock_rpc_device.cb_set.side_effect = exc
+    await init_integration(hass, 2)
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_name"},
+            blocking=True,
+        )
+
+
+async def test_rpc_camera_privacy_switch(
+    hass: HomeAssistant,
+    mock_camera_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the camera privacy switch."""
+    entity_id = "switch.test_name_privacy"
+
+    await init_integration(hass, 3, model=MODEL_CAMERA)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-camera:0-camera_privacy"
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_camera_rpc_device, "camera:0", "privacy", True
+    )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_camera_rpc_device.mock_update()
+    mock_camera_rpc_device.set_camera_privacy.assert_called_with(0, True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON

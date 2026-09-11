@@ -27,7 +27,6 @@ MISSING_INTEGRATION_TYPE = {
     "folder_watcher",
     "forked_daapd",
     "geniushub",
-    "gentex_homelink",
     "geofency",
     "govee_light_local",
     "gpsd",

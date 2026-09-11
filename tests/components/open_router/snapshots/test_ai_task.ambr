@@ -42,8 +42,8 @@
 # name: test_all_entities[ai_task.gemini_1_5_pro-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gemini 1.5 Pro',
-      'supported_features': <AITaskEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gemini 1.5 Pro',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <AITaskEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'ai_task.gemini_1_5_pro',

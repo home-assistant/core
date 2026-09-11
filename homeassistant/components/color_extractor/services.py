@@ -1,8 +1,10 @@
 """Module for color_extractor (RGB extraction from images) component."""
 
 import asyncio
+from http import HTTPStatus
 import io
 import logging
+from typing import Any
 
 import aiohttp
 from colorthief import ColorThief
@@ -14,16 +16,17 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
 )
-from homeassistant.const import SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.const import SERVICE_TURN_ON
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_TURN_ON
+from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_GET_COLOR
 
 _LOGGER = logging.getLogger(__name__)
 
 # Extend the existing light.turn_on service schema
-SERVICE_SCHEMA = vol.All(
+TURN_ON_SERVICE_SCHEMA = vol.All(
     cv.has_at_least_one_key(ATTR_URL, ATTR_PATH),
     cv.make_entity_service_schema(
         {
@@ -32,6 +35,14 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(ATTR_URL, "color_extractor"): cv.url,
         }
     ),
+)
+
+GET_COLOR_SERVICE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(ATTR_URL, ATTR_PATH),
+    {
+        vol.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
+        vol.Exclusive(ATTR_URL, "color_extractor"): cv.url,
+    },
 )
 
 
@@ -57,17 +68,14 @@ def _get_color(file_handler: io.BytesIO | str) -> tuple[int, int, int]:
 
 async def _async_extract_color_from_url(
     hass: HomeAssistant, url: str
-) -> tuple[int, int, int] | None:
+) -> tuple[int, int, int]:
     """Handle call for URL based image."""
     if not hass.config.is_allowed_external_url(url):
-        _LOGGER.error(
-            (
-                "External URL '%s' is not allowed, please add to"
-                " 'allowlist_external_urls'"
-            ),
-            url,
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="url_not_allowed",
+            translation_placeholders={"url": url},
         )
-        return None
 
     _LOGGER.debug("Getting predominant RGB from image URL '%s'", url)
 
@@ -75,14 +83,30 @@ async def _async_extract_color_from_url(
     try:
         session = aiohttp_client.async_get_clientsession(hass)
 
-        async with asyncio.timeout(10):
-            response = await session.get(url)
+        async with asyncio.timeout(10), session.get(url) as response:
+            if response.status != HTTPStatus.OK:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="http_error",
+                    translation_placeholders={
+                        "url": url,
+                        "status": str(response.status),
+                    },
+                )
+            content = await response.read()
 
-    except (TimeoutError, aiohttp.ClientError) as err:
-        _LOGGER.error("Failed to get ColorThief image due to HTTPError: %s", err)
-        return None
-
-    content = await response.content.read()
+    except TimeoutError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+            translation_placeholders={"url": url},
+        ) from err
+    except aiohttp.ClientError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="fetch_failed",
+            translation_placeholders={"url": url, "error": str(err)},
+        ) from err
 
     with io.BytesIO(content) as _file:
         _file.name = "color_extractor.jpg"
@@ -93,14 +117,14 @@ async def _async_extract_color_from_url(
 
 def _extract_color_from_path(
     hass: HomeAssistant, file_path: str
-) -> tuple[int, int, int] | None:
+) -> tuple[int, int, int]:
     """Handle call for local file based image."""
     if not hass.config.is_allowed_path(file_path):
-        _LOGGER.error(
-            "File path '%s' is not allowed, please add to 'allowlist_external_dirs'",
-            file_path,
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="path_not_allowed",
+            translation_placeholders={"file_path": file_path},
         )
-        return None
 
     _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
 
@@ -127,22 +151,55 @@ async def async_handle_service(service_call: ServiceCall) -> None:
                 _extract_color_from_path, service_call.hass, image_reference
             )
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     except UnidentifiedImageError as ex:
-        _LOGGER.error(
-            "Bad image from %s '%s' provided, are you sure it's an image? %s",
-            image_type,
-            image_reference,
-            ex,
-        )
-        return
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_image",
+            translation_placeholders={
+                "image_type": image_type,
+                "image_reference": image_reference,
+            },
+        ) from ex
 
-    if color:
-        service_data[ATTR_RGB_COLOR] = color
+    service_data[ATTR_RGB_COLOR] = color
 
-        await service_call.hass.services.async_call(
-            LIGHT_DOMAIN, LIGHT_SERVICE_TURN_ON, service_data, blocking=True
-        )
+    await service_call.hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+    )
+
+
+async def async_handle_get_color(
+    service_call: ServiceCall,
+) -> dict[str, Any]:
+    """Handle get_color service call."""
+    service_data = dict(service_call.data)
+
+    try:
+        if ATTR_URL in service_data:
+            image_type = "URL"
+            image_reference = service_data.pop(ATTR_URL)
+            color = await _async_extract_color_from_url(
+                service_call.hass, image_reference
+            )
+
+        elif ATTR_PATH in service_data:
+            image_type = "file path"
+            image_reference = service_data.pop(ATTR_PATH)
+            color = await service_call.hass.async_add_executor_job(
+                _extract_color_from_path, service_call.hass, image_reference
+            )
+
+    except UnidentifiedImageError as ex:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_image",
+            translation_placeholders={
+                "image_type": image_type,
+                "image_reference": image_reference,
+            },
+        ) from ex
+
+    return {"color": color}
 
 
 @callback
@@ -153,5 +210,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_TURN_ON,
         async_handle_service,
-        schema=SERVICE_SCHEMA,
+        schema=TURN_ON_SERVICE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_COLOR,
+        async_handle_get_color,
+        schema=GET_COLOR_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )

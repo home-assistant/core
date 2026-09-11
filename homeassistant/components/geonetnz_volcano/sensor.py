@@ -1,10 +1,10 @@
 """Feed Entity Manager Sensor support for GeoNet NZ Volcano Feeds."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, UnitOfLength
+from homeassistant.const import EntityStateAttribute, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -76,6 +76,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         self._feed_last_update_successful = None
         self._remove_signal_update = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_update = async_dispatcher_connect(
@@ -84,6 +85,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
             self._update_callback,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
         if self._remove_signal_update:
@@ -130,11 +132,13 @@ class GeonetnzVolcanoSensor(SensorEntity):
         )
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the entity."""
         return f"Volcano {self._title}"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {
@@ -143,8 +147,8 @@ class GeonetnzVolcanoSensor(SensorEntity):
                 (ATTR_EXTERNAL_ID, self._external_id),
                 (ATTR_ACTIVITY, self._activity),
                 (ATTR_HAZARDS, self._hazards),
-                (ATTR_LONGITUDE, self._longitude),
-                (ATTR_LATITUDE, self._latitude),
+                (EntityStateAttribute.LONGITUDE, self._longitude),
+                (EntityStateAttribute.LATITUDE, self._latitude),
                 (ATTR_DISTANCE, self._distance),
                 (ATTR_LAST_UPDATE, self._feed_last_update),
                 (ATTR_LAST_UPDATE_SUCCESSFUL, self._feed_last_update_successful),

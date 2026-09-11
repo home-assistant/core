@@ -1,5 +1,7 @@
 """Custom uhoo data update coordinator."""
 
+from typing import override
+
 from uhooapi import Client, Device
 from uhooapi.errors import ForbiddenError, UhooError, UnauthorizedError
 
@@ -29,6 +31,7 @@ class UhooDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         try:
             await self.client.login()

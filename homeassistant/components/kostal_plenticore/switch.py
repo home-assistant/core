@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -190,6 +190,7 @@ class PlenticoreDataSwitch(
         self._attr_device_info = device_info
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -199,6 +200,7 @@ class PlenticoreDataSwitch(
             and self.data_id in self.coordinator.data[self.module_id]
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
@@ -206,11 +208,13 @@ class PlenticoreDataSwitch(
             self.coordinator.start_fetch_data(self.module_id, self.data_id)
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
         self.coordinator.stop_fetch_data(self.module_id, self.data_id)
         await super().async_will_remove_from_hass()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         if await self.coordinator.async_write_data(
@@ -219,6 +223,7 @@ class PlenticoreDataSwitch(
             self.coordinator.name = f"{self.platform_name} {self._name} {self.on_label}"
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         if await self.coordinator.async_write_data(
@@ -230,6 +235,7 @@ class PlenticoreDataSwitch(
             await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         if self.coordinator.data[self.module_id][self.data_id] == self._is_on:
@@ -296,6 +302,7 @@ class PlenticoreShadowMgmtSwitch(
         self._attr_device_info = device_info
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -312,6 +319,7 @@ class PlenticoreShadowMgmtSwitch(
         except ValueError:
             return 0
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn shadow management on."""
         shadow_mgmt_value = self._get_shadow_mgmt_value()
@@ -322,6 +330,7 @@ class PlenticoreShadowMgmtSwitch(
         ):
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn shadow management off."""
         shadow_mgmt_value = self._get_shadow_mgmt_value()
@@ -333,6 +342,7 @@ class PlenticoreShadowMgmtSwitch(
             await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if shadow management is on."""
         return (self._get_shadow_mgmt_value() & self._mask) != 0

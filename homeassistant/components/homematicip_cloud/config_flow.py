@@ -1,18 +1,21 @@
-"""Config flow to configure the HomematicIP Cloud component."""
+"""Config flow to configure the HomematicIP Cloud integration."""
 
 from collections.abc import Mapping
-from typing import Any
+import logging
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
-from .const import _LOGGER, DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN
+from .const import DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN
 from .hap import HomematicipAuth
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Config flow for the HomematicIP Cloud component."""
+    """Config flow for the HomematicIP Cloud integration."""
 
     VERSION = 2
 
@@ -21,6 +24,7 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize HomematicIP Cloud config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

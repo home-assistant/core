@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from renault_api.kamereon.exceptions import (
     AccessDeniedException,
@@ -60,6 +60,7 @@ class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
         self._has_already_worked = False
         self._hub = hub
 
+    @override
     async def _async_update_data(self) -> T:
         """Fetch the latest data from the source."""
 
@@ -109,6 +110,7 @@ class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
         self.assumed_state = False
         return data
 
+    @override
     async def async_config_entry_first_refresh(self) -> None:
         """Refresh data for the first time when a config entry is setup.
 

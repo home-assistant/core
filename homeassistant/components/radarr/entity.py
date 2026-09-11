@@ -1,5 +1,7 @@
 """The Radarr component."""
 
+from typing import override
+
 from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -26,6 +28,7 @@ class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator[T]]):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about the Radarr instance."""
         device_info = DeviceInfo(

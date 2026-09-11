@@ -3,7 +3,7 @@
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from types import TracebackType
-from typing import Any
+from typing import Any, override
 
 import jinja2
 
@@ -20,6 +20,7 @@ class TemplateContextManager(AbstractContextManager):
         """Store template being parsed/rendered to aid error handling."""
         template_cv.set((template_str, action))
 
+    @override
     def __exit__(
         self,
         exc_type: type[BaseException] | None,

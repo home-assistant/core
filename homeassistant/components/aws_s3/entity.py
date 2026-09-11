@@ -1,5 +1,7 @@
 """Define the AWS S3 entity."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -22,6 +24,7 @@ class S3Entity(CoordinatorEntity[S3DataUpdateCoordinator]):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this AWS S3 device."""
         return DeviceInfo(

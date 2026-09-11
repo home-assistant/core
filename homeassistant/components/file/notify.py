@@ -1,7 +1,7 @@
 """Support for file notification."""
 
 import os
-from typing import Any, TextIO
+from typing import Any, TextIO, override
 
 from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
@@ -42,6 +42,7 @@ class FileNotifyEntity(NotifyEntity):
         self._attr_name = config.get(CONF_NAME, DEFAULT_NAME)
         self._attr_unique_id = unique_id
 
+    @override
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to a file."""
         file: TextIO

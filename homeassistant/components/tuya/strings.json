@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "login_error": "Login error ({code}): {msg}"
@@ -15,6 +12,9 @@
         "description": "The Tuya integration now uses an improved login method. To reauthenticate with your Smart Life or Tuya Smart account, you need to enter your user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case-sensitive, please be sure to enter it exactly as shown in the app."
       },
       "scan": {
+        "data": {
+          "QR": "QR code"
+        },
         "description": "Use the Smart Life app or Tuya Smart app to scan the following QR code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
       },
       "user": {
@@ -190,6 +190,9 @@
       "battery_backup_reserve": {
         "name": "Battery backup reserve"
       },
+      "charging_current": {
+        "name": "Charging current"
+      },
       "cloud_recipe": {
         "name": "Cloud recipe"
       },
@@ -225,6 +228,9 @@
       },
       "indexed_minimum_brightness": {
         "name": "Minimum brightness {index}"
+      },
+      "indexed_power_warning_threshold": {
+        "name": "Power warning threshold {index}"
       },
       "indexed_temperature": {
         "name": "Temperature {index}"
@@ -333,6 +339,15 @@
       },
       "brightness": {
         "name": "Brightness"
+      },
+      "charger_work_mode": {
+        "name": "Charging mode",
+        "state": {
+          "charge_energy": "Charge by energy",
+          "charge_now": "Charge now",
+          "charge_pct": "Charge to percentage",
+          "charge_schedule": "Scheduled"
+        }
       },
       "concentration": {
         "name": "Concentration"
@@ -478,6 +493,15 @@
           "1": "Continuous working mode"
         }
       },
+      "kettle_work_mode": {
+        "name": "Work mode",
+        "state": {
+          "boiling_quick": "Quick boil",
+          "setting_quick": "Quick heat",
+          "temp_boiling": "Boil and keep warm",
+          "temp_setting": "Heat and keep warm"
+        }
+      },
       "led_type": {
         "name": "Light source type",
         "state": {
@@ -490,6 +514,7 @@
         "name": "Indicator light mode",
         "state": {
           "none": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
           "pos": "Indicate inverted switch state",
           "relay": "Indicate switch on/off state"
         }
@@ -513,6 +538,16 @@
         "state": {
           "interim": "Interim",
           "smart": "Smart"
+        }
+      },
+      "quick_heat_temperature": {
+        "name": "Quick heat temperature",
+        "state": {
+          "80": "80 °C",
+          "85": "85 °C",
+          "90": "90 °C",
+          "95": "95 °C",
+          "100": "100 °C"
         }
       },
       "record_mode": {
@@ -670,6 +705,19 @@
       "cat_weight": {
         "name": "Cat weight"
       },
+      "charger_status": {
+        "name": "Status",
+        "state": {
+          "charger_charging": "[%key:common::state::charging%]",
+          "charger_end": "Finished",
+          "charger_fault": "[%key:common::state::fault%]",
+          "charger_free": "[%key:common::state::idle%]",
+          "charger_free_fault": "Fault while idle",
+          "charger_insert": "Plugged in",
+          "charger_pause": "[%key:common::state::paused%]",
+          "charger_wait": "Waiting"
+        }
+      },
       "cleaning_area": {
         "name": "Cleaning area"
       },
@@ -742,11 +790,36 @@
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
+      "indexed_current": {
+        "name": "Current channel {index}"
+      },
+      "indexed_energy_today": {
+        "name": "Energy today channel {index}"
+      },
       "indexed_humidity_outdoor": {
         "name": "Outdoor humidity channel {index}"
       },
+      "indexed_meter_status": {
+        "name": "Status channel {index}",
+        "state": {
+          "close": "[%key:common::state::closed%]",
+          "idle": "[%key:common::state::idle%]",
+          "monitor": "Monitoring",
+          "warning": "Warning",
+          "working": "Working"
+        }
+      },
+      "indexed_power": {
+        "name": "Power channel {index}"
+      },
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
+      },
+      "indexed_total_energy": {
+        "name": "Total energy channel {index}"
+      },
+      "indexed_voltage": {
+        "name": "Voltage channel {index}"
       },
       "inverter_output_power": {
         "name": "Inverter output power"
@@ -874,6 +947,9 @@
       },
       "rolling_brush_life": {
         "name": "Rolling brush lifetime"
+      },
+      "session_energy": {
+        "name": "Session energy"
       },
       "side_brush_life": {
         "name": "Side brush lifetime"

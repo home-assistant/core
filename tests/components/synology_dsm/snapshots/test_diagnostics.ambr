@@ -2,6 +2,7 @@
 # name: test_entry_diagnostics
   dict({
     'device_info': dict({
+      'fan_speed_mode': 'coolfan',
       'model': 'DS1821+',
       'ram': 32768,
       'temperature': 58,

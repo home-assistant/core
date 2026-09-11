@@ -1,6 +1,7 @@
 """Support for number entities."""
 
 import logging
+from typing import override
 
 from thinqconnect import DeviceType
 from thinqconnect.devices.const import Property as ThinQProperty
@@ -14,7 +15,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfTime
+from homeassistant.const import UnitOfRatio, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,13 +41,13 @@ NUMBER_DESC: dict[ThinQProperty, NumberEntityDescription] = {
     ),
     ThinQProperty.LIGHT_STATUS: NumberEntityDescription(
         key=ThinQProperty.LIGHT_STATUS,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.LIGHT_STATUS,
     ),
     ThinQProperty.TARGET_HUMIDITY: NumberEntityDescription(
         key=ThinQProperty.TARGET_HUMIDITY,
         device_class=NumberDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.TARGET_HUMIDITY,
     ),
     ThinQProperty.TARGET_TEMPERATURE: NumberEntityDescription(
@@ -98,6 +99,9 @@ DEVICE_TYPE_NUMBER_MAP: dict[DeviceType, tuple[NumberEntityDescription, ...]] = 
     DeviceType.AIR_CONDITIONER: (
         TIMER_NUMBER_DESC[ThinQProperty.RELATIVE_HOUR_TO_START],
         TIMER_NUMBER_DESC[ThinQProperty.RELATIVE_HOUR_TO_STOP],
+        TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
+    ),
+    DeviceType.AIR_PURIFIER: (
         TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
     ),
     DeviceType.AIR_PURIFIER_FAN: (
@@ -240,6 +244,7 @@ class ThinQNumberEntity(ThinQEntity, NumberEntity):
 
     _attr_mode = NumberMode.BOX
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -283,6 +288,7 @@ class ThinQNumberEntity(ThinQEntity, NumberEntity):
             self.native_step,
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         if self.step.is_integer():

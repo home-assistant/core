@@ -22,8 +22,8 @@
       'subentries': list([
       ]),
       'title': 'Test Omada Controller',
-      'unique_id': '12345',
-      'version': 1,
+      'unique_id': '12345_Default',
+      'version': 2,
     }),
     'runtime': dict({
       'clients': dict({

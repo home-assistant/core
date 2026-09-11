@@ -1,18 +1,26 @@
 """Test schlage sensor."""
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import PERCENTAGE
+from collections.abc import Awaitable, Callable
+from unittest.mock import patch
+
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import MockSchlageConfigEntry
 
+from tests.common import snapshot_platform
 
-async def test_battery_sensor(
-    hass: HomeAssistant, mock_added_config_entry: MockSchlageConfigEntry
+
+async def test_sensor_attributes(
+    hass: HomeAssistant,
+    mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the battery sensor."""
-    battery_sensor = hass.states.get("sensor.vault_door_battery")
-    assert battery_sensor is not None
-    assert battery_sensor.state == "20"
-    assert battery_sensor.attributes["unit_of_measurement"] == PERCENTAGE
-    assert battery_sensor.attributes["device_class"] == SensorDeviceClass.BATTERY
+    """Test sensor attributes."""
+    with patch("homeassistant.components.schlage.PLATFORMS", [Platform.SENSOR]):
+        config_entry = await mock_add_config_entry()
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

@@ -3,7 +3,7 @@
 import asyncio
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from aionotion.bridge.models import Bridge
 from aionotion.client import Client
@@ -126,6 +126,7 @@ class NotionDataUpdateCoordinator(DataUpdateCoordinator[NotionData]):
 
         self._client = client
 
+    @override
     async def _async_update_data(self) -> NotionData:
         """Fetch data from Notion."""
         data = NotionData(hass=self.hass, entry=self.config_entry)

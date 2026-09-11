@@ -39,7 +39,7 @@
 # name: test_all_entities[time.test_trmnl_sleep_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test TRMNL Sleep end time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test TRMNL Sleep end time',
     }),
     'context': <ANY>,
     'entity_id': 'time.test_trmnl_sleep_end_time',
@@ -89,7 +89,7 @@
 # name: test_all_entities[time.test_trmnl_sleep_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test TRMNL Sleep start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test TRMNL Sleep start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.test_trmnl_sleep_start_time',

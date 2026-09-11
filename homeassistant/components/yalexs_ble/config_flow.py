@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 from bleak_retry_connector import BleakError, BLEDevice
 import voluptuous as vol
@@ -78,6 +78,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
         self._lock_cfg: ValidatedLockConfig | None = None
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -96,6 +97,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_integration_discovery_confirm()
         return await self.async_step_key_slot()
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -148,6 +150,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_integration_discovery_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         # Integration discovery should abort other flows unless they
@@ -288,6 +291,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -351,6 +355,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> YaleXSBLEOptionsFlowHandler:

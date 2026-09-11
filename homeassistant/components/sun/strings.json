@@ -1,4 +1,96 @@
 {
+  "common": {
+    "condition_threshold_name": "Threshold type",
+    "period_description": "The time of day to consider: the morning, the evening, or either.",
+    "period_name": "Period",
+    "trigger_for_name": "For at least",
+    "trigger_offset_description": "Time to offset the trigger from the solar event.",
+    "trigger_offset_name": "Offset",
+    "trigger_offset_type_description": "Whether to trigger before or after the solar event.",
+    "trigger_offset_type_name": "Offset type",
+    "trigger_threshold_name": "Threshold type",
+    "twilight_type_description": "The phase of twilight.",
+    "twilight_type_name": "Twilight type"
+  },
+  "conditions": {
+    "elevation": {
+      "description": "Tests the sun's elevation against a threshold you set.",
+      "fields": {
+        "threshold": {
+          "name": "[%key:component::sun::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Sun elevation"
+    },
+    "is_ascending": {
+      "description": "Tests if the sun is ascending.",
+      "name": "Sun is ascending"
+    },
+    "is_blue_hour": {
+      "description": "Tests if it is blue hour, optionally for a specific period.",
+      "fields": {
+        "period": {
+          "description": "[%key:component::sun::common::period_description%]",
+          "name": "[%key:component::sun::common::period_name%]"
+        }
+      },
+      "name": "It is blue hour"
+    },
+    "is_descending": {
+      "description": "Tests if the sun is descending.",
+      "name": "Sun is descending"
+    },
+    "is_evening_twilight": {
+      "description": "Tests if it is evening twilight, optionally of a specific type.",
+      "fields": {
+        "type": {
+          "description": "[%key:component::sun::common::twilight_type_description%]",
+          "name": "[%key:component::sun::common::twilight_type_name%]"
+        }
+      },
+      "name": "It is evening twilight"
+    },
+    "is_golden_hour": {
+      "description": "Tests if it is golden hour, optionally for a specific period.",
+      "fields": {
+        "period": {
+          "description": "[%key:component::sun::common::period_description%]",
+          "name": "[%key:component::sun::common::period_name%]"
+        }
+      },
+      "name": "It is golden hour"
+    },
+    "is_midnight_sun": {
+      "description": "Tests if it is midnight sun.",
+      "name": "It is midnight sun"
+    },
+    "is_morning_twilight": {
+      "description": "Tests if it is morning twilight, optionally of a specific type.",
+      "fields": {
+        "type": {
+          "description": "[%key:component::sun::common::twilight_type_description%]",
+          "name": "[%key:component::sun::common::twilight_type_name%]"
+        }
+      },
+      "name": "It is morning twilight"
+    },
+    "is_night": {
+      "description": "Tests if it is night.",
+      "name": "It is night"
+    },
+    "is_polar_night": {
+      "description": "Tests if it is polar night.",
+      "name": "It is polar night"
+    },
+    "is_set": {
+      "description": "Tests if the sun is set.",
+      "name": "Sun is set"
+    },
+    "is_up": {
+      "description": "Tests if the sun is up.",
+      "name": "Sun is up"
+    }
+  },
   "config": {
     "step": {
       "user": {
@@ -36,5 +128,271 @@
       }
     }
   },
-  "title": "Sun"
+  "selector": {
+    "period": {
+      "options": {
+        "any": "Any",
+        "evening": "Evening",
+        "morning": "Morning"
+      }
+    },
+    "trigger_offset_type": {
+      "options": {
+        "after": "After",
+        "before": "Before"
+      }
+    },
+    "twilight_type": {
+      "options": {
+        "any": "Any",
+        "astronomical": "Astronomical",
+        "civil": "Civil",
+        "nautical": "Nautical"
+      }
+    }
+  },
+  "title": "Sun",
+  "triggers": {
+    "blue_hour_ended": {
+      "description": "Triggers when blue hour ends, in the morning, the evening, or either.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        },
+        "period": {
+          "description": "[%key:component::sun::common::period_description%]",
+          "name": "[%key:component::sun::common::period_name%]"
+        }
+      },
+      "name": "Blue hour ended"
+    },
+    "blue_hour_started": {
+      "description": "Triggers when blue hour starts, in the morning, the evening, or either.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        },
+        "period": {
+          "description": "[%key:component::sun::common::period_description%]",
+          "name": "[%key:component::sun::common::period_name%]"
+        }
+      },
+      "name": "Blue hour started"
+    },
+    "dawn": {
+      "description": "Triggers at dawn, when civil, nautical, or astronomical twilight begins.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        },
+        "type": {
+          "description": "[%key:component::sun::common::twilight_type_description%]",
+          "name": "[%key:component::sun::common::twilight_type_name%]"
+        }
+      },
+      "name": "Dawn"
+    },
+    "dusk": {
+      "description": "Triggers at dusk, when civil, nautical, or astronomical twilight ends.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        },
+        "type": {
+          "description": "[%key:component::sun::common::twilight_type_description%]",
+          "name": "[%key:component::sun::common::twilight_type_name%]"
+        }
+      },
+      "name": "Dusk"
+    },
+    "elevation_changed": {
+      "description": "Triggers whenever the sun's elevation changes, optionally limited to a threshold or range you set.",
+      "fields": {
+        "threshold": {
+          "name": "[%key:component::sun::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Sun elevation changed"
+    },
+    "elevation_crossed_threshold": {
+      "description": "Triggers when the sun's elevation crosses a threshold you set.",
+      "fields": {
+        "for": {
+          "name": "[%key:component::sun::common::trigger_for_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::sun::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Sun elevation crossed threshold"
+    },
+    "golden_hour_ended": {
+      "description": "Triggers when golden hour ends, in the morning, the evening, or either.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        },
+        "period": {
+          "description": "[%key:component::sun::common::period_description%]",
+          "name": "[%key:component::sun::common::period_name%]"
+        }
+      },
+      "name": "Golden hour ended"
+    },
+    "golden_hour_started": {
+      "description": "Triggers when golden hour starts, in the morning, the evening, or either.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        },
+        "period": {
+          "description": "[%key:component::sun::common::period_description%]",
+          "name": "[%key:component::sun::common::period_name%]"
+        }
+      },
+      "name": "Golden hour started"
+    },
+    "midnight_sun_ended": {
+      "description": "Triggers when the midnight sun period ends and the sun sets again.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        }
+      },
+      "name": "Midnight sun ended"
+    },
+    "midnight_sun_started": {
+      "description": "Triggers when the midnight sun period starts and the sun stops setting.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        }
+      },
+      "name": "Midnight sun started"
+    },
+    "polar_night_ended": {
+      "description": "Triggers when the polar night period ends and the sun rises again.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        }
+      },
+      "name": "Polar night ended"
+    },
+    "polar_night_started": {
+      "description": "Triggers when the polar night period starts and the sun stops rising.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        }
+      },
+      "name": "Polar night started"
+    },
+    "solar_midnight": {
+      "description": "Triggers when the sun reaches its lowest point.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        }
+      },
+      "name": "Solar midnight"
+    },
+    "solar_noon": {
+      "description": "Triggers when the sun reaches its highest point.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        }
+      },
+      "name": "Solar noon"
+    },
+    "sunrise": {
+      "description": "Triggers when the sun rises.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        }
+      },
+      "name": "Sunrise"
+    },
+    "sunset": {
+      "description": "Triggers when the sun sets.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        }
+      },
+      "name": "Sunset"
+    }
+  }
 }

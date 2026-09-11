@@ -1,6 +1,7 @@
 """Config flow to set up IRM KMI integration via the UI."""
 
 import logging
+from typing import override
 
 from irm_kmi_api import IrmKmiApiClient, IrmKmiApiError
 import voluptuous as vol
@@ -45,10 +46,12 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(_config_entry: IrmKmiConfigEntry) -> OptionsFlow:
         """Create the options flow."""
         return IrmKmiOptionFlow()
 
+    @override
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Define the user step of the configuration flow."""
         errors: dict = {}

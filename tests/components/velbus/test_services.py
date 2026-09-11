@@ -1,6 +1,6 @@
 """Velbus services tests."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import voluptuous as vol
@@ -164,6 +164,7 @@ async def test_clear_cache(
 
     # Test with OSError
     with (
+        patch("os.path.exists", return_value=True),
         patch("os.unlink", side_effect=OSError("Boom")),
         pytest.raises(HomeAssistantError),
     ):
@@ -176,3 +177,60 @@ async def test_clear_cache(
             },
             blocking=True,
         )
+
+    # Test with OSError on directory removal
+    with (
+        patch("os.path.isdir", return_value=True),
+        patch("shutil.rmtree", side_effect=OSError("Boom")),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAR_CACHE,
+            {CONF_CONFIG_ENTRY: config_entry.entry_id},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service_data", "patch_target", "patch_func"),
+    [
+        pytest.param(
+            {CONF_ADDRESS: 1},
+            ("os.path.exists", "os.unlink"),
+            (True, MagicMock()),
+            id="file_exists_unlink",
+        ),
+        pytest.param(
+            {},
+            ("os.path.isdir", "shutil.rmtree"),
+            (True, MagicMock()),
+            id="dir_exists_rmtree",
+        ),
+    ],
+)
+async def test_clear_cache_path_exists(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    service_data: dict,
+    patch_target: tuple[str, str],
+    patch_func: tuple,
+) -> None:
+    """Test clear_cache when the cache path actually exists."""
+    await init_integration(hass, config_entry)
+
+    exists_mock = MagicMock(return_value=patch_func[0])
+    op_mock = MagicMock()
+    with (
+        patch(patch_target[0], exists_mock),
+        patch(patch_target[1], op_mock),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAR_CACHE,
+            {CONF_CONFIG_ENTRY: config_entry.entry_id, **service_data},
+            blocking=True,
+        )
+        exists_mock.assert_called_once()
+        op_mock.assert_called_once()
+    config_entry.runtime_data.controller.scan.assert_called_once_with()

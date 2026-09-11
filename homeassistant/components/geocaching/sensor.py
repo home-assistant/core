@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
-from typing import cast
+from typing import cast, override
 
 from geocachingapi.models import GeocachingCache, GeocachingStatus
 
@@ -153,6 +153,7 @@ class GeoEntityCacheSensorEntity(GeoEntityBaseCache, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType | datetime.date:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.cache)
@@ -184,6 +185,7 @@ class GeocachingProfileSensor(GeocachingBaseEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

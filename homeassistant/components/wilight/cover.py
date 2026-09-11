@@ -1,6 +1,6 @@
 """Support for WiLight Cover."""
 
-from typing import Any
+from typing import Any, override
 
 from pywilight.const import (
     COVER_V1,
@@ -60,6 +60,7 @@ class WiLightCover(WiLightDevice, CoverEntity):
     _attr_name = None
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -70,6 +71,7 @@ class WiLightCover(WiLightDevice, CoverEntity):
         return None
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
         if "motor_state" not in self._status:
@@ -77,6 +79,7 @@ class WiLightCover(WiLightDevice, CoverEntity):
         return self._status["motor_state"] == WL_OPENING
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
         if "motor_state" not in self._status:
@@ -84,6 +87,7 @@ class WiLightCover(WiLightDevice, CoverEntity):
         return self._status["motor_state"] == WL_CLOSING
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if "motor_state" not in self._status or "position_current" not in self._status:
@@ -93,19 +97,23 @@ class WiLightCover(WiLightDevice, CoverEntity):
             and wilight_to_hass_position(self._status["position_current"]) == 0
         )
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._client.cover_command(self._index, WL_OPEN)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self._client.cover_command(self._index, WL_CLOSE)
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = hass_to_wilight_position(kwargs[ATTR_POSITION])
         await self._client.set_cover_position(self._index, position)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._client.cover_command(self._index, WL_STOP)

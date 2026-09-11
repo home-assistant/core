@@ -1,6 +1,6 @@
 """Support for Proximity sensors."""
 
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -145,6 +145,7 @@ class ProximitySensor(CoordinatorEntity[ProximityDataUpdateCoordinator], SensorE
         self._attr_device_info = _device_info(coordinator)
 
     @property
+    @override
     def native_value(self) -> str | float | None:
         """Return native sensor value."""
         if (
@@ -183,6 +184,7 @@ class ProximityTrackedEntitySensor(
             "tracked_entity": tracked_entity_descriptor.name
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register entity mapping."""
         await super().async_added_to_hass()
@@ -196,6 +198,7 @@ class ProximityTrackedEntitySensor(
         return self.coordinator.data.entities[self.tracked_entity_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -204,6 +207,7 @@ class ProximityTrackedEntitySensor(
         )
 
     @property
+    @override
     def native_value(self) -> str | float | None:
         """Return native sensor value."""
         return self.data.get(self.entity_description.key)

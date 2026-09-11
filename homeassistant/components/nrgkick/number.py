@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from nrgkick_api.const import (
     CONTROL_KEY_CURRENT_SET,
@@ -130,6 +130,7 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
         super().__init__(coordinator, description.key)
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         if self.entity_description.max_value_fn is not None:
@@ -140,6 +141,7 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
         return super().native_max_value
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         data = self.coordinator.data
@@ -147,6 +149,7 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
             assert data is not None
         return self.entity_description.value_fn(data)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         await self._async_call_api(
@@ -164,6 +167,7 @@ class NRGkickPhaseCountNumber(NRGkickNumber):
     _last_phase_count: float | None = None
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value, filtering transient zeros."""
         value = super().native_value
@@ -171,6 +175,7 @@ class NRGkickPhaseCountNumber(NRGkickNumber):
             self._last_phase_count = value
         return self._last_phase_count
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set phase count with optimistic update."""
         self._last_phase_count = int(value)

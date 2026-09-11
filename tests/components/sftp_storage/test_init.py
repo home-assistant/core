@@ -3,23 +3,21 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from asyncssh.sftp import SFTPPermissionDenied
+from asyncssh.misc import ChannelOpenError, ConnectionLost, PermissionDenied
+from asyncssh.sftp import SFTPConnectionLost, SFTPPermissionDenied
 import pytest
 
 from homeassistant.components.sftp_storage import SFTPConfigEntryData
 from homeassistant.components.sftp_storage.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util.ulid import ulid
 
 from .asyncssh_mock import SSHClientConnectionMock
 from .conftest import (
     CONF_BACKUP_LOCATION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     USER_INPUT,
     ComponentSetup,
     create_private_key_file,
@@ -76,15 +74,61 @@ async def test_setup_error(
     assert entries[0].state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_unexpected_error(
+@pytest.mark.parametrize(
+    "connect_error",
+    [OSError("Error message"), ConnectionLost("Connection lost")],
+    ids=["oserror", "connection_lost"],
+)
+async def test_setup_connection_error_is_retried(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    caplog: pytest.LogCaptureFixture,
+    connect_error: Exception,
+) -> None:
+    """Test that a connection failure leaves the entry in a retrying state."""
+    with patch(
+        "homeassistant.components.sftp_storage.client.connect",
+        side_effect=connect_error,
+    ):
+        await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY
+    assert "Failed to establish SSH connection to" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "sftp_error",
+    [ChannelOpenError(1, "Channel open failed"), SFTPConnectionLost("Connection lost")],
+    ids=["channel_open_error", "sftp_connection_lost"],
+)
+async def test_setup_sftp_session_error_is_retried(
+    mock_ssh_connection: SSHClientConnectionMock,
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    caplog: pytest.LogCaptureFixture,
+    sftp_error: Exception,
+) -> None:
+    """Test that losing the session after connecting is also retried."""
+    mock_ssh_connection._sftp._mock_chdir.side_effect = sftp_error
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY
+    assert "Failed to open SFTP session on" in caplog.text
+
+
+async def test_setup_invalid_credentials(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test setup error."""
+    """Test that rejected credentials are not retried."""
     with patch(
         "homeassistant.components.sftp_storage.client.connect",
-        side_effect=OSError("Error message"),
+        side_effect=PermissionDenied("Permission denied"),
     ):
         await setup_integration()
 

@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import httpx
 import voluptuous as vol
@@ -154,11 +154,13 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         self._timeout: int = config[CONF_TIMEOUT]
         self._verify_ssl: bool = config[CONF_VERIFY_SSL]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle adding to Home Assistant."""
         await super().async_added_to_hass()
         await self.async_update()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         body_on_t = self._body_on.async_render(parse_result=False)
@@ -181,6 +183,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
 
         self._attr_is_on = True
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         body_off_t = self._body_off.async_render(parse_result=False)

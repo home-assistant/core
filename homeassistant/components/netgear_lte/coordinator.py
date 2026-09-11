@@ -1,6 +1,7 @@
 """Data update coordinator for the Netgear LTE integration."""
 
 from datetime import timedelta
+from typing import override
 
 from eternalegypt.eternalegypt import Error, Information, Modem
 
@@ -34,6 +35,7 @@ class NetgearLTEDataUpdateCoordinator(DataUpdateCoordinator[Information]):
         )
         self.modem = modem
 
+    @override
     async def _async_update_data(self) -> Information:
         """Get the latest data."""
         try:

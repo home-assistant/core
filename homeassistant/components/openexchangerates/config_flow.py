@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aioopenexchangerates import (
     Client,
@@ -53,6 +53,7 @@ class OpenExchangeRatesConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.currencies: dict[str, str] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

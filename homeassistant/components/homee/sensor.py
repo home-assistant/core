@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyHomee.const import AttributeType, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
@@ -289,6 +290,7 @@ async def async_setup_entry(
     """Add the homee platform for the sensor components."""
 
     async def add_sensor_entities(
+        hass: HomeAssistant,
         config_entry: HomeeConfigEntry,
         async_add_entities: AddConfigEntryEntitiesCallback,
         nodes: list[HomeeNode],
@@ -299,14 +301,14 @@ async def async_setup_entry(
         for node in nodes:
             # Node properties that are sensors.
             entities.extend(
-                HomeeNodeSensor(node, config_entry, description)
+                HomeeNodeSensor(hass, node, config_entry, description)
                 for description in NODE_SENSOR_DESCRIPTIONS
             )
 
             # Node attributes that are sensors.
             entities.extend(
                 HomeeSensor(
-                    attribute, config_entry, SENSOR_DESCRIPTIONS[attribute.type]
+                    hass, attribute, config_entry, SENSOR_DESCRIPTIONS[attribute.type]
                 )
                 for attribute in node.attributes
                 if attribute.type in SENSOR_DESCRIPTIONS and not attribute.editable
@@ -315,7 +317,9 @@ async def async_setup_entry(
         if entities:
             async_add_entities(entities)
 
-    await setup_homee_platform(add_sensor_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_sensor_entities, async_add_entities, config_entry
+    )
 
 
 class HomeeSensor(HomeeEntity, SensorEntity):
@@ -325,12 +329,13 @@ class HomeeSensor(HomeeEntity, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         attribute: HomeeAttribute,
         entry: HomeeConfigEntry,
         description: HomeeSensorEntityDescription,
     ) -> None:
         """Initialize a homee sensor entity."""
-        super().__init__(attribute, entry)
+        super().__init__(hass, attribute, entry)
         self.entity_description = description
         self._attr_translation_key = description.key
         if attribute.instance > 0:
@@ -341,11 +346,13 @@ class HomeeSensor(HomeeEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | str | None:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self._attribute)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the native unit of the sensor."""
         return self.entity_description.native_unit_of_measurement_fn(
@@ -360,17 +367,19 @@ class HomeeNodeSensor(HomeeNodeEntity, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         node: HomeeNode,
         entry: HomeeConfigEntry,
         description: HomeeNodeSensorEntityDescription,
     ) -> None:
         """Initialize a homee node sensor entity."""
-        super().__init__(node, entry)
+        super().__init__(hass, node, entry)
         self.entity_description = description
         self._node = node
         self._attr_unique_id = f"{self._attr_unique_id}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the sensors value."""
         return self.entity_description.value_fn(self._node)

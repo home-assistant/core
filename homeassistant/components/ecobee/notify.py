@@ -1,5 +1,7 @@
 """Support for Ecobee Send Message service."""
 
+from typing import override
+
 from homeassistant.components.notify import NotifyEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -24,15 +26,15 @@ class EcobeeNotifyEntity(EcobeeBaseEntity, NotifyEntity):
     """Implement the notification entity for the Ecobee thermostat."""
 
     _attr_name = None
-    _attr_has_entity_name = True
 
     def __init__(self, data: EcobeeData, thermostat_index: int) -> None:
         """Initialize the thermostat."""
         super().__init__(data, thermostat_index)
         self._attr_unique_id = (
-            f"{self.thermostat['identifier']}_notify_{thermostat_index}"
+            f"{self.thermostat['identifier']}_notify_{thermostat_index}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         )
 
+    @override
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         self.data.ecobee.send_message(self.thermostat_index, message)

@@ -1,6 +1,6 @@
 """Event platform for HTML5 integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.event import EventEntity
 from homeassistant.config_entries import ConfigEntry
@@ -57,6 +57,7 @@ class HTML5EventEntity(HTML5Entity, EventEntity):
             )
             self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register event callback."""
 

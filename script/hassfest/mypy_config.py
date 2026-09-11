@@ -31,9 +31,13 @@ HEADER: Final = """
 GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
     "platform": "linux",
+    # voluptuous is aliased to probatio at runtime; this stub path re-exports
+    # probatio's types under the voluptuous name for not-yet-migrated integrations.
+    "mypy_path": "stubs",
     "plugins": ", ".join(  # noqa: FLY002
         [
             "pydantic.mypy",
+            "mypy_plugins/enum_identity_compare.py",
         ]
     ),
     "show_error_codes": "true",
@@ -54,6 +58,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "enable_error_code": ", ".join(  # noqa: FLY002
         [
             "deprecated",
+            "explicit-override",
             "ignore-without-code",
             "redundant-self",
             "truthy-iterable",

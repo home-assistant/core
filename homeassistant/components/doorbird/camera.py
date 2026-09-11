@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+from typing import override
 
 import aiohttp
 
@@ -77,10 +78,12 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         self._last_update = datetime.datetime.min
         self._attr_unique_id = f"{self._mac_addr}_{camera_id}"
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the stream source."""
         return self._stream_url
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -107,6 +110,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         self._last_update = now
         return self._last_image
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
         await super().async_added_to_hass()
@@ -114,6 +118,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         for event in self._door_station.events:
             event_to_entity_id[event] = self.entity_id
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from events."""
         event_to_entity_id = self._door_bird_data.event_entity_ids

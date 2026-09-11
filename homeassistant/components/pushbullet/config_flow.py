@@ -1,6 +1,6 @@
 """Config flow for pushbullet integration."""
 
-from typing import Any
+from typing import Any, override
 
 from pushbullet import InvalidKeyError, PushBullet, PushbulletError
 import voluptuous as vol
@@ -24,6 +24,7 @@ CONFIG_SCHEMA = vol.Schema(
 class PushBulletConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for pushbullet integration."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

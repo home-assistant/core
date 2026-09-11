@@ -18,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, mock_zeversolar_client: MagicMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -26,7 +26,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    await _set_up_zeversolar(hass=hass, flow_id=result["flow_id"])
+    await _set_up_zeversolar(
+        hass=hass, flow_id=result["flow_id"], mock_client=mock_zeversolar_client
+    )
 
 
 @pytest.mark.parametrize(
@@ -52,6 +54,7 @@ async def test_form(hass: HomeAssistant) -> None:
 )
 async def test_form_errors(
     hass: HomeAssistant,
+    mock_zeversolar_client: MagicMock,
     side_effect: Exception,
     errors: dict,
 ) -> None:
@@ -60,32 +63,30 @@ async def test_form_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "zeversolar.ZeverSolarClient.get_data",
-        side_effect=side_effect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            flow_id=result["flow_id"],
-            user_input={
-                CONF_HOST: "test_ip",
-            },
-        )
+    mock_zeversolar_client.get_data.side_effect = side_effect
+    result2 = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"],
+        user_input={
+            CONF_HOST: "test_ip",
+        },
+    )
+    mock_zeversolar_client.get_data.side_effect = None
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == errors
 
-    await _set_up_zeversolar(hass=hass, flow_id=result["flow_id"])
-
-
-async def test_abort_already_configured(hass: HomeAssistant) -> None:
-    """Test we abort when the device is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Zeversolar",
-        data={CONF_HOST: "test_ip"},
-        unique_id="test_serial",
+    await _set_up_zeversolar(
+        hass=hass, flow_id=result["flow_id"], mock_client=mock_zeversolar_client
     )
-    entry.add_to_hass(hass)
+
+
+async def test_abort_already_configured(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zeversolar_client: MagicMock,
+) -> None:
+    """Test we abort when the device is already configured."""
+    config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -94,14 +95,9 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
     assert result.get("errors") is None
     assert "flow_id" in result
 
-    mock_data = MagicMock()
-    mock_data.serial_number = "test_serial"
-    with (
-        patch("zeversolar.ZeverSolarClient.get_data", return_value=mock_data),
-        patch(
-            "homeassistant.components.zeversolar.async_setup_entry",
-        ) as mock_setup_entry,
-    ):
+    with patch(
+        "homeassistant.components.zeversolar.async_setup_entry",
+    ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"],
             user_input={
@@ -115,17 +111,15 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def _set_up_zeversolar(hass: HomeAssistant, flow_id: str) -> None:
+async def _set_up_zeversolar(
+    hass: HomeAssistant, flow_id: str, mock_client: MagicMock
+) -> None:
     """Reusable successful setup of Zeversolar sensor."""
-    mock_data = MagicMock()
-    mock_data.serial_number = "test_serial"
-    with (
-        patch("zeversolar.ZeverSolarClient.get_data", return_value=mock_data),
-        patch(
-            "homeassistant.components.zeversolar.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
+    mock_client.get_data.return_value.serial_number = "test_serial"
+    with patch(
+        "homeassistant.components.zeversolar.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=flow_id,
             user_input={

@@ -4,7 +4,6 @@ from typing import Final
 
 from homeassistant.const import Platform
 
-CONF_DISPLAY_OPTIONS = "display_options"
 DOMAIN: Final = "time_date"
 PLATFORMS = [Platform.SENSOR]
 TIME_STR_FORMAT = "%H:%M"

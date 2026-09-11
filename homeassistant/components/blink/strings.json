@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -25,6 +24,12 @@
         },
         "description": "The credentials for {username} need to be updated",
         "title": "Re-authenticate Blink"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
       },
       "user": {
         "data": {
@@ -54,7 +59,7 @@
   },
   "exceptions": {
     "cant_write": {
-      "message": "Can't write to file."
+      "message": "Can't write to file, check logs for details."
     },
     "failed_arm": {
       "message": "Blink failed to arm camera."

@@ -39,7 +39,7 @@
 # name: test_rpc_blu_trv_button[button.trv_name_calibrate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TRV-Name Calibrate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TRV-Name Calibrate',
     }),
     'context': <ANY>,
     'entity_id': 'button.trv_name_calibrate',
@@ -89,8 +89,8 @@
 # name: test_rpc_button[button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Test name Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_restart',
@@ -140,7 +140,7 @@
 # name: test_rpc_device_virtual_button[button.test_name_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Button',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_button',
@@ -190,7 +190,7 @@
 # name: test_wall_display_screen_buttons[turn_off-False][button.test_name_turn_off_the_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Turn off the screen',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Turn off the screen',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_turn_off_the_screen',
@@ -240,7 +240,7 @@
 # name: test_wall_display_screen_buttons[turn_on-True][button.test_name_turn_on_the_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Turn on the screen',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Turn on the screen',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_turn_on_the_screen',
@@ -290,7 +290,7 @@
 # name: test_wall_display_virtual_button[button.test_name_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Button',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_button',

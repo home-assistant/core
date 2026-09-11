@@ -100,7 +100,7 @@ def process_service_info(
     # not verified then we need to reauth
     if (
         not data.pending
-        and data.encryption_scheme != EncryptionScheme.NONE
+        and data.encryption_scheme is not EncryptionScheme.NONE
         and not data.bindkey_verified
     ):
         entry.async_start_reauth(hass, data={"device": data})

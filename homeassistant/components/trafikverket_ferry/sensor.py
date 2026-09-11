@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -146,6 +146,7 @@ class FerrySensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
             }
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         self._update_attr()
         return super()._handle_coordinator_update()

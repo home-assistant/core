@@ -1,5 +1,7 @@
 """Support for Vera binary sensors."""
 
+from typing import override
+
 import pyvera as veraApi
 
 from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity
@@ -39,6 +41,7 @@ class VeraBinarySensor(VeraEntity[veraApi.VeraBinarySensor], BinarySensorEntity)
         VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
+    @override
     def update(self) -> None:
         """Get the latest data and update the state."""
         super().update()

@@ -2,12 +2,11 @@
 
 from collections.abc import Callable, Coroutine, Mapping
 from enum import StrEnum
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import DEVICE_CLASS_UNITS, SensorDeviceClass
+from homeassistant.components.sensor import DEVICE_CLASS_UNITS
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_MAXIMUM,
@@ -25,6 +24,8 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowMenuStep,
 )
 from homeassistant.helpers.selector import (
+    DeviceClassSelector,
+    DeviceClassSelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -48,13 +49,8 @@ def _generate_schema(domain: str, flow_type: _FlowType) -> vol.Schema:
         schema[vol.Required(CONF_NAME)] = TextSelector()
 
         if domain == Platform.BINARY_SENSOR:
-            schema[vol.Optional(CONF_DEVICE_CLASS)] = SelectSelector(
-                SelectSelectorConfig(
-                    options=[cls.value for cls in BinarySensorDeviceClass],
-                    sort=True,
-                    mode=SelectSelectorMode.DROPDOWN,
-                    translation_key="binary_sensor_device_class",
-                ),
+            schema[vol.Optional(CONF_DEVICE_CLASS)] = DeviceClassSelector(
+                DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR)
             )
 
     if domain == Platform.SENSOR:
@@ -62,17 +58,8 @@ def _generate_schema(domain: str, flow_type: _FlowType) -> vol.Schema:
             {
                 vol.Optional(CONF_MINIMUM, default=DEFAULT_MIN): cv.positive_int,
                 vol.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): cv.positive_int,
-                vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
-                    SelectSelectorConfig(
-                        options=[
-                            cls.value
-                            for cls in SensorDeviceClass
-                            if cls != SensorDeviceClass.ENUM
-                        ],
-                        sort=True,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="sensor_device_class",
-                    ),
+                vol.Optional(CONF_DEVICE_CLASS): DeviceClassSelector(
+                    DeviceClassSelectorConfig(domain=Platform.NUMBER)
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
                     SelectSelectorConfig(
@@ -187,6 +174,7 @@ class RandomConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow_reloads = True
 
     @callback
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options["name"])

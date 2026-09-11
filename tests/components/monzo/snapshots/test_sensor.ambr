@@ -42,10 +42,10 @@
 # name: test_all_entities[sensor.current_account_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Monzo',
-      'device_class': 'monetary',
-      'friendly_name': 'Current Account Balance',
-      'unit_of_measurement': 'GBP',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monzo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Current Account Balance',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'GBP',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.current_account_balance',
@@ -53,6 +53,62 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.23',
+  })
+# ---
+# name: test_all_entities[sensor.current_account_spent_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.current_account_spent_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Spent today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Spent today',
+    'platform': 'monzo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'spend_today',
+    'unique_id': 'acc_curr_spend_today',
+    'unit_of_measurement': 'GBP',
+  })
+# ---
+# name: test_all_entities[sensor.current_account_spent_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monzo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Current Account Spent today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'GBP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.current_account_spent_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.45',
   })
 # ---
 # name: test_all_entities[sensor.current_account_total_balance-entry]
@@ -98,10 +154,10 @@
 # name: test_all_entities[sensor.current_account_total_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Monzo',
-      'device_class': 'monetary',
-      'friendly_name': 'Current Account Total balance',
-      'unit_of_measurement': 'GBP',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monzo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Current Account Total balance',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'GBP',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.current_account_total_balance',
@@ -148,16 +204,16 @@
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': 'acc_flex_balance',
-    'unit_of_measurement': 'GBP',
+    'unit_of_measurement': 'EUR',
   })
 # ---
 # name: test_all_entities[sensor.flex_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Monzo',
-      'device_class': 'monetary',
-      'friendly_name': 'Flex Balance',
-      'unit_of_measurement': 'GBP',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monzo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flex Balance',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flex_balance',
@@ -165,6 +221,62 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.23',
+  })
+# ---
+# name: test_all_entities[sensor.flex_spent_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.flex_spent_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Spent today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Spent today',
+    'platform': 'monzo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'spend_today',
+    'unique_id': 'acc_flex_spend_today',
+    'unit_of_measurement': 'EUR',
+  })
+# ---
+# name: test_all_entities[sensor.flex_spent_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monzo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flex Spent today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.flex_spent_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.67',
   })
 # ---
 # name: test_all_entities[sensor.flex_total_balance-entry]
@@ -204,16 +316,16 @@
     'supported_features': 0,
     'translation_key': 'total_balance',
     'unique_id': 'acc_flex_total_balance',
-    'unit_of_measurement': 'GBP',
+    'unit_of_measurement': 'EUR',
   })
 # ---
 # name: test_all_entities[sensor.flex_total_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Monzo',
-      'device_class': 'monetary',
-      'friendly_name': 'Flex Total balance',
-      'unit_of_measurement': 'GBP',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monzo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flex Total balance',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flex_total_balance',
@@ -260,16 +372,16 @@
     'supported_features': 0,
     'translation_key': 'pot_balance',
     'unique_id': 'pot_savings_pot_balance',
-    'unit_of_measurement': 'GBP',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.savings_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Monzo',
-      'device_class': 'monetary',
-      'friendly_name': 'Savings Balance',
-      'unit_of_measurement': 'GBP',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monzo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Savings Balance',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.savings_balance',

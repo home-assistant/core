@@ -2,10 +2,11 @@
 
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, override
 
 from aiohttp import web
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.auth.models import RefreshToken, User
 from homeassistant.core import Context, HomeAssistant, callback
@@ -88,6 +89,7 @@ class ActiveConnection:
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<ActiveConnection {self.get_description(None)}>"
@@ -294,7 +296,7 @@ class ActiveConnection:
             err_message = "Unauthorized"
         elif isinstance(err, vol.Invalid):
             code = const.ERR_INVALID_FORMAT
-            err_message = vol.humanize.humanize_error(msg, err)
+            err_message = humanize_error(msg, err)
         elif isinstance(err, TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"

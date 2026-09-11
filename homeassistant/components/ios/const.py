@@ -1,6 +1,14 @@
 """Const for iOS."""
 
+from typing import Any
+
+from homeassistant.util.hass_dict import HassKey
+
 DOMAIN = "ios"
+
+# The iOS app's registration file, holding every registered device and the
+# push configuration. It is integration-wide, not per config entry.
+IOS_DATA: HassKey[dict[str, dict[str, Any]]] = HassKey(DOMAIN)
 
 ATTR_BATTERY = "battery"
 ATTR_BATTERY_LEVEL = "level"
@@ -32,7 +40,6 @@ CONF_ACTION_LABEL_TEXT = "text"
 CONF_ACTION_ICON = "icon"
 CONF_ACTION_ICON_COLOR = "color"
 CONF_ACTION_ICON_ICON = "icon"
-CONF_ACTIONS = "actions"
 CONF_ACTION_SHOW_IN_CARPLAY = "show_in_carplay"
 CONF_ACTION_SHOW_IN_WATCH = "show_in_watch"
 CONF_ACTION_USE_CUSTOM_COLORS = "use_custom_colors"

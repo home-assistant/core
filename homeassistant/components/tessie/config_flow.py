@@ -1,7 +1,7 @@
 """Config Flow for Tessie integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectionError
 from tesla_fleet_api.exceptions import InvalidToken, MissingToken, TeslaFleetError
@@ -45,6 +45,7 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:

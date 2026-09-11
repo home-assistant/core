@@ -13,7 +13,7 @@ from homeassistant.components.plaato.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
@@ -54,9 +54,15 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
 async def test_show_config_form_device_type_airlock(hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
             CONF_DEVICE_NAME: "device_name",
         },
@@ -71,9 +77,18 @@ async def test_show_config_form_device_type_airlock(hass: HomeAssistant) -> None
 async def test_show_config_form_device_type_keg(hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_DEVICE_TYPE: PlaatoDeviceType.Keg, CONF_DEVICE_NAME: "device_name"},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE_TYPE: PlaatoDeviceType.Keg,
+            CONF_DEVICE_NAME: "device_name",
+        },
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -176,6 +191,7 @@ async def test_show_config_form_validate_webhook_not_connected(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cloud_not_connected"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_show_config_form_validate_token(hass: HomeAssistant) -> None:

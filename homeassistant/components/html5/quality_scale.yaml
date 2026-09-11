@@ -10,9 +10,15 @@ rules:
   config-flow: done
   dependency-transparency: todo
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: todo
   docs-installation-instructions: done
   docs-removal-instructions: todo
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: todo
   has-entity-name: done

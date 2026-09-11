@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from spotifyaio import (
     ContextType,
@@ -89,6 +90,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         self._playlist: Playlist | None = None
         self._checked_playlist_id: str | None = None
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -109,6 +111,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         except SpotifyConnectionError as err:
             raise UpdateFailed("Error communicating with Spotify API") from err
 
+    @override
     async def _async_update_data(self) -> SpotifyCoordinatorData:
         self.update_interval = UPDATE_INTERVAL
         try:
@@ -195,6 +198,7 @@ class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
         )
         self._client = client
 
+    @override
     async def _async_update_data(self) -> list[Device]:
         try:
             return await self._client.get_devices()

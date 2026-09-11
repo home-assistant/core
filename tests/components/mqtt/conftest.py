@@ -5,11 +5,12 @@ from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
 from random import getrandbits
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt import DOMAIN
 from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
 from homeassistant.components.mqtt.util import EnsureJobAfterCooldown
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
@@ -31,6 +32,24 @@ ENTRY_DEFAULT_BIRTH_MESSAGE = {
 @pytest.fixture(autouse=True)
 def patch_hass_config(mock_hass_config: None) -> None:
     """Patch configuration.yaml."""
+
+
+@pytest.fixture
+def mock_v5_protocol_check() -> bool:
+    """Fixture to mock a v5 protocol test result."""
+    return True
+
+
+@pytest.fixture(autouse=True)
+def mock_try_connection_protocol_check(
+    hass: HomeAssistant, mock_v5_protocol_check: bool
+) -> Generator[MagicMock]:
+    """Patch try_connection."""
+    with patch(
+        "homeassistant.components.mqtt.try_connection",
+        return_value=mock_v5_protocol_check,
+    ) as mock_try_connection:
+        yield mock_try_connection
 
 
 @pytest.fixture
@@ -97,14 +116,14 @@ async def setup_with_birth_msg_client_mock(
         patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0),
     ):
         entry = MockConfigEntry(
-            domain=mqtt.DOMAIN,
+            domain=DOMAIN,
             data=mqtt_config_entry_data or {mqtt.CONF_BROKER: "test-broker"},
             options=mqtt_config_entry_options or {},
             version=mqtt.CONFIG_ENTRY_VERSION,
             minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
         )
         entry.add_to_hass(hass)
-        hass.config.components.add(mqtt.DOMAIN)
+        hass.config.components.add(DOMAIN)
         assert await hass.config_entries.async_setup(entry.entry_id)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 

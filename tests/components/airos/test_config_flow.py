@@ -1,7 +1,6 @@
 """Test the Ubiquiti airOS config flow."""
 
-from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from airos.exceptions import (
     AirOSConnectionAuthenticationError,
@@ -10,18 +9,20 @@ from airos.exceptions import (
     AirOSEndpointError,
     AirOSKeyDataMissingError,
     AirOSListenerError,
+    AirOSTLSCompatibilityError,
 )
 from airos.helpers import DetectDeviceData
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.airos.const import (
+    CONF_LEGACY_SSL,
     DEFAULT_USERNAME,
     DOMAIN,
     HOSTNAME,
     IP_ADDRESS,
     MAC_ADDRESS,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
 )
 from homeassistant.config_entries import (
     SOURCE_DHCP,
@@ -48,7 +49,7 @@ NEW_PASSWORD = "new_password"
 REAUTH_STEP = "reauth_confirm"
 RECONFIGURE_STEP = "reconfigure"
 
-MOCK_ADVANCED_SETTINGS = {
+MOCK_ADDITIONAL_SETTINGS = {
     CONF_SSL: True,
     CONF_VERIFY_SSL: False,
 }
@@ -57,7 +58,7 @@ MOCK_CONFIG = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: DEFAULT_USERNAME,
     CONF_PASSWORD: "test-password",
-    SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS: MOCK_ADDITIONAL_SETTINGS,
 }
 MOCK_CONFIG_REAUTH = {
     CONF_HOST: "1.1.1.1",
@@ -84,7 +85,7 @@ MOCK_DISC_EXISTS = {
 
 async def test_manual_flow_creates_entry(
     hass: HomeAssistant,
-    ap_status_fixture: dict[str, Any],
+    ap_status_fixture: AirOSData,
     mock_airos_client: AsyncMock,
     mock_async_get_firmware_data: AsyncMock,
     mock_setup_entry: AsyncMock,
@@ -159,7 +160,7 @@ async def test_form_duplicate_entry(
 async def test_form_exception_handling(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    ap_status_fixture: dict[str, Any],
+    ap_status_fixture: AirOSData,
     mock_airos_client: AsyncMock,
     mock_async_get_firmware_data: AsyncMock,
     exception: Exception,
@@ -231,7 +232,7 @@ async def test_reauth_flow_scenario(
             data=mock_config_entry.data,
         )
 
-    assert flow["type"] == FlowResultType.FORM
+    assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == REAUTH_STEP
 
     fw_major = int(ap_status_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
@@ -305,7 +306,7 @@ async def test_reauth_flow_scenarios(
             data=mock_config_entry.data,
         )
 
-    assert flow["type"] == FlowResultType.FORM
+    assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == REAUTH_STEP
 
     with patch(
@@ -337,7 +338,7 @@ async def test_reauth_flow_scenarios(
             user_input={CONF_PASSWORD: NEW_PASSWORD},
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
@@ -410,7 +411,7 @@ async def test_successful_reconfigure(
 
     user_input = {
         CONF_PASSWORD: NEW_PASSWORD,
-        SECTION_ADVANCED_SETTINGS: {
+        SECTION_ADDITIONAL_SETTINGS: {
             CONF_SSL: True,
             CONF_VERIFY_SSL: True,
         },
@@ -426,8 +427,8 @@ async def test_successful_reconfigure(
 
     updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert updated_entry.data[CONF_PASSWORD] == NEW_PASSWORD
-    assert updated_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL] is True
-    assert updated_entry.data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL] is True
+    assert updated_entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL] is True
+    assert updated_entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL] is True
 
     assert updated_entry.data[CONF_HOST] == MOCK_CONFIG[CONF_HOST]
     assert updated_entry.data[CONF_USERNAME] == MOCK_CONFIG[CONF_USERNAME]
@@ -468,7 +469,7 @@ async def test_reconfigure_flow_failure(
 
     user_input = {
         CONF_PASSWORD: NEW_PASSWORD,
-        SECTION_ADVANCED_SETTINGS: {
+        SECTION_ADDITIONAL_SETTINGS: {
             CONF_SSL: True,
             CONF_VERIFY_SSL: True,
         },
@@ -525,7 +526,7 @@ async def test_reconfigure_unique_id_mismatch(
 
     user_input = {
         CONF_PASSWORD: NEW_PASSWORD,
-        SECTION_ADVANCED_SETTINGS: {
+        SECTION_ADDITIONAL_SETTINGS: {
             CONF_SSL: True,
             CONF_VERIFY_SSL: True,
         },
@@ -546,8 +547,8 @@ async def test_reconfigure_unique_id_mismatch(
     updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert updated_entry.data[CONF_PASSWORD] == MOCK_CONFIG[CONF_PASSWORD]
     assert (
-        updated_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL]
-        == MOCK_CONFIG[SECTION_ADVANCED_SETTINGS][CONF_SSL]
+        updated_entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL]
+        == MOCK_CONFIG[SECTION_ADDITIONAL_SETTINGS][CONF_SSL]
     )
 
 
@@ -611,7 +612,7 @@ async def test_discover_flow_one_device_found(
             {
                 CONF_USERNAME: DEFAULT_USERNAME,
                 CONF_PASSWORD: "test-password",
-                SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+                SECTION_ADDITIONAL_SETTINGS: MOCK_ADDITIONAL_SETTINGS,
             },
         )
 
@@ -687,7 +688,7 @@ async def test_discover_flow_multiple_devices_found(
             {
                 CONF_USERNAME: DEFAULT_USERNAME,
                 CONF_PASSWORD: "test-password",
-                SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+                SECTION_ADDITIONAL_SETTINGS: MOCK_ADDITIONAL_SETTINGS,
             },
         )
 
@@ -785,7 +786,7 @@ async def test_configure_device_flow_exceptions(
             {
                 CONF_USERNAME: "wrong-user",
                 CONF_PASSWORD: "wrong-password",
-                SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+                SECTION_ADDITIONAL_SETTINGS: MOCK_ADDITIONAL_SETTINGS,
             },
         )
 
@@ -801,7 +802,7 @@ async def test_configure_device_flow_exceptions(
             {
                 CONF_USERNAME: DEFAULT_USERNAME,
                 CONF_PASSWORD: "some-password",
-                SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+                SECTION_ADDITIONAL_SETTINGS: MOCK_ADDITIONAL_SETTINGS,
             },
         )
 
@@ -876,3 +877,99 @@ async def test_dhcp_ip_unchanged(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_manual_flow_retries_with_legacy_tls(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_async_get_firmware_data: AsyncMock,
+    ap_status_fixture: AirOSData,
+) -> None:
+    """Test manual flow retries with legacy TLS and creates an entry."""
+    legacy_session = MagicMock()
+    legacy_session.close = AsyncMock()
+
+    mock_async_get_firmware_data.side_effect = [
+        AirOSTLSCompatibilityError(),
+        {
+            "mac": ap_status_fixture.derived.mac,
+            "hostname": ap_status_fixture.host.hostname,
+        },
+    ]
+
+    with (
+        patch(
+            "homeassistant.components.airos.config_flow.TCPConnector",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.airos.config_flow.ClientSession",
+            return_value=legacy_session,
+        ) as mock_client_session,
+        patch(
+            "homeassistant.components.airos.config_flow.build_legacy_context",
+            return_value=MagicMock(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "manual"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_CONFIG
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_LEGACY_SSL] is True
+    assert mock_async_get_firmware_data.await_count == 2
+    mock_client_session.assert_called_once()
+    legacy_session.close.assert_awaited_once()
+
+
+async def test_validate_raise_on_attempted_legacy(
+    hass: HomeAssistant,
+    mock_async_get_firmware_data: AsyncMock,
+) -> None:
+    """Test legacy mode re-raises TLS compatibility errors."""
+    legacy_session = MagicMock()
+    legacy_session.close = AsyncMock()
+
+    mock_async_get_firmware_data.side_effect = AirOSTLSCompatibilityError()
+
+    with (
+        patch(
+            "homeassistant.components.airos.config_flow.TCPConnector",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.airos.config_flow.ClientSession",
+            return_value=legacy_session,
+        ) as mock_client_session,
+        patch(
+            "homeassistant.components.airos.config_flow.build_legacy_context",
+            return_value=MagicMock(),
+        ) as mock_build_legacy_context,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "manual"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_CONFIG
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert mock_async_get_firmware_data.await_count == 2
+    mock_client_session.assert_called_once()
+    mock_build_legacy_context.assert_called_once_with(
+        verify_ssl=MOCK_CONFIG[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL]
+    )
+    legacy_session.close.assert_awaited_once()

@@ -10,7 +10,7 @@ from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import CONF_DEVICE_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -26,9 +26,9 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_ENERGYID_KEY,
     CONF_HA_ENTITY_UUID,
@@ -222,7 +222,7 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
             ):
                 try:
                     value = float(current_state.state)
-                    timestamp = current_state.last_updated or dt.datetime.now(dt.UTC)
+                    timestamp = current_state.last_updated or dt_util.utcnow()
                     client.get_or_create_sensor(energyid_key).update(value, timestamp)
                 except ValueError, TypeError:
                     _LOGGER.debug(

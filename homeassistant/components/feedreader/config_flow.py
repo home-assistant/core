@@ -2,7 +2,7 @@
 
 import html
 import logging
-from typing import Any
+from typing import Any, override
 import urllib.error
 
 import feedparser
@@ -23,14 +23,18 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DOMAIN
+from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DOMAIN, USER_AGENT
 
 LOGGER = logging.getLogger(__name__)
 
 
 async def async_fetch_feed(hass: HomeAssistant, url: str) -> feedparser.FeedParserDict:
     """Fetch the feed."""
-    return await hass.async_add_executor_job(feedparser.parse, url)
+
+    def _parse_feed() -> feedparser.FeedParserDict:
+        return feedparser.parse(url, agent=USER_AGENT)
+
+    return await hass.async_add_executor_job(_parse_feed)
 
 
 class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -40,6 +44,7 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> FeedReaderOptionsFlowHandler:
@@ -69,6 +74,7 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

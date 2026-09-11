@@ -40,7 +40,7 @@ def mock_opengarage() -> Generator[MagicMock]:
         client.update_state.return_value = {
             "name": "abcdef",
             "mac": "aa:bb:cc:dd:ee:ff",
-            "fwv": "1.2.0",
+            "fwv": 120,
         }
         yield client
 

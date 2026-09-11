@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
-from typing import final
+from typing import final, override
 
 from infrared_protocols.commands import Command as InfraredCommand
 from propcache.api import cached_property
@@ -49,8 +49,17 @@ class InfraredEmitterEntity(RestoreEntity):
 
     __last_command_sent: str | None = None
 
+    @override
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For infrared emitters this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         return self.__last_command_sent
@@ -66,6 +75,7 @@ class InfraredEmitterEntity(RestoreEntity):
         self.async_write_ha_state()
 
     @final
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the infrared entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -99,6 +109,14 @@ class InfraredReceiverEntity(RestoreEntity):
 
     __last_signal_received: str | None = None
 
+    @override
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For infrared receivers this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
     @cached_property
     def __signal_callbacks(self) -> set[Callable[[InfraredReceivedSignal], None]]:
         """Subscriber callback set, lazily initialized on first access."""
@@ -106,11 +124,13 @@ class InfraredReceiverEntity(RestoreEntity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         return self.__last_signal_received
 
     @final
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the infrared entity is added to hass."""
         await super().async_internal_added_to_hass()

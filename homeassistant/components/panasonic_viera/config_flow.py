@@ -2,7 +2,7 @@
 
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.error import URLError
 
 from panasonic_viera import TV_TYPE_ENCRYPTED, RemoteControl, SOAPError
@@ -44,6 +44,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._remote: RemoteControl | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

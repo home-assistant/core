@@ -1,5 +1,7 @@
 """Sensor platform support for wiffi devices."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -86,11 +88,13 @@ class NumberEntity(WiffiEntity, SensorEntity):
         self.reset_expiration_date()
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if value is valid."""
         return self._attr_native_value is not None
 
     @callback
+    @override
     def _update_value_callback(self, device, metric):
         """Update the value of the entity.
 
@@ -116,11 +120,13 @@ class StringEntity(WiffiEntity, SensorEntity):
         self.reset_expiration_date()
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if value is valid."""
         return self._attr_native_value is not None
 
     @callback
+    @override
     def _update_value_callback(self, device, metric):
         """Update the value of the entity.
 

@@ -57,7 +57,7 @@ async def test_set(
     await hass.services.async_call(
         "climate",
         service,
-        {ATTR_ENTITY_ID: "climate.thermostat"} | service_parameters,
+        {ATTR_ENTITY_ID: "climate.room_thermostat"} | service_parameters,
         blocking=True,
     )
     getattr(
@@ -77,40 +77,50 @@ async def test_updating(
 
     climate.state = 0
     await find_update_callback(mock_niko_home_control_connection, 5)(0)
-    assert hass.states.get("climate.thermostat").attributes.get("preset_mode") == "day"
-    assert hass.states.get("climate.thermostat").state == "auto"
+    assert (
+        hass.states.get("climate.room_thermostat").attributes.get("preset_mode")
+        == "day"
+    )
+    assert hass.states.get("climate.room_thermostat").state == "auto"
 
     climate.state = 1
     await find_update_callback(mock_niko_home_control_connection, 5)(1)
     assert (
-        hass.states.get("climate.thermostat").attributes.get("preset_mode") == "night"
+        hass.states.get("climate.room_thermostat").attributes.get("preset_mode")
+        == "night"
     )
-    assert hass.states.get("climate.thermostat").state == "auto"
+    assert hass.states.get("climate.room_thermostat").state == "auto"
 
     climate.state = 2
     await find_update_callback(mock_niko_home_control_connection, 5)(2)
-    assert hass.states.get("climate.thermostat").state == "auto"
-    assert hass.states.get("climate.thermostat").attributes["preset_mode"] == "eco"
+    assert hass.states.get("climate.room_thermostat").state == "auto"
+    assert hass.states.get("climate.room_thermostat").attributes["preset_mode"] == "eco"
 
     climate.state = 3
     await find_update_callback(mock_niko_home_control_connection, 5)(3)
-    assert hass.states.get("climate.thermostat").state == "off"
+    assert hass.states.get("climate.room_thermostat").state == "off"
 
     climate.state = 4
     await find_update_callback(mock_niko_home_control_connection, 5)(4)
-    assert hass.states.get("climate.thermostat").state == "cool"
+    assert hass.states.get("climate.room_thermostat").state == "cool"
 
     climate.state = 5
     await find_update_callback(mock_niko_home_control_connection, 5)(5)
-    assert hass.states.get("climate.thermostat").state == "auto"
-    assert hass.states.get("climate.thermostat").attributes["preset_mode"] == "prog1"
+    assert hass.states.get("climate.room_thermostat").state == "auto"
+    assert (
+        hass.states.get("climate.room_thermostat").attributes["preset_mode"] == "prog1"
+    )
 
     climate.state = 6
     await find_update_callback(mock_niko_home_control_connection, 5)(6)
-    assert hass.states.get("climate.thermostat").state == "auto"
-    assert hass.states.get("climate.thermostat").attributes["preset_mode"] == "prog2"
+    assert hass.states.get("climate.room_thermostat").state == "auto"
+    assert (
+        hass.states.get("climate.room_thermostat").attributes["preset_mode"] == "prog2"
+    )
 
     climate.state = 7
     await find_update_callback(mock_niko_home_control_connection, 5)(7)
-    assert hass.states.get("climate.thermostat").state == "auto"
-    assert hass.states.get("climate.thermostat").attributes["preset_mode"] == "prog3"
+    assert hass.states.get("climate.room_thermostat").state == "auto"
+    assert (
+        hass.states.get("climate.room_thermostat").attributes["preset_mode"] == "prog3"
+    )

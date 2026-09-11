@@ -76,10 +76,8 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
-    PERCENTAGE,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_HOME,
@@ -90,8 +88,10 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfDensity,
     UnitOfEnergy,
     UnitOfLength,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -2023,7 +2023,7 @@ async def sensor_fixture(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_2",
-        unit_of_measurement=PERCENTAGE,
+        unit_of_measurement=UnitOfRatio.PERCENTAGE,
         original_device_class=SensorDeviceClass.HUMIDITY,
         suggested_object_id="outside_humidity",
         original_name="Outside Humidity",
@@ -2081,7 +2081,7 @@ async def sensor_fixture(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_7",
-        unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         suggested_object_id="sps30_pm_1um_weight_concentration",
         original_name="SPS30 PM <1µm Weight concentration",
     )
@@ -3274,6 +3274,115 @@ async def test_area_in_device(
     body = await generate_latest_metrics(client)
     entity_area_metric.assert_not_in_metrics(body)
     device_area_metric.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_inherited_from_parent_device(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test an entity on a child device inherits the parent device's area."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    area = area_registry.async_create("Parent Area")
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "parent")},
+    )
+    device_registry.async_update_device(parent.id, area_id=area.id)
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "child")},
+        parent_device_id=parent.id,
+    )
+
+    entity = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="child_sensor",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_object_id="child_sensor",
+        original_name="Child Sensor",
+        device_id=child.id,
+    )
+    # The entity is seen for the first time only now, so its area is resolved via the
+    # child device, which has no area of its own and inherits the parent's.
+    set_state_with_entry(hass, entity, 21.0)
+    await hass.async_block_till_done()
+
+    body = await generate_latest_metrics(client)
+    InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.child_sensor",
+        area="parent_area",
+    ).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_of_child_device_updated_when_parent_area_changes(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test a child entity's inherited area is refreshed when the parent moves."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    area_a = area_registry.async_create("Area A")
+    area_b = area_registry.async_create("Area B")
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "parent")},
+    )
+    device_registry.async_update_device(parent.id, area_id=area_a.id)
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "child")},
+        parent_device_id=parent.id,
+    )
+
+    entity = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="child_sensor",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_object_id="child_sensor",
+        original_name="Child Sensor",
+        device_id=child.id,
+    )
+    set_state_with_entry(hass, entity, 21.0)
+    await hass.async_block_till_done()
+
+    area_a_metric = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.child_sensor",
+        area="area_a",
+    )
+    area_b_metric = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.child_sensor",
+        area="area_b",
+    )
+
+    body = await generate_latest_metrics(client)
+    area_a_metric.assert_in_metrics(body)
+    area_b_metric.assert_not_in_metrics(body)
+
+    # Moving the parent must update the child entity's inherited area.
+    device_registry.async_update_device(parent.id, area_id=area_b.id)
+    await hass.async_block_till_done()
+
+    body = await generate_latest_metrics(client)
+    area_a_metric.assert_not_in_metrics(body)
+    area_b_metric.assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])

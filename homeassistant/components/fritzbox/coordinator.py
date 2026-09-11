@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes import FritzhomeTemplate, FritzhomeTrigger
@@ -120,9 +121,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         ):
             if not set(device.identifiers) & identifiers:
                 LOGGER.debug("Removing obsolete device entry %s", device.name)
-                device_reg.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_reg.async_remove_device(device.id)
 
     def _update_fritz_devices(self) -> FritzboxCoordinatorData:
         """Update all fritzbox device data."""
@@ -181,6 +180,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             supported_color_properties=supported_color_properties,
         )
 
+    @override
     async def _async_update_data(self) -> FritzboxCoordinatorData:
         """Fetch all device data."""
         try:

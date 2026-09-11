@@ -29,29 +29,29 @@
       }
     },
     "sensor": {
-      "translation_key_0": {
-        "default": "mdi:abc"
+      "flow_sensor_clicks_cubic_meter": {
+        "default": "mdi:water-pump"
       },
-      "translation_key_1": {
-        "default": "mdi:abc"
+      "flow_sensor_consumed_liters": {
+        "default": "mdi:water-pump"
       },
-      "translation_key_2": {
-        "default": "mdi:abc"
+      "flow_sensor_leak_clicks": {
+        "default": "mdi:pipe-leak"
       },
-      "translation_key_3": {
-        "default": "mdi:abc"
+      "flow_sensor_leak_volume": {
+        "default": "mdi:pipe-leak"
       },
-      "translation_key_4": {
-        "default": "mdi:abc"
+      "flow_sensor_start_index": {
+        "default": "mdi:water-pump"
       },
-      "translation_key_5": {
-        "default": "mdi:abc"
+      "flow_sensor_watering_clicks": {
+        "default": "mdi:water-pump"
       },
-      "translation_key_6": {
-        "default": "mdi:abc"
+      "last_leak_detected": {
+        "default": "mdi:pipe-leak"
       },
-      "translation_key_7": {
-        "default": "mdi:abc"
+      "rain_sensor_rain_start": {
+        "default": "mdi:weather-pouring"
       }
     },
     "switch": {

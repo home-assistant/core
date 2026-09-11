@@ -29,7 +29,6 @@ DOMAIN: Final = "motioneye"
 ATTR_EVENT_TYPE: Final = "event_type"
 ATTR_WEBHOOK_ID: Final = "webhook_id"
 
-CONF_ACTION: Final = "action"
 CONF_ADMIN_PASSWORD: Final = "admin_password"
 CONF_ADMIN_USERNAME: Final = "admin_username"
 CONF_MORE_OPTIONS: Final = "more_options"

@@ -8,7 +8,7 @@ from unittest.mock import call, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import climate, mqtt
+from homeassistant.components import climate
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
@@ -34,6 +34,7 @@ from homeassistant.components.mqtt.climate import (
 )
 from homeassistant.components.mqtt.const import (
     DEFAULT_CLIMATE_INITIAL_TEMPERATURE as DEFAULT_INITIAL_TEMPERATURE,
+    DOMAIN,
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -83,7 +84,7 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 ENTITY_CLIMATE = "climate.test"
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         climate.DOMAIN: {
             "name": "test",
             "mode_command_topic": "mode-topic",
@@ -218,7 +219,7 @@ async def test_set_operation_bad_attr_and_state(
         await common.async_set_hvac_mode(hass, None, ENTITY_CLIMATE)  # type:ignore[arg-type]
     assert (
         "expected HVACMode or one of 'off', 'heat', 'cool', 'heat_cool', 'auto', 'dry',"
-        " 'fan_only' for dictionary value @ data['hvac_mode']" in str(excinfo.value)
+        " 'fan_only' at 'hvac_mode'" in str(excinfo.value)
     )
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "off"
@@ -484,9 +485,7 @@ async def test_set_fan_mode_bad_attr(
     assert state.attributes.get("fan_mode") == "low"
     with pytest.raises(vol.Invalid) as excinfo:
         await common.async_set_fan_mode(hass, None, ENTITY_CLIMATE)  # type:ignore[arg-type]
-    assert "string value is None for dictionary value @ data['fan_mode']" in str(
-        excinfo.value
-    )
+    assert "string value is None at 'fan_mode'" in str(excinfo.value)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("fan_mode") == "low"
 
@@ -581,19 +580,14 @@ async def test_set_swing_mode_bad_attr(
     assert state.attributes.get("swing_mode") == "off"
     with pytest.raises(vol.Invalid) as excinfo:
         await common.async_set_swing_mode(hass, None, ENTITY_CLIMATE)  # type:ignore[arg-type]
-    assert "string value is None for dictionary value @ data['swing_mode']" in str(
-        excinfo.value
-    )
+    assert "string value is None at 'swing_mode'" in str(excinfo.value)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") == "off"
 
     assert state.attributes.get("swing_horizontal_mode") == "off"
     with pytest.raises(vol.Invalid) as excinfo:
         await common.async_set_swing_horizontal_mode(hass, None, ENTITY_CLIMATE)  # type:ignore[arg-type]
-    assert (
-        "string value is None for dictionary value @ data['swing_horizontal_mode']"
-        in str(excinfo.value)
-    )
+    assert "string value is None at 'swing_horizontal_mode'" in str(excinfo.value)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_horizontal_mode") == "off"
 
@@ -1421,7 +1415,7 @@ async def test_get_target_temperature_low_high_with_templates(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 climate.DOMAIN: {
                     "name": "test",
                     "mode_command_topic": "mode-topic",
@@ -1588,7 +1582,7 @@ async def test_get_with_templates(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 climate.DOMAIN: {
                     "name": "test",
                     "mode_command_topic": "mode-topic",
@@ -2021,7 +2015,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 climate.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -2074,7 +2068,7 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][climate.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][climate.DOMAIN])
     await help_test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
@@ -2091,7 +2085,7 @@ async def test_discovery_removal_climate(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered climate."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][climate.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][climate.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, climate.DOMAIN, data)
 
 
@@ -2172,7 +2166,7 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             climate.DOMAIN: {
                 "name": "test",
                 "mode_state_topic": "test-topic",
@@ -2199,7 +2193,7 @@ async def test_entity_debug_info_message(
 ) -> None:
     """Test MQTT debug info."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             climate.DOMAIN: {
                 "name": "test",
                 "mode_command_topic": "command-topic",
@@ -2362,8 +2356,8 @@ async def test_publishing_with_custom_encoding(
     domain = climate.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG)
     if topic != "preset_mode_command_topic":
-        del config[mqtt.DOMAIN][domain]["preset_mode_command_topic"]
-        del config[mqtt.DOMAIN][domain]["preset_modes"]
+        del config[DOMAIN][domain]["preset_mode_command_topic"]
+        del config[DOMAIN][domain]["preset_modes"]
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -2384,7 +2378,7 @@ async def test_publishing_with_custom_encoding(
     [
         (  # test_valid_humidity_min_max
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     climate.DOMAIN: {
                         "name": "test",
                         "min_humidity": 20,
@@ -2396,7 +2390,7 @@ async def test_publishing_with_custom_encoding(
         ),
         (  # test_invalid_humidity_min_max_1
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     climate.DOMAIN: {
                         "name": "test",
                         "min_humidity": 0,
@@ -2408,7 +2402,7 @@ async def test_publishing_with_custom_encoding(
         ),
         (  # test_invalid_humidity_min_max_2
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     climate.DOMAIN: {
                         "name": "test",
                         "max_humidity": 20,
@@ -2420,7 +2414,7 @@ async def test_publishing_with_custom_encoding(
         ),
         (  # test_valid_humidity_state
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     climate.DOMAIN: {
                         "name": "test",
                         "target_humidity_state_topic": "humidity-state",
@@ -2432,7 +2426,7 @@ async def test_publishing_with_custom_encoding(
         ),
         (  # test_invalid_humidity_state
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     climate.DOMAIN: {
                         "name": "test",
                         "target_humidity_state_topic": "humidity-state",

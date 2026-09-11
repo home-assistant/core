@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from reolink_aio.exceptions import (
     CredentialsInvalidError,
@@ -79,6 +80,7 @@ class ReolinkDeviceCoordinator(ReolinkCoordinator):
         self._last_known_firmware: dict[int | None, str | None] = {}
         self.firmware_coordinator: ReolinkFirmwareCoordinator | None = None
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
         async with asyncio.timeout(self._update_timeout):
@@ -88,12 +90,15 @@ class ReolinkDeviceCoordinator(ReolinkCoordinator):
                 self._host.credential_errors += 1
                 if self._host.credential_errors >= NUM_CRED_ERRORS:
                     await self._host.stop()
+                    # pylint: disable-next=home-assistant-exception-not-translated
                     raise ConfigEntryAuthFailed(err) from err
+                # pylint: disable-next=home-assistant-exception-not-translated
                 raise UpdateFailed(str(err)) from err
             except LoginPrivacyModeError:
                 pass  # HTTP API is shutdown when privacy mode is active
             except ReolinkError as err:
                 self._host.credential_errors = 0
+                # pylint: disable-next=home-assistant-exception-not-translated
                 raise UpdateFailed(str(err)) from err
 
         self._host.credential_errors = 0
@@ -120,7 +125,7 @@ class ReolinkDeviceCoordinator(ReolinkCoordinator):
 
         if (
             self._host.api.new_devices
-            and self.config_entry.state == ConfigEntryState.LOADED
+            and self.config_entry.state is ConfigEntryState.LOADED
         ):
             # There are new cameras/chimes connected, reload to add them.
             _LOGGER.debug(
@@ -153,6 +158,7 @@ class ReolinkFirmwareCoordinator(ReolinkCoordinator):
             update_interval=None,  # Do not auto-fetch, resume 24h
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Check for firmware updates."""
         async with asyncio.timeout(self._min_timeout):
@@ -167,6 +173,7 @@ class ReolinkFirmwareCoordinator(ReolinkCoordinator):
                     )
                     return
 
+                # pylint: disable-next=home-assistant-exception-not-translated
                 raise UpdateFailed(
                     "Error checking Reolink firmware update"
                     f" from {self._host.api.nvr_name}, "

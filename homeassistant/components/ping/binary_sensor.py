@@ -1,5 +1,7 @@
 """Tracks the latency of a host by sending ICMP echo requests (ping)."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -41,6 +43,7 @@ class PingBinarySensor(PingEntity, BinarySensorEntity):
             )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.coordinator.data.is_alive

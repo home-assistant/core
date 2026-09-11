@@ -1,5 +1,7 @@
 """Support for Streamlabs Water Monitor Away Mode."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -31,6 +33,7 @@ class StreamlabsAwayMode(StreamlabsWaterEntity, BinarySensorEntity):
         super().__init__(coordinator, location_id, "away_mode")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if away mode is on."""
         return self.location_data.is_away

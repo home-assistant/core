@@ -1,6 +1,6 @@
 """Support for Tuya switches."""
 
-from typing import Any
+from typing import Any, override
 
 from tuya_device_handlers.definition.switch import (
     SwitchDefinition,
@@ -894,6 +894,19 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             translation_key="switch",
         ),
     ),
+    DeviceCategory.ZNJDQ: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.ZNJXS: (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
@@ -966,10 +979,12 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         self._dpcode_wrapper = definition.switch_wrapper
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],
@@ -984,10 +999,12 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
             self.device, updated_status_properties, dp_timestamps
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, False)

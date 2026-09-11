@@ -236,7 +236,7 @@ jobs:
       - name: Detect duplicates using AI
         id: ai_detection
         if: steps.extract.outputs.should_continue == 'true' && steps.fetch_similar.outputs.has_similar == 'true'
-        uses: actions/ai-inference@e09e65981758de8b2fdab13c2bfb7c7d5493b0b6 # v2.0.7
+        uses: actions/ai-inference@a7805884c80886efc241e94a5351df715968a0ad # v2.1.1
         with:
           model: openai/gpt-4o
           system-prompt: |

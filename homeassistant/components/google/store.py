@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from gcal_sync.api import GoogleCalendarService
 from gcal_sync.store import CalendarStore
@@ -44,12 +44,14 @@ class LocalCalendarStore(CalendarStore):
         )
         self._data: dict[str, Any] | None = None
 
+    @override
     async def async_load(self) -> dict[str, Any] | None:
         """Load data."""
         if self._data is None:
             self._data = await self._store.async_load() or {}
         return self._data
 
+    @override
     async def async_save(self, data: dict[str, Any]) -> None:
         """Save data."""
         self._data = data

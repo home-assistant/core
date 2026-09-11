@@ -1,6 +1,6 @@
 """Config flow to configure the Elgato Light integration."""
 
-from typing import Any
+from typing import Any, override
 
 from elgato import Elgato, ElgatoError
 import voluptuous as vol
@@ -26,6 +26,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     serial_number: str
     mac: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -42,6 +43,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._async_create_entry()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -106,6 +108,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

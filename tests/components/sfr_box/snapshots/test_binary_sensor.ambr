@@ -39,8 +39,8 @@
 # name: test_binary_sensors[adsl][binary_sensor.sfr_box_dsl_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'SFR Box DSL status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SFR Box DSL status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sfr_box_dsl_status',
@@ -90,7 +90,7 @@
 # name: test_binary_sensors[adsl][binary_sensor.sfr_box_voip_call_history_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SFR Box VoIP call history active',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SFR Box VoIP call history active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sfr_box_voip_call_history_active',
@@ -140,7 +140,7 @@
 # name: test_binary_sensors[adsl][binary_sensor.sfr_box_voip_phone_hook_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SFR Box VoIP phone hook status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SFR Box VoIP phone hook status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sfr_box_voip_phone_hook_status',
@@ -190,8 +190,8 @@
 # name: test_binary_sensors[adsl][binary_sensor.sfr_box_voip_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'SFR Box VoIP status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SFR Box VoIP status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sfr_box_voip_status',
@@ -241,8 +241,8 @@
 # name: test_binary_sensors[adsl][binary_sensor.sfr_box_wan_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'SFR Box WAN status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SFR Box WAN status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sfr_box_wan_status',
@@ -292,8 +292,8 @@
 # name: test_binary_sensors[ftth][binary_sensor.sfr_box_ftth_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'SFR Box FTTH status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SFR Box FTTH status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sfr_box_ftth_status',
@@ -343,7 +343,7 @@
 # name: test_binary_sensors[ftth][binary_sensor.sfr_box_voip_call_history_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SFR Box VoIP call history active',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SFR Box VoIP call history active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sfr_box_voip_call_history_active',
@@ -393,7 +393,7 @@
 # name: test_binary_sensors[ftth][binary_sensor.sfr_box_voip_phone_hook_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SFR Box VoIP phone hook status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SFR Box VoIP phone hook status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sfr_box_voip_phone_hook_status',
@@ -443,8 +443,8 @@
 # name: test_binary_sensors[ftth][binary_sensor.sfr_box_voip_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'SFR Box VoIP status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SFR Box VoIP status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sfr_box_voip_status',
@@ -494,8 +494,8 @@
 # name: test_binary_sensors[ftth][binary_sensor.sfr_box_wan_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'SFR Box WAN status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SFR Box WAN status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sfr_box_wan_status',

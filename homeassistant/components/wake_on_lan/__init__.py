@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_SECUREON_PASSWORD, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ SERVICE_SEND_MAGIC_PACKET = "send_magic_packet"
 WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_MAC): cv.string,
+        vol.Optional(CONF_SECUREON_PASSWORD): cv.string,
         vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
         vol.Optional(CONF_BROADCAST_PORT): cv.port,
     }
@@ -34,7 +35,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def send_magic_packet(call: ServiceCall) -> None:
         """Send magic packet to wake up a device."""
-        mac_address = call.data.get(CONF_MAC)
+        mac_address: str = call.data[CONF_MAC]
+        secureon_password = call.data.get(CONF_SECUREON_PASSWORD)
         broadcast_address = call.data.get(CONF_BROADCAST_ADDRESS)
         broadcast_port = call.data.get(CONF_BROADCAST_PORT)
 
@@ -45,14 +47,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             service_kwargs["port"] = broadcast_port
 
         _LOGGER.debug(
-            "Send magic packet to mac %s (broadcast: %s, port: %s)",
+            "Send magic packet to mac %s (secureon: %s, broadcast: %s, port: %s)",
             mac_address,
+            secureon_password is not None,
             broadcast_address,
             broadcast_port,
         )
 
+        if secureon_password:
+            mac_address += f"/{secureon_password}"
+
         await hass.async_add_executor_job(
-            partial(wakeonlan.send_magic_packet, mac_address, **service_kwargs)  # type: ignore[arg-type]
+            partial(wakeonlan.send_magic_packet, mac_address, **service_kwargs)
         )
 
     hass.services.async_register(

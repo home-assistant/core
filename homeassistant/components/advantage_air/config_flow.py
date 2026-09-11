@@ -1,6 +1,6 @@
 """Config Flow for Advantage Air integration."""
 
-from typing import Any
+from typing import Any, override
 
 from advantage_air import ApiError, advantage_air
 import voluptuous as vol
@@ -28,6 +28,7 @@ class AdvantageAirConfigFlow(ConfigFlow, domain=DOMAIN):
 
     DOMAIN = DOMAIN
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

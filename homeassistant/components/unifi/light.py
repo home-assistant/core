@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aiounifi import AiounifiException
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
@@ -158,6 +158,7 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     _attr_supported_features = LightEntityFeature(0)
 
     @callback
+    @override
     def async_initiate_state(self) -> None:
         """Initiate entity state."""
         device = cast(Device, self.entity_description.object_fn(self.api, self._obj_id))
@@ -171,6 +172,7 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 
         self.async_update_state(ItemEvent.ADDED, self._obj_id)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         try:
@@ -183,6 +185,7 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                 translation_key="action_request_failed",
             ) from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         try:
@@ -196,6 +199,7 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             ) from err
 
     @callback
+    @override
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state."""
         description = self.entity_description

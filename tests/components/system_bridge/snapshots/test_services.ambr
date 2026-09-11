@@ -1,0 +1,91 @@
+# serializer version: 1
+# name: test_get_process_services[get_process_by_id]
+  dict({
+    'cpu_usage': 12.3,
+    'created': 12.3,
+    'id': 1234,
+    'memory_usage': 12.3,
+    'name': 'name',
+    'path': '/path',
+    'status': 'running',
+    'username': 'username',
+    'working_directory': '/working/directory',
+  })
+# ---
+# name: test_get_process_services[get_processes_by_name]
+  dict({
+    'count': 1,
+    'processes': list([
+      dict({
+        'cpu_usage': 12.3,
+        'created': 12.3,
+        'id': 1234,
+        'memory_usage': 12.3,
+        'name': 'name',
+        'path': '/path',
+        'status': 'running',
+        'username': 'username',
+        'working_directory': '/working/directory',
+      }),
+    ]),
+  })
+# ---
+# name: test_services[open_path]
+  dict({
+    'data': dict({
+      'path': '/home/user/documents',
+    }),
+    'id': 'test',
+    'message': 'Opened file',
+    'module': None,
+    'subtype': None,
+    'type': <EventType.OPENED: 'OPENED'>,
+  })
+# ---
+# name: test_services[open_url]
+  dict({
+    'data': dict({
+      'url': 'https://example.com',
+    }),
+    'id': 'test',
+    'message': 'Opened url',
+    'module': None,
+    'subtype': None,
+    'type': <EventType.OPENED: 'OPENED'>,
+  })
+# ---
+# name: test_services[power_command_shutdown]
+  dict({
+    'data': dict({
+    }),
+    'id': 'test',
+    'message': 'Shutdown',
+    'module': None,
+    'subtype': None,
+    'type': <EventType.POWER_SHUTDOWN: 'POWER_SHUTDOWN'>,
+  })
+# ---
+# name: test_services[send_keypress]
+  dict({
+    'data': dict({
+      'key': 'backspace',
+    }),
+    'id': 'test',
+    'message': 'Keyboard key pressed',
+    'module': None,
+    'subtype': None,
+    'type': <EventType.KEYBOARD_KEY_PRESSED: 'KEYBOARD_KEY_PRESSED'>,
+  })
+# ---
+# name: test_services[send_text]
+  dict({
+    'data': dict({
+      'text': 'Hello world',
+    }),
+    'id': 'test',
+    'message': 'Keyboard text sent',
+    'module': None,
+    'subtype': None,
+    'type': <EventType.KEYBOARD_TEXT_SENT: 'KEYBOARD_TEXT_SENT'>,
+  })
+# ---

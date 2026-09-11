@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
+from tesla_fleet_api import firmware_at_least
 from teslemetry_stream.vehicle import TeslemetryStreamVehicle
 
 from homeassistant.components.binary_sensor import (
@@ -11,7 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import STATE_ON, EntityCategory
+from homeassistant.const import STATE_ON, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -25,6 +26,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
+from .helpers import async_remove_stale_vehicle_entities
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -134,6 +136,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     TeslemetryBinarySensorEntityDescription(
         key="climate_state_cabin_overheat_protection_actively_cooling",
         polling=True,
+        device_class=BinarySensorDeviceClass.HEAT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="climate_state_is_rear_defroster_on",
+        polling=True,
+        streaming_listener=lambda vehicle, callback: vehicle.listen_RearDefrostEnabled(
+            callback
+        ),
         device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -326,13 +338,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     TeslemetryBinarySensorEntityDescription(
         key="driver_seat_occupied",
         streaming_listener=lambda vehicle, callback: vehicle.listen_DriverSeatOccupied(
-            callback
-        ),
-        entity_registry_enabled_default=False,
-    ),
-    TeslemetryBinarySensorEntityDescription(
-        key="passenger_seat_belt",
-        streaming_listener=lambda vehicle, callback: vehicle.listen_PassengerSeatBelt(
             callback
         ),
         entity_registry_enabled_default=False,
@@ -557,12 +562,13 @@ async def async_setup_entry(
             if (
                 not vehicle.poll
                 and description.streaming_listener
-                and vehicle.firmware >= description.streaming_firmware
+                and firmware_at_least(vehicle.firmware, description.streaming_firmware)
             ):
                 entities.append(
                     TeslemetryVehicleStreamingBinarySensorEntity(vehicle, description)
                 )
-            elif description.polling:
+            elif description.polling and vehicle.poll is not False:
+                # poll may be None (unknown); only an explicit False is stream-only
                 entities.append(
                     TeslemetryVehiclePollingBinarySensorEntity(vehicle, description)
                 )
@@ -581,6 +587,13 @@ async def async_setup_entry(
         if description.key in energysite.info_coordinator.data
     )
 
+    async_remove_stale_vehicle_entities(
+        hass,
+        entry.entry_id,
+        Platform.BINARY_SENSOR,
+        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
+        {entity.unique_id for entity in entities if entity.unique_id},
+    )
     async_add_entities(entities)
 
 
@@ -600,6 +613,7 @@ class TeslemetryVehiclePollingBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
 
@@ -625,6 +639,7 @@ class TeslemetryVehicleStreamingBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -661,6 +676,7 @@ class TeslemetryEnergyLiveBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_is_on = self.entity_description.polling_value_fn(self._value)
@@ -682,6 +698,7 @@ class TeslemetryEnergyInfoBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_is_on = self.entity_description.polling_value_fn(self._value)

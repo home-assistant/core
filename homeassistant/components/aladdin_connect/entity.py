@@ -1,5 +1,7 @@
 """Base class for Aladdin Connect entities."""
 
+from typing import override
+
 from genie_partner_sdk.client import AladdinConnectClient
 from genie_partner_sdk.model import GarageDoor
 
@@ -29,6 +31,7 @@ class AladdinConnectEntity(CoordinatorEntity[AladdinConnectCoordinator]):
         self._number = door.door_number
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._door_id in self.coordinator.data

@@ -2,10 +2,10 @@
 
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import EventName
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,19 +15,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import assert_command_call, async_deliver_events, build_event
+from .helpers import assert_command_call, async_deliver_events, device_unavailable_event
 
 from tests.common import snapshot_platform
 
 MY_POSITION = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "io://1234-1234-6233/12184029",
-    "button.garden_house_shutter_my_position",
+    "button.office_garden_house_shutter_my_position",
 )
 IDENTIFY = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "io://1234-1234-6233/12184029",
-    "button.garden_house_shutter_identify",
+    "button.office_garden_house_shutter_identify",
 )
 GO_TO_ALIAS = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe_2.json",
@@ -37,13 +37,24 @@ GO_TO_ALIAS = FixtureDevice(
 CHECK_EVENT_TRIGGER = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/8907539",
-    "button.living_room_smoke_detector_test",
+    "button.maple_residence_living_room_smoke_detector_test",
+)
+STEP_POSITIVE = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16752757",
+    "button.palm_court_led_strip_brightness_up",
+)
+STEP_NEGATIVE = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16752757",
+    "button.palm_court_led_strip_brightness_down",
 )
 
 SNAPSHOT_FIXTURES = [
     MY_POSITION,
     GO_TO_ALIAS,
     CHECK_EVENT_TRIGGER,
+    STEP_POSITIVE,
 ]
 
 
@@ -95,26 +106,37 @@ async def test_button_press(
     )
 
 
+@pytest.mark.parametrize(
+    ("device", "command_name", "parameters"),
+    [
+        pytest.param(GO_TO_ALIAS, "goToAlias", ["1"], id="go_to_alias"),
+        pytest.param(STEP_POSITIVE, "stepPositive", [5], id="step_positive"),
+        pytest.param(STEP_NEGATIVE, "stepNegative", [5], id="step_negative"),
+    ],
+)
 async def test_button_press_with_args(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
+    device: FixtureDevice,
+    command_name: str,
+    parameters: list[Any],
 ) -> None:
     """Test pressing a button with arguments sends the correct command."""
-    await setup_overkiz_integration(fixture=GO_TO_ALIAS.fixture)
+    await setup_overkiz_integration(fixture=device.fixture)
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: GO_TO_ALIAS.entity_id},
+        {ATTR_ENTITY_ID: device.entity_id},
         blocking=True,
     )
 
     assert_command_call(
         mock_client,
-        device_url=GO_TO_ALIAS.device_url,
-        command_name="goToAlias",
-        parameters=["1"],
+        device_url=device.device_url,
+        command_name=command_name,
+        parameters=parameters,
     )
 
 
@@ -136,8 +158,7 @@ async def test_button_unavailability(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_UNAVAILABLE.value,
+            device_unavailable_event(
                 device_url=MY_POSITION.device_url,
             )
         ],

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from sanix import Sanix
 from sanix.exceptions import SanixException
@@ -36,6 +37,7 @@ class SanixCoordinator(DataUpdateCoordinator[Measurement]):
         )
         self._sanix_api = sanix_api
 
+    @override
     async def _async_update_data(self) -> Measurement:
         """Fetch data from API endpoint."""
         try:

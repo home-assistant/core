@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import functools
-from typing import Any
+from typing import Any, override
 
 from pydantic import ValidationError
 import voluptuous as vol
@@ -20,7 +20,12 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
+from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionRunner,
+    TriggerConfig,
+    TriggerNotTriggeredReporter,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from ..const import (
@@ -32,11 +37,12 @@ from ..const import (
     DOMAIN,
 )
 from ..helpers import (
+    async_bypass_dynamic_config_validation,
+    async_get_config_entry_from_node,
     async_get_nodes_from_targets,
     get_device_id,
     get_home_and_node_id_from_device_entry,
 )
-from .trigger_helpers import async_bypass_dynamic_config_validation
 
 # Relative platform type should be <SUBMODULE_NAME>
 RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
@@ -45,11 +51,25 @@ RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
 PLATFORM_TYPE = f"{DOMAIN}.{RELATIVE_PLATFORM_TYPE}"
 
 
-def validate_non_node_event_source(obj: dict) -> dict:
-    """Validate that a trigger for a non node event source has a config entry."""
-    if obj[ATTR_EVENT_SOURCE] != "node" and ATTR_CONFIG_ENTRY_ID in obj:
+def validate_event_source_targets(obj: dict) -> dict:
+    """Validate that the targets match the event source."""
+    if obj[ATTR_EVENT_SOURCE] == "node":
+        if ATTR_DEVICE_ID not in obj and ATTR_ENTITY_ID not in obj:
+            raise vol.Invalid(
+                f"Node event triggers must contain {ATTR_DEVICE_ID} or "
+                f"{ATTR_ENTITY_ID}."
+            )
         return obj
-    raise vol.Invalid(f"Non node event triggers must contain {ATTR_CONFIG_ENTRY_ID}.")
+    if ATTR_CONFIG_ENTRY_ID not in obj:
+        raise vol.Invalid(
+            f"Non node event triggers must contain {ATTR_CONFIG_ENTRY_ID}."
+        )
+    if ATTR_DEVICE_ID in obj or ATTR_ENTITY_ID in obj:
+        raise vol.Invalid(
+            f"Non node event triggers must not contain {ATTR_DEVICE_ID} or "
+            f"{ATTR_ENTITY_ID}."
+        )
+    return obj
 
 
 def validate_event_name(obj: dict) -> dict:
@@ -106,10 +126,7 @@ _CONFIG_SCHEMA = vol.Schema(
             _OPTIONS_SCHEMA_DICT,
             validate_event_name,
             validate_event_data,
-            vol.Any(
-                validate_non_node_event_source,
-                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
-            ),
+            validate_event_source_targets,
         )
     }
 )
@@ -127,6 +144,7 @@ class EventTrigger(Trigger):
     _action_runner: TriggerActionRunner
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -137,6 +155,7 @@ class EventTrigger(Trigger):
         return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -167,8 +186,11 @@ class EventTrigger(Trigger):
         assert config.options is not None
         self._options = config.options
 
+    @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
         dev_reg = dr.async_get(self._hass)
@@ -269,8 +291,11 @@ class EventTrigger(Trigger):
             driver = node.client.driver
             assert driver is not None  # The node comes from the driver.
             drivers.add(driver)
+            node_entry = async_get_config_entry_from_node(self._hass, node)
             device_identifier = get_device_id(driver, node)
-            device = dev_reg.async_get_device(identifiers={device_identifier})
+            device = dev_reg.async_get_device_by_identifier(
+                device_identifier, node_entry.entry_id
+            )
             assert device
             # We need to store the device for the callback
             self._unsubs.append(

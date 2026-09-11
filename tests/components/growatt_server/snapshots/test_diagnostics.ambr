@@ -88,8 +88,8 @@
       }),
     ]),
     'total_coordinator': dict({
-      'current_power': 2500,
-      'invTodayPpv': 2500,
+      'current_power': 2.5,
+      'invTodayPpv': 2500.0,
       'todayEnergy': 12.5,
       'today_energy': 12.5,
       'totalEnergy': 1250.0,

@@ -39,7 +39,7 @@
 # name: test_switches[switch.fakespa_filter_cycle_2_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'FakeSpa Filter cycle 2 enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FakeSpa Filter cycle 2 enabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fakespa_filter_cycle_2_enabled',

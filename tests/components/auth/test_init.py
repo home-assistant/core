@@ -16,6 +16,7 @@ from homeassistant.auth.models import (
     RefreshToken,
 )
 from homeassistant.components import auth
+from homeassistant.components.auth import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -205,7 +206,7 @@ async def test_ws_current_user(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
 ) -> None:
     """Test the current user command with Home Assistant creds."""
-    assert await async_setup_component(hass, "auth", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     user = refresh_token.user
@@ -430,7 +431,7 @@ async def test_ws_long_lived_access_token(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
 ) -> None:
     """Test generate long-lived access token."""
-    assert await async_setup_component(hass, "auth", {"http": {}})
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
 
     ws_client = await hass_ws_client(hass, hass_access_token)
 
@@ -460,7 +461,7 @@ async def test_ws_refresh_tokens(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
 ) -> None:
     """Test fetching refresh token metadata."""
-    assert await async_setup_component(hass, "auth", {"http": {}})
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
 
     ws_client = await hass_ws_client(hass, hass_access_token)
 
@@ -491,7 +492,7 @@ async def test_ws_delete_refresh_token(
     hass_access_token: str,
 ) -> None:
     """Test deleting a refresh token."""
-    assert await async_setup_component(hass, "auth", {"http": {}})
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
 
     refresh_token = await hass.auth.async_create_refresh_token(
         hass_admin_user, CLIENT_ID, credential=hass_admin_credential
@@ -523,7 +524,7 @@ async def test_ws_delete_all_refresh_tokens_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test deleting all refresh tokens, where a revoke callback raises an error."""
-    assert await async_setup_component(hass, "auth", {"http": {}})
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
 
     # one token already exists
     await hass.auth.async_create_refresh_token(
@@ -605,7 +606,7 @@ async def test_ws_delete_all_refresh_tokens(
     expected_remaining_long_lived_tokens: int,
 ) -> None:
     """Test deleting all or some refresh tokens."""
-    assert await async_setup_component(hass, "auth", {"http": {}})
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
 
     # one token already exists
     await hass.auth.async_create_refresh_token(
@@ -669,7 +670,7 @@ async def test_ws_sign_path(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
 ) -> None:
     """Test signing a path."""
-    assert await async_setup_component(hass, "auth", {"http": {}})
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
     ws_client = await hass_ws_client(hass, hass_access_token)
 
     with patch(
@@ -701,7 +702,7 @@ async def test_ws_refresh_token_set_expiry(
     hass_access_token: str,
 ) -> None:
     """Test setting expiry of a refresh token."""
-    assert await async_setup_component(hass, "auth", {"http": {}})
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
 
     refresh_token = await hass.auth.async_create_refresh_token(
         hass_admin_user, CLIENT_ID, credential=hass_admin_credential
@@ -742,7 +743,7 @@ async def test_ws_refresh_token_set_expiry_error(
     hass_access_token: str,
 ) -> None:
     """Test setting expiry of a invalid refresh token returns error."""
-    assert await async_setup_component(hass, "auth", {"http": {}})
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
 
     ws_client = await hass_ws_client(hass, hass_access_token)
 

@@ -6,6 +6,7 @@ import logging
 
 from sense_energy import (
     ASyncSenseable,
+    SenseAPIException,
     SenseAuthenticationException,
     SenseMFARequiredException,
 )
@@ -14,10 +15,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     ACTIVE_UPDATE_RATE,
+    DOMAIN,
     SENSE_CONNECT_EXCEPTIONS,
     SENSE_TIMEOUT_EXCEPTIONS,
     SENSE_WEBSOCKET_EXCEPTIONS,
@@ -88,6 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
         ) from err
     except SENSE_WEBSOCKET_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
+    except SenseAPIException as err:
+        raise ConfigEntryNotReady(
+            str(err) or "API error retrieving realtime data"
+        ) from err
 
     trends_coordinator = SenseTrendCoordinator(hass, entry, gateway)
     realtime_coordinator = SenseRealtimeCoordinator(hass, entry, gateway)
@@ -110,6 +117,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
         data=gateway,
         trends=trends_coordinator,
         rt=realtime_coordinator,
+    )
+
+    # Register the monitor device up front so child devices can reference it via
+    # via_device_id; child entities are added by concurrently-loaded platforms
+    # before any of them registers the monitor device.
+    sense_monitor_id = gateway.sense_monitor_id
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        name=f"Sense {sense_monitor_id}",
+        identifiers={(DOMAIN, sense_monitor_id)},
+        model="Sense",
+        manufacturer="Sense Labs, Inc.",
+        configuration_url="https://home.sense.com",
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

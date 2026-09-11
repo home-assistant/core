@@ -2,13 +2,21 @@
 
 import datetime
 import logging
+from typing import override
 
-from ccm15 import CCM15Device, CCM15DeviceState, CCM15SlaveDevice
+from ccm15 import (
+    CCM15Device,
+    CCM15DeviceState,
+    CCM15ReturnCode,
+    CCM15SlaveDevice,
+    TriState,
+)
 import httpx
 
-from homeassistant.components.climate import HVACMode
+from homeassistant.components.climate import SWING_ON, HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -37,13 +45,16 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             name=host,
             update_interval=datetime.timedelta(seconds=DEFAULT_INTERVAL),
         )
-        self._ccm15 = CCM15Device(host, port, DEFAULT_TIMEOUT)
+        self._ccm15 = CCM15Device(
+            host, port, DEFAULT_TIMEOUT, client=get_async_client(hass)
+        )
         self._host = host
 
     def get_host(self) -> str:
         """Get the host."""
         return self._host
 
+    @override
     async def _async_update_data(self) -> CCM15DeviceState:
         """Fetch data from Rain Bird device."""
         try:
@@ -57,15 +68,13 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     async def async_set_state(self, ac_index: int, data) -> None:
         """Set new target states."""
-        if await self._ccm15.async_set_state(ac_index, data):
+        if await self._ccm15.async_set_state(ac_index, data) is CCM15ReturnCode.OK:
             await self.async_request_refresh()
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Get ac data from the ac_index."""
-        if ac_index < 0 or ac_index >= len(self.data.devices):
-            # Network latency may return an empty or incomplete array
-            return None
-        return self.data.devices[ac_index]
+        # Slot indices can be sparse and reach >= 32, so look up by key.
+        return self.data.devices.get(ac_index)
 
     async def async_set_hvac_mode(
         self, ac_index: int, data: CCM15SlaveDevice, hvac_mode: HVACMode
@@ -81,6 +90,14 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         """Set the fan mode."""
         _LOGGER.debug("Set Fan[%s]='%s'", ac_index, fan_mode)
         data.fan_mode = CONST_FAN_CMD_MAP[fan_mode]
+        await self.async_set_state(ac_index, data)
+
+    async def async_set_swing_mode(
+        self, ac_index: int, data: CCM15SlaveDevice, swing_mode: str
+    ) -> None:
+        """Set the swing mode."""
+        _LOGGER.debug("Set Swing[%s]='%s'", ac_index, swing_mode)
+        data.desired_swing = TriState.ON if swing_mode == SWING_ON else TriState.OFF
         await self.async_set_state(ac_index, data)
 
     async def async_set_temperature(

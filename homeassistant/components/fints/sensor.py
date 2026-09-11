@@ -3,7 +3,7 @@
 from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
@@ -276,6 +276,7 @@ class FinTsHoldingsAccount(SensorEntity):
         self._attr_native_value = sum(h.total_value for h in self._holdings)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Additional attributes of the sensor.
 

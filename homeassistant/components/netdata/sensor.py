@@ -1,6 +1,7 @@
 """Support gathering system information of hosts which are running netdata."""
 
 import logging
+from typing import override
 
 from netdata import Netdata
 from netdata.exceptions import NetdataError
@@ -121,6 +122,7 @@ class NetdataSensor(SensorEntity):
         self._invert = invert
 
     @property
+    @override
     def available(self) -> bool:
         """Could the resource be accessed during the last update call."""
         return self.netdata.available
@@ -145,6 +147,7 @@ class NetdataAlarms(SensorEntity):
         self._port = port
 
     @property
+    @override
     def icon(self) -> str:
         """Status symbol if type is symbol."""
         if self._attr_native_value == "ok":
@@ -156,6 +159,7 @@ class NetdataAlarms(SensorEntity):
         return "mdi:crosshairs-question"
 
     @property
+    @override
     def available(self) -> bool:
         """Could the resource be accessed during the last update call."""
         return self.netdata.available

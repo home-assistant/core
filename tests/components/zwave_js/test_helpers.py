@@ -51,6 +51,30 @@ async def test_async_get_nodes_from_area_id(
     assert not async_get_nodes_from_area_id(hass, area.id)
 
 
+async def test_async_get_nodes_from_area_id_skips_child_device(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test async_get_nodes_from_area_id skips child devices in the area."""
+    area = area_registry.async_create("test")
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "parent")},
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "child")},
+        parent_device_id=parent.id,
+    )
+    device_registry.async_update_child_device(child.id, area_id=area.id)
+
+    # A child device is not a Z-Wave JS node; it is skipped rather than raising.
+    assert not async_get_nodes_from_area_id(hass, area.id)
+
+
 async def test_get_value_state_schema_boolean_config_value(
     hass: HomeAssistant, client, aeon_smart_switch_6
 ) -> None:

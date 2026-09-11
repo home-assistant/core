@@ -1,7 +1,7 @@
 """Stub file for hass_dict. Provide overload for type checking."""
 # ruff: noqa: PYI021  # Allow docstrings
 
-from typing import Any, Generic, TypeVar, assert_type, overload
+from typing import Any, Generic, TypeVar, assert_type, overload, override
 
 __all__ = [
     "HassDict",
@@ -16,7 +16,9 @@ class _Key(Generic[_T]):  # noqa: UP046
 
     def __init__(self, value: str, /) -> None: ...
     def __len__(self) -> int: ...
+    @override
     def __hash__(self) -> int: ...
+    @override
     def __eq__(self, other: object) -> bool: ...
     def __getitem__(self, index: int) -> str: ...
 
@@ -30,6 +32,7 @@ class HassDict(dict[_Key[Any] | str, Any]):
     """Custom dict type to provide better value type hints for Hass key types."""
 
     @overload  # type: ignore[override]
+    @override
     def __getitem__[_S](self, key: HassEntryKey[_S], /) -> dict[str, _S]: ...
     @overload
     def __getitem__[_S](self, key: HassKey[_S], /) -> _S: ...
@@ -38,6 +41,7 @@ class HassDict(dict[_Key[Any] | str, Any]):
 
     # ------
     @overload  # type: ignore[override]
+    @override
     def __setitem__[_S](
         self, key: HassEntryKey[_S], value: dict[str, _S], /
     ) -> None: ...
@@ -48,6 +52,7 @@ class HassDict(dict[_Key[Any] | str, Any]):
 
     # ------
     @overload  # type: ignore[override]
+    @override
     def setdefault[_S](
         self, key: HassEntryKey[_S], default: dict[str, _S], /
     ) -> dict[str, _S]: ...
@@ -60,6 +65,7 @@ class HassDict(dict[_Key[Any] | str, Any]):
 
     # ------
     @overload  # type: ignore[override]
+    @override
     def get[_S](self, key: HassEntryKey[_S], /) -> dict[str, _S] | None: ...
     @overload
     def get[_S, _U](
@@ -76,6 +82,7 @@ class HassDict(dict[_Key[Any] | str, Any]):
 
     # ------
     @overload  # type: ignore[override]
+    @override
     def pop[_S](self, key: HassEntryKey[_S], /) -> dict[str, _S]: ...
     @overload
     def pop[_S](

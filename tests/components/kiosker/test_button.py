@@ -54,6 +54,7 @@ async def test_all_entities(
         ("button.kiosker_a98be1ce_clear_cache", "clear_cache"),
         ("button.kiosker_a98be1ce_clear_cookies", "clear_cookies"),
         ("button.kiosker_a98be1ce_dismiss_screensaver", "screensaver_interact"),
+        ("button.kiosker_a98be1ce_clear_blackout", "blackout_clear"),
     ],
 )
 async def test_press_button(

@@ -1,6 +1,7 @@
 """Support for Prosegur alarm control panels."""
 
 import logging
+from typing import override
 
 from pyprosegur.auth import Auth
 from pyprosegur.installation import Installation, Status
@@ -81,14 +82,17 @@ class ProsegurAlarm(AlarmControlPanelEntity):
         self._attr_alarm_state = STATE_MAPPING.get(self._installation.status)
         self._attr_available = True
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._installation.disarm(self._auth)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._installation.arm_partially(self._auth)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._installation.arm(self._auth)

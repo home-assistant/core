@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "not_supported": "Device not supported",
@@ -54,6 +53,11 @@
         "name": "IR emitter"
       }
     },
+    "radio_frequency": {
+      "rf_transmitter": {
+        "name": "RF transmitter"
+      }
+    },
     "select": {
       "day_of_week": {
         "name": "Day of week",
@@ -84,6 +88,9 @@
     }
   },
   "exceptions": {
+    "connect_failed": {
+      "message": "Failed to connect to the device at {host}: {error}"
+    },
     "frequency_not_supported": {
       "message": "Broadlink devices cannot transmit on {frequency} MHz"
     },

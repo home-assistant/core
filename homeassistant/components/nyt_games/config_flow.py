@@ -1,6 +1,6 @@
 """Config flow for NYT Games."""
 
-from typing import Any
+from typing import Any, override
 
 from nyt_games import NYTGamesAuthenticationError, NYTGamesClient, NYTGamesError
 import voluptuous as vol
@@ -15,6 +15,7 @@ from .const import DOMAIN, LOGGER
 class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
     """NYT Games config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

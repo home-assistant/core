@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from onedrive_personal_sdk.clients.client import OneDriveClient
 from onedrive_personal_sdk.exceptions import OneDriveException
@@ -39,11 +39,13 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     drive: Drive
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": " ".join(OAUTH_SCOPES)}
@@ -53,6 +55,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         super().__init__()
         self._data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -82,6 +85,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_pick_implementation(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -89,6 +93,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         with tenant_id_context(self._data[CONF_TENANT_ID]):
             return await super().async_step_pick_implementation(user_input)
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Handle the initial step."""
 

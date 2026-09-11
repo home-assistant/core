@@ -6,7 +6,6 @@ import logging
 
 import aiodns
 from aiodns.error import DNSError
-from pycares import AresError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
@@ -52,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> boo
             tcp_port=entry.options[CONF_PORT],
             udp_port=entry.options[CONF_PORT],
         )
-        queries.append(resolver_ipv4.query(hostname, "A"))
+        queries.append(resolver_ipv4.query_dns(hostname, "A"))
 
     if entry.data[CONF_IPV6]:
         resolver_ipv6 = aiodns.DNSResolver(
@@ -60,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> boo
             tcp_port=entry.options[CONF_PORT_IPV6],
             udp_port=entry.options[CONF_PORT_IPV6],
         )
-        queries.append(resolver_ipv6.query(hostname, "AAAA"))
+        queries.append(resolver_ipv6.query_dns(hostname, "AAAA"))
 
     async def _close_resolvers() -> None:
         if resolver_ipv4 is not None:
@@ -78,11 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> boo
         ) from err
 
     errors = [
-        result
-        for result in results
-        if isinstance(
-            result, (TimeoutError, DNSError, AresError, asyncio.CancelledError)
-        )
+        result for result in results if isinstance(result, (TimeoutError, DNSError))
     ]
     if errors and len(errors) == len(results):
         await _close_resolvers()
@@ -115,10 +110,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: DnsIPConfigEntry
 ) -> bool:
     """Migrate old entry to a newer version."""
-
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version < 2 and config_entry.minor_version < 2:
         _LOGGER.debug(

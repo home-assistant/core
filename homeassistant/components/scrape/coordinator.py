@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from bs4 import BeautifulSoup
 
@@ -44,6 +44,7 @@ class ScrapeCoordinator(DataUpdateCoordinator[BeautifulSoup]):
         self._rest = rest
         self._rest_config = rest_config
 
+    @override
     async def _async_update_data(self) -> BeautifulSoup:
         """Fetch data from Rest."""
         if CONF_RESOURCE_TEMPLATE in self._rest_config:

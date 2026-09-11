@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectionError
 from intellifire4py.cloud_interface import IntelliFireCloudInterface
@@ -97,6 +97,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
         # Define a cloud api interface we can use
         self.cloud_api_interface = IntelliFireCloudInterface()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -251,6 +252,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_cloud_api()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -277,6 +279,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: IntellifireConfigEntry) -> OptionsFlow:
         """Create the options flow."""
         return IntelliFireOptionsFlowHandler()

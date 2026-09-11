@@ -17,7 +17,7 @@ from homeassistant.components.vacuum import (
     SERVICE_START,
     SERVICE_STOP,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -30,11 +30,10 @@ from tests.common import (
     snapshot_platform,
 )
 
-TEST_PLATFORM = VACUUM_DOMAIN
 ENTITY_ID = "vacuum.robot_vacuum_cleaner"
 
 pytestmark = [
-    pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)]),
+    pytest.mark.parametrize("platforms", [(Platform.VACUUM,)]),
     pytest.mark.parametrize("load_device_file", ["vacuum_device.json"]),
 ]
 
@@ -98,7 +97,7 @@ async def test_vacuum_program(
     """Test the vacuum can be controlled."""
 
     await hass.services.async_call(
-        TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
     mock_miele_client.send_action.assert_called_once_with(
         "Dummy_Vacuum_1", {action_command: vacuum_power}
@@ -118,7 +117,7 @@ async def test_vacuum_fan_speed(
     """Test the vacuum can be controlled."""
 
     await hass.services.async_call(
-        TEST_PLATFORM,
+        VACUUM_DOMAIN,
         SERVICE_SET_FAN_SPEED,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: fan_speed},
         blocking=True,
@@ -148,6 +147,6 @@ async def test_api_failure(
         HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
     ):
         await hass.services.async_call(
-            TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
         )
     mock_miele_client.send_action.assert_called_once()

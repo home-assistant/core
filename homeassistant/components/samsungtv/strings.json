@@ -6,9 +6,7 @@
       "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Check your TV's External Device Manager settings to authorize Home Assistant.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "id_missing": "This Samsung device doesn't have a serial number to identify it.",
-      "not_supported": "This Samsung device is currently not supported.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "not_supported": "This Samsung device is currently not supported."
     },
     "error": {
       "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]",
@@ -80,6 +78,9 @@
     },
     "error_set_volume": {
       "message": "Unable to set volume level on {host}: {error}"
+    },
+    "invalid_device": {
+      "message": "Device with ID {device_id} is invalid or not found."
     },
     "media_id_invalid": {
       "message": "Media ID must be a positive integer."

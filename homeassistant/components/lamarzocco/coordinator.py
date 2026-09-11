@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.exceptions import (
@@ -112,10 +112,12 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             self.update_success = True
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
+    @override
     async def _async_setup(self) -> None:
         """Set up coordinator."""
         await self.__handle_internal_update(self._internal_async_setup)
 
+    @override
     async def _async_update_data(self) -> None:
         """Do the data update."""
         await self.__handle_internal_update(self._internal_async_update_data)
@@ -131,12 +133,14 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
+    @override
     async def _internal_async_setup(self) -> None:
         """Set up the coordinator."""
         await self.device.ensure_token_valid()
         await self.device.get_dashboard()
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
+    @override
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
@@ -188,6 +192,7 @@ class LaMarzoccoSettingsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     _default_update_interval = SETTINGS_UPDATE_INTERVAL
 
+    @override
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.device.get_settings()
@@ -199,6 +204,7 @@ class LaMarzoccoScheduleUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     _default_update_interval = SCHEDULE_UPDATE_INTERVAL
 
+    @override
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.device.get_schedule()
@@ -210,6 +216,7 @@ class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     _default_update_interval = STATISTICS_UPDATE_INTERVAL
 
+    @override
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.device.get_coffee_and_flush_counter()
@@ -221,10 +228,12 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     _ignore_offline_mode = True
 
+    @override
     async def _internal_async_setup(self) -> None:
         """Initial setup for Bluetooth coordinator."""
         await self.device.get_model_info_from_bluetooth()
 
+    @override
     async def _internal_async_update_data(self) -> None:
         """Fetch data from Bluetooth endpoint."""
         # if the websocket is connected and the machine is connected to the cloud

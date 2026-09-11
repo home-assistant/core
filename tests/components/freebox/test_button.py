@@ -28,7 +28,7 @@ async def test_reboot(hass: HomeAssistant, router: Mock) -> None:
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             service_data={
-                ATTR_ENTITY_ID: "button.freebox_server_r2_reboot_freebox",
+                ATTR_ENTITY_ID: "button.freebox_server_r2_restart",
             },
             blocking=True,
         )

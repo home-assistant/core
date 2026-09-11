@@ -1,7 +1,7 @@
 """Config flow for Canary."""
 
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from canary.api import Api
 from requests.exceptions import ConnectTimeout, HTTPError
@@ -48,10 +48,12 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return CanaryOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

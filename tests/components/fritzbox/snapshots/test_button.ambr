@@ -39,7 +39,7 @@
 # name: test_setup[button.fake_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'fake_name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_name',
     }),
     'context': <ANY>,
     'entity_id': 'button.fake_name',

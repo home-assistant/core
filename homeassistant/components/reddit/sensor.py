@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import praw
 import voluptuous as vol
@@ -111,6 +111,7 @@ class RedditSensor(SensorEntity):
         self._subreddit_data: list = []
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {

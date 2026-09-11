@@ -1,5 +1,7 @@
 """Intents for the todo integration."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
@@ -33,6 +35,7 @@ class ListBaseIntentHandler(intent.IntentHandler):
         """Execute action specific to this intent handler."""
         raise NotImplementedError
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -84,6 +87,7 @@ class ListAddItemIntentHandler(ListBaseIntentHandler):
     intent_type = INTENT_LIST_ADD_ITEM
     description = "Add item to a todo list"
 
+    @override
     async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
         """Execute action specific to this intent handler."""
         # Format item summary with first letter capitalized and rest as-is
@@ -101,6 +105,7 @@ class ListCompleteItemIntentHandler(ListBaseIntentHandler):
     intent_type = INTENT_LIST_COMPLETE_ITEM
     description = "Complete item on a todo list"
 
+    @override
     async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
         """Execute action specific to this intent handler."""
 
@@ -134,6 +139,7 @@ class ListRemoveItemIntentHandler(ListBaseIntentHandler):
     intent_type = INTENT_LIST_REMOVE_ITEM
     description = "Remove one or more items from a todo list"
 
+    @override
     async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
         """Execute action specific to this intent handler."""
 

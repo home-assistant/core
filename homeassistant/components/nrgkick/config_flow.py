@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from nrgkick_api import NRGkickAPI
 import voluptuous as vol
@@ -168,6 +168,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -347,6 +348,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

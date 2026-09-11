@@ -1,6 +1,6 @@
 """Support for HLK-SW16 switches."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -36,14 +36,17 @@ class SW16Switch(SW16Entity, SwitchEntity):
     """Representation of a HLK-SW16 switch."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._is_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._client.turn_on(self._device_port)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._device_port)

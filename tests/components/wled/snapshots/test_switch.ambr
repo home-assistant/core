@@ -40,7 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'duration': 60,
-      'friendly_name': 'WLED RGB Light Nightlight',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Nightlight',
       'target_brightness': 0,
     }),
     'context': <ANY>,
@@ -91,7 +91,7 @@
 # name: test_snapshots[rgb][switch.wled_rgb_light_reverse-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Reverse',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Reverse',
     }),
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_reverse',
@@ -141,7 +141,7 @@
 # name: test_snapshots[rgb][switch.wled_rgb_light_segment_1_reverse-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Segment 1 reverse',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Segment 1 reverse',
     }),
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_segment_1_reverse',
@@ -191,7 +191,7 @@
 # name: test_snapshots[rgb][switch.wled_rgb_light_freeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Freeze',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Freeze',
     }),
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_freeze',
@@ -241,7 +241,7 @@
 # name: test_snapshots[rgb][switch.wled_rgb_light_segment_1_freeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Segment 1 freeze',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Segment 1 freeze',
     }),
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_segment_1_freeze',
@@ -291,7 +291,7 @@
 # name: test_snapshots[rgb][switch.wled_rgb_light_sync_receive-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Sync receive',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Sync receive',
       'udp_port': 21324,
     }),
     'context': <ANY>,
@@ -342,7 +342,7 @@
 # name: test_snapshots[rgb][switch.wled_rgb_light_sync_send-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Sync send',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Sync send',
       'udp_port': 21324,
     }),
     'context': <ANY>,
@@ -394,7 +394,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'duration': 60,
-      'friendly_name': 'WLED RGB Light Nightlight',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Nightlight',
       'target_brightness': 0,
     }),
     'context': <ANY>,
@@ -445,7 +445,7 @@
 # name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_reverse-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Reverse',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Reverse',
     }),
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_reverse',
@@ -495,7 +495,7 @@
 # name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_freeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Freeze',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Freeze',
     }),
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_freeze',
@@ -545,7 +545,7 @@
 # name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_sync_receive-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Sync receive',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Sync receive',
       'udp_port': 21324,
     }),
     'context': <ANY>,
@@ -596,7 +596,7 @@
 # name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_sync_send-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Sync send',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Sync send',
       'udp_port': 21324,
     }),
     'context': <ANY>,

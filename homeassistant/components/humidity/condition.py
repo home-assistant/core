@@ -1,5 +1,7 @@
 """Provides conditions for humidity."""
 
+from typing import override
+
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY as CLIMATE_ATTR_CURRENT_HUMIDITY,
     DOMAIN as CLIMATE_DOMAIN,
@@ -18,7 +20,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import Condition, EntityNumericalConditionBase
 
-HUMIDITY_DOMAIN_SPECS = {
+HUMIDITY_DOMAIN_SPECS: dict[str, DomainSpec] = {
     CLIMATE_DOMAIN: DomainSpec(
         value_source=CLIMATE_ATTR_CURRENT_HUMIDITY,
     ),
@@ -38,6 +40,7 @@ class HumidityCondition(EntityNumericalConditionBase):
     _domain_specs = HUMIDITY_DOMAIN_SPECS
     _valid_unit = PERCENTAGE
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip attribute-source entities that lack the humidity attribute.
 

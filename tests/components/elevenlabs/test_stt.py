@@ -6,11 +6,8 @@ from elevenlabs.core import ApiError
 import pytest
 
 from homeassistant.components import stt
-from homeassistant.components.elevenlabs.const import (
-    CONF_MODEL,
-    CONF_STT_AUTO_LANGUAGE,
-    CONF_VOICE,
-)
+from homeassistant.components.elevenlabs.const import CONF_STT_AUTO_LANGUAGE, CONF_VOICE
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 # === Fixtures ===

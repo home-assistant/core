@@ -703,7 +703,9 @@ async def test_exception_from_update_method(
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -768,7 +770,9 @@ async def test_bad_data_from_update_method(hass: HomeAssistant) -> None:
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -828,11 +832,11 @@ GOVEE_B5178_PRIMARY_SERVICE_INFO = BluetoothServiceInfo(
 
 GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
     devices={
-        "remote": {
-            "name": "B5178D6FB Remote",
-            "manufacturer": "Govee",
-            "model": "H5178-REMOTE",
-        },
+        "remote": DeviceInfo(
+            name="B5178D6FB Remote",
+            manufacturer="Govee",
+            model="H5178-REMOTE",
+        ),
     },
     entity_descriptions={
         PassiveBluetoothEntityKey(
@@ -918,16 +922,16 @@ GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
     PassiveBluetoothDataUpdate(
         devices={
-            "remote": {
-                "name": "B5178D6FB Remote",
-                "manufacturer": "Govee",
-                "model": "H5178-REMOTE",
-            },
-            "primary": {
-                "name": "B5178D6FB Primary",
-                "manufacturer": "Govee",
-                "model": "H5178",
-            },
+            "remote": DeviceInfo(
+                name="B5178D6FB Remote",
+                manufacturer="Govee",
+                model="H5178-REMOTE",
+            ),
+            "primary": DeviceInfo(
+                name="B5178D6FB Primary",
+                manufacturer="Govee",
+                model="H5178",
+            ),
         },
         entity_descriptions={
             PassiveBluetoothEntityKey(

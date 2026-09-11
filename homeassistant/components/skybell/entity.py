@@ -1,5 +1,7 @@
 """Entity representing a Skybell HD Doorbell."""
 
+from typing import override
+
 from aioskybell import SkybellDevice
 
 from homeassistant.const import ATTR_CONNECTIONS
@@ -42,6 +44,7 @@ class SkybellEntity(CoordinatorEntity[SkybellDataUpdateCoordinator]):
         """Return the device."""
         return self.coordinator.device
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

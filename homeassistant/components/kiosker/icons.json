@@ -1,6 +1,12 @@
 {
   "entity": {
     "binary_sensor": {
+      "blackout_dismissible": {
+        "default": "mdi:lock",
+        "state": {
+          "on": "mdi:lock-open-outline"
+        }
+      },
       "blackout_state": {
         "default": "mdi:monitor",
         "state": {
@@ -15,6 +21,9 @@
       }
     },
     "button": {
+      "blackout_clear": {
+        "default": "mdi:monitor"
+      },
       "clear_cache": {
         "default": "mdi:cached"
       },
@@ -47,8 +56,35 @@
       "ambient_light": {
         "default": "mdi:brightness-6"
       },
+      "blackout_background": {
+        "default": "mdi:palette"
+      },
+      "blackout_button_background": {
+        "default": "mdi:palette"
+      },
+      "blackout_button_foreground": {
+        "default": "mdi:palette-outline"
+      },
+      "blackout_button_text": {
+        "default": "mdi:button-cursor"
+      },
+      "blackout_expire": {
+        "default": "mdi:clock-end"
+      },
+      "blackout_foreground": {
+        "default": "mdi:palette-outline"
+      },
+      "blackout_icon": {
+        "default": "mdi:emoticon-outline"
+      },
+      "blackout_sound": {
+        "default": "mdi:music-note"
+      },
       "blackout_state": {
         "default": "mdi:monitor-off"
+      },
+      "blackout_text": {
+        "default": "mdi:text"
       },
       "last_interaction": {
         "default": "mdi:gesture-tap"
@@ -61,6 +97,14 @@
       "disable_screensaver": {
         "default": "mdi:power-sleep"
       }
+    }
+  },
+  "services": {
+    "navigate_url": {
+      "service": "mdi:web"
+    },
+    "set_blackout": {
+      "service": "mdi:monitor-off"
     }
   }
 }

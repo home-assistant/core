@@ -1,7 +1,7 @@
 """Support for switches through the SmartThings cloud API."""
 
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
@@ -454,6 +454,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         ) is not None:
             self._attr_translation_key = translation_key
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.execute_device_command(
@@ -461,6 +462,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
             self.entity_description.off_command,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.execute_device_command(
@@ -474,6 +476,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._current_state() == self.entity_description.on_key
@@ -484,6 +487,7 @@ class SmartThingsCommandSwitch(SmartThingsSwitch):
 
     entity_description: SmartThingsCommandSwitchEntityDescription
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.execute_device_command(
@@ -492,6 +496,7 @@ class SmartThingsCommandSwitch(SmartThingsSwitch):
             self.entity_description.off_key,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.execute_device_command(
@@ -563,15 +568,18 @@ class SmartThingsDishwasherWashingOptionSwitch(SmartThingsCommandSwitch):
         if not course_settable:
             raise ServiceValidationError("Option is not supported by selected cycle")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._validate_before_execute()
         await super().async_turn_off(**kwargs)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._validate_before_execute()
         await super().async_turn_on(**kwargs)
 
+    @override
     def _current_state(self) -> Any:
         return super()._current_state()["value"]

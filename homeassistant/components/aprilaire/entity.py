@@ -1,6 +1,7 @@
 """Base functionality for Aprilaire entities."""
 
 import logging
+from typing import override
 
 from pyaprilaire.const import Attribute
 
@@ -40,5 +41,6 @@ class BaseAprilaireEntity(BaseCoordinatorEntity[AprilaireCoordinator]):
 
         self._attr_available = connected and not stopped
 
+    @override
     async def async_update(self) -> None:
         """Implement abstract base method."""

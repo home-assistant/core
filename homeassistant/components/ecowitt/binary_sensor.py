@@ -1,7 +1,7 @@
 """Support for Ecowitt Weather Stations."""
 
 import dataclasses
-from typing import Final
+from typing import Final, override
 
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes
 
@@ -76,6 +76,7 @@ class EcowittBinarySensorEntity(EcowittEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return bool(self.ecowitt.value)

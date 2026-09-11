@@ -2,6 +2,7 @@
 
 from collections import namedtuple
 import logging
+from typing import override
 
 from btsmarthub_devicelist import BTSmartHub
 import voluptuous as vol
@@ -67,11 +68,13 @@ class BTSmartHubScanner(DeviceScanner):
         else:
             _LOGGER.warning("Failed to connect to %s", self.smarthub.router_ip)
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [device.mac for device in self.last_results]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if not self.last_results:

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any, final, override
 import uuid
 
 import voluptuous as vol
@@ -65,6 +65,7 @@ class TagIDExistsError(HomeAssistantError):
 class TagIDManager(collection.IDManager):
     """ID manager for tags."""
 
+    @override
     def generate_id(self, suggestion: str) -> str:
         """Generate an ID."""
         if self.has_id(suggestion):
@@ -92,6 +93,7 @@ def _create_entry(
 class TagStore(Store[collection.SerializedStorageCollection]):
     """Store tag data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -134,6 +136,7 @@ class TagStorageCollection(collection.DictStorageCollection):
         super().__init__(store, id_manager)
         self.entity_registry = er.async_get(self.hass)
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
@@ -151,10 +154,12 @@ class TagStorageCollection(collection.DictStorageCollection):
         return data
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict[str, str]) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_ID]
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         data = {**item, **self.UPDATE_SCHEMA(update_data)}
@@ -172,6 +177,7 @@ class TagStorageCollection(collection.DictStorageCollection):
 
         return data
 
+    @override
     def _serialize_item(self, item_id: str, item: dict) -> dict:
         """Return the serialized representation of an item for storing.
 
@@ -200,6 +206,7 @@ class TagDictStorageCollectionWebsocket(
         self.entity_registry = er.async_get(storage_collection.hass)
 
     @callback
+    @override
     def ws_list_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
@@ -399,6 +406,7 @@ class TagEntity(Entity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         if (
@@ -409,15 +417,18 @@ class TagEntity(Entity):
         return last_scanned.isoformat(timespec="milliseconds")
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sun."""
         return {TAG_ID: self._tag_id, LAST_SCANNED_BY_DEVICE_ID: self._last_device_id}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._entity_update_handlers[self._tag_id] = self.async_handle_event
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity being removed."""
         await super().async_will_remove_from_hass()

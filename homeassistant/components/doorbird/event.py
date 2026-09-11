@@ -1,6 +1,6 @@
 """Support for doorbird events."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -68,6 +68,7 @@ class DoorBirdEventEntity(DoorBirdEntity, EventEntity):
         friendly_name = slug_name.replace("_", " ")
         self._attr_name = friendly_name[0:1].upper() + friendly_name[1:].lower()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""
         self.async_on_remove(

@@ -1,7 +1,7 @@
 """Support for Fibaro binary sensors."""
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyfibaro.fibaro_device import DeviceModel
 
@@ -73,10 +73,12 @@ class FibaroBinarySensor(FibaroEntity, BinarySensorEntity):
             self._attr_icon = SENSOR_TYPES[self._fibaro_sensor_type][1]
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the extra state attributes of the device."""
         return {**super().extra_state_attributes, **self._own_extra_state_attributes}
 
+    @override
     def update(self) -> None:
         """Get the latest data and update the state."""
         super().update()

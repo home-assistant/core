@@ -81,10 +81,6 @@ async def async_migrate_entry(
         config_entry.minor_version,
     )
 
-    if config_entry.version > 1:
-        # The user has downgraded from a future version
-        return False
-
     if config_entry.version == 1:
         if config_entry.minor_version < 2:
             # 1.2: Normalize unique ID to be lowercase MAC address without separators.

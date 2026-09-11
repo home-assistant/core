@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.test_trmnl_sleep_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test TRMNL Sleep mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test TRMNL Sleep mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_trmnl_sleep_mode',

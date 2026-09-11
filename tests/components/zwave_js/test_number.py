@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from zwave_js_server.event import Event
 
+from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.const import STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -110,7 +111,7 @@ async def test_number_writeable(
     aeotec_radiator_thermostat.values.pop("4-38-0-targetValue")
 
     # set up config entry
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

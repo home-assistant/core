@@ -1,7 +1,10 @@
 """The tests for the denonavr media player platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from denonavr.exceptions import AvrIncompleteResponseError, AvrInvalidResponseError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import media_player
@@ -18,10 +21,11 @@ from homeassistant.components.denonavr.services import (
     SERVICE_SET_DYNAMIC_EQ,
     SERVICE_UPDATE_AUDYSSEY,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_HOST = "1.2.3.4"
 TEST_NAME = "Test_Receiver"
@@ -60,19 +64,21 @@ def client_fixture():
         yield mock_client_class.return_value
 
 
-async def setup_denonavr(hass: HomeAssistant) -> None:
+async def setup_denonavr(
+    hass: HomeAssistant, serial_number: str | None = TEST_SERIALNUMBER
+) -> MockConfigEntry:
     """Initialize media_player for tests."""
     entry_data = {
         CONF_HOST: TEST_HOST,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
-        CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
+        CONF_SERIAL_NUMBER: serial_number,
     }
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_UNIQUE_ID,
+        unique_id=TEST_UNIQUE_ID if serial_number else None,
         data=entry_data,
     )
 
@@ -85,6 +91,20 @@ async def setup_denonavr(hass: HomeAssistant) -> None:
 
     assert state
     assert state.name == TEST_NAME
+
+    return mock_entry
+
+
+@pytest.mark.usefixtures("client")
+async def test_setup_without_serial_number(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test a receiver reporting no serial number still gets its media player."""
+    entry = await setup_denonavr(hass, serial_number=None)
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
 
 
 async def test_get_command(hass: HomeAssistant, client) -> None:
@@ -137,3 +157,40 @@ async def test_update_audyssey(hass: HomeAssistant, client) -> None:
     await hass.async_block_till_done()
 
     client.async_update_audyssey.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(
+            AvrInvalidResponseError("XML parse error", "GET"),
+            id="invalid_response",
+        ),
+        pytest.param(
+            AvrIncompleteResponseError("Incomplete", "GET"),
+            id="incomplete_response",
+        ),
+    ],
+)
+async def test_malformed_response_marks_unavailable(
+    hass: HomeAssistant,
+    client,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test that malformed response errors mark the entity unavailable."""
+    await setup_denonavr(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state != STATE_UNAVAILABLE
+
+    # Force polling by disabling telnet, then trigger the error
+    client.telnet_connected = False
+    client.telnet_healthy = False
+    client.async_update.side_effect = exception
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNAVAILABLE

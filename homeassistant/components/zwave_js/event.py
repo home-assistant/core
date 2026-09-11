@@ -1,6 +1,7 @@
 """Support for Z-Wave controls using the event platform."""
 
 from dataclasses import dataclass
+from typing import override
 
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value, ValueNotification
@@ -105,6 +106,7 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
         self._trigger_event(event_name, {ATTR_VALUE: notification_value})
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()

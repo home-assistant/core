@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 import pyaprilaire.client
 from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
@@ -30,14 +30,15 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
     def __init__(
         self,
         hass: HomeAssistant,
-        unique_id: str | None,
+        config_entry: AprilaireConfigEntry | None,
         host: str,
         port: int,
     ) -> None:
         """Initialize the coordinator."""
 
         self.hass = hass
-        self.unique_id = unique_id
+        self.config_entry = config_entry
+        self.unique_id = config_entry.unique_id if config_entry else None
         self.data: dict[str, Any] = {}
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
@@ -55,6 +56,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
             self.data = self.client.data
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
@@ -87,13 +89,16 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
         new_device_info = self.create_device_info(data)
 
         if (
-            old_device_info is not None
+            self.config_entry is not None
+            and old_device_info is not None
             and new_device_info is not None
             and old_device_info != new_device_info
         ):
             device_registry = dr.async_get(self.hass)
 
-            device = device_registry.async_get_device(old_device_info["identifiers"])
+            device = device_registry.async_get_device_by_identifier(
+                next(iter(old_device_info["identifiers"])), self.config_entry.entry_id
+            )
 
             if device is not None:
                 new_device_info.pop("identifiers", None)
@@ -193,6 +198,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, data[Attribute.MAC_ADDRESS])},
             name=self.create_device_name(data),
             manufacturer="Aprilaire",
         )

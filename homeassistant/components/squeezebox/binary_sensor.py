@@ -1,6 +1,7 @@
 """Binary sensor platform for Squeezebox integration."""
 
 import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -96,6 +97,7 @@ class ServerStatusBinarySensor(LMSStatusEntity, BinarySensorEntity):
     """LMS Status based sensor from LMS via coordinator."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """LMS Status directly from coordinator data."""
         return bool(self.coordinator.data[self.entity_description.key])
@@ -117,6 +119,7 @@ class SqueezeboxBinarySensorEntity(SqueezeboxEntity, BinarySensorEntity):
         self._attr_unique_id = f"{format_mac(self._player.player_id)}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return getattr(self.coordinator.player, self.entity_description.key, None)

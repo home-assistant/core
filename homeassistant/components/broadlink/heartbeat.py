@@ -8,6 +8,7 @@ import broadlink as blk
 from homeassistant.const import CONF_HOST
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import event
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -31,7 +32,7 @@ class BroadlinkHeartbeat:
     async def async_setup(self) -> None:
         """Set up the heartbeat."""
         if self._unsubscribe is None:
-            await self.async_heartbeat(dt.datetime.now())
+            await self.async_heartbeat(dt_util.utcnow())
             self._unsubscribe = event.async_track_time_interval(
                 self._hass, self.async_heartbeat, self.HEARTBEAT_INTERVAL
             )

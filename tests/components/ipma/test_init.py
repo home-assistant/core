@@ -41,7 +41,7 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
         return_value=MockLocation(),
     ):
         config_entry = MockConfigEntry(
-            domain="ipma",
+            domain=DOMAIN,
             data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "daily"},
         )
         config_entry.add_to_hass(hass)

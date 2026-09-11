@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL
@@ -44,6 +45,7 @@ class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the Pterodactyl data coordinator."""
         self.api = PterodactylAPI(
@@ -59,6 +61,7 @@ class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
         except PterodactylAuthorizationError as error:
             raise ConfigEntryAuthFailed(error) from error
 
+    @override
     async def _async_update_data(self) -> dict[str, PterodactylData]:
         """Get updated data from the Pterodactyl server."""
         try:

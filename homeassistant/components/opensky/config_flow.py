@@ -1,6 +1,6 @@
 """Config flow for OpenSky integration."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohttp import BasicAuth
 from python_opensky import OpenSky
@@ -34,12 +34,14 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: OpenSkyConfigEntry,
     ) -> OpenSkyOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OpenSkyOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

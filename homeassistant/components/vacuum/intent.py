@@ -1,6 +1,7 @@
 """Intents for the vacuum integration."""
 
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -63,6 +64,7 @@ class CleanAreaIntentHandler(intent.IntentHandler):
     description = "Tells a vacuum to clean a specific area"
 
     @property
+    @override
     def slot_schema(self) -> dict:
         """Return a slot schema."""
         return {
@@ -72,6 +74,7 @@ class CleanAreaIntentHandler(intent.IntentHandler):
             vol.Optional("preferred_floor_id"): cv.string,
         }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass

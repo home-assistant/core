@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
@@ -43,12 +43,12 @@
 # name: test_light[light.evse_1_1_1_1_light_led-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': <ColorMode.ONOFF: 'onoff'>,
-      'friendly_name': 'EVSE 1.1.1.1 Light LED',
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'EVSE 1.1.1.1 Light LED',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.evse_1_1_1_1_light_led',
@@ -65,7 +65,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -102,13 +102,13 @@
 # name: test_light[light.evse_1_1_1_1_logo_led-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 192,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'EVSE 1.1.1.1 Logo LED',
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 192,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'EVSE 1.1.1.1 Logo LED',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.evse_1_1_1_1_logo_led',

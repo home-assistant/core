@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from subarulink import Controller as SubaruAPI, SubaruException
 
@@ -58,6 +58,7 @@ class SubaruDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._controller = controller
         self._vehicle_info = vehicle_info
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Subaru API."""
         try:

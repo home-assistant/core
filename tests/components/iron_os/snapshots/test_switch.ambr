@@ -39,7 +39,7 @@
 # name: test_switch_platform[switch.pinecil_animation_loop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Animation loop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Animation loop',
     }),
     'context': <ANY>,
     'entity_id': 'switch.pinecil_animation_loop',
@@ -89,7 +89,7 @@
 # name: test_switch_platform[switch.pinecil_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Boost',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Boost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.pinecil_boost',
@@ -139,7 +139,7 @@
 # name: test_switch_platform[switch.pinecil_calibrate_cjc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Calibrate CJC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Calibrate CJC',
     }),
     'context': <ANY>,
     'entity_id': 'switch.pinecil_calibrate_cjc',
@@ -189,7 +189,7 @@
 # name: test_switch_platform[switch.pinecil_cool_down_screen_flashing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Cool down screen flashing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Cool down screen flashing',
     }),
     'context': <ANY>,
     'entity_id': 'switch.pinecil_cool_down_screen_flashing',
@@ -239,7 +239,7 @@
 # name: test_switch_platform[switch.pinecil_detailed_idle_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Detailed idle screen',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Detailed idle screen',
     }),
     'context': <ANY>,
     'entity_id': 'switch.pinecil_detailed_idle_screen',
@@ -289,7 +289,7 @@
 # name: test_switch_platform[switch.pinecil_detailed_solder_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Detailed solder screen',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Detailed solder screen',
     }),
     'context': <ANY>,
     'entity_id': 'switch.pinecil_detailed_solder_screen',
@@ -339,7 +339,7 @@
 # name: test_switch_platform[switch.pinecil_invert_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Invert screen',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Invert screen',
     }),
     'context': <ANY>,
     'entity_id': 'switch.pinecil_invert_screen',
@@ -389,7 +389,7 @@
 # name: test_switch_platform[switch.pinecil_swap_buttons-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Swap +/- buttons',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Swap +/- buttons',
     }),
     'context': <ANY>,
     'entity_id': 'switch.pinecil_swap_buttons',

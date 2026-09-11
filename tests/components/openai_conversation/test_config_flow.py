@@ -16,7 +16,7 @@ from homeassistant.components.openai_conversation.const import (
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
+    CONF_PRO_MODE,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
@@ -47,7 +47,7 @@ from homeassistant.components.openai_conversation.const import (
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_OPTIONS,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -247,9 +247,9 @@ async def test_subentry_unsupported_model(
     )
     await hass.async_block_till_done()
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -274,6 +274,8 @@ async def test_subentry_unsupported_model(
         ("gpt-5.4-pro", ["medium", "high", "xhigh"]),
         ("gpt-5.5", ["none", "low", "medium", "high", "xhigh"]),
         ("gpt-5.5-pro", ["medium", "high", "xhigh"]),
+        ("gpt-5.6", ["none", "low", "medium", "high", "xhigh", "max"]),
+        ("gpt-6-astra", ["low", "medium", "high", "xhigh", "max"]),
     ],
 )
 async def test_subentry_reasoning_effort_list(
@@ -301,9 +303,9 @@ async def test_subentry_reasoning_effort_list(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -326,6 +328,7 @@ async def test_subentry_reasoning_effort_list(
         ("gpt-5", True),
         ("gpt-5-mini", True),
         ("gpt-5-pro", True),
+        ("gpt-6-astra", True),
         ("gpt-4o", False),
         ("gpt-4.1", False),
     ],
@@ -355,9 +358,9 @@ async def test_subentry_reasoning_summary_visibility(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -378,6 +381,7 @@ async def test_subentry_reasoning_summary_visibility(
         ("o4-mini", ["off", "auto", "detailed"]),
         ("gpt-5", ["off", "auto", "concise", "detailed"]),
         ("gpt-5-mini", ["off", "auto", "concise", "detailed"]),
+        ("gpt-6-astra", ["off", "auto", "concise", "detailed"]),
     ],
 )
 async def test_subentry_reasoning_summary_options(
@@ -404,7 +408,7 @@ async def test_subentry_reasoning_summary_options(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
@@ -451,7 +455,7 @@ async def test_subentry_reasoning_summary_default_sanitized_on_model_switch(
             CONF_LLM_HASS_API: ["assist"],
         },
     )
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
@@ -467,6 +471,8 @@ async def test_subentry_reasoning_summary_default_sanitized_on_model_switch(
 @pytest.mark.parametrize(
     ("model", "service_tier_options"),
     [
+        ("gpt-5.6", ["auto", "flex", "default", "priority"]),
+        ("gpt-5.5", ["auto", "flex", "default", "priority"]),
         ("gpt-5.4", ["auto", "flex", "default", "priority"]),
         ("gpt-5.4-pro", ["auto", "flex", "default", "priority"]),
         ("gpt-5.2", ["auto", "flex", "default", "priority"]),
@@ -516,9 +522,9 @@ async def test_subentry_service_tier_list(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -562,9 +568,9 @@ async def test_subentry_unsupported_reasoning_effort(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -644,6 +650,25 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
 @pytest.mark.parametrize(
     ("current_options", "new_options", "expected_options"),
     [
+        (  # Test clearing every llm api is stored as an empty list
+            {
+                CONF_RECOMMENDED: True,
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_PROMPT: "",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: True,
+                    CONF_LLM_HASS_API: [],
+                    CONF_PROMPT: "",
+                },
+            ),
+            {
+                CONF_RECOMMENDED: True,
+                CONF_LLM_HASS_API: [],
+                CONF_PROMPT: "",
+            },
+        ),
         (  # Test converting single llm api format to list
             {
                 CONF_RECOMMENDED: True,
@@ -818,12 +843,12 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 },
                 {
                     CONF_TEMPERATURE: 0.8,
-                    CONF_CHAT_MODEL: "gpt-5",
+                    CONF_CHAT_MODEL: "gpt-5.6",
                     CONF_TOP_P: 0.9,
                     CONF_MAX_TOKENS: 1000,
                 },
                 {
-                    CONF_REASONING_EFFORT: "minimal",
+                    CONF_REASONING_EFFORT: "max",
                     CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                     CONF_CODE_INTERPRETER: False,
                     CONF_VERBOSITY: "high",
@@ -832,17 +857,18 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
                     CONF_WEB_SEARCH_INLINE_CITATIONS: True,
+                    CONF_PRO_MODE: True,
                 },
             ),
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-5",
+                CONF_CHAT_MODEL: "gpt-5.6",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_STORE_RESPONSES: False,
-                CONF_REASONING_EFFORT: "minimal",
+                CONF_REASONING_EFFORT: "max",
                 CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_CODE_INTERPRETER: False,
                 CONF_VERBOSITY: "high",
@@ -851,6 +877,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
                 CONF_WEB_SEARCH_INLINE_CITATIONS: True,
+                CONF_PRO_MODE: True,
             },
         ),
         # Test that old options are removed after reconfiguration
@@ -967,7 +994,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_LLM_HASS_API: ["assist"],
                 CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-5",
+                CONF_CHAT_MODEL: "gpt-5.6",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "low",
@@ -975,6 +1002,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_SERVICE_TIER: "flex",
                 CONF_CODE_INTERPRETER: True,
                 CONF_VERBOSITY: "medium",
+                CONF_PRO_MODE: True,
             },
             (
                 {
@@ -1065,15 +1093,46 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
         ),
+        (
+            {},
+            (
+                {CONF_RECOMMENDED: False},
+                {CONF_CHAT_MODEL: "gpt-6-astra"},
+                {
+                    CONF_REASONING_EFFORT: "max",
+                    CONF_REASONING_SUMMARY: "detailed",
+                    CONF_PRO_MODE: True,
+                    CONF_VERBOSITY: "low",
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_CHAT_MODEL: "gpt-6-astra",
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TEMPERATURE: 1.0,
+                CONF_STORE_RESPONSES: False,
+                CONF_CODE_INTERPRETER: False,
+                CONF_REASONING_EFFORT: "max",
+                CONF_REASONING_SUMMARY: "detailed",
+                CONF_PRO_MODE: True,
+                CONF_VERBOSITY: "low",
+                CONF_SERVICE_TIER: "auto",
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: False,
+            },
+        ),
     ],
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_subentry_switching(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
-    current_options,
-    new_options,
-    expected_options,
+    mock_config_entry: MockConfigEntry,
+    current_options: dict[str, str | float | bool | list[str]],
+    new_options: tuple[dict[str, str | float | bool | list[str]], ...],
+    expected_options: dict[str, str | float | bool | list[str]],
 ) -> None:
     """Test the subentry form."""
     subentry = next(
@@ -1145,9 +1204,9 @@ async def test_subentry_web_search_user_location(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -1293,12 +1352,29 @@ async def test_ai_task_subentry_not_loaded(
     assert result.get("reason") == "entry_not_loaded"
 
 
-async def test_creating_ai_task_subentry_advanced(
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("image_options", "image_model"),
+    [
+        ({}, "gpt-image-2.5-flare"),
+        (
+            {CONF_IMAGE_MODEL: "gpt-image-2.5-sunburst"},
+            "gpt-image-2.5-sunburst",
+        ),
+        (
+            {CONF_IMAGE_MODEL: "gpt-image-2.5-flare"},
+            "gpt-image-2.5-flare",
+        ),
+        ({CONF_IMAGE_MODEL: "gpt-image-2"}, "gpt-image-2"),
+    ],
+)
+async def test_creating_ai_task_subentry_additional(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
+    image_options: dict[str, str],
+    image_model: str,
 ) -> None:
-    """Test creating an AI task subentry with advanced settings."""
+    """Test creating an AI task subentry with additional settings."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
         context={"source": config_entries.SOURCE_USER},
@@ -1307,7 +1383,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
-    # Go to advanced settings
+    # Go to additional settings
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
@@ -1317,9 +1393,9 @@ async def test_creating_ai_task_subentry_advanced(
     )
 
     assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "advanced"
+    assert result2.get("step_id") == "additional"
 
-    # Configure advanced settings
+    # Configure additional settings
     result3 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
@@ -1339,6 +1415,7 @@ async def test_creating_ai_task_subentry_advanced(
         result["flow_id"],
         {
             CONF_CODE_INTERPRETER: False,
+            **image_options,
         },
     )
 
@@ -1347,7 +1424,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "gpt-4o",
-        CONF_IMAGE_MODEL: "gpt-image-2",
+        CONF_IMAGE_MODEL: image_model,
         CONF_MAX_TOKENS: 200,
         CONF_STORE_RESPONSES: True,
         CONF_TEMPERATURE: 0.5,

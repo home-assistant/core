@@ -39,7 +39,7 @@
 # name: test_entities[switch.qube_heat_pump_anti_legionella_cycle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Anti-legionella cycle',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Anti-legionella cycle',
     }),
     'context': <ANY>,
     'entity_id': 'switch.qube_heat_pump_anti_legionella_cycle',
@@ -89,7 +89,7 @@
 # name: test_entities[switch.qube_heat_pump_heating_curve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Heating curve',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Heating curve',
     }),
     'context': <ANY>,
     'entity_id': 'switch.qube_heat_pump_heating_curve',
@@ -139,7 +139,7 @@
 # name: test_entities[switch.qube_heat_pump_heating_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Heating demand',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Heating demand',
     }),
     'context': <ANY>,
     'entity_id': 'switch.qube_heat_pump_heating_demand',
@@ -189,7 +189,7 @@
 # name: test_entities[switch.qube_heat_pump_summer_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Summer mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Summer mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.qube_heat_pump_summer_mode',
