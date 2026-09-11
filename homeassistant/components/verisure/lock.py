@@ -8,6 +8,7 @@ from verisure import Error as VerisureError
 from homeassistant.components.lock import LockEntity, LockState
 from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -70,18 +71,17 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         self._attr_is_locked = None
         self._attr_changed_by = None
         self._changed_method: str | None = None
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        area = self.coordinator.data["locks"][self.serial_number]["device"]["area"]
-        return DeviceInfo(
+        area = coordinator.data["locks"][serial_number]["device"]["area"]
+        self._attr_device_info = DeviceInfo(
             name=area,
             manufacturer="Verisure",
             model="Lockguard Smartlock",
-            identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
+            identifiers={(DOMAIN, serial_number)},
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.data[CONF_GIID]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             configuration_url="https://mypages.verisure.com",
         )
 

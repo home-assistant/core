@@ -183,7 +183,11 @@ async def test_delete_metadata_duplicates(
 
     def get_statistics_meta(hass: HomeAssistant) -> list:
         with session_scope(hass=hass, read_only=True) as session:
-            return list(session.query(recorder.db_schema.StatisticsMeta).all())
+            return list(
+                session.query(recorder.db_schema.StatisticsMeta)
+                .order_by(recorder.db_schema.StatisticsMeta.id)
+                .all()
+            )
 
     # Create some duplicated statistics_meta with schema version 28
     with (
@@ -308,7 +312,11 @@ async def test_delete_metadata_duplicates_many(
 
     def get_statistics_meta(hass: HomeAssistant) -> list:
         with session_scope(hass=hass, read_only=True) as session:
-            return list(session.query(recorder.db_schema.StatisticsMeta).all())
+            return list(
+                session.query(recorder.db_schema.StatisticsMeta)
+                .order_by(recorder.db_schema.StatisticsMeta.id)
+                .all()
+            )
 
     # Create some duplicated statistics with schema version 28
     with (

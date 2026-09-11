@@ -1,7 +1,9 @@
 """Coordinator for MELCloud Home."""
 
-from collections.abc import Callable
-from datetime import timedelta
+import asyncio
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -24,9 +26,18 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=60)
+TELEMETRY_UPDATE_INTERVAL = timedelta(minutes=15)
 
 
-type MelCloudHomeConfigEntry = ConfigEntry[MelCloudHomeCoordinator]
+@dataclass(kw_only=True, frozen=True)
+class MelCloudHomeRuntimeData:
+    """Runtime data for the MELCloud Home config entry."""
+
+    coordinator: MelCloudHomeCoordinator
+    telemetry_coordinator: MelCloudHomeTelemetryCoordinator
+
+
+type MelCloudHomeConfigEntry = ConfigEntry[MelCloudHomeRuntimeData]
 
 
 class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
@@ -51,8 +62,6 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         self.client = client
         self.ata_units: dict[str, ATAUnit] = {}
         self.atw_units: dict[str, ATWUnit] = {}
-        self.ata_energy: dict[str, float | None] = {}
-        self.atw_energy: dict[str, float | None] = {}
         self.known_ata: set[str] = set()
         self.known_atw: set[str] = set()
         self.new_ata_callbacks: list[Callable[[list[ATAUnit]], None]] = []
@@ -102,48 +111,13 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
                 for identifier in device.identifiers
             ):
                 _LOGGER.debug("Removing stale device: %s", device.identifiers)
-                registry.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                registry.async_remove_device(device.id)
 
     @override
     async def _async_update_data(self) -> UserContext:
         """Fetch data from the MELCloud Home API."""
         try:
             data = await self.client.get_context()
-
-            start_of_month = utcnow().replace(
-                day=1, hour=0, minute=0, second=0, microsecond=0
-            )
-            for building in data.buildings:
-                for ata_unit in building.air_to_air_units:
-                    self.ata_units[ata_unit.id] = ata_unit
-                    if (
-                        ata_unit.capabilities
-                        and ata_unit.capabilities.has_energy_consumed_meter
-                    ):
-                        energy = await self.client.get_energy_telemetry(
-                            ata_unit.id,
-                            from_dt=start_of_month,
-                            to_dt=utcnow(),
-                        )
-                        self.ata_energy[ata_unit.id] = sum(
-                            float(e.value) for e in energy
-                        )
-                for atw_unit in building.air_to_water_units:
-                    self.atw_units[atw_unit.id] = atw_unit
-                    if (
-                        atw_unit.capabilities
-                        and atw_unit.capabilities.has_energy_consumed_meter
-                    ):
-                        energy = await self.client.get_energy_telemetry(
-                            atw_unit.id,
-                            from_dt=start_of_month,
-                            to_dt=utcnow(),
-                        )
-                        self.atw_energy[atw_unit.id] = sum(
-                            float(e.value) for e in energy
-                        )
         except MelCloudHomeAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -159,8 +133,14 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
-        else:
-            return data
+
+        for building in data.buildings:
+            for ata_unit in building.air_to_air_units:
+                self.ata_units[ata_unit.id] = ata_unit
+            for atw_unit in building.air_to_water_units:
+                self.atw_units[atw_unit.id] = atw_unit
+
+        return data
 
     @callback
     @override
@@ -168,3 +148,136 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         """Notify entity callbacks after coordinator data has been updated."""
         if self.data is not None:
             self._notify_new_units(self.data)
+
+
+@dataclass(kw_only=True, frozen=True)
+class MelCloudHomeTelemetryData:
+    """Telemetry data fetched periodically for MELCloud Home units."""
+
+    energy: dict[str, float | None]
+    outdoor_temperature: dict[str, float | None]
+
+
+class MelCloudHomeTelemetryCoordinator(
+    DataUpdateCoordinator[MelCloudHomeTelemetryData]
+):
+    """Coordinator to manage fetching MELCloud Home energy and outdoor temperature telemetry."""
+
+    config_entry: MelCloudHomeConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: MelCloudHomeConfigEntry,
+        client: MELCloudHome,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN}_telemetry",
+            update_interval=TELEMETRY_UPDATE_INTERVAL,
+        )
+        self.client = client
+
+    async def _async_get_energy(
+        self, unit_id: str, start_of_month: datetime, now: datetime
+    ) -> float | None:
+        """Fetch energy telemetry for a unit without failing the whole update."""
+        try:
+            energy = await self.client.get_energy_telemetry(
+                unit_id, from_dt=start_of_month, to_dt=now
+            )
+        except (
+            MelCloudHomeAuthenticationError,
+            MelCloudHomeConnectionError,
+            MelCloudHomeTimeoutError,
+        ):
+            _LOGGER.warning("Failed to fetch energy telemetry for %s:", unit_id)
+            return None
+        return sum(float(e.value) for e in energy)
+
+    async def _async_get_outdoor_temperature(self, unit_id: str) -> float | None:
+        """Fetch outdoor temperature for a unit without failing the whole update."""
+        try:
+            return await self.client.get_outdoor_temperature(unit_id)
+        except (
+            MelCloudHomeAuthenticationError,
+            MelCloudHomeConnectionError,
+            MelCloudHomeTimeoutError,
+        ):
+            _LOGGER.warning("Failed to fetch outdoor temperature for %s", unit_id)
+            return None
+
+    @override
+    async def _async_update_data(self) -> MelCloudHomeTelemetryData:
+        """Fetch energy and outdoor temperature telemetry for all supported units."""
+        try:
+            data = await self.client.get_context()
+        except MelCloudHomeAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except MelCloudHomeConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except MelCloudHomeTimeoutError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+            ) from err
+
+        start_of_month = utcnow().replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        now = utcnow()
+
+        energy_coroutines: dict[str, Coroutine[None, None, float | None]] = {}
+        outdoor_temperature_coroutine: dict[
+            str, Coroutine[None, None, float | None]
+        ] = {}
+        for building in data.buildings:
+            for ata_unit in building.air_to_air_units:
+                if (
+                    ata_unit.capabilities
+                    and ata_unit.capabilities.has_energy_consumed_meter
+                ):
+                    energy_coroutines[ata_unit.id] = self._async_get_energy(
+                        ata_unit.id, start_of_month, now
+                    )
+                if (
+                    ata_unit.capabilities
+                    and ata_unit.capabilities.has_outdoor_temperature_sensor
+                ):
+                    outdoor_temperature_coroutine[ata_unit.id] = (
+                        self._async_get_outdoor_temperature(ata_unit.id)
+                    )
+
+            for atw_unit in building.air_to_water_units:
+                if (
+                    atw_unit.capabilities
+                    and atw_unit.capabilities.has_energy_consumed_meter
+                ):
+                    energy_coroutines[atw_unit.id] = self._async_get_energy(
+                        atw_unit.id, start_of_month, now
+                    )
+
+        energy_values, outdoor_temperature_values = await asyncio.gather(
+            asyncio.gather(*energy_coroutines.values()),
+            asyncio.gather(*outdoor_temperature_coroutine.values()),
+        )
+
+        return MelCloudHomeTelemetryData(
+            energy=dict(zip(energy_coroutines, energy_values, strict=True)),
+            outdoor_temperature=dict(
+                zip(
+                    outdoor_temperature_coroutine,
+                    outdoor_temperature_values,
+                    strict=True,
+                )
+            ),
+        )

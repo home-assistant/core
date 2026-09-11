@@ -45,6 +45,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                 ),
             },
             description="Sets the brightness percentage or color of a light",
+            required_domains={DOMAIN},
             platforms={DOMAIN},
         ),
     )

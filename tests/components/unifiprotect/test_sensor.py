@@ -11,11 +11,13 @@ from uiprotect.data import (
     DeviceState,
     Event,
     EventType,
+    Light,
     ModelType,
     Sensor,
 )
 from uiprotect.data.nvr import EventMetadata
 from uiprotect.data.public_devices import SensorFeatureCapability
+from uiprotect.utils import convert_to_datetime
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
@@ -23,6 +25,7 @@ from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,
+    LIGHT_SENSORS,
     MOTION_TRIP_SENSORS,
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
@@ -45,10 +48,12 @@ from .utils import (
     enable_entity,
     ids_from_device_description,
     init_entry,
+    make_public_light,
     make_public_sensor,
     public_device_ws_message,
     remove_entities,
     reset_objects,
+    setup_public_light,
     setup_public_sensor,
     time_changed,
 )
@@ -704,6 +709,13 @@ async def test_aiport_no_sensor_entities(
     entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
     assert not [e for e in entities if e.unique_id.startswith(f"{aiport.mac}_")]
 
+    # Check no camera-specific sensors like motion detection exist
+    for entity in entities:
+        if entity.domain == Platform.SENSOR:
+            # Camera-specific sensors should not exist for AI Port
+            assert "detected_object" not in entity.unique_id
+            assert "last_motion" not in entity.unique_id
+
 
 async def test_aiport_no_sensor_entities_on_runtime_adopt(
     hass: HomeAssistant,
@@ -721,3 +733,43 @@ async def test_aiport_no_sensor_entities_on_runtime_adopt(
 
     entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
     assert not [e for e in entities if e.unique_id.startswith(f"{aiport.mac}_")]
+
+
+async def test_sensor_light_last_motion_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """The light's last-motion timestamp reads from the public API."""
+
+    setup_public_light(ufp)
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, light, LIGHT_SENSORS[0]
+    )
+    await enable_entity(hass, ufp.entry.entry_id, entity_id)
+
+    # A value the private fixture would not produce proves the public source.
+    last_motion_ms = 1700000000000
+    public = make_public_light(light, last_motion_ms=last_motion_ms)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(entity_id).state
+        == convert_to_datetime(last_motion_ms).isoformat()
+    )
+
+
+async def test_sensor_light_last_motion_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """The migrated last-motion sensor is unavailable without a public object."""
+
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, light, LIGHT_SENSORS[0]
+    )
+    await enable_entity(hass, ufp.entry.entry_id, entity_id)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

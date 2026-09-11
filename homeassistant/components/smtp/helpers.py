@@ -5,12 +5,15 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import logging
+import mimetypes
 import os
 from pathlib import Path
 import smtplib
 import socket
 import ssl
 
+from homeassistant.components import camera, image, tts
+from homeassistant.components.media_source import async_resolve_media
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -134,26 +137,36 @@ def _attach_file(
         _LOGGER.warning("Attachment %s not found. Skipping", atch_name)
         return None
 
-    attachment: MIMEImage | MIMEApplication
+    attachment: MIMEImage | MIMEApplication | None = None
     try:
         attachment = MIMEImage(file_bytes)
     except TypeError:
+        # Not all valid images are recognized from their content, e.g. JPEGs
+        # written by ffmpeg for camera.snapshot start with a comment marker
+        # instead of JFIF/Exif, so fall back to guessing from the filename.
+        # Compressed files (e.g. .svgz) must not be labeled as plain images.
+        mime_type, encoding = mimetypes.guess_type(atch_name)
+        maintype, _, subtype = (mime_type or "").partition("/")
+        if encoding is None and maintype == "image":
+            attachment = MIMEImage(file_bytes, _subtype=subtype)
+
+    if attachment is None:
         _LOGGER.warning(
-            "Attachment %s has an unknown MIME type. Falling back to file",
+            "Could not determine an image type for attachment %s from its"
+            " content or filename. Falling back to file",
             atch_name,
         )
         attachment = MIMEApplication(file_bytes, Name=os.path.basename(atch_name))
         attachment["Content-Disposition"] = (
             f'attachment; filename="{os.path.basename(atch_name)}"'
         )
+    elif content_id:
+        attachment.add_header("Content-ID", f"<{content_id}>")
     else:
-        if content_id:
-            attachment.add_header("Content-ID", f"<{content_id}>")
-        else:
-            attachment.add_header(
-                "Content-Disposition",
-                f"attachment; filename={os.path.basename(atch_name)}",
-            )
+        attachment.add_header(
+            "Content-Disposition",
+            f"attachment; filename={os.path.basename(atch_name)}",
+        )
 
     return attachment
 
@@ -192,3 +205,38 @@ def _build_html_msg(
         if attachment:
             msg.attach(attachment)
     return msg
+
+
+async def _resolve_media(
+    hass: HomeAssistant, media_source: dict[str, str]
+) -> tuple[bytes, str | None, str | None]:
+    """Resolve media from a media source."""
+    media_content_id: str = media_source["media_content_id"]
+    if media_content_id.startswith("media-source://camera/"):
+        entity_id = media_content_id.removeprefix("media-source://camera/")
+        snapshot = await camera.async_get_image(hass, entity_id)
+        return snapshot.content, snapshot.content_type, None
+
+    if media_content_id.startswith("media-source://image/"):
+        entity_id = media_content_id.removeprefix("media-source://image/")
+        img = await image.async_get_image(hass, entity_id)
+        return img.content, img.content_type, None
+
+    if media_content_id.startswith("media-source://tts/"):
+        ext, audio = await tts.async_get_media_source_audio(hass, media_content_id)
+        return audio, mimetypes.types_map.get("." + ext), None
+
+    media = await async_resolve_media(hass, media_source["media_content_id"], None)
+
+    if media.path is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="media_source_not_supported",
+            translation_placeholders={"media_content_id": media_content_id},
+        )
+
+    return (
+        await hass.async_add_executor_job(media.path.read_bytes),
+        media.mime_type,
+        media.path.name,
+    )

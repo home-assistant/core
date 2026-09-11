@@ -1,0 +1,90 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'controller': dict({
+      'bridge_connected': True,
+      'connected': True,
+      'device_ip': '**REDACTED**',
+      'device_uid': '000000001',
+      'fan_modes': list([
+        'low',
+        'med',
+        'high',
+        'auto',
+      ]),
+      'is_ipower': False,
+      'is_v2': False,
+      'power': None,
+      'system_settings': dict({
+        'AirStreamDeviceUId': '000000001',
+        'CtrlZone': 1,
+        'DeviceType': 'ASH',
+        'EcoLock': 'true',
+        'EcoMax': '30.0',
+        'EcoMin': '15.0',
+        'FanAuto': '3-speed',
+        'FreeAir': 'disabled',
+        'NoOfConst': 0,
+        'NoOfZones': 1,
+        'RAS': 'master',
+        'Setpoint': '24.0',
+        'SleepTimer': 0,
+        'Supply': '16.0',
+        'SysFan': 'med',
+        'SysMode': 'cool',
+        'SysOn': 'on',
+        'SysType': 'iZone310',
+        'Temp': '22.0',
+      }),
+      'zones': list([
+        dict({
+          'AirStreamDeviceUId': '000000001',
+          'Const': 255,
+          'ConstA': 'false',
+          'DmpFlt': 'false',
+          'Id': 0,
+          'Index': 0,
+          'Master': 'false',
+          'MaxAir': 100,
+          'MinAir': 0,
+          'Mode': 'auto',
+          'Name': 'Living Room',
+          'SetPoint': 24.0,
+          'Temp': 22.5,
+          'Type': 'auto',
+          'iSense': 'false',
+        }),
+      ]),
+    }),
+    'discovery': dict({
+      'claimed': list([
+        dict({
+          'host': '**REDACTED**',
+          'uid': '000000001',
+        }),
+      ]),
+      'closed': False,
+      'known': list([
+      ]),
+      'recent_udp': list([
+        dict({
+          'host': '**REDACTED**',
+          'message': 'ASPort_12107,Mac_000000001,IP_**REDACTED**,iZoneV2',
+          'received_at': '2026-07-25T14:37:00.257385+00:00',
+          'source_ip': '**REDACTED**',
+          'source_port': 12107,
+          'tags': list([
+            'iZoneV2',
+          ]),
+          'uid': '000000001',
+        }),
+      ]),
+      'running': True,
+      'udp_bound': True,
+    }),
+    'entry': dict({
+      'host': '**REDACTED**',
+      'unique_id': '000000001',
+    }),
+  })
+# ---

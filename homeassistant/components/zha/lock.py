@@ -93,7 +93,7 @@ class ZhaDoorLock(ZHAEntity, LockEntity):
     @override
     def is_locked(self) -> bool:
         """Return true if entity is locked."""
-        return self.entity_data.entity.is_locked
+        return self._zha_state.is_locked
 
     @convert_zha_error_to_ha_error()
     @override

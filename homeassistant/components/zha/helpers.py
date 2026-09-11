@@ -11,7 +11,6 @@ import itertools
 import logging
 import queue
 import re
-import time
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, NamedTuple, cast, override
 from zoneinfo import ZoneInfo
@@ -357,26 +356,25 @@ class ZHADeviceProxy(EventBase):
     @property
     def device_info(self) -> dict[str, Any]:
         """Return a device description for device."""
-        ieee = str(self.device.ieee)
-        time_struct = time.localtime(self.device.last_seen)
-        update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
+        info = self.device.device_info
+        ieee = str(info.ieee)
         return {
             ATTR_IEEE: ieee,
-            ATTR_NWK: self.device.nwk,
-            ATTR_MANUFACTURER: self.device.manufacturer,
-            ATTR_MODEL: self.device.model,
-            ATTR_NAME: self.device.name or ieee,
-            ATTR_QUIRK_APPLIED: self.device.quirk_applied,
-            ATTR_QUIRK_CLASS: self.device.quirk_class,
-            ATTR_EXPOSES_FEATURES: self.device.exposes_features,
-            ATTR_MANUFACTURER_CODE: self.device.manufacturer_code,
-            ATTR_POWER_SOURCE: self.device.power_source,
-            ATTR_LQI: self.device.lqi,
-            ATTR_RSSI: self.device.rssi,
-            ATTR_LAST_SEEN: update_time,
-            ATTR_AVAILABLE: self.device.available,
-            ATTR_DEVICE_TYPE: self.device.device_type,
-            ATTR_SIGNATURE: self.device.zigbee_signature,
+            ATTR_NWK: info.nwk,
+            ATTR_MANUFACTURER: info.manufacturer,
+            ATTR_MODEL: info.model,
+            ATTR_NAME: info.name or ieee,
+            ATTR_QUIRK_APPLIED: info.quirk_applied,
+            ATTR_QUIRK_CLASS: info.quirk_class,
+            ATTR_EXPOSES_FEATURES: info.exposes_features,
+            ATTR_MANUFACTURER_CODE: info.manufacturer_code,
+            ATTR_POWER_SOURCE: info.power_source,
+            ATTR_LQI: info.lqi,
+            ATTR_RSSI: info.rssi,
+            ATTR_LAST_SEEN: info.last_seen,
+            ATTR_AVAILABLE: info.available,
+            ATTR_DEVICE_TYPE: info.device_type,
+            ATTR_SIGNATURE: info.signature,
         }
 
     @property
@@ -446,7 +444,9 @@ class ZHADeviceProxy(EventBase):
         if reg_device is not None:
             device_info[USER_GIVEN_NAME] = reg_device.name_by_user
             device_info[DEVICE_REG_ID] = reg_device.id
-            device_info[ATTR_AREA_ID] = reg_device.area_id
+            device_info[ATTR_AREA_ID] = dr.async_get_effective_area_id(
+                self.gateway_proxy.hass, reg_device
+            )
         return device_info
 
     @callback
@@ -644,7 +644,7 @@ class ZHAGatewayProxy(EventBase):
             or entity_entry.device_id is None
         ):
             return
-        device_entry: dr.DeviceEntry | None = dr.async_get(self.hass).async_get(
+        device_entry: dr.AnyDeviceEntry | None = dr.async_get(self.hass).async_get(
             entity_entry.device_id
         )
         assert device_entry
@@ -901,6 +901,17 @@ class ZHAGatewayProxy(EventBase):
     def _async_get_or_create_device_proxy(self, zha_device: Device) -> ZHADeviceProxy:
         """Get or create a ZHA device."""
         if (zha_device_proxy := self.device_proxies.get(zha_device.ieee)) is None:
+            coordinator_ieee = self.gateway.state.node_info.ieee
+            via_device_id: str | None = None
+            if zha_device.ieee != coordinator_ieee:
+                # The coordinator device is registered when the config entry is set up,
+                # before any other device is registered here.
+                via_device_id = dr.async_get_device_id_by_identifier(
+                    self.hass,
+                    (DOMAIN, str(coordinator_ieee)),
+                    config_entry_id=self.config_entry.entry_id,
+                )
+
             zha_device_proxy = ZHADeviceProxy(zha_device, self)
             self.device_proxies[zha_device_proxy.device.ieee] = zha_device_proxy
 
@@ -913,6 +924,7 @@ class ZHAGatewayProxy(EventBase):
                 manufacturer=zha_device.manufacturer,
                 model=zha_device.model,
                 sw_version=zha_device.firmware_version,
+                via_device_id=via_device_id,
             )
             zha_device_proxy.device_id = device_registry_device.id
             zha_device_proxy.attach_event_handlers()

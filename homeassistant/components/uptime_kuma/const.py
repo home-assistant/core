@@ -18,6 +18,7 @@ HAS_PORT = {
     MonitorType.RADIUS,
     MonitorType.SNMP,
     MonitorType.SMTP,
+    MonitorType.NTP,
 }
 HAS_HOST = HAS_PORT | {
     MonitorType.PING,

@@ -155,7 +155,11 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         try:
             return await command(*args, **kwargs)
         except SmlightAuthError as err:
-            raise ConfigEntryAuthFailed from err
+            self.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except SmlightConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

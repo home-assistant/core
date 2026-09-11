@@ -20,13 +20,13 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 
 from .const import (
-    _LOGGER,
     CONF_DEVICE_DETAILS,
     DEFAULT_HOST,
     DEFAULT_USERNAME,
     DEVICE_TYPE,
     DEVICE_URL,
     DOMAIN,
+    LOGGER,
 )
 from .coordinator import VodafoneConfigEntry
 from .utils import async_client_session
@@ -114,7 +114,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
         except aiovodafone_exceptions.ModelNotSupported:
             errors["base"] = "model_not_supported"
         except Exception:  # noqa: BLE001
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
@@ -150,7 +150,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
             except aiovodafone_exceptions.CannotAuthenticate:
                 errors["base"] = "invalid_auth"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
@@ -193,7 +193,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
         except aiovodafone_exceptions.CannotAuthenticate:
             errors["base"] = "invalid_auth"
         except Exception:  # noqa: BLE001
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             return self.async_update_reload_and_abort(

@@ -271,8 +271,10 @@ def async_host_input_received(
         logical_address.addr_id,
         logical_address.is_group,
     )
-    identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
-    device = device_registry.async_get_device(identifiers=identifiers)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, generate_unique_id(config_entry.entry_id, address)),
+        config_entry.entry_id,
+    )
 
     if isinstance(inp, pypck.inputs.ModStatusAccessControl):
         _async_fire_access_control_event(hass, device, address, inp)

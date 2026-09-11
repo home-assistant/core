@@ -6,10 +6,14 @@ from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW, AtaDevice, AtwDevice
 import pymelcloud.ata_device as ata
 import pymelcloud.atw_device as atw
 from pymelcloud.atw_device import (
-    PROPERTY_ZONE_1_OPERATION_MODE,
-    PROPERTY_ZONE_2_OPERATION_MODE,
+    ZONE_OPERATION_MODE_COOL_FLOW,
+    ZONE_OPERATION_MODE_COOL_THERMOSTAT,
+    ZONE_OPERATION_MODE_CURVE,
+    ZONE_OPERATION_MODE_HEAT_FLOW,
+    ZONE_OPERATION_MODE_HEAT_THERMOSTAT,
     Zone,
 )
+from pymelcloud.device import PROPERTY_POWER
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -53,7 +57,17 @@ ATW_ZONE_HVAC_MODE_LOOKUP = {
     atw.ZONE_STATUS_HEAT: HVACMode.HEAT,
     atw.ZONE_STATUS_COOL: HVACMode.COOL,
 }
-ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATW_ZONE_HVAC_MODE_LOOKUP.items()}
+
+HEAT_OPERATION_MODES = {
+    ZONE_OPERATION_MODE_HEAT_THERMOSTAT,
+    ZONE_OPERATION_MODE_HEAT_FLOW,
+    ZONE_OPERATION_MODE_CURVE,
+}
+COOL_OPERATION_MODES = {
+    ZONE_OPERATION_MODE_COOL_THERMOSTAT,
+    ZONE_OPERATION_MODE_COOL_FLOW,
+}
+
 
 ATW_ZONE_HVAC_ACTION_LOOKUP = {
     atw.STATUS_IDLE: HVACAction.IDLE,
@@ -351,7 +365,11 @@ class AtwDeviceZoneClimate(MelCloudClimate):
 
     _attr_max_temp = 30
     _attr_min_temp = 10
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
 
     def __init__(
         self,
@@ -367,6 +385,12 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         self._attr_unique_id = f"{self.coordinator.device.serial}-{atw_zone.zone_index}"
         self._attr_device_info = self.coordinator.zone_device_info(atw_zone)
 
+        self._attr_hvac_modes = [HVACMode.OFF]
+        if any(mode in HEAT_OPERATION_MODES for mode in atw_zone.operation_modes):
+            self._attr_hvac_modes.append(HVACMode.HEAT)
+        if any(mode in COOL_OPERATION_MODES for mode in atw_zone.operation_modes):
+            self._attr_hvac_modes.append(HVACMode.COOL)
+
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -381,36 +405,47 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        # Use zone status (heat/cool/idle) not operation_mode (heat-thermostat/etc.)
-        status = self._zone.status
-        if not self._device.power or status is None:
+        if not self._device.power:
             return HVACMode.OFF
-        return ATW_ZONE_HVAC_MODE_LOOKUP.get(status, HVACMode.OFF)
+        if self._zone.operation_mode in COOL_OPERATION_MODES:
+            return HVACMode.COOL
+        return HVACMode.HEAT
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
-            await self.coordinator.async_set({"power": False})
+            await self.coordinator.async_set({PROPERTY_POWER: False})
             return
 
-        operation_mode = ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP.get(hvac_mode)
-        if operation_mode is None:
-            raise ValueError(f"Invalid hvac_mode [{hvac_mode}]")
+        await self._zone.set_operation_mode(self._target_operation_mode(hvac_mode))
+        if not self._device.power:
+            await self.coordinator.async_set({PROPERTY_POWER: True})
+        await self.coordinator.async_request_refresh()
 
-        if self._zone.zone_index == 1:
-            props = {PROPERTY_ZONE_1_OPERATION_MODE: operation_mode}
-        else:
-            props = {PROPERTY_ZONE_2_OPERATION_MODE: operation_mode}
-        if self.hvac_mode == HVACMode.OFF:
-            props["power"] = True
-        await self.coordinator.async_set(props)
+    def _target_operation_mode(self, hvac_mode: HVACMode) -> str:
+        """Return the zone operation mode for a direction, preserving the method."""
+        if hvac_mode == HVACMode.HEAT:
+            if self._zone.operation_mode == ZONE_OPERATION_MODE_COOL_FLOW:
+                return ZONE_OPERATION_MODE_HEAT_FLOW
+            if self._zone.operation_mode in HEAT_OPERATION_MODES:
+                return self._zone.operation_mode
+            return ZONE_OPERATION_MODE_HEAT_THERMOSTAT
+        if self._zone.operation_mode == ZONE_OPERATION_MODE_HEAT_FLOW:
+            return ZONE_OPERATION_MODE_COOL_FLOW
+        if self._zone.operation_mode in COOL_OPERATION_MODES:
+            return self._zone.operation_mode
+        return ZONE_OPERATION_MODE_COOL_THERMOSTAT
 
-    @property
     @override
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available hvac operation modes."""
-        return [self.hvac_mode]
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        await self.coordinator.async_set({PROPERTY_POWER: True})
+
+    @override
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        await self.coordinator.async_set({PROPERTY_POWER: False})
 
     @property
     @override

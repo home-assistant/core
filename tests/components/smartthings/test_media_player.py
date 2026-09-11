@@ -279,9 +279,9 @@ async def test_media_previous_track(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test media player previous track command."""
-    devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK] = {
-        Attribute.SUPPORTED_PLAYBACK_COMMANDS: Status(["rewind"])
-    }
+    devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK][
+        Attribute.SUPPORTED_PLAYBACK_COMMANDS
+    ] = Status(["rewind"])
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -305,9 +305,9 @@ async def test_media_next_track(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test media player next track command."""
-    devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK] = {
-        Attribute.SUPPORTED_PLAYBACK_COMMANDS: Status(["fastForward"])
-    }
+    devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK][
+        Attribute.SUPPORTED_PLAYBACK_COMMANDS
+    ] = Status(["fastForward"])
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -497,7 +497,7 @@ async def test_media_repeat_mode(
 ) -> None:
     """Test media player repeat mode command."""
     devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK_REPEAT] = {
-        Attribute.REPEAT_MODE: Status("one")
+        Attribute.PLAYBACK_REPEAT_MODE: Status("one")
     }
     await setup_integration(hass, mock_config_entry)
 

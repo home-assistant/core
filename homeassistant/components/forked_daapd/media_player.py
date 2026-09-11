@@ -27,6 +27,8 @@ from homeassistant.components.spotify import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -51,6 +53,7 @@ from .const import (
     DEFAULT_TTS_PAUSE_TIME,
     DEFAULT_TTS_VOLUME,
     DEFAULT_UNMUTE_VOLUME,
+    DOMAIN,
     FD_NAME,
     KNOWN_PIPES,
     PIPE_FUNCTION_MAP,
@@ -457,6 +460,74 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             await self.async_turn_on()
         else:
             await self.async_turn_off()
+
+    @override
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join `group_members` (outputs) to the current playback."""
+        entity_registry = er.async_get(self.hass)
+        known_output_ids = {output["id"] for output in self._outputs}
+        output_ids: list[str] = []
+        for entity_id in group_members:
+            if entity_id == self.entity_id:
+                continue
+            if not (entity_entry := entity_registry.async_get(entity_id)):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="entity_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            if (
+                entity_entry.platform != DOMAIN
+                or entity_entry.config_entry_id != self._entry_id
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_forked_daapd_output",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            # Zone unique ids are f"{config_entry.entry_id}-{output_id}"
+            output_id = entity_entry.unique_id.split("-", 1)[1]
+            # Registry entries persist after an output disappears from the server
+            if output_id not in known_output_ids:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="output_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            output_ids.append(output_id)
+
+        await asyncio.gather(
+            *(
+                self.api.change_output(output_id, selected=True)
+                for output_id in output_ids
+            )
+        )
+
+    @override
+    async def async_unjoin_player(self) -> None:
+        """Remove all outputs from the current playback."""
+        if any(output["selected"] for output in self._outputs):
+            await self.api.set_enabled_outputs([])
+
+    @property
+    @override
+    def group_members(self) -> list[str]:
+        """List of players which are currently grouped together."""
+        entity_registry = er.async_get(self.hass)
+        output_id_to_entity_id = {
+            entry.unique_id.split("-", 1)[1]: entry.entity_id
+            for entry in er.async_entries_for_config_entry(
+                entity_registry, self._entry_id
+            )
+            # Skip the master entity, whose unique id is the config entry id
+            if isinstance(entry.unique_id, str) and "-" in entry.unique_id
+        }
+        return [self.entity_id] + [
+            entity_id
+            for output in self._outputs
+            if output["selected"]
+            and (entity_id := output_id_to_entity_id.get(output["id"])) is not None
+        ]
 
     @property
     @override

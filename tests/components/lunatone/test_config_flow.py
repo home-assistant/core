@@ -72,7 +72,7 @@ async def test_full_flow_fail_because_of_missing_device_infos(
     hass: HomeAssistant, mock_lunatone_info: AsyncMock
 ) -> None:
     """Test full flow."""
-    mock_lunatone_info.serial_number = None
+    mock_lunatone_info.data = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -158,6 +158,7 @@ async def test_zeroconf_flow(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
 ) -> None:
     """Test zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
@@ -180,6 +181,7 @@ async def test_zeroconf_flow_abort_duplicate(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test zeroconf flow aborts with duplicate."""

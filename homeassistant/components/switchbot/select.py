@@ -79,13 +79,13 @@ class SwitchBotMeterProCO2TimeFormatSelect(SwitchbotEntity, SelectEntity):
 
 
 NIGHT_LIGHT_OFF = "off"
-NIGHT_LIGHT_LEVEL_1 = "level_1"
-NIGHT_LIGHT_LEVEL_2 = "level_2"
-NIGHT_LIGHT_OPTIONS = [NIGHT_LIGHT_OFF, NIGHT_LIGHT_LEVEL_1, NIGHT_LIGHT_LEVEL_2]
+NIGHT_LIGHT_BRIGHT = "bright"
+NIGHT_LIGHT_SOFT = "soft"
+NIGHT_LIGHT_OPTIONS = [NIGHT_LIGHT_OFF, NIGHT_LIGHT_SOFT, NIGHT_LIGHT_BRIGHT]
 NIGHT_LIGHT_TO_STATE: dict[str, NightLightState] = {
     NIGHT_LIGHT_OFF: NightLightState.OFF,
-    NIGHT_LIGHT_LEVEL_1: NightLightState.LEVEL_1,
-    NIGHT_LIGHT_LEVEL_2: NightLightState.LEVEL_2,
+    NIGHT_LIGHT_SOFT: NightLightState.LEVEL_2,
+    NIGHT_LIGHT_BRIGHT: NightLightState.LEVEL_1,
 }
 NIGHT_LIGHT_FROM_STATE: dict[int, str] = {
     state.value: option for option, state in NIGHT_LIGHT_TO_STATE.items()

@@ -28,7 +28,7 @@ from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -429,7 +429,7 @@ class HKDevice:
                 (dr.CONNECTION_BLUETOOTH, cast(BleDiscovery, discovery).device.address),
             }
 
-        device_info = DeviceInfo(
+        return DeviceInfo(
             identifiers={
                 (
                     IDENTIFIER_ACCESSORY_ID,
@@ -444,17 +444,6 @@ class HKDevice:
             hw_version=accessory.hardware_revision,
             serial_number=accessory.serial_number,
         )
-
-        if accessory.aid != 1:
-            # Every pairing has an accessory 1
-            # It *doesn't* have a via_device, as it is the device we are connecting to
-            # Every other accessory should use it as its via device.
-            device_info[ATTR_VIA_DEVICE] = (
-                IDENTIFIER_ACCESSORY_ID,
-                f"{self.unique_id}:aid:1",
-            )
-
-        return device_info
 
     @callback
     def async_migrate_devices(self) -> None:
@@ -484,19 +473,29 @@ class HKDevice:
                     (DOMAIN, IDENTIFIER_LEGACY_SERIAL_NUMBER, accessory.serial_number)
                 )
 
-            device = device_registry.async_get_device(identifiers=identifiers)  # type: ignore[arg-type]
+            # Resolve to this config entry's own device. Several config entries can share
+            # the legacy identifier, in which case async_get_device returns a read-only
+            # composite spanning them and async_update_device would silently drop the
+            # identifier rename; scope the lookup to this entry instead.
+            candidates = device_registry.async_get_devices(identifiers=identifiers)  # type: ignore[arg-type]
+            device = next(
+                (
+                    candidate
+                    for candidate in candidates
+                    if candidate.config_entry_id == self.config_entry.entry_id
+                ),
+                None,
+            )
             if not device:
-                continue
-
-            if self.config_entry.entry_id not in device.config_entries:
-                _LOGGER.warning(
-                    (
-                        "Found candidate device for %s:aid:%s, but owned by a different"
-                        " config entry, skipping"
-                    ),
-                    self.unique_id,
-                    accessory.aid,
-                )
+                if candidates:
+                    _LOGGER.warning(
+                        (
+                            "Found candidate device for %s:aid:%s, but owned by a"
+                            " different config entry, skipping"
+                        ),
+                        self.unique_id,
+                        accessory.aid,
+                    )
                 continue
 
             _LOGGER.debug(
@@ -575,22 +574,22 @@ class HKDevice:
 
         device_registry = dr.async_get(self.hass)
         for accessory in self.entity_map.accessories:
-            identifiers = {
-                (
-                    IDENTIFIER_ACCESSORY_ID,
-                    f"{self.unique_id}:aid:{accessory.aid}",
-                )
-            }
+            identifier = (
+                IDENTIFIER_ACCESSORY_ID,
+                f"{self.unique_id}:aid:{accessory.aid}",
+            )
             legacy_serial_identifier = (
                 IDENTIFIER_SERIAL_NUMBER,
                 accessory.serial_number,
             )
 
-            device = device_registry.async_get_device(identifiers=identifiers)
+            device = device_registry.async_get_device_by_identifier(
+                identifier, self.config_entry.entry_id
+            )
             if not device or legacy_serial_identifier not in device.identifiers:
                 continue
 
-            device_registry.async_update_device(device.id, new_identifiers=identifiers)
+            device_registry.async_update_device(device.id, new_identifiers={identifier})
 
     @callback
     def async_reap_stale_entity_registry_entries(self) -> None:
@@ -669,16 +668,24 @@ class HKDevice:
         device_registry = dr.async_get(self.hass)
 
         devices = {}
+        bridge_device_id: str | None = None
 
-        # Accessories need to be created in the correct order or setting up
-        # relationships with ATTR_VIA_DEVICE may fail.
+        # Accessories are sorted by their HomeKit accessory id (aid). The bridge is
+        # always aid 1, so it is registered before the accessories that link back to
+        # it via via_device_id.
         for accessory in sorted(self.entity_map.accessories, key=attrgetter("aid")):
             device_info = self.device_info_for_accessory(accessory)
+
+            if accessory.aid != 1 and bridge_device_id is not None:
+                device_info["via_device_id"] = bridge_device_id
 
             device = device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
                 **device_info,
             )
+
+            if accessory.aid == 1:
+                bridge_device_id = device.id
 
             devices[accessory.aid] = device.id
 

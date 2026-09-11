@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -14,16 +14,16 @@ from homeassistant.components.remote import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import VizioConfigEntry, VizioDeviceCoordinator
+from .coordinator import VizioConfigEntry
+from .entity import VizioEntity
+from .helpers import async_device_command
 
 PARALLEL_UPDATES = 0
 
-# Maps native pyvizio key names to human-friendly aliases.
+# Maps native vizaio key names to human-friendly aliases.
 # Keys are uppercase native names (e.g. "CC_TOGGLE"), values are lists of lowercase aliases.
 REMOTE_KEY_ALIASES: dict[str, list[str]] = {
     "CC_TOGGLE": ["closed_captions", "cc"],
@@ -59,23 +59,14 @@ async def async_setup_entry(
     async_add_entities([VizioRemote(config_entry)])
 
 
-class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
+class VizioRemote(VizioEntity, RemoteEntity):
     """Remote entity for Vizio SmartCast devices."""
-
-    _attr_has_entity_name = True
 
     def __init__(self, config_entry: VizioConfigEntry) -> None:
         """Initialize the remote entity."""
-        coordinator = config_entry.runtime_data.device_coordinator
-        super().__init__(coordinator)
-        self._attr_unique_id = unique_id = config_entry.unique_id
-        # Guard against config entries missing unique_id, which should never happen
-        if TYPE_CHECKING:
-            assert unique_id is not None
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
-        self._device = coordinator.device
-        valid_keys = set(self._device.get_remote_keys_list())
-        # Map lowercased native keys to their original uppercase pyvizio names
+        super().__init__(config_entry)
+        valid_keys = set(self._device.available_keys)
+        # Map lowercased native keys to their original uppercase vizaio names
         self._command_map: dict[str, str] = {key.lower(): key for key in valid_keys}
         # Add aliases only for native keys this device actually supports
         for alias, target in _ALIAS_LOOKUP.items():
@@ -89,7 +80,7 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
         return self.coordinator.data.is_on
 
     def _resolve_command(self, command: str) -> str:
-        """Resolve an lowercased command string to a pyvizio key name."""
+        """Resolve an lowercased command string to a vizaio key name."""
         if resolved := self._command_map.get(command):
             return resolved
         raise ServiceValidationError(
@@ -101,12 +92,12 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
-        await self._device.pow_on(log_api_exception=False)
+        await async_device_command(self._device.power_on())
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
-        await self._device.pow_off(log_api_exception=False)
+        await async_device_command(self._device.power_off())
 
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
@@ -117,6 +108,6 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
 
         for i in range(num_repeats):
             for cmd in resolved:
-                await self._device.remote(cmd, log_api_exception=False)
+                await async_device_command(self._device.send_key(cmd))
             if i < num_repeats - 1:
                 await asyncio.sleep(delay)

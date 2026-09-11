@@ -18,6 +18,7 @@ TO_REDACT = {
     "deviceUUID",
     "icon",
     "largeIcon",
+    "macAddress",
 }
 
 
@@ -25,7 +26,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: WebOsTvConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    client: WebOsClient = entry.runtime_data
+    client: WebOsClient = entry.runtime_data.client
 
     client_data = {
         "is_registered": client.is_registered(),

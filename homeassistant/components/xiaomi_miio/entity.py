@@ -176,7 +176,11 @@ class XiaomiGatewayDevice(CoordinatorEntity[GatewayDeviceCoordinator], Entity):
             assert self._entry.unique_id is not None
         return DeviceInfo(
             identifiers={(DOMAIN, self._sub_device.sid)},
-            via_device=(DOMAIN, self._entry.unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._entry.unique_id),
+                config_entry_id=self._entry.entry_id,
+            ),
             manufacturer="Xiaomi",
             name=self._sub_device.name,
             model=self._sub_device.model,

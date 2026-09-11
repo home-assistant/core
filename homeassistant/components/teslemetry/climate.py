@@ -5,6 +5,7 @@ from typing import Any, cast, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import CabinOverheatProtectionTemp, Scope
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.climate import (
@@ -12,6 +13,7 @@ from homeassistant.components.climate import (
     HVAC_MODES,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.const import (
@@ -89,7 +91,7 @@ async def async_setup_entry(
 class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):
     """Vehicle Climate Control."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_precision = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
@@ -287,9 +289,15 @@ class TeslemetryStreamingClimateEntity(
             self._attr_hvac_mode = (
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
-            self._attr_current_temperature = state.attributes.get("current_temperature")
-            self._attr_target_temperature = state.attributes.get("temperature")
-            self._attr_preset_mode = state.attributes.get("preset_mode")
+            self._attr_current_temperature = state.attributes.get(
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE
+            )
+            self._attr_target_temperature = state.attributes.get(
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+            )
+            self._attr_preset_mode = state.attributes.get(
+                ClimateEntityStateAttribute.PRESET_MODE
+            )
 
         self.async_on_remove(
             self.vehicle.stream_vehicle.listen_InsideTemp(
@@ -378,7 +386,7 @@ COP_LEVELS = {
 class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntity):
     """Vehicle Cabin Overheat Protection."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 5
     _attr_min_temp = 30
@@ -531,8 +539,12 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
             self._attr_hvac_mode = (
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
-            self._attr_current_temperature = state.attributes.get("current_temperature")
-            self._attr_target_temperature = state.attributes.get("temperature")
+            self._attr_current_temperature = state.attributes.get(
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE
+            )
+            self._attr_target_temperature = state.attributes.get(
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+            )
 
         self.async_on_remove(
             self.vehicle.stream_vehicle.listen_InsideTemp(

@@ -89,6 +89,18 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
     # Needs override to omit is_closed_state, since OpenClosedState is unreliable
+    # uiClass is Awning
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_HORIZONTAL_AWNING_UNO,
+        device_class=CoverDeviceClass.AWNING,
+        current_position_state=OverkizState.CORE_DEPLOYMENT,
+        set_position_command=OverkizCommand.SET_DEPLOYMENT,
+        open_command=OverkizCommand.DEPLOY,
+        close_command=OverkizCommand.UNDEPLOY,
+        stop_command=OverkizCommand.STOP,
+        invert_position=False,
+    ),
+    # Needs override to omit is_closed_state, since OpenClosedState is unreliable
     # uiClass is RollerShutter
     OverkizCoverDescription(
         key=UIWidget.POSITIONABLE_ROLLER_SHUTTER_UNO,
@@ -354,8 +366,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     # uiClass is Generic (not mapped to cover as this is a Generic device class)
     OverkizCoverDescription(
         key=UIWidget.RTS_GENERIC,
-        open_command=OverkizCommand.OPEN,
-        close_command=OverkizCommand.CLOSE,
+        open_command=OverkizCommand.UP,
+        close_command=OverkizCommand.DOWN,
         stop_command=OverkizCommand.STOP,
     ),
     ##
@@ -521,6 +533,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
 ]
 
 SUPPORTED_DEVICES = {description.key: description for description in COVER_DESCRIPTIONS}
+
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(

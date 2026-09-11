@@ -538,6 +538,9 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
 
 
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,
