@@ -26,7 +26,7 @@ CHANNELS = {
 
 
 def create_media_library() -> MagicMock:
-    """Return a Kodi library that answers with two TV channels."""
+    """Return a Kodi library that answers with the TV channels above."""
     library = MagicMock()
     library.get_channels = AsyncMock(return_value=CHANNELS)
     library.thumbnail_url = MagicMock(
