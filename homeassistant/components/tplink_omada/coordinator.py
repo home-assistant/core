@@ -275,12 +275,14 @@ def _unique_id_to_mac(unique_id: str | None) -> str | None:
     if not sep or not site_id or not mac:
         return None
 
-    # format_mac returns unrecognized input unchanged or lowercases without
-    # validating, so require the canonical MAC shape and hex digits.
+    # format_mac lowercases and reformats recognized separators without
+    # validating, so require six octets of exactly two hex digits.
     mac = dr.format_mac(mac)
-    if len(mac) != 17 or mac.count(":") != 5:
-        return None
-    if any(char not in "0123456789abcdef" for char in mac if char != ":"):
+    octets = mac.split(":")
+    if len(octets) != 6 or any(
+        len(octet) != 2 or any(char not in "0123456789abcdef" for char in octet)
+        for octet in octets
+    ):
         return None
     return mac
 
