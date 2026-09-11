@@ -972,6 +972,80 @@ async def test_run_start_without_tts(
         )
 
 
+async def test_run_start_streams_pipeline_audio(
+    hass: HomeAssistant,
+) -> None:
+    """Test RUN_START can immediately stream processor-produced audio."""
+    events: list[Event] = [
+        RunPipeline(
+            start_stage=PipelineStage.WAKE, end_stage=PipelineStage.TTS
+        ).event(),
+    ]
+    pipeline_event = asyncio.Event()
+    stream = MagicMock()
+
+    def _async_pipeline_from_audio_stream(*args: Any, **kwargs: Any) -> None:
+        pipeline_event.set()
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient(events),
+        ) as mock_client,
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            wraps=_async_pipeline_from_audio_stream,
+        ) as mock_run_pipeline,
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.assist_pipeline.async_get_audio_output_stream",
+            return_value=stream,
+        ),
+        patch.object(
+            WyomingAssistSatellite, "_stream_tts", new_callable=AsyncMock
+        ) as stream_tts,
+    ):
+        await setup_config_entry(hass)
+
+        async with asyncio.timeout(1):
+            await pipeline_event.wait()
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        event_callback = mock_run_pipeline.call_args.kwargs["event_callback"]
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.RUN_START,
+                {
+                    "tts_output": {
+                        "token": "pipeline-output",
+                        "start_streaming": True,
+                    }
+                },
+            )
+        )
+        await hass.async_block_till_done()
+
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.INTENT_PROGRESS,
+                {"tts_start_streaming": True},
+            )
+        )
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.TTS_END,
+                {"tts_output": {"token": "pipeline-output"}},
+            )
+        )
+        await hass.async_block_till_done()
+
+    stream_tts.assert_awaited_once_with(stream)
+
+
 async def test_announce_raises_when_client_disconnected(
     hass: HomeAssistant,
 ) -> None:

@@ -16,7 +16,12 @@ from voip_utils import SIP_PORT, RtpDatagramProtocol
 from voip_utils.sip import SipEndpoint, get_sip_endpoint
 
 from homeassistant.components import intent, tts
-from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
+from homeassistant.components.assist_pipeline import (
+    AudioOutputStream,
+    PipelineEvent,
+    PipelineEventType,
+    async_get_audio_output_stream,
+)
 from homeassistant.components.assist_satellite import (
     AssistSatelliteAnnouncement,
     AssistSatelliteConfiguration,
@@ -123,6 +128,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._run_pipeline_task: asyncio.Task | None = None
         self._pipeline_had_error: bool = False
         self._tts_done = asyncio.Event()
+        self._active_pipeline_output_token: str | None = None
         self._tts_extra_timeout: float = 1.0
         self._tone_bytes: dict[Tones, bytes] = {}
         self._tones = tones
@@ -407,6 +413,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 # Run pipeline until voice command finishes, then start over
                 self._clear_audio_queue()
                 self._tts_done.clear()
+                self._active_pipeline_output_token = None
                 self._run_pipeline_task = (
                     self.config_entry.async_create_background_task(
                         self.hass,
@@ -525,7 +532,24 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     @override
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
-        if event.type == PipelineEventType.STT_END:
+        if event.type == PipelineEventType.RUN_START:
+            if (
+                event.data
+                and (tts_output := event.data.get("tts_output"))
+                and tts_output.get("start_streaming")
+                and (
+                    stream := async_get_audio_output_stream(
+                        self.hass, tts_output["token"]
+                    )
+                )
+            ):
+                self._active_pipeline_output_token = tts_output["token"]
+                self.config_entry.async_create_background_task(
+                    self.hass,
+                    self._send_tts(tts_stream=stream, wait_for_tone=False),
+                    "voip_pipeline_audio",
+                )
+        elif event.type == PipelineEventType.STT_END:
             if (self._tones & Tones.PROCESSING) == Tones.PROCESSING:
                 self._processing_tone_done.clear()
                 self.config_entry.async_create_background_task(
@@ -533,20 +557,24 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 )
         elif event.type == PipelineEventType.TTS_END:
             # Send TTS audio to caller over RTP
-            if (
-                event.data
-                and (tts_output := event.data["tts_output"])
-                and (stream := tts.async_get_stream(self.hass, tts_output["token"]))
-            ):
-                self.config_entry.async_create_background_task(
-                    self.hass,
-                    self._send_tts(tts_stream=stream),
-                    "voip_pipeline_tts",
-                )
-            else:
-                # Empty TTS response
-                _LOGGER.debug("Empty TTS response")
-                self._tts_done.set()
+            if event.data and (tts_output := event.data["tts_output"]):
+                if tts_output["token"] == self._active_pipeline_output_token:
+                    return
+
+                if stream := async_get_audio_output_stream(
+                    self.hass, tts_output["token"]
+                ):
+                    self._active_pipeline_output_token = tts_output["token"]
+                    self.config_entry.async_create_background_task(
+                        self.hass,
+                        self._send_tts(tts_stream=stream),
+                        "voip_pipeline_tts",
+                    )
+                    return
+
+            # Empty TTS response
+            _LOGGER.debug("Empty TTS response")
+            self._tts_done.set()
         elif event.type == PipelineEventType.ERROR:
             # Play error tone instead of wait for TTS when pipeline is finished.
             self._pipeline_had_error = True
@@ -554,7 +582,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
     async def _send_tts(
         self,
-        tts_stream: tts.ResultStream,
+        tts_stream: AudioOutputStream,
         wait_for_tone: bool = True,
     ) -> None:
         """Send TTS audio to caller via RTP."""

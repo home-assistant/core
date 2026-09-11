@@ -27,9 +27,12 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import (
+    AudioOutputStream,
+    PipelineAudioOutputError,
     PipelineEvent,
     PipelineEventType,
     PipelineStage,
+    async_get_audio_output_stream,
 )
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.intent import (
@@ -404,8 +407,14 @@ class EsphomeAssistSatellite(
                         self._entry_data.api_version
                     )
                 )
-                if feature_flags & VoiceAssistantFeature.SPEAKER and (
-                    stream := tts.async_get_stream(self.hass, tts_output["token"])
+                if (
+                    self._tts_streaming_task is None
+                    and feature_flags & VoiceAssistantFeature.SPEAKER
+                    and (
+                        stream := async_get_audio_output_stream(
+                            self.hass, tts_output["token"]
+                        )
+                    )
                 ):
                     self._tts_streaming_task = (
                         self.config_entry.async_create_background_task(
@@ -434,6 +443,23 @@ class EsphomeAssistSatellite(
                 path = tts_output["url"]
                 url = async_process_play_media_url(self.hass, path)
                 data_to_send = {"url": url}
+                if tts_output.get("start_streaming"):
+                    assert self._entry_data.device_info is not None
+                    feature_flags = self._entry_data.device_info.voice_assistant_feature_flags_compat(
+                        self._entry_data.api_version
+                    )
+                    if feature_flags & VoiceAssistantFeature.SPEAKER and (
+                        stream := async_get_audio_output_stream(
+                            self.hass, tts_output["token"]
+                        )
+                    ):
+                        self._tts_streaming_task = (
+                            self.config_entry.async_create_background_task(
+                                self.hass,
+                                self._stream_tts_audio(stream),
+                                "esphome_voice_assistant_tts",
+                            )
+                        )
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END:
             if self._tts_streaming_task is None:
                 # No TTS
@@ -704,7 +730,7 @@ class EsphomeAssistSatellite(
 
     async def _stream_tts_audio(
         self,
-        tts_result: tts.ResultStream,
+        tts_result: AudioOutputStream,
         sample_rate: int = 16000,
         sample_width: int = 2,
         sample_channels: int = 1,
@@ -760,6 +786,8 @@ class EsphomeAssistSatellite(
 
         except ValueError as err:
             _LOGGER.error("Error streaming WAV: %s", err)
+        except PipelineAudioOutputError as err:
+            _LOGGER.error("Error streaming pipeline audio: %s", err)
         except asyncio.CancelledError:
             return  # Don't trigger state change
         finally:
