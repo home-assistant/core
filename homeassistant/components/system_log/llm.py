@@ -14,22 +14,22 @@ from homeassistant.util.json import JsonObjectType
 
 from . import DOMAIN, LogErrorHandler
 
-LOG_LEVELS = ["error", "warning", "critical"]
-DEFAULT_LIMIT = 25
+_LOG_LEVELS = ["error", "warning", "critical"]
+_DEFAULT_LIMIT = 25
 
 
 def _filter_log_entries(
     log_entries: list[dict[str, Any]],
     level: str | None = None,
     logger: str | None = None,
-    limit: int = DEFAULT_LIMIT,
+    limit: int = _DEFAULT_LIMIT,
 ) -> list[dict[str, Any]]:
     """Filter and limit raw log entries."""
     predicates: list[Callable[[dict[str, Any]], bool]] = []
 
     if level:
-        level_upper = level.upper()
-        predicates.append(lambda entry: entry["level"].upper() == level_upper)
+        level_lower = level.lower()
+        predicates.append(lambda entry: entry["level"].lower() == level_lower)
 
     if logger:
         logger_lower = logger.strip().lower()
@@ -83,7 +83,7 @@ class SystemLogGetEntriesTool(Tool):
             vol.Optional(
                 "level",
                 description="Filter by log level. Allowed values: 'error', 'warning', 'critical'.",
-            ): vol.All(cv.string, vol.Lower, vol.In(LOG_LEVELS)),
+            ): vol.All(cv.string, vol.Lower, vol.In(_LOG_LEVELS)),
             vol.Optional(
                 "logger",
                 description=(
@@ -93,8 +93,8 @@ class SystemLogGetEntriesTool(Tool):
             ): cv.string,
             vol.Optional(
                 "limit",
-                description=f"Maximum number of log entries to return (default: {DEFAULT_LIMIT}, max: 50).",
-                default=DEFAULT_LIMIT,
+                description=f"Maximum number of log entries to return (default: {_DEFAULT_LIMIT}, max: 50).",
+                default=_DEFAULT_LIMIT,
             ): vol.All(vol.Coerce(int), vol.Range(min=1, max=50)),
             vol.Optional(
                 "include_traceback",
