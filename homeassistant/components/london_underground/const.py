@@ -30,7 +30,7 @@ TUBE_LINES = [
     "Weaver",
     "Windrush",
     "Tram",
-    "IFS Cloud Cable Car",
+    "London Cable Car",
 ]
 
 # Default lines to monitor if none selected
