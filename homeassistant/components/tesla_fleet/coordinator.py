@@ -164,6 +164,20 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data = response["response"]
 
         except VehicleOffline:
+            if not self.updated_once:
+                # Still within the initial setup: don't let a vehicle that is
+                # asleep on the very first refresh masquerade as a successful
+                # update. self.data only has the listing data from __init__ at
+                # this point (no charge_state/vehicle_state/etc.), so silently
+                # returning it here would create entities that read as
+                # "unknown" forever, since nothing else forces an early retry
+                # (the next scheduled poll is up to VEHICLE_INTERVAL_SECONDS
+                # away, and if the vehicle is still asleep then, it repeats).
+                # Raising here lets async_config_entry_first_refresh() surface
+                # ConfigEntryNotReady instead, so the entry retries per the
+                # VEHICLE_FIRST_REFRESH_TIMEOUT budget above - which is the
+                # behavior that comment already documents as intended.
+                raise UpdateFailed("Vehicle was asleep during the initial refresh")
             self.data["state"] = TeslaFleetState.ASLEEP
             return self.data
         except RateLimited:

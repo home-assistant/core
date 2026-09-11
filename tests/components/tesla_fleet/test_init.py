@@ -117,6 +117,26 @@ async def test_vehicle_first_refresh_timeout(
     never.set()
 
 
+async def test_vehicle_first_refresh_offline_retries(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test a vehicle asleep on the very first refresh retries setup.
+
+    Regression test for the vehicle being asleep during
+    async_config_entry_first_refresh(): this must not be treated as a
+    successful update (which would create entities that read "unknown"
+    forever), it should raise so the entry retries - see issue #146030.
+    """
+    mock_vehicle_data.side_effect = VehicleOffline
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.states.get("sensor.test_battery_level")
+
+
 async def test_oauth_refresh_expired(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
