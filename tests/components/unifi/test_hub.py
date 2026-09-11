@@ -25,7 +25,7 @@ from .conftest import (
     WebsocketStateManager,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -95,6 +95,30 @@ async def test_get_data_update_coordinator_requires_registered_handler(
 
     with pytest.raises(KeyError):
         loader.get_data_update_coordinator(api.sites)
+
+
+async def test_polling_coordinator_refreshes_after_interval(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure polling coordinators refresh when their interval elapses."""
+    loader = config_entry_setup.runtime_data.entity_loader
+    api = config_entry_setup.runtime_data.api
+    coordinator = loader.get_data_update_coordinator(
+        api.object_oriented_network_configs
+    )
+
+    assert coordinator.update_interval == POLL_INTERVAL
+
+    with patch.object(
+        api.object_oriented_network_configs,
+        "update",
+        wraps=api.object_oriented_network_configs.update,
+    ) as mock_update:
+        async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert mock_update.call_count >= 1
 
 
 async def test_websocket_updates_notify_coordinator(

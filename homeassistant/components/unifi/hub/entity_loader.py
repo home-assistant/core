@@ -71,7 +71,9 @@ class UnifiEntityLoader:
             id(hub.api.ports): id(hub.api.devices),
         }
         for coordinator in self._data_coordinators.values():
-            coordinator.async_add_listener(lambda: None)
+            self.hub.config.entry.async_on_unload(
+                coordinator.async_add_listener(lambda: None)
+            )
 
         self.platforms: list[
             tuple[

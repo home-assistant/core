@@ -232,7 +232,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
         self._async_process_update()
 
     @callback
-    def _async_process_update(self) -> None:
+    def _async_process_update(self, event: ItemEvent = ItemEvent.CHANGED) -> None:
         """Update the entity state from the handler."""
         handler = self.entity_description.api_handler_fn(self.api)
         if self._obj_id not in handler:
@@ -245,7 +245,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             return
 
         self._attr_available = description.available_fn(self.hub, self._obj_id)
-        self.async_update_state(ItemEvent.CHANGED, self._obj_id)
+        self.async_update_state(event, self._obj_id)
         self.async_write_ha_state()
 
     @callback
@@ -255,7 +255,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             self.hass.async_create_task(self.remove_item({obj_id}))
             return
 
-        self._async_process_update()
+        self._async_process_update(event)
 
     @callback
     def async_signal_reachable_callback(self) -> None:
