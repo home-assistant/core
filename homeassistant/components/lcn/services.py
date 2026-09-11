@@ -71,8 +71,10 @@ class LcnServiceCall:
     def get_device_connection(self, service: ServiceCall) -> DeviceConnection:
         """Get address connection object."""
         entry: LcnConfigEntry
+        # device_connections is keyed by the ids of the main devices LCN registers
+        # for its modules and groups, so a child device has no connection
         device, entry = async_get_device_and_config_entry(
-            self.hass, DOMAIN, service.data[CONF_DEVICE_ID]
+            self.hass, DOMAIN, service.data[CONF_DEVICE_ID], include_child_devices=False
         )
         return entry.runtime_data.device_connections[device.id]
 

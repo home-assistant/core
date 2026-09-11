@@ -10184,6 +10184,137 @@ async def test_async_get_device_and_config_entry_for_domain_composite(
     assert device.config_entries == {entry_a.entry_id, entry_b.entry_id}
 
 
+async def test_async_get_device_and_config_entry_for_domain_child_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test getting the device and config entry of a domain owning a child device."""
+    entry = MockConfigEntry(domain="domain_a")
+    entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("domain_a", "1")}
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("domain_a", "1_1")},
+        parent_device_id=parent.id,
+    )
+
+    # A child device is paired with the entry owning it
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, child.id, domain="domain_a"
+    ) == (child, entry)
+    # A domain not owning the child still gets the child
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, child.id, domain="domain_b"
+    ) == (child, None)
+    # With include_child_devices=False the child is treated as absent
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, child.id, domain="domain_a", include_child_devices=False
+    ) == (None, None)
+    # A main device is unaffected by include_child_devices
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, parent.id, domain="domain_a"
+    ) == (parent, entry)
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, parent.id, domain="domain_a", include_child_devices=False
+    ) == (parent, entry)
+    # An unknown device id
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, "unknown_id", domain="domain_a"
+    ) == (None, None)
+
+
+async def test_async_get_device_and_config_entry_for_domain_no_main_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test getting the device and config entry with main devices excluded."""
+    entry = MockConfigEntry(domain="domain_a")
+    entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("domain_a", "1")}
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("domain_a", "1_1")},
+        parent_device_id=parent.id,
+    )
+
+    # A main device is not resolved
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, parent.id, domain="domain_a", include_main_devices=False
+    ) == (None, None)
+    # A child-only lookup resolves the child
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, child.id, domain="domain_a", include_main_devices=False
+    ) == (child, entry)
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, child.id, domain="domain_b", include_main_devices=False
+    ) == (child, None)
+    # Neither main nor child devices are resolved with both flags off
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass,
+        child.id,
+        domain="domain_a",
+        include_child_devices=False,
+        include_main_devices=False,
+    ) == (None, None)
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass,
+        parent.id,
+        domain="domain_a",
+        include_child_devices=False,
+        include_main_devices=False,
+    ) == (None, None)
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_async_get_device_and_config_entry_for_domain_composite_flags(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test the include_* flags for a composite device id."""
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    hass_storage[dr.STORAGE_KEY] = _composite_device_storage(entry_a, entry_b)
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    device_registry = dr.async_get(hass)
+
+    split_a = _get_device_for_config_entry(
+        device_registry, entry_a.entry_id, identifiers={("domain_a", "1")}
+    )
+
+    # A composite device id resolves to the domain's split regardless of
+    # include_child_devices
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, COMPOSITE_ID, domain="domain_a", include_child_devices=False
+    ) == (split_a, entry_a)
+    # A domain owning none of the splits still gets the restored composite
+    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, COMPOSITE_ID, domain="domain_c", include_child_devices=False
+    )
+    assert config_entry is None
+    assert device is not None
+    assert device.id == COMPOSITE_ID
+    # A composite device and its splits are main devices: include_main_devices=False
+    # suppresses both the split lookup and the restored composite
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, COMPOSITE_ID, domain="domain_a", include_main_devices=False
+    ) == (None, None)
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, COMPOSITE_ID, domain="domain_c", include_main_devices=False
+    ) == (None, None)
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass,
+        COMPOSITE_ID,
+        domain="domain_a",
+        include_child_devices=False,
+        include_main_devices=False,
+    ) == (None, None)
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_clear_config_entry_clears_composite_primary_config_entry(
     hass: HomeAssistant, hass_storage: dict[str, Any]
