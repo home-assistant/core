@@ -3249,6 +3249,7 @@ def mock_provisioning_client(mock_client: APIClient) -> Generator[Mock]:
 
     def _api_client(*args: Any, **kwargs: Any) -> Mock:
         if kwargs.get("noise_psk") == ZERO_NOISE_PSK:
+            client.outgoing_connection_target = kwargs["outgoing_connection_target"]
             return client
         return mock_client(*args, **kwargs)
 
@@ -3317,6 +3318,8 @@ async def test_dynamic_encryption_key_provisioned_over_zero_psk(
     )
     mock_client.noise_encryption_set_key.assert_not_called()
     mock_provisioning_client.disconnect.assert_called_with(force=True)
+    # The key exchange session must not become a dial-back target
+    assert mock_provisioning_client.outgoing_connection_target is False
 
     # Entry and storage were updated
     assert entry.data[CONF_NOISE_PSK] == expected_key

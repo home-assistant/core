@@ -1,9 +1,11 @@
 """Test the Tesla Fleet init."""
 
+import asyncio
 from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -56,6 +58,8 @@ SETUP_ERRORS = [
     (OAuthExpired, ConfigEntryState.SETUP_ERROR),
     (LoginRequired, ConfigEntryState.SETUP_ERROR),
     (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
+    (ClientError, ConfigEntryState.SETUP_RETRY),
+    (TimeoutError, ConfigEntryState.SETUP_RETRY),
 ]
 
 RUNTIME_ERRORS = [InvalidToken, OAuthExpired, LoginRequired, TeslaFleetError]
@@ -86,7 +90,7 @@ async def test_init_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_products: AsyncMock,
-    side_effect: type[TeslaFleetError],
+    side_effect: type[Exception],
     state: ConfigEntryState,
 ) -> None:
     """Test init with errors."""
@@ -94,6 +98,26 @@ async def test_init_error(
     mock_products.side_effect = side_effect
     await setup_platform(hass, normal_config_entry)
     assert normal_config_entry.state is state
+
+
+async def test_vehicle_first_refresh_timeout(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test a slow first vehicle refresh retries instead of blocking setup."""
+    never = asyncio.Event()
+
+    async def _hang(*args: object, **kwargs: object) -> None:
+        await never.wait()
+
+    mock_vehicle_data.side_effect = _hang
+
+    with patch("homeassistant.components.tesla_fleet.VEHICLE_FIRST_REFRESH_TIMEOUT", 0):
+        await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+    never.set()
 
 
 async def test_oauth_refresh_expired(

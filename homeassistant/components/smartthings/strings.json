@@ -6,8 +6,7 @@
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_scopes": "Authentication failed. Please make sure you have granted all required permissions.",
       "reauth_account_mismatch": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account and pick the right location.",
-      "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location."
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
@@ -1146,9 +1145,6 @@
     }
   },
   "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
     "remote_control_status": {
       "message": "Can only be changed when remote control is enabled"
     }

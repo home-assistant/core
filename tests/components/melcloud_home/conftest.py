@@ -47,6 +47,7 @@ def mock_melcloud_client() -> Generator[AsyncMock]:
         TelemetryValue.model_validate(value)
         for value in load_json_array_fixture("energy.json", DOMAIN)
     ]
+    client.get_outdoor_temperature.return_value = 19.5
 
     with (
         patch(

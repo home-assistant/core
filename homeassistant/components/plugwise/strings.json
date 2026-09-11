@@ -3,8 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna",
-      "not_the_same_smile": "The configured Smile ID does not match the Smile ID on the requested IP address.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "not_the_same_smile": "The configured Smile ID does not match the Smile ID on the requested IP address."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
