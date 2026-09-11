@@ -2,7 +2,7 @@
 
 import contextlib
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from homematicip.base.functionalChannels import FunctionalChannel
 from homematicip.device import Device
@@ -145,6 +145,8 @@ class HomematicipGenericEntity(Entity):
             if device_name and home_name:
                 device_name = f"{home_name} {device_name}"
 
+            if TYPE_CHECKING:
+                assert self.platform.config_entry is not None
             return DeviceInfo(
                 identifiers={
                     # Serial numbers of Homematic IP device
@@ -155,7 +157,11 @@ class HomematicipGenericEntity(Entity):
                 name=device_name,
                 sw_version=self._device.firmwareVersion,
                 # Link to the homematic ip access point.
-                via_device=(DOMAIN, home_id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.hass,
+                    (DOMAIN, home_id),
+                    config_entry_id=self.platform.config_entry.entry_id,
+                ),
             )
         return None
 
@@ -207,8 +213,9 @@ class HomematicipGenericEntity(Entity):
         if device_id := self.registry_entry.device_id:
             # Remove from device registry.
             device_registry = dr.async_get(self.hass)
-            if device_id in device_registry.devices:
-                # This will also remove associated entities from entity registry.
+            # This will also remove associated entities from entity registry,
+            # ignore an already removed device.
+            with contextlib.suppress(KeyError):
                 device_registry.async_remove_device(device_id)
         else:  # noqa: PLR5501
             # Remove from entity registry.

@@ -860,6 +860,31 @@ LOCK_PRO_WIFI_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
+LOCK_ULTRA_MAX_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Ultra Max",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\x11\x22\x33\x2a\x88\x18\x64\x00\x91"},
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80\x64\x00\x11\x9f\xb8"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Lock Ultra Max",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\x11\x22\x33\x2a\x88\x18\x64\x00\x91"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80\x64\x00\x11\x9f\xb8"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Ultra Max"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
 AIR_PURIFIER_TABLE_US_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Air Purifier Table US",
     manufacturer_data={
@@ -1513,7 +1538,7 @@ KEYPAD_VISION_INFO = BluetoothServiceInfoBleak(
 
 KEYPAD_VISION_PRO_INFO = BluetoothServiceInfoBleak(
     name="Keypad Vision Pro",
-    manufacturer_data={2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\x00\x00\x00\x00\x00\x002"},
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\xc5\x00\x00\x00\x00\x002"},
     service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00`\x01\x11Q\x98"},
     service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     address="AA:BB:CC:DD:EE:FF",
@@ -1522,7 +1547,7 @@ KEYPAD_VISION_PRO_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(
         local_name="Keypad Vision Pro",
         manufacturer_data={
-            2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\x00\x00\x00\x00\x00\x002"
+            2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\xc5\x00\x00\x00\x00\x002"
         },
         service_data={
             "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00`\x01\x11Q\x98"

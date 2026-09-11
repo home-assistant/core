@@ -83,6 +83,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         hass,
         const.DOMAIN,
         "set_user",
+        admin_only=True,
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Optional(const.ATTR_USER_ID): uint16_id,
@@ -106,6 +107,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         hass,
         const.DOMAIN,
         "delete_user",
+        admin_only=True,
         entity_domain=LOCK_DOMAIN,
         schema={vol.Required(const.ATTR_USER_ID): uint16_id},
         func="async_delete_user",
@@ -115,6 +117,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         hass,
         const.DOMAIN,
         "delete_all_users",
+        admin_only=True,
         entity_domain=LOCK_DOMAIN,
         schema={},
         func="async_delete_all_users",
@@ -144,6 +147,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         hass,
         const.DOMAIN,
         "set_credential",
+        admin_only=True,
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Required(const.ATTR_USER_ID): uint16_id,
@@ -161,6 +165,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         hass,
         const.DOMAIN,
         "delete_credential",
+        admin_only=True,
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Required(const.ATTR_USER_ID): uint16_id,
@@ -176,6 +181,7 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
         hass,
         const.DOMAIN,
         "delete_all_credentials",
+        admin_only=True,
         entity_domain=LOCK_DOMAIN,
         schema={vol.Required(const.ATTR_USER_ID): uint16_id},
         func="async_delete_all_credentials",
@@ -600,6 +606,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_GET_LOCK_USERCODE,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Optional(ATTR_CODE_SLOT): vol.Coerce(int),
@@ -612,6 +619,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_SET_LOCK_USERCODE,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
@@ -624,6 +632,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_CLEAR_LOCK_USERCODE,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
@@ -635,6 +644,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_SET_LOCK_CONFIGURATION,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Required(const.ATTR_OPERATION_TYPE): vol.All(
@@ -964,9 +974,7 @@ class ZWaveServices:
 
         for device_id in service.data.get(ATTR_DEVICE_ID, []):
             try:
-                node = async_get_node_from_device_id(
-                    self._hass, device_id, self._dev_reg
-                )
+                node = async_get_node_from_device_id(self._hass, device_id)
             except ValueError as err:
                 _LOGGER.warning(err.args[0])
                 continue
@@ -983,9 +991,7 @@ class ZWaveServices:
                     const.DOMAIN,
                 )
                 continue
-            node = async_get_node_from_entity_id(
-                self._hass, entity_id, self._ent_reg, self._dev_reg
-            )
+            node = async_get_node_from_entity_id(self._hass, entity_id, self._ent_reg)
             if (
                 value_id := get_value_id_from_unique_id(entity_entry.unique_id)
             ) is None:

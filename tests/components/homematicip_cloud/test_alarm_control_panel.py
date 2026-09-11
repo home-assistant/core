@@ -1,9 +1,13 @@
 """Tests for HomematicIP Cloud alarm control panel."""
 
+from unittest.mock import Mock
+
 from homematicip.async_home import AsyncHome
+import pytest
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .helper import HomeFactory, get_and_check_entity_basics
 
@@ -53,6 +57,8 @@ async def test_hmip_alarm_control_panel(
     assert not hmip_device
 
     home = mock_hap.home
+    # the mocked connection answers every call with a tuple, not a RestResult
+    home.set_security_zones_activation_async.return_value = Mock(success=True)
 
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_away", {"entity_id": entity_id}, blocking=True
@@ -99,3 +105,53 @@ async def test_hmip_alarm_control_panel(
         hass, home, external_active=True, alarm_triggered=True
     )
     assert hass.states.get(entity_id).state == AlarmControlPanelState.TRIGGERED
+
+
+async def test_hmip_alarm_control_panel_activation_blocked(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test that a refused activation names the blocking devices."""
+    entity_id = "alarm_control_panel.hmip_alarm_control_panel"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_groups=["EXTERNAL", "INTERNAL"]
+    )
+    home = mock_hap.home
+    home.set_security_zones_activation_async.return_value = Mock(
+        success=False,
+        json={
+            "channelActivationProblems": {
+                "3014F7110000000000000001:1": ["WINDOW_OPEN"],
+                "3014F7110000000000000005:1": ["WINDOW_OPEN"],
+            }
+        },
+    )
+
+    with pytest.raises(HomeAssistantError, match="Fenster, Wohnzimmer"):
+        await hass.services.async_call(
+            "alarm_control_panel",
+            "alarm_arm_away",
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
+
+
+async def test_hmip_alarm_control_panel_activation_failed(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test a refusal that does not name any device."""
+    entity_id = "alarm_control_panel.hmip_alarm_control_panel"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_groups=["EXTERNAL", "INTERNAL"]
+    )
+    home = mock_hap.home
+    home.set_security_zones_activation_async.return_value = Mock(success=False, json={})
+
+    with pytest.raises(HomeAssistantError, match="did not accept"):
+        await hass.services.async_call(
+            "alarm_control_panel",
+            "alarm_arm_home",
+            {"entity_id": entity_id},
+            blocking=True,
+        )

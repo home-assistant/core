@@ -220,7 +220,7 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
             _LOGGER.debug("Ignoring retained infrared signal on topic %s", msg.topic)
             return
         payload = self._value_template(msg.payload)
-        if not payload or payload in (PAYLOAD_NONE, "null"):
+        if not payload or payload in (PAYLOAD_NONE, "null", '""'):
             _LOGGER.debug(
                 "Ignoring payload for %s on topic %s, with template %s",
                 self.entity_id,

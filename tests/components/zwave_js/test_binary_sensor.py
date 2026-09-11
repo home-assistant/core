@@ -18,6 +18,7 @@ from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
@@ -329,17 +330,193 @@ async def test_notification_sensor(
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "device_class"),
+    [
+        ("binary_sensor.keypad_v2_power_has_been_applied", None),
+        (
+            "binary_sensor.keypad_v2_ac_mains_re_connected",
+            BinarySensorDeviceClass.PLUG,
+        ),
+    ],
+    ids=["power_applied", "mains_re_connected"],
+)
 @pytest.mark.usefixtures("ring_keypad", "integration")
 async def test_power_management_notification_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    entity_id: str,
+    device_class: BinarySensorDeviceClass | None,
 ) -> None:
     """Test Power Management notification sensors are diagnostic."""
-    entity_id = "binary_sensor.keypad_v2_power_has_been_applied"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.usefixtures("ring_keypad", "integration")
+async def test_power_management_mains_disconnected_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the AC mains disconnected sensor is kept as a diagnostic sensor.
+
+    State 3 (AC mains re-connected) is the PLUG sensor, with state 2 (AC mains
+    disconnected) as its off state. State 2 also gets its own entity without a
+    device class, kept for backwards compatibility to be deprecated separately.
+    """
+    entity_id = "binary_sensor.keypad_v2_ac_mains_disconnected"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.usefixtures("zooz_zac36_titan_valve_actuator", "integration")
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "binary_sensor.titan_water_valve_actuator_overheat_detected",
+        "binary_sensor.titan_water_valve_actuator_underheat_detected",
+    ],
+)
+async def test_heat_notification_sensor_diagnostic(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+) -> None:
+    """Test overheat/underheat is diagnostic for non-heat-relevant device classes."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.HEAT
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.usefixtures("climate_heatit_z_trm6", "integration")
+async def test_heat_notification_sensor_primary(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test overheat/underheat is primary for heat-relevant generic device classes."""
+    entity_id = "binary_sensor.floor_thermostat_overheat_detected"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.HEAT
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is None
+
+
+@pytest.mark.usefixtures("wallmote_central_scene", "integration")
+async def test_power_management_battery_charging_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test Power Management battery charging notification sensor."""
+    entity_id = "binary_sensor.mbr_wallmote_quad_battery_is_charging"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert (
+        state.attributes.get(ATTR_DEVICE_CLASS)
+        == BinarySensorDeviceClass.BATTERY_CHARGING
+    )
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "device_class"),
+    [
+        ("binary_sensor.mbr_wallmote_quad_battery_is_fully_charged", None),
+        (
+            "binary_sensor.mbr_wallmote_quad_charge_battery_soon",
+            BinarySensorDeviceClass.BATTERY,
+        ),
+        (
+            "binary_sensor.mbr_wallmote_quad_charge_battery_now",
+            BinarySensorDeviceClass.BATTERY,
+        ),
+    ],
+    ids=["fully_charged", "charge_soon", "charge_now"],
+)
+@pytest.mark.usefixtures("wallmote_central_scene", "integration")
+async def test_power_management_battery_level_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    device_class: BinarySensorDeviceClass | None,
+) -> None:
+    """Test Power Management battery level notification sensors are diagnostic."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "binary_sensor.smart_switch_7_over_current_detected",
+        "binary_sensor.smart_switch_7_over_load_detected",
+    ],
+    ids=["over_current", "over_load"],
+)
+@pytest.mark.usefixtures("aeotec_smart_switch_7", "integration")
+async def test_power_management_safety_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+) -> None:
+    """Test Power Management power status notification sensors use safety class."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.SAFETY
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "binary_sensor.touchscreen_deadbolt_replace_battery_soon",
+        "binary_sensor.touchscreen_deadbolt_replace_battery_now",
+    ],
+    ids=["replace_soon", "replace_now"],
+)
+@pytest.mark.usefixtures("lock_schlage_be469", "integration")
+async def test_power_management_battery_maintenance_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+) -> None:
+    """Test Power Management battery maintenance notification sensors use battery class."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.BATTERY
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
@@ -1530,3 +1707,23 @@ async def test_legacy_door_open_state_stale_repair_issue_cleaned_up(
         )
         is None
     )
+
+
+ZSE43_VIBRATION_SENSOR = "binary_sensor.tilt_shock_xs_sensor_vibration"
+
+
+@pytest.mark.usefixtures("zooz_zse43", "integration")
+async def test_zooz_zse43_vibration_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the ZSE43 cover-removed notification is exposed as a vibration sensor."""
+    state = hass.states.get(ZSE43_VIBRATION_SENSOR)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.VIBRATION
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Tilt Shock XS Sensor Vibration"
+
+    entity_entry = entity_registry.async_get(ZSE43_VIBRATION_SENSOR)
+    assert entity_entry
+    assert entity_entry.original_name == "Vibration"
+    assert entity_entry.entity_category is None

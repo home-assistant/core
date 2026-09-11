@@ -4,6 +4,7 @@ from pyyardian import AsyncYardianClient
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
@@ -32,6 +33,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: YardianConfigEntry) -> b
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # Register the main device so zone child devices can resolve it as their
+    # via_device regardless of platform setup order.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        **coordinator.device_info,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

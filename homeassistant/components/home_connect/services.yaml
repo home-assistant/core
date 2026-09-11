@@ -29,6 +29,7 @@ set_program_and_options:
             - consumer_products_coffee_maker_program_beverage_caffe_latte
             - consumer_products_coffee_maker_program_beverage_cappuccino
             - consumer_products_coffee_maker_program_beverage_coffee
+            - consumer_products_coffee_maker_program_beverage_coffee_pot
             - consumer_products_coffee_maker_program_beverage_espresso
             - consumer_products_coffee_maker_program_beverage_espresso_doppio
             - consumer_products_coffee_maker_program_beverage_espresso_macchiato
@@ -38,11 +39,27 @@ set_program_and_options:
             - consumer_products_coffee_maker_program_beverage_ristretto
             - consumer_products_coffee_maker_program_beverage_warm_milk
             - consumer_products_coffee_maker_program_beverage_x_l_coffee
+            - consumer_products_coffee_maker_program_cleaning_modes_appliance_off_rinsing
+            - consumer_products_coffee_maker_program_cleaning_modes_appliance_on_rinsing
+            - consumer_products_coffee_maker_program_cleaning_modes_auto_clean
+            - consumer_products_coffee_maker_program_cleaning_modes_auto_descale
+            - consumer_products_coffee_maker_program_cleaning_modes_calc_n_clean
+            - consumer_products_coffee_maker_program_cleaning_modes_clean
+            - consumer_products_coffee_maker_program_cleaning_modes_clean_brewing_unit_manually
+            - consumer_products_coffee_maker_program_cleaning_modes_clean_brewing_unit_manually_detailed
+            - consumer_products_coffee_maker_program_cleaning_modes_clean_outlet_manually
+            - consumer_products_coffee_maker_program_cleaning_modes_descale
+            - consumer_products_coffee_maker_program_cleaning_modes_frost_protection
+            - consumer_products_coffee_maker_program_cleaning_modes_remove_water_filter
+            - consumer_products_coffee_maker_program_cleaning_modes_replace_water_filter
+            - consumer_products_coffee_maker_program_cleaning_modes_rinse_milk_system
             - consumer_products_coffee_maker_program_coffee_world_americano
             - consumer_products_coffee_maker_program_coffee_world_black_eye
             - consumer_products_coffee_maker_program_coffee_world_cafe_au_lait
             - consumer_products_coffee_maker_program_coffee_world_cafe_con_leche
             - consumer_products_coffee_maker_program_coffee_world_cafe_cortado
+            - consumer_products_coffee_maker_program_coffee_world_cold_brew
+            - consumer_products_coffee_maker_program_coffee_world_cold_brew_macchiato
             - consumer_products_coffee_maker_program_coffee_world_cortado
             - consumer_products_coffee_maker_program_coffee_world_dead_eye
             - consumer_products_coffee_maker_program_coffee_world_doppio
@@ -54,12 +71,41 @@ set_program_and_options:
             - consumer_products_coffee_maker_program_coffee_world_kleiner_brauner
             - consumer_products_coffee_maker_program_coffee_world_koffie_verkeerd
             - consumer_products_coffee_maker_program_coffee_world_red_eye
+            - consumer_products_coffee_maker_program_coffee_world_slow_brew
             - consumer_products_coffee_maker_program_coffee_world_verlaengerter
             - consumer_products_coffee_maker_program_coffee_world_verlaengerter_braun
             - consumer_products_coffee_maker_program_coffee_world_wiener_melange
+            - consumer_products_coffee_maker_program_my_coffee_my_coffee_1
+            - consumer_products_coffee_maker_program_my_coffee_my_coffee_2
+            - consumer_products_coffee_maker_program_my_coffee_my_coffee_3
+            - consumer_products_coffee_maker_program_my_coffee_my_coffee_4
+            - consumer_products_coffee_maker_program_my_coffee_my_coffee_5
+            - consumer_products_coffee_maker_program_my_coffee_my_coffee_6
+            - consumer_products_coffee_maker_program_my_coffee_my_coffee_7
+            - consumer_products_coffee_maker_program_my_coffee_my_coffee_8
             - cooking_common_program_hood_automatic
             - cooking_common_program_hood_delayed_shut_off
+            - cooking_common_program_hood_interval
             - cooking_common_program_hood_venting
+            - cooking_hob_program_frying_sensor_mode
+            - cooking_hob_program_power_level_mode
+            - cooking_hob_program_power_move_mode
+            - cooking_oven_program_cleaning_draining
+            - cooking_oven_program_cleaning_drying
+            - cooking_oven_program_cleaning_ecolysis
+            - cooking_oven_program_cleaning_modes_auto_steam_calibration
+            - cooking_oven_program_cleaning_pyrolysis
+            - cooking_oven_program_dish_automatic_conv_steam_boneless_pork_neck_joint
+            - cooking_oven_program_dish_automatic_microwave_gefluegelteile_auftauen
+            - cooking_oven_program_dish_automatic_microwave_haehnchenteile
+            - cooking_oven_program_dish_automatic_microwave_pommes_frites
+            - cooking_oven_program_dish_recommendation_conv_meat_probe_goose_breast
+            - cooking_oven_program_dish_recommendation_conv_steam_meat_probe_boneless_pork_neck_joint
+            - cooking_oven_program_dish_recommendation_conv_steam_meat_probe_turkey_breast
+            - cooking_oven_program_dish_recommendation_conv_steam_part_cooked_bread_rolls_or_baguette
+            - cooking_oven_program_dish_recommendation_full_steam_broccoli
+            - cooking_oven_program_dish_subsequent_cooking
+            - cooking_oven_program_heating_mode_2_d_hot_air
             - cooking_oven_program_heating_mode_3_d_hot_air
             - cooking_oven_program_heating_mode_air_fry
             - cooking_oven_program_heating_mode_bottom_heating
@@ -68,6 +114,7 @@ set_program_and_options:
             - cooking_oven_program_heating_mode_desiccation
             - cooking_oven_program_heating_mode_dough_proving
             - cooking_oven_program_heating_mode_frozen_heatup_special
+            - cooking_oven_program_heating_mode_full_surface_grill
             - cooking_oven_program_heating_mode_grill_large_area
             - cooking_oven_program_heating_mode_grill_small_area
             - cooking_oven_program_heating_mode_hot_air
@@ -80,6 +127,7 @@ set_program_and_options:
             - cooking_oven_program_heating_mode_hot_air_grilling
             - cooking_oven_program_heating_mode_intensive_heat
             - cooking_oven_program_heating_mode_keep_warm
+            - cooking_oven_program_heating_mode_let_rest
             - cooking_oven_program_heating_mode_pizza_setting
             - cooking_oven_program_heating_mode_pre_heating
             - cooking_oven_program_heating_mode_preheat_ovenware
@@ -97,7 +145,13 @@ set_program_and_options:
             - cooking_oven_program_microwave_900_watt
             - cooking_oven_program_microwave_90_watt
             - cooking_oven_program_microwave_max
+            - cooking_oven_program_steam_modes_dough_proving
+            - cooking_oven_program_steam_modes_reheat
             - cooking_oven_program_steam_modes_steam
+            - cooking_oven_program_subsequent_mode_continue_cooking
+            - cooking_oven_program_subsequent_mode_keep_warm
+            - cooking_oven_program_subsequent_mode_leave_to_rest
+            - cooking_oven_program_subsequent_mode_microwave
             - dishcare_dishwasher_program_auto_1
             - dishcare_dishwasher_program_auto_2
             - dishcare_dishwasher_program_auto_3
@@ -106,6 +160,7 @@ set_program_and_options:
             - dishcare_dishwasher_program_express_sparkle_65
             - dishcare_dishwasher_program_glas_40
             - dishcare_dishwasher_program_glass_care
+            - dishcare_dishwasher_program_glass_shine
             - dishcare_dishwasher_program_intensiv_45
             - dishcare_dishwasher_program_intensiv_70
             - dishcare_dishwasher_program_intensiv_power
@@ -114,6 +169,7 @@ set_program_and_options:
             - dishcare_dishwasher_program_learning_dishwasher
             - dishcare_dishwasher_program_machine_care
             - dishcare_dishwasher_program_magic_daily
+            - dishcare_dishwasher_program_max_efficient
             - dishcare_dishwasher_program_maximum_cleaning
             - dishcare_dishwasher_program_mixed_load
             - dishcare_dishwasher_program_night_wash
@@ -122,6 +178,7 @@ set_program_and_options:
             - dishcare_dishwasher_program_pre_rinse
             - dishcare_dishwasher_program_quick_45
             - dishcare_dishwasher_program_quick_65
+            - dishcare_dishwasher_program_quick_d
             - dishcare_dishwasher_program_steam_fresh
             - dishcare_dishwasher_program_super_60
             - heating_ventilation_air_conditioning_air_conditioner_program_active_clean
@@ -131,24 +188,39 @@ set_program_and_options:
             - heating_ventilation_air_conditioning_air_conditioner_program_fan
             - heating_ventilation_air_conditioning_air_conditioner_program_heat
             - laundry_care_dryer_program_anti_shrink
+            - laundry_care_dryer_program_bedlinens
             - laundry_care_dryer_program_blankets
             - laundry_care_dryer_program_business_shirts
+            - laundry_care_dryer_program_business_shirts_easy_iron
+            - laundry_care_dryer_program_cold_refresh_1_piece
+            - laundry_care_dryer_program_cold_refresh_5_piece
+            - laundry_care_dryer_program_cold_refresh_business
+            - laundry_care_dryer_program_cold_refresh_cold_refresh_cold_refresh
+            - laundry_care_dryer_program_connected_dry
             - laundry_care_dryer_program_cotton
+            - laundry_care_dryer_program_cotton_cotton_eco
+            - laundry_care_dryer_program_cotton_eco_4060
             - laundry_care_dryer_program_delicates
             - laundry_care_dryer_program_dessous
             - laundry_care_dryer_program_down_feathers
+            - laundry_care_dryer_program_easy_care_easy_care
             - laundry_care_dryer_program_hygiene
             - laundry_care_dryer_program_in_basket
+            - laundry_care_dryer_program_in_basket_wool_basket
             - laundry_care_dryer_program_jeans
+            - laundry_care_dryer_program_maintenance_care_1_maintenance_care_1_quick_care
+            - laundry_care_dryer_program_maintenance_care_2_maintenance_care_2_depth_care
             - laundry_care_dryer_program_mix
             - laundry_care_dryer_program_my_time_my_drying_time
             - laundry_care_dryer_program_outdoor
+            - laundry_care_dryer_program_outdoor_sportswear
             - laundry_care_dryer_program_pillow
             - laundry_care_dryer_program_shirts_15
             - laundry_care_dryer_program_super_40
             - laundry_care_dryer_program_synthetic
             - laundry_care_dryer_program_synthetic_refresh
             - laundry_care_dryer_program_time_cold
+            - laundry_care_dryer_program_time_cold_air_fluff
             - laundry_care_dryer_program_time_cold_fix_time_cold_20
             - laundry_care_dryer_program_time_cold_fix_time_cold_30
             - laundry_care_dryer_program_time_cold_fix_time_cold_60
@@ -157,12 +229,19 @@ set_program_and_options:
             - laundry_care_dryer_program_time_warm_fix_time_warm_40
             - laundry_care_dryer_program_time_warm_fix_time_warm_60
             - laundry_care_dryer_program_towels
+            - laundry_care_dryer_program_wool_finish
             - laundry_care_washer_dryer_program_cotton
             - laundry_care_washer_dryer_program_cotton_eco_4060
+            - laundry_care_washer_dryer_program_delicates_silk
+            - laundry_care_washer_dryer_program_drum_clean_and_dry_drum_care
             - laundry_care_washer_dryer_program_easy_care
             - laundry_care_washer_dryer_program_mix
+            - laundry_care_washer_dryer_program_rinse
+            - laundry_care_washer_dryer_program_sensitive
+            - laundry_care_washer_dryer_program_spin
             - laundry_care_washer_dryer_program_wash_and_dry_60
             - laundry_care_washer_dryer_program_wash_and_dry_90
+            - laundry_care_washer_dryer_program_wool
             - laundry_care_washer_program_auto_30
             - laundry_care_washer_program_auto_40
             - laundry_care_washer_program_auto_60
@@ -182,6 +261,7 @@ set_program_and_options:
             - laundry_care_washer_program_mix
             - laundry_care_washer_program_mix_night_wash
             - laundry_care_washer_program_monsoon
+            - laundry_care_washer_program_my_time
             - laundry_care_washer_program_outdoor
             - laundry_care_washer_program_plush_toy
             - laundry_care_washer_program_power_speed_59
@@ -191,14 +271,27 @@ set_program_and_options:
             - laundry_care_washer_program_shirts_blouses
             - laundry_care_washer_program_spin_spin_drain
             - laundry_care_washer_program_sport_fitness
+            - laundry_care_washer_program_sport_shoes
+            - laundry_care_washer_program_steaming_steaming
             - laundry_care_washer_program_super_153045_super_15
             - laundry_care_washer_program_super_153045_super_1530
+            - laundry_care_washer_program_super_153045_super_30
             - laundry_care_washer_program_towels
+            - laundry_care_washer_program_wash_and_dry_60
+            - laundry_care_washer_program_wash_and_dry_90
             - laundry_care_washer_program_water_proof
             - laundry_care_washer_program_wool
     air_conditioner_options:
       collapsed: true
       fields:
+        heating_ventilation_air_conditioning_air_conditioner_option_setpoint_temperature:
+          example: 22
+          required: false
+          selector:
+            number:
+              step: 0.1
+              mode: box
+              unit_of_measurement: °C
         heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_percentage:
           example: 50
           required: false
@@ -505,7 +598,7 @@ set_program_and_options:
               min: 0
               step: 1
               mode: box
-              unit_of_measurement: °C/°F
+              unit_of_measurement: °C
         b_s_h_common_option_duration:
           example: 900
           required: false

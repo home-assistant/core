@@ -73,6 +73,12 @@ DISCOVERY_IGNORED_MODELS = ["Sonos Boost"]
 ZGS_SUBSCRIPTION_TIMEOUT = 2
 SHUTDOWN_TIMEOUT = 10
 
+
+def _get_soco_uid(soco: SoCo) -> str:
+    """Get SoCo uid as a typed helper for executor jobs."""
+    return soco.uid
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -531,9 +537,11 @@ class SonosDiscoveryManager:
                 ),
                 None,
             )
-            if not known_speaker:
+            if known_speaker:
+                uid = known_speaker.uid
+            else:
                 try:
-                    uid = await self.hass.async_add_executor_job(getattr, soco, "uid")
+                    uid = await self.hass.async_add_executor_job(_get_soco_uid, soco)
                 except HTTPError as err:
                     await self._process_http_connection_error(err, ip_addr)
                     continue
@@ -545,6 +553,14 @@ class SonosDiscoveryManager:
                 ) as ex:
                     _LOGGER.warning("Could not get Sonos uid from %s: %s", ip_addr, ex)
                     continue
+
+            if self.is_device_disabled(uid):
+                _LOGGER.debug(
+                    "Skipping manual poll for disabled Sonos device: %s",
+                    uid,
+                )
+                continue
+            if not known_speaker:
                 try:
                     await self._async_handle_discovery_message(
                         uid,
@@ -579,8 +595,8 @@ class SonosDiscoveryManager:
     def is_device_disabled(self, uid: str) -> bool:
         """Check if the Sonos device is disabled in the device registry."""
         if not (
-            device := dr.async_get(self.hass).async_get_device(
-                identifiers={(DOMAIN, uid)}
+            device := dr.async_get(self.hass).async_get_device_by_identifier(
+                (DOMAIN, uid), self.entry.entry_id
             )
         ):
             return False
@@ -724,7 +740,7 @@ class SonosDiscoveryManager:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove Sonos config entry from a device."""
     known_devices = config_entry.runtime_data.discovered.keys()

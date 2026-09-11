@@ -6,7 +6,10 @@ from typing import override
 import voluptuous as vol
 
 from homeassistant.components import alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityStateAttribute,
+    AlarmControlPanelState,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE, CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
@@ -56,9 +59,9 @@ PARALLEL_UPDATES = 0
 
 MQTT_ALARM_ATTRIBUTES_BLOCKED = frozenset(
     {
-        alarm.ATTR_CHANGED_BY,
-        alarm.ATTR_CODE_ARM_REQUIRED,
-        alarm.ATTR_CODE_FORMAT,
+        AlarmControlPanelEntityStateAttribute.CHANGED_BY,
+        AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED,
+        AlarmControlPanelEntityStateAttribute.CODE_FORMAT,
     }
 )
 

@@ -10,7 +10,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
 from .const import CONF_REGION_DEVICE_TRACKER, CONF_REGION_IDENTIFIER, DOMAIN
-from .exceptions import EntityNotFoundError
+from .exceptions import CoordinatesNotFoundError, EntityNotFoundError
 from .util import get_position_data
 
 EXCLUSIVE_OPTIONS = (CONF_REGION_IDENTIFIER, CONF_REGION_DEVICE_TRACKER)
@@ -61,7 +61,7 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
                         position = get_position_data(self.hass, entity_entry.id)
                     except EntityNotFoundError:
                         errors["base"] = "entity_not_found"
-                    except AttributeError:
+                    except CoordinatesNotFoundError:
                         errors["base"] = "attribute_not_found"
                     else:
                         # Validate position using the API

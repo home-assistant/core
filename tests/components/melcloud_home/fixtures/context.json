@@ -43,7 +43,7 @@
             "hasDemandSideControl": false,
             "hasHalfDegreeIncrements": true,
             "supportsWideVane": false,
-            "hasOutdoorTemperatureSensor": false,
+            "hasOutdoorTemperatureSensor": true,
             "hasVaneVertical": true,
             "hasVaneHorizontal": true,
             "hasStandbyMode": false

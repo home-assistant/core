@@ -13,7 +13,4 @@ MOCK_MAC_NEW = "00:00:00:00:00:01"
 TEST_CON_ERROR = ConnectionError("Connection failed")
 TEST_IMP_ERROR = NotImplementedError("Not implemented")
 
-TEST_FAILED_ON = "Failed to turn on device"
-TEST_FAILED_OFF = "Failed to turn off device"
-TEST_FAILED_CMD = "Failed to send command"
 TEST_COMMAND = "test"

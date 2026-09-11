@@ -117,12 +117,12 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
         if not (legacy_entry := async_get_legacy_entry(self.hass)):
             return False
         device_registry = dr.async_get(self.hass)
-        existing_device = device_registry.async_get_device(
+        existing_devices = device_registry.async_get_devices(
             identifiers={(DOMAIN, self.unique_id)}
         )
-        return bool(
-            existing_device is not None
-            and legacy_entry.entry_id in existing_device.config_entries
+        return any(
+            device.config_entry_id == legacy_entry.entry_id
+            for device in existing_devices
         )
 
     async def async_step_discovery_confirm(

@@ -1,7 +1,7 @@
 """Config flow for LiteLLM integration."""
 
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
 import voluptuous as vol
@@ -65,7 +65,8 @@ async def _get_models(hass: HomeAssistant, url: str, api_key: str | None) -> lis
     client = AsyncOpenAI(
         base_url=url,
         api_key=api_key or PLACEHOLDER_API_KEY,
-        http_client=get_async_client(hass),
+        # Legacy HTTPX clients are supported at runtime only.
+        http_client=cast(Any, get_async_client(hass)),
     )
     try:
         return [
@@ -180,7 +181,7 @@ class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
+            if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
             if self._is_new:
                 return self.async_create_entry(

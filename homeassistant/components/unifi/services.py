@@ -54,7 +54,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     """Try to get wireless client to reconnect to Wi-Fi."""
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(data[ATTR_DEVICE_ID])
+    device_entry = device_registry.async_get(
+        data[ATTR_DEVICE_ID], include_child_devices=False
+    )
 
     if device_entry is None:
         raise ServiceValidationError(

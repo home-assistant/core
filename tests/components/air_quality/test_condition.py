@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.air_quality.condition import CONDITIONS
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -17,9 +18,11 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     assert_numerical_condition_unit_conversion,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -69,6 +72,29 @@ _UGM3_THRESHOLD = {
 }
 
 
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_gas_detected": TargetSupport.STANDARD,
+    "is_gas_cleared": TargetSupport.STANDARD,
+    "is_co_detected": TargetSupport.STANDARD,
+    "is_co_cleared": TargetSupport.STANDARD,
+    "is_smoke_detected": TargetSupport.STANDARD,
+    "is_smoke_cleared": TargetSupport.STANDARD,
+    "is_co_value": TargetSupport.STANDARD,
+    "is_ozone_value": TargetSupport.STANDARD,
+    "is_voc_value": TargetSupport.STANDARD,
+    "is_voc_ratio_value": TargetSupport.STANDARD,
+    "is_no_value": TargetSupport.STANDARD,
+    "is_no2_value": TargetSupport.STANDARD,
+    "is_so2_value": TargetSupport.STANDARD,
+    "is_co2_value": TargetSupport.STANDARD,
+    "is_pm1_value": TargetSupport.STANDARD,
+    "is_pm25_value": TargetSupport.STANDARD,
+    "is_pm4_value": TargetSupport.STANDARD,
+    "is_pm10_value": TargetSupport.STANDARD,
+    "is_n2o_value": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -112,6 +138,11 @@ async def test_air_quality_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

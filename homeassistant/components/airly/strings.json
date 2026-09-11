@@ -5,7 +5,9 @@
       "wrong_location": "[%key:component::airly::config::error::wrong_location%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "wrong_location": "No Airly measuring stations in this area."
     },
     "step": {
@@ -15,7 +17,11 @@
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
         },
-        "description": "To generate API key go to {developer_registration_url}"
+        "data_description": {
+          "api_key": "To generate API key go to {developer_registration_url}.",
+          "latitude": "The latitude of your location.",
+          "longitude": "The longitude of your location."
+        }
       }
     }
   },

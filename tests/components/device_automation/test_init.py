@@ -1243,6 +1243,50 @@ async def test_automation_with_dynamically_validated_trigger(
     module.async_attach_trigger.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("fake_integration")
+async def test_automation_with_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device automation targeting a child device of the domain's config entry."""
+    module_cache = hass.data[loader.DATA_COMPONENTS]
+    module = module_cache["fake_integration.device_trigger"]
+    module.async_attach_trigger = AsyncMock()
+    module.async_validate_trigger_config = AsyncMock(wraps=lambda hass, config: config)
+
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.add_to_hass(hass)
+    parent_device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("fake_integration", "parent")},
+    )
+    child_device_entry = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("fake_integration", "child")},
+        parent_device_id=parent_device_entry.id,
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {
+                    "platform": "device",
+                    "device_id": child_device_entry.id,
+                    "domain": "fake_integration",
+                },
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    module.async_validate_trigger_config.assert_awaited_once()
+    module.async_attach_trigger.assert_awaited_once()
+
+
 async def test_automation_with_integration_without_device_trigger(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1272,7 +1316,7 @@ async def test_automation_with_integration_without_device_trigger(
 BAD_AUTOMATIONS = [
     (
         {"device_id": "very_unique", "domain": "light"},
-        "required key not provided @ data['entity_id']",
+        "required key not provided at 'entity_id'",
     ),
     (
         {"device_id": "wrong", "domain": "light"},
@@ -1280,7 +1324,7 @@ BAD_AUTOMATIONS = [
     ),
     (
         {"device_id": "wrong"},
-        "required key not provided @ data{path}['domain']",
+        "required key not provided at '{path}domain'",
     ),
     (
         {"device_id": "wrong", "domain": "light"},
@@ -1288,7 +1332,7 @@ BAD_AUTOMATIONS = [
     ),
     (
         {"device_id": "very_unique", "domain": "light"},
-        "required key not provided @ data['entity_id']",
+        "required key not provided at 'entity_id'",
     ),
     (
         {"device_id": "very_unique", "domain": "light", "entity_id": "wrong"},
@@ -1298,7 +1342,7 @@ BAD_AUTOMATIONS = [
 
 BAD_TRIGGERS = BAD_CONDITIONS = [
     *BAD_AUTOMATIONS,
-    ({"domain": "light"}, "required key not provided @ data{path}['device_id']"),
+    ({"domain": "light"}, "required key not provided at '{path}device_id'"),
 ]
 
 
@@ -1333,7 +1377,7 @@ async def test_automation_with_bad_action(
         },
     )
 
-    assert expected_error.format(path="['actions'][0]") in caplog.text
+    assert expected_error.format(path="actions[0].") in caplog.text
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1367,7 +1411,7 @@ async def test_automation_with_bad_condition_action(
         },
     )
 
-    assert expected_error.format(path="['actions'][0]") in caplog.text
+    assert expected_error.format(path="actions[0].") in caplog.text
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1401,7 +1445,7 @@ async def test_automation_with_bad_condition(
         },
     )
 
-    assert expected_error.format(path="['conditions'][0]") in caplog.text
+    assert expected_error.format(path="conditions[0].") in caplog.text
 
 
 async def test_automation_with_sub_condition(
@@ -1567,7 +1611,7 @@ async def test_automation_with_bad_sub_condition(
         },
     )
 
-    path = "['conditions'][0]['conditions'][0]"
+    path = "conditions[0].conditions[0]."
     assert expected_error.format(path=path) in caplog.text
 
 
@@ -1865,13 +1909,13 @@ async def test_validate_config_rewrites_composite_device_id(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_fake.id] = attr.evolve(
+    device_registry._devices[device_fake.id] = attr.evolve(
         device_fake, composite_device_id=old_id
     )
-    device_registry.devices[device_other.id] = attr.evolve(
+    device_registry._devices[device_other.id] = attr.evolve(
         device_other, composite_device_id=old_id
     )
-    assert old_id not in device_registry.devices
+    assert old_id not in device_registry._devices
 
     validated = await async_validate_device_automation_config(
         hass,
@@ -1889,3 +1933,96 @@ async def test_validate_config_rewrites_composite_device_id(
         DeviceAutomationType.TRIGGER,
     )
     assert validated["device_id"] == device_fake.id
+
+
+def _mock_device_trigger_platform(hass: HomeAssistant, domain: str) -> None:
+    """Mock a device_trigger platform returning one trigger for the queried device."""
+
+    async def _async_get_triggers(
+        hass: HomeAssistant, device_id: str
+    ) -> list[dict[str, str]]:
+        """List device triggers."""
+        return [
+            {
+                "platform": "device",
+                "domain": domain,
+                "type": "changed_states",
+                "device_id": device_id,
+            }
+        ]
+
+    mock_platform(
+        hass,
+        f"{domain}.device_trigger",
+        Mock(async_get_triggers=_async_get_triggers, spec=["async_get_triggers"]),
+    )
+
+
+async def test_async_get_device_automations_composite_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test a composite id is queried for the domains of all its splits' config entries.
+
+    A split device is queried only for the domain of its own config entry.
+    """
+    await async_setup_component(hass, DOMAIN, {})
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    _mock_device_trigger_platform(hass, "domain_a")
+    _mock_device_trigger_platform(hass, "domain_b")
+
+    device_a = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id, identifiers={("domain_a", "1")}
+    )
+    device_b = device_registry.async_get_or_create(
+        config_entry_id=entry_b.entry_id, identifiers={("domain_b", "1")}
+    )
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry._devices[device_a.id] = attr.evolve(
+        device_a, composite_device_id=COMPOSITE_ID
+    )
+    device_registry._devices[device_b.id] = attr.evolve(
+        device_b, composite_device_id=COMPOSITE_ID
+    )
+    assert device_registry.async_get(COMPOSITE_ID).is_composite_device is True
+    assert device_registry.async_get(device_a.id).is_composite_device is False
+
+    result = await device_automation.async_get_device_automations(
+        hass,
+        device_automation.DeviceAutomationType.TRIGGER,
+        [COMPOSITE_ID, device_a.id],
+    )
+
+    # Results are keyed by the requested ids, the composite id included
+    assert set(result) == {COMPOSITE_ID, device_a.id}
+    # The composite is queried for both of its splits' config entry domains
+    assert result[COMPOSITE_ID] == unordered(
+        [
+            {
+                "platform": "device",
+                "domain": "domain_a",
+                "type": "changed_states",
+                "device_id": COMPOSITE_ID,
+                "metadata": {},
+            },
+            {
+                "platform": "device",
+                "domain": "domain_b",
+                "type": "changed_states",
+                "device_id": COMPOSITE_ID,
+                "metadata": {},
+            },
+        ]
+    )
+    # A split is queried for its own config entry domain only
+    assert result[device_a.id] == [
+        {
+            "platform": "device",
+            "domain": "domain_a",
+            "type": "changed_states",
+            "device_id": device_a.id,
+            "metadata": {},
+        }
+    ]

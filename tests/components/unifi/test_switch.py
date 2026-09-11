@@ -735,6 +735,34 @@ PDU_DEVICE_1 = {
     "x_has_ssh_hostkey": True,
 }
 
+UPS_DEVICE_1 = deepcopy(PDU_DEVICE_1)
+UPS_DEVICE_1.update(
+    {
+        "device_id": "mock-ups",
+        "mac": "02:00:00:00:00:01",
+        "model": "USPDA2B",
+        "name": "Dummy UPS 2U Pro",
+        "type": "usp",
+        "outlet_table": [
+            {
+                "index": 1,
+                "relay_state": True,
+                "cycle_enabled": False,
+                "name": "Outlet 1",
+                "outlet_caps": 65539,
+            }
+        ],
+        "outlet_overrides": [
+            {
+                "cycle_enabled": False,
+                "name": "Outlet 1",
+                "relay_state": True,
+                "index": 1,
+            }
+        ],
+    }
+)
+
 WLAN = {
     "_id": "012345678910111213141516",
     "bc_filter_enabled": False,
@@ -870,6 +898,33 @@ FIREWALL_POLICY = {
         "port_matching_type": "ANY",
         "zone_id": "678c63bc2d97692f08adcdfa",
     },
+}
+
+OBJECT_ORIENTED_NETWORK_CONFIG = {
+    "id": "69f6b0a5e0e3ee2d4614cb5c",
+    "enabled": True,
+    "name": "Nintendo Switch - Block Internet",
+    "target_type": "CLIENTS",
+    "targets": [CLIENT_1["mac"]],
+    "qos": {"enabled": False},
+    "route": {"enabled": False},
+    "secure": {
+        "enabled": True,
+        "internet": {
+            "mode": "TURN_OFF_INTERNET",
+            "schedule": {"mode": "ALWAYS"},
+        },
+    },
+}
+
+OBJECT_ORIENTED_NETWORK_ROUTE_CONFIG = {
+    "id": "69f6b0eae0e3ee2d4614cb91",
+    "enabled": True,
+    "name": "VPN traffic route",
+    "target_type": "NETWORKS",
+    "targets": ["6060b00f45de3905133cea14"],
+    "route": {"enabled": True},
+    "secure": None,
 }
 
 
@@ -1354,11 +1409,81 @@ async def test_firewall_policies(
 
 
 @pytest.mark.parametrize(
+    ("object_oriented_network_config_payload"),
+    [([OBJECT_ORIENTED_NETWORK_CONFIG, OBJECT_ORIENTED_NETWORK_ROUTE_CONFIG])],
+)
+async def test_object_oriented_network_configs(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    object_oriented_network_config_payload: list[dict[str, Any]],
+) -> None:
+    """Test control of UniFi Policy Engine rules."""
+    entity_id = "switch.unifi_network_nintendo_switch_block_internet"
+    assert hass.states.get("switch.unifi_network_vpn_traffic_route") is None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    config = deepcopy(object_oriented_network_config_payload[0])
+    config_url = (
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}"
+        f"/object-oriented-network-config/{config['id']}"
+    )
+
+    aioclient_mock.put(config_url)
+
+    call_count = aioclient_mock.call_count
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    expected_disable_call = deepcopy(config)
+    expected_disable_call["enabled"] = False
+
+    assert (
+        "put",
+        config_url,
+        expected_disable_call,
+    ) in (
+        (method, str(url), data)
+        for method, url, data, _headers in aioclient_mock.mock_calls[call_count:]
+    )
+
+    call_count = aioclient_mock.call_count
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    expected_enable_call = deepcopy(config)
+    expected_enable_call["enabled"] = True
+
+    assert (
+        "put",
+        config_url,
+        expected_enable_call,
+    ) in (
+        (method, str(url), data)
+        for method, url, data, _headers in aioclient_mock.mock_calls[call_count:]
+    )
+
+
+@pytest.mark.parametrize(
     ("device_payload", "entity_id", "outlet_index", "expected_switches"),
     [
         ([OUTLET_UP1], "plug_outlet_1", 1, 1),
         ([PDU_DEVICE_1], "dummy_usp_pdu_pro_usb_outlet_1", 1, 2),
         ([PDU_DEVICE_1], "dummy_usp_pdu_pro_outlet_2", 2, 2),
+        ([UPS_DEVICE_1], "dummy_ups_2u_pro_outlet_1", 1, 1),
     ],
 )
 async def test_outlet_switches(

@@ -55,7 +55,9 @@ async def test_device_registered_with_firmware(
     """The first successful read populates firmware on the device entry."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert "18.52" in (device.sw_version or "")
 

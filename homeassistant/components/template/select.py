@@ -10,6 +10,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     ENTITY_ID_FORMAT,
     SelectEntity,
+    SelectEntityCapabilityAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_OPTIONS, CONF_STATE
@@ -22,7 +23,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -33,7 +34,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -54,9 +55,17 @@ SELECT_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=SelectEntityCapabilityAttribute
+)
+
 SELECT_YAML_SCHEMA = SELECT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
-).extend(make_template_entity_common_modern_schema(SELECT_DOMAIN, DEFAULT_NAME).schema)
+).extend(
+    make_template_entity_common_schema(
+        SELECT_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
+    ).schema
+)
 
 SELECT_CONFIG_ENTRY_SCHEMA = SELECT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
@@ -140,6 +149,7 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity, RestoreEntity
     _state_option = CONF_STATE
     _restore_state_extra_data = SelectExtraStoredData
     _restore_state_properties = ("_attr_current_option",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -152,12 +162,12 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity, RestoreEntity
 
         self.setup_state_template(
             "_attr_current_option",
-            template_validators.string(self, CONF_STATE),
+            tcv.string(self, CONF_STATE),
         )
         self.setup_template(
             CONF_OPTIONS,
             "_attr_options",
-            template_validators.list_of_strings(self, CONF_OPTIONS),
+            tcv.list_of_strings(self, CONF_OPTIONS),
         )
 
         self._attr_current_option = None

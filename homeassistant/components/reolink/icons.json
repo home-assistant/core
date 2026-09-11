@@ -121,6 +121,12 @@
           "on": "mdi:package-variant-closed-check"
         }
       },
+      "tamper": {
+        "default": "mdi:shield-check",
+        "state": {
+          "on": "mdi:shield-alert"
+        }
+      },
       "vehicle": {
         "default": "mdi:car-off",
         "state": {
@@ -182,6 +188,9 @@
       },
       "ptz_zoom_out": {
         "default": "mdi:magnify"
+      },
+      "sync_time": {
+        "default": "mdi:clock-outline"
       }
     },
     "light": {
@@ -378,6 +387,9 @@
       }
     },
     "select": {
+      "anti_flicker": {
+        "default": "mdi:camera-iris"
+      },
       "auto_quick_reply_message": {
         "default": "mdi:message-reply-text-outline"
       },
@@ -488,6 +500,12 @@
         "state": {
           "off": "mdi:music-note-off"
         }
+      },
+      "work_mode_battery": {
+        "default": "mdi:battery"
+      },
+      "work_mode_powered": {
+        "default": "mdi:power-plug"
       }
     },
     "sensor": {
@@ -628,6 +646,20 @@
       },
       "siren_on_event": {
         "default": "mdi:alarm-light"
+      },
+      "tamper_enabled": {
+        "default": "mdi:shield-check",
+        "state": {
+          "off": "mdi:shield"
+        }
+      }
+    },
+    "time": {
+      "floodlight_schedule_end": {
+        "default": "mdi:clock-end"
+      },
+      "floodlight_schedule_start": {
+        "default": "mdi:clock-start"
       }
     }
   },

@@ -28,7 +28,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up IntelliClima VMC fans."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.devices_coordinator
 
     entities: list[IntelliClimaVMCFan] = [
         IntelliClimaVMCFan(

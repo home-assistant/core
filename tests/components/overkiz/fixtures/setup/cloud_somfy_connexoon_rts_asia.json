@@ -611,6 +611,97 @@
       "type": 1,
       "oid": "97f85fd1-53f7-4cdf-8c73-9b2c172dbd62",
       "uiClass": "Generic"
+    },
+    {
+      "creationTime": 1613676730000,
+      "lastUpdateTime": 1613676730000,
+      "label": "LED Strip",
+      "deviceURL": "rts://1234-1234-6362/16752757",
+      "shortcut": false,
+      "controllableName": "rts:DimmableLightRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 1
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "onWithTimer",
+            "nparams": 1
+          },
+          {
+            "commandName": "rest",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 1
+          },
+          {
+            "commandName": "test",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 1
+          },
+          {
+            "commandName": "openConfiguration",
+            "nparams": 1
+          },
+          {
+            "commandName": "stepNegative",
+            "nparams": 2
+          },
+          {
+            "commandName": "stepPositive",
+            "nparams": 2
+          }
+        ],
+        "states": [],
+        "dataProperties": [
+          {
+            "value": "0",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "DimmerOnOffLight",
+        "uiProfiles": ["SwitchableLight", "Switchable", "UpDown"],
+        "uiClass": "Light",
+        "qualifiedName": "rts:DimmableLightRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [],
+      "attributes": [
+        {
+          "name": "rts:diy",
+          "type": 6,
+          "value": false
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
+      "widget": "DimmerOnOffLight",
+      "type": 1,
+      "oid": "1ebe282d-951d-4fb6-97a6-1ebfd2ff7f8f",
+      "uiClass": "Light"
     }
   ],
   "zones": [],

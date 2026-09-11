@@ -17,9 +17,12 @@ from .coordinator import (
 )
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.DEVICE_TRACKER,
+    Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.UPDATE,
 ]
 
@@ -43,8 +46,6 @@ async def async_setup_entry(
 
     config_entry.runtime_data = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -55,6 +56,8 @@ async def async_setup_entry(
         sw_version=coordinator.firmware,
     )
 
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
     return True
 
 
@@ -62,4 +65,9 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: MikrotikConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        await hass.async_add_executor_job(config_entry.runtime_data.api.api.close)
+    return unload_ok

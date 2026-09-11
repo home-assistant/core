@@ -103,6 +103,7 @@ class XiaomiDevice(Entity):
         else:
             if TYPE_CHECKING:
                 assert self._gateway_id is not None
+                assert self.platform.config_entry is not None
             device_info = DeviceInfo(
                 connections={(dr.CONNECTION_ZIGBEE, self._device_id)},
                 identifiers={(DOMAIN, self._device_id)},
@@ -110,7 +111,11 @@ class XiaomiDevice(Entity):
                 model=self._model,
                 name=self._device_name,
                 sw_version=self._protocol,
-                via_device=(DOMAIN, self._gateway_id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.hass,
+                    (DOMAIN, self._gateway_id),
+                    config_entry_id=self.platform.config_entry.entry_id,
+                ),
             )
 
         return device_info
