@@ -98,6 +98,14 @@
       }
     }
   },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with the LaMetric device"
+    },
+    "invalid_response": {
+      "message": "Invalid response from the LaMetric device"
+    }
+  },
   "selector": {
     "icon_type": {
       "options": {

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from demetriek import (
     LaMetricConnectionError,
     LaMetricError,
+    Model,
     Notification,
     NotificationIconType,
     NotificationPriority,
@@ -15,6 +16,7 @@ from demetriek import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -166,18 +168,19 @@ async def test_send_message(
         blocking=True,
     )
 
-    assert len(mock_lametric.notify.mock_calls) == 1
-
-    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
-    assert notification.icon_type is NotificationIconType.NONE
-    assert notification.priority is NotificationPriority.INFO
-    assert notification.model.sound is None
-
-    assert len(notification.model.frames) == 1
-    frame = notification.model.frames[0]
-    assert type(frame) is Simple
-    assert frame.icon is None
-    assert frame.text == "The way to get started is to quit talking and begin doing"
+    mock_lametric.notify.assert_called_once_with(
+        notification=Notification(
+            icon_type=NotificationIconType.NONE,
+            priority=NotificationPriority.INFO,
+            model=Model(
+                frames=[
+                    Simple(
+                        text="The way to get started is to quit talking and begin doing"
+                    )
+                ]
+            ),
+        )
+    )
 
     state = hass.states.get(ENTITY_ID)
     assert state
@@ -185,17 +188,17 @@ async def test_send_message(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error_message", "expected_state"),
+    ("side_effect", "translation_key", "expected_state"),
     [
         pytest.param(
             LaMetricError,
-            "Invalid response from the LaMetric device",
+            "invalid_response",
             STATE_UNKNOWN,
             id="error",
         ),
         pytest.param(
             LaMetricConnectionError,
-            "Error communicating with the LaMetric device",
+            "communication_error",
             STATE_UNAVAILABLE,
             id="connection_error",
         ),
@@ -205,13 +208,13 @@ async def test_send_message_error(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
     side_effect: type[LaMetricError],
-    error_message: str,
+    translation_key: str,
     expected_state: str,
 ) -> None:
     """Test error handling of the LaMetric notify entity."""
     mock_lametric.notify.side_effect = side_effect
 
-    with pytest.raises(HomeAssistantError, match=error_message):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
@@ -221,6 +224,9 @@ async def test_send_message_error(
             },
             blocking=True,
         )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == translation_key
 
     state = hass.states.get(ENTITY_ID)
     assert state

@@ -14,11 +14,6 @@
         "default": "mdi:bell-cancel"
       }
     },
-    "notify": {
-      "message": {
-        "default": "mdi:message"
-      }
-    },
     "number": {
       "brightness": {
         "default": "mdi:brightness-6"
