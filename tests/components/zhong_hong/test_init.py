@@ -63,7 +63,7 @@ async def test_setup_retries_without_devices(
     assert mock_gateway.start_listen_calls == 0
 
 
-async def test_setup_stops_listener_when_the_first_query_fails(
+async def test_setup_stops_listener_when_first_refresh_fails(
     hass: HomeAssistant, mock_gateway: FakeGateway, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the listener is stopped when the entry fails after it was started.
@@ -86,7 +86,8 @@ async def test_setup_asks_for_the_state_of_every_device(
     """Test the entities have state without waiting for someone to touch a unit.
 
     The gateway reports a unit when it changes and not before, so the first
-    state of each one has to be asked for.
+    state of each one has to be asked for. That is what the coordinator's
+    first refresh is doing.
     """
     await setup_integration(hass, mock_config_entry)
 

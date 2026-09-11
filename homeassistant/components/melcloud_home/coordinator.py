@@ -26,7 +26,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=60)
-ENERGY_UPDATE_INTERVAL = timedelta(minutes=15)
+TELEMETRY_UPDATE_INTERVAL = timedelta(minutes=15)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -34,7 +34,7 @@ class MelCloudHomeRuntimeData:
     """Runtime data for the MELCloud Home config entry."""
 
     coordinator: MelCloudHomeCoordinator
-    energy_coordinator: MelCloudHomeEnergyCoordinator
+    telemetry_coordinator: MelCloudHomeTelemetryCoordinator
 
 
 type MelCloudHomeConfigEntry = ConfigEntry[MelCloudHomeRuntimeData]
@@ -150,8 +150,18 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
             self._notify_new_units(self.data)
 
 
-class MelCloudHomeEnergyCoordinator(DataUpdateCoordinator[dict[str, float | None]]):
-    """Coordinator to manage fetching MELCloud Home energy telemetry."""
+@dataclass(kw_only=True, frozen=True)
+class MelCloudHomeTelemetryData:
+    """Telemetry data fetched periodically for MELCloud Home units."""
+
+    energy: dict[str, float | None]
+    outdoor_temperature: dict[str, float | None]
+
+
+class MelCloudHomeTelemetryCoordinator(
+    DataUpdateCoordinator[MelCloudHomeTelemetryData]
+):
+    """Coordinator to manage fetching MELCloud Home energy and outdoor temperature telemetry."""
 
     config_entry: MelCloudHomeConfigEntry
 
@@ -166,8 +176,8 @@ class MelCloudHomeEnergyCoordinator(DataUpdateCoordinator[dict[str, float | None
             hass,
             _LOGGER,
             config_entry=entry,
-            name=f"{DOMAIN}_energy",
-            update_interval=ENERGY_UPDATE_INTERVAL,
+            name=f"{DOMAIN}_telemetry",
+            update_interval=TELEMETRY_UPDATE_INTERVAL,
         )
         self.client = client
 
@@ -188,9 +198,21 @@ class MelCloudHomeEnergyCoordinator(DataUpdateCoordinator[dict[str, float | None
             return None
         return sum(float(e.value) for e in energy)
 
+    async def _async_get_outdoor_temperature(self, unit_id: str) -> float | None:
+        """Fetch outdoor temperature for a unit without failing the whole update."""
+        try:
+            return await self.client.get_outdoor_temperature(unit_id)
+        except (
+            MelCloudHomeAuthenticationError,
+            MelCloudHomeConnectionError,
+            MelCloudHomeTimeoutError,
+        ):
+            _LOGGER.warning("Failed to fetch outdoor temperature for %s", unit_id)
+            return None
+
     @override
-    async def _async_update_data(self) -> dict[str, float | None]:
-        """Fetch energy telemetry for all units with an energy meter."""
+    async def _async_update_data(self) -> MelCloudHomeTelemetryData:
+        """Fetch energy and outdoor temperature telemetry for all supported units."""
         try:
             data = await self.client.get_context()
         except MelCloudHomeAuthenticationError as err:
@@ -215,6 +237,9 @@ class MelCloudHomeEnergyCoordinator(DataUpdateCoordinator[dict[str, float | None
         now = utcnow()
 
         energy_coroutines: dict[str, Coroutine[None, None, float | None]] = {}
+        outdoor_temperature_coroutine: dict[
+            str, Coroutine[None, None, float | None]
+        ] = {}
         for building in data.buildings:
             for ata_unit in building.air_to_air_units:
                 if (
@@ -224,6 +249,14 @@ class MelCloudHomeEnergyCoordinator(DataUpdateCoordinator[dict[str, float | None
                     energy_coroutines[ata_unit.id] = self._async_get_energy(
                         ata_unit.id, start_of_month, now
                     )
+                if (
+                    ata_unit.capabilities
+                    and ata_unit.capabilities.has_outdoor_temperature_sensor
+                ):
+                    outdoor_temperature_coroutine[ata_unit.id] = (
+                        self._async_get_outdoor_temperature(ata_unit.id)
+                    )
+
             for atw_unit in building.air_to_water_units:
                 if (
                     atw_unit.capabilities
@@ -233,10 +266,18 @@ class MelCloudHomeEnergyCoordinator(DataUpdateCoordinator[dict[str, float | None
                         atw_unit.id, start_of_month, now
                     )
 
-        return dict(
-            zip(
-                energy_coroutines,
-                await asyncio.gather(*energy_coroutines.values()),
-                strict=True,
-            )
+        energy_values, outdoor_temperature_values = await asyncio.gather(
+            asyncio.gather(*energy_coroutines.values()),
+            asyncio.gather(*outdoor_temperature_coroutine.values()),
+        )
+
+        return MelCloudHomeTelemetryData(
+            energy=dict(zip(energy_coroutines, energy_values, strict=True)),
+            outdoor_temperature=dict(
+                zip(
+                    outdoor_temperature_coroutine,
+                    outdoor_temperature_values,
+                    strict=True,
+                )
+            ),
         )

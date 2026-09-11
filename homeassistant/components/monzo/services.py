@@ -88,7 +88,7 @@ TRANSFER_SCHEMA = vol.Schema(
 
 
 @callback
-def _async_get_resource_id(device: dr.DeviceEntry) -> str:
+def _async_get_resource_id(device: dr.AnyDeviceEntry) -> str:
     """Get the Monzo resource ID represented by a device."""
     for domain, resource_id in device.identifiers:
         if domain == DOMAIN:
@@ -99,7 +99,7 @@ def _async_get_resource_id(device: dr.DeviceEntry) -> str:
     )
 
 
-def _device_name(device: dr.DeviceEntry) -> str:
+def _device_name(device: dr.AnyDeviceEntry) -> str:
     """Return the best available name for a device."""
     return device.name_by_user or device.name or device.id
 
