@@ -455,8 +455,7 @@ def test_validate_custom_requirements_invalid(
     """Test custom integration requirements that clash with Home Assistant."""
     custom_integration.manifest["requirements"] = [requirement]
 
-    validate_custom_requirements(custom_integration, core_config)
-
+    assert not validate_custom_requirements(custom_integration, core_config)
     assert [x.error for x in custom_integration.errors] == [error]
 
 
@@ -484,8 +483,7 @@ def test_validate_custom_requirements_valid(
     """Test custom integration requirements that Home Assistant is fine with."""
     custom_integration.manifest["requirements"] = [requirement]
 
-    validate_custom_requirements(custom_integration, core_config)
-
+    assert validate_custom_requirements(custom_integration, core_config)
     assert not custom_integration.errors
 
 
@@ -496,6 +494,5 @@ def test_validate_custom_requirements_skips_core(
     custom_integration.path = core_config.root / "homeassistant/components/modbus"
     custom_integration.manifest["requirements"] = ["pymodbus==3.13.1"]
 
-    validate_custom_requirements(custom_integration, core_config)
-
+    assert validate_custom_requirements(custom_integration, core_config)
     assert not custom_integration.errors

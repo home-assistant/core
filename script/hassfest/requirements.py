@@ -518,15 +518,19 @@ def _specifiers_conflict(left: SpecifierSet, right: SpecifierSet) -> bool:
     )
 
 
-def validate_custom_requirements(integration: Integration, config: Config) -> None:
+def validate_custom_requirements(integration: Integration, config: Config) -> bool:
     """Validate a custom integration against the requirements of Home Assistant.
 
     Custom integrations are installed into the same Python environment as Home
     Assistant itself. A requirement that rules out the version Home Assistant
     needs takes the whole installation down with it.
+
+    Returns if valid.
     """
     if integration.core:
-        return
+        return True
+
+    start_errors = len(integration.errors)
 
     core_requirements = _load_requirement_file(config.root / "requirements.txt")
     all_requirements = _load_requirement_file(config.root / "requirements_all.txt")
@@ -605,13 +609,18 @@ def validate_custom_requirements(integration: Integration, config: Config) -> No
                 "instead, so it can follow along when Home Assistant updates it.",
             )
 
+    return len(integration.errors) == start_errors
+
 
 def validate_requirements(integration: Integration, config: Config) -> None:
     """Validate requirements."""
     if not validate_requirements_format(integration):
         return
 
-    validate_custom_requirements(integration, config)
+    # Installing a requirement we already rejected would downgrade the
+    # environment hassfest itself runs in.
+    if not validate_custom_requirements(integration, config):
+        return
 
     integration_requirements = set()
     integration_packages = set()
