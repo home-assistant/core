@@ -349,7 +349,14 @@ def core_config(tmp_path: Path) -> Generator[Config]:
         "-r requirements.txt\n\n# homeassistant.components.modbus\npymodbus==3.13.1\n"
     )
     (tmp_path / "homeassistant" / "package_constraints.txt").write_text(
-        "pymodbus==3.13.1\naiofiles>=24.1.0\n"
+        "pymodbus==3.13.1\n"
+        "aiofiles>=24.1.0\n"
+        "poetry==1000000000.0.0\n"
+        "tenacity!=8.4.0\n"
+        "auth0-python<5.0\n"
+        # Listed twice, as package_constraints.txt does for some packages
+        "dupe-package<2.0\n"
+        "dupe-package>=1.5\n"
     )
 
     _load_requirement_file.cache_clear()
@@ -412,6 +419,31 @@ def custom_integration(core_config: Config) -> Integration:
             "which Home Assistant's package constraints require.",
             id="violates_package_constraint",
         ),
+        pytest.param(
+            "poetry>=1",
+            "Requirement poetry>=1 is prohibited by Home Assistant, poetry must "
+            "not be installed.",
+            id="prohibited_package",
+        ),
+        pytest.param(
+            "pymodbus==3.6.2;platform_machine=='aarch64'",
+            "Requirement pymodbus==3.6.2;platform_machine=='aarch64' is "
+            "incompatible with pymodbus==3.13.1, which Home Assistant depends on.",
+            id="marker_applying_on_another_platform",
+        ),
+        pytest.param(
+            "tenacity==8.4.0",
+            "Requirement tenacity==8.4.0 is incompatible with tenacity!=8.4.0, "
+            "which Home Assistant's package constraints require.",
+            id="violates_excluded_version",
+        ),
+        pytest.param(
+            "dupe-package==3.0",
+            "Requirement dupe-package==3.0 is incompatible with "
+            "dupe-package<2.0,>=1.5, which Home Assistant's package constraints "
+            "require.",
+            id="violates_merged_constraints",
+        ),
     ],
 )
 def test_validate_custom_requirements_invalid(
@@ -436,6 +468,13 @@ def test_validate_custom_requirements_invalid(
         pytest.param("aiofiles>=25.0.0", id="within_package_constraint"),
         pytest.param("unknown-package==1.2.3", id="unknown_package"),
         pytest.param("pymodbus==3.6.2;python_version<'3.0'", id="marker_not_applying"),
+        pytest.param("aiofiles>25,<25.0.1", id="range_excluding_own_boundaries"),
+        pytest.param("pymodbus>3.13.0,<4", id="range_around_core_version"),
+        pytest.param("pymodbus==3.13.*", id="wildcard_matching_core_version"),
+        pytest.param("pymodbus~=3.13.1", id="compatible_release"),
+        pytest.param("tenacity>8.4.0,<9", id="range_around_excluded_version"),
+        pytest.param("auth0-python==4.9.0", id="pinned_package_we_only_constrain"),
+        pytest.param("dupe-package==1.7", id="within_merged_constraints"),
         pytest.param("git+https://github.com/user/project.git@1.2.3", id="git_url"),
     ],
 )
