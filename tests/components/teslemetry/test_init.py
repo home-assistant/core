@@ -2306,7 +2306,9 @@ async def test_unload_never_connected_bluetooth(hass: HomeAssistant) -> None:
     bluetooth_vehicle.disconnect.assert_awaited_once()
 
 
-async def test_unload_disconnect_timeout(hass: HomeAssistant) -> None:
+async def test_unload_disconnect_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """A hung Bluetooth disconnect cannot block unload past the timeout."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
@@ -2327,6 +2329,7 @@ async def test_unload_disconnect_timeout(hass: HomeAssistant) -> None:
         ) as mock_parent,
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
         patch("homeassistant.components.teslemetry.BLE_DISCONNECT_TIMEOUT", 0),
+        caplog.at_level(logging.WARNING),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
         mock_parent.return_value.vehicles.createBluetooth.return_value = (
@@ -2340,6 +2343,7 @@ async def test_unload_disconnect_timeout(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     bluetooth_vehicle.disconnect.assert_awaited_once()
+    assert "timed out after 0s" in caplog.text
 
 
 async def test_ble_parent_shared_and_cached(hass: HomeAssistant) -> None:
