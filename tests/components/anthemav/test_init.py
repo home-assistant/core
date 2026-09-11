@@ -103,10 +103,14 @@ async def test_device_init_timeout_not_reported_as_connect_timeout(
     mock_anthemav: AsyncMock,
 ) -> None:
     """Test a post-connect TimeoutError isn't misreported as a connect timeout."""
-    mock_anthemav.protocol.wait_for_device_initialised = AsyncMock(
-        side_effect=TimeoutError
-    )
-    with patch("anthemav.Connection.create", return_value=mock_anthemav):
+    with (
+        patch("anthemav.Connection.create", return_value=mock_anthemav),
+        patch.object(
+            mock_anthemav.protocol,
+            "wait_for_device_initialised",
+            side_effect=TimeoutError,
+        ),
+    ):
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
