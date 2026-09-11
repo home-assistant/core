@@ -22,6 +22,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_ALLOW_NAMELESS_UUIDS,
+    CONF_ALLOWED_BEACONS,
     CONF_IGNORE_ADDRESSES,
     CONF_IGNORE_UUIDS,
     DOMAIN,
@@ -154,6 +155,8 @@ class IBeaconCoordinator:
         )
         self._ignored_nameless_by_uuid: dict[str, set[str]] = {}
 
+        self._allowed_beacons = set(entry.options.get(CONF_ALLOWED_BEACONS, []))
+
         self._entry.async_on_unload(
             self._entry.add_update_listener(self.async_config_entry_updated)
         )
@@ -259,6 +262,14 @@ class IBeaconCoordinator:
         self._addresses_by_group_id.setdefault(group_id, set()).add(address)
 
     @callback
+    def _async_known_group_id(self, group_id: str) -> bool:
+        """Return True if the iBeacon group_id has already been seen before."""
+        return bool(
+            group_id in self._group_ids_random_macs
+            or group_id in self._unique_ids_by_group_id
+        )
+
+    @callback
     def _async_update_ibeacon(
         self,
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -278,13 +289,30 @@ class IBeaconCoordinator:
 
         major = ibeacon_advertisement.major
         minor = ibeacon_advertisement.minor
+        group_id = f"{uuid_str}_{major}_{minor}"
+
+        if self._allowed_beacons and group_id not in self._allowed_beacons:
+            _LOGGER.debug(
+                "ignoring beacon %s because it is not in the allowlist",
+                group_id,
+            )
+            return
+
+        if self._entry.pref_disable_new_entities and not self._async_known_group_id(
+            group_id
+        ):
+            _LOGGER.debug(
+                "ignoring new beacon %s because adding new entities is disabled",
+                group_id,
+            )
+            return
+
         major_minor_by_uuid = self._major_minor_by_uuid.setdefault(uuid_str, set())
         if len(major_minor_by_uuid) + 1 > MAX_IDS_PER_UUID:
             self._async_ignore_uuid(uuid_str)
             return
 
         major_minor_by_uuid.add((major, minor))
-        group_id = f"{uuid_str}_{major}_{minor}"
 
         if group_id in self._group_ids_random_macs:
             self._async_update_ibeacon_with_random_mac(
@@ -480,6 +508,7 @@ class IBeaconCoordinator:
         self._allow_nameless_uuids = set(
             self._entry.options.get(CONF_ALLOW_NAMELESS_UUIDS, [])
         )
+        self._allowed_beacons = set(self._entry.options.get(CONF_ALLOWED_BEACONS, []))
 
         for uuid in self._allow_nameless_uuids:
             for address in self._ignored_nameless_by_uuid.pop(uuid, set()):
