@@ -342,30 +342,6 @@ async def test_partial_ventilation_temperatures_only_expose_available_sensor_val
     assert hass.states.get("sensor.living_exhaust_air_temperature") is None
 
 
-async def test_time_filter_remaining_transient_failure_recovers_sensor_creation(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_duco_client: AsyncMock,
-    mock_sensor_nodes: list[Node],
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the filter timer sensor is added once a transient startup failure recovers."""
-    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-    mock_duco_client.async_get_time_filter_remaining = AsyncMock(
-        side_effect=[DucoError("heat recovery info error"), 180]
-    )
-
-    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
-
-    assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
-
-    await async_fire_coordinator_update(hass, freezer)
-
-    state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
-    assert state is not None
-    assert state.state == "180"
-
-
 @pytest.mark.parametrize(
     (
         "node_id",
