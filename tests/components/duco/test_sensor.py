@@ -259,19 +259,27 @@ async def test_lan_info_failures_keep_node_entities_available(
     assert state.state == "-60"
 
 
-async def test_time_filter_remaining_missing_is_retried(
+@pytest.mark.parametrize(
+    "initial_time_filter_remain",
+    [
+        pytest.param(None, id="missing"),
+        pytest.param(DucoError("heat recovery info error"), id="transient_failure"),
+    ],
+)
+async def test_time_filter_remaining_is_retried(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
+    initial_time_filter_remain: DucoError | None,
 ) -> None:
-    """Test a missing filter timer does not create the sensor but is retried."""
+    """Test unavailable filter timer data is retried and can create the sensor."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-
-    mock_duco_client.async_get_time_filter_remaining = AsyncMock(
-        side_effect=[None, 180]
-    )
+    mock_duco_client.async_get_time_filter_remaining.side_effect = [
+        initial_time_filter_remain,
+        180,
+    ]
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
 
@@ -332,30 +340,6 @@ async def test_partial_ventilation_temperatures_only_expose_available_sensor_val
 
     assert hass.states.get("sensor.living_supply_air_temperature") is None
     assert hass.states.get("sensor.living_exhaust_air_temperature") is None
-
-
-async def test_time_filter_remaining_transient_failure_recovers_sensor_creation(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_duco_client: AsyncMock,
-    mock_sensor_nodes: list[Node],
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the filter timer sensor is added once a transient startup failure recovers."""
-    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-    mock_duco_client.async_get_time_filter_remaining = AsyncMock(
-        side_effect=[DucoError("heat recovery info error"), 180]
-    )
-
-    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
-
-    assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
-
-    await async_fire_coordinator_update(hass, freezer)
-
-    state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
-    assert state is not None
-    assert state.state == "180"
 
 
 @pytest.mark.parametrize(
