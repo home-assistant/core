@@ -189,7 +189,10 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
         # New data from coordinator
         self.async_on_remove(
-            self.coordinator.async_add_listener(self._async_coordinator_updated)
+            self.coordinator.async_add_listener(
+                self._async_coordinator_updated,
+                context=(self._obj_id, self._obj_id.partition("_")[0]),
+            )
         )
 
         # State change from hub or websocket

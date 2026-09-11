@@ -53,3 +53,22 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
     def _async_handle_update(self, event: ItemEvent, obj_id: str) -> None:
         """Notify listeners which object changed on a websocket update."""
         self.async_set_updated_data((event, obj_id))
+
+    @callback
+    @override
+    def async_update_listeners(self) -> None:
+        """Notify listeners for the changed object or a polling refresh."""
+        data = self.data
+        changed_obj_id = data[1] if data is not None else None
+        for update_callback, context in list(self._listeners.values()):
+            if changed_obj_id is not None and isinstance(context, tuple):
+                if changed_obj_id not in context:
+                    continue
+            try:
+                update_callback()
+            except Exception:
+                self.logger.exception(
+                    "Unexpected error updating listener %s for %s",
+                    id(update_callback),
+                    self.name,
+                )

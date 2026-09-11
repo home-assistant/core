@@ -213,6 +213,84 @@ async def test_websocket_updates_notify_coordinator(
     set_updated_data.assert_called_once_with((ItemEvent.ADDED, "00:00:00:00:00:01"))
 
 
+async def test_coordinator_filters_websocket_listeners_and_broadcasts_polling(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Ensure websocket updates filter listeners and polling updates broadcast."""
+    clients_coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            config_entry_setup.runtime_data.api.clients
+        )
+    )
+    client_calls: list[str] = []
+    other_calls: list[str] = []
+
+    @callback
+    def client_listener() -> None:
+        client_calls.append("called")
+
+    @callback
+    def other_listener() -> None:
+        other_calls.append("called")
+
+    remove_client_listener = clients_coordinator.async_add_listener(
+        client_listener, context=("00:00:00:00:00:01",)
+    )
+    remove_other_listener = clients_coordinator.async_add_listener(
+        other_listener, context=("00:00:00:00:00:02",)
+    )
+
+    mock_websocket_message(
+        message=MessageKey.CLIENT,
+        data={
+            "hostname": "client",
+            "ip": "10.0.0.1",
+            "is_wired": True,
+            "last_seen": 1562600145,
+            "mac": "00:00:00:00:00:01",
+            "name": "Client",
+        },
+    )
+
+    assert client_calls == ["called"]
+    assert other_calls == []
+
+    polling_coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            config_entry_setup.runtime_data.api.object_oriented_network_configs
+        )
+    )
+    polling_calls: list[str] = []
+    other_polling_calls: list[str] = []
+
+    @callback
+    def polling_listener() -> None:
+        polling_calls.append("called")
+
+    @callback
+    def other_polling_listener() -> None:
+        other_polling_calls.append("called")
+
+    remove_polling_listener = polling_coordinator.async_add_listener(
+        polling_listener, context=("any-object",)
+    )
+    remove_other_polling_listener = polling_coordinator.async_add_listener(
+        other_polling_listener, context=("another-object",)
+    )
+    polling_coordinator.async_set_updated_data(None)
+    await hass.async_block_till_done()
+
+    assert polling_calls == ["called"]
+    assert other_polling_calls == ["called"]
+
+    remove_client_listener()
+    remove_other_listener()
+    remove_polling_listener()
+    remove_other_polling_listener()
+
+
 @pytest.mark.parametrize(
     "config_entry_options",
     [{CONF_BLOCK_CLIENT: ["00:00:00:00:00:01", "00:00:00:00:00:02"]}],
