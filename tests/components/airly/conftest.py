@@ -8,9 +8,6 @@ import pytest
 
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant
-
-from . import setup_integration
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -31,18 +28,22 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+def _measurements(filename: str) -> Measurement:
+    """Build Airly measurements from a fixture."""
+    data = load_json_object_fixture(filename, DOMAIN)["current"]
+    return Measurement(data)
+
+
 @pytest.fixture
 def mock_airly_measurements() -> Measurement:
     """Return the default mocked Airly measurements."""
-    return Measurement(
-        load_json_object_fixture("valid_station.json", DOMAIN)["current"]
-    )
+    return _measurements("valid_station.json")
 
 
 @pytest.fixture
 def mock_airly_no_station_measurements() -> Measurement:
     """Return the mocked Airly measurements for an area without sensors."""
-    return Measurement(load_json_object_fixture("no_station.json", DOMAIN)["current"])
+    return _measurements("no_station.json")
 
 
 @pytest.fixture
@@ -71,17 +72,8 @@ def mock_airly_client(
     ):
         measurements.current = mock_airly_measurements
         measurements.update = AsyncMock()
+
     client.requests_remaining = 42
     client.requests_per_day = 100
 
     return client
-
-
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_airly_client: MagicMock,
-) -> None:
-    """Set up the Airly integration for testing."""
-    await setup_integration(hass, mock_config_entry)

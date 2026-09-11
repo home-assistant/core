@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def setup_integration(
+async def init_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
