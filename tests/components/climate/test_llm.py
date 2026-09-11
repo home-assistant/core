@@ -61,8 +61,21 @@ async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     assert "climate__HassClimateSetTemperature" in await _tool_names(hass)
 
 
+@pytest.mark.parametrize(
+    "target_args",
+    [
+        pytest.param(
+            {"area": "", "floor": "", "name": "Test climate"},
+            id="named-target",
+        ),
+        pytest.param(
+            {"area": "", "floor": " ", "name": None},
+            id="implicit-single-target",
+        ),
+    ],
+)
 async def test_set_temperature_omits_empty_optional_targets(
-    hass: HomeAssistant,
+    hass: HomeAssistant, target_args: dict[str, str | None]
 ) -> None:
     """Test empty optional targets do not invalidate a climate LLM tool call."""
     api = await llm.async_get_api(hass, "assist", _llm_context())
@@ -71,12 +84,7 @@ async def test_set_temperature_omits_empty_optional_targets(
     response = await api.async_call_tool(
         llm.ToolInput(
             "climate__HassClimateSetTemperature",
-            {
-                "area": "",
-                "floor": "",
-                "name": "Test climate",
-                "temperature": 25,
-            },
+            {**target_args, "temperature": 25},
         )
     )
 
