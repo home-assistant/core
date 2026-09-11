@@ -24,11 +24,15 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import run_callback_threadsafe
 
 _KEY_INSTANCE = "configurator"
+
+# The configurator integration is deprecated and can be removed in HA Core 2027.10
+_BREAKS_IN_HA_VERSION = "2027.10"
 
 DATA_REQUESTS = "configurator_requests"
 
@@ -54,8 +58,51 @@ type ConfiguratorCallback = Callable[[list[dict[str, str]]], None]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
+def _report_deprecation() -> None:
+    """Report use of the deprecated configurator integration."""
+    report_usage(
+        "uses the deprecated configurator integration, which should be replaced "
+        "by a config flow",
+        breaks_in_ha_version=_BREAKS_IN_HA_VERSION,
+        core_behavior=ReportBehavior.LOG,
+        exclude_integrations={DOMAIN},
+    )
+
+
 @async_callback
 def async_request_config(
+    hass: HomeAssistant,
+    name: str,
+    callback: ConfiguratorCallback | None = None,
+    description: str | None = None,
+    description_image: str | None = None,
+    submit_caption: str | None = None,
+    fields: list[dict[str, str]] | None = None,
+    link_name: str | None = None,
+    link_url: str | None = None,
+    entity_picture: str | None = None,
+) -> str:
+    """Create a new request for configuration.
+
+    Will return an ID to be used for subsequent calls.
+    """
+    _report_deprecation()
+    return _async_request_config(
+        hass,
+        name,
+        callback=callback,
+        description=description,
+        description_image=description_image,
+        submit_caption=submit_caption,
+        fields=fields,
+        link_name=link_name,
+        link_url=link_url,
+        entity_picture=entity_picture,
+    )
+
+
+@async_callback
+def _async_request_config(
     hass: HomeAssistant,
     name: str,
     callback: ConfiguratorCallback | None = None,
@@ -97,8 +144,9 @@ def request_config(hass: HomeAssistant, *args: Any, **kwargs: Any) -> str:
 
     Will return an ID to be used for sequent calls.
     """
+    _report_deprecation()
     return run_callback_threadsafe(
-        hass.loop, ft.partial(async_request_config, hass, *args, **kwargs)
+        hass.loop, ft.partial(_async_request_config, hass, *args, **kwargs)
     ).result()
 
 

@@ -117,10 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
         )
         if device:
             _LOGGER.info("Removing device %s", device.name)
-            device_registry.async_update_device(
-                device_id=device.id,
-                remove_config_entry_id=entry.entry_id,
-            )
+            device_registry.async_remove_device(device.id)
 
     homee.add_nodes_listener(_remove_node_callback)
 

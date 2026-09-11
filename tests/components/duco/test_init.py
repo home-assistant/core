@@ -5,6 +5,7 @@ from unittest.mock import ANY, AsyncMock, patch
 
 from duco_connectivity import (
     BoardInfo,
+    BypassSupplyTemperatureTarget,
     ConfigNode,
     ConfigNodeOverview,
     ConfigValueString,
@@ -20,12 +21,13 @@ from duco_connectivity import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.duco.const import SCAN_INTERVAL
+from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import async_fire_coordinator_update, setup_platform_integration
 from .conftest import (
     TEST_HOST,
     TEST_MAC,
@@ -36,9 +38,13 @@ from .conftest import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-def _get_duco_node_device(device_registry: dr.DeviceRegistry) -> dr.DeviceEntry:
+def _get_duco_node_device(
+    device_registry: dr.DeviceRegistry, config_entry_id: str
+) -> dr.DeviceEntry:
     """Return the primary Duco node device used in setup tests."""
-    device = device_registry.async_get_device(identifiers={("duco", f"{TEST_MAC}_1")})
+    device = device_registry.async_get_device_by_identifier(
+        ("duco", f"{TEST_MAC}_1"), config_entry_id
+    )
     assert device is not None
     return device
 
@@ -69,7 +75,7 @@ def _node_configs_with_primary_name(
             "async_get_board_info",
             DucoConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
-            None,
+            "cannot_connect",
             False,
         ),
         (
@@ -90,7 +96,7 @@ def _node_configs_with_primary_name(
             "async_get_nodes",
             DucoConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
-            None,
+            "cannot_connect",
             False,
         ),
         (
@@ -135,6 +141,36 @@ async def test_setup_entry_success(
 ) -> None:
     """Test successful setup of the Duco integration."""
     assert init_integration.state is ConfigEntryState.LOADED
+
+
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a sub-node added before the box still links to it via via_device_id."""
+    # Force the child-before-parent race: return a sub-node ahead of the box node
+    # and set up only the sensor platform (the fan platform would otherwise create
+    # the box first). This only resolves because the box is pre-registered in
+    # async_setup_entry before the platforms build their entities.
+    box_node = next(node for node in mock_nodes if node.node_id == BOX_NODE_ID)
+    child_node = next(node for node in mock_nodes if node.node_id != BOX_NODE_ID)
+    mock_duco_client.async_get_nodes.return_value = [child_node, box_node]
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    box_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_MAC}_{BOX_NODE_ID}"), mock_config_entry.entry_id
+    )
+    assert box_device is not None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_MAC}_{child_node.node_id}"), mock_config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == box_device.id
 
 
 @pytest.mark.parametrize(
@@ -187,13 +223,102 @@ async def test_setup_entry_recovers_from_optional_temperature_capability_failure
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.living_outdoor_air_temperature") is None
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get("sensor.living_outdoor_air_temperature")
     assert state is not None
     assert state.state == "5.5"
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        pytest.param(
+            DucoConnectionError("Connection refused"),
+            "cannot_connect",
+            id="connection_error",
+        ),
+        pytest.param(DucoError("API error"), "api_error", id="duco_error"),
+        pytest.param(
+            DucoResponseError(500, "/config"),
+            "api_error",
+            id="response_error",
+        ),
+    ],
+)
+async def test_setup_entry_retries_on_bypass_temperature_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    exception: Exception,
+    translation_key: str,
+) -> None:
+    """Test setup retries when fetching bypass temperature targets fails."""
+    mock_duco_client.async_get_bypass_supply_temperature_targets.side_effect = exception
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == translation_key
+    assert mock_config_entry.error_reason_translation_placeholders is None
+
+
+@pytest.mark.parametrize(
+    ("initial_zone_ids", "initial_missing_entity_ids"),
+    [
+        pytest.param(
+            frozenset(),
+            (
+                "number.living_bypass_target_1",
+                "number.living_bypass_target_2",
+            ),
+            id="empty",
+        ),
+        pytest.param(
+            frozenset({2}),
+            ("number.living_bypass_target_1",),
+            id="zone_1_missing",
+        ),
+    ],
+)
+async def test_bypass_temperature_targets_are_retried(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    initial_zone_ids: frozenset[int],
+    initial_missing_entity_ids: tuple[str, ...],
+) -> None:
+    """Test missing bypass targets are retried and create number entities."""
+    initial_targets = {
+        zone_id: target
+        for zone_id, target in mock_bypass_supply_temperature_targets.items()
+        if zone_id in initial_zone_ids
+    }
+    mock_duco_client.async_get_bypass_supply_temperature_targets.side_effect = [
+        initial_targets,
+        mock_bypass_supply_temperature_targets.copy(),
+    ]
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    for entity_id in initial_missing_entity_ids:
+        assert hass.states.get(entity_id) is None
+    mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
+
+    await async_fire_coordinator_update(hass, freezer)
+
+    assert mock_duco_client.async_get_bypass_supply_temperature_targets.await_count == 2
+    state = hass.states.get("number.living_bypass_target_1")
+    assert state is not None
+    assert state.state == "20.0"
+    assert hass.states.get("number.living_bypass_target_2") is not None
 
 
 async def test_setup_entry_ignores_node_name_config_failures(
@@ -212,7 +337,7 @@ async def test_setup_entry_ignores_node_name_config_failures(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == mock_nodes[0].general.name
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
@@ -321,6 +446,16 @@ async def test_setup_entry_creates_http_client(
         (
             mock_client_class.return_value.async_get_ventilation_temperature_info.return_value
         ) = VentilationTemperatureInfo()
+
+        mock_client_class.return_value.async_get_bypass_supply_temperature_targets.return_value = {
+            1: BypassSupplyTemperatureTarget(
+                zone_id=1,
+                value=20.0,
+                minimum=15.0,
+                increment=0.1,
+                maximum=25.0,
+            )
+        }
         mock_client_class.return_value.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
         ]
@@ -353,7 +488,7 @@ async def test_setup_entry_uses_configured_node_name(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == "Kitchen"
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
@@ -376,7 +511,7 @@ async def test_node_name_refresh_updates_device_registry_name(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == "Kitchen"
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
@@ -384,13 +519,13 @@ async def test_node_name_refresh_updates_device_registry_name(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == "Kitchen"
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
     assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == "Living Room"
     assert mock_duco_client.async_get_node_configs.call_count == 2

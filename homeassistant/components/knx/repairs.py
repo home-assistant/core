@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from functools import partial
+import logging
 from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
@@ -9,6 +10,7 @@ from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir, selector
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -21,11 +23,14 @@ from .const import (
     CONF_KNX_KNXKEY_PASSWORD,
     DOMAIN,
     REPAIR_ISSUE_DATA_SECURE_GROUP_KEY,
+    REPAIR_ISSUE_ENTITY_VALIDATION_ERROR,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
     KNXConfigEntryData,
 )
 from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
 
@@ -41,6 +46,35 @@ async def async_create_fix_flow(
     # If KNX adds confirm-only repairs in the future, this should be changed
     # to return a ConfirmRepairFlow instead of raising a ValueError
     raise ValueError(f"unknown repair {issue_id}")
+
+
+###########################
+# Entity store schema issue
+###########################
+
+
+@callback
+def async_create_entity_validation_issue(
+    hass: HomeAssistant, platform: Platform, unique_ids: list[str]
+) -> None:
+    """Create a repair issue for invalid entity configurations in the config store."""
+    _LOGGER.error(
+        "Invalid KNX %s configuration in storage. These entities were not set up: %s",
+        platform,
+        ", ".join(unique_ids),
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"{REPAIR_ISSUE_ENTITY_VALIDATION_ERROR}_{platform}",
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key=REPAIR_ISSUE_ENTITY_VALIDATION_ERROR,
+        translation_placeholders={
+            "platform": platform,
+            "entities": "\n".join(f"- {unique_id}" for unique_id in unique_ids),
+        },
+    )
 
 
 ######################

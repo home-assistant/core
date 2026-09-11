@@ -70,10 +70,9 @@ async def test_device_info(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device info is correctly populated."""
-    device = device_registry.async_get_device(
-        connections={
-            (dr.CONNECTION_BLUETOOTH, format_mac(CASPER_GLOW_DISCOVERY_INFO.address))
-        }
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, format_mac(CASPER_GLOW_DISCOVERY_INFO.address)),
+        config_entry.entry_id,
     )
     assert device is not None
     assert device == snapshot

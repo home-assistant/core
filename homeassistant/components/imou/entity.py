@@ -2,13 +2,14 @@
 
 from typing import override
 
+from pyimouapi.const import PARAM_STATE, PARAM_STATUS
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, PARAM_STATE, PARAM_STATUS, imou_device_identifier
+from .const import DOMAIN, imou_device_identifier
 from .coordinator import ImouDataUpdateCoordinator
 
 

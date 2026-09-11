@@ -11,6 +11,7 @@ from syrupy.filters import props
 
 from homeassistant.components import automation
 from homeassistant.components.media_player import (
+    ATTR_APP_ID,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_CONTENT_ID,
@@ -28,6 +29,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.webostv.const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
+    CONF_SOURCES,
     DOMAIN,
     LIVE_TV_APP_ID,
     WebOsTvCommandError,
@@ -324,7 +326,9 @@ async def test_device_info_startup_off(
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.unique_id), entry.entry_id
+    )
 
     assert device
     assert device.identifiers == {(DOMAIN, entry.unique_id)}
@@ -363,7 +367,9 @@ async def test_entity_attributes(
     assert attrs[ATTR_MEDIA_TITLE] == "Channel Name 2"
 
     # Device Info
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.unique_id), entry.entry_id
+    )
     assert device == snapshot
 
     # Sound output when off
@@ -410,6 +416,48 @@ async def test_play_media(hass: HomeAssistant, client, media_id, ch_id) -> None:
     await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
 
     client.set_channel.assert_called_once_with(ch_id)
+
+
+async def test_play_media_channel_name_over_number(hass: HomeAssistant, client) -> None:
+    """Test that an exact channel name match takes precedence over a channel number match."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    client.tv_state.channels = [
+        {"channelNumber": "1", "channelName": "20", "channelId": "ch_name_match"},
+        {"channelNumber": "20", "channelName": "Ch 20", "channelId": "ch_number_match"},
+    ]
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+        ATTR_MEDIA_CONTENT_ID: "20",
+    }
+    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
+
+    client.set_channel.assert_called_once_with("ch_name_match")
+
+
+async def test_play_media_duplicate_channel_number_selects_first(
+    hass: HomeAssistant, client
+) -> None:
+    """Test that the first channel is selected when two channels share the same number."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    client.tv_state.channels = [
+        {"channelNumber": "5", "channelName": "TV Channel", "channelId": "ch_first"},
+        {"channelNumber": "5", "channelName": "Radio Channel", "channelId": "ch_last"},
+    ]
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+        ATTR_MEDIA_CONTENT_ID: "5",
+    }
+    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
+
+    client.set_channel.assert_called_once_with("ch_first")
 
 
 async def test_update_sources_live_tv_find(hass: HomeAssistant, client) -> None:
@@ -489,6 +537,52 @@ async def test_update_sources_live_tv_find(hass: HomeAssistant, client) -> None:
 
     assert "Live TV" in sources
     assert len(sources) == 1
+
+
+async def test_source_unlisted_current_app(hass: HomeAssistant, client) -> None:
+    """Test source is cleared when the current app is not in the lists."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE] == "Live TV"
+
+    # home screen and screen saver are not in the apps or inputs lists
+    client.tv_state.current_app_id = "com.webos.app.home"
+    await client.mock_state_update()
+
+    attributes = hass.states.get(ENTITY_ID).attributes
+    assert ATTR_INPUT_SOURCE not in attributes
+    assert attributes[ATTR_INPUT_SOURCE_LIST] == ["Input01", "Input02", "Live TV"]
+
+
+async def test_source_cleared_with_filtered_out_sources(
+    hass: HomeAssistant, client
+) -> None:
+    """Test source is cleared when configured sources match nothing."""
+    client.tv_state.inputs = {}
+    await setup_webostv(hass, options={CONF_SOURCES: ["Netflix"]})
+    await client.mock_state_update()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE] == "Live TV"
+
+    client.tv_state.current_app_id = "com.webos.app.home"
+    await client.mock_state_update()
+
+    assert ATTR_INPUT_SOURCE not in hass.states.get(ENTITY_ID).attributes
+
+
+async def test_app_id(hass: HomeAssistant, client) -> None:
+    """Test app_id follows the foreground app id reported by the TV."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_APP_ID] == LIVE_TV_APP_ID
+
+    # apps outside the source list still get a usable app id
+    client.tv_state.current_app_id = "com.webos.app.home"
+    await client.mock_state_update()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_APP_ID] == "com.webos.app.home"
 
 
 async def test_client_disconnected(

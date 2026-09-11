@@ -26,7 +26,7 @@ def async_entity_id_to_device_id(
 def async_entity_id_to_device(
     hass: HomeAssistant,
     entity_id_or_uuid: str,
-) -> dr.DeviceEntry | None:
+) -> dr.AnyDeviceEntry | None:
     """Resolve the device entry for the entity id or entity uuid."""
 
     if (device_id := async_entity_id_to_device_id(hass, entity_id_or_uuid)) is None:

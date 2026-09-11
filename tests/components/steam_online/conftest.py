@@ -27,6 +27,12 @@ def mock_config_entry() -> MockConfigEntry:
                 title=ACCOUNT_NAME_2,
                 unique_id=ACCOUNT_2,
             ),
+            ConfigSubentryData(
+                data={},
+                subentry_type=SUBENTRY_TYPE_FRIEND,
+                title="unconfigured_account",
+                unique_id="1234567890",
+            ),
         ],
         version=3,
     )

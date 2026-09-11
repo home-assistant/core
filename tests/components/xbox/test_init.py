@@ -23,12 +23,14 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_object_fixture,
 )
+from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("xbox_live_client")
@@ -204,9 +206,11 @@ async def test_dynamic_devices(
     xbox_live_client: AsyncMock,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test adding of new and removal of stale devices at runtime."""
-
+    assert await async_setup_component(hass, "config", {})
+    client = await hass_ws_client(hass)
     xbox_live_client.smartglass.get_console_list.return_value = SmartglassConsoleList(
         **await async_load_json_object_fixture(
             hass, "smartglass_console_list_empty.json", DOMAIN
@@ -219,8 +223,12 @@ async def test_dynamic_devices(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert device_registry.async_get_device({(DOMAIN, "ABCDEFG")}) is None
-    assert device_registry.async_get_device({(DOMAIN, "HIJKLMN")}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "ABCDEFG"), config_entry.entry_id
+        )
+        is None
+    )
 
     xbox_live_client.smartglass.get_console_list.return_value = SmartglassConsoleList(
         **await async_load_json_object_fixture(
@@ -232,8 +240,14 @@ async def test_dynamic_devices(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device({(DOMAIN, "ABCDEFG")})
-    assert device_registry.async_get_device({(DOMAIN, "HIJKLMN")})
+    assert (
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "ABCDEFG"), config_entry.entry_id
+        )
+    )
+
+    response = await client.remove_device(device.id)
+    assert not response["success"]
 
     xbox_live_client.smartglass.get_console_list.return_value = SmartglassConsoleList(
         **await async_load_json_object_fixture(
@@ -245,5 +259,21 @@ async def test_dynamic_devices(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device({(DOMAIN, "ABCDEFG")}) is None
-    assert device_registry.async_get_device({(DOMAIN, "HIJKLMN")}) is None
+    response = await client.remove_device(device.id)
+    assert response["success"]
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "ABCDEFG"), config_entry.entry_id
+        )
+        is None
+    )
+
+    # Test that service devices cannot be removed
+    assert (
+        account := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "271958441785640"), config_entry.entry_id
+        )
+    )
+    response = await client.remove_device(account.id)
+    assert not response["success"]

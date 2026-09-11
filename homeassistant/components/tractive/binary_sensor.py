@@ -23,12 +23,16 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        entry: TractiveConfigEntry,
         client: TractiveClient,
         item: Trackables,
         description: TractiveBinarySensorEntityDescription,
     ) -> None:
         """Initialize sensor entity."""
         super().__init__(
+            hass,
+            entry,
             client,
             item.trackable,
             item.tracker_details,
@@ -80,7 +84,7 @@ async def async_setup_entry(
     trackables = entry.runtime_data.trackables
 
     entities = [
-        TractiveBinarySensor(client, item, description)
+        TractiveBinarySensor(hass, entry, client, item, description)
         for description in SENSOR_TYPES
         for item in trackables
         if description.supported(item.tracker_details)

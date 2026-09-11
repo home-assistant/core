@@ -370,7 +370,7 @@ class MatchTargetsCandidate:
     is_exposed: bool
     entity: er.RegistryEntry | None = None
     area: ar.AreaEntry | None = None
-    device: dr.DeviceEntry | None = None
+    device: dr.AnyDeviceEntry | None = None
     matched_name: str | None = None
 
 
@@ -494,9 +494,13 @@ def _add_areas(
             # Use entity area first
             candidate.area = areas.async_get_area(candidate.entity.area_id)
             assert candidate.area is not None
-        elif (candidate.device is not None) and candidate.device.area_id:
+        elif candidate.device is not None and (
+            device_area_id := dr.async_get_effective_area_id(
+                devices.hass, candidate.device
+            )
+        ):
             # Fall back to device area
-            candidate.area = areas.async_get_area(candidate.device.area_id)
+            candidate.area = areas.async_get_area(device_area_id)
 
 
 def _default_area_candidate_filter(

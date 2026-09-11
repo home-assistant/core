@@ -2,7 +2,7 @@
 
 from pathlib import Path
 import tempfile
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import web
 import pytest
@@ -41,7 +41,7 @@ def dsm_with_photos() -> MagicMock:
     dsm.login = AsyncMock(return_value=True)
     dsm.update = AsyncMock(return_value=True)
     dsm.information = mock_dsm_information()
-    dsm.network.update = AsyncMock(return_value=True)
+    dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS, hostname=HOST)
     dsm.hardware = mock_dsm_hardware()
     dsm.surveillance_station.update = AsyncMock(return_value=True)
     dsm.upgrade.update = AsyncMock(return_value=True)

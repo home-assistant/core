@@ -9,10 +9,9 @@ from pyhap.service import Service
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     STATE_HOME,
     STATE_ON,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import State, callback
@@ -131,7 +130,7 @@ class TemperatureSensor(HomeAccessory):
     def async_update_state(self, new_state: State) -> None:
         """Update temperature after state changed."""
         unit = new_state.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature.CELSIUS
+            EntityStateAttribute.UNIT_OF_MEASUREMENT, UnitOfTemperature.CELSIUS
         )
         if (temperature := convert_to_float(new_state.state)) is not None:
             temperature = temperature_to_homekit(temperature, unit)
@@ -450,7 +449,7 @@ class BinarySensor(HomeAccessory):
         super().__init__(*args, category=CATEGORY_SENSOR)
         state = self.hass.states.get(self.entity_id)
         assert state
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         service_char = (
             BINARY_SENSOR_SERVICE_MAP[device_class]
             if device_class in BINARY_SENSOR_SERVICE_MAP

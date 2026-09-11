@@ -27,8 +27,9 @@ async def test_device_discover(
     await send_discovery_message(hass, payload)
 
     # Verify device and registry entries are created
-    device_entry = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, payload["mac"])}
+    device_entry = device_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, payload["mac"]),
+        hass.config_entries.async_entries("pglab")[0].entry_id,
     )
     assert device_entry is not None
     assert device_entry.configuration_url == f"http://{payload['ip']}/"
@@ -55,8 +56,9 @@ async def test_device_update(
     await send_discovery_message(hass, payload)
 
     # Verify device is created
-    device_entry = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, payload["mac"])}
+    device_entry = device_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, payload["mac"]),
+        hass.config_entries.async_entries("pglab")[0].entry_id,
     )
     assert device_entry is not None
 
@@ -67,8 +69,9 @@ async def test_device_update(
     await send_discovery_message(hass, payload)
 
     # Verify device is created
-    device_entry = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, payload["mac"])}
+    device_entry = device_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, payload["mac"]),
+        hass.config_entries.async_entries("pglab")[0].entry_id,
     )
     assert device_entry is not None
     assert device_entry.sw_version == "1.0.1"
@@ -91,15 +94,19 @@ async def test_device_remove(
     await send_discovery_message(hass, payload)
 
     # Verify device is created
-    device_entry = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, payload["mac"])}
+    device_entry = device_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, payload["mac"]),
+        hass.config_entries.async_entries("pglab")[0].entry_id,
     )
     assert device_entry is not None
 
     await send_discovery_message(hass, None)
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, payload["mac"])}
+    assert (
+        device_reg.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, payload["mac"]),
+            hass.config_entries.async_entries("pglab")[0].entry_id,
+        )
+        is None
     )
-    assert device_entry is None

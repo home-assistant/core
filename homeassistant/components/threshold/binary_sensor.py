@@ -30,7 +30,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device import async_entity_id_to_device
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -178,7 +178,7 @@ class ThresholdSensor(BinarySensorEntity):
         hysteresis: float,
         device_class: BinarySensorDeviceClass | None,
         unique_id: str | None,
-        device: DeviceEntry | None = None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the Threshold sensor."""
         self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None

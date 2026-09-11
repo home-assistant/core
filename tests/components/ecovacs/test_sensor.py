@@ -77,11 +77,11 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
         (
             "5xu9h3",
             [
-                "sensor.goat_g1_area_cleaned",
-                "sensor.goat_g1_cleaning_duration",
-                "sensor.goat_g1_total_area_cleaned",
-                "sensor.goat_g1_total_cleaning_duration",
-                "sensor.goat_g1_total_cleanings",
+                "sensor.goat_g1_area_mowed",
+                "sensor.goat_g1_mowing_duration",
+                "sensor.goat_g1_total_area_mowed",
+                "sensor.goat_g1_total_mowing_duration",
+                "sensor.goat_g1_total_mowings",
                 "sensor.goat_g1_battery",
                 "sensor.goat_g1_ip_address",
                 "sensor.goat_g1_wi_fi_rssi",

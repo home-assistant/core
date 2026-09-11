@@ -44,7 +44,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -622,7 +622,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Statistics sensor entry."""
     sampling_size = entry.options.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
-    if sampling_size:
+    if sampling_size is not None:
         sampling_size = int(sampling_size)
 
     max_age = None
@@ -666,7 +666,7 @@ class StatisticsSensor(SensorEntity):
         samples_keep_last: bool,
         precision: int,
         percentile: int,
-        device: DeviceEntry | None = None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the Statistics sensor."""
         self._attr_name: str = name

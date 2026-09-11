@@ -1,8 +1,9 @@
 """Test the Tesla Fleet init."""
 
+import asyncio
 from copy import deepcopy
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -94,6 +95,26 @@ async def test_init_error(
     mock_products.side_effect = side_effect
     await setup_platform(hass, normal_config_entry)
     assert normal_config_entry.state is state
+
+
+async def test_vehicle_first_refresh_timeout(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test a slow first vehicle refresh retries instead of blocking setup."""
+    never = asyncio.Event()
+
+    async def _hang(*args: object, **kwargs: object) -> None:
+        await never.wait()
+
+    mock_vehicle_data.side_effect = _hang
+
+    with patch("homeassistant.components.tesla_fleet.VEHICLE_FIRST_REFRESH_TIMEOUT", 0):
+        await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+    never.set()
 
 
 async def test_oauth_refresh_expired(
@@ -231,6 +252,26 @@ async def test_devices(
 
     for device in devices:
         assert device == snapshot(name=f"{device.identifiers}")
+
+
+async def test_vehicle_device_model_from_library(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the vehicle device model is provided by the library."""
+    with patch(
+        "tesla_fleet_api.tesla.VehicleFleet.model",
+        new_callable=PropertyMock,
+        return_value="Cybercab",
+    ):
+        await setup_platform(hass, normal_config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "LRWXF7EK4KC700000"), normal_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.model == "Cybercab"
 
 
 # Vehicle Coordinator
