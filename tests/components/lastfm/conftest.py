@@ -11,7 +11,14 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import API_KEY, USERNAME_1, USERNAME_2, MockNetwork, MockUser
+from . import (
+    API_KEY,
+    CONF_DATA_WITH_SESSION_KEY,
+    USERNAME_1,
+    USERNAME_2,
+    MockNetwork,
+    MockUser,
+)
 
 from tests.common import MockConfigEntry
 
@@ -30,6 +37,12 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERS: [USERNAME_1, USERNAME_2],
         },
     )
+
+
+@pytest.fixture(name="authenticated_config_entry")
+def mock_authenticated_config_entry() -> MockConfigEntry:
+    """Create an authenticated LastFM entry in Home Assistant."""
+    return MockConfigEntry(domain=DOMAIN, data={}, options=CONF_DATA_WITH_SESSION_KEY)
 
 
 @pytest.fixture(name="imported_config_entry")

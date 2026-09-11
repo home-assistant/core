@@ -1,9 +1,29 @@
 """Test LastFM component setup process."""
 
-from homeassistant.components.lastfm.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from unittest.mock import patch
 
-from . import MockUser
+from pylast import LastFMNetwork, WSError
+import pytest
+
+from homeassistant.components.lastfm.const import (
+    CONF_API_SECRET,
+    CONF_SESSION_KEY,
+    DOMAIN,
+    ERROR_CODE_INVALID_SESSION_KEY,
+    ERROR_CODE_TOKEN_UNAUTHORIZED,
+)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from . import (
+    API_KEY,
+    API_SECRET,
+    SESSION_KEY,
+    MockSessionKeyGenerator,
+    MockUser,
+    get_session_key_polling_task,
+)
 from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry
@@ -27,3 +47,92 @@ async def test_load_unload_entry(
 
     state = hass.states.get("sensor.lastfm_testaccount1")
     assert not state
+
+
+async def test_load_entry_with_session_key(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    default_user: MockUser,
+) -> None:
+    """Test the client is authenticated with a session key when configured."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            **config_entry.options,
+            CONF_API_SECRET: API_SECRET,
+            CONF_SESSION_KEY: SESSION_KEY,
+        },
+    )
+    with (
+        patch("pylast.User", return_value=default_user),
+        patch(
+            "homeassistant.components.lastfm.coordinator.LastFMNetwork",
+            wraps=LastFMNetwork,
+        ) as mock_network,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    mock_network.assert_called_once_with(
+        api_key=API_KEY, api_secret=API_SECRET, session_key=SESSION_KEY
+    )
+
+
+@pytest.mark.parametrize(
+    "user",
+    [
+        pytest.param(
+            MockUser(
+                thrown_error=WSError(
+                    "network", ERROR_CODE_INVALID_SESSION_KEY, "Invalid session key"
+                )
+            ),
+            id="user_data",
+        ),
+        pytest.param(
+            MockUser(
+                recent_tracks_error=WSError(
+                    "network", ERROR_CODE_INVALID_SESSION_KEY, "Invalid session key"
+                )
+            ),
+            id="recent_tracks",
+        ),
+    ],
+)
+async def test_invalid_session_key_starts_reauth(
+    hass: HomeAssistant,
+    authenticated_config_entry: MockConfigEntry,
+    user: MockUser,
+) -> None:
+    """Test an invalid stored session key starts reauthentication."""
+    authenticated_config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "pylast.User",
+            return_value=user,
+        ),
+        patch(
+            "homeassistant.components.lastfm.config_flow.SessionKeyGenerator",
+            return_value=MockSessionKeyGenerator(
+                session_key_error=WSError(
+                    "network", ERROR_CODE_TOKEN_UNAUTHORIZED, "Unauthorized token"
+                )
+            ),
+        ),
+        patch("homeassistant.components.lastfm.config_flow.POLLING_INTERVAL", 60),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        polling_task = get_session_key_polling_task()
+        await hass.async_block_till_done()
+
+    assert not polling_task.done()
+    assert authenticated_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "auth_url"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+    hass.config_entries.flow.async_abort(flows[0]["flow_id"])
+    await hass.async_block_till_done()
+    assert polling_task.cancelled()
