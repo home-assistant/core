@@ -149,8 +149,6 @@ async def async_firewall_policy_control_fn(
     policy = hub.api.firewall_policies[obj_id].raw
     policy["enabled"] = target
     await hub.api.request(FirewallPolicyUpdateRequest.create(policy))
-    # Update the policies so the UI is updated appropriately
-    await hub.api.firewall_policies.update()
 
 
 @callback
