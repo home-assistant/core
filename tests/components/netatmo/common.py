@@ -2,6 +2,7 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from datetime import timedelta
 import json
 from typing import Any
 from unittest.mock import patch
@@ -143,7 +144,7 @@ async def advance_time(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     polling_cycles: int,
-    polling_delta: int,
+    polling_delta: timedelta,
 ) -> None:
     """Advance time to trigger polling."""
     for _ in range(polling_cycles):
