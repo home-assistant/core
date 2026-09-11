@@ -25,5 +25,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "station_not_found": {
+      "message": "Station {station} is not available in the NMBS station list"
+    }
   }
 }
