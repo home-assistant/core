@@ -59,7 +59,6 @@ ISSUE_TYPE_BLE_KEY_REJECTED: Final = "ble_key_rejected"
 VEHICLE_ISSUE_LEARN_MORE: dict[str, str | None] = {
     "key": "https://teslemetry.com/key",
     "streaming_toggle": None,
-    ISSUE_TYPE_BLE_KEY_REJECTED: None,
 }
 
 

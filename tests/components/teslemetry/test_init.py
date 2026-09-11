@@ -2314,6 +2314,28 @@ async def test_ble_key_rejection_clears_when_key_works_again(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
+async def test_ble_key_rejection_survives_metadata_refresh(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """A locally-raised key rejection must not be cleared by a metadata refresh that never reports it."""
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        _cloud,
+    ):
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        issue_id = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{VIN}"
+
+        bluetooth_vehicle.flash_lights.side_effect = NotOnWhitelistFault()
+        assert await router.flash_lights() == CLOUD_RESULT
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+        await entry.runtime_data.metadata_coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+
 async def test_vehicle_paired_but_never_seen(hass: HomeAssistant) -> None:
     """A paired vehicle never seen by Bluetooth is built without a device handle."""
     entry = _entry_with_ble()
