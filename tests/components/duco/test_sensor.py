@@ -259,19 +259,27 @@ async def test_lan_info_failures_keep_node_entities_available(
     assert state.state == "-60"
 
 
-async def test_time_filter_remaining_missing_is_retried(
+@pytest.mark.parametrize(
+    "initial_time_filter_remain",
+    [
+        pytest.param(None, id="missing"),
+        pytest.param(DucoError("heat recovery info error"), id="transient_failure"),
+    ],
+)
+async def test_time_filter_remaining_is_retried(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
+    initial_time_filter_remain: DucoError | None,
 ) -> None:
-    """Test a missing filter timer does not create the sensor but is retried."""
+    """Test unavailable filter timer data is retried and can create the sensor."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-
-    mock_duco_client.async_get_time_filter_remaining = AsyncMock(
-        side_effect=[None, 180]
-    )
+    mock_duco_client.async_get_time_filter_remaining.side_effect = [
+        initial_time_filter_remain,
+        180,
+    ]
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
 
