@@ -609,12 +609,20 @@ async def test_service_post_local_media_source(
                     ATTR_MEDIA_DESCRIPTION: "I play the sax",
                     ATTR_FOCUS_X: -0.5,
                     ATTR_FOCUS_Y: 0.5,
-                }
+                },
+                {
+                    ATTR_MEDIA_SOURCE: {
+                        "media_content_id": "media-source://media_source/local/screenshot.png",
+                        "media_content_type": "image/png",
+                    },
+                },
             ],
         },
         blocking=True,
     )
-    mock_mastodon_client.media_post.assert_called_once_with(
+
+    assert mock_mastodon_client.media_post.call_count == 2
+    mock_mastodon_client.media_post.assert_any_call(
         media_file=b"I play the sax\n",
         mime_type="video/mp4",
         description="I play the sax",
@@ -622,8 +630,19 @@ async def test_service_post_local_media_source(
         thumbnail=None,
         thumbnail_mime_type=None,
     )
+    mock_mastodon_client.media_post.assert_any_call(
+        media_file=b"\x89PNG\n",
+        mime_type="image/png",
+        description=None,
+        focus=(0, 0),
+        thumbnail=None,
+        thumbnail_mime_type=None,
+    )
     mock_mastodon_client.status_post.assert_called_once_with(
-        media_ids=[MediaAttachment(id=1)],
+        media_ids=[
+            MediaAttachment(id=1),
+            MediaAttachment(id=2),
+        ],
         status="test toot",
         visibility=None,
         quote_approval_policy=None,
@@ -1162,7 +1181,7 @@ async def test_service_entry_availability(
         (
             {
                 ATTR_AVATAR: {
-                    "media_content_id": "media-source://media_source/local/test.png",
+                    "media_content_id": "media-source://media_source/local/screenshot.png",
                     "media_content_type": "image/png",
                 }
             },
@@ -1198,7 +1217,7 @@ async def test_service_entry_availability(
         (
             {
                 ATTR_HEADER: {
-                    "media_content_id": "media-source://media_source/local/test.png",
+                    "media_content_id": "media-source://media_source/local/screenshot.png",
                     "media_content_type": "image/png",
                 }
             },
