@@ -233,6 +233,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/besen/ @moryoav
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
+/homeassistant/components/bitvis/ @MandusBorjesson @real-tintin @simontegelid
+/tests/components/bitvis/ @MandusBorjesson @real-tintin @simontegelid
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
 /homeassistant/components/blebox/ @bbx-a @swistakm @bkobus-bbx
 /tests/components/blebox/ @bbx-a @swistakm @bkobus-bbx
@@ -1219,6 +1221,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/mutesync/ @currentoor
 /homeassistant/components/my/ @home-assistant/core
 /tests/components/my/ @home-assistant/core
+/homeassistant/components/my_pv/ @my-pv @rrooggiieerr
+/tests/components/my_pv/ @my-pv @rrooggiieerr
 /homeassistant/components/myneomitis/ @Epyes
 /tests/components/myneomitis/ @Epyes
 /homeassistant/components/mysensors/ @MartinHjelmare @functionpointer
@@ -2104,6 +2108,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/wiim/ @Linkplay2020
 /homeassistant/components/wilight/ @leofig-rj
 /tests/components/wilight/ @leofig-rj
+/homeassistant/components/willow/ @paxprz
+/tests/components/willow/ @paxprz
 /homeassistant/components/window/ @home-assistant/core
 /tests/components/window/ @home-assistant/core
 /homeassistant/components/wirelesstag/ @sergeymaysak

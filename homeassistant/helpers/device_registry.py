@@ -427,6 +427,16 @@ class BaseDeviceEntry:
         return self.config_entry_id
 
     @property
+    def is_composite_device(self) -> bool:
+        """Return if this entry is a restored composite device.
+
+        A restored composite is synthesized by async_get for a pre-migration
+        composite device id and never stored; a plain main or child device is
+        never a composite.
+        """
+        return False
+
+    @property
     def disabled(self) -> bool:
         """Return if entry is disabled."""
         return self.disabled_by is not None
@@ -525,6 +535,16 @@ class DeviceEntry(BaseDeviceEntry):
                 for entry_id, subentries in self._composite_subentries.items()
             }
         return {self.config_entry_id: {self.config_subentry_id}}
+
+    @property
+    @override
+    def is_composite_device(self) -> bool:
+        """Return if this entry is a restored composite device.
+
+        A restored composite is synthesized by async_get for a pre-migration
+        composite device id and never stored.
+        """
+        return self._composite_subentries is not None
 
     @property
     @override
@@ -3062,11 +3082,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "add_config_entry_id or remove_config_entry_id"
             )
 
-        if not new_connections and not new_identifiers:
-            raise HomeAssistantError(
-                "A device must have at least one of identifiers or connections"
-            )
-
         if merge_connections is not UNDEFINED and new_connections is not UNDEFINED:
             raise HomeAssistantError(
                 "Cannot define both merge_connections and new_connections"
@@ -3075,6 +3090,25 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
             raise HomeAssistantError(
                 "Cannot define both merge_identifiers and new_identifiers"
+            )
+
+        # Intentional lazy set operations to determine if the device will have
+        # identifiers, actual merge happens later.
+        if new_identifiers is not UNDEFINED:
+            has_identifiers = new_identifiers
+        elif merge_identifiers is not UNDEFINED:
+            has_identifiers = old.identifiers or merge_identifiers
+        else:
+            has_identifiers = old.identifiers
+        if new_connections is not UNDEFINED:
+            has_connections = new_connections
+        elif merge_connections is not UNDEFINED:
+            has_connections = old.connections or merge_connections
+        else:
+            has_connections = old.connections
+        if not has_identifiers and not has_connections:
+            raise HomeAssistantError(
+                "A device must have at least one of identifiers or connections"
             )
 
         if (
