@@ -8,5 +8,9 @@ PLATFORMS: list[Platform] = [Platform.LOCK]
 # Config entry keys (CONF_ADDRESS and CONF_UUID come from homeassistant.const)
 CONF_PRIV_SCALAR = "priv_scalar"
 
+# Option key: connect on a timer for locks that cannot report door status in
+# their advertisements.
+CONF_ENABLE_POLLING = "enable_polling"
+
 # Default user subtype (gateway)
 DEFAULT_USER_SUBTYPE: int = 17  # UserSubType.BT_GATEWAY
