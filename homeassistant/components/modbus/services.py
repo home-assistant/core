@@ -101,7 +101,7 @@ async def _async_stop_hub(service: ServiceCall) -> None:
     """Stop Modbus hub."""
     hass = service.hass
     hub = _get_hubs(hass)[service.data[ATTR_HUB]]
-    async_dispatcher_send(hass, SIGNAL_STOP_ENTITY)
+    async_dispatcher_send(hass, SIGNAL_STOP_ENTITY.format(hub.name))
     await hub.async_close()
 
 
