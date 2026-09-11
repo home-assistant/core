@@ -67,9 +67,9 @@ async def test_full_flow(
     hass: HomeAssistant,
     server_type: MinecraftServerType,
     lookup_target: str,
-    lookup_result,
+    lookup_result: callable,
     status_target: str,
-    status_response,
+    status_response: dict,
 ) -> None:
     """Test config entry creation for all supported server editions."""
     result = await hass.config_entries.flow.async_init(
@@ -106,9 +106,9 @@ async def test_service_already_configured(
     hass: HomeAssistant,
     server_type: MinecraftServerType,
     lookup_target: str,
-    lookup_result,
+    lookup_result: callable,
     status_target: str,
-    status_response,
+    status_response: dict,
 ) -> None:
     """Test config flow abort if a server is already configured."""
     entry = MockConfigEntry(
@@ -149,9 +149,9 @@ async def test_recovery(
     hass: HomeAssistant,
     server_type: MinecraftServerType,
     lookup_target: str,
-    lookup_result,
+    lookup_result: callable,
     status_target: str,
-    status_response,
+    status_response: dict,
 ) -> None:
     """Test recovery flow across all supported server editions."""
     with (
