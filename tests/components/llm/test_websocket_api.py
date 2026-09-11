@@ -30,11 +30,19 @@ async def setup_llm(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("registered_apis", "expected_apis"),
     [
-        pytest.param([], [{"id": "assist", "name": "Assist"}], id="assist_only"),
+        pytest.param(
+            [],
+            [
+                {"id": "assist", "name": "Assist"},
+                {"id": "management", "name": "Management"},
+            ],
+            id="default_apis",
+        ),
         pytest.param(
             [("test-api", "Test API")],
             [
                 {"id": "assist", "name": "Assist"},
+                {"id": "management", "name": "Management"},
                 {"id": "test-api", "name": "Test API"},
             ],
             id="registered_api",

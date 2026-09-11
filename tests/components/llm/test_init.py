@@ -202,3 +202,25 @@ async def test_get_tools_prefixed_tool_names_not_reported(
         await async_get_tools(hass, llm_context, "assist")
 
     assert "not prefixed with 'test__'" not in caplog.text
+
+
+async def test_management_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+    """Test that ManagementAPI is registered and retrieves management tools."""
+    tool = _StubTool("test__mgmt_tool")
+    _mock_tools_platform(hass, "test", LLMTools(tools=[tool], prompt="mgmt prompt"))
+
+    assert await async_setup_component(hass, "llm", {})
+
+    apis = {api.id: api for api in llm.async_get_apis(hass)}
+    assert llm.LLM_API_ASSIST in apis
+    assert llm.LLM_API_MANAGEMENT in apis
+    assert apis[llm.LLM_API_MANAGEMENT].name == "Management"
+
+    api_instance = await apis[llm.LLM_API_MANAGEMENT].async_get_api_instance(
+        llm_context
+    )
+    assert api_instance.api_prompt == "mgmt prompt"
+    assert [t.name for t in api_instance.tools] == [
+        "llm__GetDateTime",
+        "test__mgmt_tool",
+    ]

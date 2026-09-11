@@ -11,6 +11,7 @@ from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.helpers.llm import (
     API,
     LLM_API_ASSIST,
+    LLM_API_MANAGEMENT,
     APIInstance,
     LLMContext,
     Tool,
@@ -62,6 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, _process_llm_tools_platform
     )
     async_register_api(hass, AssistAPI(hass))
+    async_register_api(hass, ManagementAPI(hass))
     async_setup_ws_api(hass)
     return True
 
@@ -132,6 +134,31 @@ class AssistAPI(API):
             hass=hass,
             id=LLM_API_ASSIST,
             name="Assist",
+        )
+
+    @override
+    async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
+        """Return the instance of the API."""
+        llm_tools = await async_get_tools(self.hass, llm_context, self.id)
+
+        return APIInstance(
+            api=self,
+            api_prompt=llm_tools.prompt or "",
+            llm_context=llm_context,
+            tools=llm_tools.tools,
+            custom_serializer=selector_serializer,
+        )
+
+
+class ManagementAPI(API):
+    """API exposing Management API to LLMs."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Init the class."""
+        super().__init__(
+            hass=hass,
+            id=LLM_API_MANAGEMENT,
+            name="Management",
         )
 
     @override
