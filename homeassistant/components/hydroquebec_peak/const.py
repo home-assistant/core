@@ -14,6 +14,7 @@ CONF_OFFER: Final = "offer"
 # The feed is a small static file behind a CDN and events are published
 # hours in advance; conditional requests make polling cheap.
 SCAN_INTERVAL: Final = timedelta(minutes=15)
+BOUNDARY_REFRESH_DELAY: Final = timedelta(seconds=1)
 
 PLATFORMS: Final = [Platform.SENSOR]
 
