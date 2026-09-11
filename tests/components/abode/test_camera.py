@@ -2,31 +2,39 @@
 
 from unittest.mock import patch
 
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.abode.const import DOMAIN
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN, CameraState
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
+from tests.common import snapshot_platform
 
-async def test_entity_registry(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+
+@pytest.fixture(autouse=True)
+def mock_getrandbits():
+    """Mock camera access token which normally is randomized."""
+    with patch(
+        "homeassistant.components.camera.SystemRandom.getrandbits",
+        return_value=1,
+    ):
+        yield
+
+
+async def test_all_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, CAMERA_DOMAIN)
+    """Test all entities."""
+    config_entry = await setup_platform(hass, CAMERA_DOMAIN)
 
-    entry = entity_registry.async_get("camera.test_cam")
-    assert entry.unique_id == "d0a3a1c316891ceb00c20118aae2a133"
-
-
-async def test_attributes(hass: HomeAssistant) -> None:
-    """Test the camera attributes are correct."""
-    await setup_platform(hass, CAMERA_DOMAIN)
-
-    state = hass.states.get("camera.test_cam")
-    assert state.state == CameraState.IDLE
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_capture_image(hass: HomeAssistant) -> None:

@@ -190,6 +190,12 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
     ),
+    DeviceCategory.QCCDZ: (
+        SelectEntityDescription(
+            key=DPCode.WORK_MODE,
+            translation_key="charger_work_mode",
+        ),
+    ),
     DeviceCategory.QN: (
         SelectEntityDescription(
             key=DPCode.LEVEL,
