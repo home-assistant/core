@@ -2346,6 +2346,43 @@ async def test_unload_disconnect_timeout(
     assert "timed out after 0s" in caplog.text
 
 
+async def test_unload_disconnect_instant_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A TimeoutError raised by disconnect() itself is not mistaken for the deadline."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle.disconnect = AsyncMock(side_effect=TimeoutError("device busy"))
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        caplog.at_level(logging.WARNING),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    bluetooth_vehicle.disconnect.assert_awaited_once()
+    assert "Error disconnecting Bluetooth for" in caplog.text
+    assert "device busy" in caplog.text
+    assert "timed out after" not in caplog.text
+
+
 async def test_ble_parent_shared_and_cached(hass: HomeAssistant) -> None:
     """The BLE parent (holding the private key) is created once and reused."""
     with patch(
