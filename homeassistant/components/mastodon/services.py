@@ -69,6 +69,7 @@ from .const import (
     LOGGER,
 )
 from .coordinator import MastodonConfigEntry
+from .issue import async_deprecated_media_path
 from .utils import get_media_type
 
 MAX_DURATION_SECONDS = 315360000  # 10 years
@@ -322,6 +323,7 @@ async def _async_unmute_account(call: ServiceCall) -> ServiceResponse:
 
 async def _async_post(call: ServiceCall) -> ServiceResponse:
     """Post a status."""
+
     entry: MastodonConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
@@ -342,9 +344,12 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
     idempotency_key: str | None = call.data.get(ATTR_IDEMPOTENCY_KEY)
     spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
     language: str | None = call.data.get(ATTR_LANGUAGE)
-    media_path: str | None = (
-        path if isinstance((path := call.data.get(ATTR_MEDIA)), str) else None
-    )
+
+    if isinstance(media_path := call.data.get(ATTR_MEDIA), str):
+        async_deprecated_media_path(call.hass)
+    else:
+        media_path = None
+
     media: list[dict[str, Any]] = (
         []
         if isinstance(call.data.get(ATTR_MEDIA), str)
