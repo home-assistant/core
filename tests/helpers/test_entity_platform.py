@@ -1512,19 +1512,15 @@ async def test_device_info_called(
         ("hue", "1234"), config_entry.entry_id
     )
     assert device == snapshot
-    assert device.config_entries == {config_entry.entry_id}
-    assert device.config_entries_subentries == {config_entry.entry_id: {None}}
-    assert device.primary_config_entry == config_entry.entry_id
+    assert device.config_entry_id == config_entry.entry_id
+    assert device.config_subentry_id is None
     assert device.via_device_id == via.id
     device = device_registry.async_get_device_by_identifier(
         ("hue", "efgh"), config_entry.entry_id
     )
     assert device == snapshot
-    assert device.config_entries == {config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        config_entry.entry_id: {"mock-subentry-id-1"}
-    }
-    assert device.primary_config_entry == config_entry.entry_id
+    assert device.config_entry_id == config_entry.entry_id
+    assert device.config_subentry_id == "mock-subentry-id-1"
     assert device.via_device_id == via.id
 
 
