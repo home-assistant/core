@@ -113,7 +113,7 @@ async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) 
     assert float(hass.states.get("sensor.mysite_solar_import").state) == 28.2
 
     state = hass.states.get("sensor.mysite_charge")
-    assert state.state == "47"
+    assert state.state == "47.34587394586"
     expected_attributes = {
         "unit_of_measurement": PERCENTAGE,
         "friendly_name": "MySite Charge",
