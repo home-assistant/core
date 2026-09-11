@@ -121,6 +121,67 @@ async def test_polling_coordinator_refreshes_after_interval(
     assert mock_update.call_count >= 1
 
 
+@pytest.mark.parametrize(
+    "object_oriented_network_config_payload",
+    [
+        [
+            {
+                "id": "69f6b0a5e0e3ee2d4614cb5c",
+                "enabled": True,
+                "name": "Nintendo Switch - Block Internet",
+                "target_type": "CLIENTS",
+                "targets": ["00:00:00:00:00:01"],
+                "qos": {"enabled": False},
+                "route": {"enabled": False},
+                "secure": {
+                    "enabled": True,
+                    "internet": {
+                        "mode": "TURN_OFF_INTERNET",
+                        "schedule": {"mode": "ALWAYS"},
+                    },
+                },
+            }
+        ]
+    ],
+)
+async def test_entity_unavailable_on_polling_coordinator_failure(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure polling failures make entities unavailable until recovery."""
+    entity_id = "switch.unifi_network_nintendo_switch_block_internet"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
+
+    coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            config_entry_setup.runtime_data.api.object_oriented_network_configs
+        )
+    )
+
+    with patch.object(
+        coordinator.handler,
+        "update",
+        side_effect=RuntimeError("Polling error"),
+    ):
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is False
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is True
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
+
+
 async def test_websocket_updates_notify_coordinator(
     config_entry_setup: MockConfigEntry,
     mock_websocket_message: WebsocketMessageMock,

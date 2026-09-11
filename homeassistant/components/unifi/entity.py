@@ -244,7 +244,10 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        self._attr_available = description.available_fn(self.hub, self._obj_id)
+        self._attr_available = (
+            description.available_fn(self.hub, self._obj_id)
+            and self.coordinator.last_update_success
+        )
         self.async_update_state(event, self._obj_id)
         self.async_write_ha_state()
 
