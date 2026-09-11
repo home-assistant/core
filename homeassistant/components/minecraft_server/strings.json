@@ -14,7 +14,7 @@
         },
         "data_description": {
           "address": "The hostname, IP address or SRV record of your Minecraft server, optionally including the port.",
-          "type": "For Java Edition beta version 1.8 till release version 1.6.1, select 'Legacy Java Edition'.\n For Java Edition release version 1.7+, select 'Java Edition'.\n For all Bedrock Edition versions, select 'Bedrock Edition'."
+          "type": "For Java Edition beta version 1.8 till release version 1.6.4, select 'Legacy Java Edition'.\n For Java Edition release version 1.7+, select 'Java Edition'.\n For all Bedrock Edition versions, select 'Bedrock Edition'."
         },
         "description": "Set up your Minecraft Server instance to allow monitoring.\n\nSelect the server edition and server address.",
         "title": "Link your Minecraft Server"
