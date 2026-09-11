@@ -1,7 +1,7 @@
 """Tests for the iCloud account."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyicloud.const import AppleAuthError
@@ -23,6 +23,7 @@ from homeassistant.components.icloud.const import (
     DEFAULT_MAX_INTERVAL,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -628,3 +629,74 @@ async def test_family_device_after_setup_time_2fa(
     assert state is not None
     assert state.state == "80"
     assert state.attributes[ATTR_OWNER_NAME] == MEMBER_1_FULL_NAME
+
+
+async def test_account_with_no_devices_keeps_polling(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an empty device response does not kill the account.
+
+    iCloud answers with no devices while an account is still settling, and
+    the status of the first device was read without checking there was one.
+    """
+    service, status = polling_service
+    service.devices = MockDevicesWithLocation(USER_INFO, [])
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.iphone_battery") is None
+
+    # The devices show up on a later poll.
+    service.devices = MockDevicesWithLocation(USER_INFO, [FakeAppleDevice(status)])
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.iphone_battery").state == "80"
+
+
+async def test_rejected_session_on_device_refresh_asks_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a session rejected while reading the devices reaches the user.
+
+    Refreshing the devices is where a stored session is usually turned down,
+    and that request was handled as an unknown error: retried every couple of
+    minutes with nothing ever shown to the user.
+    """
+    service, _ = polling_service
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    type(service).devices = PropertyMock(
+        side_effect=PyiCloudFailedLoginException("rejected")
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert config_entry.runtime_data.api is None
