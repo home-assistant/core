@@ -271,6 +271,11 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.OperationalStatus,
             clusters.WindowCovering.Attributes.Type,
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
+        ),
+        # tilt is optional, not required: some devices (e.g. Shelly 2PM Gen4)
+        # report it as present but null instead of omitting it when tilt is
+        # disabled, which would otherwise fail schema matching
+        optional_attributes=(
             clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
         ),
     ),
