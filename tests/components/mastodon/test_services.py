@@ -612,8 +612,8 @@ async def test_service_post_local_media_source(
                 },
                 {
                     ATTR_MEDIA_SOURCE: {
-                        "media_content_id": "media-source://media_source/local/screenshot.png",
-                        "media_content_type": "image/png",
+                        "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                        "media_content_type": "image/jpeg",
                     },
                 },
             ],
@@ -631,8 +631,8 @@ async def test_service_post_local_media_source(
         thumbnail_mime_type=None,
     )
     mock_mastodon_client.media_post.assert_any_call(
-        media_file=b"\x89PNG\n",
-        mime_type="image/png",
+        media_file=b"\xff\xd8\xff\xdb\n",
+        mime_type="image/jpeg",
         description=None,
         focus=(0, 0),
         thumbnail=None,
@@ -1181,11 +1181,11 @@ async def test_service_entry_availability(
         (
             {
                 ATTR_AVATAR: {
-                    "media_content_id": "media-source://media_source/local/screenshot.png",
-                    "media_content_type": "image/png",
+                    "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                    "media_content_type": "image/jpeg",
                 }
             },
-            {ATTR_AVATAR: b"\x89PNG\n", ATTR_AVATAR_MIME_TYPE: "image/png"},
+            {ATTR_AVATAR: b"\xff\xd8\xff\xdb\n", ATTR_AVATAR_MIME_TYPE: "image/jpeg"},
         ),
         (
             {
@@ -1217,11 +1217,11 @@ async def test_service_entry_availability(
         (
             {
                 ATTR_HEADER: {
-                    "media_content_id": "media-source://media_source/local/screenshot.png",
-                    "media_content_type": "image/png",
+                    "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                    "media_content_type": "image/jpeg",
                 }
             },
-            {ATTR_HEADER: b"\x89PNG\n", ATTR_HEADER_MIME_TYPE: "image/png"},
+            {ATTR_HEADER: b"\xff\xd8\xff\xdb\n", ATTR_HEADER_MIME_TYPE: "image/jpeg"},
         ),
     ],
 )
