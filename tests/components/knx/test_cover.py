@@ -1,10 +1,11 @@
 """Test KNX cover."""
 
-import asyncio
+from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.cover import (
@@ -14,6 +15,7 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.knx.const import CONF_SYNC_STATE, CoverConf
+from homeassistant.components.knx.cover import POSITION_SEND_COOLDOWN
 from homeassistant.components.knx.schema import CoverSchema
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.const import (
@@ -29,7 +31,11 @@ from homeassistant.util import dt as dt_util
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
-from tests.common import async_capture_events, mock_restore_cache
+from tests.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    mock_restore_cache,
+)
 from tests.components.recorder.common import async_wait_recording_done
 from tests.typing import WebSocketGenerator
 
@@ -507,7 +513,7 @@ async def test_cover_position_state_send(hass: HomeAssistant, knx: KNXTestKit) -
 
 
 async def test_cover_position_state_send_restored_position_only_once(
-    hass: HomeAssistant, knx: KNXTestKit
+    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test the restored position is published once, not again after the cooldown.
 
@@ -519,22 +525,22 @@ async def test_cover_position_state_send_restored_position_only_once(
         hass,
         (State("cover.test", CoverState.OPEN, {ATTR_CURRENT_POSITION: 80}),),
     )
-    # a short but non-zero cooldown: zero would create no cooldown task at all,
+    # a cooldown is needed here: with zero xknx creates no cooldown task at all,
     # and it is exactly that task which used to send the duplicate
-    with patch("homeassistant.components.knx.cover.POSITION_SEND_COOLDOWN", 0.01):
-        await knx.setup_integration(
-            {
-                CoverSchema.PLATFORM: {
-                    CONF_NAME: "test",
-                    CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
-                    CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
-                    CoverConf.POSITION_STATE_SEND: True,
-                }
+    await knx.setup_integration(
+        {
+            CoverSchema.PLATFORM: {
+                CONF_NAME: "test",
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                CoverConf.POSITION_STATE_SEND: True,
             }
-        )
+        }
+    )
     await knx.assert_write("1/0/2", (0x33,))
 
-    await asyncio.sleep(0.05)  # past the cooldown
+    freezer.tick(timedelta(seconds=POSITION_SEND_COOLDOWN))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
 
