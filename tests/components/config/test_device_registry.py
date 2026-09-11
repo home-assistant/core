@@ -604,7 +604,7 @@ async def test_remove_device(
     # Identifiers and connections are unique per config entry, so the two config
     # entries get separate devices even though they share a connection
     assert device_entry_1.id != device_entry.id
-    assert device_entry.config_entries == {entry_2.entry_id}
+    assert device_entry.config_entry_id == entry_2.entry_id
 
     # Removal is rejected while async_remove_config_entry_device returns False
     response = await _send_remove_device(
@@ -628,9 +628,9 @@ async def test_remove_device(
     assert not device_registry.async_get(device_entry.id)
 
     # The device belonging to the other config entry is untouched
-    assert device_registry.async_get(device_entry_1.id).config_entries == {
-        entry_1.entry_id
-    }
+    assert (
+        device_registry.async_get(device_entry_1.id).config_entry_id == entry_1.entry_id
+    )
 
     # Only the deprecated alias logs a deprecation warning
     assert (_DEPRECATION_WARNING in caplog.text) is deprecated
@@ -698,9 +698,9 @@ async def test_remove_device_fails(
     )
     # Identifiers and connections are unique per config entry, so each config entry
     # gets its own device even though they share a connection
-    assert device_entry_1.config_entries == {entry_1.entry_id}
-    assert device_entry_2.config_entries == {entry_2.entry_id}
-    assert device_entry_3.config_entries == {entry_3.entry_id}
+    assert device_entry_1.config_entry_id == entry_1.entry_id
+    assert device_entry_2.config_entry_id == entry_2.entry_id
+    assert device_entry_3.config_entry_id == entry_3.entry_id
 
     fake_device_id = "abc123"
     assert device_entry_3.id != fake_device_id
@@ -797,7 +797,7 @@ async def test_remove_device_if_integration_removes(
     # Identifiers and connections are unique per config entry, so the two config
     # entries get separate devices even though they share a connection
     assert device_entry_1.id != device_entry.id
-    assert device_entry.config_entries == {entry_2.entry_id}
+    assert device_entry.config_entry_id == entry_2.entry_id
 
     # Removal is rejected while async_remove_config_entry_device returns False
     response = await ws_client.remove_device(device_entry.id)
@@ -817,9 +817,9 @@ async def test_remove_device_if_integration_removes(
     assert not device_registry.async_get(device_entry.id)
 
     # The device belonging to the other config entry is untouched
-    assert device_registry.async_get(device_entry_1.id).config_entries == {
-        entry_1.entry_id
-    }
+    assert (
+        device_registry.async_get(device_entry_1.id).config_entry_id == entry_1.entry_id
+    )
 
 
 @pytest.mark.parametrize(("command", "deprecated"), _REMOVE_DEVICE_COMMANDS)
