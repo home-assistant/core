@@ -1405,6 +1405,77 @@ async def test_subentry_add_flow_entry_not_loaded(hass: HomeAssistant) -> None:
     assert result["reason"] == "entry_not_loaded"
 
 
+async def test_subentry_reconfigure_updates_address(hass: HomeAssistant) -> None:
+    """Reconfigure re-scans and re-pairs an already added vehicle, updating its address."""
+    entry = await _setup_paired_entry(hass)
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+    new_address = "11:22:33:44:55:66"
+
+    vehicle = _mock_vehicle(on_whitelist=True)
+    info = _discovered_info()
+    info.address = new_address
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[info],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "scan"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    updated = entry.subentries[subentry.subentry_id]
+    assert updated.unique_id == VIN
+    assert updated.data == {CONF_VIN: VIN, CONF_ADDRESS: new_address}
+    vehicle.connect.assert_awaited_once()
+    vehicle.disconnect.assert_awaited_once()
+
+
+async def test_subentry_reconfigure_device_not_found(hass: HomeAssistant) -> None:
+    """Reconfigure re-shows the scan form when the vehicle cannot be found."""
+    entry = await _setup_paired_entry(hass)
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=MagicMock(),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "scan"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scan"
+    assert result["errors"] == {"base": "device_not_found"}
+    # The stored address is untouched by a failed re-scan.
+    assert entry.subentries[subentry.subentry_id].data == {
+        CONF_VIN: VIN,
+        CONF_ADDRESS: ADDRESS,
+    }
+
+
 SITE_ID = 123456
 WALL_CONNECTOR_SITE_ID = 555555
 HOST = "192.168.91.1"
