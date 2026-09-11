@@ -21,13 +21,13 @@ from duco_connectivity import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN, SCAN_INTERVAL
+from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import setup_platform_integration
+from . import async_fire_coordinator_update, setup_platform_integration
 from .conftest import (
     TEST_HOST,
     TEST_MAC,
@@ -223,9 +223,7 @@ async def test_setup_entry_recovers_from_optional_temperature_capability_failure
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.living_outdoor_air_temperature") is None
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get("sensor.living_outdoor_air_temperature")
     assert state is not None
@@ -289,9 +287,7 @@ async def test_empty_bypass_temperature_targets_are_retried(
     assert hass.states.get("number.living_bypass_target_2") is None
     mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert mock_duco_client.async_get_bypass_supply_temperature_targets.await_count == 2
     assert hass.states.get("number.living_bypass_target_1") is not None
@@ -321,9 +317,7 @@ async def test_missing_bypass_temperature_targets_are_retried(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("number.living_bypass_target_1") is None
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get("number.living_bypass_target_1")
     assert state is not None
