@@ -87,8 +87,14 @@ async def test_step_user_error_handling(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("invalid_url"),
+    ["hts://invalid", "hts://invalid:123"],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_step_user_invalid_url(hass: HomeAssistant, mock_librenms: Mock) -> None:
+async def test_step_user_invalid_url(
+    hass: HomeAssistant, mock_librenms: Mock, invalid_url: str
+) -> None:
     """Test a user initiated config flow with errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -98,7 +104,7 @@ async def test_step_user_invalid_url(hass: HomeAssistant, mock_librenms: Mock) -
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {**MOCK_USER_DATA, CONF_URL: "hts://invalid"},
+        {**MOCK_USER_DATA, CONF_URL: invalid_url},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"

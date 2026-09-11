@@ -57,6 +57,7 @@ def _parse_url(url: str) -> tuple[str, int, bool]:
         (host := parsed_url.host) is None
         or (port := parsed_url.port) is None
         or (scheme := parsed_url.scheme) is None
+        or scheme not in ["http", "https"]
     ):
         raise InvalidUrl
     return host, port, scheme == "https"
