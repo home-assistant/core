@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
@@ -21,7 +21,7 @@ async def test_config_entry_loaded(loaded_entry: ConfigEntry) -> None:
 async def test_setup_entry_connection_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_wibeee_api: MagicMock,
+    mock_wibeee_api: AsyncMock,
 ) -> None:
     """Test setup raises ConfigEntryNotReady on connection error."""
     mock_wibeee_api.async_fetch_device_info.side_effect = aiohttp.ClientError("boom")
@@ -36,7 +36,7 @@ async def test_setup_entry_connection_error(
 async def test_setup_entry_device_info_none(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_wibeee_api: MagicMock,
+    mock_wibeee_api: AsyncMock,
 ) -> None:
     """Test setup retries when the device returns no device info."""
     mock_config_entry.add_to_hass(hass)
@@ -58,7 +58,7 @@ async def test_setup_entry_device_info_none(
 async def test_setup_entry_initial_data_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_wibeee_api: MagicMock,
+    mock_wibeee_api: AsyncMock,
     side_effect: Exception,
 ) -> None:
     """Test setup raises ConfigEntryNotReady when the initial fetch fails."""
@@ -74,12 +74,10 @@ async def test_setup_entry_initial_data_error(
 async def test_setup_entry_unexpected_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_wibeee_api: MagicMock,
+    mock_wibeee_api: AsyncMock,
 ) -> None:
     """Test setup fails permanently when another device answers at the host."""
-    mock_wibeee_api.async_fetch_device_info.return_value.mac_addr_formatted = (
-        "ffeeddccbbaa"
-    )
+    mock_wibeee_api.async_fetch_device_info.return_value.mac_addr = "ffeeddccbbaa"
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -91,7 +89,7 @@ async def test_setup_entry_unexpected_device(
 async def test_setup_entry_no_initial_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_wibeee_api: MagicMock,
+    mock_wibeee_api: AsyncMock,
 ) -> None:
     """Test setup raises ConfigEntryNotReady when initial data is None."""
     mock_wibeee_api.async_fetch_sensors_data.return_value = None

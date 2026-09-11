@@ -1,6 +1,8 @@
 """Tests for Wibeee sensors."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, patch
+
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.wibeee.const import (
     CONF_MAC_ADDRESS,
@@ -8,34 +10,33 @@ from homeassistant.components.wibeee.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_HOST, MOCK_MAC, MOCK_WIBEEE_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_sensors_created(
-    hass: HomeAssistant, loaded_entry: MockConfigEntry
+async def test_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_wibeee_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that sensor entities are created."""
-    entity_ids = {state.entity_id for state in hass.states.async_all("sensor")}
-    assert "sensor.wibeee_112233_total_active_power" in entity_ids
-    assert "sensor.wibeee_112233_l1_active_power" in entity_ids
+    """Test the sensor entities."""
+    with patch("homeassistant.components.wibeee.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-
-async def test_sensor_state_class(
-    hass: HomeAssistant, loaded_entry: MockConfigEntry
-) -> None:
-    """Test sensor has correct state class."""
-    state = hass.states.get("sensor.wibeee_112233_total_active_power")
-    assert state.attributes.get("state_class") == "measurement"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_sensors_consumed_produced_energy(
-    hass: HomeAssistant, mock_wibeee_api: MagicMock
+    hass: HomeAssistant, mock_wibeee_api: AsyncMock
 ) -> None:
     """Newer firmware reports energy in separate consumed/produced counters."""
     mock_wibeee_api.async_fetch_sensors_data.return_value = {
@@ -76,7 +77,7 @@ async def test_sensors_consumed_produced_energy(
 
 
 async def test_sensor_unavailable_on_coordinator_failure(
-    hass: HomeAssistant, loaded_entry: MockConfigEntry, mock_wibeee_api: MagicMock
+    hass: HomeAssistant, loaded_entry: MockConfigEntry, mock_wibeee_api: AsyncMock
 ) -> None:
     """Sensors go unavailable when a coordinator refresh fails."""
     mock_wibeee_api.async_fetch_sensors_data.side_effect = TimeoutError
@@ -126,7 +127,7 @@ async def test_sensor_unavailable_on_missing_key(
 async def test_sensors_polling_mode_keeps_all_keys(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_wibeee_api: MagicMock,
+    mock_wibeee_api: AsyncMock,
 ) -> None:
     """Polling mode keeps all sensors, including disabled-by-default metrics."""
     mock_wibeee_api.async_fetch_sensors_data.return_value = {
@@ -161,7 +162,7 @@ async def test_sensors_polling_mode_keeps_all_keys(
 
 
 async def test_sensor_setup_no_known_phases(
-    hass: HomeAssistant, mock_wibeee_api: MagicMock
+    hass: HomeAssistant, mock_wibeee_api: AsyncMock
 ) -> None:
     """Setup fails and retries when the device returns no known phases."""
     mock_wibeee_api.async_fetch_sensors_data.return_value = {
