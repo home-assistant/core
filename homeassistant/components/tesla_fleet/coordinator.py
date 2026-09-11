@@ -163,7 +163,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             response = await self.api.vehicle_data(endpoints=self.endpoints)
             data = response["response"]
 
-        except VehicleOffline:
+        except VehicleOffline as err:
             if not self.updated_once:
                 # Still within the initial setup: don't let a vehicle that is
                 # asleep on the very first refresh masquerade as a successful
@@ -177,7 +177,9 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # ConfigEntryNotReady instead, so the entry retries per the
                 # VEHICLE_FIRST_REFRESH_TIMEOUT budget above - which is the
                 # behavior that comment already documents as intended.
-                raise UpdateFailed("Vehicle was asleep during the initial refresh")
+                raise UpdateFailed(
+                    "Vehicle was asleep during the initial refresh"
+                ) from err
             self.data["state"] = TeslaFleetState.ASLEEP
             return self.data
         except RateLimited:
