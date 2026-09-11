@@ -182,7 +182,13 @@ class LibrenmsConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         current_data = entry.data
 
-        url = f"{'https' if current_data[CONF_SSL] else 'http'}://{current_data[CONF_HOST]}:{current_data[CONF_PORT]}"
+        url = str(
+            URL.build(
+                scheme="https" if current_data[CONF_SSL] else "http",
+                host=current_data[CONF_HOST],
+                port=current_data[CONF_PORT],
+            )
+        )
         verify_ssl = current_data[CONF_VERIFY_SSL]
 
         errors: dict[str, str] = {}
