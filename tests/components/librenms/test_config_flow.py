@@ -298,3 +298,35 @@ async def test_step_reconfigure_invalid_url(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_already_configured(
+    hass: HomeAssistant, mock_librenms: Mock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test duplicate-reconfiguration guard."""
+    mock_config_entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "librenms2",
+            CONF_API_KEY: "abcdef0123456789",
+            CONF_PORT: 8443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+        title="librenms2",
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry2.add_to_hass(hass)
+
+    result = await mock_config_entry2.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_URL: "https://librenms:443", CONF_VERIFY_SSL: True},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

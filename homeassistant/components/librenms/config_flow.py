@@ -188,6 +188,7 @@ class LibrenmsConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidUrl:
                 errors[CONF_URL] = "invalid_url"
             else:
+                self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
                 try:
                     await check_connection(
                         self.hass,
