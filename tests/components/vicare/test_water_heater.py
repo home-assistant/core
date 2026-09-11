@@ -178,7 +178,7 @@ async def test_set_operation_mode(
     )
 
     entity._api.service.setProperty.assert_called_once_with(
-        entity._api.service.accessor,
+        entity._api.accessor,
         "heating.circuits.0.operating.modes.active",
         "setMode",
         {"mode": vicare_mode},
