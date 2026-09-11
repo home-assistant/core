@@ -685,7 +685,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         "name": "approximate_location",
                         "description": "Approximate location data of the user "
                         "for refined web search results",
-                        "schema": to_openapi(location_schema),
+                        "schema": to_openapi(location_schema, openapi_version="3.1.0"),
                         "strict": False,
                     }
                 },
