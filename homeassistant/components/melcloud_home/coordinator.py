@@ -176,7 +176,7 @@ class MelCloudHomeEnergyCoordinator(DataUpdateCoordinator[dict[str, float | None
         """Fetch energy telemetry for a unit without failing the whole update."""
         try:
             energy = await self.client.get_energy_telemetry(
-                unit_id, from_dt=start_of_month, to_dt=now
+                unit_id, from_dt=start_of_month, to_dt=now, interval="Day"
             )
         except (
             MelCloudHomeAuthenticationError,
