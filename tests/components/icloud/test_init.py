@@ -13,13 +13,32 @@ from pyicloud.exceptions import (
 import pytest
 from requests import Response
 
+from homeassistant.components.icloud.config_flow import (
+    CONF_REQUEST_NEW_CODE,
+    CONF_VERIFICATION_CODE,
+)
 from homeassistant.components.icloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
-from .const import MOCK_CONFIG, USERNAME
+from .const import DEVICE, MOCK_CONFIG, USER_INFO, USERNAME
 
 from tests.common import MockConfigEntry
+
+
+class MockDevice(dict):
+    """Device payload that answers status() with itself, as pyicloud does."""
+
+    def status(self, fields):
+        """Return every requested field, as AppleDevice.status does."""
+        return self
+
+
+class MockDevices(list):
+    """Devices response that also carries the account's user info."""
+
+    user_info = USER_INFO
 
 
 @pytest.fixture(name="service_2fa")
@@ -209,12 +228,23 @@ async def test_2fa_required_exception_on_first_fetch_starts_reauth(
 
     The challenge arrives when the session is refreshed to read the devices,
     which raises instead of setting requires_2fa, so the exception is the only
-    signal that a code is what is missing.
+    signal that a code is what is missing. The reauth flow has to be told, or
+    it reads api.requires_2fa, finds it false and never asks for the code.
     """
     service_2fa.return_value.requires_2fa = False
-    type(service_2fa.return_value).devices = PropertyMock(
+    service_2fa.return_value.requires_2sa = False
+    devices = PropertyMock(
         side_effect=PyiCloud2FARequiredException(USERNAME, Mock(spec=Response))
     )
+    type(service_2fa.return_value).devices = devices
+
+    def validate_2fa_code(code: str) -> bool:
+        """Clear the challenge, as entering a valid code does."""
+        devices.side_effect = None
+        devices.return_value = MockDevices([MockDevice(DEVICE)])
+        return True
+
+    service_2fa.return_value.validate_2fa_code = Mock(side_effect=validate_2fa_code)
 
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
@@ -225,11 +255,26 @@ async def test_2fa_required_exception_on_first_fetch_starts_reauth(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert [
+    flows = [
         flow
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "verification_code"
+
+    # The code goes through the session that was kept, not down the
+    # two-step-verification path that a false requires_2fa would select.
+    result = await hass.config_entries.flow.async_configure(
+        flows[0]["flow_id"],
+        {CONF_VERIFICATION_CODE: "123456", CONF_REQUEST_NEW_CODE: False},
+    )
+    await hass.async_block_till_done()
+
+    service_2fa.return_value.validate_2fa_code.assert_called_once_with("123456")
+    service_2fa.return_value.validate_verification_code.assert_not_called()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.parametrize(

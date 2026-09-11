@@ -65,15 +65,13 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-# pyicloud only raises PyiCloud2FARequiredException for a 409 whose body is JSON
-# with authType == "hsa2". Every other authentication rejection falls through to
-# Session._raise_error(), which rewrites the reason to "Authentication required
-# for Account." and raises a plain PyiCloudAPIResponseException carrying the HTTP
-# status in .code. The status is therefore what has to be inspected, not the type.
+# Most authentication rejections arrive as a plain PyiCloudAPIResponseException
+# carrying the HTTP status in .code, so the status is what has to be inspected
+# rather than the exception type.
 #
-# GENERAL_AUTH_ERROR (500) is excluded on purpose: pyicloud groups it with the
+# GENERAL_AUTH_ERROR (500) is left out on purpose: pyicloud groups it with the
 # authentication statuses, but a 500 is just as likely to be a transient iCloud
-# failure, and asking the user to reauthenticate for those would be wrong.
+# failure, and asking the user to log in again for those would be wrong.
 _AUTH_REQUIRED_STATUSES = frozenset(
     {
         AppleAuthError.TWO_FACTOR_REQUIRED,
@@ -117,6 +115,8 @@ class IcloudAccount:
         self._icloud_dir = icloud_dir
 
         self.api: PyiCloudService | None = None
+        # Read by the reauth flow when api.requires_2fa cannot be trusted.
+        self.requires_verification_code = False
         self._owner_fullname: str | None = None
         self._family_members_fullname: dict[str, str] = {}
         self._devices: dict[str, IcloudDevice] = {}
@@ -144,27 +144,33 @@ class IcloudAccount:
         except PyiCloudFailedLoginException:
             # PyiCloudService authenticates while constructing, so this means
             # the stored password was rejected.
-            self._handle_auth_required(requires_2fa=False)
+            self._handle_auth_required(two_factor=False, keep_session=False)
             return
 
-        except PyiCloud2FARequiredException, PyiCloudAuthRequiredException:
+        except PyiCloud2FARequiredException:
             # A 2FA challenge can also surface as an exception here rather than
             # as requires_2fa, because authenticate() raises out of
-            # _get_mfa_auth_options() before the flag is set. Either way
-            # self.api was never assigned, so there is no session for the reauth
+            # _get_mfa_auth_options() before the flag is set. self.api was
+            # never assigned either way, so there is no session for the reauth
             # flow to send a code through; ask for the password, which starts a
             # fresh login and re-issues the challenge.
-            self._handle_auth_required(requires_2fa=False)
+            self._handle_auth_required(two_factor=True, keep_session=False)
+            return
+
+        except PyiCloudAuthRequiredException:
+            # iCloud rejected the session rather than issuing a challenge, so
+            # this is a login to redo, not a code to enter.
+            self._handle_auth_required(two_factor=False, keep_session=False)
             return
 
         except PyiCloudAPIResponseException as err:
             if not _is_auth_error(err):
                 raise
-            self._handle_auth_required(requires_2fa=False)
+            self._handle_auth_required(two_factor=False, keep_session=False)
             return
 
         if self.api.requires_2fa:
-            self._handle_auth_required(requires_2fa=True)
+            self._handle_auth_required(two_factor=True, keep_session=True)
             return
 
         try:
@@ -175,7 +181,7 @@ class IcloudAccount:
             # the devices rather than while logging in, and does not set
             # requires_2fa for it, so ask for a code explicitly. The session is
             # kept so the reauth flow can send the code through it.
-            self._handle_auth_required(requires_2fa=True)
+            self._handle_auth_required(two_factor=True, keep_session=True)
             raise ConfigEntryNotReady from err
         except (PyiCloudFailedLoginException, PyiCloudAuthRequiredException) as err:
             # Reading the devices refreshes the session, and a stored token
@@ -184,9 +190,8 @@ class IcloudAccount:
             # act on, and still raise: the fetch timer is only armed at the
             # end of update_devices(), so returning here would leave an entry
             # that is loaded and never polls again.
-            self._handle_auth_required(
-                requires_2fa=self.api is not None and self.api.requires_2fa
-            )
+            challenged = self.api is not None and self.api.requires_2fa
+            self._handle_auth_required(two_factor=challenged, keep_session=challenged)
             raise ConfigEntryNotReady from err
         except (
             PyiCloudServiceNotActivatedException,
@@ -203,7 +208,7 @@ class IcloudAccount:
             # Drop the session instead of keeping it for a code: it has just
             # failed to refresh, so a reauth flow sending a code through it
             # would fail as well.
-            self._handle_auth_required(requires_2fa=False)
+            self._handle_auth_required(two_factor=False, keep_session=False)
             raise ConfigEntryNotReady from err
 
         if user_info is None:
@@ -223,12 +228,20 @@ class IcloudAccount:
         self._devices = {}
         self.update_devices()
 
-    def _handle_auth_required(self, requires_2fa: bool) -> None:
-        """Report why authentication failed and start the reauth flow."""
-        if requires_2fa:
-            # Keep the API around: the reauth flow reuses this session to send
-            # and validate the 2FA code rather than asking for the password
-            # again. Dropping it would send the user back to the setup form.
+    def _handle_auth_required(self, *, two_factor: bool, keep_session: bool) -> None:
+        """Report why authentication failed and start the reauth flow.
+
+        two_factor says what iCloud asked for, keep_session whether there is a
+        session to ask through: a 2FA challenge raised before the session was
+        established leaves nothing to send a code over, so the user has to log
+        in again even though a code is what iCloud wants.
+        """
+        if not keep_session:
+            # Without a session the reauth flow goes to the password form,
+            # which starts a fresh login and re-issues any challenge.
+            self.api = None
+
+        if two_factor and keep_session:
             _LOGGER.warning(
                 (
                     "2FA authentication required for '%s'; go to the Integrations "
@@ -237,8 +250,16 @@ class IcloudAccount:
                 ),
                 self._config_entry.data[CONF_USERNAME],
             )
+        elif two_factor:
+            _LOGGER.warning(
+                (
+                    "2FA authentication required for '%s'; go to the Integrations "
+                    "menu and click on Configure on the discovered Apple iCloud "
+                    "card to login again"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
         else:
-            self.api = None
             _LOGGER.error(
                 (
                     "Your iCloud account for '%s' is no longer working; Go to the "
@@ -247,6 +268,11 @@ class IcloudAccount:
                 ),
                 self._config_entry.data[CONF_USERNAME],
             )
+
+        # A challenge raised by a request pyicloud does not route through
+        # authenticate() never sets api.requires_2fa, which is what the reauth
+        # flow reads to decide whether to ask for a code.
+        self.requires_verification_code = two_factor and keep_session
         self._require_reauth()
 
     def update_devices(self) -> None:
