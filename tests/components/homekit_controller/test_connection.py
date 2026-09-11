@@ -251,8 +251,10 @@ async def test_migrate_device_id_shared_identifier_only_migrates_own(
         name="Other",
     )
     old_id = "composite00000000000000000000ab"
-    device_registry.devices[device.id] = attr.evolve(device, composite_device_id=old_id)
-    device_registry.devices[other_device.id] = attr.evolve(
+    device_registry._devices[device.id] = attr.evolve(
+        device, composite_device_id=old_id
+    )
+    device_registry._devices[other_device.id] = attr.evolve(
         other_device, composite_device_id=old_id
     )
     # The shared identifier now resolves to the read-only composite

@@ -36,3 +36,12 @@ async def test_binary_sensor_no_matching_interfaces(hass: HomeAssistant) -> None
         await setup_mikrotik_entry(hass, interface_data=[interface_without_running])
 
     assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == []
+
+
+async def test_binary_sensor_skips_loopback_interfaces(hass: HomeAssistant) -> None:
+    """Test no binary sensor entities are created for loopback interfaces."""
+    loopback_interface = {**BRIDGE1_INTERFACE, "name": "lo", "type": "loopback"}
+    with patch("homeassistant.components.mikrotik.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await setup_mikrotik_entry(hass, interface_data=[loopback_interface])
+
+    assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == []

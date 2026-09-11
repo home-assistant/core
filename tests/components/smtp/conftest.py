@@ -7,6 +7,8 @@ import pytest
 
 from homeassistant.components.smtp.const import (
     CONF_ENCRYPTION,
+    CONF_REPLY_TO,
+    CONF_REPLY_TO_NAME,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DOMAIN,
@@ -49,12 +51,23 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_smtp() -> Generator[MagicMock]:
     """Mock smtplib.SMTP."""
 
+    with patch(
+        "homeassistant.components.smtp.helpers.smtplib.SMTP", autospec=True
+    ) as mock_client:
+        client = mock_client.return_value
+        client.cls = mock_client
+        yield client
+
+
+@pytest.fixture(name="aiosmtplib")
+def mock_aiosmtplib() -> Generator[AsyncMock]:
+    """Mock aiosmtplib."""
+
     with (
         patch(
-            "homeassistant.components.smtp.config_flow.SMTP_SSL", autospec=True
+            "homeassistant.components.smtp.config_flow.SMTP", autospec=True
         ) as mock_client,
-        patch("homeassistant.components.smtp.helpers.smtplib.SMTP", new=mock_client),
-        patch("homeassistant.components.smtp.config_flow.SMTP", new=mock_client),
+        patch("homeassistant.components.smtp.SMTP", new=mock_client),
     ):
         client = mock_client.return_value
         client.cls = mock_client
@@ -78,9 +91,36 @@ def mock_randrange() -> Generator[None]:
 
     with patch(
         "random.randrange",
-        return_value=1234567890123456789,
+        side_effect=[1, 2, 3, 4, 5, 6, 7, 8, 9],
     ):
         yield
+
+
+@pytest.fixture(name="version")
+def mock_version() -> Generator[None]:
+    """Mock Home Assistant version."""
+
+    with patch(
+        "homeassistant.components.smtp.notify.__version__",
+        "2026.10.0",
+    ):
+        yield
+
+
+@pytest.fixture(name="client_context")
+def mock_client_context() -> Generator[None]:
+    """Mock client_context."""
+
+    with (
+        patch(
+            "homeassistant.components.smtp.config_flow.client_context"
+        ) as mock_client,
+        patch(
+            "homeassistant.components.smtp.client_context",
+            new=mock_client,
+        ),
+    ):
+        yield mock_client
 
 
 @pytest.fixture(name="config_entry")
@@ -92,6 +132,8 @@ def mock_config_entry() -> MockConfigEntry:
         data=USER_INPUT,
         options={
             CONF_TIMEOUT: 1312,
+            CONF_REPLY_TO: "replyto@example.com",
+            CONF_REPLY_TO_NAME: "Reply To Name",
         },
         entry_id="123456789",
         subentries_data=[

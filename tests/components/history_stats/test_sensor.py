@@ -2162,14 +2162,14 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("binary_sensor.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     history_stats_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             CONF_NAME: DEFAULT_NAME,
-            CONF_ENTITY_ID: "binary_sensor.test_source",
+            CONF_ENTITY_ID: source_entity.entity_id,
             CONF_STATE: ["on"],
             CONF_TYPE: "count",
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
@@ -2182,7 +2182,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(history_stats_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    history_stats_entity = entity_registry.async_get("sensor.history_stats")
+    history_stats_entity = entity_registry.async_get("sensor.mock_title_history_stats")
     assert history_stats_entity is not None
     assert history_stats_entity.device_id == source_entity.device_id
 

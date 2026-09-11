@@ -47,6 +47,6 @@
   "iot_class": "local_polling",
   "loggers": ["blebox_uniapi"],
   "quality_scale": "gold",
-  "requirements": ["blebox-uniapi==2.5.6"],
+  "requirements": ["blebox-uniapi==2.5.7"],
   "zeroconf": ["_bbxsrv._tcp.local."]
 }

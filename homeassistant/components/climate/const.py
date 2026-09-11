@@ -1,6 +1,7 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
+from typing import Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
 
@@ -126,8 +127,9 @@ DEFAULT_MAX_TEMP = 35
 DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
-DOMAIN = "climate"
+DOMAIN: Final = "climate"
 
+INTENT_SET_FAN_MODE = "HassClimateSetFanMode"
 INTENT_SET_TEMPERATURE = "HassClimateSetTemperature"
 
 SERVICE_SET_FAN_MODE = "set_fan_mode"

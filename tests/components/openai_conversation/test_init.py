@@ -277,12 +277,13 @@ async def test_init_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    side_effect,
-    error,
+    side_effect: APIConnectionError | BadRequestError,
+    error: str,
 ) -> None:
     """Test initialization errors."""
     with patch(
         "openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
         side_effect=side_effect,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
@@ -298,6 +299,7 @@ async def test_init_auth_error(
     """Test auth error during init errors."""
     with patch(
         "openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
         side_effect=AuthenticationError(
             response=httpx.Response(
                 status_code=500, request=httpx.Request(method="GET", url="test")
@@ -1636,7 +1638,7 @@ async def test_migrate_entry_from_v2_3(
     conversation_device = attr.evolve(
         conversation_device, disabled_by=device_disabled_by
     )
-    device_registry.devices[conversation_device.id] = conversation_device
+    device_registry._devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

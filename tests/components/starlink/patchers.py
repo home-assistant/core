@@ -1,9 +1,8 @@
 """General Starlink patchers."""
 
-import json
 from unittest.mock import patch
 
-from tests.common import load_fixture
+from tests.common import load_json_array_fixture, load_json_object_fixture
 
 SETUP_ENTRY_PATCHER = patch(
     "homeassistant.components.starlink.async_setup_entry", return_value=True
@@ -11,23 +10,23 @@ SETUP_ENTRY_PATCHER = patch(
 
 LOCATION_DATA_SUCCESS_PATCHER = patch(
     "homeassistant.components.starlink.coordinator.location_data",
-    return_value=json.loads(load_fixture("location_data_success.json", "starlink")),
+    return_value=load_json_object_fixture("location_data_success.json", "starlink"),
 )
 
 SLEEP_DATA_SUCCESS_PATCHER = patch(
     "homeassistant.components.starlink.coordinator.get_sleep_config",
-    return_value=json.loads(load_fixture("sleep_data_success.json", "starlink")),
+    return_value=load_json_array_fixture("sleep_data_success.json", "starlink"),
 )
 
 STATUS_DATA_TARGET = "homeassistant.components.starlink.coordinator.status_data"
-STATUS_DATA_FIXTURE = json.loads(load_fixture("status_data_success.json", "starlink"))
+STATUS_DATA_FIXTURE = load_json_array_fixture("status_data_success.json", "starlink")
 STATUS_DATA_SUCCESS_PATCHER = patch(
     STATUS_DATA_TARGET, return_value=STATUS_DATA_FIXTURE
 )
 
 HISTORY_STATS_SUCCESS_PATCHER = patch(
     "homeassistant.components.starlink.coordinator.history_stats",
-    return_value=json.loads(load_fixture("history_stats_success.json", "starlink")),
+    return_value=load_json_array_fixture("history_stats_success.json", "starlink"),
 )
 
 DEVICE_FOUND_PATCHER = patch(

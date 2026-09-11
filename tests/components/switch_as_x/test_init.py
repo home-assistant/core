@@ -226,7 +226,10 @@ async def test_device_registry_config_entry_1(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
+    entity_id = entity_registry.async_get_entity_id(
+        target_domain, DOMAIN, switch_as_x_config_entry.entry_id
+    )
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
@@ -305,7 +308,10 @@ async def test_device_registry_config_entry_2(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
+    entity_id = entity_registry.async_get_entity_id(
+        target_domain, DOMAIN, switch_as_x_config_entry.entry_id
+    )
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
@@ -387,7 +393,10 @@ async def test_device_registry_config_entry_3(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
+    entity_id = entity_registry.async_get_entity_id(
+        target_domain, DOMAIN, switch_as_x_config_entry.entry_id
+    )
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
@@ -531,7 +540,10 @@ async def test_device(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
+    entity_id = entity_registry.async_get_entity_id(
+        target_domain, DOMAIN, switch_as_x_config_entry.entry_id
+    )
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
     assert entity_entry.device_id == switch_entity_entry.device_id
 
@@ -1164,8 +1176,8 @@ async def test_migrate(
     assert config_entry.minor_version == SwitchAsXConfigFlowHandler.MINOR_VERSION
 
     # Check the state and entity registry entry are present
-    assert hass.states.get(f"{target_domain}.abc") is not None
-    assert entity_registry.async_get(f"{target_domain}.abc") is not None
+    assert hass.states.get(switch_as_x_entity_entry.entity_id) is not None
+    assert entity_registry.async_get(switch_as_x_entity_entry.entity_id) is not None
 
     # The switch_as_x config entry was never added to the device, so migration does
     # not change the switch_as_x entity's device link

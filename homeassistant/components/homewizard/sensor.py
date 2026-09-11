@@ -138,6 +138,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_registry_enabled_default=False,
         has_fn=(
             lambda data: (

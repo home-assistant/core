@@ -332,8 +332,17 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
 
                 cost_state = max(0, cost_read.provided_cost)
                 compensation_state = max(0, -cost_read.provided_cost)
-                consumption_state = max(0, cost_read.consumption)
-                return_state = max(0, -cost_read.consumption)
+                # Prefer the meter's own import and export registers when the
+                # utility publishes them. Splitting the net consumption on its
+                # sign undercounts both directions on a net-metered site,
+                # because an interval that is net-export can still contain real
+                # import (and vice versa).
+                if cost_read.imported is not None and cost_read.exported is not None:
+                    consumption_state = cost_read.imported
+                    return_state = cost_read.exported
+                else:
+                    consumption_state = max(0, cost_read.consumption)
+                    return_state = max(0, -cost_read.consumption)
 
                 cost_sum += cost_state
                 compensation_sum += compensation_state

@@ -375,7 +375,8 @@ async def test_update_attrs_fails_in_init(
     assert entity
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
-    assert f"Unable to read data for MockLight {entity_id}:" in caplog.text
+    assert f"Unable to read data for {IP_ADDRESS} {entity_id}:" in caplog.text
+    assert "MockLight" not in caplog.text
 
 
 async def test_update_attrs_fails_on_update(
@@ -418,7 +419,8 @@ async def test_update_attrs_fails_on_update(
     assert entity
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
-    assert f"Unable to read data for MockLight {entity_id}:" in caplog.text
+    assert f"Unable to read data for {IP_ADDRESS} {entity_id}:" in caplog.text
+    assert "MockLight" not in caplog.text
     # Check only logs once
     caplog.clear()
     freezer.tick(5)
@@ -427,7 +429,7 @@ async def test_update_attrs_fails_on_update(
     assert entity
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
-    assert f"Unable to read data for MockLight {entity_id}:" not in caplog.text
+    assert f"Unable to read data for {IP_ADDRESS} {entity_id}:" not in caplog.text
 
 
 async def test_feature_no_category(

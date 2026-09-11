@@ -299,7 +299,7 @@ async def update_listener(hass: HomeAssistant, entry: ScrapeConfigEntry) -> None
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: ConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, entry: ConfigEntry, device: dr.AnyDeviceEntry
 ) -> bool:
     """Remove Scrape config entry from a device."""
     entity_registry = er.async_get(hass)

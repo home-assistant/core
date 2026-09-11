@@ -131,7 +131,7 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="network_tx",
         translation_key="network_tx",
-        native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -142,7 +142,7 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="network_rx",
         translation_key="network_rx",
-        native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
