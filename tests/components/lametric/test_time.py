@@ -69,15 +69,25 @@ async def test_set_value(
     )
 
 
-@pytest.mark.parametrize("device_fixture", ["device_sa5"])
-@pytest.mark.usefixtures("init_integration")
-async def test_unknown_times(hass: HomeAssistant) -> None:
-    """Test devices that have no screensaver times configured."""
-    state = hass.states.get("time.spyfly_s_lametric_sky_screensaver_start_time")
+async def test_unknown_times(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test a device that has no screensaver times configured."""
+    time_based = mock_lametric.device.return_value.display.screensaver.modes.time_based
+    time_based.start_time = None
+    time_based.end_time = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_START_TIME)
     assert state
     assert state.state == STATE_UNKNOWN
 
-    state = hass.states.get("time.spyfly_s_lametric_sky_screensaver_end_time")
+    state = hass.states.get(ENTITY_END_TIME)
     assert state
     assert state.state == STATE_UNKNOWN
 
