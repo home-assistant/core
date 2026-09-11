@@ -13,7 +13,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_OFFER, DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import BOUNDARY_REFRESH_DELAY, CONF_OFFER, DOMAIN, LOGGER, SCAN_INTERVAL
 
 type HydroQuebecPeakConfigEntry = ConfigEntry[HydroQuebecPeakCoordinator]
 
@@ -64,6 +64,10 @@ class HydroQuebecPeakCoordinator(DataUpdateCoordinator[tuple[PeakEvent, ...]]):
         today/tomorrow flags), not only on the fetched data. Schedule a
         listener update at the next event start/end or local midnight so
         states flip on time instead of waiting for the next poll.
+
+        The update runs slightly after the boundary so that time triggers
+        scheduled on the sensors' timestamps fire before the sensors roll
+        over to the next event.
         """
         now = dt_util.utcnow()
         boundaries = [
@@ -77,7 +81,7 @@ class HydroQuebecPeakCoordinator(DataUpdateCoordinator[tuple[PeakEvent, ...]]):
         if self._boundary_unsub is not None:
             self._boundary_unsub()
         self._boundary_unsub = async_track_point_in_utc_time(
-            self.hass, self._handle_boundary, min(boundaries)
+            self.hass, self._handle_boundary, min(boundaries) + BOUNDARY_REFRESH_DELAY
         )
 
     @callback
