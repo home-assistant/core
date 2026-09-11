@@ -53,7 +53,8 @@ async def test_entry_diagnostics(
             CONF_USE_PSK: True,
             CONF_PIN: "12345qwerty",
         },
-        unique_id="very_unique_string",
+        unique_id="aa:bb:cc:dd:ee:ff",
+        version=2,
         entry_id="3bd2acb0e4f0476d40865546d0d91921",
     )
 
