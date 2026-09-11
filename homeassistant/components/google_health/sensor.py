@@ -158,6 +158,8 @@ SLEEP_SENSORS: list[
         key="sleep_asleep",
         translation_key="sleep_asleep",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
@@ -170,6 +172,8 @@ SLEEP_SENSORS: list[
         key="sleep_awake",
         translation_key="sleep_awake",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
@@ -182,6 +186,8 @@ SLEEP_SENSORS: list[
         key="sleep_in_bed",
         translation_key="sleep_in_bed",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (

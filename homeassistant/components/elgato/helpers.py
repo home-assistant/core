@@ -34,20 +34,29 @@ def color_temperature_range(data: ElgatoData) -> tuple[int, int]:
     return COLOR_TEMPERATURE_RANGE
 
 
-def elgato_exception_handler[_ElgatoEntityT: ElgatoEntity, **_P](
+def elgato_device_action[_ElgatoEntityT: ElgatoEntity, **_P](
     func: Callable[Concatenate[_ElgatoEntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_ElgatoEntityT, _P], Coroutine[Any, Any, None]]:
-    """Decorate Elgato calls to handle Elgato exceptions.
+    """Decorate anything that asks something of an Elgato device.
 
-    A decorator that wraps the passed in function, catches Elgato errors,
-    and raises a translated ``HomeAssistantError``.
+    Three things every such call wants, in this order.
+
+    It waits its turn, because a firmware install has the device to itself:
+    it answers nothing while it erases a flash slot, and enough traffic in
+    that window takes its HTTP server down and restarts the light.
+
+    Elgato errors become a translated ``HomeAssistantError``.
+
+    And the device is asked for its new state afterwards, outside the lock,
+    because that is another request and it has to queue like the rest.
     """
 
     async def handler(
         self: _ElgatoEntityT, *args: _P.args, **kwargs: _P.kwargs
     ) -> None:
         try:
-            await func(self, *args, **kwargs)
+            async with self.coordinator.device_lock:
+                await func(self, *args, **kwargs)
         except ElgatoConnectionError as error:
             self.coordinator.last_update_success = False
             self.coordinator.async_update_listeners()
@@ -60,5 +69,7 @@ def elgato_exception_handler[_ElgatoEntityT: ElgatoEntity, **_P](
                 translation_domain=DOMAIN,
                 translation_key="unknown_error",
             ) from error
+
+        await self.coordinator.async_request_refresh()
 
     return handler

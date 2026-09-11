@@ -90,6 +90,11 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
 
         await self._async_run_command(self.client.async_stop_charging())
 
+    async def async_set_charge_amps(self, amps: int) -> None:
+        """Set the charging current."""
+
+        await self._async_run_command(self.client.async_set_charge_amps(amps))
+
     async def _async_run_command(self, command: Awaitable[None]) -> None:
         """Run a charger command and translate command failures."""
 

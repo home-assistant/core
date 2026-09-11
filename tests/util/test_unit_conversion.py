@@ -880,6 +880,11 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
         (30, UnitOfPressure.MMHG, 16.0572051431838, UnitOfPressure.INH2O),
         (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
+        (1, UnitOfPressure.ATM, 101325, UnitOfPressure.PA),
+        (1, UnitOfPressure.ATM, 1013.25, UnitOfPressure.HPA),
+        (1, UnitOfPressure.ATM, 1013.25, UnitOfPressure.MBAR),
+        (1, UnitOfPressure.ATM, 1.01325, UnitOfPressure.BAR),
+        (101325, UnitOfPressure.PA, 1, UnitOfPressure.ATM),
     ],
     RadiationConcentrationConverter: [
         (

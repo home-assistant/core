@@ -695,6 +695,10 @@ ZEROCONF = {
                 "vendor": "tailwind",
             },
         },
+        {
+            "domain": "velux",
+            "name": "velux_klf_lan_*",
+        },
     ],
     "_hue._tcp.local.": [
         {
@@ -824,6 +828,11 @@ ZEROCONF = {
             "domain": "bluesound",
         },
     ],
+    "_mypv._tcp.local.": [
+        {
+            "domain": "my_pv",
+        },
+    ],
     "_nanoleafapi._tcp.local.": [
         {
             "domain": "nanoleaf",
@@ -877,6 +886,11 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise",
+        },
+    ],
+    "_powerhub._udp.local.": [
+        {
+            "domain": "bitvis",
         },
     ],
     "_powerview._tcp.local.": [
