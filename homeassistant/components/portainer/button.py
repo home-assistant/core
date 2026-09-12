@@ -32,6 +32,7 @@ from .coordinator import (
     PortainerCoordinatorData,
 )
 from .entity import PortainerContainerEntity, PortainerEndpointEntity
+from .util import async_add_entities_by_subentry
 
 PARALLEL_UPDATES = 1
 
@@ -164,29 +165,43 @@ async def async_setup_entry(
 
     def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
         """Add new endpoint binary sensors."""
-        async_add_entities(
-            PortainerEndpointButton(
-                coordinator,
-                entity_description,
-                endpoint,
-            )
-            for entity_description in ENDPOINT_BUTTONS
-            for endpoint in endpoints
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerEndpointButton(
+                        coordinator,
+                        entity_description,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for entity_description in ENDPOINT_BUTTONS
+                for endpoint in endpoints
+            ),
         )
 
     def _async_add_new_containers(
         containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
     ) -> None:
         """Add new container button sensors."""
-        async_add_entities(
-            PortainerContainerButton(
-                coordinator,
-                entity_description,
-                container,
-                endpoint,
-            )
-            for (endpoint, container) in containers
-            for entity_description in CONTAINER_BUTTONS
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerContainerButton(
+                        coordinator,
+                        entity_description,
+                        container,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, container) in containers
+                for entity_description in CONTAINER_BUTTONS
+            ),
         )
 
     coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)

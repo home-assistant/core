@@ -18,7 +18,8 @@ from pyportainer.models.stacks import Stack
 from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
 
-from homeassistant.components.portainer.const import DOMAIN
+from homeassistant.components.portainer.const import DOMAIN, SUBENTRY_TYPE_ENVIRONMENT
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
 from tests.common import (
@@ -172,4 +173,19 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id=TEST_INSTANCE_ID,
         entry_id=TEST_ENTRY,
         version=5,
+        minor_version=2,
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+                title="my-environment",
+                unique_id="1",
+            ),
+            ConfigSubentryData(
+                data={},
+                subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+                title="my-edge-offline",
+                unique_id="42",
+            ),
+        ],
     )
