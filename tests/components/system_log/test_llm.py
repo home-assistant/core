@@ -120,19 +120,18 @@ async def test_get_entries_with_traceback(
 
 
 @pytest.mark.parametrize(
-    ("filter_level", "expected_count", "expected_level"),
+    ("filter_level", "expected_levels"),
     [
-        pytest.param("error", 1, "ERROR", id="filter_error"),
-        pytest.param("WARNING", 1, "WARNING", id="filter_warning_uppercase"),
-        pytest.param("critical", 0, None, id="filter_no_match"),
+        pytest.param("error", ["ERROR"], id="filter_error"),
+        pytest.param("WARNING", ["WARNING"], id="filter_warning_uppercase"),
+        pytest.param("critical", [], id="filter_no_match"),
     ],
 )
 async def test_filter_by_level(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
     filter_level: str,
-    expected_count: int,
-    expected_level: str | None,
+    expected_levels: list[str],
 ) -> None:
     """Test filtering entries by level."""
     assert await async_setup_component(hass, system_log.DOMAIN, {})
@@ -146,27 +145,24 @@ async def test_filter_by_level(
     result = await tool.async_call(hass, tool_input, llm_context)
 
     assert result["success"] is True
-    assert len(result["result"]) == expected_count
-    if expected_level:
-        assert result["result"][0]["level"] == expected_level
+    assert [entry["level"] for entry in result["result"]] == expected_levels
 
 
 @pytest.mark.parametrize(
-    ("logger_query", "expected_count", "expected_name"),
+    ("logger_query", "expected_names"),
     [
-        pytest.param("test_system", 1, "test_system_log_llm", id="match_test_logger"),
+        pytest.param("test_system", ["test_system_log_llm"], id="match_test_logger"),
         pytest.param(
-            "custom_integration", 1, "custom_integration", id="match_custom_logger"
+            "custom_integration", ["custom_integration"], id="match_custom_logger"
         ),
-        pytest.param("nonexistent", 0, None, id="no_match"),
+        pytest.param("nonexistent", [], id="no_match"),
     ],
 )
 async def test_filter_by_logger(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
     logger_query: str,
-    expected_count: int,
-    expected_name: str | None,
+    expected_names: list[str],
 ) -> None:
     """Test filtering entries by logger name."""
     assert await async_setup_component(hass, system_log.DOMAIN, {})
@@ -180,9 +176,7 @@ async def test_filter_by_logger(
     result = await tool.async_call(hass, tool_input, llm_context)
 
     assert result["success"] is True
-    assert len(result["result"]) == expected_count
-    if expected_name:
-        assert result["result"][0]["name"] == expected_name
+    assert [entry["name"] for entry in result["result"]] == expected_names
 
 
 async def test_limit(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:

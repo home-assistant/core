@@ -1304,6 +1304,7 @@ async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> N
 
     instance = await llm.async_get_api(hass, ["api-1", "api-2"], llm_context)
     assert instance.api.id == "api-1|api-2"
+    assert instance.api.requires_admin is False
 
     assert (
         instance.api_prompt

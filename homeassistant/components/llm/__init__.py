@@ -5,6 +5,7 @@ import logging
 from typing import Protocol, override
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
@@ -168,30 +169,27 @@ class ManagementAPI(API):
             hass=hass,
             id=LLM_API_MANAGEMENT,
             name="Management",
+            requires_admin=True,
         )
 
     @override
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
-        tools: list[Tool] = []
-        prompt = ""
-
         if (
-            llm_context.context
-            and llm_context.context.user_id
-            and (
+            not llm_context.context
+            or not llm_context.context.user_id
+            or not (
                 user := await self.hass.auth.async_get_user(llm_context.context.user_id)
             )
-            and user.is_admin
+            or not user.is_admin
         ):
-            llm_tools = await async_get_tools(self.hass, llm_context, self.id)
-            tools = llm_tools.tools
-            prompt = llm_tools.prompt or ""
+            raise Unauthorized(context=llm_context.context)
 
+        llm_tools = await async_get_tools(self.hass, llm_context, self.id)
         return APIInstance(
             api=self,
-            api_prompt=prompt,
+            api_prompt=llm_tools.prompt or "",
             llm_context=llm_context,
-            tools=tools,
+            tools=llm_tools.tools,
             custom_serializer=selector_serializer,
         )

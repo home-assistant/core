@@ -214,6 +214,7 @@ class API(ABC):
     hass: HomeAssistant
     id: str
     name: str
+    requires_admin: bool = False
 
     @abstractmethod
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
@@ -357,6 +358,7 @@ class MergedAPI(API):
             hass=hass,
             id="|".join(unicode_slug.slugify(api.id) for api in llm_apis),
             name="Merged LLM API",
+            requires_admin=any(api.requires_admin for api in llm_apis),
         )
         self.llm_apis = llm_apis
 

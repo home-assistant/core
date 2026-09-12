@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.llm import DATA_PLATFORMS, LLMTools, async_get_tools
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import frame, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
@@ -236,7 +237,7 @@ async def test_management_api(hass: HomeAssistant, hass_admin_user: MockUser) ->
 async def test_management_api_denied_for_non_admin(
     hass: HomeAssistant, hass_read_only_user: MockUser
 ) -> None:
-    """Test that ManagementAPI returns empty tools for non-admin user."""
+    """Test that ManagementAPI raises Unauthorized for non-admin user."""
     tool = _StubTool("test__mgmt_tool")
     _mock_tools_platform(hass, "test", LLMTools(tools=[tool], prompt="mgmt prompt"))
 
@@ -250,25 +251,19 @@ async def test_management_api_denied_for_non_admin(
         assistant="conversation",
         device_id=None,
     )
-    api_instance = await apis[llm.LLM_API_MANAGEMENT].async_get_api_instance(
-        non_admin_context
-    )
-    assert api_instance.api_prompt == ""
-    assert api_instance.tools == []
+    with pytest.raises(Unauthorized):
+        await apis[llm.LLM_API_MANAGEMENT].async_get_api_instance(non_admin_context)
 
 
 async def test_management_api_denied_without_user(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Test that ManagementAPI returns empty tools when no user is in context."""
+    """Test that ManagementAPI raises Unauthorized when no user is in context."""
     tool = _StubTool("test__mgmt_tool")
     _mock_tools_platform(hass, "test", LLMTools(tools=[tool], prompt="mgmt prompt"))
 
     assert await async_setup_component(hass, "llm", {})
 
     apis = {api.id: api for api in llm.async_get_apis(hass)}
-    api_instance = await apis[llm.LLM_API_MANAGEMENT].async_get_api_instance(
-        llm_context
-    )
-    assert api_instance.api_prompt == ""
-    assert api_instance.tools == []
+    with pytest.raises(Unauthorized):
+        await apis[llm.LLM_API_MANAGEMENT].async_get_api_instance(llm_context)
