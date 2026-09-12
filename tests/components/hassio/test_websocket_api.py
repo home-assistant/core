@@ -286,6 +286,67 @@ async def test_websocket_supervisor_api_error_without_msg(
 
 
 @pytest.mark.usefixtures("hassio_env")
+async def test_websocket_supervisor_api_text_response(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test Supervisor websocket api with text/plain response."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    websocket_client = await hass_ws_client(hass)
+    log_content = "2026-09-09 10:00:00 WARNING (MainThread) [test] core logs\n"
+    aioclient_mock.get(
+        "http://127.0.0.1/core/logs",
+        text=log_content,
+        headers={"Content-Type": "text/plain; charset=utf-8"},
+    )
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/core/logs",
+            ATTR_METHOD: "get",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"] == log_content
+
+
+@pytest.mark.usefixtures("hassio_env")
+async def test_websocket_supervisor_api_plain_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test Supervisor websocket api non-JSON error handling."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.get(
+        "http://127.0.0.1/ping",
+        text="502 Bad Gateway",
+        status=502,
+        headers={"Content-Type": "text/plain; charset=utf-8"},
+    )
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/ping",
+            ATTR_METHOD: "get",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"] is False
+    assert msg["error"]["code"] == "unknown_error"
+    assert msg["error"]["message"] == "502 Bad Gateway"
+
+
+@pytest.mark.usefixtures("hassio_env")
 async def test_websocket_non_admin_user(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

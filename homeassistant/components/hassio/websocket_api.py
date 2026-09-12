@@ -148,16 +148,19 @@ async def websocket_supervisor_api(
             params=msg.get(ATTR_PARAMS),
         )
     except HassioAPIError as err:
-        _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
+        _LOGGER.error("Failed to call %s - %s", msg[ATTR_ENDPOINT], err)
         connection.send_error(
             msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
         )
     else:
-        data = result.get(ATTR_DATA, {})
-        # Remove options from add-on info for non-admin users, as options can contain
-        # sensitive information and the frontend does not require it for ingress.
-        if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
-            data.pop("options", None)
+        if isinstance(result, dict):
+            data = result.get(ATTR_DATA, {})
+            # Remove options from add-on info for non-admin users, as options can contain
+            # sensitive information and the frontend does not require it for ingress.
+            if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
+                data.pop("options", None)
+        else:
+            data = result
         connection.send_result(msg[WS_ID], data)
 
 
