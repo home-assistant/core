@@ -608,13 +608,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 vehicle,
             )
 
-            ble_broadcast_glue = (
-                BleBroadcastStreamGlue(
+            if isinstance(vehicle_api, VehicleRouter):
+                ble_broadcast_glue = BleBroadcastStreamGlue(
                     vehicle_api.primary, cast(StreamSink, stream_vehicle)
                 )
-                if isinstance(vehicle_api, VehicleRouter)
-                else None
-            )
+                entry.async_on_unload(ble_broadcast_glue.stop)
 
             vehicles.append(
                 TeslemetryVehicleData(
@@ -627,7 +625,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     vin=vin,
                     firmware=firmware or "Unknown",
                     device=device,
-                    ble_broadcast_glue=ble_broadcast_glue,
                 )
             )
 
@@ -914,8 +911,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) 
         # Release any on-demand Bluetooth link only after platforms unloaded, or the still-loaded entry's backends must keep working.
         for vehicle in entry.runtime_data.vehicles:
             if isinstance(vehicle.api, VehicleRouter):
-                if vehicle.ble_broadcast_glue is not None:
-                    vehicle.ble_broadcast_glue.stop()
                 try:
                     await vehicle.api.primary.disconnect()
                 except (BleakError, TeslaFleetError, TimeoutError) as err:

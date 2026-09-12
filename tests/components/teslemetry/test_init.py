@@ -1990,7 +1990,6 @@ async def test_vehicle_cloud_without_bluetooth(hass: HomeAssistant) -> None:
     vehicle = entry.runtime_data.vehicles[0]
     assert isinstance(vehicle.api, Vehicle)
     assert not isinstance(vehicle.api, VehicleRouter)
-    assert vehicle.ble_broadcast_glue is None
 
 
 @pytest.mark.parametrize(
@@ -2050,7 +2049,6 @@ async def test_vehicle_bluetooth_key_load_falls_back_to_cloud(
     vehicle = entry.runtime_data.vehicles[0]
     assert isinstance(vehicle.api, Vehicle)
     assert not isinstance(vehicle.api, VehicleRouter)
-    assert vehicle.ble_broadcast_glue is None
     # The rest of the account is unaffected: the energy site still loads.
     assert len(entry.runtime_data.energysites) == 1
     assert "falling back to cloud control" in caplog.text
@@ -2379,6 +2377,7 @@ async def test_unload_stops_ble_broadcast_glue(hass: HomeAssistant) -> None:
             "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
         ) as mock_parent,
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        patch.object(BleBroadcastStreamGlue, "stop", autospec=True) as mock_stop,
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
         mock_parent.return_value.vehicles.createBluetooth.return_value = (
@@ -2387,12 +2386,41 @@ async def test_unload_stops_ble_broadcast_glue(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        glue = entry.runtime_data.vehicles[0].ble_broadcast_glue
-        assert isinstance(glue, BleBroadcastStreamGlue)
-        with patch.object(glue, "stop") as mock_stop:
-            assert await hass.config_entries.async_unload(entry.entry_id)
-            await hass.async_block_till_done()
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
 
+    mock_stop.assert_called_once()
+
+
+async def test_setup_failure_after_glue_construction_stops_it(
+    hass: HomeAssistant, mock_stream_get_config: AsyncMock
+) -> None:
+    """A setup failure after the BLE glue is built still unsubscribes it."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
+    # async_unload_entry is never called on a failed setup, only async_on_unload callbacks.
+    mock_stream_get_config.side_effect = ConfigEntryNotReady("boom")
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        patch.object(BleBroadcastStreamGlue, "stop", autospec=True) as mock_stop,
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     mock_stop.assert_called_once()
 
 
