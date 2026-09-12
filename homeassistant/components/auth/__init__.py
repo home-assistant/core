@@ -14,7 +14,8 @@ Exchange the authorization code retrieved from the login flow for tokens.
 {
     "client_id": "https://hassbian.local:8123/",
     "grant_type": "authorization_code",
-    "code": "411ee2f916e648d691e937ae9344681e"
+    "code": "411ee2f916e648d691e937ae9344681e",
+    "code_verifier": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
 }
 
 Return value will be the access and refresh tokens. The access token will have
@@ -124,11 +125,16 @@ as part of a config flow.
 """
 
 import asyncio
+import base64
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+import hashlib
+import hmac
 from http import HTTPStatus
 from logging import getLogger
-from typing import Any, cast
+import re
+from typing import Any, Protocol, cast
 import uuid
 
 from aiohttp import web
@@ -162,8 +168,31 @@ from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
 
-type StoreResultType = Callable[[str, Credentials], str]
-type RetrieveResultType = Callable[[str, str], Credentials | None]
+
+@dataclass(slots=True)
+class AuthCodeEntry:
+    """Entry stored in the auth code store."""
+
+    created: datetime
+    credentials: Credentials
+    code_challenge: str | None = None
+    code_challenge_method: str | None = None
+
+
+class StoreResultType(Protocol):
+    """Protocol for storing auth flow results."""
+
+    def __call__(
+        self,
+        client_id: str,
+        result: Credentials,
+        code_challenge: str | None = None,
+        code_challenge_method: str | None = None,
+    ) -> str:
+        """Store flow result and return a code to retrieve it."""
+
+
+type RetrieveResultType = Callable[[str, str], AuthCodeEntry | None]
 DATA_STORE: HassKey[StoreResultType] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -231,6 +260,19 @@ class RevokeTokenView(HomeAssistantView):
         return web.Response(status=HTTPStatus.OK)
 
 
+# RFC 7636 4.1: code_verifier is 43-128 unreserved characters.
+_CODE_VERIFIER_RE = re.compile(r"^[A-Za-z0-9._~-]{43,128}\Z")
+
+
+def _verify_code_verifier(code_verifier: str, code_challenge: str) -> bool:
+    """Verify code_verifier against code_challenge per RFC 7636 (S256)."""
+    if not _CODE_VERIFIER_RE.match(code_verifier):
+        return False
+    hashed = hashlib.sha256(code_verifier.encode("ascii")).digest()
+    computed_challenge = base64.urlsafe_b64encode(hashed).decode("ascii").rstrip("=")
+    return hmac.compare_digest(computed_challenge, code_challenge)
+
+
 class TokenView(HomeAssistantView):
     """View to issue tokens."""
 
@@ -290,14 +332,43 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        credential = self._retrieve_auth(client_id, code)
+        entry = self._retrieve_auth(client_id, code)
 
-        if credential is None or not isinstance(credential, Credentials):
+        if entry is None:
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid code"},
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
+        if entry.code_challenge is not None:
+            if not (code_verifier := data.get("code_verifier")):
+                return self.json(
+                    {
+                        "error": "invalid_request",
+                        "error_description": "Code verifier required",
+                    },
+                    status_code=HTTPStatus.BAD_REQUEST,
+                )
+            if not _verify_code_verifier(code_verifier, entry.code_challenge):
+                return self.json(
+                    {
+                        "error": "invalid_grant",
+                        "error_description": "Invalid code verifier",
+                    },
+                    status_code=HTTPStatus.BAD_REQUEST,
+                )
+        elif "code_verifier" in data:
+            return self.json(
+                {
+                    "error": "invalid_request",
+                    "error_description": (
+                        "Code verifier provided but no code challenge was present"
+                    ),
+                },
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
+
+        credential = entry.credentials
         user = await hass.auth.async_get_or_create_user(credential)
 
         if user_access_error := async_user_not_allowed_do_auth(hass, user):
@@ -421,12 +492,12 @@ class LinkUserView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         user: User = request["hass_user"]
 
-        credentials = self._retrieve_credentials(data["client_id"], data["code"])
+        entry = self._retrieve_credentials(data["client_id"], data["code"])
 
-        if credentials is None:
+        if entry is None:
             return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
 
-        linked_user = await hass.auth.async_get_user_by_credentials(credentials)
+        linked_user = await hass.auth.async_get_user_by_credentials(entry.credentials)
         if linked_user != user and linked_user is not None:
             return self.json_message(
                 "Credential already linked", status_code=HTTPStatus.BAD_REQUEST
@@ -434,44 +505,51 @@ class LinkUserView(HomeAssistantView):
 
         # No-op if credential is already linked to the user it will be linked to
         if linked_user != user:
-            await hass.auth.async_link_user(user, credentials)
+            await hass.auth.async_link_user(user, entry.credentials)
         return self.json_message("User linked")
 
 
 @callback
 def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
     """Create an in memory store."""
-    temp_results: dict[tuple[str, str], tuple[datetime, Credentials]] = {}
+    temp_results: dict[tuple[str, str], AuthCodeEntry] = {}
 
     @callback
-    def store_result(client_id: str, result: Credentials) -> str:
+    def store_result(
+        client_id: str,
+        result: Credentials,
+        code_challenge: str | None = None,
+        code_challenge_method: str | None = None,
+    ) -> str:
         """Store flow result and return a code to retrieve it."""
         if not isinstance(result, Credentials):
             raise TypeError("result has to be a Credentials instance")
 
         code = uuid.uuid4().hex
-        temp_results[(client_id, code)] = (
-            dt_util.utcnow(),
-            result,
+        temp_results[(client_id, code)] = AuthCodeEntry(
+            created=dt_util.utcnow(),
+            credentials=result,
+            code_challenge=code_challenge,
+            code_challenge_method=code_challenge_method,
         )
         return code
 
     @callback
-    def retrieve_result(client_id: str, code: str) -> Credentials | None:
+    def retrieve_result(client_id: str, code: str) -> AuthCodeEntry | None:
         """Retrieve flow result."""
         key = (client_id, code)
 
         if key not in temp_results:
             return None
 
-        created, result = temp_results.pop(key)
+        entry = temp_results.pop(key)
 
         # OAuth 4.2.1
         # The authorization code MUST expire shortly after it is issued to
         # mitigate the risk of leaks.  A maximum authorization code lifetime of
         # 10 minutes is RECOMMENDED.
-        if dt_util.utcnow() - created < timedelta(minutes=10):
-            return result
+        if dt_util.utcnow() - entry.created < timedelta(minutes=10):
+            return entry
 
         return None
 
