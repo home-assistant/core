@@ -7,6 +7,7 @@ from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
@@ -51,7 +52,7 @@ CHARGE_ON_SOLAR_LOWER_LIMIT_DEFAULT = 20
 class TeslemetryNumberVehicleEntityDescription(NumberEntityDescription):
     """Describes Teslemetry Number entity."""
 
-    func: Callable[[Vehicle, int], Awaitable[Any]]
+    func: Callable[[Vehicle | VehicleRouter, int], Awaitable[Any]]
     min_key: str | None = None
     max_key: str
     native_min_value: float
@@ -207,7 +208,7 @@ async def async_setup_entry(
 class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):
     """Vehicle number entity base class."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     entity_description: TeslemetryNumberVehicleEntityDescription
 
     @override

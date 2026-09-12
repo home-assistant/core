@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 import openai
 from probatio import to_openapi
@@ -117,7 +117,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     client = openai.AsyncOpenAI(
-        api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
+        api_key=data[CONF_API_KEY],
+        # Legacy HTTPX clients are supported at runtime only.
+        http_client=cast(Any, get_async_client(hass)),
     )
     await client.models.list(timeout=10.0)
 
@@ -553,6 +555,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             ] = SelectSelector(
                 SelectSelectorConfig(
                     options=[
+                        "gpt-image-2.5-sunburst",
+                        "gpt-image-2.5-flare",
                         "gpt-image-2",
                         "gpt-image-1.5",
                         "gpt-image-1",
@@ -649,7 +653,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if zone_home is not None:
             client = openai.AsyncOpenAI(
                 api_key=self._get_entry().data[CONF_API_KEY],
-                http_client=get_async_client(self.hass),
+                http_client=cast(Any, get_async_client(self.hass)),
             )
             location_schema = vol.Schema(
                 {

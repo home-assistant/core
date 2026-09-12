@@ -86,6 +86,8 @@ def __serialize_prices(
             {
                 "price": price,
                 "timestamp": str(time_range.start_including),
+                "start": str(time_range.start_including),
+                "end": str(time_range.end_excluding),
             }
             for price_data in prices
             for time_range, price in price_data.prices.items()
@@ -111,12 +113,20 @@ async def __get_prices(
     local_tz = ZoneInfo(call.hass.config.time_zone)
     start_date, start_datetime = __get_date(call.data.get(ATTR_START), local_tz)
     end_date, end_datetime = __get_date(call.data.get(ATTR_END), local_tz)
+
     filter_start = start_datetime or dt_util.as_utc(
         dt_util.start_of_local_day(start_date)
     )
-    filter_end = end_datetime or dt_util.as_utc(
-        dt_util.start_of_local_day(end_date + timedelta(days=1))
-    )
+    end_start = end_datetime or dt_util.as_utc(dt_util.start_of_local_day(end_date))
+
+    if filter_start == end_start:
+        day = filter_start.astimezone(local_tz).date()
+        filter_start = dt_util.as_utc(dt_util.start_of_local_day(day))
+        filter_end = dt_util.as_utc(dt_util.start_of_local_day(day + timedelta(days=1)))
+    else:
+        filter_end = end_datetime or dt_util.as_utc(
+            dt_util.start_of_local_day(end_date + timedelta(days=1))
+        )
 
     if filter_end <= filter_start:
         raise ServiceValidationError(

@@ -7,7 +7,7 @@ from functools import cache, partial
 import inspect
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast, overload
 
 import voluptuous as vol
 
@@ -433,7 +433,7 @@ async def async_extract_config_entry_ids(
         if (
             device := dev_reg.async_get(device_id, include_composite_devices=False)
         ) is not None:
-            config_entry_ids.update(device.config_entries)
+            config_entry_ids.add(device.config_entry_id)
 
     for entity_id in referenced.referenced | referenced.indirectly_referenced:
         entry = ent_reg.async_get(entity_id)
@@ -1425,17 +1425,67 @@ def _async_get_single_loaded_config_entry(
     return config_entry
 
 
+@overload
+def async_get_device_and_config_entry(
+    hass: HomeAssistant,
+    domain: str,
+    device_id: str,
+    *,
+    include_child_devices: Literal[False],
+    include_main_devices: bool = True,
+) -> tuple[device_registry.DeviceEntry, ConfigEntry]: ...
+
+
+@overload
+def async_get_device_and_config_entry(
+    hass: HomeAssistant,
+    domain: str,
+    device_id: str,
+    *,
+    include_child_devices: Literal[True] = True,
+    include_main_devices: Literal[False],
+) -> tuple[device_registry.ChildDeviceEntry, ConfigEntry]: ...
+
+
+@overload
+def async_get_device_and_config_entry(
+    hass: HomeAssistant,
+    domain: str,
+    device_id: str,
+    *,
+    include_child_devices: Literal[True] = True,
+    include_main_devices: Literal[True] = True,
+) -> tuple[device_registry.AnyDeviceEntry, ConfigEntry]: ...
+
+
 @callback
 def async_get_device_and_config_entry(
-    hass: HomeAssistant, domain: str, device_id: str
-) -> tuple[device_registry.DeviceEntry, ConfigEntry]:
+    hass: HomeAssistant,
+    domain: str,
+    device_id: str,
+    *,
+    include_child_devices: bool = True,
+    include_main_devices: bool = True,
+) -> tuple[device_registry.AnyDeviceEntry, ConfigEntry]:
     """Get and validate the device and the loaded config entry of the domain owning it.
 
     Raises ServiceValidationError if the device is unknown, is not owned by a
     config entry of the domain, or if that config entry is not loaded.
+
+    With include_child_devices=False a child-device id raises as an unknown device.
+    With include_main_devices=False a main-device id raises as an unknown device;
+    as does a composite-device id, because both the splits of a composite and the
+    restored composite itself are main devices.
     """
-    device, config_entry = device_registry.async_get_device_and_config_entry_for_domain(
-        hass, device_id, domain=domain
+    device: device_registry.AnyDeviceEntry | None
+    config_entry: ConfigEntry | None
+    # The flags are plain bools here, which matches none of the Literal overloads
+    device, config_entry = device_registry.async_get_device_and_config_entry_for_domain(  # type: ignore[call-overload]
+        hass,
+        device_id,
+        domain=domain,
+        include_child_devices=include_child_devices,
+        include_main_devices=include_main_devices,
     )
     if device is None:
         raise ServiceValidationError(
