@@ -72,6 +72,20 @@ class MonzoWebhookManager:
         self._retry_cancel: CALLBACK_TYPE | None = None
         self._retrying = False
         self._webhook_url: str | None = None
+        self._known_account_ids: set[str] = set()
+
+    @property
+    def diagnostics_data(self) -> dict[str, bool | int]:
+        """Return privacy-safe webhook diagnostics."""
+        return {
+            "active": self._active,
+            "has_registered_webhook_url": self._webhook_url is not None,
+            "known_account_count": len(self._known_account_ids),
+            "retry_scheduled": self._retry_cancel is not None,
+            "retrying": self._retrying,
+            "uses_cloudhook": self._webhook_url is not None
+            and self._webhook_url == self.entry.data.get(CONF_CLOUDHOOK_URL),
+        }
 
     async def async_setup(self) -> None:
         """Set up the local webhook and remote subscriptions."""
@@ -101,6 +115,10 @@ class MonzoWebhookManager:
             self.hass.bus.async_listen(
                 EVENT_CORE_CONFIG_UPDATE, self._async_core_config_updated
             )
+        )
+        self._known_account_ids.update(self.coordinator.data.accounts)
+        self.entry.async_on_unload(
+            self.coordinator.async_add_listener(self._async_accounts_updated)
         )
         await self.async_register_remote_webhooks()
 
@@ -323,6 +341,15 @@ class MonzoWebhookManager:
         if "external_url" not in event.data:
             return
         self._async_schedule_registration("update Monzo webhooks")
+
+    @callback
+    def _async_accounts_updated(self) -> None:
+        """Reconcile webhooks when the set of Monzo accounts changes."""
+        current_account_ids = set(self.coordinator.data.accounts)
+        new_account_ids = current_account_ids - self._known_account_ids
+        self._known_account_ids = current_account_ids
+        if new_account_ids:
+            self._async_schedule_registration("add webhooks for new Monzo accounts")
 
     @callback
     def _async_schedule_registration(self, name: str) -> None:

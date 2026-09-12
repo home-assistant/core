@@ -65,7 +65,7 @@ async def async_setup_entry(
             KnxYamlSwitch(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.SWITCH):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.SWITCH):
         entities.extend(
             KnxUiSwitch(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()

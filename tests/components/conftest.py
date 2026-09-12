@@ -82,7 +82,7 @@ from homeassistant.data_entry_flow import (
     FlowResultType,
     section,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import VolSchemaType
@@ -1185,6 +1185,8 @@ async def _check_config_flow_result_translations(
         # aborts, since such flows won't be seen by users
         if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
             return
+        if (abort_domain := result.get("translation_domain")) is not None:
+            integration = abort_domain
         await _validate_translation(
             flow.hass,
             translation_errors,
@@ -1247,6 +1249,8 @@ async def _check_exception_translation(
     request: pytest.FixtureRequest,
     ignore_translations_for_mock_domains: set[str],
 ) -> None:
+    if isinstance(exception, Unauthorized):
+        return
     if exception.translation_key is None:
         if (
             _get_request_quality_scale(request, "exception-translations")

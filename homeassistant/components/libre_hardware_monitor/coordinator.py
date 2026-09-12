@@ -16,11 +16,11 @@ from librehardwaremonitor_api.model import (
     LibreHardwareMonitorData,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -67,7 +67,6 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             for device in device_entries
             if device.identifiers and device.name
         }
-        self._is_deprecated_version: bool | None = None
 
     @override
     async def _async_update_data(self) -> LibreHardwareMonitorData:
@@ -83,12 +82,14 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         except LibreHardwareMonitorNoDevicesError as err:
             raise UpdateFailed("No sensor data available, will retry") from err
 
-        # Check whether user has upgraded LHM from a deprecated
-        # version while the integration is running
-        if self._is_deprecated_version and not lhm_data.is_deprecated_version:
-            # Clear deprecation issue
-            ir.async_delete_issue(self.hass, DOMAIN, f"deprecated_api_{self._entry_id}")
-        self._is_deprecated_version = lhm_data.is_deprecated_version
+        if lhm_data.is_deprecated_version:
+            if self.config_entry.state is ConfigEntryState.LOADED:
+                # if user downgrades while HA is running, reload integration to surface ConfigEntryError
+                self.hass.config_entries.async_schedule_reload(self._entry_id)
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="deprecated_version",
+            )
 
         await self._async_handle_changes_in_devices(
             dict(lhm_data.main_device_ids_and_names)

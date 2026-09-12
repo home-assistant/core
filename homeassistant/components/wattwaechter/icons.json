@@ -18,6 +18,9 @@
       },
       "import_total": {
         "default": "mdi:meter-electric"
+      },
+      "ssid": {
+        "default": "mdi:access-point"
       }
     }
   }

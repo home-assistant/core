@@ -927,7 +927,7 @@ class PrometheusMetrics:
         # Temperatures
         self._temperature_metric(
             state,
-            WaterHeaterStateAttribute.TEMPERATURE,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             "water_heater_temperature_celsius",
             "Target temperature in degrees Celsius",
         )

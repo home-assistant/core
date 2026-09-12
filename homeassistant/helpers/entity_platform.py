@@ -851,7 +851,7 @@ class EntityPlatform:
             integration_domain=self.platform_name,
         )
 
-    async def _async_add_entity(  # noqa: C901
+    async def _async_add_entity(
         self,
         entity: Entity,
         update_before_add: bool,
@@ -867,7 +867,77 @@ class EntityPlatform:
             self,
             self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
+        try:
+            restored = await self._async_add_entity_impl(
+                entity, update_before_add, entity_registry, config_subentry_id
+            )
+        except BaseException:
+            # Also abort on cancellation, e.g. by the surrounding add timeout;
+            # the entity is not registered yet, so aborting is enough to clean up.
+            entity.add_to_platform_abort()
+            raise
 
+        if restored is None:
+            # The entity was rejected and already aborted by the impl.
+            return
+
+        entity_id = entity.entity_id
+        self.entities[entity_id] = entity
+        self.domain_entities[entity_id] = entity
+        self.domain_platform_entities[entity_id] = entity
+
+        if not restored:
+            # Reserve the state in the state machine
+            # because as soon as we return control to the event
+            # loop below, another entity could be added
+            # with the same id before `entity.add_to_platform_finish()`
+            # has a chance to finish.
+            self.hass.states.async_reserve(entity_id)
+
+        def remove_entity_cb() -> None:
+            """Remove entity from entities dict."""
+            del self.entities[entity_id]
+            del self.domain_entities[entity_id]
+            del self.domain_platform_entities[entity_id]
+
+        entity.async_on_remove(remove_entity_cb)
+
+        try:
+            await entity.add_to_platform_finish()
+        except BaseException:
+            # Also handle cancellation, e.g. by the surrounding add timeout. The
+            # entity is partially registered: the state id was reserved and
+            # `async_internal_added_to_hass` may have populated entity_sources.
+            # Roll that back before aborting so neither leaks.
+            try:
+                await entity.async_internal_will_remove_from_hass()
+            except Exception:
+                self.logger.exception(
+                    "%s: Error cleaning up entity %s after it failed to be added",
+                    self.platform_name,
+                    entity_id,
+                )
+            finally:
+                if not restored:
+                    self.hass.states.async_remove(entity_id)
+                entity.add_to_platform_abort()
+            raise
+
+    async def _async_add_entity_impl(  # noqa: C901
+        self,
+        entity: Entity,
+        update_before_add: bool,
+        entity_registry: EntityRegistry,
+        config_subentry_id: str | None,
+    ) -> bool | None:
+        """Prepare adding an entity to the platform.
+
+        The caller must call add_to_platform_start before calling this method,
+        and add_to_platform_abort if this method raises.
+
+        Returns the ``restored`` flag when the entity should be added, or None
+        when it should not, in which case the entity has already been aborted.
+        """
         # Update properties before we generate the entity_id. This will happen
         # also for disabled entities.
         if update_before_add:
@@ -876,7 +946,7 @@ class EntityPlatform:
             except Exception:
                 self.logger.exception("%s: Error on device update!", self.platform_name)
                 entity.add_to_platform_abort()
-                return
+                return None
 
         entity_name = entity.name
         if entity_name is UNDEFINED:
@@ -899,7 +969,6 @@ class EntityPlatform:
                             breaks_in_ha_version="2027.2.0",
                         )
                     else:
-                        entity.add_to_platform_abort()
                         raise HomeAssistantError(
                             f"Invalid entity ID: {entity.entity_id}"
                         )
@@ -918,7 +987,6 @@ class EntityPlatform:
                 except ValueError:
                     # This error handling should be removed once we remove
                     # the invalid entity ID deprecation above.
-                    entity.add_to_platform_abort()
                     raise HomeAssistantError(
                         f"Invalid entity ID: {entity.entity_id}"
                     ) from None
@@ -949,7 +1017,7 @@ class EntityPlatform:
                         )
                     self.logger.error(msg)
                     entity.add_to_platform_abort()
-                    return
+                    return None
 
             device: dr.AnyDeviceEntry | None
             if self.config_entry:
@@ -980,14 +1048,16 @@ class EntityPlatform:
                                     },
                                 ),
                             )
-                    except dr.DeviceInfoError as exc:
+                    except (HomeAssistantError, TypeError) as exc:
+                        # A TypeError signals a bad key in the device info passed as
+                        # keyword arguments.
                         self.logger.error(
-                            "%s: Not adding entity with invalid device info: %s",
+                            "%s: Not adding entity, error adding device: %s",
                             self.platform_name,
                             str(exc),
                         )
                         entity.add_to_platform_abort()
-                        return
+                        return None
 
                     entity.device_entry = device
                 else:
@@ -1032,30 +1102,40 @@ class EntityPlatform:
                     )
                     self._entity_limit_warned = True
                 entity.add_to_platform_abort()
-                return
+                return None
 
-            entry = entity_registry.async_get_or_create(
-                self.domain,
-                self.platform_name,
-                entity.unique_id,
-                capabilities=entity.capability_attributes,
-                config_entry=self.config_entry,
-                config_subentry_id=config_subentry_id,
-                device_id=device.id if device else None,
-                disabled_by=disabled_by,
-                entity_category=entity.entity_category,
-                get_initial_options=entity.get_initial_entity_options,
-                has_entity_name=entity.has_entity_name,
-                hidden_by=hidden_by,
-                object_id_base=object_id_base,
-                original_device_class=entity.device_class,
-                original_icon=entity.icon,
-                original_name=entity_name,
-                suggested_object_id=suggested_object_id,
-                supported_features=entity.supported_features,
-                translation_key=entity.translation_key,
-                unit_of_measurement=entity.unit_of_measurement,
-            )
+            try:
+                entry = entity_registry.async_get_or_create(
+                    self.domain,
+                    self.platform_name,
+                    entity.unique_id,
+                    capabilities=entity.capability_attributes,
+                    config_entry=self.config_entry,
+                    config_subentry_id=config_subentry_id,
+                    device_id=device.id if device else None,
+                    disabled_by=disabled_by,
+                    entity_category=entity.entity_category,
+                    get_initial_options=entity.get_initial_entity_options,
+                    has_entity_name=entity.has_entity_name,
+                    hidden_by=hidden_by,
+                    object_id_base=object_id_base,
+                    original_device_class=entity.device_class,
+                    original_icon=entity.icon,
+                    original_name=entity_name,
+                    suggested_object_id=suggested_object_id,
+                    supported_features=entity.supported_features,
+                    translation_key=entity.translation_key,
+                    unit_of_measurement=entity.unit_of_measurement,
+                )
+            except HomeAssistantError as exc:
+                self.logger.error(
+                    "%s: Not adding entity %s, entity registry error: %s",
+                    self.platform_name,
+                    entity_name or entity.entity_id,
+                    str(exc),
+                )
+                entity.add_to_platform_abort()
+                return None
 
             if device and device.disabled and not entry.disabled:
                 entry = entity_registry.async_update_entity(
@@ -1091,7 +1171,7 @@ class EntityPlatform:
                 "Entity id already exists - ignoring: %s", entity.entity_id
             )
             entity.add_to_platform_abort()
-            return
+            return None
 
         if entity.registry_entry and entity.registry_entry.disabled:
             self.logger.debug(
@@ -1101,30 +1181,9 @@ class EntityPlatform:
                 or f'"{self.platform_name} {entity.unique_id}"',
             )
             entity.add_to_platform_abort()
-            return
+            return None
 
-        entity_id = entity.entity_id
-        self.entities[entity_id] = entity
-        self.domain_entities[entity_id] = entity
-        self.domain_platform_entities[entity_id] = entity
-
-        if not restored:
-            # Reserve the state in the state machine
-            # because as soon as we return control to the event
-            # loop below, another entity could be added
-            # with the same id before `entity.add_to_platform_finish()`
-            # has a chance to finish.
-            self.hass.states.async_reserve(entity.entity_id)
-
-        def remove_entity_cb() -> None:
-            """Remove entity from entities dict."""
-            del self.entities[entity_id]
-            del self.domain_entities[entity_id]
-            del self.domain_platform_entities[entity_id]
-
-        entity.async_on_remove(remove_entity_cb)
-
-        await entity.add_to_platform_finish()
+        return restored
 
     async def async_reset(self) -> None:
         """Remove all entities and reset data.

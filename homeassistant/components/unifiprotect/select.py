@@ -192,15 +192,14 @@ async def _set_paired_camera(obj: Light | Sensor, camera_id: str) -> None:
 async def _set_doorbell_message(obj: Camera, message: str) -> None:
     if message.startswith(DoorbellMessageType.CUSTOM_MESSAGE.value):
         message = message.rsplit(":", maxsplit=1)[-1]
+        # reset_at=None keeps the message up until it is changed
         await obj.set_lcd_message_public(
-            DoorbellMessageType.CUSTOM_MESSAGE, text=message
+            DoorbellMessageType.CUSTOM_MESSAGE, text=message, reset_at=None
         )
     elif message == TYPE_EMPTY_VALUE:
-        # Public API has no endpoint to clear the LCD message; fall back to
-        # the non-deprecated legacy helper.
-        await obj.set_lcd_text(None)
+        await obj.set_lcd_message_public(None)
     else:
-        await obj.set_lcd_message_public(DoorbellMessageType(message))
+        await obj.set_lcd_message_public(DoorbellMessageType(message), reset_at=None)
 
 
 async def _set_liveview(obj: Viewer, liveview_id: str) -> None:

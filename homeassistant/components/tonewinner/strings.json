@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "reconfigure_unload_failed": "The existing configuration could not be unloaded. Please try again."
     },
     "error": {
@@ -28,7 +27,7 @@
           "serial_port": "Serial port path to connect to"
         },
         "description": "Enter the serial port of your Tonewinner AV receiver.",
-        "title": "Setup Tonewinner"
+        "title": "Set up Tonewinner"
       }
     }
   },

@@ -1,5 +1,6 @@
 """HTTP views to interact with the device registry."""
 
+from itertools import chain
 import logging
 from typing import Any
 
@@ -10,7 +11,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, label_registry as lr
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,7 +93,7 @@ def websocket_list_devices(
     inner = b",".join(
         [
             entry.json_repr
-            for entry in (*registry.devices, *registry.child_devices)
+            for entry in chain(registry.devices, registry.child_devices)
             if entry.json_repr is not None
         ]
     )
@@ -175,8 +176,8 @@ def websocket_update_device(
         msg["disabled_by"] = DeviceEntryDisabler(msg["disabled_by"])
 
     if "labels" in msg:
-        # Convert labels to a set
-        msg["labels"] = set(msg["labels"])
+        labels = set(msg["labels"])
+        msg["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
     device_id = msg["device_id"]
 

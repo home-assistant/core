@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -45,13 +44,7 @@ PLATFORMS = [
 async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
     """Set up xbox from a config entry."""
 
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as e:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from e
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     session = OAuth2Session(hass, entry, implementation)
     async_session = get_async_client(hass)
@@ -88,17 +81,32 @@ async def async_unload_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> boo
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: XboxConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Remove a stale device from a config entry."""
+
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN
+        and (
+            (
+                isinstance(device_entry, dr.DeviceEntry)
+                and device_entry.entry_type == dr.DeviceEntryType.SERVICE
+            )
+            or identifier[1] in config_entry.runtime_data.consoles.data
+        )
+    )
+
+
 async def async_migrate_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
     """Migrate config entry."""
 
     if entry.version == 1 and entry.minor_version < 3:
-        try:
-            implementation = await async_get_config_entry_implementation(hass, entry)
-        except ImplementationUnavailableError as e:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="oauth2_implementation_unavailable",
-            ) from e
+        implementation = await async_get_config_entry_implementation(hass, entry)
         session = OAuth2Session(hass, entry, implementation)
         async_session = get_async_client(hass)
         auth = AsyncConfigEntryAuth(async_session, session)

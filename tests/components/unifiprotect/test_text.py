@@ -78,7 +78,7 @@ async def test_text_camera_set(
     )
 
     with patch_ufp_method(
-        doorbell, "set_lcd_text", new_callable=AsyncMock
+        doorbell, "set_lcd_message_public", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "text",
@@ -88,5 +88,5 @@ async def test_text_camera_set(
         )
 
         mock_method.assert_called_once_with(
-            DoorbellMessageType.CUSTOM_MESSAGE, text="Test test"
+            DoorbellMessageType.CUSTOM_MESSAGE, text="Test test", reset_at=None
         )

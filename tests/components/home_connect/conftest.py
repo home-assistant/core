@@ -12,7 +12,6 @@ from aiohomeconnect.model import (
     ArrayOfCommands,
     ArrayOfEvents,
     ArrayOfHomeAppliances,
-    ArrayOfImages,
     ArrayOfOptions,
     ArrayOfPrograms,
     ArrayOfSettings,
@@ -79,7 +78,6 @@ def mock_token_entry(token_expiration_time: float) -> dict[str, Any]:
         "access_token": FAKE_ACCESS_TOKEN,
         "type": "Bearer",
         "expires_at": token_expiration_time,
-        "scope": "Control Monitor Images Settings IdentifyAppliance",
     }
 
 
@@ -120,22 +118,6 @@ def mock_config_entry_v1_2(token_entry: dict[str, Any]) -> MockConfigEntry:
             "token": token_entry,
         },
         minor_version=2,
-    )
-
-
-@pytest.fixture(name="config_entry_no_images_scope")
-def mock_config_entry_no_image_scope(token_entry: dict[str, Any]) -> MockConfigEntry:
-    """Fixture for a config entry."""
-    _token_entry = token_entry.copy()
-    _token_entry["scope"] = "Control Monitor Settings IdentifyAppliance"
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": FAKE_AUTH_IMPL,
-            "token": _token_entry,
-        },
-        minor_version=3,
-        unique_id="1234567890",
     )
 
 
@@ -442,7 +424,6 @@ def mock_client(
     mock.get_settings = AsyncMock(side_effect=_get_settings_side_effect)
     mock.get_setting = AsyncMock(side_effect=_get_setting_side_effect)
     mock.get_status = AsyncMock(return_value=copy.deepcopy(MOCK_STATUS))
-    mock.get_images = AsyncMock(return_value=ArrayOfImages([]))
     mock.get_all_programs = AsyncMock(side_effect=_get_all_programs_side_effect)
     mock.get_available_commands = AsyncMock(
         side_effect=_get_available_commands_side_effect
@@ -506,7 +487,6 @@ def mock_client_with_exception(
     mock.get_settings = AsyncMock(side_effect=exception)
     mock.get_setting = AsyncMock(side_effect=exception)
     mock.get_status = AsyncMock(side_effect=exception)
-    mock.get_images = AsyncMock(side_effect=exception)
     mock.get_all_programs = AsyncMock(side_effect=exception)
     mock.get_available_commands = AsyncMock(side_effect=exception)
     mock.put_command = AsyncMock(side_effect=exception)
