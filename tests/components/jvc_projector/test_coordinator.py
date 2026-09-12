@@ -10,11 +10,11 @@ from jvcprojector import (
 )
 import pytest
 
+from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.components.jvc_projector.coordinator import (
     INTERVAL_FAST,
     INTERVAL_SLOW,
 )
-from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
