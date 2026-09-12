@@ -41,7 +41,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
   devices: done
   diagnostics: todo
@@ -52,7 +52,7 @@ rules:
     status: exempt
     comment: The household event feed is a cloud service with no local endpoint.
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done

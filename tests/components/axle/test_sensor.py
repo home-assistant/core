@@ -14,7 +14,9 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -136,13 +138,14 @@ async def test_polling(
     assert hass.states.get("sensor.axle_energy_import_export").state == "import"
 
 
-async def test_authentication_failure_stops_polling(
+async def test_authentication_failure_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Stop polling rejected credentials and allow recovery after reload."""
+    """Replace rejected credentials without recreating entity registrations."""
     await setup(hass, mock_config_entry)
     mock_client.get_event.side_effect = AxleAuthenticationError()
     freezer.tick(timedelta(minutes=10))
@@ -154,8 +157,28 @@ async def test_authentication_failure_stops_polling(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_client.get_event.assert_not_called()
-    assert not hass.config_entries.flow.async_progress()
+    entity_ids = {
+        entry.entity_id: entry.id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    }
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
     mock_client.get_event.side_effect = None
-    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    result = await hass.config_entries.flow.async_configure(
+        flows[0]["flow_id"], {CONF_API_KEY: "replacement-token"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
     await hass.async_block_till_done()
     assert hass.states.get("sensor.axle_energy_import_export").state == "export"
+    assert mock_config_entry.data[CONF_API_KEY] == "replacement-token"
+    assert len(hass.config_entries.async_entries("axle")) == 1
+    assert {
+        entry.entity_id: entry.id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    } == entity_ids
