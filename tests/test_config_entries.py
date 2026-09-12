@@ -3536,6 +3536,115 @@ async def test_entry_reload_not_loaded(
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
+async def test_entry_reload_from_migration_error(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test that we can recover from a migration error."""
+    entry = MockConfigEntry(domain="comp")
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
+    async_migrate_entry = AsyncMock(side_effect=[False, False, True])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+            async_migrate_entry=async_migrate_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 2
+        MINOR_VERSION = 1
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> FlowResult:
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with (
+        mock_config_flow("comp", TestFlow),
+    ):
+        result = await async_setup_component(hass, "comp", {})
+        await hass.async_block_till_done()
+
+    assert result is True
+    assert entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+
+    with (
+        mock_config_flow("comp", TestFlow),
+    ):
+        await manager.async_retry_migration(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(async_unload_entry.mock_calls) == 0
+    assert len(async_setup.mock_calls) == 1
+    assert len(async_setup_entry.mock_calls) == 0
+    assert len(async_migrate_entry.mock_calls) == 2
+    assert entry.version == 1
+    assert entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+
+    with (
+        mock_config_flow("comp", TestFlow),
+    ):
+        await manager.async_retry_migration(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(async_unload_entry.mock_calls) == 0
+    assert len(async_setup.mock_calls) == 1
+    assert len(async_setup_entry.mock_calls) == 1
+    assert len(async_migrate_entry.mock_calls) == 3
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+async def test_entry_reload_from_migration_error_fails(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Start from migration error fails when in wrong state."""
+    entry = MockConfigEntry(domain="comp")
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    result = await async_setup_component(hass, "comp", {})
+    await hass.async_block_till_done()
+
+    assert result is True
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+    with pytest.raises(
+        config_entries.OperationNotAllowed,
+        match="cannot retry the migration as it is not in the state"
+        " 'ConfigEntryState.MIGRATION_ERROR' but is in the state ConfigEntryState.LOADED",
+    ):
+        await manager.async_retry_migration(entry.entry_id)
+
+
 @pytest.mark.parametrize(
     "state",
     [
