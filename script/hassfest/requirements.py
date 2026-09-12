@@ -2,16 +2,22 @@
 
 from collections import deque
 from collections.abc import Collection
+from contextlib import suppress
 from functools import cache
 from importlib.metadata import PackageMetadata, files, metadata
 import json
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
 from typing import Any, TypedDict
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.specifiers import SpecifierSet
+from packaging.utils import canonicalize_name
+from packaging.version import InvalidVersion, Version
 from tqdm import tqdm
 
 import homeassistant.util.package as pkg_util
@@ -82,6 +88,27 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "python-miio": {"zeroconf"},
     },
 }
+
+# Constraints use an impossible version to prohibit a package altogether.
+PROHIBITED_VERSION = "1000000000.0.0"
+
+# Hassfest runs the Python version Home Assistant requires, but on a single
+# platform. Markers are evaluated against every platform a requirement could
+# land on, so one is only skipped when it can never be installed at all.
+MARKER_ENVIRONMENTS = tuple(
+    {
+        "os_name": os_name,
+        "platform_machine": platform_machine,
+        "platform_system": platform_system,
+        "sys_platform": sys_platform,
+    }
+    for os_name, platform_system, sys_platform in (
+        ("posix", "Linux", "linux"),
+        ("posix", "Darwin", "darwin"),
+        ("nt", "Windows", "win32"),
+    )
+    for platform_machine in ("aarch64", "armv7l", "i686", "x86_64")
+)
 
 PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_,\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
@@ -371,7 +398,8 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     # Check if we are doing format-only validation.
     if not config.requirements:
         for integration in integrations.values():
-            validate_requirements_format(integration)
+            if validate_requirements_format(integration):
+                validate_custom_requirements(integration, config)
         return
 
     # check for incompatible requirements
@@ -379,7 +407,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     disable_tqdm = bool(config.specific_integrations or os.environ.get("CI"))
 
     for integration in tqdm(integrations.values(), disable=disable_tqdm):
-        validate_requirements(integration)
+        validate_requirements(integration, config)
 
 
 def validate_requirements_format(integration: Integration) -> bool:
@@ -432,9 +460,166 @@ def validate_requirements_format(integration: Integration) -> bool:
     return len(integration.errors) == start_errors
 
 
-def validate_requirements(integration: Integration) -> None:
+@cache
+def _load_requirement_file(path: Path) -> dict[str, SpecifierSet]:
+    """Read a pip requirements file into a map of package name to version specifier."""
+    requirements: dict[str, SpecifierSet] = {}
+    if not path.is_file():
+        return requirements
+
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+
+        # Skip comments and pip options such as "-r requirements.txt"
+        if not line or line.startswith(("#", "-")):
+            continue
+
+        try:
+            requirement = Requirement(line)
+        except InvalidRequirement:
+            continue
+
+        # These files can name a package more than once, each line narrows it.
+        package = canonicalize_name(requirement.name)
+        requirements[package] = (
+            requirements.get(package, SpecifierSet()) & requirement.specifier
+        )
+
+    return requirements
+
+
+def _probe_versions(*specifier_sets: SpecifierSet) -> set[Version]:
+    """Return the versions worth probing to compare specifier sets.
+
+    A specifier set describes a union of version intervals, so a non-empty
+    intersection of two of them always contains a version that sits on, just
+    below, or just above one of the boundaries either of them mentions. The
+    release suffix covers boundaries that exclude their own pre and post
+    releases, such as ">1.0" not allowing "1.0.post0".
+    """
+    versions = {Version("0")}
+
+    for specifiers in specifier_sets:
+        for specifier in specifiers:
+            boundary = specifier.version.removesuffix(".*")
+            for suffix in ("", ".dev0", ".post0", ".0.0.1"):
+                with suppress(InvalidVersion):
+                    versions.add(Version(f"{boundary}{suffix}"))
+
+    return versions
+
+
+def _specifiers_conflict(left: SpecifierSet, right: SpecifierSet) -> bool:
+    """Return if no single version can satisfy both specifier sets."""
+    return not any(
+        left.contains(version, prereleases=True)
+        and right.contains(version, prereleases=True)
+        for version in _probe_versions(left, right)
+    )
+
+
+def validate_custom_requirements(integration: Integration, config: Config) -> bool:
+    """Validate a custom integration against the requirements of Home Assistant.
+
+    Custom integrations are installed into the same Python environment as Home
+    Assistant itself. A requirement that rules out the version Home Assistant
+    needs takes the whole installation down with it.
+
+    Returns if valid.
+    """
+    if integration.core:
+        return True
+
+    start_errors = len(integration.errors)
+
+    core_requirements = _load_requirement_file(config.root / "requirements.txt")
+    all_requirements = _load_requirement_file(config.root / "requirements_all.txt")
+    constraints = _load_requirement_file(
+        config.root / "homeassistant/package_constraints.txt"
+    )
+
+    for req in integration.requirements:
+        try:
+            requirement = Requirement(req)
+        except InvalidRequirement:
+            continue
+
+        if requirement.marker and not any(
+            requirement.marker.evaluate(environment)
+            for environment in MARKER_ENVIRONMENTS
+        ):
+            continue
+
+        package = canonicalize_name(requirement.name)
+
+        if package in core_requirements:
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is a dependency of Home Assistant itself and "
+                "must not be listed in the manifest of a custom integration.",
+            )
+            continue
+
+        pinned = all_requirements.get(package)
+        constraint = constraints.get(package)
+
+        if constraint is not None and any(
+            specifier.version == PROHIBITED_VERSION for specifier in constraint
+        ):
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is prohibited by Home Assistant, "
+                f"{package} must not be installed.",
+            )
+            continue
+
+        if pinned is not None and _specifiers_conflict(requirement.specifier, pinned):
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is incompatible with {package}{pinned}, which "
+                "Home Assistant depends on.",
+            )
+            continue
+
+        if constraint is not None and _specifiers_conflict(
+            requirement.specifier, constraint
+        ):
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is incompatible with {package}{constraint}, "
+                "which Home Assistant's package constraints require.",
+            )
+            continue
+
+        # Pinning a package Home Assistant ships breaks the moment we bump it.
+        # Constrained packages are left alone, we only bound those.
+        if pinned is not None and (
+            exact := sorted(
+                specifier.version
+                for specifier in requirement.specifier
+                if specifier.operator in ("==", "===")
+                and not specifier.version.endswith(".*")
+            )
+        ):
+            suggestion = f"{package}>={exact[0]}"
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} pins a package Home Assistant depends on "
+                f'({package}{pinned}). Use a minimum version ("{suggestion}") '
+                "instead, so it can follow along when Home Assistant updates it.",
+            )
+
+    return len(integration.errors) == start_errors
+
+
+def validate_requirements(integration: Integration, config: Config) -> None:
     """Validate requirements."""
     if not validate_requirements_format(integration):
+        return
+
+    # Installing a requirement we already rejected would downgrade the
+    # environment hassfest itself runs in.
+    if not validate_custom_requirements(integration, config):
         return
 
     integration_requirements = set()
