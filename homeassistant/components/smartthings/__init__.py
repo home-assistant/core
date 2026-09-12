@@ -14,7 +14,6 @@ from pysmartthings import (
     ComponentStatus,
     Device,
     DeviceEvent,
-    DeviceType,
     Lifecycle,
     Scene,
     SmartThings,
@@ -544,6 +543,8 @@ def create_devices(
             kwargs[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_ZIGBEE, format_zigbee_address(zigbee.eui))
             }
+            if device.device.device_manufacturer_code:
+                kwargs.setdefault(ATTR_MANUFACTURER, device.device.device_manufacturer_code)
         if (matter := device.device.matter) is not None:
             kwargs.update(
                 {
@@ -552,17 +553,6 @@ def create_devices(
                     ATTR_SERIAL_NUMBER: matter.serial_number,
                 }
             )
-        # SmartThings doesn't expose a friendly manufacturer name for plain
-        # Z-Wave devices (deviceManufacturerCode is a raw numeric ID triplet
-        # there, not a name), so fall back to a generic label. For Zigbee,
-        # deviceManufacturerCode IS a real manufacturer string (read off the
-        # device's Basic cluster during pairing), so use it directly. Both
-        # fall back to the device's driver-assigned name for the model,
-        # since SmartThings doesn't expose a separate model field for either.
-if device.device.type is DeviceType.ZIGBEE:
-    kwargs.setdefault(
-        ATTR_MANUFACTURER, device.device.device_manufacturer_code
-    )
         if (main_component := device.status.get(MAIN)) is not None:
             if (
                 device_identification := main_component.get(
