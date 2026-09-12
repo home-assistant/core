@@ -118,10 +118,8 @@ async def test_migration_from_v1(
     )
     assert device.identifiers == {(DOMAIN, "4584")}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = list(entry.subentries.values())[1]
     assert subentry.subentry_type == "station"
@@ -140,10 +138,8 @@ async def test_migration_from_v1(
     )
     assert device.identifiers == {(DOMAIN, "4585")}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -346,10 +342,6 @@ async def test_migration_from_v1_disabled(
         )
         assert device.identifiers == {(DOMAIN, subentry.unique_id)}
         assert device.id == devices[subentry_data["device"]].id
-        assert device.config_entries == {
-            mock_config_entries[main_config_entry].entry_id
-        }
-        assert device.config_entries_subentries == {
-            mock_config_entries[main_config_entry].entry_id: {subentry.subentry_id}
-        }
+        assert device.config_entry_id == mock_config_entries[main_config_entry].entry_id
+        assert device.config_subentry_id == subentry.subentry_id
         assert device.disabled_by is subentry_data["device_disabled_by"]

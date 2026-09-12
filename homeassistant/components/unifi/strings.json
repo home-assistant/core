@@ -4,7 +4,8 @@
       "already_configured": "UniFi Network site is already configured",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "configuration_updated": "Configuration updated",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown_site_id": "Previously configured UniFi Network site can no longer be found"
     },
     "error": {
       "faulty_credentials": "[%key:common::config_flow::error::invalid_auth%]",

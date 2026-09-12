@@ -202,6 +202,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
         tv_state = self._client.tv_state
         source_list = self._source_list
         self._source_list = {}
+        self._current_source = None
         conf_sources = self._sources
 
         found_live_tv = False
