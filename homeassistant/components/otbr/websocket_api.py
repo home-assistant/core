@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
+import logging
 from typing import TYPE_CHECKING, Any, cast
 
 import python_otbr_api
@@ -17,8 +18,10 @@ from homeassistant.components.thread import async_add_dataset, async_get_dataset
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DEFAULT_CHANNEL, DOMAIN
+from .const import DEFAULT_CHANNEL, DOMAIN, EPHEMERAL_KEY_LIFETIME_MS
 from .util import (
+    EphemeralKeyInUse,
+    EphemeralKeyNotSupported,
     OTBRData,
     compose_default_network_name,
     generate_random_pan_id,
@@ -29,12 +32,16 @@ from .util import (
 if TYPE_CHECKING:
     from . import OTBRConfigEntry
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the OTBR Websocket API."""
     websocket_api.async_register_command(hass, websocket_info)
     websocket_api.async_register_command(hass, websocket_create_network)
+    websocket_api.async_register_command(hass, websocket_create_ephemeral_key)
+    websocket_api.async_register_command(hass, websocket_delete_ephemeral_key)
     websocket_api.async_register_command(hass, websocket_set_channel)
     websocket_api.async_register_command(hass, websocket_set_network)
 
@@ -70,6 +77,14 @@ async def websocket_info(
             connection.send_error(msg["id"], "otbr_info_failed", str(exc))
             return
 
+        if data.ephemeral_key_supported is None:
+            try:
+                data.ephemeral_key_supported = await data.get_ephemeral_key_supported(
+                    hass
+                )
+            except HomeAssistantError:
+                _LOGGER.debug("Could not probe %s for ephemeral key support", data.url)
+
         # The border agent ID is checked when the OTBR config entry is setup,
         # we can assert it's not None
         assert border_agent_id is not None
@@ -85,6 +100,7 @@ async def websocket_info(
             "channel": dataset.channel if dataset else None,
             "extended_address": extended_address,
             "extended_pan_id": extended_pan_id,
+            "ephemeral_key_supported": bool(data.ephemeral_key_supported),
             "url": data.url,
         }
 
@@ -196,6 +212,93 @@ async def websocket_create_network(
     # Update repair issues
     await update_issues(hass, data, dataset_tlvs)
 
+    connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "otbr/create_ephemeral_key",
+        vol.Required("extended_address"): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+@async_get_otbr_data
+async def websocket_create_ephemeral_key(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    data: OTBRData,
+) -> None:
+    """Create an ephemeral key for sharing the Thread network credentials."""
+    try:
+        ephemeral_key, port = await data.activate_ephemeral_key(
+            hass, EPHEMERAL_KEY_LIFETIME_MS
+        )
+    except EphemeralKeyNotSupported:
+        connection.send_error(
+            msg["id"],
+            "ephemeral_key_not_supported",
+            "The border router does not support credential sharing",
+        )
+        return
+    except EphemeralKeyInUse:
+        connection.send_error(
+            msg["id"],
+            "ephemeral_key_in_use",
+            "The active ephemeral key is still in use",
+        )
+        return
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "create_ephemeral_key_failed", str(exc))
+        return
+
+    # The key grants Thread administration to whoever enters it, so leave a trace
+    _LOGGER.info("Ephemeral key for %s created by %s", data.url, connection.user.name)
+    connection.send_result(
+        msg["id"],
+        {
+            "ephemeral_key": ephemeral_key,
+            "lifetime": EPHEMERAL_KEY_LIFETIME_MS // 1000,
+            "port": port,
+        },
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "otbr/delete_ephemeral_key",
+        vol.Required("extended_address"): str,
+        vol.Optional("ephemeral_key"): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+@async_get_otbr_data
+async def websocket_delete_ephemeral_key(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    data: OTBRData,
+) -> None:
+    """Deactivate the active ephemeral key, revoking the shared credentials."""
+    try:
+        deleted = await data.deactivate_ephemeral_key(hass, msg.get("ephemeral_key"))
+    except EphemeralKeyNotSupported:
+        connection.send_error(
+            msg["id"],
+            "ephemeral_key_not_supported",
+            "The border router does not support credential sharing",
+        )
+        return
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "delete_ephemeral_key_failed", str(exc))
+        return
+
+    if deleted:
+        _LOGGER.info(
+            "Ephemeral key for %s deleted by %s", data.url, connection.user.name
+        )
     connection.send_result(msg["id"])
 
 
