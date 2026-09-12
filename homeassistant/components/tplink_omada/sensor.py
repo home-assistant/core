@@ -24,17 +24,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import OmadaConfigEntry
+from .config_flow import CONF_SITE
 from .const import OmadaDeviceStatus
 from .coordinator import (
     OmadaControllerStatusCoordinator,
     OmadaDevicesCoordinator,
     OmadaSwitchPortCoordinator,
 )
-from .entity import (
-    OmadaControllerEntity,
-    OmadaDeviceEntity,
-    get_switch_port_base_name,
-)
+from .entity import OmadaControllerEntity, OmadaDeviceEntity, get_switch_port_base_name
 
 PARALLEL_UPDATES = 0
 
@@ -177,7 +174,8 @@ class OmadaControllerStatusSensor(OmadaControllerEntity, SensorEntity):
     def __init__(self, coordinator: OmadaControllerStatusCoordinator) -> None:
         """Initialize the controller status sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.data.mac}_device_status"
+        site_id = coordinator.config_entry.data[CONF_SITE]
+        self._attr_unique_id = f"{coordinator.data.mac}_{site_id}_device_status"
 
 
 class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity):

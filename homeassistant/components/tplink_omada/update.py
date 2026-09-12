@@ -16,6 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
+from .config_flow import CONF_SITE
 from .const import DOMAIN
 from .coordinator import (
     OmadaControllerStatusCoordinator,
@@ -69,7 +70,8 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
         super().__init__(status_coordinator)
         self._update_coordinator = update_coordinator
         self._omada_client = update_coordinator.omada_client
-        self._attr_unique_id = f"{status_coordinator.data.mac}_firmware"
+        site_id = status_coordinator.config_entry.data[CONF_SITE]
+        self._attr_unique_id = f"{status_coordinator.data.mac}_{site_id}_firmware"
 
         self._update_attrs()
 

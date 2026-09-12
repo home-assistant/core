@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 16>,
     'translation_key': 'firmware',
-    'unique_id': '00-11-22-33-44-55_firmware',
+    'unique_id': '00-11-22-33-44-55_Default_firmware',
     'unit_of_measurement': None,
   })
 # ---

@@ -9,7 +9,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import OmadaCoordinator, OmadaControllerStatusCoordinator
+from .coordinator import OmadaControllerStatusCoordinator, OmadaCoordinator
 
 
 class OmadaDeviceEntity[_T: OmadaCoordinator[Any]](CoordinatorEntity[_T]):

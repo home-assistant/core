@@ -14,13 +14,17 @@ from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
-    ATTR_VERSION,
     DATA_COMPONENT,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     UpdateEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_ON, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -170,11 +174,11 @@ async def test_install_controller_firmware_success(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VERSION: "1.0.2"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    mock_omada_client.install_controller_firmware.assert_awaited_once_with("1.0.2")
+    mock_omada_client.install_controller_firmware.assert_awaited_once_with("1.0.1")
     mock_omada_client.check_firmware_updates.assert_awaited()
 
 
