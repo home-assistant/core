@@ -7,6 +7,9 @@ from typing import TYPE_CHECKING, Any, override
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
+    PyiCloud2FARequiredException,
+    PyiCloudAPIResponseException,
+    PyiCloudAuthRequiredException,
     PyiCloudException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
@@ -53,9 +56,22 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._trusted_device = None
         self._verification_code = None
+        self._forced_2fa = False
 
         self._existing_entry_data: dict[str, Any] | None = None
         self._description_placeholders: dict[str, str] | None = None
+
+    @property
+    def _requires_2fa(self) -> bool:
+        """Return True when a 2FA code is what this flow has to collect.
+
+        iCloud can raise a challenge from a request pyicloud does not route
+        through authenticate(), which leaves api.requires_2fa false while a
+        code is outstanding. The account records that case, and the flow has
+        to honour it both when routing to the code form and when validating
+        what is entered there.
+        """
+        return self._forced_2fa or bool(self.api and self.api.requires_2fa)
 
     def _show_setup_form(self, user_input=None, errors=None, step_id="user"):
         """Show the setup form to the user."""
@@ -158,8 +174,25 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.api = None
                 errors = {CONF_PASSWORD: "invalid_auth"}
                 return self._show_setup_form(user_input, errors, step_id)
+            except (
+                PyiCloud2FARequiredException,
+                PyiCloudAuthRequiredException,
+                PyiCloudAPIResponseException,
+            ) as error:
+                # PyiCloudService validates the stored session while it is
+                # constructed, so a session iCloud is rejecting fails here
+                # before the password is tried. Report it rather than letting
+                # it escape the flow.
+                _LOGGER.error(
+                    "Stored iCloud session for %s was rejected: %s",
+                    self._username,
+                    error,
+                )
+                self.api = None
+                errors = {"base": "unknown"}
+                return self._show_setup_form(user_input, errors, step_id)
 
-        if self.api.requires_2fa:
+        if self._requires_2fa:
             return await self.async_step_verification_code()
 
         if self.api.requires_2sa:
@@ -221,12 +254,17 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         self._description_placeholders = {"username": entry_data[CONF_USERNAME]}
 
         # Get the API from the existing entry runtime data
-        self.api = self._get_reauth_entry().runtime_data.api
+        account = self._get_reauth_entry().runtime_data
+        self.api = account.api
 
         # If the API is None, it means the existing entry was never successfully authenticated,
         # so we need to show the setup form again to get the password.
         if self.api is None:
             return self._show_setup_form(step_id="reauth_confirm")
+
+        # Only meaningful together with the session it was raised on, which is
+        # why it is read here rather than before the check above.
+        self._forced_2fa = account.requires_verification_code
 
         # If the API is not None, it means the existing entry was successfully authenticated before,
         # so we can proceed to the reauth_confirm step to trigger 2FA challenge.
@@ -327,7 +365,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         self._verification_code = user_input[CONF_VERIFICATION_CODE]
 
         try:
-            if self.api.requires_2fa:
+            if self._requires_2fa:
                 if not await self.hass.async_add_executor_job(
                     self.api.validate_2fa_code, self._verification_code
                 ):
@@ -348,10 +386,14 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             self._verification_code = None
             errors["base"] = "validate_verification_code"
 
-            if self.api.requires_2fa:
+            if self._requires_2fa:
                 return await self.async_step_verification_code(errors=errors)
 
             return await self.async_step_trusted_device(errors=errors)
+
+        # The challenge is answered; leaving this set would route the login
+        # that follows straight back to this form.
+        self._forced_2fa = False
 
         return await self.async_step_user(
             {
