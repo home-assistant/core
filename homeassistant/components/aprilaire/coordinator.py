@@ -106,7 +106,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
                 device_registry.async_update_device(
                     device_id=device.id,
-                    **new_device_info,  # type: ignore[misc]
+                    **new_device_info,
                 )
 
     async def start_listen(self):

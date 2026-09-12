@@ -39,7 +39,7 @@ class OpenRGBProfileSelect(CoordinatorEntity[OpenRGBCoordinator], SelectEntity):
         """Initialize the select entity."""
         super().__init__(coordinator)
         self._attr_unique_id = UID_SEPARATOR.join([entry.entry_id, "profile"])
-        self._attr_device_info = {
+        self._attr_device_info = {  # type: ignore[assignment]
             "identifiers": {(DOMAIN, entry.entry_id)},
         }
         self._update_attrs()
