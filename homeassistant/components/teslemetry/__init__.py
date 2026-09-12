@@ -517,8 +517,8 @@ async def _async_gather_first_refreshes(
                 task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
     for task in tasks:
-        if task in done and not task.cancelled() and (exc := task.exception()):
-            raise exc
+        if task in done:
+            task.result()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:

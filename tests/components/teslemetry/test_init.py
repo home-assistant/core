@@ -38,6 +38,7 @@ from teslemetry_stream import TeslemetryStreamAuthenticationError
 
 from homeassistant.components.teslemetry import (
     STREAM_TOPICS,
+    _async_gather_first_refreshes,
     _async_get_rsa_key_pem,
     _get_access_token,
 )
@@ -225,6 +226,25 @@ async def test_vehicle_first_refresh_timeout_cancels_stream_setup(
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert stream_setup_cancelled.is_set()
     never.set()
+
+
+async def test_gather_first_refreshes_raises_for_cancelled_sibling() -> None:
+    """A task that ends up cancelled must still fail the gather, not be ignored.
+
+    asyncio.wait(..., return_when=FIRST_EXCEPTION) does not return early for a
+    cancelled task, so it can sit in the done set already cancelled while a
+    sibling still finishes normally; that must surface as a failure.
+    """
+
+    async def _cancel_self() -> None:
+        asyncio.current_task().cancel()
+        await asyncio.sleep(0)
+
+    async def _succeeds() -> None:
+        return None
+
+    with pytest.raises(asyncio.CancelledError):
+        await _async_gather_first_refreshes(_cancel_self(), _succeeds())
 
 
 # Test Energy Live Coordinator
