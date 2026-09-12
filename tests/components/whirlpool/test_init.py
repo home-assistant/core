@@ -1,5 +1,6 @@
 """Test the Whirlpool Sixth Sense init."""
 
+import logging
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
@@ -9,10 +10,16 @@ from whirlpool.backendselector import Brand, Region
 
 from homeassistant.components.whirlpool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_USERNAME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from . import init_integration, init_integration_with_entry
+from . import init_integration, init_integration_with_entry, trigger_attr_callback
 
 from tests.common import MockConfigEntry
 
@@ -124,12 +131,11 @@ async def test_setup_auth_failed(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_fetch_appliances_failed(
-    hass: HomeAssistant,
-    mock_appliances_manager_api: MagicMock,
+async def test_setup_connect_failed(
+    hass: HomeAssistant, mock_appliances_manager_api: MagicMock
 ) -> None:
-    """Test setup with failed fetch_appliances."""
-    mock_appliances_manager_api.return_value.fetch_appliances.return_value = False
+    """Test setup with failed connect call."""
+    mock_appliances_manager_api.return_value.connect = AsyncMock(return_value=False)
     entry = await init_integration(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -146,3 +152,61 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_availability_logs(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+    mock_appliances_manager_api: MagicMock,
+) -> None:
+    """Test availability and transition logs for every appliance entity."""
+    manager = mock_appliances_manager_api.return_value
+    appliances = [
+        *manager.aircons,
+        *manager.washers,
+        *manager.dryers,
+        *manager.ovens,
+        *manager.refrigerators,
+    ]
+    for appliance in appliances:
+        appliance.get_online.return_value = False
+    entry = await init_integration(hass)
+
+    entity_ids = {
+        entity.entity_id
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    }
+    assert entity_ids
+    for entity_id in entity_ids:
+        assert (state := hass.states.get(entity_id)) is not None
+        assert state.state == STATE_UNAVAILABLE
+
+    # Repeated updates must not log again; subsequent transitions must log again.
+    for online, message, log_count in (
+        (True, "is back online", 1),
+        (False, "is unavailable", 1),
+        (False, "is unavailable", 0),
+        (True, "is back online", 1),
+        (True, "is back online", 0),
+        (False, "is unavailable", 1),
+    ):
+        caplog.clear()
+        for appliance in appliances:
+            appliance.get_online.return_value = online
+            await trigger_attr_callback(hass, appliance)
+
+        for entity_id in entity_ids:
+            assert (state := hass.states.get(entity_id)) is not None
+            assert (state.state != STATE_UNAVAILABLE) is online
+            assert (
+                caplog.record_tuples.count(
+                    (
+                        "homeassistant.components.whirlpool.entity",
+                        logging.INFO,
+                        f"The entity {entity_id} {message}",
+                    )
+                )
+                == log_count
+            )

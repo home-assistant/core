@@ -42,7 +42,10 @@ def _get_doorbell_current(obj: Camera) -> str | None:
 
 
 async def _set_doorbell_message(obj: Camera, message: str) -> None:
-    await obj.set_lcd_text(DoorbellMessageType.CUSTOM_MESSAGE, text=message)
+    # reset_at=None keeps the message up until it is changed
+    await obj.set_lcd_message_public(
+        DoorbellMessageType.CUSTOM_MESSAGE, text=message, reset_at=None
+    )
 
 
 CAMERA: tuple[ProtectTextEntityDescription, ...] = (
