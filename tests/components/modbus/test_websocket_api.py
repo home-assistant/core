@@ -8,15 +8,18 @@ from modbus_connection import ModbusTcpParams
 from modbus_connection.tmodbus import ModbusConnection
 import pytest
 
+from homeassistant import config as hass_config
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.modbus.const import DATA_MODBUS_HUBS
 from homeassistant.config_entries import ConfigFlow
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     MockModule,
+    get_fixture_path,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -338,3 +341,25 @@ async def test_the_endpoint_of_a_yaml_hub_follows_its_transport(
     result = (await client.receive_json())["result"]
 
     assert result["connections"][0]["endpoint"] == endpoint
+
+
+async def test_a_yaml_hub_dropped_by_a_reload_is_not_listed(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_pymodbus: AsyncMock,
+) -> None:
+    """A reload that leaves no Modbus config leaves no connection behind."""
+    mock_pymodbus.connected = True
+    assert await async_setup_component(
+        hass, "modbus", {"modbus": [yaml_hub(TCP_TRANSPORT)]}
+    )
+
+    yaml_path = get_fixture_path("configuration_empty.yaml", "modbus")
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call("modbus", SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "modbus/connections/list"})
+
+    assert (await client.receive_json())["result"] == {"connections": []}
