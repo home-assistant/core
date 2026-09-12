@@ -3747,15 +3747,28 @@ class ConfigSubentryFlowManager(
         if unique_id is not None and not isinstance(unique_id, str):
             raise HomeAssistantError("unique_id must be a string")
 
-        self.hass.config_entries.async_add_subentry(
-            entry,
-            ConfigSubentry(
-                data=MappingProxyType(result["data"]),
-                subentry_type=subentry_type,
-                title=result["title"],
-                unique_id=unique_id,
-            ),
-        )
+        automatic_reload = False
+        if isinstance(flow, ConfigSubentryFlowWithReload):
+            automatic_reload = flow.automatic_reload
+        if automatic_reload and entry.update_listeners:
+            raise ValueError(
+                "Config entry update listeners should not be"
+                " used with ConfigSubentryFlowWithReload"
+            )
+
+        if (
+            self.hass.config_entries.async_add_subentry(
+                entry,
+                ConfigSubentry(
+                    data=MappingProxyType(result["data"]),
+                    subentry_type=subentry_type,
+                    title=result["title"],
+                    unique_id=unique_id,
+                ),
+            )
+            and automatic_reload is True
+        ):
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
         return result
 
@@ -3934,6 +3947,18 @@ class ConfigSubentryFlow(
         if subentry_id not in entry.subentries:
             raise UnknownSubEntry(subentry_id)
         return entry.subentries[subentry_id]
+
+
+class ConfigSubentryFlowWithReload(ConfigSubentryFlow):
+    """Automatic reloading class for subentry flow.
+
+    Triggers an automatic reload of the config entry when the flow ends with
+    calling `async_create_entry`.
+    It's not allowed to use this class if the integration uses config entry
+    update listeners.
+    """
+
+    automatic_reload: bool = True
 
 
 class OptionsFlowManager(
