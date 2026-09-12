@@ -11,7 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONTENT_TYPE_JSON
 
 from .common import TEST_EMAIL_ADDRESS, TEST_PASSWORD, TEST_TOKEN, TEST_USER_ID
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -26,7 +26,18 @@ def config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def aioclient_mock_fixture(aioclient_mock: AiohttpClientMocker) -> None:
+def device_info_response(request: pytest.FixtureRequest) -> str:
+    """Shutoff valve device info, with tempF overridden when parametrized."""
+    device_info = load_json_object_fixture("flo/device_info_response.json")
+    if hasattr(request, "param"):
+        device_info["telemetry"]["current"]["tempF"] = request.param
+    return json.dumps(device_info)
+
+
+@pytest.fixture
+def aioclient_mock_fixture(
+    aioclient_mock: AiohttpClientMocker, device_info_response: str
+) -> None:
     """Fixture to provide a aioclient mocker."""
     now = round(time.time())
     # Mocks the login response for flo.
@@ -56,7 +67,7 @@ def aioclient_mock_fixture(aioclient_mock: AiohttpClientMocker) -> None:
     # Mocks the devices for flo.
     aioclient_mock.get(
         "https://api-gw.meetflo.com/api/v2/devices/98765",
-        text=load_fixture("flo/device_info_response.json"),
+        text=device_info_response,
         status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
