@@ -212,11 +212,6 @@ async def test_management_api(hass: HomeAssistant, hass_admin_user: MockUser) ->
 
     assert await async_setup_component(hass, "llm", {})
 
-    apis = {api.id: api for api in llm.async_get_apis(hass)}
-    assert llm.LLM_API_ASSIST in apis
-    assert llm.LLM_API_MANAGEMENT in apis
-    assert apis[llm.LLM_API_MANAGEMENT].name == "Management"
-
     admin_context = llm.LLMContext(
         platform="test",
         context=Context(user_id=hass_admin_user.id),
@@ -224,9 +219,7 @@ async def test_management_api(hass: HomeAssistant, hass_admin_user: MockUser) ->
         assistant="conversation",
         device_id=None,
     )
-    api_instance = await apis[llm.LLM_API_MANAGEMENT].async_get_api_instance(
-        admin_context
-    )
+    api_instance = await llm.async_get_api(hass, llm.LLM_API_MANAGEMENT, admin_context)
     assert api_instance.api_prompt == "mgmt prompt"
     assert [t.name for t in api_instance.tools] == [
         "llm__GetDateTime",
