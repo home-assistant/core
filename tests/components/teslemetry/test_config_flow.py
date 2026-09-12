@@ -796,6 +796,7 @@ async def _start_pairing_at_scan(
     return result
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None:
     """The add flow creates the subentry when the key is already whitelisted."""
     entry = await _setup_account_entry(hass)
@@ -828,6 +829,7 @@ async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None
     vehicle.disconnect.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_pairing_duplicate_vin_aborts(hass: HomeAssistant) -> None:
     """A second flow racing on the same VIN aborts with already_configured."""
     entry = await _setup_account_entry(hass)
@@ -866,6 +868,7 @@ async def test_subentry_pairing_duplicate_vin_aborts(hass: HomeAssistant) -> Non
     assert len(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)) == 1
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> None:
     """Pairing walks through instructions and key install when not whitelisted."""
     entry = await _setup_account_entry(hass)
@@ -913,6 +916,7 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
     vehicle.pair.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
     """The scan step re-shows the form with an error when BLE connect fails."""
     entry = await _setup_account_entry(hass)
@@ -951,6 +955,7 @@ async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
     ],
     ids=["timeout", "transport", "rejected"],
 )
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_authorize_failure(
     hass: HomeAssistant, error: type[TeslaFleetError], expected: str
 ) -> None:
@@ -998,6 +1003,7 @@ async def test_subentry_authorize_failure(
     vehicle.pair.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_authorize_unexpected_error_disconnects(
     hass: HomeAssistant,
 ) -> None:
@@ -1029,6 +1035,7 @@ async def test_subentry_authorize_unexpected_error_disconnects(
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_authorize_existing_key_finishes(hass: HomeAssistant) -> None:
     """Approving the key after a timeout, then retrying, completes the pairing."""
     entry = await _setup_account_entry(hass)
@@ -1103,6 +1110,7 @@ async def test_subentry_authorize_existing_key_finishes(hass: HomeAssistant) -> 
         pytest.param(TimeoutError(), id="timeout_error"),
     ],
 )
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_handshake_error_recovers(
     hass: HomeAssistant, handshake_error: Exception
 ) -> None:
@@ -1145,6 +1153,7 @@ async def test_subentry_handshake_error_recovers(
     assert vehicle.disconnect.await_count == 2
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
     """Abandoning the flow mid-pairing cancels the pair task and disconnects."""
     entry = await _setup_account_entry(hass)
@@ -1188,6 +1197,7 @@ async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
     """The scan step re-shows the form with an error when no device is found."""
     entry = await _setup_account_entry(hass)
@@ -1225,6 +1235,7 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_scan_key_load_recovers(
     hass: HomeAssistant, key_error: Exception
 ) -> None:
@@ -1266,6 +1277,7 @@ async def test_subentry_scan_key_load_recovers(
     vehicle.connect.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_scan_finds_device_after_active_scan(
     hass: HomeAssistant,
 ) -> None:
@@ -1306,6 +1318,7 @@ async def test_subentry_scan_finds_device_after_active_scan(
     vehicle.connect.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_add_flow_keeps_device_on_parent(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -1408,6 +1421,7 @@ async def test_subentry_add_flow_keeps_device_on_parent(
     assert all(entity.config_subentry_id is None for entity in bound_entities)
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_add_flow_no_available_vehicles(hass: HomeAssistant) -> None:
     """The add flow aborts when every account vehicle is already added."""
     entry = await _setup_paired_entry(hass)
@@ -1421,6 +1435,20 @@ async def test_subentry_add_flow_no_available_vehicles(hass: HomeAssistant) -> N
     assert result["reason"] == "no_vehicles"
 
 
+async def test_subentry_add_flow_no_bluetooth(hass: HomeAssistant) -> None:
+    """The add flow aborts immediately when no Bluetooth integration is set up."""
+    entry = await _setup_account_entry(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "bluetooth_not_available"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_add_flow_entry_not_loaded(hass: HomeAssistant) -> None:
     """The add flow aborts when the parent entry is not loaded."""
     entry = mock_config_entry()
