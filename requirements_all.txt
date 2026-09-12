@@ -2844,7 +2844,7 @@ python-xbox==0.2.1
 pythonegardia==1.0.52
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.5.2
+pythonkuma==0.5.3
 
 # homeassistant.components.tile
 pytile==2024.12.0
