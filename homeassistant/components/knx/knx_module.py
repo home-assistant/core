@@ -57,6 +57,7 @@ from .expose import KnxExposeEntity, KnxExposeTime
 from .project import KNXProject
 from .repairs import data_secure_group_key_issue_dispatcher
 from .storage.config_store import KNXConfigStore
+from .storage.entity_link_controller import EntityLinkController
 from .storage.expose_controller import ExposeController
 from .storage.time_server import TimeServerController
 from .telegrams import Telegrams
@@ -78,6 +79,7 @@ class KNXModule:
         self.service_exposures: dict[str, KnxExposeEntity | KnxExposeTime] = {}
         self.ui_expose_controller = ExposeController()
         self.ui_time_server_controller = TimeServerController()
+        self.ui_entity_link_controller = EntityLinkController()
         self.entry = entry
 
         self.project = KNXProject(hass=hass, entry=entry)

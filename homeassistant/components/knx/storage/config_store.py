@@ -15,6 +15,10 @@ from ..const import DOMAIN, KNX_MODULE_KEY
 from ..repairs import async_create_entity_validation_issue
 from . import migration
 from .const import CONF_DATA
+from .entity_link_controller import (
+    KNXEntityLinkStoreConfigModel,
+    KNXEntityLinkStoreModel,
+)
 from .entity_store_validation import (
     EntityStoreValidationException,
     validate_entity_data,
@@ -25,7 +29,7 @@ from .time_server import KNXTimeServerStoreModel
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION: Final = 2
-STORAGE_VERSION_MINOR: Final = 4
+STORAGE_VERSION_MINOR: Final = 5
 STORAGE_KEY: Final = f"{DOMAIN}/config_store.json"
 
 type KNXPlatformStoreModel = dict[str, dict[str, Any]]  # unique_id: configuration
@@ -40,6 +44,7 @@ class KNXConfigStoreModel(TypedDict):
     entities: KNXEntityStoreModel
     expose: KNXExposeStoreModel
     time_server: KNXTimeServerStoreModel
+    entity_links: KNXEntityLinkStoreModel
 
 
 class PlatformControllerBase(ABC):
@@ -80,6 +85,10 @@ class _KNXConfigStoreStorage(Store[KNXConfigStoreModel]):
             # version 2.4 introduced in 2026.5
             migration.migrate_2_3_to_2_4(old_data)
 
+        if old_major_version <= 2 and old_minor_version < 5:
+            # version 2.5 introduced in 2026.8
+            migration.migrate_2_4_to_2_5(old_data)
+
         return old_data
 
 
@@ -101,6 +110,7 @@ class KNXConfigStore:
             entities={},
             expose={},
             time_server={},
+            entity_links={},
         )
         self._platform_controllers: dict[Platform, PlatformControllerBase] = {}
 
@@ -269,6 +279,41 @@ class KNXConfigStore:
         except KeyError as err:
             raise ConfigStoreException(
                 f"Entity not found in expose configuration: {entity_id}"
+            ) from err
+        await self._store.async_save(self.data)
+
+    @callback
+    def get_entity_links(self) -> KNXEntityLinkStoreModel:
+        """Return all KNX entity link configurations."""
+        return self.data["entity_links"]
+
+    @callback
+    def get_entity_link_config(self, entity_id: str) -> KNXEntityLinkStoreConfigModel:
+        """Return the configuration of a single KNX entity link."""
+        return self.data["entity_links"].get(
+            entity_id, KNXEntityLinkStoreConfigModel(knx={})
+        )
+
+    async def update_entity_link(
+        self, entity_id: str, link_config: KNXEntityLinkStoreConfigModel
+    ) -> None:
+        """Create or update a KNX entity link and load it."""
+        knx_module = self.hass.data[KNX_MODULE_KEY]
+        knx_module.ui_entity_link_controller.update_link(
+            self.hass, knx_module.xknx, entity_id, link_config
+        )
+        self.data["entity_links"][entity_id] = link_config
+        await self._store.async_save(self.data)
+
+    async def delete_entity_link(self, entity_id: str) -> None:
+        """Delete a KNX entity link."""
+        knx_module = self.hass.data[KNX_MODULE_KEY]
+        knx_module.ui_entity_link_controller.remove_link(entity_id)
+        try:
+            del self.data["entity_links"][entity_id]
+        except KeyError as err:
+            raise ConfigStoreException(
+                f"Entity not found in entity link configuration: {entity_id}"
             ) from err
         await self._store.async_save(self.data)
 

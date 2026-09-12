@@ -1,4 +1,104 @@
 # serializer version: 1
+# name: test_knx_get_entity_link_schema[switch]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_status',
+        'options': dict({
+          'passive': False,
+          'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_command',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': True,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': 1,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': False,
+        'name': 'invert',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'default': True,
+        'name': 'respond_to_read',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_advanced_options',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'default': True,
+        'name': 'send_on_init',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'default': 0.0,
+        'name': 'cooldown',
+        'optional': True,
+        'required': False,
+        'type': 'float',
+        'valueMin': 0,
+      }),
+      dict({
+        'default': 0.0,
+        'name': 'periodic_send',
+        'optional': True,
+        'required': False,
+        'type': 'float',
+        'valueMin': 0,
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_knx_get_expose_config
   dict({
     'id': 1,
