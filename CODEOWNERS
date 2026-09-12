@@ -2040,6 +2040,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/vilfo/ @ManneW
 /homeassistant/components/vistapool/ @fdebrus
 /tests/components/vistapool/ @fdebrus
+/homeassistant/components/vitesy/ @chemelli74
+/tests/components/vitesy/ @chemelli74
 /homeassistant/components/vivotek/ @HarlemSquirrel
 /tests/components/vivotek/ @HarlemSquirrel
 /homeassistant/components/vizio/ @raman325
