@@ -42,8 +42,8 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .storage.config_store import KnxEntityData
-from .storage.const import CONF_ENTITY, CONF_GA_SENSOR
-from .storage.util import ConfigExtractor
+from .storage.const import CONF_ENTITY
+from .storage.entity_store_schema import BinarySensorKnxConfig
 
 
 async def async_setup_entry(
@@ -69,7 +69,9 @@ async def async_setup_entry(
             KnxYamlBinarySensor(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.BINARY_SENSOR):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.BINARY_SENSOR, BinarySensorKnxConfig
+    ):
         entities.extend(
             KnxUiBinarySensor(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -147,7 +149,10 @@ class KnxUiBinarySensor(_KnxBinarySensor, KnxUiEntity):
     _device: XknxBinarySensor
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[BinarySensorKnxConfig],
     ) -> None:
         """Initialize KNX binary sensor."""
         super().__init__(
@@ -155,18 +160,16 @@ class KnxUiBinarySensor(_KnxBinarySensor, KnxUiEntity):
             unique_id=unique_id,
             entity_config=config[CONF_ENTITY],
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = config[DOMAIN]
         self._device = XknxBinarySensor(
             xknx=knx_module.xknx,
             name=config[CONF_ENTITY][CONF_NAME],
-            group_address_state=knx_conf.get_state_and_passive(CONF_GA_SENSOR),
-            sync_state=knx_conf.get(CONF_SYNC_STATE),
-            invert=knx_conf.get(CONF_INVERT, default=False),
-            ignore_internal_state=knx_conf.get(
-                CONF_IGNORE_INTERNAL_STATE, default=False
-            ),
-            context_timeout=knx_conf.get(CONF_CONTEXT_TIMEOUT),
-            reset_after=knx_conf.get(CONF_RESET_AFTER),
+            group_address_state=knx_conf.ga_sensor.state_and_passive(),
+            sync_state=knx_conf.sync_state,
+            invert=knx_conf.invert,
+            ignore_internal_state=knx_conf.ignore_internal_state,
+            context_timeout=knx_conf.context_timeout,
+            reset_after=knx_conf.reset_after,
             always_callback=True,
         )
         self._attr_force_update = self._device.ignore_internal_state

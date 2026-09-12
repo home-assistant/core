@@ -97,7 +97,15 @@ def _number_limit_sub_validator(config: dict) -> dict:
     """Validate min, max, and step values for a number entity."""
     transcoder = DPTNumeric.parse_transcoder(config[CONF_TYPE])
     assert transcoder is not None  # already checked by numeric_type_validator
-    return validate_number_attributes(transcoder, config)
+    validate_number_attributes(
+        transcoder,
+        min_config=config.get(NumberConf.MIN),
+        max_config=config.get(NumberConf.MAX),
+        step_config=config.get(NumberConf.STEP),
+        device_class=config.get(CONF_DEVICE_CLASS),
+        unit_of_measurement=config.get(CONF_UNIT_OF_MEASUREMENT),
+    )
+    return config
 
 
 def _max_payload_value(payload_length: int) -> int:
@@ -165,7 +173,13 @@ def _sensor_attribute_sub_validator(config: dict) -> dict:
         config[CONF_TYPE]
     )
     dpt_metadata = get_supported_dpts()[transcoder.dpt_number_str()]
-    return validate_sensor_attributes(dpt_metadata, config)
+    validate_sensor_attributes(
+        dpt_metadata,
+        state_class=config.get(CONF_SENSOR_STATE_CLASS),
+        device_class=config.get(CONF_DEVICE_CLASS),
+        unit_of_measurement=config.get(CONF_UNIT_OF_MEASUREMENT),
+    )
+    return config
 
 
 #########

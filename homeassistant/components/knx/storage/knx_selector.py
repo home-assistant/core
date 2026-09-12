@@ -382,11 +382,17 @@ def ga(
 def knx_selector_in(
     nodes: Iterable[Any],
 ) -> KNXSelectorBase | selector.Selector | None:
-    """Return the first KNX or HA selector in `nodes`, looking into `Coerce`."""
+    """Return the first KNX or HA selector in `nodes`.
+
+    Looks into `Coerce` and `Maybe`, the wrappers used in field annotations.
+    """
     for node in nodes:
-        candidate = node.type if isinstance(node, probatio.Coerce) else node
-        if isinstance(candidate, (KNXSelectorBase, selector.Selector)):
-            return candidate
+        if isinstance(node, probatio.Coerce):
+            node = node.type
+        elif isinstance(node, probatio.Maybe):
+            node = node.validator
+        if isinstance(node, (KNXSelectorBase, selector.Selector)):
+            return node
     return None
 
 

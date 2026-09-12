@@ -1,6 +1,6 @@
 """Support for KNX number entities."""
 
-from typing import Any, cast, override
+from typing import cast, override
 
 from xknx.devices import NumericValue
 
@@ -42,8 +42,8 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .storage.config_store import KnxEntityData
-from .storage.const import CONF_ENTITY, CONF_GA_SENSOR
-from .storage.util import ConfigExtractor
+from .storage.const import CONF_ENTITY
+from .storage.entity_store_schema import NumberKnxConfig
 
 
 async def async_setup_entry(
@@ -69,7 +69,9 @@ async def async_setup_entry(
             KnxYamlNumber(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.NUMBER):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.NUMBER, NumberKnxConfig
+    ):
         entities.extend(
             KnxUiNumber(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -170,7 +172,7 @@ class KnxUiNumber(_KnxNumber, KnxUiEntity):
         self,
         knx_module: KNXModule,
         unique_id: str,
-        config: KnxEntityData[Any],
+        config: KnxEntityData[NumberKnxConfig],
     ) -> None:
         """Initialize a KNX number."""
         super().__init__(
@@ -178,24 +180,24 @@ class KnxUiNumber(_KnxNumber, KnxUiEntity):
             unique_id=unique_id,
             entity_config=config[CONF_ENTITY],
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
-        dpt_string = knx_conf.get_dpt(CONF_GA_SENSOR)
+        knx_conf = config[DOMAIN]
+        dpt_string = knx_conf.ga_sensor.dpt
         assert dpt_string is not None  # required for number
         dpt_info = get_supported_dpts()[dpt_string]
 
         self._device = NumericValue(
             knx_module.xknx,
             name=config[CONF_ENTITY][CONF_NAME],
-            group_address=knx_conf.get_write(CONF_GA_SENSOR),
-            group_address_state=knx_conf.get_state_and_passive(CONF_GA_SENSOR),
-            respond_to_read=knx_conf.get(CONF_RESPOND_TO_READ),
-            sync_state=knx_conf.get(CONF_SYNC_STATE),
+            group_address=knx_conf.ga_sensor.write,
+            group_address_state=knx_conf.ga_sensor.state_and_passive(),
+            respond_to_read=knx_conf.respond_to_read,
+            sync_state=knx_conf.sync_state,
             value_type=dpt_string,
         )
 
-        if device_class_override := knx_conf.get(CONF_DEVICE_CLASS):
+        if knx_conf.device_class:
             self._attr_device_class = try_parse_enum(
-                NumberDeviceClass, device_class_override
+                NumberDeviceClass, knx_conf.device_class
             )
         else:
             self._attr_device_class = try_parse_enum(
@@ -205,21 +207,19 @@ class KnxUiNumber(_KnxNumber, KnxUiEntity):
                 NumberDeviceClass,
                 dpt_info["sensor_device_class"],
             )
-        self._attr_mode = NumberMode(knx_conf.get(CONF_MODE))
-        self._attr_native_max_value = knx_conf.get(
-            NumberConf.MAX,
-            default=self._device.sensor_value.dpt_class.value_max,
+        dpt_class = self._device.sensor_value.dpt_class
+        self._attr_mode = NumberMode(knx_conf.mode)
+        self._attr_native_max_value = (
+            knx_conf.max if knx_conf.max is not None else dpt_class.value_max
         )
-        self._attr_native_min_value = knx_conf.get(
-            NumberConf.MIN,
-            default=self._device.sensor_value.dpt_class.value_min,
+        self._attr_native_min_value = (
+            knx_conf.min if knx_conf.min is not None else dpt_class.value_min
         )
-        self._attr_native_step = knx_conf.get(
-            NumberConf.STEP,
-            default=self._device.sensor_value.dpt_class.resolution,
+        self._attr_native_step = (
+            knx_conf.step if knx_conf.step is not None else dpt_class.resolution
         )
         self._attr_native_unit_of_measurement = (
-            knx_conf.get(CONF_UNIT_OF_MEASUREMENT) or dpt_info["unit"]
+            knx_conf.unit_of_measurement or dpt_info["unit"]
         )
 
         self._device.sensor_value.value = max(0, self._attr_native_min_value)

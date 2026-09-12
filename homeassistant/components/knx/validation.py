@@ -1,10 +1,10 @@
 """Validation helpers for KNX config schemas."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from enum import Enum
 import ipaddress
 import math
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 from xknx.dpt import DPTBase, DPTNumeric, DPTString
@@ -25,6 +25,15 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import NumberConf
 from .dpt import DPTInfo, get_supported_dpts
+
+# Device and state classes arrive as plain strings from the UI selectors and as
+# their StrEnum from YAML - both look up the same StrEnum keyed entries.
+_NUMBER_DEVICE_CLASS_UNITS = cast(Mapping[str, set[Any]], NUMBER_DEVICE_CLASS_UNITS)
+_SENSOR_DEVICE_CLASS_UNITS = cast(Mapping[str, set[Any]], DEVICE_CLASS_UNITS)
+_SENSOR_DEVICE_CLASS_STATE_CLASSES = cast(
+    Mapping[str, set[Any]], DEVICE_CLASS_STATE_CLASSES
+)
+_SENSOR_STATE_CLASS_UNITS = cast(Mapping[str, set[Any]], STATE_CLASS_UNITS)
 
 
 def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str | int]:
@@ -163,16 +172,18 @@ def backwards_compatible_xknx_climate_enum_member(enumClass: type[Enum]) -> vol.
 
 
 def validate_number_attributes(
-    transcoder: type[DPTNumeric], config: dict[str, Any]
-) -> dict[str, Any]:
+    transcoder: type[DPTNumeric],
+    *,
+    min_config: float | None,
+    max_config: float | None,
+    step_config: float | None,
+    device_class: str | None,
+    unit_of_measurement: str | None,
+) -> None:
     """Validate a number entity configurations dependent on configured value type.
 
-    Works for both, UI and YAML configuration schema since they
-    share same names for all tested attributes.
+    Works for both, UI and YAML configuration schema. `None` means not configured.
     """
-    min_config: float | None = config.get(NumberConf.MIN)
-    max_config: float | None = config.get(NumberConf.MAX)
-    step_config: float | None = config.get(NumberConf.STEP)
     _dpt_error_str = f"DPT {transcoder.dpt_number_str()} '{transcoder.value_type}'"
 
     # Infinity is not supported by Home Assistant frontend so user defined
@@ -208,101 +219,105 @@ def validate_number_attributes(
 
     # Validate device class and unit of measurement compatibility
     dpt_metadata = get_supported_dpts()[transcoder.dpt_number_str()]
-
-    device_class = config.get(
-        CONF_DEVICE_CLASS,
-        dpt_metadata["sensor_device_class"],
+    effective_device_class = (
+        device_class
+        if device_class is not None
+        else dpt_metadata["sensor_device_class"]
     )
-    unit_of_measurement = config.get(
-        CONF_UNIT_OF_MEASUREMENT,
-        dpt_metadata["unit"],
+    effective_unit = (
+        unit_of_measurement if unit_of_measurement is not None else dpt_metadata["unit"]
     )
     if (
-        device_class
-        and (d_c_units := NUMBER_DEVICE_CLASS_UNITS.get(device_class)) is not None
-        and unit_of_measurement not in d_c_units
+        effective_device_class
+        and (d_c_units := _NUMBER_DEVICE_CLASS_UNITS.get(effective_device_class))
+        is not None
+        and effective_unit not in d_c_units
     ):
         _options = ", ".join(sorted(map(str, d_c_units), key=str.casefold))
         raise vol.Invalid(
-            f"Unit of measurement '{unit_of_measurement}'"
+            f"Unit of measurement '{effective_unit}'"
             f" is not valid for device class"
-            f" '{device_class}'."
+            f" '{effective_device_class}'."
             f" Valid options are: {_options}",
             path=(
                 [CONF_DEVICE_CLASS]
-                if CONF_DEVICE_CLASS in config
+                if device_class is not None
                 else [CONF_UNIT_OF_MEASUREMENT]
             ),
         )
 
-    return config
-
 
 def validate_sensor_attributes(
-    dpt_info: DPTInfo, config: dict[str, Any]
-) -> dict[str, Any]:
+    dpt_info: DPTInfo,
+    *,
+    state_class: str | None,
+    device_class: str | None,
+    unit_of_measurement: str | None,
+) -> None:
     """Validate state_class, device_class and unit compatibility.
 
-    Works for both, UI and YAML configuration schema since they
-    share same names for all tested attributes.
+    Works for both, UI and YAML configuration schema. `None` means not configured.
     """
-    state_class = config.get(
-        CONF_SENSOR_STATE_CLASS,
-        dpt_info["sensor_state_class"],
+    effective_state_class = (
+        state_class if state_class is not None else dpt_info["sensor_state_class"]
     )
-    device_class = config.get(
-        CONF_DEVICE_CLASS,
-        dpt_info["sensor_device_class"],
+    effective_device_class = (
+        device_class if device_class is not None else dpt_info["sensor_device_class"]
     )
-    unit_of_measurement = config.get(
-        CONF_UNIT_OF_MEASUREMENT,
-        dpt_info["unit"],
+    effective_unit = (
+        unit_of_measurement if unit_of_measurement is not None else dpt_info["unit"]
     )
     if (
-        state_class
-        and device_class
-        and (state_classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
-        and state_class not in state_classes
+        effective_state_class
+        and effective_device_class
+        and (
+            state_classes := _SENSOR_DEVICE_CLASS_STATE_CLASSES.get(
+                effective_device_class
+            )
+        )
+        is not None
+        and effective_state_class not in state_classes
     ):
         _options = ", ".join(sorted(map(str, state_classes), key=str.casefold))
         raise vol.Invalid(
-            f"State class '{state_class}' is not valid"
-            f" for device class '{device_class}'."
+            f"State class '{effective_state_class}' is not valid"
+            f" for device class '{effective_device_class}'."
             f" Valid options are: {_options}",
             path=[CONF_SENSOR_STATE_CLASS],
         )
     if (
-        device_class
-        and (d_c_units := DEVICE_CLASS_UNITS.get(device_class)) is not None
-        and unit_of_measurement not in d_c_units
+        effective_device_class
+        and (d_c_units := _SENSOR_DEVICE_CLASS_UNITS.get(effective_device_class))
+        is not None
+        and effective_unit not in d_c_units
     ):
         _options = ", ".join(sorted(map(str, d_c_units), key=str.casefold))
         raise vol.Invalid(
-            f"Unit of measurement '{unit_of_measurement}'"
+            f"Unit of measurement '{effective_unit}'"
             f" is not valid for device class"
-            f" '{device_class}'."
+            f" '{effective_device_class}'."
             f" Valid options are: {_options}",
             path=(
                 [CONF_DEVICE_CLASS]
-                if CONF_DEVICE_CLASS in config
+                if device_class is not None
                 else [CONF_UNIT_OF_MEASUREMENT]
             ),
         )
     if (
-        state_class
-        and (s_c_units := STATE_CLASS_UNITS.get(state_class)) is not None
-        and unit_of_measurement not in s_c_units
+        effective_state_class
+        and (s_c_units := _SENSOR_STATE_CLASS_UNITS.get(effective_state_class))
+        is not None
+        and effective_unit not in s_c_units
     ):
         _options = ", ".join(sorted(map(str, s_c_units), key=str.casefold))
         raise vol.Invalid(
-            f"Unit of measurement '{unit_of_measurement}'"
+            f"Unit of measurement '{effective_unit}'"
             f" is not valid for state class"
-            f" '{state_class}'."
+            f" '{effective_state_class}'."
             f" Valid options are: {_options}",
             path=(
                 [CONF_SENSOR_STATE_CLASS]
-                if CONF_SENSOR_STATE_CLASS in config
+                if state_class is not None
                 else [CONF_UNIT_OF_MEASUREMENT]
             ),
         )
-    return config
