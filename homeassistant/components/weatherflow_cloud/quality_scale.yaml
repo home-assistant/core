@@ -1,0 +1,155 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not register any service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow:
+    status: todo
+    comment: |
+      strings.json does not include data_description entries for the
+      api_token field in the user or reauth_confirm steps.
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not register any service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions:
+    status: todo
+    comment: |
+      The documentation does not include removal instructions.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: todo
+    comment: |
+      async_setup_entry calls rest_api.async_get_stations() at
+      __init__.py:46 without a try/except. A network or auth failure
+      here raises an unhandled exception instead of ConfigEntryNotReady
+      or ConfigEntryAuthFailed.
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      This integration does not register any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters:
+    status: todo
+    comment: |
+      The API key is mentioned as a requirement but the documentation
+      does not explain how to obtain it.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: todo
+    comment: |
+      No PARALLEL_UPDATES constant is defined in sensor.py or weather.py.
+      The REST-polling sensor and weather platforms should declare their
+      concurrency model.
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: |
+      Tests exist but full branch coverage has not been confirmed at
+      >95%. In particular, async_setup_entry error paths and the
+      websocket disconnect handler are not tested.
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: |
+      No diagnostics.py file exists in the integration.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This is a cloud-polling integration. Devices are identified by
+      API token, not by local network discovery.
+  discovery:
+    status: exempt
+    comment: |
+      This is a cloud-polling integration (iot_class: cloud_polling).
+      No local network discovery is possible for identifying stations.
+  docs-data-update:
+    status: todo
+    comment: |
+      The documentation notes the IoT class is cloud_polling but does
+      not document the specific refresh interval or update mechanism.
+  docs-examples:
+    status: todo
+    comment: |
+      No practical configuration examples or automation scenarios are
+      provided in the documentation.
+  docs-known-limitations:
+    status: todo
+    comment: |
+      The documentation only notes weather icon mapping differences;
+      other limitations are not documented.
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: todo
+    comment: |
+      No troubleshooting section exists in the documentation.
+  docs-use-cases:
+    status: todo
+    comment: |
+      No explicit use cases are described beyond general weather
+      monitoring.
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Stations are fetched once at setup time and do not change
+      dynamically while the integration is running.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: |
+      coordinator.py raises UpdateFailed with a plain f-string message
+      rather than a translatable string.
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      No async_step_reconfigure method exists in config_flow.py. Users
+      cannot change the API token without deleting and re-adding the
+      integration.
+  repair-issues:
+    status: exempt
+    comment: |
+      Auth errors are handled via the reauthentication flow
+      (ConfigEntryAuthFailed). No persistent repair issues are needed.
+  stale-devices:
+    status: exempt
+    comment: |
+      The device set is static; stations are determined at setup time
+      by the API token and do not change while the integration runs.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: todo
+    comment: |
+      async_setup_entry correctly passes async_get_clientsession(hass)
+      to WeatherFlowRestAPI (__init__.py:43), but config_flow.py
+      instantiates WeatherFlowRestAPI without a session.
+  strict-typing:
+    status: todo
+    comment: |
+      The integration is not listed in .strict-typing and has not been
+      verified to pass mypy in strict mode.
