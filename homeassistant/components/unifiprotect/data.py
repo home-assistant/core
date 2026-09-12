@@ -415,10 +415,11 @@ class ProtectData:
 
         Each non-eviction change is dispatched — a detection type may surface at
         the event start, on a later update, or only as it ends — routed to the
-        subscribers registered for this device and event type; entities fire each
-        ``(event, type)`` once. Subscriptions are keyed by ``device_id`` (the
-        stable cross-API join key, shared by the private and public bootstraps),
-        so the event routes directly without a bootstrap lookup.
+        subscribers registered for this device and event type; entities dedupe
+        each surfaced type by event id and Protect event type. Subscriptions are
+        keyed by ``device_id`` (the stable cross-API join key, shared by the private
+        and public bootstraps), so the event routes directly without a bootstrap
+        lookup.
         """
         if change is EventChange.REMOVED:
             return
@@ -830,23 +831,6 @@ class ProtectData:
             _LOGGER.debug("Re-reading public device from bootstrap: %s", mac)
         for update_callback in subscriptions:
             update_callback(obj)
-
-
-@callback
-def async_ufp_instance_for_config_entry_ids(
-    hass: HomeAssistant, config_entry_ids: set[str]
-) -> ProtectApiClient | None:
-    """Find the UFP instance for the config entry ids."""
-    return next(
-        iter(
-            entry.runtime_data.api
-            for entry_id in config_entry_ids
-            if (entry := hass.config_entries.async_get_entry(entry_id))
-            and entry.domain == DOMAIN
-            and hasattr(entry, "runtime_data")
-        ),
-        None,
-    )
 
 
 @callback

@@ -92,7 +92,7 @@
     },
     "sensor": {
       "follower": {
-        "name": "Follower",
+        "name": "Followers",
         "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
       },
       "following": {

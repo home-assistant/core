@@ -316,6 +316,12 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return true if the device's event stream is connected."""
+        return self._camera.stream_connected
+
+    @property
+    @override
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         return self._get_sensor_attributes()[0]
