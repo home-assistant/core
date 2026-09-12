@@ -197,7 +197,8 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             }
 
     if domain == Platform.COVER:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            vol.Optional(CONF_STATE): selector.TemplateSelector(),
             vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
             vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
             vol.Optional(STOP_ACTION): selector.ActionSelector(),
@@ -235,7 +236,8 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             }
 
     if domain == Platform.FAN:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            vol.Optional(CONF_STATE): selector.TemplateSelector(),
             vol.Required(CONF_ON_ACTION): selector.ActionSelector(),
             vol.Required(CONF_OFF_ACTION): selector.ActionSelector(),
             vol.Optional(CONF_PERCENTAGE): selector.TemplateSelector(),
@@ -254,7 +256,8 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         }
 
     if domain == Platform.LIGHT:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            vol.Optional(CONF_STATE): selector.TemplateSelector(),
             vol.Required(CONF_TURN_ON): selector.ActionSelector(),
             vol.Required(CONF_TURN_OFF): selector.ActionSelector(),
             vol.Optional(CONF_LEVEL): selector.TemplateSelector(),
@@ -266,7 +269,8 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         }
 
     if domain == Platform.LOCK:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            vol.Optional(CONF_STATE): selector.TemplateSelector(),
             vol.Required(CONF_LOCK): selector.ActionSelector(),
             vol.Required(CONF_UNLOCK): selector.ActionSelector(),
             vol.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
@@ -278,7 +282,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
                 selector.DeviceClassSelectorConfig(domain=Platform.NUMBER),
             ),
-            vol.Required(CONF_STATE): selector.TemplateSelector(),
+            vol.Optional(CONF_STATE): selector.TemplateSelector(),
             vol.Required(CONF_MIN, default=DEFAULT_MIN_VALUE): selector.NumberSelector(
                 selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
             ),
@@ -297,7 +301,8 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         }
 
     if domain == Platform.SELECT:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            vol.Optional(CONF_STATE): selector.TemplateSelector(),
             vol.Required(CONF_OPTIONS): selector.TemplateSelector(),
             vol.Optional(CONF_SELECT_OPTION): selector.ActionSelector(),
         }
@@ -354,7 +359,8 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             }
 
     if domain == Platform.VACUUM:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            vol.Optional(CONF_STATE): selector.TemplateSelector(),
             vol.Required(SERVICE_START): selector.ActionSelector(),
             vol.Optional(CONF_FAN_SPEED): selector.TemplateSelector(),
             vol.Optional(CONF_FAN_SPEED_LIST): selector.SelectSelector(
