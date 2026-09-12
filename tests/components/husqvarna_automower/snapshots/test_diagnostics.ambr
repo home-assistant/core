@@ -161,7 +161,7 @@
         'orientation_shift': 1800,
         'progress': 40,
         'type': 'systematic',
-        'use_global_cutting_height': True,
+        'use_global_cutting_height': False,
       }),
       '654321': dict({
         'current_orientation': None,
@@ -174,7 +174,7 @@
         'orientation_shift': None,
         'progress': None,
         'type': 'random',
-        'use_global_cutting_height': True,
+        'use_global_cutting_height': False,
       }),
     }),
   })

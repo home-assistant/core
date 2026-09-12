@@ -57,6 +57,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self.new_devices_callbacks: list[Callable[[set[str]], None]] = []
         self.new_zones_callbacks: list[Callable[[str, set[str]], None]] = []
         self.new_areas_callbacks: list[Callable[[str, set[int]], None]] = []
+        self.work_area_cutting_height_callbacks: list[
+            Callable[[str, set[int], set[int]], None]
+        ] = []
+        self._work_area_cutting_height_states: dict[tuple[str, int], bool] = {}
         self.pong: datetime | None = None
         self.websocket_alive: bool = False
         self.websocket_callbacks: list[Callable[[bool], None]] = []
@@ -170,7 +174,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         """Listen with the client."""
         try:
             await automower_client.auth.websocket_connect()
-            # Reset reconnect time after successful connection
             self.reconnect_time = DEFAULT_RECONNECT_TIME
             await automower_client.start_listening()
         except (HusqvarnaWSServerHandshakeError, HusqvarnaWSClientError) as err:
@@ -228,13 +231,20 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         orphaned_devices = registered_devices - current_devices
         if orphaned_devices:
             _LOGGER.debug("Removing orphaned devices: %s", orphaned_devices)
-            device_registry = dr.async_get(self.hass)
+
             for mower_id in orphaned_devices:
                 dev = device_registry.async_get_device_by_identifier(
                     (DOMAIN, mower_id), self.config_entry.entry_id
                 )
                 if dev is not None:
                     device_registry.async_remove_device(dev.id)
+                stale_state_keys = {
+                    state_key
+                    for state_key in self._work_area_cutting_height_states
+                    if state_key[0] == mower_id
+                }
+                for state_key in stale_state_keys:
+                    self._work_area_cutting_height_states.pop(state_key)
 
         new_devices = current_devices - registered_devices
         if new_devices:
@@ -327,3 +337,49 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     for area_id in removed_areas:
                         if entry.unique_id.startswith(f"{mower_id}_{area_id}_"):
                             entity_registry.async_remove(entry.entity_id)
+            cutting_height_enabled: set[int] = set()
+            cutting_height_disabled: set[int] = set()
+            work_areas = self.data[mower_id].work_areas
+            if work_areas is None:
+                continue
+            for area_id in current_ids:
+                work_area = work_areas[area_id]
+                enabled = work_area.use_global_cutting_height is False
+                state_key = (mower_id, area_id)
+                previous_enabled = self._work_area_cutting_height_states.get(state_key)
+                if previous_enabled is not None and previous_enabled != enabled:
+                    if enabled:
+                        cutting_height_enabled.add(area_id)
+                    else:
+                        cutting_height_disabled.add(area_id)
+                self._work_area_cutting_height_states[state_key] = enabled
+            for area_id in removed_areas:
+                self._work_area_cutting_height_states.pop((mower_id, area_id), None)
+            if cutting_height_enabled or cutting_height_disabled:
+                _LOGGER.debug(
+                    "Work area cutting height changes for %s: enabled=%s, disabled=%s",
+                    mower_id,
+                    cutting_height_enabled,
+                    cutting_height_disabled,
+                )
+                for callback_fn in self.work_area_cutting_height_callbacks:
+                    callback_fn(
+                        mower_id, cutting_height_enabled, cutting_height_disabled
+                    )
+
+        current_state_keys = {
+            (mower_id, area_id)
+            for mower_id, area_ids in current_areas.items()
+            for area_id in area_ids
+        }
+        stale_state_keys = {
+            state_key
+            for state_key in self._work_area_cutting_height_states
+            if state_key[0] not in self.data
+            or (
+                self.data[state_key[0]].work_areas is not None
+                and state_key not in current_state_keys
+            )
+        }
+        for state_key in stale_state_keys:
+            self._work_area_cutting_height_states.pop(state_key)
