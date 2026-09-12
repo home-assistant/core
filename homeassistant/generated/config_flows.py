@@ -92,6 +92,7 @@ FLOWS = {
         "awair",
         "aws_s3",
         "axis",
+        "axle_energy",
         "azure_data_explorer",
         "azure_devops",
         "azure_event_hub",

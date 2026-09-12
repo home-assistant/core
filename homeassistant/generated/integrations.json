@@ -669,6 +669,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "axle_energy": {
+      "name": "Axle Energy",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "backblaze_b2": {
       "name": "Backblaze B2",
       "integration_type": "service",
