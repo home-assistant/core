@@ -1,0 +1,60 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Create this in the SmartyPlants app, under Settings. It identifies your account to Home Assistant."
+        },
+        "description": "Enter the API key from the SmartyPlants app, under Settings.",
+        "title": "Connect SmartyPlants"
+      },
+      "webhook": {
+        "data": {
+          "webhook_secret": "Webhook secret"
+        },
+        "data_description": {
+          "webhook_secret": "The signing secret the SmartyPlants app shows after you add the webhook URL. It is used to verify that pushed updates really came from SmartyPlants."
+        },
+        "description": "Optional: for instant updates instead of polling every minute, add this webhook URL in the SmartyPlants app, then paste the signing secret it gives you below.\n\n`{webhook_url}`\n\nLeave the secret empty to use polling only.",
+        "title": "Enable live updates"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "fertilize": {
+        "name": "Fertilize in"
+      },
+      "health_score": {
+        "name": "Health score"
+      },
+      "light_quality": {
+        "name": "Light quality"
+      },
+      "moisture": {
+        "name": "Soil moisture"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not reach SmartyPlants: {error}"
+    },
+    "forbidden": {
+      "message": "SmartyPlants refused the request: {error}"
+    },
+    "invalid_auth": {
+      "message": "The SmartyPlants API key was rejected. Enter a new one to reconnect."
+    }
+  }
+}
