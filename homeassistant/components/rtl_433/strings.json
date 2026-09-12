@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to rtl_433 server",
+        "description": "Enter the connection details for the rtl_433 server's HTTP/WebSocket API.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "path": "[%key:common::config_flow::data::path%]",
+          "secure": "Use a secure connection"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the rtl_433 server.",
+          "port": "The port the rtl_433 HTTP server is listening on.",
+          "path": "The WebSocket path on the rtl_433 HTTP server.",
+          "secure": "Connect over an encrypted WebSocket (wss://) instead of ws://."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}
