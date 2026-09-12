@@ -1,0 +1,99 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register custom actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not register conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not register triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities receive their updates through the shared coordinator.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration only reads from the charger.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters:
+    status: exempt
+    comment: Setup is discovery driven and takes no parameters.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      The charger has no credential the integration holds. It accepts commands
+      from any client that wins its single Bluetooth slot.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      The Bluetooth address is the unique ID and does not change, and the
+      charger advertises nothing else that setup stores.
+  discovery: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: todo
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: A config entry is one charger and never gains child devices.
+  entity-category:
+    status: exempt
+    comment: Every entity is primary state rather than configuration or diagnostics.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: Every entity the integration creates is useful by default.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      The entry stores only the Bluetooth address, which is the unique ID and
+      cannot be reconfigured.
+  repair-issues:
+    status: exempt
+    comment: Nothing the integration detects needs user repair.
+  stale-devices:
+    status: exempt
+    comment: A config entry is one charger; removing the entry removes it.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: The integration talks Bluetooth and opens no web session.
+  strict-typing: done
