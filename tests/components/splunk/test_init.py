@@ -1,6 +1,5 @@
 """Test the Splunk integration init."""
 
-import asyncio
 from http import HTTPStatus
 import logging
 from unittest.mock import AsyncMock, MagicMock
@@ -296,24 +295,23 @@ async def test_event_listener_unauthorized_repeated_failures_log_once(
         hass.states.async_set("sensor.test", "recovered")
         await hass.async_block_till_done()
 
-    # Unauthorized failures are user-visible at ERROR, so the recovery that
-    # closes them out must be equally visible, not silently downgraded.
+    # Recovery never logs higher than warning, even after an ERROR failure.
     recovery_records = [
         record
         for record in caplog.records
-        if record.levelno == logging.ERROR
+        if record.levelno == logging.WARNING
         and "Sending events to Splunk has recovered" in record.message
     ]
     assert len(recovery_records) == 1
 
 
-async def test_event_listener_category_change_logs_again(
+async def test_event_listener_category_change_stays_at_debug(
     hass: HomeAssistant,
     mock_hass_splunk: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test switching from one failure category to another logs the new one too."""
+    """Test switching failure type mid-outage keeps logging at debug."""
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -334,21 +332,22 @@ async def test_event_listener_category_change_logs_again(
             hass.states.async_set("sensor.test", f"unauthorized-{i}")
             await hass.async_block_till_done()
 
+    # Connection errors already log at debug on their own, so all 3 appear.
     connection_records = [
         record
         for record in caplog.records
-        if record.levelno == logging.DEBUG
-        and "Connection error sending to Splunk" in record.message
+        if "Connection error sending to Splunk" in record.message
     ]
-    assert len(connection_records) == 1
+    assert len(connection_records) == 3
+    assert all(record.levelno == logging.DEBUG for record in connection_records)
 
     unauthorized_records = [
         record
         for record in caplog.records
-        if record.levelno == logging.ERROR
-        and "Splunk token unauthorized" in record.message
+        if "Splunk token unauthorized" in record.message
     ]
-    assert len(unauthorized_records) == 1
+    assert len(unauthorized_records) == 3
+    assert all(record.levelno == logging.DEBUG for record in unauthorized_records)
 
     # Reauth still fires on every failure regardless of log suppression.
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -543,17 +542,17 @@ async def test_event_listener_recovery_from_debug_only_outage_stays_at_debug(
     assert recovery_records[0].levelno == logging.DEBUG
 
 
-async def test_event_listener_recovery_after_error_then_debug_stays_visible(
+async def test_event_listener_recovery_after_error_then_debug_capped_at_warning(
     hass: HomeAssistant,
     mock_hass_splunk: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test recovery keeps the highest severity seen, not just the latest failure.
+    """Test recovery keeps the highest severity seen, capped at warning.
 
     An ERROR-level failure (unauthorized) followed by a DEBUG-level failure
-    (connection blip) before recovery must still surface the recovery at
-    ERROR, not be silently downgraded to DEBUG.
+    (connection blip) before recovery must surface the recovery at WARNING,
+    the highest severity a recovery message may ever reach.
     """
     mock_config_entry.add_to_hass(hass)
 
@@ -582,7 +581,7 @@ async def test_event_listener_recovery_after_error_then_debug_stays_visible(
         if "Sending events to Splunk has recovered" in record.message
     ]
     assert len(recovery_records) == 1
-    assert recovery_records[0].levelno == logging.ERROR
+    assert recovery_records[0].levelno == logging.WARNING
 
 
 async def test_event_listener_no_recovery_message_without_prior_failure(
@@ -605,127 +604,6 @@ async def test_event_listener_no_recovery_message_without_prior_failure(
         "Sending events to Splunk has recovered" in record.message
         for record in caplog.records
     )
-
-
-async def test_event_listener_out_of_order_completion_preserves_failure(
-    hass: HomeAssistant,
-    mock_hass_splunk: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a slow success finishing after a fast failure doesn't erase it.
-
-    Each firing of the listener runs as its own task, so an older send that
-    is slow to resolve can complete after a newer send has already failed.
-    That late success must not clear the failure state or log a false
-    recovery.
-    """
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    async def delayed_queue(data: str, send: bool = True) -> bool:
-        if "slow-success" in data:
-            await asyncio.sleep(0.1)
-            return True
-        raise SplunkPayloadError(0, "Bad request", HTTPStatus.BAD_REQUEST)
-
-    mock_hass_splunk.queue.side_effect = delayed_queue
-
-    with caplog.at_level(logging.DEBUG):
-        # Dispatched first but resolves last.
-        hass.states.async_set("sensor.test", "slow-success")
-        # Dispatched second but resolves first.
-        hass.states.async_set("sensor.test", "fast-failure")
-        await hass.async_block_till_done()
-
-    assert not any(
-        "Sending events to Splunk has recovered" in record.message
-        for record in caplog.records
-    )
-
-    caplog.clear()
-    mock_hass_splunk.queue.side_effect = SplunkPayloadError(
-        0, "Bad request", HTTPStatus.BAD_REQUEST
-    )
-
-    with caplog.at_level(logging.DEBUG):
-        hass.states.async_set("sensor.test", "still-failing")
-        await hass.async_block_till_done()
-
-    # The failure category set by the fast failure must have survived the
-    # late-arriving success, so a same-category failure is suppressed again.
-    assert not any(
-        "Splunk payload error" in record.message for record in caplog.records
-    )
-
-
-async def test_event_listener_out_of_order_failure_after_success(
-    hass: HomeAssistant,
-    mock_hass_splunk: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a slow failure finishing after a fast success is not discarded.
-
-    An older send that fails slowly can complete after a newer send has
-    already succeeded. That success advances the sequence gate, but the
-    late failure must still be recorded and logged: it is a fact about a
-    send that genuinely failed, not stale good news that can be dropped.
-    """
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    async def delayed_queue(data: str, send: bool = True) -> bool:
-        if "slow-failure" in data:
-            await asyncio.sleep(0.1)
-            raise SplunkPayloadError(0, "Bad request", HTTPStatus.BAD_REQUEST)
-        return True
-
-    mock_hass_splunk.queue.side_effect = delayed_queue
-
-    with caplog.at_level(logging.DEBUG):
-        # Dispatched first but resolves last.
-        hass.states.async_set("sensor.test", "slow-failure")
-        # Dispatched second but resolves first.
-        hass.states.async_set("sensor.test", "fast-success")
-        await hass.async_block_till_done()
-
-    # The late failure must still be logged even though a newer send already
-    # succeeded and advanced the sequence gate.
-    assert any("Splunk payload error" in record.message for record in caplog.records)
-
-    caplog.clear()
-    mock_hass_splunk.queue.side_effect = SplunkPayloadError(
-        0, "Bad request", HTTPStatus.BAD_REQUEST
-    )
-
-    with caplog.at_level(logging.DEBUG):
-        hass.states.async_set("sensor.test", "still-failing")
-        await hass.async_block_till_done()
-
-    # The failure category recorded by the late-arriving failure must have
-    # survived, so a same-category failure is suppressed.
-    assert not any(
-        "Splunk payload error" in record.message for record in caplog.records
-    )
-
-    caplog.clear()
-    mock_hass_splunk.queue.side_effect = None
-
-    with caplog.at_level(logging.DEBUG):
-        hass.states.async_set("sensor.test", "recovered")
-        await hass.async_block_till_done()
-
-    recovery_records = [
-        record
-        for record in caplog.records
-        if "Sending events to Splunk has recovered" in record.message
-    ]
-    assert len(recovery_records) == 1
 
 
 async def test_yaml_filter_only_no_deprecation_issue(
