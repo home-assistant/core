@@ -86,4 +86,5 @@ def make_coordinator(
         async_refresh=AsyncMock(),
         async_request_refresh=AsyncMock(),
         supports_update_run=MagicMock(return_value=True),
+        is_data_path_failing=MagicMock(return_value=False),
     )

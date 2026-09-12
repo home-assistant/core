@@ -776,3 +776,35 @@ def test_available_referenced_entity_present_uid_is_available() -> None:
     """A referenced entity whose uid still resolves to data stays available."""
     entity = _make_entity(uid="d1", data={"guid": "g1"}, description=_REF_DESC)
     assert entity.available is True
+
+
+def test_available_is_false_while_backing_job_is_failing() -> None:
+    """An entity goes unavailable once its data_path's job is marked failing.
+
+    Even though _data itself is still populated (the last-good snapshot),
+    a permanently failing job must not keep entities "available" forever.
+    """
+    coordinator = make_coordinator(data={"disk": {"d1": {"guid": "g1"}}})
+    coordinator.is_data_path_failing = lambda data_path: data_path == "disk"
+    entity = TrueNASEntity(coordinator, _REF_DESC, "d1")
+    assert entity.available is False
+
+
+def test_available_ignores_failing_flag_of_unrelated_data_path() -> None:
+    """A failing flag on a different data_path must not affect this entity."""
+    coordinator = make_coordinator(data={"disk": {"d1": {"guid": "g1"}}})
+    coordinator.is_data_path_failing = lambda data_path: data_path == "pool"
+    entity = TrueNASEntity(coordinator, _REF_DESC, "d1")
+    assert entity.available is True
+
+
+def test_available_keyless_entity_unavailable_while_multi_owner_job_failing() -> None:
+    """A keyless entity on a multi-owner data_path goes unavailable when failing.
+
+    ``system_info`` is owned by get_systeminfo; a failing flag on it must win
+    over the still-populated last-good snapshot that make_coordinator seeds.
+    """
+    coordinator = make_coordinator()
+    coordinator.is_data_path_failing = lambda data_path: data_path == "system_info"
+    entity = TrueNASEntity(coordinator, _STATIC_DESC, None)
+    assert entity.available is False

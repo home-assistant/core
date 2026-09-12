@@ -85,9 +85,16 @@ def from_entry(
     max_len: int | None = 255,
     round_digits: int | None = None,
 ) -> Any:
-    """Validate and return value from an API dict."""
+    """Validate and return value from an API dict.
+
+    A JSON ``null`` for a present key resolves to Python ``None``, which is not
+    ``_MISSING`` -- fall back to ``default`` here too so a declared default is
+    honored instead of leaking the raw ``None`` (TrueNAS sends fields such as
+    ``progress/percent`` on ``core.get_jobs`` as ``null`` before a job starts
+    progressing, where the spec's declared default is ``0``, not ``None``).
+    """
     ret = _resolve_source(entry, param)
-    if ret is _MISSING:
+    if ret is _MISSING or ret is None:
         return default
 
     if isinstance(ret, float) and round_digits is not None:

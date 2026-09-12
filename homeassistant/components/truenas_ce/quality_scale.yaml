@@ -39,12 +39,12 @@ rules:
     comment: Linked docs PR home-assistant/home-assistant.io#47351 still lists options (cron-skip toggle, poll interval) this Bronze scope does not expose; will be marked done once the docs PR is aligned.
   docs-installation-parameters: done
   entity-unavailable:
-    status: todo
-    comment: Coordinator jobs run behind a blanket exception-swallowing wrapper with no per-job/per-endpoint success tracking, so an endpoint whose job keeps raising retains its last-good ds snapshot (and its entities stay "available") indefinitely -- entity.py's available property only catches the case where the snapshot itself comes back empty, not a stale one. Planned as a follow-up PR after the initial bronze PR merges.
+    status: done
+    comment: Best-effort at ds-key (data_path) granularity, not per-entity -- see TrueNASCoordinator.is_data_path_failing. Covers both a job that raises (_JOB_DATA_PATHS) and a TrueNASState method that swallows a failed/malformed primary result and returns a cached snapshot instead (aiotruenas>=1.5.5's stale_endpoints, see _STALE_ENDPOINT_DATA_PATHS). Deliberately does not cover best-effort enrichment on top of an otherwise-fresh result (disk temperature, interface throughput, the systemstats netdata graphs, TrueNAS version/virtualization detection) -- aiotruenas's stale_endpoints intentionally excludes these too, since folding them in would pin whole entity groups (all disk/system_info sensors) permanently unavailable on hardware that simply never reports the optional metric; that staleness stays visible only via aiotruenas's finer systemstats_stale_graphs/ups_stale_graphs and debug/warning logs. system_info/interface are still fetched via raw api.query() (not yet migrated to TrueNASState), so stale_endpoints' entries for those two names are currently unreachable here; both now raise directly on a non-dict/non-list response instead of silently keeping the previous snapshot (_query_interfaces checks the raw interface.query result before parse_api) -- to revisit once interface migrates to TrueNASState.get_interface().
   integration-owner: done
   log-when-unavailable:
-    status: todo
-    comment: Same root cause as entity-unavailable -- no per-job state to log a transition on. Planned as a follow-up PR after the initial bronze PR merges.
+    status: done
+    comment: Same job-outcome-transition tracking as entity-unavailable (_note_job_outcome) drives the logging -- one exception traceback per transition into failure, one info-level line on recovery, not a re-log per poll. The stale_endpoints-derived path (get_smb/get_ups/get_pool/get_dataset/get_directoryservices/get_alerts/get_scrub) instead relies on aiotruenas's own once-per-transition warning/recovery logging inside TrueNASState (_note_fallback_outcome) rather than logging again here.
   parallel-updates: done
   reauthentication-flow:
     status: todo

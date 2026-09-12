@@ -98,6 +98,88 @@ def get_truenas_coordinator(
     return getattr(config_entry, "runtime_data", None)
 
 
+# Maps each coordinator job (by method name) to the self.ds key(s) it owns,
+# used to decide which entities go unavailable while a job is persistently
+# failing (see TrueNASCoordinator._note_job_outcome/is_data_path_failing).
+# get_smb and get_ups are included here even though their TrueNASState
+# methods never raise for a failed/malformed API response (that case is
+# covered via _STALE_ENDPOINT_DATA_PATHS/stale_endpoints instead, below) --
+# kept as defense in depth for an exception that isn't a TrueNASError (e.g.
+# a bug in the domain layer itself, or something below aiotruenas's own
+# TrueNASError wrapping) and so does propagate out of the get_*() call:
+# TrueNASState.stale_endpoints's own docstring is explicit that "a primary
+# get_* that fails by raising is not reflected here", so without a
+# _JOB_DATA_PATHS entry that case would go entirely untracked.
+# get_systemstats is the one job intentionally omitted: it only contributes
+# a subset of "system_info"/"interface" fields that get_systeminfo already
+# owns, so mapping it here would wrongly mark unrelated entities (hostname,
+# version, uptime, ...) unavailable whenever only a netdata-graph fetch
+# fails. It tracks its own graph failures via _record_failed_graphs
+# (transition warning + cooldown) instead.
+# "_query_interfaces" is not a top-level job run via the _run_job closure in
+# _async_update_data -- it's called from inside get_systeminfo() -- but its
+# outcome is tracked through the same _note_job_outcome/_job_failing
+# mechanism under its own name, for the same reason get_systemstats isn't
+# folded into get_systeminfo's entry: keeping a failure scoped to the
+# entities it actually affects.
+_JOB_DATA_PATHS: dict[str, tuple[str, ...]] = {
+    # "interface" stays listed here too: if get_systeminfo raises before ever
+    # reaching _query_interfaces (system.info itself failed), the interface
+    # data wasn't refreshed this poll either. The reverse direction --
+    # interface.query failing on its own -- is tracked separately below via
+    # "_query_interfaces" so it doesn't also mark system_info unavailable.
+    "get_systeminfo": ("system_info", "interface"),
+    "_query_interfaces": ("interface",),
+    "get_pool": ("pool",),
+    "get_dataset": ("dataset",),
+    "get_disk": ("disk",),
+    "get_directoryservices": ("directoryservices",),
+    "get_alerts": ("alerts",),
+    "get_certificates": ("certificate",),
+    "get_arc": ("arc",),
+    "get_smb": ("smb",),
+    "get_ups": ("ups",),
+    "get_cloudsync": ("cloudsync",),
+    "get_replication": ("replication",),
+    "get_rsync": ("rsynctask",),
+    "get_snapshottask": ("snapshottask",),
+    "get_scrub": ("scrub",),
+    "get_app": ("app",),
+    "get_app_stats": ("app_stats",),
+}
+
+# self.ds keys whose backing TrueNASState.get_*() method can silently fall
+# back to a cached/malformed-primary-result snapshot without raising -- see
+# TrueNASState.stale_endpoints's docstring (aiotruenas>=1.5.5, the first
+# release where its known gaps -- e.g. "dataset" below -- were closed).
+# Checked by is_data_path_failing() in addition to _JOB_DATA_PATHS so these
+# entities don't stay "available" forever on a stuck upstream fetch.
+# Deliberately an explicit allowlist, not "any name state.stale_endpoints
+# returns": aiotruenas also reports "system_info"/"interface"/"service"/"vm"
+# there, but this coordinator either doesn't call the corresponding
+# self.state.get_*() method yet (interface/service/vm) or already gets a
+# hard raise for it via get_systeminfo()'s own isinstance(dict) check
+# (system_info) -- listing them here too would be a no-op at best and a
+# footgun for a future migration at worst. Endpoints aiotruenas deliberately
+# never reports here (disk-temp, interface-throughput, systemstats graphs,
+# capability detection) stay available-by-design; see the aiotruenas design
+# rationale linked from quality_scale.yaml's entity-unavailable comment.
+#
+# Known accepted over-report for "dataset": TrueNASState.get_pool() also
+# flags "dataset" stale on a malformed 'pool.query' response, even in a poll
+# where get_dataset()'s own 'pool.dataset.query' call -- which this
+# coordinator runs first, every cycle -- just freshly republished it (see
+# stale_endpoints's own "dataset" docstring section). A 'pool.query'-only
+# outage therefore marks dataset entities unavailable too, even though their
+# data is current; self-corrects as soon as 'pool.query' recovers. Left in
+# rather than dropped because the alternative -- no tracking at all for a
+# genuine 'pool.dataset.query' outage, which get_dataset() also never raises
+# for -- is the more likely and more important failure to catch.
+_STALE_ENDPOINT_DATA_PATHS: frozenset[str] = frozenset(
+    {"pool", "dataset", "directoryservices", "alerts", "smb", "ups", "scrub"}
+)
+
+
 def _unwrap_app_stats_message(msg: dict[str, Any]) -> dict[str, Any] | None:
     """Unwrap collection_update envelope; return inner params/fields dict or None."""
     params = msg.get("params")
@@ -150,6 +232,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "app_stats": {},
             "cronjob": {},
             "ups": {},
+            "smb": {},
             "alerts": {
                 "count": 0,
                 "messages": [],
@@ -175,6 +258,16 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._systemstats_error_cooldown = timedelta(minutes=10)
         self.datasets_hass_device_id = None
 
+        # Per-job failure tracking (name -> currently failing) for
+        # entity-unavailable/log-when-unavailable; see _note_job_outcome.
+        self._job_failing: dict[str, bool] = {}
+
+        # Whether the last _async_ensure_connected attempt failed, deduped
+        # the same way so a persistently unreachable host (e.g. deliberately
+        # powered off via truenas_ce.system_shutdown) logs one ERROR instead
+        # of one every 60s poll -- see issue #145.
+        self._connection_failing = False
+
         self._is_virtual = False
         self._version_major: int = 0
         self._version_minor: int = 0
@@ -182,6 +275,11 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self._app_stats_event_name: str | None = None
         self._app_stats_sub_id: str | None = None
+        # Root cause of the most recent failed _subscribe_to_app_stats
+        # attempt, folded into get_app_stats()'s UpdateFailed instead of
+        # being logged at ERROR twice for one failure -- see
+        # _subscribe_to_app_stats.
+        self._app_stats_subscribe_error: BaseException | str | None = None
 
     def connected(self) -> bool:
         """Return connected state."""
@@ -197,13 +295,71 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         return group in monitored
 
+    def _note_job_outcome(self, job_name: str, *, failed: bool) -> bool:
+        """Track a job's OK<->failing transition, logging only on change.
+
+        Returns True only on the poll where a job first starts failing (or
+        on its very first run), so the caller can emit a one-off traceback;
+        every repeated failure returns False and stays silent. Logs an
+        info-level recovery message once the job succeeds again. A job that
+        no-ops instead of raising (e.g. a monitored-group toggle disabling
+        it) counts as a success here and clears any stale failing flag the
+        same way.
+        """
+        was_failing = self._job_failing.get(job_name, False)
+        if failed:
+            self._job_failing[job_name] = True
+            return not was_failing
+        if was_failing:
+            _LOGGER.info(
+                "TrueNAS job %s recovered; its entities are available again",
+                job_name,
+            )
+            self._job_failing[job_name] = False
+        return False
+
+    def is_data_path_failing(self, data_path: str) -> bool:
+        """Return True if any job owning this ds key is currently failing.
+
+        Also true when aiotruenas itself reports the ds key as stale (see
+        _STALE_ENDPOINT_DATA_PATHS/TrueNASState.stale_endpoints) -- the
+        job-level check alone can't see a domain method that swallows a
+        failed/malformed primary RPC result and returns the previous
+        snapshot instead of raising.
+        """
+        if (
+            data_path in _STALE_ENDPOINT_DATA_PATHS
+            and data_path in self.state.stale_endpoints
+        ):
+            return True
+        return any(
+            self._job_failing.get(job_name, False)
+            for job_name, data_paths in _JOB_DATA_PATHS.items()
+            if data_path in data_paths
+        )
+
     async def _async_ensure_connected(self) -> None:
-        """Connect if needed, raising the appropriate coordinator error on failure."""
+        """Connect if needed, raising the appropriate coordinator error on failure.
+
+        For the common case where api.connect() returns False (e.g. TrueNAS
+        unreachable), deduped like _note_job_outcome/self._job_failing: a
+        persistently unreachable host (e.g. deliberately powered off via
+        truenas_ce.system_shutdown, see #145) logs one ERROR instead of one
+        every 60s poll, plus an INFO line once the connection recovers.
+        quiet is threaded into api.connect() on repeat failures so its own
+        ERROR-level traceback is deduped too, not just the shorter follow-up
+        line below. An unexpected exception from api.connect() itself
+        (rather than a normal False return) bypasses this dedup and relies
+        on the DataUpdateCoordinator's own success/failure-transition
+        logging instead -- that path is rare enough not to warrant its own
+        bookkeeping here.
+        """
         if self.api.connected():
+            self._note_connection_recovered()
             return
 
         try:
-            connected = await self.api.connect()
+            connected = await self.api.connect(quiet=self._connection_failing)
         except Exception as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -211,24 +367,40 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"host": self.host, "error": str(e)},
             ) from e
 
-        if not connected:
-            if self.api.error == ERR_INVALID_KEY:
-                # Bronze scope has no reauth flow (quality_scale.yaml); degrade
-                # to UpdateFailed instead of ConfigEntryAuthFailed.
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_api_key",
-                    translation_placeholders={"host": self.host},
-                )
-            _LOGGER.error("TrueNAS connection failed (error code: %s)", self.api.error)
+        if connected:
+            self._note_connection_recovered()
+            return
+
+        if self.api.error == ERR_INVALID_KEY:
+            # Bronze scope has no reauth flow (quality_scale.yaml); degrade
+            # to UpdateFailed instead of ConfigEntryAuthFailed.
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="connection_error",
-                translation_placeholders={
-                    "host": self.host,
-                    "error": str(self.api.error),
-                },
+                translation_key="invalid_api_key",
+                translation_placeholders={"host": self.host},
             )
+        if self._connection_failing:
+            _LOGGER.debug(
+                "TrueNAS connection still failing (error code: %s)",
+                self.api.error,
+            )
+        else:
+            _LOGGER.error("TrueNAS connection failed (error code: %s)", self.api.error)
+            self._connection_failing = True
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+            translation_placeholders={
+                "host": self.host,
+                "error": str(self.api.error),
+            },
+        )
+
+    def _note_connection_recovered(self) -> None:
+        """Log recovery once and clear the dedup flag; see _async_ensure_connected."""
+        if self._connection_failing:
+            _LOGGER.info("TrueNAS connection recovered")
+            self._connection_failing = False
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
@@ -268,12 +440,28 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.api.connected():
 
             async def _run_job(job: Callable[[], Awaitable[None]]) -> None:
+                name = getattr(job, "__name__", str(job))
                 try:
                     await job()
                 except Exception:
-                    _LOGGER.exception(
-                        "Error running TrueNAS job %s", getattr(job, "__name__", job)
-                    )
+                    if self._note_job_outcome(name, failed=True):
+                        _LOGGER.exception(
+                            "TrueNAS job %s failed; its entities will go unavailable",
+                            name,
+                        )
+                else:
+                    # A job can return cleanly (no exception) yet not have
+                    # actually finished its work, if the connection dropped
+                    # mid-job and its own connected() guard made it bail out
+                    # early (e.g. get_systeminfo/_handle_update_job). Only
+                    # count this as a real success while still connected --
+                    # otherwise a job that was previously flagged failing
+                    # would log a spurious "recovered" line in the very same
+                    # poll that then raises "disconnected" below. Leaving the
+                    # flag untouched here just defers the recovery log to a
+                    # poll where the job actually completes while connected.
+                    if self.api.connected():
+                        self._note_job_outcome(name, failed=False)
 
             # Must run before the concurrent jobs: get_systemstats reads
             # ds["interface"]/_is_virtual, which this populates.
@@ -337,13 +525,16 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     {"name": "update_jobid", "default": 0},
                     {"name": "update_state", "default": "unknown"},
                     {"name": "update_version", "default": "unknown"},
-                    {"name": "smb_connections", "default": 0},
                 ],
             )
         else:
-            _LOGGER.debug(
-                "Skipping system_info update due to invalid/empty API response: %r",
-                raw_system_info,
+            # No usable system.info payload: signal failure so _run_job marks
+            # system_info/interface entities unavailable instead of serving
+            # stale data indefinitely (entity-unavailable / log-when-unavailable).
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="system_info_unavailable",
+                translation_placeholders={"host": self.host},
             )
 
         if not self.api.connected():
@@ -362,7 +553,21 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._parse_version()
         self._detect_virtualization()
         self._update_uptime()
-        await self._query_interfaces()
+
+        # Tracked as its own job (not re-raised) so a lone interface.query
+        # failure only marks "interface" entities unavailable instead of
+        # also taking down the ten unrelated system_info entities above,
+        # which are already known-fresh at this point in the same poll.
+        try:
+            await self._query_interfaces()
+        except UpdateFailed:
+            if self._note_job_outcome("_query_interfaces", failed=True):
+                _LOGGER.exception(
+                    "TrueNAS job %s failed; its entities will go unavailable",
+                    "_query_interfaces",
+                )
+        else:
+            self._note_job_outcome("_query_interfaces", failed=False)
 
     async def _handle_update_job(self) -> None:
         """Refresh progress/state for a running update job, if any."""
@@ -449,9 +654,28 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _query_interfaces(self) -> None:
         """Query network interfaces from TrueNAS."""
+        raw_interfaces = await self.api.query("interface.query")
+        if not isinstance(raw_interfaces, list):
+            if not self.api.connected():
+                # Connection dropped mid-query; _async_update_data's own
+                # "disconnected" error covers this poll, so don't also
+                # misattribute it as an interface-specific failure. Logged at
+                # DEBUG so a genuinely malformed response that happens to
+                # coincide with a disconnect isn't entirely untraceable.
+                _LOGGER.debug(
+                    "interface.query returned %r while disconnected; skipping "
+                    "interface_unavailable for this poll",
+                    raw_interfaces,
+                )
+                return
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="interface_unavailable",
+                translation_placeholders={"host": self.host},
+            )
         self.ds["interface"] = parse_api(
             data=self.ds["interface"],
-            source=await self.api.query("interface.query"),
+            source=raw_interfaces,
             key="id",
             vals=[
                 {"name": "id", "default": "unknown"},
@@ -504,6 +728,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         }
         tmp_graph = await self._fetch_stat_graphs(graph_names, graph_query)
         if not tmp_graph:
+            # Every graph fetch failed; _fetch_stat_graphs already logged the
+            # transition and armed the cooldown, so just keep last-known values.
             return
 
         for item in tmp_graph:
@@ -824,19 +1050,25 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def get_smb(self) -> None:
         """Get active SMB connections via the aiotruenas domain layer.
 
-        ``TrueNASState.get_smb()`` returns a standalone ``{"connections": N}``
-        map; merged into ``system_info`` here so the ``smb_connections``
-        sensor's data path is unchanged.
+        Own ``"smb"`` ds key (not merged into ``system_info``): ``get_smb()``
+        never raises on a failed/malformed ``smb.status`` response, it logs
+        once and returns the previous count instead (see
+        ``TrueNASState.get_smb``) -- keeping it separate lets
+        ``is_data_path_failing("smb")`` (via ``TrueNASState.stale_endpoints``)
+        mark just the smb_connections entity unavailable on a stuck fetch,
+        rather than every system_info entity (hostname, version, uptime, ...).
         """
-        smb = await self.state.get_smb()
-        if "connections" in smb:
-            self.ds["system_info"]["smb_connections"] = smb["connections"]
+        self.ds["smb"] = await self.state.get_smb()
 
     async def get_ups(self) -> None:
         """Get UPS readings via the aiotruenas domain layer, if a UPS is present."""
         if not self._is_group_monitored(MONITOR_GROUP_UPS):
             self.ds["ups"] = {}
             return
+        # get_ups() never raises on a failed/malformed reading -- it logs once
+        # and returns the previous snapshot (see TrueNASState.get_ups) -- so
+        # is_data_path_failing("ups") relies on TrueNASState.stale_endpoints
+        # (see _STALE_ENDPOINT_DATA_PATHS) rather than a job-level raise here.
         self.ds["ups"] = await self.state.get_ups()
 
     async def get_cloudsync(self) -> None:
@@ -942,6 +1174,11 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if not self.api.connected():
             _LOGGER.debug("start_app_stats: API not connected, skipping")
+            # Overwrite rather than leave whatever an earlier, unrelated
+            # subscribe attempt left here -- otherwise get_app_stats() could
+            # later chain a stale cause into an UpdateFailed that doesn't
+            # actually explain this cycle's failure.
+            self._app_stats_subscribe_error = "disconnected before subscribe attempt"
             return
 
         event_name = self._resolve_app_stats_event_name()
@@ -990,13 +1227,30 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             sub_id, queue = await self.api.subscribe_events(event_name)
             if sub_id and queue is not None:
                 self._set_app_stats_subscription(sub_id, event_name)
+                self._app_stats_subscribe_error = None
                 _LOGGER.debug("TrueNAS app.stats subscription established: %s", sub_id)
             else:
+                self._app_stats_subscribe_error = "no sub_id/queue returned"
                 _LOGGER.debug(
                     "TrueNAS app.stats subscription failed: no sub_id/queue returned"
                 )
-        except Exception:
-            _LOGGER.exception("Failed to establish app.stats subscription")
+        except Exception as err:
+            # get_app_stats() raises UpdateFailed when self._app_stats_sub_id
+            # is still unset after this returns, which the coordinator's
+            # _run_job closure logs as one ERROR-with-traceback per failing
+            # transition (deduped via _note_job_outcome). Logging the
+            # underlying exception at ERROR here too, on every single
+            # attempt (this method isn't itself routed through _run_job),
+            # would double that traceback for one failure event -- kept at
+            # DEBUG so a poll-by-poll trace is still available with debug
+            # logging enabled. The root cause isn't lost though: stashed
+            # here so get_app_stats() can fold it into the UpdateFailed it
+            # raises (and chain it as the traceback's cause) instead of that
+            # ERROR line reading as an unexplained generic failure.
+            self._app_stats_subscribe_error = err
+            _LOGGER.debug(
+                "Failed to establish app.stats subscription: %s", err, exc_info=err
+            )
 
     async def get_app_stats(self) -> None:
         """Process buffered app.stats events and update state."""
@@ -1009,6 +1263,18 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.ds["app_stats"] = {}
             return
 
+        if not self.api.connected():
+            return
+
+        if not self.ds.get("app"):
+            # No apps means no app_stats entities either (they're created
+            # per app uid), so there's nothing a failed resubscribe below
+            # could mark unavailable -- skip the subscription dance
+            # entirely rather than raising over a persistently-failing
+            # resubscribe attempt that has no user-visible effect here.
+            self._prune_stale_app_stats(set())
+            return
+
         if not self._app_stats_sub_id or not await self.api.is_subscribed(
             self._app_stats_sub_id
         ):
@@ -1017,17 +1283,36 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             await self.start_app_stats()
             if not self._app_stats_sub_id:
-                _LOGGER.debug(
-                    "get_app_stats: subscription not established, skipping event fetch"
-                )
-                return
-
-        if not self.api.connected():
-            return
-
-        if not self.ds.get("app"):
-            self._prune_stale_app_stats(set())
-            return
+                if not self.api.connected():
+                    # Connection dropped between the connected() check above
+                    # and here (e.g. during is_subscribed()/start_app_stats()'s
+                    # own awaits) -- the poll's other jobs already surface
+                    # "TrueNAS disconnected" via their own connected() guards,
+                    # so raising the subscription-specific message below would
+                    # misattribute the actual root cause. Logged at DEBUG so a
+                    # genuine resubscribe bug that happens to coincide with a
+                    # disconnect isn't entirely untraceable.
+                    _LOGGER.debug(
+                        "app.stats resubscribe left no sub_id while disconnected; "
+                        "skipping app_stats_unavailable for this poll"
+                    )
+                    return
+                # start_app_stats()/_subscribe_to_app_stats() only log
+                # internally and never raise, so this is the one place a
+                # failed resubscribe attempt becomes visible: raise so
+                # entity-unavailable/log-when-unavailable can mark the
+                # app_stats entities unavailable instead of serving a frozen
+                # last-good snapshot forever. Folds in the stashed root cause
+                # (an exception object chains as the traceback's cause; a
+                # plain reason string, e.g. "no sub_id/queue returned", is
+                # just placed in the message) so the one ERROR line _run_job
+                # logs for this isn't a generic, unexplained failure.
+                cause = self._app_stats_subscribe_error
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="app_stats_unavailable",
+                    translation_placeholders={"host": self.host, "error": str(cause)},
+                ) from (cause if isinstance(cause, BaseException) else None)
 
         messages = await self.api.get_subscription_events(self._app_stats_sub_id)
         self._process_app_stats_messages(messages)

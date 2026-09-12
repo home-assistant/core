@@ -389,30 +389,36 @@ async def test_get_alerts_delegates_to_state(coordinator: TrueNASCoordinator) ->
 # ---------------------------
 # The list-vs-dict response-shape handling these tests used to exercise
 # directly now lives in and is tested by aiotruenas's own
-# TrueNASState.get_smb(). get_smb() just delegates and merges "connections"
-# into system_info, so this only needs to lock in that plumbing.
-async def test_get_smb_merges_connections_into_system_info(
+# TrueNASState.get_smb(). get_smb() just delegates into its own "smb" ds key
+# (kept separate from system_info so is_data_path_failing("smb") -- driven by
+# TrueNASState.stale_endpoints -- only affects the smb_connections entity),
+# so this only needs to lock in that plumbing.
+async def test_get_smb_writes_own_ds_key(
     coordinator: TrueNASCoordinator,
 ) -> None:
-    """get_smb copies TrueNASState.get_smb()'s "connections" into system_info."""
+    """get_smb stores TrueNASState.get_smb()'s result under ds["smb"]."""
     coord = coordinator
-    coord.ds = {"system_info": {}}
+    coord.ds = {"smb": {}}
     coord.state = MagicMock()
     coord.state.get_smb = AsyncMock(return_value={"connections": 3})
     await coord.get_smb()
-    assert coord.ds["system_info"]["smb_connections"] == 3
+    assert coord.ds["smb"] == {"connections": 3}
 
 
-async def test_get_smb_leaves_system_info_untouched_without_connections_key(
+async def test_get_smb_keeps_stale_snapshot_from_state(
     coordinator: TrueNASCoordinator,
 ) -> None:
-    """A malformed/failed state response (no "connections" key) is a no-op."""
+    """A malformed/failed response is a no-op.
+
+    TrueNASState.get_smb() already returns the previous snapshot itself (see
+    aiotruenas), so get_smb() just stores it as-is.
+    """
     coord = coordinator
-    coord.ds = {"system_info": {"smb_connections": 3}}
+    coord.ds = {"smb": {"connections": 3}}
     coord.state = MagicMock()
-    coord.state.get_smb = AsyncMock(return_value={})
+    coord.state.get_smb = AsyncMock(return_value={"connections": 3})
     await coord.get_smb()
-    assert coord.ds["system_info"]["smb_connections"] == 3
+    assert coord.ds["smb"] == {"connections": 3}
 
 
 async def test_start_app_stats_stops_when_containers_not_monitored(
@@ -486,6 +492,26 @@ async def test_start_app_stats_defaults_when_config_entry_missing(
 
     monitored_mock.assert_called()
     coord.api.subscribe_events.assert_awaited_once()
+
+
+async def test_start_app_stats_overwrites_stale_error_when_disconnected(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A disconnected-guard skip must not leave a stale subscribe error behind.
+
+    Without this, get_app_stats() could later chain a leftover exception from
+    an earlier, unrelated subscribe attempt into an UpdateFailed that doesn't
+    actually explain why this cycle's resubscribe failed.
+    """
+    coord = coordinator
+    coord._app_stats_subscribe_error = ValueError("stale, unrelated failure")
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=False)
+    coord.config_entry = None
+
+    await coord.start_app_stats()
+
+    assert coord._app_stats_subscribe_error == "disconnected before subscribe attempt"
 
 
 async def test_start_app_stats_defaults_when_monitored_groups_missing(
@@ -647,10 +673,107 @@ async def test_get_app_stats_re_subscribes_when_sub_id_missing(
     coord.api.is_subscribed = AsyncMock(return_value=False)
     coord._app_stats_sub_id = None
 
-    with patch.object(coord, "start_app_stats", new_callable=AsyncMock) as start_mock:
+    async def _fake_start_app_stats() -> None:
+        # Simulate a successful resubscribe -- the raise-on-persistent-failure
+        # path below is covered separately by
+        # test_get_app_stats_raises_when_resubscribe_fails.
+        coord._app_stats_sub_id = "sub-1"
+
+    with patch.object(
+        coord, "start_app_stats", new=AsyncMock(side_effect=_fake_start_app_stats)
+    ) as start_mock:
         await coord.get_app_stats()
 
     start_mock.assert_awaited_once()
+
+
+async def test_get_app_stats_raises_when_resubscribe_fails(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A persistently failing resubscribe raises UpdateFailed.
+
+    start_app_stats()/_subscribe_to_app_stats() only log internally and never
+    raise on a failed subscription attempt, so get_app_stats() is the one
+    place this becomes visible to entity-unavailable/log-when-unavailable.
+    The raise also folds in and chains the underlying exception
+    _subscribe_to_app_stats stashed, so the one ERROR line the coordinator's
+    _run_job closure logs for this isn't a generic, unexplained failure.
+    """
+    coord = coordinator
+    coord.ds = {
+        "app": {"test-app": {"name": "test-app"}},
+        "app_stats": {},
+    }
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=True)
+    coord.api.is_subscribed = AsyncMock(return_value=False)
+    coord._app_stats_sub_id = None
+    underlying = ValueError("boom")
+    coord._app_stats_subscribe_error = underlying
+
+    with (
+        patch.object(coord, "start_app_stats", new_callable=AsyncMock),
+        pytest.raises(coordinator_module.UpdateFailed) as exc_info,
+    ):
+        await coord.get_app_stats()
+
+    assert exc_info.value.translation_key == "app_stats_unavailable"
+    assert "boom" in exc_info.value.translation_placeholders["error"]
+    assert exc_info.value.__cause__ is underlying
+
+
+async def test_get_app_stats_raise_does_not_chain_a_plain_reason_string(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A failed-resubscribe cause that isn't an exception is folded in but not chained.
+
+    E.g. "no sub_id/queue returned" is folded into the message but must not
+    be (mis-)used as an exception cause.
+    """
+    coord = coordinator
+    coord.ds = {
+        "app": {"test-app": {"name": "test-app"}},
+        "app_stats": {},
+    }
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=True)
+    coord.api.is_subscribed = AsyncMock(return_value=False)
+    coord._app_stats_sub_id = None
+    coord._app_stats_subscribe_error = "no sub_id/queue returned"
+
+    with (
+        patch.object(coord, "start_app_stats", new_callable=AsyncMock),
+        pytest.raises(coordinator_module.UpdateFailed) as exc_info,
+    ):
+        await coord.get_app_stats()
+
+    assert (
+        "no sub_id/queue returned" in exc_info.value.translation_placeholders["error"]
+    )
+    assert exc_info.value.__cause__ is None
+
+
+async def test_get_app_stats_skips_raise_when_disconnected_mid_resubscribe(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A connection drop between the connected() guard and the resubscribe attempt is ignored.
+
+    It's already surfaced by the poll's other jobs via their own connected()
+    guards -- raising here too would misattribute the actual root cause, so
+    get_app_stats() returns quietly instead.
+    """
+    coord = coordinator
+    coord.ds = {
+        "app": {"test-app": {"name": "test-app"}},
+        "app_stats": {},
+    }
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(side_effect=[True, False])
+    coord.api.is_subscribed = AsyncMock(return_value=False)
+    coord._app_stats_sub_id = None
+
+    with patch.object(coord, "start_app_stats", new_callable=AsyncMock):
+        await coord.get_app_stats()  # must not raise
 
 
 async def test_get_app_stats_re_subscribes_when_existing_sub_not_active(
@@ -1266,7 +1389,11 @@ def _stub_all_jobs(coord: TrueNASCoordinator) -> None:
         "get_ups",
         "get_pool",
     ):
-        setattr(coord, name, AsyncMock())
+        stub = AsyncMock()
+        # _run_job derives the job key from __name__; keep it realistic so
+        # _note_job_outcome/is_data_path_failing see the true job name.
+        stub.__name__ = name
+        setattr(coord, name, stub)
 
 
 async def test_async_update_data_runs_jobs_when_connected(
@@ -1393,6 +1520,229 @@ async def test_async_update_data_raises_when_system_info_missing(
     coord.get_pool.assert_not_awaited()
 
 
+async def test_run_job_does_not_log_recovery_when_disconnected_mid_job(
+    caplog: pytest.LogCaptureFixture, coordinator: TrueNASCoordinator
+) -> None:
+    """A job returning cleanly right as the connection drops isn't "recovered".
+
+    Logging a recovery here would be misleading: this same poll goes on to
+    raise "disconnected" a few lines later, so nothing actually recovered --
+    the job-failing flag must stay set until a poll where the job actually
+    completes while still connected.
+    """
+    coord = coordinator
+    coord.host = "truenas.local"
+    coord._job_failing["get_systeminfo"] = True
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=True)
+    coord._async_ensure_connected = AsyncMock()
+    _stub_all_jobs(coord)
+    coord.ds = {"system_info": {"hostname": "truenas"}}
+
+    async def fake_get_systeminfo() -> None:
+        # Simulate the connection dropping during the job's own work.
+        coord.api.connected = MagicMock(return_value=False)
+
+    fake_get_systeminfo.__name__ = "get_systeminfo"
+    coord.get_systeminfo = fake_get_systeminfo
+
+    with caplog.at_level("INFO"), pytest.raises(coordinator_module.UpdateFailed):
+        await coord._async_update_data()
+
+    assert "get_systeminfo recovered" not in caplog.text
+    assert coord.is_data_path_failing("system_info") is True
+
+
+# ---------------------------
+#   _note_job_outcome / is_data_path_failing
+# ---------------------------
+def test_note_job_outcome_reports_only_the_first_failure(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """The transition into failing returns True once; repeats return False."""
+    coord = coordinator
+
+    assert coord._note_job_outcome("get_disk", failed=True) is True
+    assert coord._note_job_outcome("get_disk", failed=True) is False
+    assert coord.is_data_path_failing("disk") is True
+
+
+def test_note_job_outcome_logs_recovery_once_and_clears_flag(
+    caplog: pytest.LogCaptureFixture, coordinator: TrueNASCoordinator
+) -> None:
+    """A success after a failure logs an info recovery and resets the flag."""
+    coord = coordinator
+    coord._note_job_outcome("get_disk", failed=True)
+
+    with caplog.at_level("INFO"):
+        coord._note_job_outcome("get_disk", failed=False)
+        coord._note_job_outcome("get_disk", failed=False)
+
+    assert coord.is_data_path_failing("disk") is False
+    assert caplog.text.count("TrueNAS job get_disk recovered") == 1
+
+
+async def test_is_data_path_failing_stays_false_for_a_job_that_never_failed(
+    caplog: pytest.LogCaptureFixture, coordinator: TrueNASCoordinator
+) -> None:
+    """A clean poll leaves every data_path available and logs no failure."""
+    coord = coordinator
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=True)
+    coord._async_ensure_connected = AsyncMock()
+    _stub_all_jobs(coord)
+    coord.ds = {"system_info": {"hostname": "truenas"}}
+
+    with caplog.at_level("DEBUG"):
+        await coord._async_update_data()
+
+    assert "get_disk" not in caplog.text
+    assert coord.is_data_path_failing("disk") is False
+
+
+async def test_is_data_path_failing_tracks_a_one_to_one_job(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A persistently failing 1:1 job marks only its own ds key."""
+    coord = coordinator
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=True)
+    coord._async_ensure_connected = AsyncMock()
+    _stub_all_jobs(coord)
+    coord.ds = {"system_info": {"hostname": "truenas"}}
+    failing_disk = AsyncMock(side_effect=Exception("boom"))
+    failing_disk.__name__ = "get_disk"
+    coord.get_disk = failing_disk
+
+    await coord._async_update_data()
+
+    assert coord.is_data_path_failing("disk") is True
+    assert coord.is_data_path_failing("pool") is False
+
+
+async def test_is_data_path_failing_covers_every_path_of_a_multi_path_job(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A failing get_systeminfo marks both ds keys it owns, then clears them."""
+    coord = coordinator
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=True)
+    coord._async_ensure_connected = AsyncMock()
+    _stub_all_jobs(coord)
+    coord.ds = {"system_info": {"hostname": "truenas"}}
+    failing_systeminfo = AsyncMock(side_effect=Exception("boom"))
+    failing_systeminfo.__name__ = "get_systeminfo"
+    coord.get_systeminfo = failing_systeminfo
+
+    await coord._async_update_data()
+
+    assert coord.is_data_path_failing("system_info") is True
+    assert coord.is_data_path_failing("interface") is True
+
+    recovered_systeminfo = AsyncMock()
+    recovered_systeminfo.__name__ = "get_systeminfo"
+    coord.get_systeminfo = recovered_systeminfo
+
+    await coord._async_update_data()
+
+    assert coord.is_data_path_failing("system_info") is False
+    assert coord.is_data_path_failing("interface") is False
+
+
+async def test_async_update_data_marks_a_persistently_failing_job_then_recovers(
+    caplog: pytest.LogCaptureFixture, coordinator: TrueNASCoordinator
+) -> None:
+    """Warn once for a job that raises every poll, then recover on a clean one.
+
+    A job raising every poll warns once and flips its data_path failing; a
+    later clean poll logs recovery and clears it again.
+    """
+    coord = coordinator
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=True)
+    coord._async_ensure_connected = AsyncMock()
+    _stub_all_jobs(coord)
+    coord.ds = {"system_info": {"hostname": "truenas"}}
+    failing_disk = AsyncMock(side_effect=Exception("boom"))
+    failing_disk.__name__ = "get_disk"
+    coord.get_disk = failing_disk
+
+    with caplog.at_level("ERROR"):
+        await coord._async_update_data()
+        await coord._async_update_data()
+
+    assert coord.is_data_path_failing("disk") is True
+    assert caplog.text.count("TrueNAS job get_disk failed") == 1
+
+    caplog.clear()
+    recovered_disk = AsyncMock()
+    recovered_disk.__name__ = "get_disk"
+    coord.get_disk = recovered_disk
+
+    with caplog.at_level("INFO"):
+        await coord._async_update_data()
+
+    assert coord.is_data_path_failing("disk") is False
+    assert "TrueNAS job get_disk recovered" in caplog.text
+
+
+# ---------------------------
+#   is_data_path_failing / TrueNASState.stale_endpoints (aiotruenas>=1.5.5)
+# ---------------------------
+def test_is_data_path_failing_reflects_stale_endpoints(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A ds key in _STALE_ENDPOINT_DATA_PATHS follows state.stale_endpoints.
+
+    Covers the case _JOB_DATA_PATHS alone can't see: a TrueNASState method
+    (get_smb/get_ups/get_pool/get_dataset/get_directoryservices/get_alerts/
+    get_scrub) that swallows a failed/malformed primary result and returns
+    the previous cached snapshot instead of raising.
+    """
+    coord = coordinator
+    coord.state = MagicMock()
+    coord.state.stale_endpoints = frozenset({"smb"})
+
+    assert coord.is_data_path_failing("smb") is True
+    assert coord.is_data_path_failing("ups") is False
+
+
+def test_is_data_path_failing_ignores_stale_endpoints_outside_the_allowlist(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A stale_endpoints name this coordinator doesn't map is ignored.
+
+    aiotruenas also reports "system_info"/"interface"/"service"/"vm" via
+    stale_endpoints, but this coordinator either already gets a hard raise
+    for the case it can detect (system_info) or doesn't call the
+    corresponding self.state.get_*() method yet (interface/service/vm) --
+    see _STALE_ENDPOINT_DATA_PATHS's comment.
+    """
+    coord = coordinator
+    coord.state = MagicMock()
+    coord.state.stale_endpoints = frozenset({"system_info", "interface"})
+
+    assert coord.is_data_path_failing("system_info") is False
+    assert coord.is_data_path_failing("interface") is False
+
+
+def test_is_data_path_failing_combines_job_and_stale_endpoint_signals(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """Either signal alone is enough to mark a data_path failing."""
+    coord = coordinator
+    coord.state = MagicMock()
+    coord.state.stale_endpoints = frozenset()
+    coord._note_job_outcome("get_pool", failed=True)
+
+    assert coord.is_data_path_failing("pool") is True  # via _job_failing
+
+    coord._note_job_outcome("get_pool", failed=False)
+    coord.state.stale_endpoints = frozenset({"pool"})
+
+    assert coord.is_data_path_failing("pool") is True  # via stale_endpoints
+
+
 # ---------------------------
 #   get_systeminfo / _handle_update_job / _query_interfaces
 # ---------------------------
@@ -1404,14 +1754,18 @@ async def test_get_systeminfo_parses_valid_response_and_runs_pipeline(
     coord.ds = {"system_info": {}, "interface": {}}
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
-    coord.api.query = AsyncMock(
-        return_value={
-            "version": "TrueNAS-SCALE-25.04.1",
-            "hostname": "nas1",
-            "uptime_seconds": 100,
-            "physmem": 1000,
-        }
-    )
+
+    async def fake_query(method: str, *_args: object, **_kwargs: object) -> object:
+        if method == "system.info":
+            return {
+                "version": "TrueNAS-SCALE-25.04.1",
+                "hostname": "nas1",
+                "uptime_seconds": 100,
+                "physmem": 1000,
+            }
+        return []
+
+    coord.api.query = AsyncMock(side_effect=fake_query)
     coord._handle_update_job = AsyncMock()
 
     await coord.get_systeminfo()
@@ -1422,20 +1776,24 @@ async def test_get_systeminfo_parses_valid_response_and_runs_pipeline(
     coord._handle_update_job.assert_awaited_once()
 
 
-async def test_get_systeminfo_skips_parse_on_invalid_response(
+async def test_get_systeminfo_raises_on_invalid_response(
     coordinator: TrueNASCoordinator,
 ) -> None:
-    """A None system-info response skips parsing but still runs the update job."""
+    """A None system-info response fails the job so its entities go unavailable."""
     coord = coordinator
+    coord.host = "truenas.local"
     coord.ds = {"system_info": {}, "interface": {}}
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord.api.query = AsyncMock(return_value=None)
     coord._handle_update_job = AsyncMock()
 
-    await coord.get_systeminfo()
+    with pytest.raises(coordinator_module.UpdateFailed) as exc_info:
+        await coord.get_systeminfo()
 
-    coord._handle_update_job.assert_awaited_once()
+    assert exc_info.value.translation_key == "system_info_unavailable"
+    assert exc_info.value.translation_placeholders == {"host": "truenas.local"}
+    coord._handle_update_job.assert_not_awaited()
 
 
 async def test_get_systeminfo_returns_early_when_disconnected_after_parse(
@@ -1553,6 +1911,93 @@ async def test_query_interfaces_derives_link_up(
     await coord._query_interfaces()
     assert coord.ds["interface"]["eth0"]["link_up"] is True
     assert coord.ds["interface"]["eth1"]["link_up"] is False
+
+
+async def test_query_interfaces_raises_on_invalid_response(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A None interface.query response fails the job instead of being swallowed.
+
+    Without this check, a failed ``interface.query`` call silently kept the
+    previous snapshot forever, so interface entities never went unavailable.
+    """
+    coord = coordinator
+    coord.host = "truenas.local"
+    coord.ds = {"interface": {}}
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=True)
+    coord.api.query = AsyncMock(return_value=None)
+
+    with pytest.raises(coordinator_module.UpdateFailed) as exc_info:
+        await coord._query_interfaces()
+
+    assert exc_info.value.translation_key == "interface_unavailable"
+    assert exc_info.value.translation_placeholders == {"host": "truenas.local"}
+
+
+async def test_query_interfaces_skips_raise_when_disconnected_mid_query(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A mid-query disconnect is left to _async_update_data's own error.
+
+    Raising "interface_unavailable" here too would misattribute a plain
+    disconnect as an interface-specific failure, mirroring the same guard
+    already in get_app_stats.
+    """
+    coord = coordinator
+    coord.ds = {"interface": {}}
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=False)
+    coord.api.query = AsyncMock(return_value=None)
+
+    await coord._query_interfaces()
+
+
+async def test_query_interfaces_accepts_empty_list(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """An empty interface list is valid data (zero interfaces), not a failure.
+
+    parse_api's own pruning (_empty_source_result with source_was_none=False)
+    drops the previous snapshot entirely rather than keeping it as stale.
+    """
+    coord = coordinator
+    coord.ds = {"interface": {"eth0": {"id": "eth0", "name": "eth0"}}}
+    coord.api = MagicMock()
+    coord.api.query = AsyncMock(return_value=[])
+
+    await coord._query_interfaces()
+
+    assert coord.ds["interface"] == {}
+
+
+async def test_get_systeminfo_tracks_interface_failure_separately(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A lone interface.query failure marks only "interface" unavailable.
+
+    system_info was already parsed successfully earlier in the same poll, so
+    get_systeminfo() must not re-raise the interface.query failure -- doing
+    so would also mark the ten unrelated system_info entities unavailable.
+    """
+    coord = coordinator
+    coord.host = "truenas.local"
+    coord.ds = {"system_info": {}, "interface": {}}
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=True)
+
+    async def fake_query(method: str, *_args: object, **_kwargs: object) -> object:
+        if method == "system.info":
+            return {"version": "TrueNAS-SCALE-25.04.1", "hostname": "nas1"}
+        return None
+
+    coord.api.query = AsyncMock(side_effect=fake_query)
+    coord._handle_update_job = AsyncMock()
+
+    await coord.get_systeminfo()
+
+    assert coord.is_data_path_failing("interface") is True
+    assert coord.is_data_path_failing("system_info") is False
 
 
 # ---------------------------
@@ -2509,6 +2954,7 @@ async def test_subscribe_to_app_stats_handles_missing_sub_id(
     coord.api.subscribe_events = AsyncMock(return_value=(None, None))
     await coord._subscribe_to_app_stats("event")
     assert coord._app_stats_sub_id is None
+    assert coord._app_stats_subscribe_error == "no sub_id/queue returned"
 
 
 async def test_subscribe_to_app_stats_handles_exception(
@@ -2517,9 +2963,26 @@ async def test_subscribe_to_app_stats_handles_exception(
     """A subscribe_events exception is swallowed instead of propagating."""
     coord = coordinator
     coord.api = MagicMock()
-    coord.api.subscribe_events = AsyncMock(side_effect=Exception("boom"))
+    boom = Exception("boom")
+    coord.api.subscribe_events = AsyncMock(side_effect=boom)
     await coord._subscribe_to_app_stats("event")  # must not raise
     assert coord._app_stats_sub_id is None
+    assert coord._app_stats_subscribe_error is boom
+
+
+async def test_subscribe_to_app_stats_clears_error_on_success(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A stale error from a previous failed attempt must not leak into later state.
+
+    Specifically, a later, successful subscription's state.
+    """
+    coord = coordinator
+    coord._app_stats_subscribe_error = Exception("stale")
+    coord.api = MagicMock()
+    coord.api.subscribe_events = AsyncMock(return_value=("sub-1", MagicMock()))
+    await coord._subscribe_to_app_stats("event")
+    assert coord._app_stats_subscribe_error is None
 
 
 async def test_stop_app_stats_unsubscribe_exception_still_clears_state(

@@ -187,6 +187,12 @@
     },
     "system_info_unavailable": {
       "message": "Essential system information was not received from TrueNAS ({host})"
+    },
+    "interface_unavailable": {
+      "message": "Network interface information was not received from TrueNAS ({host})"
+    },
+    "app_stats_unavailable": {
+      "message": "Could not establish the app.stats subscription with TrueNAS ({host}): {error}"
     }
   }
 }

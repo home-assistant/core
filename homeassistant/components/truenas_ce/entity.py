@@ -420,13 +420,18 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
     @property
     @override
     def available(self) -> bool:
-        """Return False once this entity's backing data is gone or empty.
+        """Return False once this entity's backing data is gone, empty or stale.
 
-        Covers both a referenced uid no longer present (e.g. the disk/
-        dataset/VM was deleted) and a keyless data_path that came back empty
-        on a transient fetch failure -- the base CoordinatorEntity.available
-        only checks last_update_success.
+        Covers a referenced uid no longer present (e.g. the disk/dataset/VM
+        was deleted), a keyless data_path that came back empty on a
+        transient fetch failure -- the base CoordinatorEntity.available only
+        checks last_update_success -- and a data_path whose backing
+        coordinator job has been failing since a previous poll, so a
+        last-good snapshot isn't reported as available forever.
         """
+        data_path = self.entity_description.data_path
+        if data_path and self.coordinator.is_data_path_failing(data_path):
+            return False
         return super().available and bool(self._data)
 
     def _core_name_translation_key(self) -> str | None:

@@ -209,8 +209,8 @@ SENSOR_TYPES: tuple[TrueNASSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         ha_group="System",
-        data_path="system_info",
-        data_attribute="smb_connections",
+        data_path="smb",
+        data_attribute="connections",
     ),
     TrueNASSensorEntityDescription(
         key="system_uptime",
