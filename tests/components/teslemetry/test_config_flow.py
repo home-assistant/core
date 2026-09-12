@@ -933,14 +933,23 @@ async def _unload_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def _drop_vehicle_data(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    """Remove the vehicle from the account's runtime data mid-flow."""
-    entry.runtime_data.vehicles.clear()
+async def _reload_without_vehicles(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Reload the account entry after its vehicle left the account mid-flow."""
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.products",
+            return_value={"response": []},
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+    assert entry.state is ConfigEntryState.LOADED
+    assert not entry.runtime_data.vehicles
 
 
 @pytest.mark.parametrize(
     "lose_vehicle",
-    [_unload_entry, _drop_vehicle_data],
+    [_unload_entry, _reload_without_vehicles],
     ids=["entry_not_loaded", "vehicle_missing"],
 )
 async def test_subentry_pair_wake_skipped_without_vehicle_data(
