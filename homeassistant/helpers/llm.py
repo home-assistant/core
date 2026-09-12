@@ -16,7 +16,7 @@ from homeassistant.const import (
     EVENT_SERVICE_REMOVED,
 )
 from homeassistant.core import Context, Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 from homeassistant.util.ulid import ulid_now
@@ -115,6 +115,14 @@ async def async_get_api(
         api = apis[api_id[0]]
     else:
         api = MergedAPI([apis[key] for key in api_id])
+
+    if api.requires_admin and (
+        not llm_context.context
+        or not llm_context.context.user_id
+        or not (user := await hass.auth.async_get_user(llm_context.context.user_id))
+        or not user.is_admin
+    ):
+        raise Unauthorized(context=llm_context.context)
 
     return await api.async_get_api_instance(llm_context)
 
