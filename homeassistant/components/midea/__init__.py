@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_KEY, CONF_SN, CONF_SUBTYPE, LOGGER
+from .const import CONF_KEY, CONF_SN, CONF_SUBTYPE, DOMAIN, LOGGER
 from .entity import MideaConfigEntry
 
 _PLATFORMS: list[Platform] = [
@@ -40,6 +40,7 @@ _PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,
+    Platform.WATER_HEATER,
 ]
 
 
@@ -57,6 +58,8 @@ def _create_device(data: Mapping[str, Any], ip_address: str) -> MideaDevice | No
         data[CONF_MODEL],
         data[CONF_SUBTYPE],
         "",
+        data.get(CONF_MAC, None),
+        data.get(CONF_SN, None),
     )
 
 
@@ -94,7 +97,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
 
     device = await hass.async_add_executor_job(_create_device, data, ip_address)
     if device is None:
-        raise ConfigEntryError("Unable to initialize device")
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="unable_initialize_device"
+        )
 
     connected = await hass.async_add_executor_job(_connect, device)
     if not connected:
@@ -117,7 +122,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
                 device = new_device
                 connected = await hass.async_add_executor_job(_connect, device)
         if not connected:
-            raise ConfigEntryNotReady(f"Unable to connect to device {device_id}")
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="unable_connect_device",
+                translation_placeholders={"device_id": str(device_id)},
+            )
+
+    unavailable_logged = False
+
+    def _log_availability(_status: Mapping[str, Any]) -> None:
+        """Log once when the device goes offline and once when it is back."""
+        nonlocal unavailable_logged
+        if not device.available and not unavailable_logged:
+            LOGGER.info("Device %s is unavailable", device_id)
+            unavailable_logged = True
+        elif device.available and unavailable_logged:
+            LOGGER.info("Device %s is back online", device_id)
+            unavailable_logged = False
+
+    device.register_update(_log_availability)
+    entry.async_on_unload(partial(device.unregister_update, _log_availability))
 
     # The library's reconnect loop keeps retrying with a growing backoff
     # (up to 600s) without checking for a stop request while sleeping, so

@@ -1,6 +1,5 @@
 """Test the HVV Departures config flow."""
 
-import json
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientConnectorError
@@ -18,16 +17,16 @@ from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
-FIXTURE_INIT = json.loads(load_fixture("hvv_departures/init.json"))
-FIXTURE_CHECK_NAME = json.loads(load_fixture("hvv_departures/check_name.json"))
-FIXTURE_STATION_INFORMATION = json.loads(
-    load_fixture("hvv_departures/station_information.json")
+FIXTURE_INIT = load_json_object_fixture("hvv_departures/init.json")
+FIXTURE_CHECK_NAME = load_json_object_fixture("hvv_departures/check_name.json")
+FIXTURE_STATION_INFORMATION = load_json_object_fixture(
+    "hvv_departures/station_information.json"
 )
-FIXTURE_CONFIG_ENTRY = json.loads(load_fixture("hvv_departures/config_entry.json"))
-FIXTURE_OPTIONS = json.loads(load_fixture("hvv_departures/options.json"))
-FIXTURE_DEPARTURE_LIST = json.loads(load_fixture("hvv_departures/departure_list.json"))
+FIXTURE_CONFIG_ENTRY = load_json_object_fixture("hvv_departures/config_entry.json")
+FIXTURE_OPTIONS = load_json_object_fixture("hvv_departures/options.json")
+FIXTURE_DEPARTURE_LIST = load_json_object_fixture("hvv_departures/departure_list.json")
 
 
 async def test_user_flow(hass: HomeAssistant) -> None:

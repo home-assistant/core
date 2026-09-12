@@ -73,7 +73,6 @@ async def async_get_config_entry_diagnostics(
         "model": receiver.model.name,
         "power_on": receiver.power_on,
         "volume": volume.value if volume is not None else None,
-        "max_volume": receiver.max_volume,
         "mute_enabled": receiver.muted,
         "source": receiver.source,
         "available_sources": receiver.sources,
@@ -107,11 +106,8 @@ async def async_get_config_entry_diagnostics(
         for name, control in trims.items()
     }
 
-    # Not lipsync.range: the control reads None until the device reports a
-    # value, while the range is known from the model as soon as it connects.
-    lipsync_range = receiver.lipsync_range
     ranges: dict[str, Any] = {
-        "lipsync_range": asdict(lipsync_range) if lipsync_range is not None else None
+        "lipsync_range": asdict(lipsync.range) if lipsync is not None else None
     }
     ranges |= {
         f"{name}_range": asdict(control.range) if control is not None else None

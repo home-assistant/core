@@ -1,5 +1,8 @@
 """Test the zhong_hong climate platform."""
 
+from datetime import timedelta
+
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from zhong_hong_hvac.protocol import StatusFanMode, StatusOperation, StatusSwitch
 
@@ -22,6 +25,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     STATE_OFF,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -31,7 +35,11 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DEVICE_ADDRESS, ENTITY_ID, FakeGateway, build_status
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+# Spelled out instead of importing SCAN_INTERVAL, so that changing it in the
+# integration makes these tests fail instead of following along.
+POLL_INTERVAL = timedelta(seconds=60)
 
 
 async def test_entity_registration(
@@ -98,6 +106,98 @@ async def test_push_of_an_unknown_operation(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+
+async def test_scheduled_poll_queries_the_gateway(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the gateway is polled for the pushes that were missed."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_gateway.query_all_status_calls == 1
+
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    # The coordinator refreshes in a background task.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_gateway.query_all_status_calls == 2
+
+
+async def test_a_push_does_not_postpone_the_poll(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a unit that reports often does not hold off the poll.
+
+    The poll is there for the units whose reports went missing, and a gateway
+    usually has more than one air conditioner on it. Were a push to put the
+    next poll a full interval out, one unit reporting every few seconds would
+    be enough to keep the others from ever being asked about.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_gateway.query_all_status_calls == 1
+
+    freezer.tick(POLL_INTERVAL / 2)
+    mock_gateway.push_status(build_status())
+    await hass.async_block_till_done()
+
+    freezer.tick(POLL_INTERVAL / 2)
+    async_fire_time_changed(hass)
+    # The coordinator refreshes in a background task.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_gateway.query_all_status_calls == 2
+
+
+async def test_unavailable_when_the_gateway_connection_drops(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a dropped gateway connection makes the entity unavailable."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+    mock_gateway.connected = False
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    # The coordinator refreshes in a background task.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    # The gateway is not talked to while the connection is known to be down.
+    assert mock_gateway.query_all_status_calls == 1
+
+
+async def test_unavailable_when_the_query_cannot_be_sent(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll that cannot be sent makes the entity unavailable.
+
+    A gateway that goes quiet without dropping the connection is caught by
+    the connection going stale instead, which is what `connected` reports.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    mock_gateway.query_all_status_result = False
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    # The coordinator refreshes in a background task.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_turn_on_success(

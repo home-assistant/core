@@ -11,7 +11,7 @@ from tuya_sharing import CustomerDevice, Manager
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
@@ -129,7 +129,8 @@ async def async_set_feeder_meal_plan(call: ServiceCall) -> None:
     )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up Tuya services."""
 
     hass.services.async_register(
