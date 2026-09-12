@@ -11,6 +11,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mobile_app.const import DATA_LIVE_ACTIVITY_TOKENS, DOMAIN
+from homeassistant.components.mobile_app.push_notification import (
+    PUSH_DEGRADED_PROBE_INTERVAL,
+)
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TITLE,
@@ -25,9 +28,18 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, MockUser, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    MockUser,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
+
+CONFIRM_TIMEOUT_PATCH = (
+    "homeassistant.components.mobile_app.push_notification.PUSH_CONFIRM_TIMEOUT"
+)
 
 
 @pytest.fixture
@@ -412,6 +424,12 @@ async def test_notify_ws_confirming_works(
     result = await client.receive_json()
     assert result["success"]
 
+    # The timely confirm cancelled the fallback timer: advancing past the
+    # confirm timeout must not send anything via cloud
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15))
+    await hass.async_block_till_done()
+    assert len(aioclient_mock.mock_calls) == 0
+
     # Drop local push channel and try to confirm another message
     await client.send_json_auto_id(
         {
@@ -444,7 +462,7 @@ async def test_notify_ws_not_confirming(
     setup_push_receiver,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test we go via cloud when failed to confirm."""
+    """Test a late confirm falls back via cloud without dropping the channel."""
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -457,29 +475,476 @@ async def test_notify_ws_not_confirming(
 
     sub_result = await client.receive_json()
     assert sub_result["success"]
+    sub_id = sub_result["id"]
 
     await hass.services.async_call(
         "notify", "mobile_app_test", {"message": "Hello world 1"}, blocking=True
     )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 1"
 
-    with patch(
-        "homeassistant.components.mobile_app.push_notification.PUSH_CONFIRM_TIMEOUT", 0
-    ):
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
         await hass.services.async_call(
             "notify", "mobile_app_test", {"message": "Hello world 2"}, blocking=True
         )
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
-    # When we fail, all unconfirmed ones and failed one are sent via cloud
-    assert len(aioclient_mock.mock_calls) == 2
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 2"
 
-    # All future ones also go via cloud
+    # Only the message that missed its confirmation falls back via cloud;
+    # the channel stays registered instead of being torn down
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # Later messages keep being delivered locally
     await hass.services.async_call(
         "notify", "mobile_app_test", {"message": "Hello world 3"}, blocking=True
     )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 3"
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # Dropping the channel still flushes the unconfirmed messages via cloud once
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": sub_id,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 3
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_notify_ws_confirm_resets_timeout_count(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a timely confirm between two timeouts keeps the channel local."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+            "support_confirm": True,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
+        await hass.services.async_call(
+            "notify", "mobile_app_test", {"message": "Hello world 1"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 1"
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # A timely confirm resets the consecutive timeout count
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 2"}, blocking=True
+    )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 2"
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_confirm",
+            "webhook_id": "mock-webhook_id",
+            "confirm_id": msg_result["event"]["hass_confirm_id"],
+        }
+    )
+    result = await client.receive_json()
+    assert result["success"]
+
+    # The next timeout is an isolated one again and must not open the breaker
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
+        await hass.services.async_call(
+            "notify", "mobile_app_test", {"message": "Hello world 3"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 3"
+    assert len(aioclient_mock.mock_calls) == 2
+
+    # Local delivery continues
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 4"}, blocking=True
+    )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 4"
+    assert len(aioclient_mock.mock_calls) == 2
+
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": sub_id,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 3
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_notify_ws_degraded_channel(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test consecutive confirm timeouts degrade the channel to cloud routing."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+            "support_confirm": True,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
+        await hass.services.async_call(
+            "notify", "mobile_app_test", {"message": "Hello world 1"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            "notify", "mobile_app_test", {"message": "Hello world 2"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 1"
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 2"
+
+    # Both messages were delivered locally and fell back via cloud unconfirmed
+    assert len(aioclient_mock.mock_calls) == 2
+
+    # Two consecutive timeouts degraded the channel: this send goes straight
+    # via cloud without waiting out the confirm timeout
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 3"}, blocking=True
+    )
+    assert len(aioclient_mock.mock_calls) == 3
+
+    # After the probe interval the next send tries local delivery again
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=PUSH_DEGRADED_PROBE_INTERVAL + 1)
+    )
+    await hass.async_block_till_done()
+
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
+        await hass.services.async_call(
+            "notify", "mobile_app_test", {"message": "Hello world 4"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    # The probe was delivered locally and fell back via cloud unconfirmed;
+    # the bypassed message never reached the websocket
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 4"
+    assert len(aioclient_mock.mock_calls) == 4
+
+    # The unconfirmed probe kept the channel degraded
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 5"}, blocking=True
+    )
+    assert len(aioclient_mock.mock_calls) == 5
+
+    # Allow another probe and confirm it in time
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=PUSH_DEGRADED_PROBE_INTERVAL + 1)
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 6"}, blocking=True
+    )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 6"
+
+    # Only a single send probes: a message sent while the probe is still
+    # unconfirmed keeps routing via cloud
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 6b"}, blocking=True
+    )
+    assert len(aioclient_mock.mock_calls) == 6
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_confirm",
+            "webhook_id": "mock-webhook_id",
+            "confirm_id": msg_result["event"]["hass_confirm_id"],
+        }
+    )
+    result = await client.receive_json()
+    assert result["success"]
+
+    # The confirmed probe restored local delivery
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 7"}, blocking=True
+    )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 7"
+    assert len(aioclient_mock.mock_calls) == 6
+
+    # Dropping the channel still flushes the unconfirmed message via cloud
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": sub_id,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 7
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_send_message_degraded_channel(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test notify.send_message bypasses a degraded channel via cloud."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+            "support_confirm": True,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {ATTR_ENTITY_ID: "notify.test", ATTR_MESSAGE: "Hello world 1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {ATTR_ENTITY_ID: "notify.test", ATTR_MESSAGE: "Hello world 2"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 1"
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 2"
+    assert len(aioclient_mock.mock_calls) == 2
+
+    # The degraded channel is bypassed straight via cloud
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_ENTITY_ID: "notify.test", ATTR_MESSAGE: "Hello world 3"},
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 3
+
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": sub_id,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 3
+
+
+@pytest.mark.usefixtures("setup_websocket_channel_only_push")
+async def test_local_push_only_stays_local_when_degraded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a degraded channel keeps local delivery for local-push-only targets."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "websocket-push-webhook-id",
+            "support_confirm": True,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    with (
+        patch(CONFIRM_TIMEOUT_PATCH, 0),
+        patch(
+            "homeassistant.components.mobile_app.notify._send_message"
+        ) as mock_cloud_send,
+    ):
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_websocket_push_name",
+            {"message": "Hello world 1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_websocket_push_name",
+            {"message": "Hello world 2"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 1"
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 2"
+    # A local-push-only registration has no cloud path to fall back to
+    assert len(mock_cloud_send.mock_calls) == 0
+
+    # The channel reached the degraded threshold, but a local-push-only
+    # target has no cloud path: the legacy service still delivers locally
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_websocket_push_name",
+        {"message": "Hello world 3"},
+        blocking=True,
+    )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 3"
+    confirm_id_3 = msg_result["event"]["hass_confirm_id"]
+
+    # The notify entity still delivers locally on the degraded channel as well
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_ENTITY_ID: "notify.websocket_push_name", ATTR_MESSAGE: "Hello world 4"},
+        blocking=True,
+    )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 4"
+    confirm_id_4 = msg_result["event"]["hass_confirm_id"]
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_confirm",
+            "webhook_id": "websocket-push-webhook-id",
+            "confirm_id": confirm_id_3,
+        }
+    )
+    result = await client.receive_json()
+    assert result["success"]
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_confirm",
+            "webhook_id": "websocket-push-webhook-id",
+            "confirm_id": confirm_id_4,
+        }
+    )
+    result = await client.receive_json()
+    assert result["success"]
+
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": sub_id,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("setup_websocket_channel_only_push")
+async def test_local_push_only_missed_confirm(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a missed confirm without a cloud fallback keeps the channel working."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "websocket-push-webhook-id",
+            "support_confirm": True,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    # The confirm times out and there is no cloud delivery to fall back to
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_websocket_push_name",
+            {"message": "Hello world 1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 1"
+
+    # The channel is still registered and keeps delivering locally
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_websocket_push_name",
+        {"message": "Hello world 2"},
+        blocking=True,
+    )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 2"
+
+    # The pending confirm of the second message is flushed by the teardown
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": sub_id,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    await hass.async_block_till_done()
 
 
 @pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
