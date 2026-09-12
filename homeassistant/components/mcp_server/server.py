@@ -8,6 +8,7 @@ See https://modelcontextprotocol.io/docs/concepts/architecture#implementation-ex
 """
 
 from collections.abc import Callable, Sequence
+from dataclasses import replace
 import json
 import logging
 from typing import Any, cast
@@ -31,6 +32,7 @@ SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
 SNAPSHOT_RESOURCE_URL = AnyUrl(SNAPSHOT_RESOURCE_URI)
 SNAPSHOT_RESOURCE_MIME_TYPE = "text/plain"
 LIVE_CONTEXT_TOOL_NAME = "homeassistant__GetLiveContext"
+META_DEVICE_ID = "io.home-assistant/device_id"
 
 
 def _has_live_context_tool(llm_api: llm.APIInstance) -> bool:
@@ -68,8 +70,15 @@ async def create_server(
 
     async def get_api_instance() -> llm.APIInstance:
         """Get the LLM API selected."""
+        meta = server.request_context.meta
+        device_id = getattr(meta, META_DEVICE_ID, None)
+        if device_id is not None and not isinstance(device_id, str):
+            raise ValueError(f"{META_DEVICE_ID} must be a string")
+
         # Backwards compatibility with old MCP Server config
-        return await llm.async_get_api(hass, llm_api_id, llm_context)
+        return await llm.async_get_api(
+            hass, llm_api_id, replace(llm_context, device_id=device_id)
+        )
 
     @server.list_prompts()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_list_prompts() -> list[types.Prompt]:

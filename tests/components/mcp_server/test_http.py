@@ -1,7 +1,7 @@
 """Test the Model Context Protocol Server init module."""
 
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator, Callable
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from http import HTTPStatus
 import json
 import logging
@@ -18,6 +18,7 @@ import pytest
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.mcp_server.const import DOMAIN, STATELESS_LLM_API
 from homeassistant.components.mcp_server.http import (
@@ -51,7 +52,12 @@ from tests.typing import ClientSessionGenerator
 _LOGGER = logging.getLogger(__name__)
 
 TEST_ENTITY = "light.kitchen"
+DEVICE_ID_META_KEY = "io.home-assistant/device_id"
 SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
+type MCPClientFactory = Callable[
+    [HomeAssistant, str, str],
+    AbstractAsyncContextManager[mcp.client.session.ClientSession],
+]
 INITIALIZE_MESSAGE = {
     "jsonrpc": "2.0",
     "id": "request-id-1",
@@ -388,6 +394,196 @@ def mcp_client_fixture(mcp_protocol: str) -> Any:
     if mcp_protocol == "streamable":
         return mcp_streamable_session
     raise ValueError(f"Unknown MCP protocol: {mcp_protocol}")
+
+
+@pytest.mark.parametrize(
+    ("mcp_request", "result_type"),
+    [
+        pytest.param(
+            mcp.types.ClientRequest(mcp.types.ListToolsRequest()),
+            mcp.types.ListToolsResult,
+            id="tools-list",
+        ),
+        pytest.param(
+            mcp.types.ClientRequest(
+                mcp.types.CallToolRequest(
+                    params=mcp.types.CallToolRequestParams(
+                        name="intent__HassTurnOn",
+                        arguments={"name": "kitchen light"},
+                    )
+                )
+            ),
+            mcp.types.CallToolResult,
+            id="tools-call",
+        ),
+        pytest.param(
+            mcp.types.ClientRequest(mcp.types.ListPromptsRequest()),
+            mcp.types.ListPromptsResult,
+            id="prompts-list",
+        ),
+        pytest.param(
+            mcp.types.ClientRequest(
+                mcp.types.GetPromptRequest(
+                    params=mcp.types.GetPromptRequestParams(name="Assist")
+                )
+            ),
+            mcp.types.GetPromptResult,
+            id="prompts-get",
+        ),
+        pytest.param(
+            mcp.types.ClientRequest(mcp.types.ListResourcesRequest()),
+            mcp.types.ListResourcesResult,
+            id="resources-list",
+        ),
+        pytest.param(
+            mcp.types.ClientRequest.model_validate(
+                {"method": "resources/read", "params": {"uri": SNAPSHOT_RESOURCE_URI}}
+            ),
+            mcp.types.ReadResourceResult,
+            id="resources-read",
+        ),
+    ],
+)
+async def test_request_device_id(
+    hass: HomeAssistant,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+    mcp_request: mcp.types.ClientRequest,
+    result_type: type[mcp.types.Result],
+) -> None:
+    """Apply the caller device to each request without retaining it in the session."""
+    request_data = mcp_request.model_dump(by_alias=True, exclude_none=True)
+    request_data.setdefault("params", {})["_meta"] = {DEVICE_ID_META_KEY: "test-device"}
+
+    with patch(
+        "homeassistant.helpers.llm.async_get_api", wraps=llm.async_get_api
+    ) as mock_get_api:
+        async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+            await session.send_request(
+                mcp.types.ClientRequest.model_validate(request_data), result_type
+            )
+            assert mock_get_api.await_count > 0
+            device_contexts = [call.args[2] for call in mock_get_api.await_args_list]
+            assert {context.device_id for context in device_contexts} == {"test-device"}
+            mock_get_api.reset_mock()
+
+            await session.send_request(mcp_request, result_type)
+
+    assert mock_get_api.await_count > 0
+    contexts = [call.args[2] for call in mock_get_api.await_args_list]
+    assert {context.device_id for context in contexts} == {None}
+    assert {context.device_id for context in device_contexts} == {"test-device"}
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        pytest.param({}, id="empty"),
+        pytest.param({"other": "value"}, id="unrelated"),
+        pytest.param({DEVICE_ID_META_KEY: None}, id="null-device"),
+    ],
+)
+async def test_request_metadata_without_device_id(
+    hass: HomeAssistant,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+    metadata: dict[str, str | None],
+) -> None:
+    """Metadata without a caller device keeps the default LLM context."""
+    with patch(
+        "homeassistant.helpers.llm.async_get_api", wraps=llm.async_get_api
+    ) as mock_get_api:
+        async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+            await session.list_tools(
+                params=mcp.types.PaginatedRequestParams(
+                    _meta=mcp.types.RequestParams.Meta.model_validate(metadata)
+                )
+            )
+
+    mock_get_api.assert_awaited_once()
+    assert mock_get_api.await_args.args[2].device_id is None
+
+
+@pytest.mark.parametrize(
+    "device_id",
+    [
+        pytest.param(123, id="number"),
+        pytest.param(True, id="boolean"),
+        pytest.param(["test-device"], id="list"),
+        pytest.param({"id": "test-device"}, id="object"),
+    ],
+)
+async def test_request_invalid_device_id(
+    hass: HomeAssistant,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+    device_id: int | bool | list[str] | dict[str, str],
+) -> None:
+    """Reject caller device metadata with an invalid type."""
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        with pytest.raises(
+            McpError, match="io.home-assistant/device_id must be a string"
+        ):
+            await session.list_tools(
+                params=mcp.types.PaginatedRequestParams(
+                    _meta=mcp.types.RequestParams.Meta.model_validate(
+                        {DEVICE_ID_META_KEY: device_id}
+                    )
+                )
+            )
+
+
+async def test_tool_call_invalid_device_id(
+    hass: HomeAssistant,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Invalid caller metadata returns a tool error without performing the action."""
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+            meta={DEVICE_ID_META_KEY: 123},
+        )
+
+    assert result.isError
+    assert result.content == [
+        mcp.types.TextContent(
+            type="text", text="io.home-assistant/device_id must be a string"
+        )
+    ]
+    assert hass.states.get(TEST_ENTITY).state == STATE_OFF
+
+
+async def test_request_device_id_enables_timer_tools(
+    hass: HomeAssistant,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Offer timer tools only for requests from a device that supports timers."""
+
+    def handle_timer(*args: object) -> None:
+        pass
+
+    async_register_timer_handler(hass, "test-device", handle_timer)
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_tools(
+            params=mcp.types.PaginatedRequestParams(
+                _meta=mcp.types.RequestParams.Meta.model_validate(
+                    {DEVICE_ID_META_KEY: "test-device"}
+                )
+            )
+        )
+        assert "intent__HassStartTimer" in {tool.name for tool in result.tools}
+
+        result = await session.list_tools()
+        assert "intent__HassStartTimer" not in {tool.name for tool in result.tools}
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
