@@ -109,6 +109,8 @@ class UniFiScannerEntity(
 ):
     """Representation of a device connected to a UniFi AP Direct."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: UniFiDirectDataUpdateCoordinator, mac: str) -> None:
         """Initialize the tracked device."""
         super().__init__(coordinator)
