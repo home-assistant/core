@@ -1,0 +1,40 @@
+{
+  "entity": {
+    "number": {
+      "bass": {
+        "default": "mdi:equalizer"
+      },
+      "desk": {
+        "default": "mdi:tune-vertical"
+      },
+      "presence": {
+        "default": "mdi:tune"
+      },
+      "treble": {
+        "default": "mdi:tune-vertical-variant"
+      }
+    },
+    "select": {
+      "input_source": {
+        "default": "mdi:import"
+      },
+      "voicing": {
+        "default": "mdi:equalizer-outline"
+      }
+    },
+    "switch": {
+      "mute": {
+        "default": "mdi:volume-high",
+        "state": {
+          "on": "mdi:volume-off"
+        }
+      },
+      "sleep": {
+        "default": "mdi:power",
+        "state": {
+          "on": "mdi:power-sleep"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,99 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register custom actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities do not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: This integration communicates with a physical UDP speaker with no authentication concept.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: Not yet implemented.
+  discovery: done
+  discovery-update-info: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: todo
+    comment: The documentation page has no troubleshooting section yet.
+  docs-use-cases:
+    status: todo
+    comment: The documentation page does not yet describe concrete use cases.
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry represents a single physical speaker; new speakers are added via their own discovery-driven config entry.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: All entities are primary controls a user wants visible by default.
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: Raised exceptions do not yet use translation_domain/translation_key.
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: Host/port are meaningfully reconfigurable independent of the serial-based unique_id, but async_step_reconfigure is not yet implemented.
+  repair-issues:
+    status: todo
+    comment: No issue_registry usage yet; e.g. a serial mismatch on rediscovery only raises ConfigEntryNotReady today.
+  stale-devices:
+    status: exempt
+    comment: Single-device-per-config-entry architecture; the group device is virtual and layered over real devices already tracked normally.
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: The client communicates over raw UDP sockets via hass.async_add_executor_job rather than native async I/O.
+  inject-websession:
+    status: exempt
+    comment: Communication is raw UDP, not HTTP; there is no aiohttp/httpx session to inject.
+  strict-typing:
+    status: todo
+    comment: Not yet added to the repo's .strict-typing file.
