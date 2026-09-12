@@ -16,5 +16,10 @@
     "select_sound_output": {
       "service": "mdi:volume-source"
     }
+  },
+  "triggers": {
+    "turn_on_requested": {
+      "trigger": "mdi:television-play"
+    }
   }
 }
