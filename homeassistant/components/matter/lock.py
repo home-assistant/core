@@ -124,6 +124,14 @@ class MatterLock(MatterEntity, LockEntity):
         # Handle the DoorLock events
         node_event_data: dict[str, int] = node_event.data or {}
         match node_event.event_id:
+            case clusters.DoorLock.Events.DoorLockAlarm.event_id:
+                if (
+                    node_event_data.get("alarmCode")
+                    == clusters.DoorLock.Enums.AlarmCodeEnum.kLockJammed
+                ):
+                    self._reset_optimistic_state(write_state=False)
+                    self._attr_is_jammed = True
+                    self.async_write_ha_state()
             case clusters.DoorLock.Events.LockOperation.event_id:
                 operation_source: int = node_event_data.get("operationSource", -1)
                 source_name = DOOR_LOCK_OPERATION_SOURCE.get(
@@ -237,15 +245,18 @@ class MatterLock(MatterEntity, LockEntity):
         if lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
             self._attr_is_locked = False
             self._attr_is_open = True
+            self._attr_is_jammed = False
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
             self._attr_is_locked = True
             self._attr_is_open = False
+            self._attr_is_jammed = False
         elif lock_state in (
             clusters.DoorLock.Enums.DlLockState.kUnlocked,
             clusters.DoorLock.Enums.DlLockState.kNotFullyLocked,
         ):
             self._attr_is_locked = False
             self._attr_is_open = False
+            self._attr_is_jammed = False
         else:
             # Treat any other state as unknown.
             # NOTE: A null state can happen during device startup.
