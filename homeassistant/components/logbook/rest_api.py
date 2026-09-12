@@ -8,10 +8,7 @@ from typing import Any
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.auth.permissions import (
-    entity_permission_filter,
-    filter_entity_ids_by_permission,
-)
+from homeassistant.auth.permissions import filter_entity_ids_by_permission
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
 from homeassistant.components.recorder import get_instance
@@ -114,7 +111,7 @@ class LogbookView(HomeAssistantView):
             context_id,
             timestamp=False,
             include_entity_name=True,
-            entity_filter=entity_permission_filter(user, POLICY_READ),
+            user=user,
         )
 
         def json_events() -> web.Response:

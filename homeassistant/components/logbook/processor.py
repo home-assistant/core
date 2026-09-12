@@ -12,6 +12,9 @@ from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import Session
 
+from homeassistant.auth.models import User
+from homeassistant.auth.permissions import entity_permission_filter
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
@@ -111,8 +114,8 @@ class LogbookRun:
     entity_name_cache: EntityNameCache
     include_entity_name: bool
     timestamp: bool
-    # Per-entity read check, or None when the caller may read everything.
-    entity_filter: Callable[[str], bool] | None = None
+    # The caller entries are filtered for, or None to return everything.
+    user: User | None = None
     memoize_new_contexts: bool = True
     # True when this run will switch to a live stream; gates population of
     # context_user_ids (wasted work for one-shot REST/get_events callers).
@@ -137,7 +140,7 @@ class EventProcessor:
         timestamp: bool = False,
         include_entity_name: bool = True,
         for_live_stream: bool = False,
-        entity_filter: Callable[[str], bool] | None = None,
+        user: User | None = None,
     ) -> None:
         """Init the event stream."""
         assert not (context_id and (entity_ids or device_ids)), (
@@ -158,7 +161,7 @@ class EventProcessor:
             entity_name_cache=EntityNameCache(self.hass),
             include_entity_name=include_entity_name,
             timestamp=timestamp,
-            entity_filter=entity_filter,
+            user=user,
             for_live_stream=for_live_stream,
         )
         self.context_augmenter = ContextAugmenter(self.logbook_run)
@@ -278,9 +281,13 @@ class EventProcessor:
             query_parent_user_ids,
         )
         # A request without entity_ids covers everything, so entries the caller
-        # may not read are dropped here rather than at the query. The check is
-        # skipped entirely for callers that may read every entity.
-        if (entity_filter := self.logbook_run.entity_filter) is not None:
+        # may not read are dropped here rather than at the query. Permissions
+        # are resolved per batch rather than held from when the processor was
+        # built, because a live stream outlives a change to them. A caller that
+        # may read every entity resolves to None and is not filtered at all.
+        if (user := self.logbook_run.user) is not None and (
+            entity_filter := entity_permission_filter(user, POLICY_READ)
+        ) is not None:
             return _filter_readable_entries(entries, entity_filter)
 
         return list(entries)

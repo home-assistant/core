@@ -3963,3 +3963,56 @@ async def test_get_events_filters_unauthorized_context_description(
         assert "context_source" not in entry
         assert "binary_sensor.forbidden" not in str(entry)
         assert "Secret automation" not in str(entry)
+
+
+async def test_event_stream_follows_revoked_permissions(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test an open stream follows a permission change."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy({"entities": {"all": {"read": True}}})
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
+    await client.send_json_auto_id(
+        {"type": "logbook/event_stream", "start_time": now.isoformat()}
+    )
+    response = await asyncio.wait_for(client.receive_json(), 2)
+    assert response["success"]
+
+    # Historical batch, then the end of the historical events
+    await asyncio.wait_for(client.receive_json(), 2)
+    response = await asyncio.wait_for(client.receive_json(), 2)
+    assert response["event"]["events"] == []
+
+    hass.states.async_set("light.kitchen", STATE_OFF)
+    hass.states.async_set("light.kitchen", STATE_ON)
+    await hass.async_block_till_done()
+
+    response = await asyncio.wait_for(client.receive_json(), 2)
+    assert _entity_ids(response["event"]["events"]) == ["light.kitchen"]
+
+    # Take the access away while the stream is open
+    hass_read_only_user.mock_policy({"entities": {"entity_ids": {}}})
+
+    hass.states.async_set("light.kitchen", STATE_OFF)
+    hass.states.async_set("light.kitchen", STATE_ON)
+    hass.states.async_set("light.hallway", STATE_OFF)
+    hass.states.async_set("light.hallway", STATE_ON)
+    await hass.async_block_till_done()
+
+    with pytest.raises(TimeoutError):
+        await asyncio.wait_for(client.receive_json(), 1)
