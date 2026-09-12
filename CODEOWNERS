@@ -206,8 +206,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/aws_s3/ @tomasbedrich
 /homeassistant/components/axis/ @Kane610
 /tests/components/axis/ @Kane610
-/homeassistant/components/axle/ @Herbertmt978
-/tests/components/axle/ @Herbertmt978
+/homeassistant/components/axle_energy/ @Herbertmt978
+/tests/components/axle_energy/ @Herbertmt978
 /homeassistant/components/azure_data_explorer/ @kaareseras
 /tests/components/azure_data_explorer/ @kaareseras
 /homeassistant/components/azure_devops/ @timmo001

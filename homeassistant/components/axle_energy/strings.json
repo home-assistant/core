@@ -1,22 +1,13 @@
 {
   "config": {
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "api_key": "[%key:component::axle::config::step::user::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "[%key:component::axle::config::step::user::data_description::api_key%]"
-        },
-        "description": "Your Axle API key is no longer valid. Enter a new Home Assistant token from your Axle account settings."
-      },
       "user": {
         "data": {
           "api_key": "API key"

@@ -217,7 +217,7 @@ aioasuswrt==1.5.4
 # homeassistant.components.husqvarna_automower
 aioautomower==2.8.1
 
-# homeassistant.components.axle
+# homeassistant.components.axle_energy
 aioaxlevpp==0.1.0
 
 # homeassistant.components.azure_devops

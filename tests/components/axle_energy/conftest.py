@@ -27,7 +27,7 @@ def mock_event() -> GridEvent:
 def mock_config_entry() -> MockConfigEntry:
     """One Axle household."""
     return MockConfigEntry(
-        domain="axle",
+        domain="axle_energy",
         title="Axle Energy",
         entry_id="test-entry",
         data={CONF_API_KEY: "test-token"},
@@ -38,8 +38,12 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_client(mock_event: GridEvent) -> Iterator[AsyncMock]:
     """Mock the external dependency at the integration boundary."""
     with (
-        patch("homeassistant.components.axle.AxleClient", autospec=True) as client,
-        patch("homeassistant.components.axle.config_flow.AxleClient", new=client),
+        patch(
+            "homeassistant.components.axle_energy.AxleClient", autospec=True
+        ) as client,
+        patch(
+            "homeassistant.components.axle_energy.config_flow.AxleClient", new=client
+        ),
     ):
         client.return_value.get_event.return_value = mock_event
         yield client.return_value
