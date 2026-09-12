@@ -170,6 +170,71 @@ async def test_get_stream_source_from_camera(
     assert stream_source == STREAM_SOURCE
 
 
+@pytest.mark.usefixtures("mock_camera", "mock_stream_source")
+async def test_get_shared_stream_source_without_provider(hass: HomeAssistant) -> None:
+    """Without a provider the camera's own source is what consumers get."""
+    assert (
+        await camera.async_get_shared_stream_source(hass, "camera.demo_camera")
+        == STREAM_SOURCE
+    )
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_stream_source")
+async def test_get_shared_stream_source_provider_cannot_restream(
+    hass: HomeAssistant, register_test_provider: SomeTestProvider
+) -> None:
+    """A provider that does not restream leaves the camera's own source in place."""
+    assert (
+        await camera.async_get_shared_stream_source(hass, "camera.demo_camera")
+        == STREAM_SOURCE
+    )
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_get_shared_stream_source_restreamed(
+    hass: HomeAssistant,
+    mock_stream_source: AsyncMock,
+    register_test_provider: SomeTestProvider,
+) -> None:
+    """The provider's restream is preferred, and the source is resolved once."""
+    # Registering the provider already resolved the source; count only our own call.
+    mock_stream_source.reset_mock()
+    with patch.object(
+        register_test_provider,
+        "async_get_shared_stream_source",
+        return_value="rtsp://restream",
+    ) as restream:
+        assert (
+            await camera.async_get_shared_stream_source(hass, "camera.demo_camera")
+            == "rtsp://restream"
+        )
+
+    restream.assert_called_once()
+    assert restream.call_args.args[1] == STREAM_SOURCE
+    assert mock_stream_source.call_count == 1
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_get_shared_stream_source_without_source(
+    hass: HomeAssistant, register_test_provider: SomeTestProvider
+) -> None:
+    """A camera with no source has nothing to share, and the provider is not asked."""
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.stream_source", return_value=None
+        ),
+        patch.object(
+            register_test_provider, "async_get_shared_stream_source"
+        ) as restream,
+    ):
+        assert (
+            await camera.async_get_shared_stream_source(hass, "camera.demo_camera")
+            is None
+        )
+
+    restream.assert_not_called()
+
+
 @pytest.mark.usefixtures("image_mock_url")
 async def test_get_image_without_exists_camera(hass: HomeAssistant) -> None:
     """Try to get image without exists camera."""
