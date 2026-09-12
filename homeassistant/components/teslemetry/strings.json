@@ -111,7 +111,7 @@
           "title": "Approve the virtual key"
         },
         "scan": {
-          "description": "Home Assistant will look for vehicle {vin} over Bluetooth. Make sure the vehicle is within Bluetooth range of a Home Assistant Bluetooth adapter, has less than three phone keys in range, then continue.",
+          "description": "Home Assistant will look for vehicle {vin} over Bluetooth. Make sure the vehicle is within Bluetooth range of a Home Assistant Bluetooth adapter and has fewer than three phone keys in range, then continue."
           "title": "Set up Bluetooth control"
         },
         "user": {
