@@ -36,6 +36,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Required("name"): cv.string,
             vol.Required("code"): vol.All(cv.string, cv.matches_regex(r"^\d{4,8}$")),
             vol.Optional("notify_on_use", default=True): cv.boolean,
+            vol.Optional("start_datetime"): cv.datetime,
+            vol.Optional("end_datetime"): cv.datetime,
         },
         func=SERVICE_ADD_CODE,
     )
