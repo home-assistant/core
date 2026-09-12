@@ -130,7 +130,7 @@ async def test_setup(hass: HomeAssistant) -> None:
 async def test_setup_websocket(hass: HomeAssistant) -> None:
     """Test setup of platform."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
+        "homeassistant.components.samsungtv.bridge.websocket.SamsungTVWSAsyncRemote"
     ) as remote_class:
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
@@ -167,7 +167,7 @@ async def test_setup_websocket_2(
     assert entry is config_entries[0]
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
+        "homeassistant.components.samsungtv.bridge.websocket.SamsungTVWSAsyncRemote"
     ) as remote_class:
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
@@ -194,7 +194,7 @@ async def test_setup_encrypted_websocket(
 ) -> None:
     """Test setup of platform from config entry."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote"
+        "homeassistant.components.samsungtv.bridge.encrypted.SamsungTVEncryptedWSAsyncRemote"
     ) as remote_class:
         remote = Mock(SamsungTVEncryptedWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
@@ -231,7 +231,7 @@ async def test_update_off(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
+        "homeassistant.components.samsungtv.bridge.legacy.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
     ):
         freezer.tick(timedelta(minutes=5))
@@ -375,7 +375,7 @@ async def test_update_access_denied(
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
+        "homeassistant.components.samsungtv.bridge.legacy.Remote",
         side_effect=exceptions.AccessDenied("Boom"),
     ):
         freezer.tick(timedelta(minutes=5))
@@ -515,7 +515,7 @@ async def test_update_unhandled_response(
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
+        "homeassistant.components.samsungtv.bridge.legacy.Remote",
         side_effect=[exceptions.UnhandledResponse("Boom"), DEFAULT_MOCK],
     ):
         freezer.tick(timedelta(minutes=5))
@@ -534,7 +534,7 @@ async def test_connection_closed_during_update_can_recover(
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
+        "homeassistant.components.samsungtv.bridge.legacy.Remote",
         side_effect=[exceptions.ConnectionClosed(), DEFAULT_MOCK],
     ):
         freezer.tick(timedelta(minutes=5))
@@ -706,7 +706,7 @@ async def test_state(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
     assert state.state == STATE_OFF
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
+        "homeassistant.components.samsungtv.bridge.legacy.Remote",
         side_effect=OSError,
     ):
         freezer.tick(timedelta(seconds=20))
@@ -743,7 +743,7 @@ async def test_turn_off_websocket(
         hass, "ws_installed_app_event.json", DOMAIN
     )
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
+        "homeassistant.components.samsungtv.bridge.legacy.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
     ):
         await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
@@ -784,7 +784,7 @@ async def test_turn_off_websocket_frame(
         hass, "device_info_UE43LS003.json", DOMAIN
     )
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
+        "homeassistant.components.samsungtv.bridge.legacy.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
     ):
         await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
@@ -1058,7 +1058,9 @@ async def test_turn_on_without_turnon(hass: HomeAssistant, remote_legacy: Mock) 
 async def test_play_media(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for play_media."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
-    with patch("homeassistant.components.samsungtv.bridge.asyncio.sleep") as sleep:
+    with patch(
+        "homeassistant.components.samsungtv.bridge.legacy.asyncio.sleep"
+    ) as sleep:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -1082,7 +1084,7 @@ async def test_play_media(hass: HomeAssistant, remote_legacy: Mock) -> None:
 
 async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
     """Test for play_media with invalid media type."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
+    with patch("homeassistant.components.samsungtv.bridge.legacy.Remote") as remote:
         url = "https://example.com"
         await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
         remote.reset_mock()
@@ -1111,7 +1113,7 @@ async def test_play_media_content_invalid_id(
     hass: HomeAssistant, content_id: str
 ) -> None:
     """Test for play_media with invalid channel as string."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
+    with patch("homeassistant.components.samsungtv.bridge.legacy.Remote") as remote:
         await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
         remote.reset_mock()
         with pytest.raises(HomeAssistantError) as err:
@@ -1150,7 +1152,7 @@ async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
 
     source = "INVALID"
 
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
+    with patch("homeassistant.components.samsungtv.bridge.legacy.Remote") as remote:
         await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
         remote.reset_mock()
         with pytest.raises(HomeAssistantError) as exc_info:
