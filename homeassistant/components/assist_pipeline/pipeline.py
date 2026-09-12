@@ -956,9 +956,31 @@ class PipelineRun:
                     silence_seconds=self.audio_settings.silence_seconds
                 )
 
+            # When the STT entity handles VAD internally (requires_external_vad
+            # is False) the pipeline has no VoiceCommandSegmenter, so it never
+            # emits STT_VAD_START/STT_VAD_END. Track the first/last consumed
+            # chunk timestamps while streaming so the pair can be synthesized
+            # from audio-stream-relative timestamps after a successful result.
+            synthesize_vad = (
+                self.audio_settings.is_vad_enabled
+                and not self.stt_provider.audio_processing.requires_external_vad
+            )
+            first_ts: int | None = None
+            last_ts: int | None = None
+
+            async def _record_audio_stream() -> AsyncGenerator[EnhancedAudioChunk]:
+                nonlocal first_ts, last_ts
+                async for chunk in stream:
+                    if first_ts is None:
+                        first_ts = chunk.timestamp_ms
+                    last_ts = chunk.timestamp_ms
+                    yield chunk
+
             result = await self.stt_provider.async_process_audio_stream(
                 metadata,
-                self._speech_to_text_stream(audio_stream=stream, stt_vad=stt_vad),
+                self._speech_to_text_stream(
+                    audio_stream=_record_audio_stream(), stt_vad=stt_vad
+                ),
             )
         except asyncio.CancelledError, TimeoutError:
             raise  # expected
@@ -985,6 +1007,24 @@ class PipelineRun:
         if not result.text:
             raise SpeechToTextError(
                 code="stt-no-text-recognized", message="No text recognized"
+            )
+
+        if synthesize_vad and first_ts is not None and last_ts is not None:
+            # The STT entity handled VAD internally, so the pipeline never emitted
+            # STT_VAD_START/STT_VAD_END. Synthesize the pair now (before STT_END)
+            # so external consumers like voice satellites still see a complete VAD
+            # cycle and know when to stop streaming audio.
+            self.process_event(
+                PipelineEvent(
+                    PipelineEventType.STT_VAD_START,
+                    {"timestamp": first_ts},
+                )
+            )
+            self.process_event(
+                PipelineEvent(
+                    PipelineEventType.STT_VAD_END,
+                    {"timestamp": last_ts},
+                )
             )
 
         self.process_event(
