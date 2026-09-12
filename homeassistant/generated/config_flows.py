@@ -251,6 +251,7 @@ FLOWS = {
         "fluss",
         "flux_led",
         "folder_watcher",
+        "foreca",
         "forecast_solar",
         "forked_daapd",
         "foscam",
