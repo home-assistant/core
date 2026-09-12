@@ -370,8 +370,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             message_expiry_interval=message_expiry_interval,
         )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_PUBLISH, async_publish_service, MQTT_PUBLISH_SCHEMA
     )
 
     async def async_dump_service(call: ServiceCall) -> None:
@@ -395,11 +395,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         ev.async_call_later(hass, call.data["duration"], finish_dump)
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_DUMP,
         async_dump_service,
-        schema=vol.Schema(
+        vol.Schema(
             {
                 vol.Required("topic"): valid_subscribe_topic,
                 vol.Optional("duration", default=5): int,
