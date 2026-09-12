@@ -1,0 +1,10 @@
+{
+  "poc": "BOB1101",
+  "priceDollarsPerMwh": null,
+  "priceCentsPerKwh": null,
+  "priceCentsPerKwhInclGst": null,
+  "observedAt": null,
+  "ageSeconds": null,
+  "isStale": true,
+  "gstRatePercent": 15.0
+}

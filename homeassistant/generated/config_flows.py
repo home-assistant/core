@@ -191,6 +191,7 @@ FLOWS = {
         "ecobee",
         "ecoforest",
         "econet",
+        "ecosmart",
         "ecovacs",
         "ecowitt",
         "edifier_infrared",

@@ -1,0 +1,18 @@
+{
+  "keyPrefix": "ecos_live_abcd1234",
+  "label": "redacted",
+  "accountRef": "ACC-000000",
+  "allowedIcps": [
+    {
+      "icp": "0000123456AB123",
+      "poc": "BOB1101",
+      "network": "COUP",
+      "priceCategoryCode": "RSUC"
+    }
+  ],
+  "rateLimitPerMinute": 60,
+  "createdAt": "2026-08-17T07:10:41.765114Z",
+  "lastUsedAt": "2026-08-21T01:42:02.443745Z",
+  "gstRatePercent": 15.0,
+  "pricesAre": "Wholesale energy prices at the grid exit point. Not a retail price: lines charges, metering, levies and retailer margin are not included."
+}
