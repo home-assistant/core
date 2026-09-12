@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from tplink_omada_client.definitions import (
     DeviceStatusCategory,
@@ -23,10 +23,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
+from .const import DOMAIN
 from .controller import OmadaGatewayCoordinator
 from .entity import OmadaDeviceEntity
 
@@ -42,21 +44,25 @@ async def async_setup_entry(
     controller = config_entry.runtime_data
 
     async def _create_gateway_port_entities(device: OmadaListDevice) -> None:
-        gateway_coordinator = controller.gateway_coordinator
-        if TYPE_CHECKING:
-            assert gateway_coordinator is not None
+        gateway_coordinator = await controller.async_get_gateway_coordinator(device.mac)
 
         entities: list[Entity] = []
-        gateway = gateway_coordinator.data.get(device.mac)
-        if gateway:
-            entities.extend(
-                OmadaGatewayPortBinarySensor(
-                    gateway_coordinator, gateway, p.port_number, desc
-                )
-                for p in gateway.port_configs
-                for desc in GATEWAY_PORT_SENSORS
-                if desc.exists_func(p)
+        gateway = (gateway_coordinator.data or {}).get(device.mac)
+        if gateway is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="gateway_unavailable",
+                translation_placeholders={"mac": device.mac},
             )
+
+        entities.extend(
+            OmadaGatewayPortBinarySensor(
+                gateway_coordinator, gateway, p.port_number, desc
+            )
+            for p in gateway.port_configs
+            for desc in GATEWAY_PORT_SENSORS
+            if desc.exists_func(p)
+        )
         async_add_entities(entities)
 
     await controller.async_register_device_entities(
