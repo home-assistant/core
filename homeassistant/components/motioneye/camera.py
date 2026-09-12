@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from contextlib import suppress
-from typing import Any, override
+from typing import Any, cast, override
 
 import aiohttp
 from jinja2 import Template
@@ -195,8 +195,16 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
 
         return {
             CONF_NAME: None,
-            CONF_USERNAME: self._surveillance_username if auth is not None else None,
-            CONF_PASSWORD: self._surveillance_password if auth is not None else "",
+            CONF_USERNAME: (
+                camera.get("streaming_username", self._surveillance_username)
+                if auth is not None
+                else None
+            ),
+            CONF_PASSWORD: (
+                camera.get("streaming_password", self._surveillance_password)
+                if auth is not None
+                else ""
+            ),
             CONF_MJPEG_URL: streaming_url or "",
             CONF_STILL_IMAGE_URL: self._client.get_camera_snapshot_url(camera),
             CONF_AUTHENTICATION: auth,
@@ -254,6 +262,15 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
+
+    @override
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Return a still image using the authenticated motionEye client."""
+        if not self._camera:
+            return None
+        return await cast(Any, self._client).async_get_camera_snapshot(self._camera_id)
 
     async def async_set_text_overlay(
         self,

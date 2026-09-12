@@ -1,9 +1,8 @@
 """Test Local Media Source."""
 
 import logging
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import AsyncMock, patch
 
-from motioneye_client.client import MotionEyeClientPathError
 import pytest
 
 from homeassistant.components.media_source import (
@@ -15,17 +14,19 @@ from homeassistant.components.media_source import (
     async_resolve_media,
 )
 from homeassistant.components.motioneye.const import DOMAIN
+from homeassistant.components.motioneye.media_source import async_get_media_source
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import (
     TEST_CAMERA_DEVICE_IDENTIFIER,
-    TEST_CAMERA_ID,
     TEST_CONFIG_ENTRY_ID,
     create_mock_motioneye_client,
     setup_mock_motioneye_config_entry,
 )
+
+from tests.typing import ClientSessionGenerator
 
 TEST_MOVIES = {
     "mediaList": [
@@ -71,6 +72,16 @@ TEST_IMAGES = {
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture(autouse=True)
+def mock_sign_path() -> None:
+    """Return a deterministic signed media proxy URL."""
+    with patch(
+        "homeassistant.components.motioneye.media_source.async_sign_path",
+        return_value="http://signed",
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -250,7 +261,6 @@ async def test_async_browse_media_success(
         "not_shown": 0,
     }
 
-    client.get_movie_url = Mock(return_value="http://movie")
     media = await async_browse_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}/{config.entry_id}#{device.id}#movies#/2021-04-25",
@@ -283,7 +293,7 @@ async def test_async_browse_media_success(
                 "can_expand": False,
                 "can_search": False,
                 "search_media_classes": None,
-                "thumbnail": "http://movie",
+                "thumbnail": "http://signed",
                 "children_media_class": None,
             },
             {
@@ -299,7 +309,7 @@ async def test_async_browse_media_success(
                 "can_expand": False,
                 "can_search": False,
                 "search_media_classes": None,
-                "thumbnail": "http://movie",
+                "thumbnail": "http://signed",
                 "children_media_class": None,
             },
             {
@@ -315,7 +325,7 @@ async def test_async_browse_media_success(
                 "can_expand": False,
                 "can_search": False,
                 "search_media_classes": None,
-                "thumbnail": "http://movie",
+                "thumbnail": "http://signed",
                 "children_media_class": None,
             },
         ],
@@ -337,7 +347,6 @@ async def test_async_browse_media_images_success(
     )
 
     client.async_get_images = AsyncMock(return_value=TEST_IMAGES)
-    client.get_image_url = Mock(return_value="http://image")
 
     media = await async_browse_media(
         hass,
@@ -371,12 +380,34 @@ async def test_async_browse_media_images_success(
                 "can_expand": False,
                 "can_search": False,
                 "search_media_classes": None,
-                "thumbnail": "http://image",
+                "thumbnail": "http://signed",
                 "children_media_class": None,
             }
         ],
         "not_shown": 0,
     }
+
+
+async def test_media_proxy_image(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test fetching saved image media through the Home Assistant proxy."""
+    client = create_mock_motioneye_client()
+    client.async_get_media = AsyncMock(return_value=b"image")
+    config = await setup_mock_motioneye_config_entry(hass, client=client)
+    await async_get_media_source(hass)
+
+    client_session = await hass_client()
+    response = await client_session.get(
+        f"/api/motioneye/media/{config.entry_id}/1/images/0/L2Zvby5qcGc="
+    )
+
+    assert response.status == 200
+    assert response.content_type == "image/jpeg"
+    assert await response.read() == b"image"
+    client.async_get_media.assert_awaited_once_with(
+        1, "/foo.jpg", image=True, preview=False
+    )
 
 
 async def test_async_resolve_media_success(
@@ -394,24 +425,20 @@ async def test_async_resolve_media_success(
     )
 
     # Test successful resolve for a movie.
-    client.get_movie_url = Mock(return_value="http://movie-url")
     media = await async_resolve_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4",
         None,
     )
-    assert media == PlayMedia(url="http://movie-url", mime_type="video/mp4")
-    assert client.get_movie_url.call_args == call(TEST_CAMERA_ID, "/foo.mp4")
+    assert media == PlayMedia(url="http://signed", mime_type="video/mp4")
 
     # Test successful resolve for an image.
-    client.get_image_url = Mock(return_value="http://image-url")
     media = await async_resolve_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#images#/foo.jpg",
         None,
     )
-    assert media == PlayMedia(url="http://image-url", mime_type="image/jpeg")
-    assert client.get_image_url.call_args == call(TEST_CAMERA_ID, "/foo.jpg")
+    assert media == PlayMedia(url="http://signed", mime_type="image/jpeg")
 
 
 async def test_async_resolve_media_failure(
@@ -436,8 +463,6 @@ async def test_async_resolve_media_failure(
         config_entry_id=config.entry_id,
         identifiers={(DOMAIN, f"{config.entry_id}_NOTINT")},
     )
-    client.get_movie_url = Mock(return_value="http://url")
-
     # URI doesn't contain necessary components.
     with pytest.raises(Unresolvable):
         await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/foo", None)
@@ -482,17 +507,7 @@ async def test_async_resolve_media_failure(
             None,
         )
 
-    # Playback URL raises exception.
-    client.get_movie_url = Mock(side_effect=MotionEyeClientPathError)
-    with pytest.raises(Unresolvable):
-        await async_resolve_media(
-            hass,
-            f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4",
-            None,
-        )
-
     # Media path does not start with '/'
-    client.get_movie_url = Mock(side_effect=MotionEyeClientPathError)
     with pytest.raises(MediaSourceError):
         await async_resolve_media(
             hass,
