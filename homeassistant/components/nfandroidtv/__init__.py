@@ -12,6 +12,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_HASS_CONFIG, DOMAIN
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.NOTIFY]
@@ -24,6 +25,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NFAndroidTV component."""
 
     hass.data[DATA_HASS_CONFIG] = config
+
+    async_setup_services(hass)
     return True
 
 
