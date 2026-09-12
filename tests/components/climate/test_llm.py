@@ -3,11 +3,19 @@
 import pytest
 
 from homeassistant.components import llm as llm_component
-from homeassistant.components.climate import llm as climate_llm
+from homeassistant.components.climate import (
+    ATTR_TEMPERATURE,
+    DOMAIN,
+    SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
+    llm as climate_llm,
+)
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+
+from tests.common import async_mock_service
 
 ENTITY_ID = "climate.test"
 
@@ -19,7 +27,14 @@ async def setup_integrations(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "intent", {})
     assert await async_setup_component(hass, "climate", {})
     assert await async_setup_component(hass, "llm", {})
-    hass.states.async_set(ENTITY_ID, "on", {"friendly_name": "Test climate"})
+    hass.states.async_set(
+        ENTITY_ID,
+        "on",
+        {
+            "friendly_name": "Test climate",
+            "supported_features": ClimateEntityFeature.TARGET_TEMPERATURE,
+        },
+    )
     async_expose_entity(hass, "conversation", ENTITY_ID, True)
     await hass.async_block_till_done()
 
@@ -44,6 +59,41 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is offered for an exposed climate entity."""
     assert "climate__HassClimateSetTemperature" in await _tool_names(hass)
+
+
+@pytest.mark.parametrize(
+    "target_args",
+    [
+        pytest.param(
+            {"area": "", "floor": "", "name": "Test climate"},
+            id="named-target",
+        ),
+        pytest.param(
+            {"area": "", "floor": " ", "name": None},
+            id="implicit-single-target",
+        ),
+    ],
+)
+async def test_set_temperature_omits_empty_optional_targets(
+    hass: HomeAssistant, target_args: dict[str, str | None]
+) -> None:
+    """Test empty optional targets do not invalidate a climate LLM tool call."""
+    api = await llm.async_get_api(hass, "assist", _llm_context())
+    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_TEMPERATURE)
+
+    response = await api.async_call_tool(
+        llm.ToolInput(
+            "climate__HassClimateSetTemperature",
+            {**target_args, "temperature": 25},
+        )
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": ENTITY_ID,
+        ATTR_TEMPERATURE: 25,
+    }
+    assert response["response_type"] == "action_done"
 
 
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:

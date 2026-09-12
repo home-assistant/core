@@ -256,7 +256,11 @@ class IntentTool(Tool):
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
         """Handle the intent."""
-        slots = {key: {"value": val} for key, val in tool_input.tool_args.items()}
+        slots = {
+            key: {"value": val}
+            for key, val in tool_input.tool_args.items()
+            if not intent.is_blank_slot_value(val)
+        }
 
         if self.extra_slots and llm_context.device_id:
             device_reg = dr.async_get(hass)
