@@ -409,7 +409,7 @@ async def test_migrate_entry(
     entity_1 = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
-        "11_0_213c7f2:16_signal_strength",
+        "11_0_213c7f2:16_Rssi numeric",
         config_entry=entry,
         device_id=device_1.id,
     )
@@ -501,7 +501,7 @@ async def test_migrate_entry(
 
     entity_1 = entity_registry.async_get(entity_1.entity_id)
     assert entity_1
-    assert entity_1.unique_id == f"{subentry_1.subentry_id}_signal_strength"
+    assert entity_1.unique_id == f"{subentry_1.subentry_id}_Rssi numeric"
     assert entity_1.config_subentry_id == subentry_1.subentry_id
 
     entity_2 = entity_registry.async_get(entity_2.entity_id)
@@ -564,7 +564,7 @@ async def test_migrate_entry_skips_foreign_and_migrated_entities(
     migrated_entity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
-        "existing_subentry_id_signal_strength",
+        "existing_subentry_id_Rssi numeric",
         config_entry=entry,
         config_subentry_id="existing_subentry_id",
         device_id=device_1.id,
@@ -589,7 +589,7 @@ async def test_migrate_entry_skips_foreign_and_migrated_entities(
 
     migrated_entity = entity_registry.async_get(migrated_entity.entity_id)
     assert migrated_entity
-    assert migrated_entity.unique_id == "existing_subentry_id_signal_strength"
+    assert migrated_entity.unique_id == "existing_subentry_id_Rssi numeric"
     assert migrated_entity.config_subentry_id == "existing_subentry_id"
 
     helper_entity = entity_registry.async_get(helper_entity.entity_id)
