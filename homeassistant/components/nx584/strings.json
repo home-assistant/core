@@ -1,4 +1,47 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue": {
+      "description": "Configuring NX584 using YAML is deprecated.\n\nWhile importing your configuration, an error occurred. Please review the Home Assistant logs and restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "NX584 YAML configuration import failed"
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_zone_options": "Excluded zones must be a YAML list of zone numbers (for example `[3, 5]`), and zone types must be a YAML mapping of zone numbers to binary sensor device classes (for example `3: motion`)."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "exclude_zones": "Excluded zones",
+          "zone_types": "Zone device classes"
+        },
+        "data_description": {
+          "exclude_zones": "Zone numbers to exclude from Home Assistant, as a YAML list, for example:\n```yaml\n- 3\n- 5\n```\nor using brackets: `[3, 5]`.",
+          "zone_types": "Mapping of zone numbers to a binary sensor device class, as a YAML mapping, for example:\n```yaml\n1: opening\n2: motion\n4: opening\n```\nZones not listed default to opening."
+        },
+        "description": "Values are entered using YAML syntax."
+      }
+    }
+  },
   "services": {
     "bypass_zone": {
       "description": "Bypasses a zone.",
