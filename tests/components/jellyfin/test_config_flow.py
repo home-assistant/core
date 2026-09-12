@@ -1,11 +1,12 @@
 """Test the jellyfin config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from voluptuous.error import Invalid
 
 from homeassistant import config_entries
+from homeassistant.components.jellyfin.client_wrapper import CannotConnect, InvalidAuth
 from homeassistant.components.jellyfin.const import (
     CONF_AUDIO_CODEC,
     CONF_CLIENT_DEVICE_ID,
@@ -16,9 +17,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import async_load_json_fixture
-from .const import REAUTH_INPUT, TEST_PASSWORD, TEST_URL, TEST_USERNAME, USER_INPUT
+from .const import (
+    REAUTH_INPUT,
+    RECONFIGURE_INPUT,
+    TEST_NEW_URL,
+    TEST_PASSWORD,
+    TEST_URL,
+    TEST_USERNAME,
+    USER_INPUT,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -456,6 +465,128 @@ async def test_reauth_exception(
     )
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
+
+
+@pytest.mark.usefixtures("mock_jellyfin")
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_setup_entry: MagicMock,
+) -> None:
+    """Test reconfiguring a Jellyfin server."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={CONF_CLIENT_DEVICE_ID: "TEST-UUID", **mock_config_entry.data},
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_URL) == TEST_URL
+    )
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_USERNAME)
+        == TEST_USERNAME
+    )
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_PASSWORD)
+        == TEST_PASSWORD
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_CLIENT_DEVICE_ID: "TEST-UUID",
+        CONF_URL: TEST_NEW_URL,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
+    }
+    mock_client.auth.connect_to_address.assert_called_once_with(TEST_NEW_URL)
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_jellyfin")
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test reconfiguring with a different Jellyfin account."""
+    mock_client.jellyfin.get_user_settings.return_value = {"Id": "OTHER-USER-UUID"}
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_URL] == TEST_URL
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (CannotConnect(), "cannot_connect"),
+        (InvalidAuth(), "invalid_auth"),
+        (Exception("Unexpected error"), "unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_jellyfin")
+async def test_reconfigure_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test an error while reconfiguring a Jellyfin server."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.jellyfin.config_flow.validate_input",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=RECONFIGURE_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": expected_error}
+    assert mock_config_entry.data[CONF_URL] == TEST_URL
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_URL)
+        == TEST_NEW_URL
+    )
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_USERNAME)
+        == TEST_USERNAME
+    )
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_PASSWORD)
+        == TEST_PASSWORD
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_URL] == TEST_NEW_URL
 
 
 async def test_options_flow(

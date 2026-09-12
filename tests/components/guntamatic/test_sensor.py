@@ -171,7 +171,7 @@ async def test_enum_sensor_unmapped_value(
     await setup_integration(hass, mock_config_entry)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.heating_circuit_1_pump")
+    state = hass.states.get("sensor.mock_title_heating_circuit_1_pump")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 

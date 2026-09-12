@@ -3,9 +3,10 @@
 from datetime import date, datetime, time, timedelta
 import logging
 import re
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, cast, override
 
-import caldav
+from caldav.calendarobjectresource import CalendarObjectResource
+from caldav.collection import Calendar
 
 from homeassistant.components.calendar import (
     CalendarEvent,
@@ -27,7 +28,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 OFFSET = "!!"
 
 
-def _get_status(vevent: caldav.CalendarObjectResource) -> CalendarEventStatus | None:
+def _get_status(vevent: CalendarObjectResource) -> CalendarEventStatus | None:
     """Return the rfc5545 STATUS of a VEVENT, if a calendar entity reports it.
 
     Anything outside the supported set is dropped rather than passed on, which
@@ -52,7 +53,8 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         self,
         hass: HomeAssistant,
         entry: CalDavConfigEntry | None,
-        calendar: caldav.Calendar,
+        calendar: Calendar,
+        calendar_name: str | None,
         days: int,
         include_all_day: bool,
         search: str | None,
@@ -62,10 +64,11 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             hass,
             _LOGGER,
             config_entry=entry,
-            name=f"CalDAV {calendar.name}",
+            name=f"CalDAV {calendar_name}",
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
         self.calendar = calendar
+        self.calendar_name = calendar_name
         self.days = days
         self.include_all_day = include_all_day
         self.search = search
@@ -81,11 +84,14 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         self, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Fetch and parse events in a specific time frame."""
-        vevent_list = self.calendar.search(
-            start=start_date,
-            end=end_date,
-            event=True,
-            expand=True,
+        vevent_list = cast(
+            list[CalendarObjectResource],
+            self.calendar.search(
+                start=start_date,
+                end=end_date,
+                event=True,
+                expand=True,
+            ),
         )
         event_list = []
         for event in vevent_list:
@@ -132,18 +138,21 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         """Fetch and parse the next matching event."""
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
-        results = self.calendar.search(
-            start=start_of_today,
-            end=start_of_tomorrow,
-            event=True,
-            expand=True,
+        results = cast(
+            list[CalendarObjectResource],
+            self.calendar.search(
+                start=start_of_today,
+                end=start_of_tomorrow,
+                event=True,
+                expand=True,
+            ),
         )
 
         # Create new events for each recurrence of an event that happens today.
         # For recurring events, some servers return the original
         # event with recurrence rules
         # and they would not be properly parsed using their original start/end dates.
-        new_events = []
+        new_events: list[CalendarObjectResource] = []
         for event in results:
             if not hasattr(event.vobject_instance, "vevent"):
                 _LOGGER.warning("Skipped event with missing 'vevent' property")
@@ -161,7 +170,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                     _start_of_tomorrow = start_of_tomorrow
                 if _start_of_today <= start_dt < _start_of_tomorrow:
                     new_event = event.copy()
-                    new_vevent = new_event.vobject_instance.vevent  # type: ignore[attr-defined]
+                    new_vevent = new_event.vobject_instance.vevent
                     if hasattr(new_vevent, "dtend"):
                         dur = new_vevent.dtend.value - new_vevent.dtstart.value
                         new_vevent.dtend.value = start_dt + dur
@@ -197,7 +206,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             _LOGGER.debug(
                 "No matching event found in the %d results for %s",
                 len(vevents),
-                self.calendar.name,
+                self.calendar_name,
             )
             return None, None
 
