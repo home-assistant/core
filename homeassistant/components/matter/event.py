@@ -16,6 +16,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
@@ -117,12 +118,25 @@ class MatterEventEntity(MatterEntity, EventEntity):
         """Call on NodeEvent."""
         if data.endpoint_id != self._endpoint.endpoint_id:
             return
+
+        # event ids are only unique within a cluster, and an endpoint can host
+        # more clusters than the switch this entity was made for
+        if data.cluster_id != clusters.Switch.id:
+            return
+
+        event_type: str | None = EVENT_TYPES_MAP.get(data.event_id)
         if data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
             # multi press event
             presses = (data.data or {}).get("totalNumberOfPressesCounted", 1)
             event_type = f"multi_press_{presses}"
-        else:
-            event_type = EVENT_TYPES_MAP[data.event_id]
+
+        if event_type is None:
+            LOGGER.debug(
+                "Ignoring unknown switch event id %s for %s",
+                data.event_id,
+                self.entity_id,
+            )
+            return
 
         if event_type not in self.event_types:
             # this should not happen, but guard for bad things
