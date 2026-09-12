@@ -20,6 +20,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.vehicle.stream_glue import BleBroadcastStreamGlue, StreamSink
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamAuthenticationError
 from teslemetry_stream.const import SseTopic
@@ -607,6 +608,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 vehicle,
             )
 
+            # Bluetooth-paired only: feeds the router's own primary broadcast
+            # listeners into the same stream sink a native stream event reaches.
+            ble_broadcast_glue = (
+                BleBroadcastStreamGlue(
+                    vehicle_api.primary, cast(StreamSink, stream_vehicle)
+                )
+                if isinstance(vehicle_api, VehicleRouter)
+                else None
+            )
+
             vehicles.append(
                 TeslemetryVehicleData(
                     api=vehicle_api,
@@ -618,6 +629,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     vin=vin,
                     firmware=firmware or "Unknown",
                     device=device,
+                    ble_broadcast_glue=ble_broadcast_glue,
                 )
             )
 
@@ -904,6 +916,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) 
         # Release any on-demand Bluetooth link only after platforms unloaded, or the still-loaded entry's backends must keep working.
         for vehicle in entry.runtime_data.vehicles:
             if isinstance(vehicle.api, VehicleRouter):
+                if vehicle.ble_broadcast_glue is not None:
+                    vehicle.ble_broadcast_glue.stop()
                 try:
                     await vehicle.api.primary.disconnect()
                 except (BleakError, TeslaFleetError, TimeoutError) as err:
