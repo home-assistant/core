@@ -12,6 +12,7 @@ from .dataset_store import (
     async_add_dataset,
     async_get_dataset,
     async_get_preferred_dataset,
+    async_get_store,
 )
 from .websocket_api import async_setup as async_setup_ws_api
 
@@ -22,6 +23,7 @@ __all__ = [
     "async_add_dataset",
     "async_get_dataset",
     "async_get_preferred_dataset",
+    "async_get_store",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

@@ -564,6 +564,16 @@ class DatasetStore:
         """Schedule saving the dataset store."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
+    async def async_save(self) -> None:
+        """Write the dataset store now, ahead of any scheduled save.
+
+        For a caller whose write has an external side effect that cannot be
+        called back, such as a mesh that is already migrating to the stored
+        credentials, so that a crash inside the save delay cannot leave the
+        store behind the network.
+        """
+        await self._store.async_save(self._data_to_save())
+
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:
         """Return data of datasets to store in a file."""
