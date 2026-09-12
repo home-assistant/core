@@ -1,14 +1,17 @@
 {
-  "local_mode": true,
+  "local_mode": false,
+  "schedule_id": "Manual Schedule",
   "schedule": [
     {
       "type": 1,
+      "min": 10,
+      "max": 95,
       "params": {
         "setpoint": 0,
         "max_charge": 6028,
         "max_discharge": 6028,
-        "min_soc": 10,
-        "max_soc": 95
+        "import_limit": 10000,
+        "export_limit": 9000
       }
     }
   ]

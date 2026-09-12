@@ -73,8 +73,9 @@ def async_get_device_and_config_for_service_call(
 ) -> tuple[dr.DeviceEntry, TeslemetryConfigEntry]:
     """Get the device entry and config entry related to a service call."""
     config_entry: TeslemetryConfigEntry
+    # Callers match the device's serial number, which only a main device has
     device_entry, config_entry = service.async_get_device_and_config_entry(
-        hass, DOMAIN, call.data[CONF_DEVICE_ID]
+        hass, DOMAIN, call.data[CONF_DEVICE_ID], include_child_devices=False
     )
     return device_entry, config_entry
 

@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 from typing import Any
 
@@ -36,18 +36,43 @@ DATA_MODBUS_CONNECTIONS: HassKey[dict[ModbusEndpoint, _SharedConnection]] = Hass
 
 @dataclass
 class _SharedConnection:
-    """A connection and how many units are held on it."""
+    """A connection and the units held on it."""
 
     params: ModbusParams
     connection: ModbusConnection
-    consumers: int = 0
+    units: dict[str, set[int]] = field(default_factory=dict)
+    """The unit ids each config entry holds, keyed by entry id."""
+    transient: int = 0
+    """Holds with no config entry behind them, taken by a config flow."""
+
+    @property
+    def consumers(self) -> int:
+        """How many holds are on this connection."""
+        return sum(len(held) for held in self.units.values()) + self.transient
+
+
+@dataclass(frozen=True, kw_only=True)
+class ModbusConnectionInfo:
+    """A connection the integration is keeping open, and who is using it."""
+
+    endpoint: ModbusEndpoint
+    connected: bool
+    units: dict[str, list[int]]
+    """The unit ids each config entry holds, keyed by entry id."""
 
 
 @callback
 def _async_acquire(
-    hass: HomeAssistant, params: ModbusParams
+    hass: HomeAssistant,
+    params: ModbusParams,
+    entry_id: str | None,
+    unit_id: int,
 ) -> tuple[ModbusConnection, Callable[[], Coroutine[Any, Any, None]]]:
     """Take a hold on the connection these credentials describe.
+
+    A hold with no ``entry_id`` behind it is a config flow's, which keeps the
+    connection up without belonging to anything that could be shown as using
+    it.
 
     Raises `HomeAssistantError` if the device is already in use over different
     link settings, which cannot both be honoured on one connection.
@@ -64,11 +89,19 @@ def _async_acquire(
             f"settings: {shared.params} against {params}"
         )
 
-    shared.consumers += 1
+    if entry_id is None:
+        shared.transient += 1
+    else:
+        shared.units.setdefault(entry_id, set()).add(unit_id)
 
     async def release() -> None:
         """Give up this hold, closing behind the last one."""
-        shared.consumers -= 1
+        if entry_id is None:
+            shared.transient -= 1
+        elif (held := shared.units.get(entry_id)) is not None:
+            held.discard(unit_id)
+            if not held:
+                del shared.units[entry_id]
         if shared.consumers or connections.get(endpoint) is not shared:
             return
         del connections[endpoint]
@@ -94,7 +127,7 @@ def async_get_unit(
     Raises `HomeAssistantError` if the device is already in use over different
     link settings, which cannot both be honoured on one connection.
     """
-    connection, release = _async_acquire(hass, params)
+    connection, release = _async_acquire(hass, params, entry.entry_id, unit_id)
     entry.async_on_unload(release)
     return connection.for_unit(unit_id)
 
@@ -114,8 +147,25 @@ async def async_get_temporary_unit(
     Raises `HomeAssistantError` if the device is already in use over different
     link settings, which cannot both be honoured on one connection.
     """
-    connection, release = _async_acquire(hass, params)
+    connection, release = _async_acquire(hass, params, None, unit_id)
     try:
         yield connection.for_unit(unit_id)
     finally:
         await release()
+
+
+@callback
+def async_get_connection_info(hass: HomeAssistant) -> list[ModbusConnectionInfo]:
+    """Return the connections the integration is keeping open.
+
+    One entry per physical device, naming the config entries holding units on
+    it. A device several integrations share appears once, with all of them.
+    """
+    return [
+        ModbusConnectionInfo(
+            endpoint=endpoint,
+            connected=shared.connection.connected,
+            units={entry_id: sorted(held) for entry_id, held in shared.units.items()},
+        )
+        for endpoint, shared in hass.data.get(DATA_MODBUS_CONNECTIONS, {}).items()
+    ]
