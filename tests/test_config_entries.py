@@ -3567,7 +3567,9 @@ async def test_entry_reload_from_migration_error(
         VERSION = 2
         MINOR_VERSION = 1
 
-        async def async_step_user(self, user_input=None):
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> FlowResult:
             """Test user step."""
             return self.async_create_entry(title="title", data={})
 
