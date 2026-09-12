@@ -17,21 +17,23 @@ from homeassistant.helpers import (
 from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
 
 from .const import DOMAIN
-from .timers import async_device_supports_timers
+from .timers import async_device_supports_timer_intent
 
 # Generic intents exposed as LLM tools regardless of a timer-capable device.
 LLM_INTENTS = (
     intent.INTENT_TURN_ON,
     intent.INTENT_TURN_OFF,
-    intent.INTENT_CANCEL_ALL_TIMERS,
     intent.INTENT_SET_POSITION,
     intent.INTENT_STOP_MOVING,
 )
 
-# Timer intents, only exposed for a device that supports timers.
+# Timer intents, only exposed for a device that supports timers. All of them
+# resolve the requesting device's own timer list, so without one they can only
+# fail.
 TIMER_INTENTS = (
     intent.INTENT_START_TIMER,
     intent.INTENT_CANCEL_TIMER,
+    intent.INTENT_CANCEL_ALL_TIMERS,
     intent.INTENT_INCREASE_TIMER,
     intent.INTENT_DECREASE_TIMER,
     intent.INTENT_PAUSE_TIMER,
@@ -55,13 +57,14 @@ def async_get_tools(
     if api_id != LLM_API_ASSIST:
         return None
 
-    supports_timers = (
-        llm_context.device_id is not None
-        and async_device_supports_timers(hass, llm_context.device_id)
-    )
     wanted = set(LLM_INTENTS)
-    if supports_timers:
-        wanted.update(TIMER_INTENTS)
+    if (device_id := llm_context.device_id) is not None:
+        # Offer only the timer tools the device's own list can actually serve.
+        wanted.update(
+            intent_type
+            for intent_type in TIMER_INTENTS
+            if async_device_supports_timer_intent(hass, device_id, intent_type)
+        )
 
     exposed_domains = {
         state.domain
@@ -116,6 +119,6 @@ def async_get_tools(
         )
 
     prompt_parts = [DEVICE_CONTROL_TOOL_USAGE_PROMPT, area_prompt]
-    if not supports_timers:
+    if intent.INTENT_START_TIMER not in wanted:
         prompt_parts.append("This device is not able to start timers.")
     return LLMTools(tools=tools, prompt="\n".join(prompt_parts))

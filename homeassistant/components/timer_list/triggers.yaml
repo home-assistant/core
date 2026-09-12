@@ -1,0 +1,11 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: timer_list
+
+timer_created: *trigger_common
+timer_paused: *trigger_common
+timer_unpaused: *trigger_common
+timer_time_changed: *trigger_common
+timer_finished: *trigger_common
+timer_cancelled: *trigger_common
