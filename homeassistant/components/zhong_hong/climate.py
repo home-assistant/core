@@ -249,13 +249,15 @@ class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
         return self._device.max_temp
 
     def _command(self, sent: bool, command: str) -> None:
-        """Fail if the command did not go out.
+        """Fail if the command did not go out, and re-read the unit shortly.
 
-        Nothing is written here on success: the unit reports the state it
-        actually reached, which is not always the one it was asked for.
+        The unit reports the new state itself once it acts on the command, so
+        the re-read is only there for the reports that go missing.
         """
         if not sent:
             raise _send_failed(command)
+
+        self.coordinator.schedule_readback()
 
     @override
     def turn_on(self) -> None:

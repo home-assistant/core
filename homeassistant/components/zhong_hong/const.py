@@ -37,6 +37,11 @@ FAN_MODE_MAP: Final = {
 }
 FAN_MODE_REVERSE_MAP: Final = {v: k for k, v in FAN_MODE_MAP.items()}
 
+# A unit acts on a command inside a few seconds and then reports the new state
+# unprompted. This is how long to wait before asking for it anyway, to cover
+# the reports that never arrive.
+READBACK_DELAY: Final = 3
+
 DEFAULT_PORT: Final = 9999
 DEFAULT_GATEWAY_ADDRESS: Final = 1
 
