@@ -51,9 +51,12 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT, _FlowResult
         if (schema := result["data_schema"]) is None:
             data["data_schema"] = []
         else:
-            data["data_schema"] = to_field_list(
-                schema, custom_serializer=cv.custom_serializer
-            )
+            serialized = to_field_list(schema, custom_serializer=cv.custom_serializer)
+            if isinstance(serialized, list):
+                data_entry_flow.add_visible_conditions_to_serialized_schema(
+                    schema, serialized
+                )
+            data["data_schema"] = serialized
         return data
 
 
