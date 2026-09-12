@@ -33,7 +33,7 @@ async def test_services(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 8
+    assert aioclient_mock.call_count == 9
 
     await hass.services.async_call(
         DOMAIN,
@@ -42,7 +42,7 @@ async def test_services(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 9
+    assert aioclient_mock.call_count == 10
 
     await hass.services.async_call(
         DOMAIN,
@@ -51,7 +51,7 @@ async def test_services(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 10
+    assert aioclient_mock.call_count == 11
 
     await hass.services.async_call(
         DOMAIN,
@@ -60,7 +60,7 @@ async def test_services(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 11
+    assert aioclient_mock.call_count == 12
 
     await hass.services.async_call(
         DOMAIN,
@@ -73,7 +73,7 @@ async def test_services(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.call_count == 13
 
     # test calling with a string value to ensure it is converted to int
     await hass.services.async_call(
@@ -87,7 +87,7 @@ async def test_services(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 13
+    assert aioclient_mock.call_count == 14
 
     # test calling with a non string -> int value and ensure exception is thrown
     with pytest.raises(MultipleInvalid):
@@ -101,4 +101,4 @@ async def test_services(
             },
             blocking=True,
         )
-    assert aioclient_mock.call_count == 13
+    assert aioclient_mock.call_count == 14
