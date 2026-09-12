@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LEGACY_HARDWARE_ID, PLATFORMS
 from .coordinator import BlinkConfigEntry, BlinkUpdateCoordinator
 from .services import async_setup_services
 
@@ -50,12 +50,21 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> b
     if entry.version == 2:
         await _reauth_flow_wrapper(hass, entry, data)
         return False
-    if entry.version == 3:
+    version = entry.version
+    if version == 3:
         # Migrate device_id to hardware_id for blinkpy 0.25.x OAuth2 compatibility
         if "device_id" in data:
             data["hardware_id"] = data.pop("device_id")
-            hass.config_entries.async_update_entry(entry, data=data, version=4)
-        return True
+        version = 4
+    if version == 4:
+        # Blink's OAuth endpoint rejects LEGACY_HARDWARE_ID; drop it so blinkpy
+        # mints a fresh per-install UUID on next setup.
+        if data.get("hardware_id") == LEGACY_HARDWARE_ID:
+            data.pop("hardware_id", None)
+        version = 5
+
+    if version != entry.version or data != dict(entry.data):
+        hass.config_entries.async_update_entry(entry, data=data, version=version)
     return True
 
 
