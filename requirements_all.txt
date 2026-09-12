@@ -117,6 +117,9 @@ RestrictedPython==8.5
 # homeassistant.components.sql
 SQLAlchemy==2.0.52
 
+# homeassistant.components.tis_control
+TISApi==0.1.19
+
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
 
