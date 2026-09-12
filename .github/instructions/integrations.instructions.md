@@ -21,8 +21,8 @@ excludeAgent: "cloud-agent"
 - Integrations should not implement fixes or workarounds for limitations in libraries. Instead, the library should be updated to fix the issue.
 
 The following platforms have extra guidelines:
-- **Diagnostics**: [`platform-diagnostics.md`](platform-diagnostics.md) for diagnostic data collection
-- **Repairs**: [`platform-repairs.md`](platform-repairs.md) for user-actionable repair issues
+- **Diagnostics**: [`platform-diagnostics.md`](https://github.com/home-assistant/core/blob/dev/.claude/skills/ha-integration-knowledge/platform-diagnostics.md) for diagnostic data collection
+- **Repairs**: [`platform-repairs.md`](https://github.com/home-assistant/core/blob/dev/.claude/skills/ha-integration-knowledge/platform-repairs.md) for user-actionable repair issues
 
 ## Entity platforms
 
