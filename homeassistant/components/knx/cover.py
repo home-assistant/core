@@ -189,7 +189,7 @@ class _KnxCover(CoverEntity, RestoreEntity):
             # remote value's `last_payload`, which is only updated once the outgoing
             # telegram has been processed - during startup that can lag past the
             # cooldown, and the restored position would then go out a second time.
-            self._position_publisher.sensor_value.value = position
+            self._position_publisher.initialize_value(position)
 
     @override
     async def async_will_remove_from_hass(self) -> None:
