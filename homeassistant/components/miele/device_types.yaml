@@ -1,0 +1,20 @@
+# Maps the traits of a device type onto Miele's entities.
+#
+# Keyed by device type, then by trait. The value addresses an entity as
+# `<domain>.<translation_key>`; it looks like an entity ID but is not one, since
+# translation_key is what identifies an entity description across installations.
+#
+# Scoping by device type matters here: Miele numbers its temperature zones
+# rather than naming them, so zone_2 is the freezer on a fridge-freezer but the
+# second wine zone on a wine cabinet, and only this file gives it meaning.
+#
+# The fridge compartment and the door are missing on purpose. Those entity
+# descriptions carry no translation_key, so there is nothing to address them by
+# and Miele cannot fill the traits they would otherwise satisfy.
+
+appliance.refrigerator:
+  traits:
+    fast_cool: switch.supercooling
+    fast_freeze: switch.superfreezing
+    freezer_compartment_target_temperature: climate.zone_2
+    freezer_compartment_temperature: sensor.temperature_zone_2

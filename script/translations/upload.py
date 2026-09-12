@@ -13,6 +13,8 @@ from .util import get_current_branch, get_lokalise_token, load_json_from_path
 LOCAL_FILE = pathlib.Path("build/translations-upload.json").absolute()
 CONTAINER_FILE = "/opt/src/build/translations-upload.json"
 LANG_ISO = "en"
+DEVICE_TYPES_DIR = INTEGRATIONS_DIR / "homeassistant" / "device_types"
+DEVICE_TYPES_STRINGS_SUFFIX = ".strings.json"
 
 
 def run_upload_docker():
@@ -49,6 +51,26 @@ def run_upload_docker():
         raise ExitApp("Failed to download translations")
 
 
+def load_device_type_strings():
+    """Load the strings file paired with each device type definition.
+
+    Each device type owns a definition and a strings file side by side; the path
+    under device_types/ is the device type, and becomes the nesting here.
+    """
+    device_types: dict = {}
+    for path in sorted(
+        DEVICE_TYPES_DIR.glob(f"**{os.sep}*{DEVICE_TYPES_STRINGS_SUFFIX}")
+    ):
+        relative = path.relative_to(DEVICE_TYPES_DIR)
+        target = device_types
+        for namespace in relative.parent.parts:
+            target = target.setdefault(namespace, {})
+        target[path.name.removesuffix(DEVICE_TYPES_STRINGS_SUFFIX)] = (
+            load_json_from_path(path)
+        )
+    return device_types
+
+
 def generate_upload_data():
     """Generate the data for uploading."""
     translations = load_json_from_path(INTEGRATIONS_DIR.parent / "strings.json")
@@ -57,6 +79,9 @@ def generate_upload_data():
         path.parent.name: load_json_from_path(path)
         for path in INTEGRATIONS_DIR.glob(f"*{os.sep}strings.json")
     }
+    translations["component"]["homeassistant"]["device_types"] = (
+        load_device_type_strings()
+    )
 
     return translations
 
