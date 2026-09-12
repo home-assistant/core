@@ -1,0 +1,24 @@
+{
+  "from": 2864434397,
+  "to": 4294967295,
+  "fromId": "!aabbccdd",
+  "toId": "^all",
+  "channel": 0,
+  "id": 305441746,
+  "rxTime": 1757300480,
+  "rxSnr": 5.25,
+  "rxRssi": -85,
+  "hopLimit": 3,
+  "hopStart": 3,
+  "decoded": {
+    "portnum": "NODEINFO_APP",
+    "user": {
+      "id": "!aabbccdd",
+      "longName": "Remote One",
+      "shortName": "RM1",
+      "hwModel": "HELTEC_V3",
+      "role": "ROUTER",
+      "publicKey": "IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI="
+    }
+  }
+}
