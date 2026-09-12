@@ -1,0 +1,47 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "pairing_timeout": "The pairing code expired before it was approved in the Famn app.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The paired Famn space does not match the space this entry was set up with."
+    },
+    "progress": {
+      "wait_for_pairing": "Waiting for the pairing to be approved in the Famn app.\n\n- Pairing ID: `{pairing_id}`\n- Code: `{code}`\n\nOr open {url} to approve it."
+    },
+    "step": {
+      "pair": {
+        "data": {
+          "qr_code": "QR code"
+        },
+        "data_description": {
+          "qr_code": "Scan this QR code with the Famn app to approve the pairing."
+        },
+        "description": "Scan the QR code with the Famn app to approve this pairing.\n\nTo approve manually instead, open the Famn app, go to **Settings > Spaces > Approve device** and enter:\n\n- Pairing ID: `{pairing_id}`\n- Code: `{code}`\n\nThe code expires after 5 minutes.",
+        "title": "Pair with Famn"
+      },
+      "reauth_confirm": {
+        "description": "The Famn device registration for Home Assistant is no longer valid. Select **Submit** to pair Home Assistant with Famn again.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to Famn."
+    },
+    "complete_item_failed": {
+      "message": "Failed to mark {name} as done in Famn."
+    },
+    "create_item_failed": {
+      "message": "Failed to create {name} in Famn."
+    },
+    "token_rotation_unauthorized": {
+      "message": "Famn rejected the device credentials. Pair Home Assistant with Famn again."
+    },
+    "update_item_failed": {
+      "message": "Failed to update {name} in Famn."
+    }
+  }
+}

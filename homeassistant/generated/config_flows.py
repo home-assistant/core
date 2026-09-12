@@ -230,6 +230,7 @@ FLOWS = {
         "evil_genius_labs",
         "ezviz",
         "faa_delays",
+        "famn",
         "fastdotcom",
         "feedreader",
         "fibaro",

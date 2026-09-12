@@ -1,0 +1,60 @@
+"""Diagnostics support for the Famn integration."""
+
+from typing import Any
+
+from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.core import HomeAssistant
+
+from .coordinator import FamnConfigEntry
+
+TO_REDACT = {
+    "id",
+    "uid",
+    "spaceId",
+    "taskListId",
+    "calendarId",
+    "listId",
+    "recurrenceId",
+    "createdBy",
+    "updatedBy",
+    "executingUserId",
+    "assignments",
+    "organizer",
+    "icsBlob",
+    "name",
+    "title",
+    "description",
+    "location",
+}
+
+
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant, entry: FamnConfigEntry
+) -> dict[str, Any]:
+    """Return diagnostics for a config entry."""
+    return {
+        "chore_lists": [
+            {
+                "task_list": async_redact_data(
+                    chore_list.task_list.to_dict(), TO_REDACT
+                ),
+                "items": [
+                    async_redact_data(item.to_dict(), TO_REDACT)
+                    for item in chore_list.items
+                ],
+            }
+            for chore_list in entry.runtime_data.chores.data.values()
+        ],
+        "shopping_lists": [
+            {
+                "shopping_list": async_redact_data(
+                    shopping_list.shopping_list.to_dict(), TO_REDACT
+                ),
+                "items": [
+                    async_redact_data(item.to_dict(), TO_REDACT)
+                    for item in shopping_list.items
+                ],
+            }
+            for shopping_list in entry.runtime_data.shopping.data.values()
+        ],
+    }
