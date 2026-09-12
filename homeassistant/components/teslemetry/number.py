@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any, override
 
-from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
@@ -168,7 +167,7 @@ async def async_setup_entry(
                     description,
                     entry.runtime_data.scopes,
                 )
-                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
+                if vehicle.polls_charge_limit
                 else TeslemetryStreamingNumberEntity(
                     vehicle,
                     description,
@@ -403,7 +402,7 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
         self._attr_native_value = value
         self.vehicle.charge_on_solar_lower_limit = value
 
-        if self.vehicle.poll:
+        if self.vehicle.polls_charge_limit:
             self.async_on_remove(
                 self.vehicle.coordinator.async_add_listener(
                     self._async_handle_coordinator_update

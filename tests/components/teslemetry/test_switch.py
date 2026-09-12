@@ -324,6 +324,38 @@ async def test_charge_on_solar_switch_services_polling(
     assert state.state == STATE_ON
 
 
+async def test_charge_on_solar_switch_services_old_firmware(
+    hass: HomeAssistant,
+    mock_old_firmware: AsyncMock,
+) -> None:
+    """Test a non-polling vehicle below the streaming firmware still fetches the polled charge limit."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    entry = await setup_platform(hass, [Platform.SWITCH])
+
+    # This vehicle's raw poll flag is off, so its coordinator gets no initial
+    # refresh; force one so the charge limit is known.
+    await entry.runtime_data.vehicles[0].coordinator.async_refresh()
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=20,
+            upper_charge_limit=80,
+        )
+
+    assert (state := hass.states.get("switch.test_charge_on_solar")) is not None
+    assert state.state == STATE_ON
+
+
 async def test_charge_on_solar_switch_uses_lower_limit_number(
     hass: HomeAssistant,
 ) -> None:

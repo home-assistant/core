@@ -461,7 +461,7 @@ class TeslemetryChargeOnSolarSwitchEntity(
             )
             self._charge_limit_soc = restored.charge_limit_soc
 
-        if self.vehicle.poll:
+        if self.vehicle.polls_charge_limit:
             charge_limit = self.vehicle.coordinator.data.get(
                 "charge_state_charge_limit_soc"
             )
@@ -491,7 +491,7 @@ class TeslemetryChargeOnSolarSwitchEntity(
         self.raise_for_scope(Scope.VEHICLE_CMDS)
         async with self.vehicle.charge_on_solar_lock:
             charge_limit: int | None
-            if self.vehicle.poll:
+            if self.vehicle.polls_charge_limit:
                 value = self.vehicle.coordinator.data.get(
                     "charge_state_charge_limit_soc"
                 )

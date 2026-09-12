@@ -122,6 +122,39 @@ METADATA_LEGACY = {
         }
     },
 }
+METADATA_OLD_FIRMWARE = {
+    "uid": UNIQUE_ID,
+    "region": "NA",
+    "scopes": [
+        "openid",
+        "offline_access",
+        "user_data",
+        "vehicle_device_data",
+        "vehicle_cmds",
+        "vehicle_charging_cmds",
+        "vehicle_location",
+        "energy_device_data",
+        "energy_cmds",
+    ],
+    "vehicles": {
+        "LRW3F7EK4NC700000": {
+            "proxy": True,
+            "access": True,
+            "polling": False,
+            "firmware": "2024.20",
+            "discounted": False,
+            "fleet_telemetry": "1.0.2",
+            "name": "Home Assistant",
+            "config": VEHICLE_CONFIG,
+        }
+    },
+    "energy_sites": {
+        "123456": {
+            "access": True,
+            "name": "Energy Site",
+        }
+    },
+}
 METADATA_NOSCOPE = {
     "uid": UNIQUE_ID,
     "region": "NA",

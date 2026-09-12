@@ -280,6 +280,36 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit_polling(
     assert state.state == "10"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_charge_on_solar_lower_limit_capped_by_charge_limit_old_firmware(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_old_firmware: AsyncMock,
+) -> None:
+    """Test a non-polling vehicle below the streaming firmware still tracks coordinator updates."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    entry = await setup_platform(hass, [Platform.NUMBER])
+    vehicle = entry.runtime_data.vehicles[0]
+
+    # This vehicle's raw poll flag is off, so its coordinator gets no initial
+    # refresh; force one so the charge limit is known.
+    await vehicle.coordinator.async_refresh()
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.attributes["max"] == 80
+
+    lowered_data = deepcopy(VEHICLE_DATA)
+    lowered_data["response"]["charge_state"]["charge_limit_soc"] = 10
+    mock_vehicle_data.return_value = lowered_data
+    await vehicle.coordinator.async_refresh()
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.attributes["max"] == 10
+    assert state.state == "10"
+
+
 async def test_charge_on_solar_lower_limit_restores_max_value(
     hass: HomeAssistant,
 ) -> None:
