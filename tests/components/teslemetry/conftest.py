@@ -143,6 +143,36 @@ def mock_site_info():
 
 
 @pytest.fixture(autouse=True)
+def mock_powerwall_live_status() -> Generator[AsyncMock]:
+    """Stub the paired gateway's local live_status so tests never hit the LAN.
+
+    The default mirrors the cloud document, so an unoverridden local poll is a
+    no-op merge; paired tests override the return value or side effect.
+    """
+    with patch(
+        "aiopowerwall.energysite.PowerwallEnergySite.live_status",
+        new_callable=AsyncMock,
+    ) as mock_powerwall_live_status:
+        mock_powerwall_live_status.side_effect = lambda: deepcopy(LIVE_STATUS)
+        yield mock_powerwall_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_powerwall_local_config() -> Generator[AsyncMock]:
+    """Stub the paired gateway's local config.json read so tests never hit the LAN.
+
+    The default is empty, so an unoverridden local poll overlays nothing and the
+    config-backed entities keep their cloud values; paired tests override it.
+    """
+    with patch(
+        "aiopowerwall.energysite.PowerwallEnergySite.local_config",
+        new_callable=AsyncMock,
+        return_value={},
+    ) as mock_powerwall_local_config:
+        yield mock_powerwall_local_config
+
+
+@pytest.fixture(autouse=True)
 def mock_energy_history():
     """Mock Teslemetry Energy Specific site_info method."""
     with patch(
