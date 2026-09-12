@@ -1,6 +1,7 @@
 """Common fixtures for the LibreHardwareMonitor tests."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
 from librehardwaremonitor_api.parser import LibreHardwareMonitorParser
@@ -84,3 +85,12 @@ def mock_lhm_client() -> Generator[AsyncMock]:
         client.get_data.return_value = test_data
 
         yield client
+
+
+@pytest.fixture
+def mock_deprecated_lhm_client(mock_lhm_client: AsyncMock) -> AsyncMock:
+    """Mock a LibreHardwareMonitor client reporting a deprecated version."""
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value, is_deprecated_version=True
+    )
+    return mock_lhm_client

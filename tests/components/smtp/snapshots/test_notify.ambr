@@ -58,7 +58,9 @@
   Subject: Home Assistant
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
+  Reply-To: Reply To Name <replyto@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -75,7 +77,9 @@
    boundary="===============0000000000000000001=="
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
+  Reply-To: Reply To Name <replyto@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -104,7 +108,9 @@
    boundary="===============0000000000000000002=="
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
+  Reply-To: Reply To Name <replyto@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -147,7 +153,9 @@
   Content-Type: multipart/mixed; boundary="===============0000000000000000003=="
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
+  Reply-To: Reply To Name <replyto@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -204,7 +212,9 @@
   Content-Type: multipart/mixed; boundary="===============0000000000000000001=="
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
+  Reply-To: Reply To Name <replyto@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
@@ -233,7 +243,9 @@
   Content-Type: multipart/mixed; boundary="===============0000000000000000002=="
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
+  Reply-To: Reply To Name <replyto@example.com>
   X-Mailer: Home Assistant
+  User-Agent: HomeAssistant/2026.10.0
   Date: Sat, 02 May 2026 20:09:37 -0700
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   

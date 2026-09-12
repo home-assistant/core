@@ -299,12 +299,45 @@
 # ---
 # name: test_model_args[subentry_options0]
   dict({
+    'max_output_tokens': 3000,
+    'model': 'gpt-4o-mini',
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'temperature': 1.0,
+    'top_p': 1.0,
+  })
+# ---
+# name: test_model_args[subentry_options1]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-5.5',
+    'prompt_cache_retention': '24h',
+    'reasoning': dict({
+      'effort': 'low',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[subentry_options2]
+  dict({
     'include': list([
       'reasoning.encrypted_content',
     ]),
     'max_output_tokens': 3000,
     'model': 'gpt-5.6-sol',
-    'prompt_cache_retention': '24h',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
     'reasoning': dict({
       'effort': 'low',
       'mode': 'pro',
@@ -315,6 +348,96 @@
     'stream': True,
     'text': dict({
       'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[subentry_options3]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-5.6-sol',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'none',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'temperature': 0.5,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+    'top_p': 0.9,
+  })
+# ---
+# name: test_model_args[subentry_options4]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-6-astra',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'low',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[subentry_options5]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-6-astra',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'max',
+      'mode': 'pro',
+      'summary': 'detailed',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'low',
+    }),
+  })
+# ---
+# name: test_model_args[subentry_options6]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-6-astra',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'high',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'high',
     }),
   })
 # ---
