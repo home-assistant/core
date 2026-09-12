@@ -199,6 +199,13 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:omega",
     ),
+    # High frequency impedance sensor (ohm)
+    (ExtendedSensorDeviceClass.IMPEDANCE_HIGH, Units.OHM): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.IMPEDANCE_HIGH),
+        native_unit_of_measurement=Units.OHM,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:omega",
+    ),
     # Heart rate sensor (bpm)
     (ExtendedSensorDeviceClass.HEART_RATE, "bpm"): SensorEntityDescription(
         key=str(ExtendedSensorDeviceClass.HEART_RATE),

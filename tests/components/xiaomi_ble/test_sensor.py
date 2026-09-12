@@ -22,6 +22,7 @@ from . import (
     MISCALE_V1_SERVICE_INFO,
     MISCALE_V2_SERVICE_INFO,
     MMC_T201_1_SERVICE_INFO,
+    S400_SERVICE_INFO,
     make_advertisement,
 )
 
@@ -692,7 +693,9 @@ async def test_miscale_v1_uuid(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
+
+    assert hass.states.get("binary_sensor.mi_smart_scale_b5dc_stabilized").state == "on"
 
     mass_non_stabilized_sensor = hass.states.get(
         "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
@@ -734,7 +737,12 @@ async def test_miscale_v2_uuid(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_V2_SERVICE_INFO)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
+
+    assert (
+        hass.states.get("binary_sensor.mi_body_composition_scale_b5dc_stabilized").state
+        == "on"
+    )
 
     mass_non_stabilized_sensor = hass.states.get(
         "sensor.mi_body_composition_scale_b5dc_weight_non_stabilized"
@@ -769,6 +777,32 @@ async def test_miscale_v2_uuid(hass: HomeAssistant) -> None:
     )
     assert impedance_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "ohm"
     assert impedance_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_body_composition_scale_s400(hass: HomeAssistant) -> None:
+    """Test the S400 scale, which reports impedance at two frequencies."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="50:FB:19:1B:B5:DC",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info_bleak(hass, S400_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    impedance_sensor = hass.states.get(
+        "sensor.body_composition_scale_b5dc_impedance_high"
+    )
+    assert impedance_sensor is not None
+    assert impedance_sensor.state == "500.0"
+    assert impedance_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == "ohm"
+    assert impedance_sensor.attributes[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -844,7 +878,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
 
     mass_non_stabilized_sensor = hass.states.get(
         "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
@@ -895,7 +929,7 @@ async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
 
     mass_non_stabilized_sensor = hass.states.get(
         "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
