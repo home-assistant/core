@@ -1,6 +1,7 @@
 """Tests for the climate LLM tools platform."""
 
 import pytest
+from voluptuous_openapi import convert
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.climate import llm as climate_llm
@@ -44,6 +45,19 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is offered for an exposed climate entity."""
     assert "climate__HassClimateSetTemperature" in await _tool_names(hass)
+
+
+async def test_intent_tool_target_schema(hass: HomeAssistant) -> None:
+    """Test the intent tool target parameters are strings."""
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tool = next(
+        tool for tool in result.tools if tool.name == "HassClimateSetTemperature"
+    )
+    api = await llm.async_get_api(hass, "assist", _llm_context())
+    schema = convert(tool.parameters, custom_serializer=api.custom_serializer)
+
+    for target in ("area", "name", "floor"):
+        assert schema["properties"][target] == {"type": "string"}
 
 
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
