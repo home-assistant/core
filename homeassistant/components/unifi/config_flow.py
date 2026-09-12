@@ -31,7 +31,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import SectionConfig, section
+from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -113,15 +113,15 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "service_unavailable"
 
             else:
-                if (
-                    self.source == SOURCE_REAUTH
-                    and (
+                if self.source == SOURCE_REAUTH:
+                    if (
                         (reauth_unique_id := self._get_reauth_entry().unique_id)
                         is not None
-                    )
-                    and reauth_unique_id in self.sites
-                ):
-                    return await self.async_step_site({CONF_SITE_ID: reauth_unique_id})
+                    ) and reauth_unique_id in self.sites:
+                        return await self.async_step_site(
+                            {CONF_SITE_ID: reauth_unique_id}
+                        )
+                    raise AbortFlow("unknown_site_id")
 
                 return await self.async_step_site()
 
