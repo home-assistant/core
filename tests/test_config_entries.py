@@ -3182,6 +3182,103 @@ async def test_entry_subentry_unsupported(
         )
 
 
+@pytest.mark.parametrize(
+    (
+        "subentry_flow_base_class",
+        "number_of_update_listeners",
+        "expected_configure_result",
+        "expected_number_of_unloads",
+    ),
+    [
+        (config_entries.ConfigSubentryFlow, 0, does_not_raise(), 0),
+        (config_entries.ConfigSubentryFlowWithReload, 0, does_not_raise(), 1),
+        (config_entries.ConfigSubentryFlow, 1, does_not_raise(), 0),
+        (
+            config_entries.ConfigSubentryFlowWithReload,
+            1,
+            pytest.raises(
+                ValueError,
+                match=(
+                    "Config entry update listeners should not"
+                    " be used with ConfigSubentryFlowWithReload"
+                ),
+            ),
+            0,
+        ),
+    ],
+)
+async def test_entry_subentry_automatic_reload(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    subentry_flow_base_class: type[config_entries.ConfigSubentryFlow],
+    number_of_update_listeners: int,
+    expected_configure_result: AbstractContextManager,
+    expected_number_of_unloads: int,
+) -> None:
+    """Test subentry flow with automatic reload."""
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        """Mock setup entry."""
+        for _ in range(number_of_update_listeners):
+            entry.add_update_listener(Mock())
+        return True
+
+    unload_entry_mock = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=unload_entry_mock,
+        ),
+    )
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={})
+    entry.add_to_manager(manager)
+    assert await manager.async_setup(entry.entry_id)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        class SubentryFlowHandler(subentry_flow_base_class):
+            """Test subentry flow handler."""
+
+            async def async_step_user(self, user_input=None):
+                return self.async_create_entry(
+                    title="Mock title",
+                    data={},
+                    unique_id="test",
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: ConfigEntry
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.subentries.async_create_flow(
+            (entry.entry_id, "test"), context={"source": "test"}, data=None
+        )
+
+        flow.handler = (entry.entry_id, "test")  # Set to keep reference to config entry
+        with expected_configure_result:
+            await manager.subentries.async_finish_flow(
+                flow,
+                {
+                    "data": {},
+                    "title": "Mock title",
+                    "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+                    "unique_id": "test",
+                },
+            )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(unload_entry_mock.mock_calls) == expected_number_of_unloads
+
+
 async def test_entry_setup_succeed(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
