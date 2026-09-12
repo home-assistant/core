@@ -127,6 +127,37 @@ class MatterCover(MatterEntity, CoverEntity):
         )
 
     @callback
+    def _positions_at_target(self) -> bool | None:
+        """Return whether all supported positions match their target position.
+
+        Returns None if the positions cannot be compared, e.g. the device is
+        not position aware or a position is (still) unknown.
+        """
+        at_target: bool | None = None
+        for current_attribute, target_attribute in (
+            (
+                clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
+                clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
+            ),
+            (
+                clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
+                clusters.WindowCovering.Attributes.TargetPositionTiltPercent100ths,
+            ),
+        ):
+            if not self._entity_info.endpoint.has_attribute(
+                None, current_attribute
+            ) or not self._entity_info.endpoint.has_attribute(None, target_attribute):
+                continue
+            current_position = self.get_matter_attribute_value(current_attribute)
+            target_position = self.get_matter_attribute_value(target_attribute)
+            if current_position is None or target_position is None:
+                return None
+            if current_position != target_position:
+                return False
+            at_target = True
+        return at_target
+
+    @callback
     @override
     def _update_from_device(self) -> None:
         """Update from device."""
@@ -153,6 +184,29 @@ class MatterCover(MatterEntity, CoverEntity):
             case _:
                 self._attr_is_opening = False
                 self._attr_is_closing = False
+
+        # Some devices report a moving operational status together with the
+        # final position(s) without a subsequent report clearing the moving
+        # state, leaving the cover stuck in a moving state. For position aware
+        # covers, a covering whose position(s) match the target position(s) is
+        # not moving.
+        at_target = self._positions_at_target()
+        if at_target and (self._attr_is_opening or self._attr_is_closing):
+            LOGGER.debug(
+                "Ignoring moving operational status for %s, position(s) match target position(s)",
+                self.entity_id,
+            )
+            self._attr_is_opening = False
+            self._attr_is_closing = False
+        LOGGER.debug(
+            "Movement state for %s: opening=%s closing=%s (%s)",
+            self.entity_id,
+            self._attr_is_opening,
+            self._attr_is_closing,
+            "from operational status and target/current position"
+            if at_target is not None
+            else "from operational status only",
+        )
 
         if self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
@@ -242,6 +296,9 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.Type,
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
         ),
+        optional_attributes=(
+            clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
+        ),
         absent_attributes=(
             clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
         ),
@@ -256,6 +313,9 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.OperationalStatus,
             clusters.WindowCovering.Attributes.Type,
             clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
+        ),
+        optional_attributes=(
+            clusters.WindowCovering.Attributes.TargetPositionTiltPercent100ths,
         ),
         absent_attributes=(
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
@@ -272,6 +332,10 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.Type,
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
             clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
+        ),
+        optional_attributes=(
+            clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
+            clusters.WindowCovering.Attributes.TargetPositionTiltPercent100ths,
         ),
     ),
 ]

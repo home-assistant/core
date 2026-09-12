@@ -150,6 +150,8 @@ async def test_cover_lift(
     )
     matter_client.send_device_command.reset_mock()
 
+    set_node_attribute(matter_node, 1, 258, 14, 5000)
+    set_node_attribute(matter_node, 1, 258, 11, 10000)
     set_node_attribute(matter_node, 1, 258, 10, 0b001010)
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
@@ -157,6 +159,7 @@ async def test_cover_lift(
     assert state
     assert state.state == CoverState.CLOSING
 
+    set_node_attribute(matter_node, 1, 258, 11, 0)
     set_node_attribute(matter_node, 1, 258, 10, 0b000101)
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
@@ -293,6 +296,93 @@ async def test_cover_split_attribute_updates(
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
+        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+    ],
+)
+async def test_cover_stale_moving_operational_status(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test moving operational status is ignored when the cover is at its target."""
+
+    # the device reports a moving operational status without ever
+    # reporting it stopped, while position reports show it reached the target
+    set_node_attribute(matter_node, 1, 258, 11, 10000)
+    set_node_attribute(matter_node, 1, 258, 14, 10000)
+    set_node_attribute(matter_node, 1, 258, 10, 0b001010)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSED
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+    ],
+)
+async def test_cover_moving_status_with_unknown_target(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test operational status is trusted when the target position is unknown."""
+
+    set_node_attribute(matter_node, 1, 258, 11, None)
+    set_node_attribute(matter_node, 1, 258, 14, 10000)
+    set_node_attribute(matter_node, 1, 258, 10, 0b001010)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+    ],
+)
+async def test_cover_position_updates_without_operational_status(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device which only reports positions, never an operational status."""
+
+    # the device reports the new target and position updates while the
+    # operational status remains "not moving" the whole time
+    set_node_attribute(matter_node, 1, 258, 11, 10000)
+    set_node_attribute(matter_node, 1, 258, 14, 5000)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["current_position"] == 50
+    assert state.state == CoverState.OPEN
+
+    set_node_attribute(matter_node, 1, 258, 14, 10000)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["current_position"] == 0
+    assert state.state == CoverState.CLOSED
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
         ("mock_window_covering_tilt", "cover.mock_tilt_window_covering"),
         ("mock_window_covering_pa_tilt", "cover.mock_pa_tilt_window_covering"),
         ("mock_window_covering_full", "cover.mock_full_window_covering"),
@@ -327,12 +417,15 @@ async def test_cover_tilt(
 
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
+    set_node_attribute(matter_node, 1, 258, 15, 5000)
+    set_node_attribute(matter_node, 1, 258, 12, 10000)
     set_node_attribute(matter_node, 1, 258, 10, 0b100010)
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == CoverState.CLOSING
 
+    set_node_attribute(matter_node, 1, 258, 12, 0)
     set_node_attribute(matter_node, 1, 258, 10, 0b010001)
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
