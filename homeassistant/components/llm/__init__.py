@@ -5,7 +5,6 @@ import logging
 from typing import Protocol, override
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
@@ -175,16 +174,6 @@ class ManagementAPI(API):
     @override
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
-        if (
-            not llm_context.context
-            or not llm_context.context.user_id
-            or not (
-                user := await self.hass.auth.async_get_user(llm_context.context.user_id)
-            )
-            or not user.is_admin
-        ):
-            raise Unauthorized(context=llm_context.context)
-
         llm_tools = await async_get_tools(self.hass, llm_context, self.id)
         return APIInstance(
             api=self,

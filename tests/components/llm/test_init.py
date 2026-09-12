@@ -243,7 +243,6 @@ async def test_management_api_denied_for_non_admin(
 
     assert await async_setup_component(hass, "llm", {})
 
-    apis = {api.id: api for api in llm.async_get_apis(hass)}
     non_admin_context = llm.LLMContext(
         platform="test",
         context=Context(user_id=hass_read_only_user.id),
@@ -252,7 +251,7 @@ async def test_management_api_denied_for_non_admin(
         device_id=None,
     )
     with pytest.raises(Unauthorized):
-        await apis[llm.LLM_API_MANAGEMENT].async_get_api_instance(non_admin_context)
+        await llm.async_get_api(hass, llm.LLM_API_MANAGEMENT, non_admin_context)
 
 
 async def test_management_api_denied_without_user(
@@ -264,6 +263,5 @@ async def test_management_api_denied_without_user(
 
     assert await async_setup_component(hass, "llm", {})
 
-    apis = {api.id: api for api in llm.async_get_apis(hass)}
     with pytest.raises(Unauthorized):
-        await apis[llm.LLM_API_MANAGEMENT].async_get_api_instance(llm_context)
+        await llm.async_get_api(hass, llm.LLM_API_MANAGEMENT, llm_context)
