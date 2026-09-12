@@ -1306,6 +1306,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "de_dietrich": {
+      "name": "De Dietrich",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "deako": {
       "name": "Deako",
       "integration_type": "hub",
