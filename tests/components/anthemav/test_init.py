@@ -119,6 +119,10 @@ async def test_device_init_timeout_not_reported_as_connect_timeout(
             mock_config_entry.reason
             != "Timed out connecting to Anthem AVR at 1.1.1.1:14999"
         )
+        # The connection succeeded before this failure — it must be closed,
+        # not leaked, since runtime_data was never set (so async_unload_entry
+        # never runs to close it for us).
+        mock_anthemav.close.assert_called_once()
 
 
 async def test_anthemav_dispatcher_signal(
