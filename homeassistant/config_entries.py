@@ -2447,6 +2447,25 @@ class ConfigEntries:
             entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap]
         )
 
+    async def async_retry_migration(self, entry_id: str) -> None:
+        """Retry migration for a config entry.
+
+        This should only be called from repairs flows that was
+        created to handle non-recoverable migration errors.
+        """
+        entry = self.async_get_known_entry(entry_id)
+        if entry.state is ConfigEntryState.MIGRATION_ERROR:
+            # Config entry was never loaded so we can set state and start setup to try again
+            entry._async_set_state(self.hass, ConfigEntryState.NOT_LOADED, None)  # noqa: SLF001
+            await self.async_setup(entry_id)
+            return
+
+        raise OperationNotAllowed(
+            f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
+            f" '{entry.entry_id}' cannot retry the migration as it is not in the"
+            f" 'migration_error' state but is in the state {entry.state}"
+        )
+
     async def async_unload(self, entry_id: str, _lock: bool = True) -> bool:
         """Unload a config entry."""
         entry = self.async_get_known_entry(entry_id)
