@@ -2443,7 +2443,7 @@ async def test_unload_disconnect_timeout(
     """A hung Bluetooth disconnect cannot block unload past the timeout."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
-    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
     never_set = asyncio.Event()
 
     async def _hang(*args: object, **kwargs: object) -> None:
@@ -2483,7 +2483,7 @@ async def test_unload_disconnect_instant_timeout(
     """A TimeoutError raised by disconnect() itself is not mistaken for the deadline."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
-    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
     bluetooth_vehicle.disconnect = AsyncMock(side_effect=TimeoutError("device busy"))
 
     with (
