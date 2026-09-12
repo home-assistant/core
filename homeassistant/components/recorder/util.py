@@ -177,6 +177,9 @@ def execute(qry: Query) -> list[Row]:
 
             if tryno == RETRIES - 1:
                 raise
+            # Roll back the failed transaction so the retry can reconnect
+            # instead of raising PendingRollbackError
+            qry.session.rollback()
             time.sleep(QUERY_RETRY_WAIT)
         else:
             return result
@@ -218,6 +221,8 @@ def execute_stmt_lambda_element(
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
                 raise
+            # See execute(): roll back so the retry can reconnect
+            session.rollback()
             time.sleep(QUERY_RETRY_WAIT)
 
     # Unreachable
