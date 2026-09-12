@@ -42,7 +42,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .const import (
-    _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_COIL,
@@ -104,6 +103,7 @@ from .const import (
     CONF_WRITE_REGISTERS,
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
+    LOGGER,
     DataType,
 )
 from .entity import ModbusStructEntity
@@ -584,7 +584,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
                     f"{self.name}: No answer received from"
                     " Swing mode register. State is Unknown"
                 )
-                _LOGGER.error(_err)
+                LOGGER.error(_err)
 
         # Read the on/off register if defined. If the value in this
         # register is "OFF", it will take precedence over the value

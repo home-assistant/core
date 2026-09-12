@@ -27,6 +27,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import (
@@ -411,7 +412,11 @@ class DeconzGroup(DeconzBaseLight[Group]):
             manufacturer="dresden elektronik",
             model="deCONZ group",
             name=self._device.name,
-            via_device=(DOMAIN, self.hub.api.config.bridge_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hub.hass,
+                (DOMAIN, self.hub.api.config.bridge_id),
+                config_entry_id=self.hub.config_entry.entry_id,
+            ),
         )
 
     @property

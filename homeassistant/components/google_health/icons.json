@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "last_sync_time": {
+        "default": "mdi:sync"
+      },
       "resting_heart_rate": {
         "default": "mdi:heart-pulse"
       },

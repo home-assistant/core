@@ -8,32 +8,48 @@ on:
         description: "Image tag or digest to test (e.g. dev, 2026.7.1, 2026.8.0b0, sha256:0a1b2c3d…)"
         default: "dev"
         required: true
+      image_prefixes:
+        description: "JSON array of image prefixes to test. Will be prefixed to `-homeassistant`"
+        default: >-
+          ["generic-x86-64", "khadas-vim3", "odroid-c2", "odroid-c4",
+          "odroid-m1", "odroid-n2", "qemuarm-64", "qemux86-64",
+          "raspberrypi3-64", "raspberrypi4-64", "raspberrypi5-64",
+          "yellow", "green"]
+        required: true
+  workflow_call:
+    inputs:
+      version:
+        description: "Image tag or digest to test (e.g. dev, 2026.7.1, 2026.8.0b0, sha256:0a1b2c3d…)"
+        required: true
+        type: string
+      image_prefixes:
+        description: "JSON array of image prefixes to test. Will be prefixed to `-homeassistant`"
+        required: true
+        type: string
 
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.version }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.version }}-${{ inputs.image_prefixes }}
   cancel-in-progress: true
 
 jobs:
   boot_check:
-    name: Boot check ${{ matrix.arch }} core image
+    name: Boot check ${{ matrix.image_prefix }} image
     if: github.repository_owner == 'home-assistant'
-    runs-on: ${{ matrix.runs-on }}
+    # amd64 images need an x86 runner; all others are aarch64
+    runs-on: ${{ contains(fromJson('["amd64", "generic-x86-64", "qemux86-64"]'), matrix.image_prefix) && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - arch: amd64
-            runs-on: ubuntu-24.04
-          - arch: aarch64
-            runs-on: ubuntu-24.04-arm
+        image_prefix: ${{ fromJson(inputs.image_prefixes) }}
     env:
       BASE_URL: http://localhost:8123
     services:
       homeassistant:
-        image: ghcr.io/home-assistant/home-assistant${{ startsWith(inputs.version, 'sha256:') && '@' || ':' }}${{ inputs.version }} # zizmor: ignore[unpinned-images]
+        # Digests are referenced with '@', tags with ':'
+        image: ghcr.io/home-assistant/${{ matrix.image_prefix }}-homeassistant${{ startsWith(inputs.version, 'sha256:') && '@' || ':' }}${{ inputs.version }} # zizmor: ignore[unpinned-images]
         ports:
           - 8123:8123
         # Gate steps until Home Assistant answers (60 x 5s ≈ 300s startup budget)
@@ -49,7 +65,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:
           package_json_file: tests/e2e/package.json
 
@@ -76,7 +92,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-report-${{ matrix.arch }}
+          name: playwright-report-${{ matrix.image_prefix }}
           path: |
             tests/e2e/playwright-report/
             tests/e2e/test-results/
@@ -91,5 +107,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: container-logs-${{ matrix.arch }}
+          name: container-logs-${{ matrix.image_prefix }}
           path: homeassistant.log

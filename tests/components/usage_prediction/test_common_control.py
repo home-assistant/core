@@ -1,5 +1,6 @@
 """Test the common control usage prediction."""
 
+from typing import Any
 from unittest.mock import patch
 import uuid
 
@@ -136,19 +137,20 @@ async def test_with_service_calls(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("recorder_mock")
-async def test_multiple_entities_in_one_call(hass: HomeAssistant) -> None:
+async def test_multiple_entities_in_one_call(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test handling of service calls with multiple entity IDs."""
     user_id = str(uuid.uuid4())
 
-    ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "light",
         "test",
         "living_room",
         suggested_object_id="living_room",
         hidden_by=er.RegistryEntryHider.USER,
     )
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "light",
         "test",
         "kitchen",
@@ -408,3 +410,83 @@ async def test_different_users_separated(hass: HomeAssistant) -> None:
         evening=[],
         night=["light.user2_light"],
     )
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    "event_data",
+    [
+        pytest.param({}, id="no_event_data"),
+        pytest.param({"domain": "light", "service": "turn_on"}, id="no_service_data"),
+        pytest.param(
+            {
+                "domain": "light",
+                "service": "turn_on",
+                "service_data": {"brightness": 255},
+            },
+            id="no_entity_id",
+        ),
+    ],
+)
+async def test_events_without_entity_ids_ignored(
+    hass: HomeAssistant, event_data: dict[str, Any]
+) -> None:
+    """Test that service call events without entity IDs are skipped."""
+    user_id = str(uuid.uuid4())
+
+    hass.states.async_set("light.kitchen", "off")
+
+    with freeze_time("2023-07-01 10:00:00"):
+        hass.bus.async_fire(
+            EVENT_CALL_SERVICE, event_data, context=Context(user_id=user_id)
+        )
+        await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    with freeze_time("2023-07-02 10:00:00"):
+        results = await async_predict_common_control(hass, user_id)
+
+    assert results == EntityUsagePredictions()
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    "json_loads_kwargs",
+    [
+        pytest.param({"side_effect": ValueError("bad json")}, id="invalid_json"),
+        pytest.param({"return_value": {}}, id="empty_object"),
+    ],
+)
+async def test_unusable_event_data_ignored(
+    hass: HomeAssistant, json_loads_kwargs: dict[str, Any]
+) -> None:
+    """Test that events whose stored data cannot be used are skipped."""
+    user_id = str(uuid.uuid4())
+
+    hass.states.async_set("light.kitchen", "off")
+
+    with freeze_time("2023-07-01 10:00:00"):
+        hass.bus.async_fire(
+            EVENT_CALL_SERVICE,
+            {
+                "domain": "light",
+                "service": "turn_on",
+                "service_data": {"entity_id": "light.kitchen"},
+            },
+            context=Context(user_id=user_id),
+        )
+        await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    with (
+        freeze_time("2023-07-02 10:00:00"),
+        patch(
+            "homeassistant.components.usage_prediction.common_control.json_loads_object",
+            **json_loads_kwargs,
+        ),
+    ):
+        results = await async_predict_common_control(hass, user_id)
+
+    assert results == EntityUsagePredictions()

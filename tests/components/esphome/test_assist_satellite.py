@@ -108,8 +108,9 @@ async def test_pipeline_api_audio(
         },
     )
     await hass.async_block_till_done()
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
 
     satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
@@ -779,8 +780,9 @@ async def test_timer_events(
         },
     )
     await hass.async_block_till_done()
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
 
     total_seconds = (1 * 60 * 60) + (2 * 60) + 3
@@ -848,8 +850,9 @@ async def test_unknown_timer_event(
     )
     await hass.async_block_till_done()
     assert mock_device.entry.unique_id is not None
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
     assert dev is not None
 
@@ -1189,8 +1192,9 @@ async def test_announce_media_id(
     )
     await hass.async_block_till_done()
 
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
 
     satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
@@ -1470,8 +1474,9 @@ async def test_start_conversation_media_id(
     )
     await hass.async_block_till_done()
 
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
 
     satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)

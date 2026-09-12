@@ -1,11 +1,9 @@
 """Test the Liebherr switch platform."""
 
 import copy
-from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import (
     Device,
     DeviceState,
@@ -32,9 +30,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE
+from .conftest import MOCK_DEVICE, SSEStreamHelper
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -104,8 +102,6 @@ async def test_switch_service_calls(
     kwargs: dict[str, Any],
 ) -> None:
     """Test switch turn on/off service calls."""
-    initial_call_count = mock_liebherr_client.get_device_state.call_count
-
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
@@ -114,9 +110,6 @@ async def test_switch_service_calls(
     )
 
     getattr(mock_liebherr_client, method).assert_called_once_with(**kwargs)
-
-    # Verify coordinator refresh was triggered
-    assert mock_liebherr_client.get_device_state.call_count > initial_call_count
 
 
 @pytest.mark.parametrize(
@@ -154,7 +147,7 @@ async def test_switch_failure(
 async def test_switch_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
+    sse_helper: SSEStreamHelper,
 ) -> None:
     """Test switch entity behavior when toggle control is removed."""
     entity_id = "switch.test_fridge_top_zone_supercool"
@@ -168,9 +161,7 @@ async def test_switch_when_control_missing(
         device=MOCK_DEVICE, controls=[]
     )
 
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await sse_helper.async_reconnect()
 
     state = hass.states.get(entity_id)
     assert state is not None

@@ -20,6 +20,7 @@ from .entity import (
     KnxUiEntityPlatformController,
     KnxYamlEntity,
     _KnxEntityBase,
+    build_yaml_unique_id,
 )
 from .knx_module import KNXModule
 from .schema import SceneSchema
@@ -50,7 +51,7 @@ async def async_setup_entry(
             KnxYamlScene(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.SCENE):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.SCENE):
         entities.extend(
             KnxUiScene(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -91,8 +92,8 @@ class KnxYamlScene(_KnxScene, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=(
-                f"{self._device.scene_value.group_address}_{self._device.scene_number}"
+            unique_id=build_yaml_unique_id(
+                self._device.scene_value.group_address, self._device.scene_number
             ),
             entity_config=config,
         )

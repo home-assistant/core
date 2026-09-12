@@ -23,8 +23,8 @@ from tests.common import MockConfigEntry
 def _get_device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> str:
     """Return the device registry ID for the given config entry."""
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     return device_entry.id
@@ -34,7 +34,7 @@ def _get_device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> s
 @pytest.mark.parametrize(
     ("service_name", "power", "target_soc"),
     [
-        ("charge", 1200, 60),
+        ("charge", 5000, 60),
         ("discharge", 1200, 40),
     ],
 )

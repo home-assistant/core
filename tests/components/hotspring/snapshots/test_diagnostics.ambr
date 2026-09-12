@@ -1,0 +1,337 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'blower': dict({
+        'is_enabled': False,
+        'is_on': False,
+      }),
+      'clean_cycle': dict({
+        'is_enabled': False,
+        'vanishing_act': False,
+      }),
+      'connection_status': dict({
+        'spa_connected': True,
+      }),
+      'diagnostics': dict({
+        'heater_error': '0',
+        'heater_power': '0',
+        'heater_volts': 240.0,
+        'jet1_jet2_blower_power': '0',
+        'jet3_power': '0',
+        'jet3_volts': 0.0,
+        'l1_n_volts': 120.0,
+        'l2_n_volts': 120.0,
+        'power_frequency': '60',
+        'pressure_switch_status': '0',
+        'small_loads_power': '0',
+        'spa_failure_state': dict({
+          '__type': "<enum 'SpaFailureState'>",
+          'repr': "<SpaFailureState.OK: 'Spa_Ok'>",
+        }),
+      }),
+      'energy_savings': list([
+        dict({
+          'duration': 0,
+          'mode': 0,
+          'schedule_id': 1,
+          'start_hour': 0,
+          'start_minute': 0,
+        }),
+      ]),
+      'freshwater_iq': dict({
+        'chlorine': 0.0,
+        'conductivity': 0,
+        'installed': False,
+        'orp': 0,
+        'ph': 7.2,
+        'sensor_life_percentage': 100.0,
+      }),
+      'heater': dict({
+        'current_temperature': 102.0,
+        'heater_current': 5.0,
+        'heater_lock': False,
+        'heater_on_seconds': 3600,
+        'heating_mode': dict({
+          '__type': "<enum 'HeatingMode'>",
+          'repr': "<HeatingMode.HEAT_SAVER: 'heatSaver'>",
+        }),
+        'heatpump_installed': False,
+        'is_on': True,
+        'set_temperature': 104.0,
+        'temperature_unit': dict({
+          '__type': "<enum 'TemperatureUnit'>",
+          'repr': "<TemperatureUnit.FAHRENHEIT: 'DegF'>",
+        }),
+      }),
+      'info': dict({
+        'brand': dict({
+          '__type': "<enum 'SpaBrand'>",
+          'repr': "<SpaBrand.HOTSPRING: 'HotSpring'>",
+        }),
+        'brand_id': '1',
+        'brand_name': 'Hot Spring',
+        'collection': 'Highlife',
+        'collection_id': '1',
+        'hostname': 'ConnectedSpa_**REDACTED**',
+        'model_id': '1',
+        'model_name': 'Relay',
+        'root_topic': 'mySpa**REDACTED**',
+        'sna_ready': True,
+        'volume': 335,
+      }),
+      'jets': list([
+        dict({
+          'is_enabled': True,
+          'jet_id': 1,
+          'on_seconds': 0,
+          'speed': dict({
+            '__type': "<enum 'JetSpeed'>",
+            'repr': "<JetSpeed.OFF: 'off'>",
+          }),
+        }),
+        dict({
+          'is_enabled': True,
+          'jet_id': 2,
+          'on_seconds': 0,
+          'speed': dict({
+            '__type': "<enum 'JetSpeed'>",
+            'repr': "<JetSpeed.OFF: 'off'>",
+          }),
+        }),
+      ]),
+      'light_zones': list([
+        dict({
+          'c_blue': 0,
+          'c_green': 0,
+          'c_red': 0,
+          'color': dict({
+            '__type': "<enum 'LightColor'>",
+            'repr': "<LightColor.BLUE: 'BLUE'>",
+          }),
+          'intensity': 0,
+          'is_enabled': True,
+          'is_on': False,
+          'light_wheel': dict({
+            '__type': "<enum 'LightWheelMode'>",
+            'repr': "<LightWheelMode.OFF: 'off'>",
+          }),
+          'loop_speed': 0,
+          'rgb_state': 'inactive',
+          'zone_id': 1,
+        }),
+      ]),
+      'logo_light': dict({
+        'brightness': dict({
+          '__type': "<enum 'BrightnessLevel'>",
+          'repr': "<BrightnessLevel.LEVEL_1: 'brightness_level_1'>",
+        }),
+      }),
+      'spa_lock': dict({
+        'is_locked': False,
+      }),
+      'test_metrics': dict({
+        'heater_current': 0.0,
+        'heater_test_status': 'off',
+        'jet1_jet2_blower_current': 0.0,
+        'jet3_current': 0.0,
+        'small_loads_current': 0.0,
+        'temp_offset': 0.0,
+        'vsense_cal': 0.0,
+      }),
+      'versions': dict({
+        'amp': '',
+        'btxr': '',
+        'control_box': '3.0.0',
+        'control_panel': '2.0.0',
+        'cool_zone': '',
+        'dosing': '',
+        'fwiq': '',
+        'fwss': '1.0.0',
+        'logolight': '',
+        'wifi_dongle': '1.0.0',
+      }),
+      'water_care': dict({
+        'ace_mode': 'inactive',
+        'boost_active': False,
+        'cartridge_installed': True,
+        'level': 2,
+        'one_twenty_day_timer': 117,
+        'salt_value': 12,
+        'system_enabled': True,
+        'ten_day_timer': 0,
+      }),
+    }),
+    'entry': dict({
+      'host': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics_custom_topic
+  dict({
+    'data': dict({
+      'blower': dict({
+        'is_enabled': False,
+        'is_on': False,
+      }),
+      'clean_cycle': dict({
+        'is_enabled': False,
+        'vanishing_act': False,
+      }),
+      'connection_status': dict({
+        'spa_connected': True,
+      }),
+      'diagnostics': dict({
+        'heater_error': '0',
+        'heater_power': '0',
+        'heater_volts': 240.0,
+        'jet1_jet2_blower_power': '0',
+        'jet3_power': '0',
+        'jet3_volts': 0.0,
+        'l1_n_volts': 120.0,
+        'l2_n_volts': 120.0,
+        'power_frequency': '60',
+        'pressure_switch_status': '0',
+        'small_loads_power': '0',
+        'spa_failure_state': dict({
+          '__type': "<enum 'SpaFailureState'>",
+          'repr': "<SpaFailureState.OK: 'Spa_Ok'>",
+        }),
+      }),
+      'energy_savings': list([
+        dict({
+          'duration': 0,
+          'mode': 0,
+          'schedule_id': 1,
+          'start_hour': 0,
+          'start_minute': 0,
+        }),
+      ]),
+      'freshwater_iq': dict({
+        'chlorine': 0.0,
+        'conductivity': 0,
+        'installed': False,
+        'orp': 0,
+        'ph': 7.2,
+        'sensor_life_percentage': 100.0,
+      }),
+      'heater': dict({
+        'current_temperature': 102.0,
+        'heater_current': 5.0,
+        'heater_lock': False,
+        'heater_on_seconds': 3600,
+        'heating_mode': dict({
+          '__type': "<enum 'HeatingMode'>",
+          'repr': "<HeatingMode.HEAT_SAVER: 'heatSaver'>",
+        }),
+        'heatpump_installed': False,
+        'is_on': True,
+        'set_temperature': 104.0,
+        'temperature_unit': dict({
+          '__type': "<enum 'TemperatureUnit'>",
+          'repr': "<TemperatureUnit.FAHRENHEIT: 'DegF'>",
+        }),
+      }),
+      'info': dict({
+        'brand': dict({
+          '__type': "<enum 'SpaBrand'>",
+          'repr': "<SpaBrand.HOTSPRING: 'HotSpring'>",
+        }),
+        'brand_id': '1',
+        'brand_name': 'Hot Spring',
+        'collection': 'Highlife',
+        'collection_id': '1',
+        'hostname': 'customHost',
+        'model_id': '1',
+        'model_name': 'Relay',
+        'root_topic': 'customTopic',
+        'sna_ready': True,
+        'volume': 335,
+      }),
+      'jets': list([
+        dict({
+          'is_enabled': True,
+          'jet_id': 1,
+          'on_seconds': 0,
+          'speed': dict({
+            '__type': "<enum 'JetSpeed'>",
+            'repr': "<JetSpeed.OFF: 'off'>",
+          }),
+        }),
+        dict({
+          'is_enabled': True,
+          'jet_id': 2,
+          'on_seconds': 0,
+          'speed': dict({
+            '__type': "<enum 'JetSpeed'>",
+            'repr': "<JetSpeed.OFF: 'off'>",
+          }),
+        }),
+      ]),
+      'light_zones': list([
+        dict({
+          'c_blue': 0,
+          'c_green': 0,
+          'c_red': 0,
+          'color': dict({
+            '__type': "<enum 'LightColor'>",
+            'repr': "<LightColor.BLUE: 'BLUE'>",
+          }),
+          'intensity': 0,
+          'is_enabled': True,
+          'is_on': False,
+          'light_wheel': dict({
+            '__type': "<enum 'LightWheelMode'>",
+            'repr': "<LightWheelMode.OFF: 'off'>",
+          }),
+          'loop_speed': 0,
+          'rgb_state': 'inactive',
+          'zone_id': 1,
+        }),
+      ]),
+      'logo_light': dict({
+        'brightness': dict({
+          '__type': "<enum 'BrightnessLevel'>",
+          'repr': "<BrightnessLevel.LEVEL_1: 'brightness_level_1'>",
+        }),
+      }),
+      'spa_lock': dict({
+        'is_locked': False,
+      }),
+      'test_metrics': dict({
+        'heater_current': 0.0,
+        'heater_test_status': 'off',
+        'jet1_jet2_blower_current': 0.0,
+        'jet3_current': 0.0,
+        'small_loads_current': 0.0,
+        'temp_offset': 0.0,
+        'vsense_cal': 0.0,
+      }),
+      'versions': dict({
+        'amp': '',
+        'btxr': '',
+        'control_box': '3.0.0',
+        'control_panel': '2.0.0',
+        'cool_zone': '',
+        'dosing': '',
+        'fwiq': '',
+        'fwss': '1.0.0',
+        'logolight': '',
+        'wifi_dongle': '1.0.0',
+      }),
+      'water_care': dict({
+        'ace_mode': 'inactive',
+        'boost_active': False,
+        'cartridge_installed': True,
+        'level': 2,
+        'one_twenty_day_timer': 117,
+        'salt_value': 12,
+        'system_enabled': True,
+        'ten_day_timer': 0,
+      }),
+    }),
+    'entry': dict({
+      'host': '**REDACTED**',
+    }),
+  })
+# ---

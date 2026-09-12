@@ -1981,12 +1981,10 @@ async def test_bad_offset(hass: HomeAssistant) -> None:
 
 
 def test_calculate_adjustment_invalid_new_state(
-    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test calculate_adjustment returns None if the new state is invalid."""
     mock_sensor = UtilityMeterSensor(
-        hass,
         cron_pattern=None,
         delta_values=False,
         meter_offset=DEFAULT_OFFSET,
@@ -2061,7 +2059,7 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     utility_meter_config_entry = MockConfigEntry(
         data={},
@@ -2073,7 +2071,7 @@ async def test_device_id(
             "net_consumption": False,
             "offset": 0,
             "periodically_resetting": True,
-            "source": "sensor.test_source",
+            "source": source_entity.entity_id,
             "tariffs": ["peak", "offpeak"],
         },
         title="Energy",
@@ -2084,11 +2082,11 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    utility_meter_entity = entity_registry.async_get("sensor.energy_peak")
+    utility_meter_entity = entity_registry.async_get("sensor.mock_title_energy_peak")
     assert utility_meter_entity is not None
     assert utility_meter_entity.device_id == source_entity.device_id
 
-    utility_meter_entity = entity_registry.async_get("sensor.energy_offpeak")
+    utility_meter_entity = entity_registry.async_get("sensor.mock_title_energy_offpeak")
     assert utility_meter_entity is not None
     assert utility_meter_entity.device_id == source_entity.device_id
 
@@ -2102,7 +2100,7 @@ async def test_device_id(
             "net_consumption": False,
             "offset": 0,
             "periodically_resetting": True,
-            "source": "sensor.test_source",
+            "source": source_entity.entity_id,
             "tariffs": [],
         },
         title="Energy",
@@ -2115,6 +2113,51 @@ async def test_device_id(
     )
     await hass.async_block_till_done()
 
-    utility_meter_no_tariffs_entity = entity_registry.async_get("sensor.energy")
+    utility_meter_no_tariffs_entity = entity_registry.async_get(
+        "sensor.mock_title_energy"
+    )
     assert utility_meter_no_tariffs_entity is not None
     assert utility_meter_no_tariffs_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured Utility Meter."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "energy_bill": {
+                    "source": "sensor.test_source",
+                    "unique_id": "utility_meter_yaml",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    utility_meter_entity = entity_registry.async_get("sensor.energy_bill")
+    assert utility_meter_entity is not None
+    assert utility_meter_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text

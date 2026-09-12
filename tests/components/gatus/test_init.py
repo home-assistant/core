@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from gatus_api import GatusClientError
+from gatus_api import GatusAuthError, GatusClientError
 import pytest
 
 from homeassistant.components.gatus.coordinator import GatusDataUpdateCoordinator
@@ -48,9 +48,25 @@ async def test_setup_failure_retry(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_failure_auth(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an authentication failure places the entry in SETUP_ERROR state."""
+    mock_gatus_client.get_endpoints_statuses.side_effect = GatusAuthError(
+        "401 Unauthorized"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 @pytest.mark.usefixtures("mock_gatus_client")
 async def test_remove_stale_device_runtime(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_gatus_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
@@ -58,7 +74,6 @@ async def test_remove_stale_device_runtime(
     """Test that a device is removed at runtime when it is no longer returned by the Gatus API."""
     await setup_integration(hass, mock_config_entry)
 
-    device_registry = dr.async_get(hass)
     device = next(
         (
             dev
@@ -95,12 +110,12 @@ async def test_remove_stale_device_runtime(
 @pytest.mark.usefixtures("mock_gatus_client")
 async def test_remove_stale_device_on_startup(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that stale devices in the registry are removed on startup."""
     mock_config_entry.add_to_hass(hass)
 
-    device_registry = dr.async_get(hass)
     stale_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("gatus", f"{mock_config_entry.entry_id}_stale_service")},

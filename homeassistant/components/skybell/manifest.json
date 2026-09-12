@@ -8,5 +8,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["aioskybell"],
-  "requirements": ["aioskybell==22.7.0"]
+  "requirements": ["aioskybell==23.12.0"]
 }

@@ -35,7 +35,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_COMMAND_SET: EdifierCommandSet.R1700BTS.value,
         },
         unique_id=f"r1700bts_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
-        version=2,
+        version=3,
     )
 
 

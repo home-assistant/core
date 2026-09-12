@@ -95,8 +95,46 @@ def platforms() -> Platform | list[Platform]:
                 ),
             ],
         ),
+        (
+            "9eamof",
+            [
+                ("button.t80_omni_relocate", SetRelocationState()),
+                (
+                    "button.t80_omni_reset_main_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.BRUSH),
+                ),
+                (
+                    "button.t80_omni_reset_cleaning_solution_lifespan",
+                    ResetLifeSpan(LifeSpan.CLEANING_SOLUTION),
+                ),
+                (
+                    "button.t80_omni_reset_filter_lifespan",
+                    ResetLifeSpan(LifeSpan.FILTER),
+                ),
+                (
+                    "button.t80_omni_reset_hand_filter_lifespan",
+                    ResetLifeSpan(LifeSpan.HAND_FILTER),
+                ),
+                (
+                    "button.t80_omni_reset_sewage_box_lifespan",
+                    ResetLifeSpan(LifeSpan.SEWAGE_BOX),
+                ),
+                (
+                    "button.t80_omni_reset_side_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.SIDE_BRUSH),
+                ),
+                (
+                    "button.t80_omni_reset_unit_care_lifespan",
+                    ResetLifeSpan(LifeSpan.UNIT_CARE),
+                ),
+                (
+                    "button.t80_omni_empty_dustbin",
+                    station_action.StationAction(StationAction.EMPTY_DUSTBIN),
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3", "qhe2o2"],
+    ids=["yna5x1", "5xu9h3", "qhe2o2", "9eamof"],
 )
 async def test_buttons(
     hass: HomeAssistant,

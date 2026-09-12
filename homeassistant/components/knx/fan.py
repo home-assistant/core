@@ -25,7 +25,12 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, FanConf
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .schema import FanSchema
 from .storage.const import (
@@ -117,7 +122,7 @@ async def async_setup_entry(
             KnxYamlFan(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.FAN):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.FAN):
         entities.extend(
             KnxUiFan(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -233,10 +238,8 @@ class KnxYamlFan(_KnxFan, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=(
-                str(self._device.speed.group_address)
-                if self._device.speed.group_address
-                else str(self._device.switch.group_address)
+            unique_id=build_yaml_unique_id(
+                self._device.speed.group_address or self._device.switch.group_address
             ),
             entity_config=config,
         )

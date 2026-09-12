@@ -52,7 +52,9 @@ async def async_setup_entry(
     hive = entry.runtime_data
     devices = hive.session.deviceList.get("water_heater")
     if devices:
-        async_add_entities((HiveWaterHeater(hive, dev) for dev in devices), True)
+        async_add_entities(
+            (HiveWaterHeater(hass, entry, hive, dev) for dev in devices), True
+        )
 
     platform = entity_platform.async_get_current_platform()
 

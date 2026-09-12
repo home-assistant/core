@@ -22,9 +22,13 @@ from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
     CONF_PRO_MODE,
+    CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_SERVICE_TIER,
     CONF_STORE_RESPONSES,
+    CONF_TEMPERATURE,
+    CONF_TOP_P,
+    CONF_VERBOSITY,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
@@ -821,15 +825,42 @@ async def test_flex_tier_retry(
 
 
 @pytest.mark.parametrize(
-    "subentry_options", [{CONF_CHAT_MODEL: "gpt-5.6-sol", CONF_PRO_MODE: True}]
+    "subentry_options",
+    [
+        {CONF_CHAT_MODEL: "gpt-4o-mini"},
+        {CONF_CHAT_MODEL: "gpt-5.5"},
+        {CONF_CHAT_MODEL: "gpt-5.6-sol", CONF_PRO_MODE: True},
+        {
+            CONF_CHAT_MODEL: "gpt-5.6-sol",
+            CONF_REASONING_EFFORT: "none",
+            CONF_TEMPERATURE: 0.5,
+            CONF_TOP_P: 0.9,
+        },
+        {CONF_CHAT_MODEL: "gpt-6-astra"},
+        {
+            CONF_CHAT_MODEL: "gpt-6-astra",
+            CONF_REASONING_EFFORT: "max",
+            CONF_PRO_MODE: True,
+            CONF_REASONING_SUMMARY: "detailed",
+            CONF_VERBOSITY: "low",
+            CONF_TEMPERATURE: 0.5,
+            CONF_TOP_P: 0.9,
+        },
+        {
+            CONF_CHAT_MODEL: "gpt-6-astra",
+            CONF_REASONING_EFFORT: "high",
+            CONF_REASONING_SUMMARY: "off",
+            CONF_VERBOSITY: "high",
+        },
+    ],
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_model_args(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
-    subentry_options: dict,
+    subentry_options: dict[str, str | bool | float],
 ) -> None:
     """Test model arguments for various configuration."""
 
@@ -860,4 +891,5 @@ async def test_model_args(
     model_args = mock_create_stream.call_args.kwargs.copy()
     model_args.pop("input")
     assert model_args.pop("user") == result.conversation_id
+    assert model_args.pop("prompt_cache_key") == subentry.subentry_id
     assert model_args == snapshot

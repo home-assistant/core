@@ -542,13 +542,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._devices[dev_mac] = device
 
         # manually register device entry for new connected device
-        dr.async_get(self.hass).async_get_or_create(
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(CONNECTION_NETWORK_MAC, dev_mac)},
-            default_manufacturer="FRITZ!",
-            default_model="FRITZ!Box Tracked device",
-            default_name=device.hostname,
-            via_device=(DOMAIN, self.unique_id),
+            manufacturer="FRITZ!",
+            model="FRITZ!Box Tracked device",
+            name=device.hostname,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self.unique_id),
+                config_entry_id=self.config_entry.entry_id,
+            ),
         )
         return True
 
@@ -596,6 +601,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             )
             self.mesh_role = MeshRoles.NONE
             for mac, info in hosts.items():
+                # The box lists its own LAN MAC in the Hosts table; skip it so it
+                # is not tracked as a child of itself, as the mesh path does.
+                if dr.format_mac(mac) == self.mac:
+                    continue
                 if self.manage_device_info(info, mac, consider_home):
                     new_device = True
             await self.async_send_signal_device_update(new_device)

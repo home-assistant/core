@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfConductivity,
     UnitOfTemperature,
 )
@@ -234,9 +235,9 @@ class Plant(Entity):
             raise HomeAssistantError(
                 f"Unknown reading from sensor {entity_id}: {value}"
             )
-        if ATTR_UNIT_OF_MEASUREMENT in new_state.attributes:
+        if EntityStateAttribute.UNIT_OF_MEASUREMENT in new_state.attributes:
             self._unit_of_measurement[reading] = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
         self._update_state()
 

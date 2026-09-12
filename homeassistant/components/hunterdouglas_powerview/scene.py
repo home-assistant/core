@@ -29,7 +29,10 @@ async def async_setup_entry(
     pv_entry = entry.runtime_data
     pvscenes: list[PowerViewScene] = []
     for scene in pv_entry.scene_data.values():
-        room_name = getattr(pv_entry.room_data.get(scene.room_id), ATTR_NAME, "")
+        room_name = ", ".join(
+            getattr(pv_entry.room_data.get(room_id), ATTR_NAME, "")
+            for room_id in scene.room_id
+        )
         pvscenes.append(
             PowerViewScene(pv_entry.coordinator, pv_entry.device_info, room_name, scene)
         )

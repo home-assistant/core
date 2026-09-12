@@ -17,7 +17,11 @@ from homeassistant.components.google_assistant.const import (
 from homeassistant.components.matter import MatterDeviceInfo
 from homeassistant.core import HomeAssistant, State
 from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -120,6 +124,60 @@ async def test_google_entity_sync_serialize_with_matter(
     assert serialized["matterUniqueId"] == "mock-unique-id"
     assert serialized["matterOriginalVendorId"] == "mock-vendor-id"
     assert serialized["matterOriginalProductId"] == "mock-product-id"
+
+
+async def test_google_entity_sync_serialize_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test an entity on a child device keeps its device and inherits its area."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    area = area_registry.async_create("Living Room")
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "strip")},
+        manufacturer="Someone",
+        model="Some model",
+        sw_version="Some Version",
+        name="Power strip",
+    )
+    device_registry.async_update_device(parent.id, area_id=area.id)
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "1235",
+        suggested_object_id="ceiling_lights",
+        device_id=child.id,
+    )
+    hass.states.async_set("light.ceiling_lights", "off")
+
+    # The child device is resolved (async_get finds children, unlike the mains-only
+    # devices dict) and inherits the parent device's area.
+    _, device_entry, area_reg_entry = helpers._get_registry_entries(
+        hass, entity_entry.entity_id
+    )
+    assert device_entry is not None
+    assert device_entry.id == child.id
+    assert area_reg_entry is not None
+    assert area_reg_entry.id == area.id
+
+    entity = helpers.GoogleEntity(
+        hass, MockConfig(hass=hass), hass.states.get("light.ceiling_lights")
+    )
+    serialized = entity.sync_serialize(None, "mock-uuid")
+
+    assert serialized["roomHint"] == "Living Room"
+    # A child device carries no hardware/firmware fields
+    assert "deviceInfo" not in serialized
 
 
 async def test_config_local_sdk(

@@ -249,7 +249,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         floor_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         level: int | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
     ) -> FloorEntry:

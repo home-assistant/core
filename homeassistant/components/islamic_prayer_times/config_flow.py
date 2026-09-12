@@ -10,14 +10,13 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     LocationSelector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
 )
 
 from .const import (
@@ -66,7 +65,7 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=user_input[CONF_NAME],
+                title=NAME,
                 data={
                     CONF_LATITUDE: lat,
                     CONF_LONGITUDE: lon,
@@ -81,9 +80,6 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=home-assistant-config-flow-name-field
-                    vol.Optional(CONF_NAME, default=NAME): TextSelector(),
                     vol.Required(
                         CONF_LOCATION, default=home_location
                     ): LocationSelector(),

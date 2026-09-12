@@ -21,11 +21,11 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ACTION,
     CONF_ENTITIES,
     CONF_SERVICE,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -213,7 +213,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
             state = self.hass.states.get(entity_id)
             if (
                 state is None
-                or not state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                or not state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
                 & NotifyEntityFeature.TITLE
             ):
                 self._attr_supported_features &= ~NotifyEntityFeature.TITLE

@@ -32,7 +32,9 @@ async def test_init_success(
     )
 
     assert entry.state is ConfigEntryState.LOADED
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "abc123")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "abc123"), entry.entry_id
+    )
     assert device
     assert device.manufacturer == WALLCONNECTOR_DEVICE_MANUFACTURER
     assert device.model == WALLCONNECTOR_DEVICE_MODEL

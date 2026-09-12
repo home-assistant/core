@@ -25,7 +25,12 @@ from .const import (
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_ENTITY, CONF_GA_DATE
 from .storage.util import ConfigExtractor
@@ -54,7 +59,7 @@ async def async_setup_entry(
             KnxYamlDate(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.DATE):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.DATE):
         entities.extend(
             KnxUiDate(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -109,7 +114,7 @@ class KnxYamlDate(_KNXDate, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.remote_value.group_address),
+            unique_id=build_yaml_unique_id(self._device.remote_value.group_address),
             entity_config=config,
         )
 

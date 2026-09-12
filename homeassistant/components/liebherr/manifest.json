@@ -5,10 +5,10 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/liebherr",
   "integration_type": "hub",
-  "iot_class": "cloud_polling",
+  "iot_class": "cloud_push",
   "loggers": ["pyliebherrhomeapi"],
   "quality_scale": "platinum",
-  "requirements": ["pyliebherrhomeapi==0.4.1"],
+  "requirements": ["pyliebherrhomeapi==0.5.1"],
   "zeroconf": [
     {
       "name": "liebherr*",

@@ -7,9 +7,12 @@
     "pip_requirements",
     "pre-commit",
     "dockerfile",
+    "npm",
     "custom.regex",
     "homeassistant-manifest"
   ],
+
+  "ignorePaths": ["**/node_modules/**"],
 
   "pre-commit": {
     "enabled": true
@@ -177,6 +180,15 @@
         "yamllint",
         "zizmor"
       ],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "pnpm version pinned in the E2E tests packageManager field (allowlisted)",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["tests/e2e/package.json"],
+      "matchDepTypes": ["packageManager"],
+      "matchPackageNames": ["pnpm"],
       "enabled": true,
       "labels": ["dependency"]
     },
