@@ -13,6 +13,21 @@
       'datetime_str': '2024-01-01T00:00:00',
       'timestamp': 1704067200,
       'values': dict({
+        '0.2.0': dict({
+          'name': 'Firmware Revision',
+          'unit': '',
+          'value': 10203,
+        }),
+        '1.6.0': dict({
+          'name': 'Maximum Demand',
+          'unit': 'kW',
+          'value': 4.21,
+        }),
+        '1.7.0': dict({
+          'name': 'Import Power',
+          'unit': 'W',
+          'value': 1480.2,
+        }),
         '1.8.0': dict({
           'name': 'Total Import',
           'unit': 'kWh',
@@ -28,6 +43,11 @@
           'unit': 'Hz',
           'value': 50.01,
         }),
+        '15.8.0': dict({
+          'name': 'Absolute Energy',
+          'unit': 'kWh',
+          'value': 13580.245,
+        }),
         '16.7.0': dict({
           'name': 'Active Power',
           'unit': 'W',
@@ -38,6 +58,11 @@
           'unit': 'kWh',
           'value': 1234.567,
         }),
+        '3.8.0': dict({
+          'name': 'Reactive Import',
+          'unit': 'kvarh',
+          'value': 245.891,
+        }),
         '31.7.0': dict({
           'name': 'Current L1',
           'unit': 'A',
@@ -47,6 +72,11 @@
           'name': 'Voltage L1',
           'unit': 'V',
           'value': 230.1,
+        }),
+        '96.1.0': dict({
+          'name': 'Serial Number',
+          'unit': '',
+          'value': '0a014845480000123456',
         }),
       }),
     }),

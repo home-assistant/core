@@ -15,8 +15,14 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.wattwaechter.const import DEFAULT_SCAN_INTERVAL, DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -66,6 +72,86 @@ async def test_minimal_meter_data(
     assert _get_entity_id("2.8.0") is None
     assert _get_entity_id("32.7.0") is None
     assert _get_entity_id("31.7.0") is None
+
+
+@pytest.mark.parametrize(
+    ("obis_code", "device_class", "state_class", "unit", "entity_category"),
+    [
+        pytest.param(
+            "1.7.0",
+            SensorDeviceClass.POWER,
+            SensorStateClass.MEASUREMENT,
+            "W",
+            None,
+            id="mapped_momentary_unit",
+        ),
+        pytest.param(
+            "15.8.0",
+            SensorDeviceClass.ENERGY,
+            SensorStateClass.TOTAL_INCREASING,
+            "kWh",
+            None,
+            id="cumulative_energy",
+        ),
+        pytest.param(
+            "3.8.0",
+            SensorDeviceClass.REACTIVE_ENERGY,
+            SensorStateClass.TOTAL_INCREASING,
+            "kvarh",
+            None,
+            id="cumulative_reactive_energy",
+        ),
+        pytest.param(
+            "1.6.0",
+            None,
+            None,
+            "kW",
+            None,
+            id="unmapped_unit_no_statistics",
+        ),
+        pytest.param(
+            "96.1.0",
+            None,
+            None,
+            None,
+            EntityCategory.DIAGNOSTIC,
+            id="metadata_string",
+        ),
+        pytest.param(
+            "0.2.0",
+            None,
+            None,
+            None,
+            EntityCategory.DIAGNOSTIC,
+            id="metadata_numeric",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_client")
+async def test_generic_obis_sensor_classification(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    obis_code: str,
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | None,
+    unit: str | None,
+    entity_category: EntityCategory | None,
+) -> None:
+    """Test device/state class inference for OBIS codes without a description."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_{obis_code}"
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).entity_category == entity_category
+
+    attributes = hass.states.get(entity_id).attributes
+    assert attributes.get("device_class") == device_class
+    assert attributes.get("state_class") == state_class
+    assert attributes.get("unit_of_measurement") == unit
 
 
 @pytest.mark.parametrize(
