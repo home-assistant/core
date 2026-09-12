@@ -7,6 +7,7 @@ from copy import deepcopy
 import logging
 import time
 from types import MappingProxyType
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError
@@ -37,6 +38,7 @@ from teslemetry_stream import TeslemetryStreamAuthenticationError
 
 from homeassistant.components.teslemetry import (
     STREAM_TOPICS,
+    _async_gather_first_refreshes,
     _async_get_rsa_key_pem,
     _get_access_token,
 )
@@ -166,6 +168,83 @@ async def test_vehicle_refresh_error(
     mock_vehicle_data.side_effect = side_effect
     entry = await setup_platform(hass)
     assert entry.state is state
+
+
+async def test_vehicle_first_refresh_timeout(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test a slow first vehicle refresh retries instead of blocking setup."""
+    never = asyncio.Event()
+
+    async def _hang(*args: object, **kwargs: object) -> dict[str, Any]:
+        await never.wait()
+        return VEHICLE_DATA_ALT
+
+    mock_vehicle_data.side_effect = _hang
+
+    with patch("homeassistant.components.teslemetry.VEHICLE_FIRST_REFRESH_TIMEOUT", 0):
+        entry = await setup_platform(hass)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    never.set()
+
+
+async def test_vehicle_first_refresh_timeout_cancels_stream_setup(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_stream_get_config: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test a timed-out vehicle refresh cancels the concurrent stream setup.
+
+    asyncio.gather without return_exceptions only propagates the first
+    exception; it does not cancel the other awaitables. Assert that the
+    sibling stream setup is actually cancelled rather than left running.
+    """
+    never = asyncio.Event()
+    stream_setup_cancelled = asyncio.Event()
+
+    async def _hang_vehicle_data(*args: object, **kwargs: object) -> dict[str, Any]:
+        await never.wait()
+        return VEHICLE_DATA_ALT
+
+    async def _hang_get_config(*args: object, **kwargs: object) -> None:
+        try:
+            await never.wait()
+        except asyncio.CancelledError:
+            stream_setup_cancelled.set()
+            raise
+
+    mock_vehicle_data.side_effect = _hang_vehicle_data
+    mock_stream_get_config.side_effect = _hang_get_config
+
+    with patch("homeassistant.components.teslemetry.VEHICLE_FIRST_REFRESH_TIMEOUT", 0):
+        entry = await setup_platform(hass)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert stream_setup_cancelled.is_set()
+    never.set()
+
+
+async def test_gather_first_refreshes_raises_for_cancelled_sibling() -> None:
+    """A task that ends up cancelled must still fail the gather, not be ignored.
+
+    asyncio.wait(..., return_when=FIRST_EXCEPTION) does not return early for a
+    cancelled task, so it can sit in the done set already cancelled while a
+    sibling still finishes normally; that must surface as a failure.
+    """
+
+    async def _cancel_self() -> None:
+        asyncio.current_task().cancel()
+        await asyncio.sleep(0)
+
+    async def _succeeds() -> None:
+        return None
+
+    with pytest.raises(asyncio.CancelledError):
+        await _async_gather_first_refreshes(_cancel_self(), _succeeds())
 
 
 # Test Energy Live Coordinator
