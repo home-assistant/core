@@ -5,18 +5,17 @@ from typing import Any, override
 import voluptuous as vol
 
 from homeassistant.components.valve import (
-    ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     DOMAIN as VALVE_DOMAIN,
     PLATFORM_SCHEMA as VALVE_PLATFORM_SCHEMA,
     ValveEntity,
     ValveEntityFeature,
+    ValveEntityStateAttribute,
     ValveState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -26,6 +25,7 @@ from homeassistant.const import (
     SERVICE_STOP_VALVE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -136,7 +136,7 @@ class ValveGroup(GroupEntity, ValveEntity):
                 values.discard(entity_id)
             return
 
-        features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = new_state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if features & (ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE):
             self._valves[KEY_OPEN_CLOSE].add(entity_id)
@@ -233,7 +233,10 @@ class ValveGroup(GroupEntity, ValveEntity):
         self._attr_reports_position = False
         self._update_assumed_state_from_members()
         for state in states:
-            if state.attributes.get(ATTR_CURRENT_POSITION) is not None:
+            if (
+                state.attributes.get(ValveEntityStateAttribute.CURRENT_POSITION)
+                is not None
+            ):
                 self._attr_reports_position = True
             if state.state == ValveState.OPEN:
                 self._attr_is_closed = False
@@ -255,7 +258,7 @@ class ValveGroup(GroupEntity, ValveEntity):
             self._attr_is_closed = None
 
         self._attr_current_valve_position = reduce_attribute(
-            states, ATTR_CURRENT_POSITION
+            states, ValveEntityStateAttribute.CURRENT_POSITION
         )
 
         supported_features = ValveEntityFeature(0)

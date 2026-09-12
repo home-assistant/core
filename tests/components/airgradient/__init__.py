@@ -22,31 +22,39 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     await hass.async_block_till_done()
 
 
-def load_measures_fixture(filename: str) -> Measures:
-    """Load and parse a legacy measures fixture."""
-    return parse_measures_json(
-        load_fixture(filename, DOMAIN), api_version=ApiVersion.LEGACY
-    )
+def load_measures_fixture(
+    filename: str, api_version: ApiVersion = ApiVersion.LEGACY
+) -> Measures:
+    """Load and parse a measures fixture."""
+    return parse_measures_json(load_fixture(filename, DOMAIN), api_version=api_version)
 
 
-def load_config_fixture(filename: str) -> Config:
-    """Load and parse a legacy config fixture."""
-    return parse_config_json(
-        load_fixture(filename, DOMAIN), api_version=ApiVersion.LEGACY
-    )
+def load_config_fixture(
+    filename: str, api_version: ApiVersion = ApiVersion.LEGACY
+) -> Config:
+    """Load and parse a config fixture."""
+    return parse_config_json(load_fixture(filename, DOMAIN), api_version=api_version)
 
 
-async def async_load_measures_fixture(hass: HomeAssistant, filename: str) -> Measures:
-    """Load and parse a legacy measures fixture asynchronously."""
+async def async_load_measures_fixture(
+    hass: HomeAssistant,
+    filename: str,
+    api_version: ApiVersion = ApiVersion.LEGACY,
+) -> Measures:
+    """Load and parse a measures fixture asynchronously."""
     return parse_measures_json(
         await async_load_fixture(hass, filename, DOMAIN),
-        api_version=ApiVersion.LEGACY,
+        api_version=api_version,
     )
 
 
-async def async_load_config_fixture(hass: HomeAssistant, filename: str) -> Config:
-    """Load and parse a legacy config fixture asynchronously."""
+async def async_load_config_fixture(
+    hass: HomeAssistant,
+    filename: str,
+    api_version: ApiVersion = ApiVersion.LEGACY,
+) -> Config:
+    """Load and parse a config fixture asynchronously."""
     return parse_config_json(
         await async_load_fixture(hass, filename, DOMAIN),
-        api_version=ApiVersion.LEGACY,
+        api_version=api_version,
     )

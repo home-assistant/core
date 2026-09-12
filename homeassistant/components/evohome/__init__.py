@@ -34,7 +34,7 @@ from .const import (
     SCAN_INTERVAL_MINIMUM,
 )
 from .coordinator import EvoDataUpdateCoordinator
-from .services import setup_service_functions
+from .services import async_setup_services
 from .storage import TokenManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,6 +110,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
 
-    setup_service_functions(hass, coordinator)
+    async_setup_services(hass, coordinator)
 
     return True

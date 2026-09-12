@@ -81,7 +81,7 @@ async def test_migration_v1_to_v2(
     # validates it against the config entry's disabled state; write it
     # directly to simulate existing storage.
     device = attr.evolve(device, disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY)
-    device_registry.devices[device.id] = device
+    device_registry._devices[device.id] = device
     entity = entity_registry.async_get_or_create(
         domain="sensor",
         platform=DOMAIN,
@@ -108,7 +108,7 @@ async def test_migration_v1_to_v2(
     migrated_device = device_registry.async_get(device.id)
     assert migrated_device is not None
     assert migrated_device.identifiers == {(DOMAIN, "1234")}
-    assert migrated_device.config_entries == {config_entry.entry_id}
+    assert migrated_device.config_entry_id == config_entry.entry_id
     assert migrated_device.disabled_by is dr.DeviceEntryDisabler.USER
 
     migrated_entity = entity_registry.async_get(entity.entity_id)
@@ -252,7 +252,7 @@ async def test_migration_merges_duplicate_v1_entries(
     # The pre-existing device for 5678 was reattached to the surviving entry.
     device = device_registry.async_get(device_5678.id)
     assert device is not None
-    assert device.config_entries == {surviving.entry_id}
+    assert device.config_entry_id == surviving.entry_id
 
 
 async def test_migration_merge_into_disabled_hub(
@@ -303,7 +303,7 @@ async def test_migration_merge_into_disabled_hub(
     # state now reflects the new owning entry's disabled state.
     migrated_device = device_registry.async_get(device.id)
     assert migrated_device is not None
-    assert migrated_device.config_entries == {hub_entry.entry_id}
+    assert migrated_device.config_entry_id == hub_entry.entry_id
     assert migrated_device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
 
 

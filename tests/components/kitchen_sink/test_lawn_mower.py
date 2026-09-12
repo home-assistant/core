@@ -11,6 +11,7 @@ from homeassistant.components.lawn_mower import (
     SERVICE_DOCK,
     SERVICE_PAUSE,
     SERVICE_START_MOWING,
+    SERVICE_STOP,
     LawnMowerActivity,
 )
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
@@ -78,6 +79,12 @@ async def test_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
             LawnMowerActivity.RETURNING,
             LawnMowerActivity.DOCKED,
         ),
+        (
+            "lawn_mower.mower_can_stop",
+            SERVICE_STOP,
+            LawnMowerActivity.MOWING,
+            LawnMowerActivity.IDLE,
+        ),
     ],
 )
 async def test_mower(
@@ -109,6 +116,7 @@ async def test_mower(
         SERVICE_DOCK,
         SERVICE_START_MOWING,
         SERVICE_PAUSE,
+        SERVICE_STOP,
     ],
 )
 async def test_service_calls_mocked(hass: HomeAssistant, service_call) -> None:

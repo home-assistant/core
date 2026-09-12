@@ -1,6 +1,8 @@
 """Test UniFi Network config flow."""
 
+from collections.abc import Callable
 import socket
+from typing import Any
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -385,6 +387,43 @@ async def test_reauth_flow_update_configuration_on_not_loaded_entry(
     assert config_entry.data[CONF_PASSWORD] == "new_pass"
 
 
+@pytest.mark.parametrize(
+    "site_payload",
+    [
+        [
+            {"name": "site2", "role": "admin", "desc": "site2 name", "_id": "2"},
+        ]
+    ],
+)
+async def test_abort_reauth_flow_on_site_id_mismatch(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_requests: Callable[[str, str], None],
+) -> None:
+    """Verify reauth flow aborts when original site can no longer be found."""
+    mock_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "new_name",
+            CONF_PASSWORD: "new_pass",
+            CONF_PORT: 1234,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown_site_id"
+    assert config_entry.data[CONF_SITE_ID] == "site_id"
+
+
 @pytest.mark.parametrize("client_payload", [CLIENTS])
 @pytest.mark.parametrize("device_payload", [DEVICES])
 @pytest.mark.parametrize("wlan_payload", [WLANS])
@@ -541,6 +580,40 @@ async def test_flow_integration_discovery_aborts_if_host_already_exists(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("config_entry")
+async def test_flow_integration_discovery_aborts_on_other_announced_address(
+    hass: HomeAssistant,
+) -> None:
+    """Test we abort when the entry uses another interface of the same console."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            **INTEGRATION_DISCOVERY_INFO,
+            "source_ip": "10.0.0.1",
+            "direct_connect_domain": None,
+            "announced_ips": ["10.0.0.1", "1.2.3.4"],
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_flow_integration_discovery_ignores_entry_without_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test an entry carrying no host does not match a missing direct connect."""
+    MockConfigEntry(domain=DOMAIN, unique_id="site-id", data={}).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={**INTEGRATION_DISCOVERY_INFO, "direct_connect_domain": None},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
 async def test_flow_integration_discovery_uses_direct_connect_domain(
     hass: HomeAssistant,
 ) -> None:
@@ -580,15 +653,32 @@ async def test_flow_integration_discovery_aborts_on_direct_connect_host(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("entry_host", "extra_info"),
+    [
+        pytest.param("old.host", {}, id="stale_host"),
+        pytest.param(
+            "10.0.0.99",
+            {"announced_ips": ["10.0.0.99"]},
+            id="other_announced_interface",
+        ),
+    ],
+)
 async def test_flow_integration_discovery_updates_existing_entry_on_rediscovery(
     hass: HomeAssistant,
+    entry_host: str,
+    extra_info: dict[str, Any],
 ) -> None:
-    """Test existing entry's host is refreshed when rediscovered with same MAC."""
+    """Test existing entry's host is refreshed when rediscovered with same MAC.
+
+    This also holds when the entry sits on another interface the console
+    announces, which the host match must not abort on first.
+    """
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(INTEGRATION_DISCOVERY_INFO["hw_addr"]),
         data={
-            CONF_HOST: "old.host",
+            CONF_HOST: entry_host,
             CONF_VERIFY_SSL: False,
         },
     )
@@ -597,7 +687,7 @@ async def test_flow_integration_discovery_updates_existing_entry_on_rediscovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-        data=INTEGRATION_DISCOVERY_INFO,
+        data={**INTEGRATION_DISCOVERY_INFO, **extra_info},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

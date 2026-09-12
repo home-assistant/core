@@ -32,9 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 
     # Migrate non-string device identifiers.
     device_registry = dr.async_get(hass)
-    for device in device_registry.devices.get_devices_for_config_entry_id(
-        entry.entry_id
-    ):
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
         for ident in device.identifiers:
             if ident[0] != DOMAIN or isinstance(ident[1], str):
                 continue

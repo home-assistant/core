@@ -213,8 +213,9 @@ class HomematicipGenericEntity(Entity):
         if device_id := self.registry_entry.device_id:
             # Remove from device registry.
             device_registry = dr.async_get(self.hass)
-            if device_id in device_registry.devices:
-                # This will also remove associated entities from entity registry.
+            # This will also remove associated entities from entity registry,
+            # ignore an already removed device.
+            with contextlib.suppress(KeyError):
                 device_registry.async_remove_device(device_id)
         else:  # noqa: PLR5501
             # Remove from entity registry.
@@ -371,8 +372,7 @@ class HomematicipGenericEntity(Entity):
         """Return the FunctionalChannel for the device.
 
         Resolution priority:
-        1. For multi-channel entities with a real index, find
-           channel by index match.
+        1. With a real index, find channel by index match.
         2. For multi-channel entities without a real index, use
            the provided channel position.
         3. For non multi-channel entities with >1 channels, use
@@ -387,20 +387,20 @@ class HomematicipGenericEntity(Entity):
                 " has no functionalChannels"
             )
 
+        # Prefer real index mapping when provided to avoid ordering issues.
+        if self._channel_real_index is not None:
+            for channel in functional_channels:
+                if channel.index == self._channel_real_index:
+                    return channel
+            raise ValueError(
+                f"Real channel index"
+                f" {self._channel_real_index}"
+                " not found for device"
+                f" {getattr(self._device, 'id', 'unknown')}"
+            )
+
         # Multi-channel handling
         if self._is_multi_channel:
-            # Prefer real index mapping when provided to avoid
-            # ordering issues.
-            if self._channel_real_index is not None:
-                for channel in functional_channels:
-                    if channel.index == self._channel_real_index:
-                        return channel
-                raise ValueError(
-                    f"Real channel index"
-                    f" {self._channel_real_index}"
-                    " not found for device"
-                    f" {getattr(self._device, 'id', 'unknown')}"
-                )
             # Fallback: positional channel (already sorted as strings upstream).
             if self._channel is not None and 0 <= self._channel < len(
                 functional_channels

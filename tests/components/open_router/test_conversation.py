@@ -145,9 +145,9 @@ async def test_web_search_with_assist(
     assert {"type": "openrouter:web_search", "parameters": {"engine": "auto"}} in call[
         "extra_body"
     ]["tools"]
-    # Ensure GetDateTime is in the tools list
+    # Ensure llm__GetDateTime is in the tools list
     assert any(
-        tool.get("function", {}).get("name") == "GetDateTime"
+        tool.get("function", {}).get("name") == "llm__GetDateTime"
         for tool in call["extra_body"]["tools"]
     )
 

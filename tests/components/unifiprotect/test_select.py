@@ -561,8 +561,49 @@ async def test_select_set_option_camera_recording(
         mock_method.assert_called_once_with(RecordingMode.NEVER)
 
 
+@pytest.mark.parametrize(
+    ("mode", "expected"),
+    [
+        (IRLEDMode.CUSTOM_FILTER_ONLY, "custom_filter_only"),
+        (IRLEDMode.MANUAL, "manual"),
+        (IRLEDMode.CUSTOM, "custom"),
+    ],
+)
+async def test_select_camera_ir_current_option(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    mode: IRLEDMode,
+    expected: str,
+) -> None:
+    """A camera already in one of these modes reports it as the current option."""
+    doorbell.isp_settings.ir_led_mode = mode
+
+    await init_entry(hass, ufp, [doorbell])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, CAMERA_SELECTS[1]
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected
+    assert expected in state.attributes[ATTR_OPTIONS]
+
+
+@pytest.mark.parametrize(
+    ("option", "expected"),
+    [
+        ("on", IRLEDMode.ON),
+        ("custom_filter_only", IRLEDMode.CUSTOM_FILTER_ONLY),
+        ("manual", IRLEDMode.MANUAL),
+    ],
+)
 async def test_select_set_option_camera_ir(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    option: str,
+    expected: IRLEDMode,
 ) -> None:
     """Test Infrared Mode select."""
 
@@ -579,11 +620,11 @@ async def test_select_set_option_camera_ir(
         await hass.services.async_call(
             "select",
             "select_option",
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "on"},
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
             blocking=True,
         )
 
-        mock_method.assert_called_once_with(IRLEDMode.ON)
+        mock_method.assert_called_once_with(expected)
 
 
 async def test_select_set_option_camera_doorbell_custom(
@@ -608,8 +649,10 @@ async def test_select_set_option_camera_doorbell_custom(
             blocking=True,
         )
 
+        # reset_at=None keeps the message up; omitting it lets the NVR
+        # clear it after its own timeout
         mock_method.assert_called_once_with(
-            DoorbellMessageType.CUSTOM_MESSAGE, text="Test"
+            DoorbellMessageType.CUSTOM_MESSAGE, text="Test", reset_at=None
         )
 
 
@@ -625,14 +668,9 @@ async def test_select_set_option_camera_doorbell_unifi(
         hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    with (
-        patch_ufp_method(
-            doorbell, "set_lcd_message_public", new_callable=AsyncMock
-        ) as mock_public,
-        patch_ufp_method(
-            doorbell, "set_lcd_text", new_callable=AsyncMock
-        ) as mock_legacy,
-    ):
+    with patch_ufp_method(
+        doorbell, "set_lcd_message_public", new_callable=AsyncMock
+    ) as mock_method:
         await hass.services.async_call(
             "select",
             "select_option",
@@ -643,19 +681,9 @@ async def test_select_set_option_camera_doorbell_unifi(
             blocking=True,
         )
 
-        mock_public.assert_called_once_with(DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR)
-
-        await hass.services.async_call(
-            "select",
-            "select_option",
-            {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: "Default Message (Welcome)",
-            },
-            blocking=True,
+        mock_method.assert_called_once_with(
+            DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR, reset_at=None
         )
-
-        mock_legacy.assert_called_once_with(None)
 
 
 async def test_select_set_option_camera_doorbell_default(
@@ -671,7 +699,7 @@ async def test_select_set_option_camera_doorbell_default(
     )
 
     with patch_ufp_method(
-        doorbell, "set_lcd_text", new_callable=AsyncMock
+        doorbell, "set_lcd_message_public", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "select",
@@ -983,6 +1011,7 @@ def _make_public_bootstrap(arm_mode: Mock | None, profiles: dict[str, Mock]) -> 
     pb.arm_profiles = profiles
     pb.relays = {}
     pb.sirens = {}
+    pb.fobs = {}
     return pb
 
 

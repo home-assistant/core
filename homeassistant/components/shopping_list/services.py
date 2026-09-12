@@ -33,7 +33,7 @@ SERVICE_SORT_SCHEMA = vol.Schema(
 
 
 @callback
-def async_register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register shopping list services."""
 
     async def add_item_service(call: ServiceCall) -> None:

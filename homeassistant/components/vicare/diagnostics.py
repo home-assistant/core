@@ -3,6 +3,7 @@
 import json
 from typing import Any
 
+from PyViCare.PyViCareServiceViaGateway import filter_features_for_device
 from PyViCare.PyViCareUtils import PyViCareDeviceCommunicationError
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -36,7 +37,13 @@ async def async_get_config_entry_diagnostics(
         devices: list[dict[str, Any]] = []
         for device in entry.runtime_data.client.all_devices:
             try:
-                devices.append(json.loads(device.dump_secure()))
+                dump = json.loads(device.dump_secure())
+                # In viaGateway mode dump_secure() returns the whole gateway's
+                # features, so scope them to the device the entry describes.
+                dump["data"] = filter_features_for_device(
+                    dump["data"], device.device_id
+                )
+                devices.append(dump)
             except PyViCareDeviceCommunicationError as err:
                 # One offline gateway must not abort the whole diagnostics dump.
                 devices.append(

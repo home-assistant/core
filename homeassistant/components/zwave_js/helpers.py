@@ -34,6 +34,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_AREA_ID,
+    ATTR_CONFIG_ENTRY_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_TYPE,
@@ -256,7 +257,7 @@ def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None
 
 
 def get_home_and_node_id_from_device_entry(
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> tuple[str, int] | None:
     """Get home ID and node ID for Z-Wave device registry entry.
 
@@ -277,38 +278,28 @@ def get_home_and_node_id_from_device_entry(
 
 
 @callback
-def async_get_node_from_device_id(
-    hass: HomeAssistant, device_id: str, dev_reg: dr.DeviceRegistry | None = None
-) -> ZwaveNode:
+def async_get_node_from_device_id(hass: HomeAssistant, device_id: str) -> ZwaveNode:
     """Get node from a device ID.
 
     Raises ValueError if device is invalid or node can't be found.
     """
-    if not dev_reg:
-        dev_reg = dr.async_get(hass)
-
-    if not (device_entry := dev_reg.async_get(device_id, include_child_devices=False)):
+    # Use the device config entry to validate that this is a valid zwave_js device
+    # and to get the client
+    device, config_entry = cast(
+        tuple[dr.AnyDeviceEntry | None, ZwaveJSConfigEntry | None],
+        dr.async_get_device_and_config_entry_for_domain(hass, device_id, domain=DOMAIN),
+    )
+    if device is None:
         raise ValueError(f"Device ID {device_id} is not valid")
 
-    # Use device config entry ID's to validate that this is a valid zwave_js device
-    # and to get the client
-    config_entry_ids = device_entry.config_entries
-    entry: ZwaveJSConfigEntry | None = next(
-        (
-            entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in config_entry_ids
-        ),
-        None,
-    )
-    if entry is None:
+    if config_entry is None:
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
-    if entry.state is not ConfigEntryState.LOADED:
+    if config_entry.state is not ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
 
-    client = entry.runtime_data.client
+    client = config_entry.runtime_data.client
     driver = client.driver
 
     if driver is None:
@@ -316,7 +307,7 @@ def async_get_node_from_device_id(
 
     # Get node ID from device identifier, perform some validation, and then get the
     # node
-    identifiers = get_home_and_node_id_from_device_entry(device_entry)
+    identifiers = get_home_and_node_id_from_device_entry(device)
 
     node_id = identifiers[1] if identifiers else None
 
@@ -346,30 +337,23 @@ async def async_get_provisioning_entry_from_device_id(
 
     Raises ValueError if device is invalid
     """
-    dev_reg = dr.async_get(hass)
-
-    if not (device_entry := dev_reg.async_get(device_id)):
+    # Use the device config entry to validate that this is a valid zwave_js device
+    # and to get the client
+    device, config_entry = cast(
+        tuple[dr.AnyDeviceEntry | None, ZwaveJSConfigEntry | None],
+        dr.async_get_device_and_config_entry_for_domain(hass, device_id, domain=DOMAIN),
+    )
+    if device is None:
         raise ValueError(f"Device ID {device_id} is not valid")
 
-    # Use device config entry ID's to validate that this is a valid zwave_js device
-    # and to get the client
-    config_entry_ids = device_entry.config_entries
-    entry: ZwaveJSConfigEntry | None = next(
-        (
-            entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in config_entry_ids
-        ),
-        None,
-    )
-    if entry is None:
+    if config_entry is None:
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
-    if entry.state is not ConfigEntryState.LOADED:
+    if config_entry.state is not ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
 
-    client = entry.runtime_data.client
+    client = config_entry.runtime_data.client
     driver = client.driver
 
     if driver is None:
@@ -391,7 +375,6 @@ def async_get_node_from_entity_id(
     hass: HomeAssistant,
     entity_id: str,
     ent_reg: er.EntityRegistry | None = None,
-    dev_reg: dr.DeviceRegistry | None = None,
 ) -> ZwaveNode:
     """Get node from an entity ID.
 
@@ -407,7 +390,7 @@ def async_get_node_from_entity_id(
     # Assert for mypy, safe because we know that zwave_js entities are always
     # tied to a device
     assert entity_entry.device_id
-    return async_get_node_from_device_id(hass, entity_entry.device_id, dev_reg)
+    return async_get_node_from_device_id(hass, entity_entry.device_id)
 
 
 @callback
@@ -426,23 +409,22 @@ def async_get_nodes_from_area_id(
     # Add devices for all entities in an area that are Z-Wave JS entities
     nodes.update(
         {
-            async_get_node_from_device_id(hass, entity.device_id, dev_reg)
+            async_get_node_from_device_id(hass, entity.device_id)
             for entity in er.async_entries_for_area(ent_reg, area_id)
             if entity.platform == DOMAIN and entity.device_id is not None
         }
     )
-    # Add devices in an area that are Z-Wave JS devices
+    # Add devices in an area that are Z-Wave JS devices. Child devices are skipped
+    # since a child device is not a Z-Wave JS node.
     nodes.update(
-        async_get_node_from_device_id(hass, device.id, dev_reg)
+        async_get_node_from_device_id(hass, device.id)
         for device in dr.async_entries_for_area(dev_reg, area_id)
-        if any(
-            cast(
-                ZwaveJSConfigEntry,
-                hass.config_entries.async_get_entry(config_entry_id),
-            ).domain
-            == DOMAIN
-            for config_entry_id in device.config_entries
+        if not isinstance(device, dr.ChildDeviceEntry)
+        and (
+            config_entry := hass.config_entries.async_get_entry(device.config_entry_id)
         )
+        is not None
+        and config_entry.domain == DOMAIN
     )
 
     return nodes
@@ -464,7 +446,7 @@ def async_get_nodes_from_targets(
     # Convert all entity IDs to nodes
     for entity_id in expand_entity_ids(hass, val.get(ATTR_ENTITY_ID, [])):
         try:
-            nodes.add(async_get_node_from_entity_id(hass, entity_id, ent_reg, dev_reg))
+            nodes.add(async_get_node_from_entity_id(hass, entity_id, ent_reg))
         except ValueError as err:
             logger.warning(err.args[0])
 
@@ -475,7 +457,7 @@ def async_get_nodes_from_targets(
     # Convert all device IDs to nodes
     for device_id in val.get(ATTR_DEVICE_ID, []):
         try:
-            nodes.add(async_get_node_from_device_id(hass, device_id, dev_reg))
+            nodes.add(async_get_node_from_device_id(hass, device_id))
         except ValueError as err:
             logger.warning(err.args[0])
 
@@ -487,9 +469,9 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
     endpoint = None
     if config.get(ATTR_ENDPOINT):
         endpoint = config[ATTR_ENDPOINT]
-    property_key = None
-    if config.get(ATTR_PROPERTY_KEY):
-        property_key = config[ATTR_PROPERTY_KEY]
+    property_key = config.get(ATTR_PROPERTY_KEY)
+    if property_key == "":
+        property_key = None
     value_id = get_value_id_str(
         node,
         config[ATTR_COMMAND_CLASS],
@@ -502,13 +484,29 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
     return node.values[value_id]
 
 
-def _zwave_js_config_entry(hass: HomeAssistant, device: dr.DeviceEntry) -> str | None:
+def node_status_matches(node: ZwaveNode, status: str) -> bool:
+    """Return whether the node has the given status name."""
+    return node.status.name.lower() == status
+
+
+def value_matches_state(value: ZwaveValue, expected: Any) -> bool:
+    """Return whether a value matches the expected raw value, string form or label."""
+    current = value.value
+    return expected in (
+        current,
+        str(current),
+        value.metadata.states.get(str(current), current),
+    )
+
+
+def get_zwave_js_config_entry_id(
+    hass: HomeAssistant, device: dr.DeviceEntry
+) -> str | None:
     """Find zwave_js config entry from a device."""
-    for entry_id in device.config_entries:
-        entry = hass.config_entries.async_get_entry(entry_id)
-        if entry and entry.domain == DOMAIN:
-            return entry_id
-    return None
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device.id, domain=DOMAIN
+    )
+    return config_entry.entry_id if config_entry else None
 
 
 @callback
@@ -526,13 +524,13 @@ def async_get_node_status_sensor_entity_id(
     if not (device := dev_reg.async_get(device_id, include_child_devices=False)):
         raise HomeAssistantError("Invalid Device ID provided")
 
-    if not (entry_id := _zwave_js_config_entry(hass, device)):
+    if not (entry_id := get_zwave_js_config_entry_id(hass, device)):
         return None
 
     entry = hass.config_entries.async_get_entry(entry_id)
     assert entry
     client = entry.runtime_data.client
-    node = async_get_node_from_device_id(hass, device_id, dev_reg)
+    node = async_get_node_from_device_id(hass, device_id)
     return ent_reg.async_get_entity_id(
         SENSOR_DOMAIN,
         DOMAIN,
@@ -690,3 +688,34 @@ def async_wait_for_driver_ready_event(
 
 class CannotConnect(HomeAssistantError):
     """Indicate connection error."""
+
+
+@callback
+def async_bypass_dynamic_config_validation(
+    hass: HomeAssistant, config: ConfigType
+) -> bool:
+    """Return whether a referenced zwave_js config entry is not loaded or ready."""
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    devices = config.get(ATTR_DEVICE_ID, [])
+    entities = config.get(ATTR_ENTITY_ID, [])
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if not (
+            entry.entry_id == config.get(ATTR_CONFIG_ENTRY_ID)
+            or any(
+                device.id in devices
+                for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+            )
+            or any(
+                entity.entity_id in entities
+                for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id)
+            )
+        ):
+            continue
+        if entry.state is not ConfigEntryState.LOADED:
+            return True
+        # The driver may not be ready when the config entry is loaded.
+        if entry.runtime_data.client.driver is None:
+            return True
+
+    return False

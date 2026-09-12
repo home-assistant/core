@@ -99,17 +99,23 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         rgb_color: tuple[int, int, int] | None = kwargs.get("rgb_color")
         color_temp_kelvin: int | None = kwargs.get("color_temp_kelvin")
 
-        if brightness is not None:
-            self._attr_color_mode = self._get_default_color_mode()
-            await self._send_brightness_command(brightness)
-        elif rgb_color is not None:
+        if rgb_color is not None:
             self._attr_color_mode = ColorMode.RGB
-            await self._send_rgb_color_command(rgb_color)
         elif color_temp_kelvin is not None:
             self._attr_color_mode = ColorMode.COLOR_TEMP
-            await self._send_color_temperature_command(color_temp_kelvin)
         else:
             self._attr_color_mode = self._get_default_color_mode()
+
+        # Brightness adjustment can be sent by HASS in a single command with color adjustment,
+        # so we need to send brightness command separately if it is present.
+        if brightness is not None:
+            await self._send_brightness_command(brightness)
+
+        if rgb_color is not None:
+            await self._send_rgb_color_command(rgb_color)
+        elif color_temp_kelvin is not None:
+            await self._send_color_temperature_command(color_temp_kelvin)
+        elif brightness is None:
             await self.send_api_command(CommonCommands.ON)
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
