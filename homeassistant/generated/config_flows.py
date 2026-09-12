@@ -25,6 +25,7 @@ FLOWS = {
         "utility_meter",
     ],
     "integration": [
+        "abetterrouteplanner",
         "abode",
         "acaia",
         "accuweather",
