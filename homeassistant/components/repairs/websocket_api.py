@@ -144,7 +144,7 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager, RepairsFlowR
         try:
             result = await self._flow_mgr.async_init(
                 data["handler"],
-                data={"issue_id": data["issue_id"]},
+                context={"issue_id": data["issue_id"]},
             )
         except data_entry_flow.UnknownFlow as ex:
             return self.json_message(
