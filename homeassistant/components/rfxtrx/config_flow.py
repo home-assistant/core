@@ -347,7 +347,8 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
             existing_device_id = get_device_tuple_from_device(
                 rfx_obj.device, subentry.data.get(CONF_DATA_BITS)
             )
-            if device_id == existing_device_id:
+            existing_device_id_unmasked = get_device_tuple_from_device(rfx_obj.device)
+            if device_id in (existing_device_id, existing_device_id_unmasked):
                 return subentry.subentry_id
 
         return None

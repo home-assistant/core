@@ -871,6 +871,54 @@ async def test_options_add_device_data_bits_conflict(hass: HomeAssistant) -> Non
     assert result["errors"]["data_bits"] == "already_configured_device"
 
 
+async def test_options_add_device_matching_masked_device_unmasked(
+    hass: HomeAssistant,
+) -> None:
+    """Test entering a masked device's exact event code is caught as a duplicate.
+
+    Comparing only the existing subentry's configured (masked) tuple would
+    miss this, since the new device's tuple starts out unmasked (data_bits
+    is only asked for in a later step) - it must also be checked against
+    the existing subentry's unmasked tuple.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        subentries_data=(
+            {
+                "data": {"event_code": "0913000022670e013970", "data_bits": 4},
+                "subentry_type": "device",
+                "title": "PT2262 226700",
+                "unique_id": "13_0_226700",
+            },
+        ),
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0913000022670e013970"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["event_code"] == "already_configured_device"
+
+
 async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
     """Test we can not add a duplicate device."""
 
