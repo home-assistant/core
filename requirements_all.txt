@@ -2941,7 +2941,7 @@ qbittorrent-api==2026.5.1
 qbusmqttapi==1.5.1
 
 # homeassistant.components.qingping
-qingping-ble==1.1.5
+qingping-ble==1.1.6
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
