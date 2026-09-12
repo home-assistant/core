@@ -3,7 +3,7 @@
 import logging
 from unittest.mock import ANY, AsyncMock, patch
 
-from kasa import Module, TimeoutError
+from kasa import Module, StreamResolution, TimeoutError
 import pytest
 
 from homeassistant import config_entries
@@ -23,6 +23,7 @@ from homeassistant.components.tplink.const import (
     CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
     CONF_LIVE_VIEW,
+    CONF_USE_STREAM_FOR_STILLS,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -33,6 +34,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -2466,3 +2468,63 @@ async def test_reconfigure_camera(
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+) -> None:
+    """Test the options flow toggles stills resolution and reloads, no restart."""
+    mock_device = _mocked_device(
+        modules=[Module.Camera],
+        alias="my_camera",
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+    )
+    camera_module = mock_device.modules[Module.Camera]
+
+    with (
+        patch("homeassistant.components.tplink.PLATFORMS", [Platform.CAMERA]),
+        _patch_discovery(device=mock_device),
+        _patch_connect(device=mock_device),
+    ):
+        mock_camera_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_camera_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        camera_module.stream_rtsp_url.assert_any_call(
+            ANY, stream_resolution=StreamResolution.SD
+        )
+        camera_module.stream_rtsp_url.reset_mock()
+
+        result = await hass.config_entries.options.async_init(
+            mock_camera_config_entry.entry_id
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_USE_STREAM_FOR_STILLS: True},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert mock_camera_config_entry.options == {CONF_USE_STREAM_FOR_STILLS: True}
+        assert mock_camera_config_entry.state is ConfigEntryState.LOADED
+
+        camera_module.stream_rtsp_url.assert_any_call(
+            ANY, stream_resolution=StreamResolution.HD
+        )
+
+
+async def test_options_flow_no_camera(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the options flow aborts for entries with no camera configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_options"

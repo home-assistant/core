@@ -26,6 +26,7 @@ CONF_USES_HTTP: Final = "uses_http"
 CONF_AES_KEYS: Final = "aes_keys"
 CONF_CAMERA_CREDENTIALS = "camera_credentials"
 CONF_LIVE_VIEW = "live_view"
+CONF_USE_STREAM_FOR_STILLS = "use_stream_for_stills"
 
 CONF_CONFIG_ENTRY_MINOR_VERSION: Final = 5
 
