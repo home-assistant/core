@@ -834,7 +834,7 @@ debugpy==1.8.21
 decora-wifi==1.4
 
 # homeassistant.components.ecovacs
-deebot-client==18.5.1
+deebot-client==18.6.0
 
 # homeassistant.components.ihc
 # homeassistant.components.ohmconnect
