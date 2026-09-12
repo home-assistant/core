@@ -21,7 +21,7 @@ async def test_create_doorbell(
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
 
     with patch.object(
-        doorbell_one, "async_get_doorbell_image", create=False, return_value="image"
+        doorbell_one, "async_get_doorbell_image", create=False, return_value=b"image"
     ):
         await _create_yale_with_devices(hass, [doorbell_one], brand=Brand.YALE_GLOBAL)
 
@@ -50,7 +50,7 @@ async def test_doorbell_refresh_content_token_recover(
         doorbell_two,
         "async_get_doorbell_image",
         create=False,
-        side_effect=[ContentTokenExpired, "image"],
+        side_effect=[ContentTokenExpired, b"image"],
     ):
         await _create_yale_with_devices(
             hass,

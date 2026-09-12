@@ -742,6 +742,53 @@ async def test_camera_proxy_authenticated_unknown_entity(
 
 
 @pytest.mark.usefixtures("mock_camera")
+async def test_camera_proxy_not_modified(hass_client: ClientSessionGenerator) -> None:
+    """Test camera_proxy returns 304 with an empty body for an unchanged image."""
+    client = await hass_client()
+
+    resp = await client.get("/api/camera_proxy/camera.demo_camera")
+    assert resp.status == HTTPStatus.OK
+    etag = resp.headers[hdrs.ETAG]
+
+    resp = await client.get(
+        "/api/camera_proxy/camera.demo_camera", headers={hdrs.IF_NONE_MATCH: etag}
+    )
+    assert resp.status == HTTPStatus.NOT_MODIFIED
+    assert resp.headers[hdrs.ETAG] == etag
+    assert await resp.read() == b""
+
+
+@pytest.mark.usefixtures("mock_camera")
+@pytest.mark.parametrize(
+    ("if_none_match", "expected_status"),
+    [
+        pytest.param("{etag}", HTTPStatus.NOT_MODIFIED, id="exact"),
+        pytest.param("W/{etag}", HTTPStatus.NOT_MODIFIED, id="weak"),
+        pytest.param('"other", {etag}', HTTPStatus.NOT_MODIFIED, id="list"),
+        pytest.param("*", HTTPStatus.NOT_MODIFIED, id="any"),
+        pytest.param('"stale"', HTTPStatus.OK, id="mismatch"),
+        pytest.param("", HTTPStatus.OK, id="empty"),
+    ],
+)
+async def test_camera_proxy_if_none_match(
+    hass_client: ClientSessionGenerator,
+    if_none_match: str,
+    expected_status: HTTPStatus,
+) -> None:
+    """Test camera_proxy revalidation against the forms If-None-Match can take."""
+    client = await hass_client()
+
+    resp = await client.get("/api/camera_proxy/camera.demo_camera")
+    etag = resp.headers[hdrs.ETAG]
+
+    resp = await client.get(
+        "/api/camera_proxy/camera.demo_camera",
+        headers={hdrs.IF_NONE_MATCH: if_none_match.format(etag=etag)},
+    )
+    assert resp.status == expected_status
+
+
+@pytest.mark.usefixtures("mock_camera")
 async def test_state_streaming(hass: HomeAssistant) -> None:
     """Camera state."""
     demo_camera = hass.states.get("camera.demo_camera")
