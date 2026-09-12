@@ -10,7 +10,9 @@ from neopool_modbus.exceptions import (
 import pytest
 
 from homeassistant.components.neopool.const import (
+    CONF_CAPABILITIES,
     CONF_USE_LIGHT,
+    CURRENT_VERSION,
     DEFAULT_UNIT_ID,
     DOMAIN,
 )
@@ -222,4 +224,43 @@ async def test_options_flow_save_changes(
     assert mock_config_entry.options[CONF_USE_LIGHT] is True
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_options_flow_preserves_capability_snapshot(
+    hass: HomeAssistant,
+) -> None:
+    """The options flow keeps the capability snapshot while winter mode is on.
+
+    In winter mode the coordinator skips the poll, so the snapshot persisted in
+    options is the only source for offline setup; the flow must not drop it.
+    """
+    snapshot = {"MBF_PAR_FILT_GPIO": 1, "MBF_PAR_LIGHTING_GPIO": 2}
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        pref_disable_polling=True,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={CONF_CAPABILITIES: snapshot},
+    )
+    await setup_integration(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_USE_LIGHT: True},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_USE_LIGHT] is True
+    assert entry.options[CONF_CAPABILITIES] == snapshot
+
+    await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

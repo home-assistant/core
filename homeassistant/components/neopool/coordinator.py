@@ -19,6 +19,8 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CAPABILITY_KEYS,
+    CONF_CAPABILITIES,
     CONF_USE_AUX1,
     CONF_USE_AUX2,
     CONF_USE_AUX3,
@@ -64,8 +66,23 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
         self.client = client
+        # Persisted in options for winter mode (no Modbus reads).
+        self._capability_snapshot: dict[str, Any] = dict(
+            entry.options.get(CONF_CAPABILITIES, {})
+        )
         self._corrupted_gpio_state: frozenset[tuple[str, int]] | None = None
         self._follow_up_unsub: CALLBACK_TYPE | None = None
+
+    @property
+    def winter_mode(self) -> bool:
+        """Return whether winter mode is active.
+
+        Backed directly by the native per-entry "disable polling" system
+        option, so this stays the single source of truth even when the flag
+        is toggled outside this integration. The base coordinator already
+        skips scheduling refreshes while it is set.
+        """
+        return self.config_entry.pref_disable_polling
 
     def request_refresh_with_followup(
         self, delay: float = FOLLOW_UP_REFRESH_DELAY
@@ -166,6 +183,10 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the latest data from the pool controller."""
+        if self.winter_mode:
+            _LOGGER.debug("Winter mode active - skipping Modbus communication")
+            return self.data if self.data is not None else self._capability_snapshot
+
         try:
             data = await self.client.async_read_all()
             await self._read_timers_into_data(data)
@@ -177,4 +198,15 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from err
 
         self._check_gpio_registers(data)
+        self._persist_capability_snapshot(data)
         return data
+
+    def _persist_capability_snapshot(self, data: dict[str, Any]) -> None:
+        """Persist the capability snapshot so platform setup survives HA restarts."""
+        new_snapshot = {k: data[k] for k in CAPABILITY_KEYS if k in data}
+        if new_snapshot == self._capability_snapshot:
+            return
+        self._capability_snapshot = new_snapshot
+        options = dict(self.config_entry.options)
+        options[CONF_CAPABILITIES] = new_snapshot
+        self.hass.config_entries.async_update_entry(self.config_entry, options=options)
