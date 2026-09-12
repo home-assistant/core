@@ -25,7 +25,7 @@ from homeassistant.components.teslemetry.const import (
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -437,6 +437,38 @@ async def test_charge_on_solar_lower_limit_uses_live_charge_limit(
             lower_charge_limit=35,
             upper_charge_limit=95,
         )
+
+
+async def test_charge_on_solar_lower_limit_rejects_stale_max_while_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test the lower limit's advertised max tracks a locally lowered charge limit."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    await setup_platform(hass, [Platform.NUMBER])
+
+    # The owner lowers the charge limit locally with no stream or poll update following it.
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.set_charge_limit",
+        return_value=COMMAND_OK,
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.test_charge_limit", ATTR_VALUE: 50},
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 60},
+            blocking=True,
+        )
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.state == "20"
 
 
 async def test_charge_on_solar_switch_and_lower_limit_are_serialized(

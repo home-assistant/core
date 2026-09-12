@@ -375,9 +375,15 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
     ) -> None:
         """Initialize the charge-on-solar lower limit number entity."""
         self.scoped = Scope.VEHICLE_CMDS in scopes
-        self._attr_native_max_value = 100
         self._charge_limit_entity = charge_limit_entity
         super().__init__(data, CHARGE_ON_SOLAR_LOWER_LIMIT_KEY)
+
+    @property
+    @override
+    def native_max_value(self) -> float:
+        """Mirror the live charge limit entity so the two can never disagree."""
+        value = self._charge_limit_entity.native_value
+        return value if value is not None else 100
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -385,16 +391,15 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
         await super().async_added_to_hass()
 
         value = CHARGE_ON_SOLAR_LOWER_LIMIT_DEFAULT
-        if (last_state := await self.async_get_last_state()) and (
-            last_number_data := await self.async_get_last_number_data()
-        ):
-            if (
+        if (
+            (last_state := await self.async_get_last_state())
+            and (last_number_data := await self.async_get_last_number_data())
+            and (
                 last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
                 and last_number_data.native_value is not None
-            ):
-                value = int(last_number_data.native_value)
-            if last_number_data.native_max_value:
-                self._attr_native_max_value = last_number_data.native_max_value
+            )
+        ):
+            value = int(last_number_data.native_value)
         self._attr_native_value = value
         self.vehicle.charge_on_solar_lower_limit = value
 
@@ -414,24 +419,18 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
         )
 
     def _async_handle_coordinator_update(self) -> None:
-        """Update the upper bound from the latest polled charge limit."""
-        charge_limit = self.vehicle.coordinator.data.get(
-            "charge_state_charge_limit_soc"
-        )
-        self._async_handle_charge_limit_soc(
-            int(charge_limit) if isinstance(charge_limit, int | float) else None
-        )
+        """Re-check the stored lower limit against the latest polled charge limit."""
+        self._async_handle_charge_limit_soc(None)
 
     def _async_handle_charge_limit_soc(self, value: int | None) -> None:
-        """Cap the lower limit at the current upper (charge limit SOC) value."""
-        upper_limit = value if value is not None else 100
-        self._attr_native_max_value = upper_limit
+        """Cap the stored lower limit if the upper (charge limit SOC) value dropped below it."""
+        upper_limit = self.native_max_value
         if (
             self._attr_native_value is not None
             and self._attr_native_value > upper_limit
         ):
-            self._attr_native_value = upper_limit
-            self.vehicle.charge_on_solar_lower_limit = upper_limit
+            self._attr_native_value = int(upper_limit)
+            self.vehicle.charge_on_solar_lower_limit = int(upper_limit)
         self.async_write_ha_state()
 
     @override
