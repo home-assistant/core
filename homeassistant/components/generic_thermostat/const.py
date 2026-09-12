@@ -34,6 +34,10 @@ CONF_PRESETS = {
         PRESET_ACTIVITY,
     )
 }
+CONF_PRECISION = "precision"
 CONF_SENSOR = "target_sensor"
 CONF_KEEP_ALIVE = "keep_alive"
+CONF_TEMP_STEP = "target_temp_step"
+DEFAULT_PRECISION = "0.1"
+DEFAULT_TEMP_STEP = "0.5"
 DEFAULT_TOLERANCE = 0.3
