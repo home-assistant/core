@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Final, override
+from typing import Any, Final, override
 
 from sma_modbus import DeviceType
 from sma_modbus.home_manager import SystemStatus
@@ -516,12 +516,14 @@ class SmaSensor(SmaEntity, SensorEntity):
 
     def _read_value(self) -> StateType:
         """Read the field value from the device component."""
-        value = getattr(self.device, self.entity_description.key)
+        value: Any = getattr(self.device, self.entity_description.key)
         if isinstance(value, IntEnum):
             return value.name.lower()
         if isinstance(value, float):
             return round(value, 4)
-        return value
+        if isinstance(value, int | str | type(None)):
+            return value
+        return None
 
     @callback
     @override
