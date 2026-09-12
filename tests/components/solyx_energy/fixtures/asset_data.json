@@ -1,0 +1,6 @@
+{
+  "attributes": {
+    "boilerPower": { "value": 1234.0 },
+    "gridPower": { "value": -100.0 }
+  }
+}
