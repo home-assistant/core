@@ -1,5 +1,6 @@
 """Support for SleepIQ from SleepNumber."""
 
+import asyncio
 import logging
 from typing import Any
 
@@ -64,6 +65,48 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _serialize_login(gateway: AsyncSleepIQ) -> None:
+    """Wrap gateway.login so concurrent callers don't race.
+
+    The asyncsleepiq library retries a 401 by calling login() internally.
+    Three coordinators share one client, so an expired API key can trigger
+    three simultaneous logins. Each login issues a new key and invalidates
+    the previous one, so the last caller wins and the others retry with a
+    stale key, producing a cascading 401 storm.
+
+    The wrapper serializes login() with an asyncio.Lock and tracks a
+    generation counter. A caller that enters the lock after another caller
+    already completed skips the redundant login: on success it returns
+    immediately (the key is already fresh), on failure it re-raises the
+    cached exception so bad credentials don't trigger repeated attempts.
+    """
+    lock = asyncio.Lock()
+    generation = 0
+    last_error: BaseException | None = None
+    original_login = gateway.login
+
+    async def _locked_login(
+        email: str | None = None, password: str | None = None
+    ) -> None:
+        nonlocal generation, last_error
+        gen_at_entry = generation
+        async with lock:
+            if generation != gen_at_entry:
+                if last_error is not None:
+                    raise last_error
+                return
+            try:
+                await original_login(email, password)
+                last_error = None
+                generation += 1
+            except Exception as err:
+                last_error = err
+                generation += 1
+                raise
+
+    gateway.login = _locked_login  # type: ignore[method-assign]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> bool:
     """Set up the SleepIQ config entry."""
     conf = entry.data
@@ -73,6 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
     client_session = async_create_clientsession(hass)
 
     gateway = AsyncSleepIQ(client_session=client_session)
+    _serialize_login(gateway)
 
     try:
         await gateway.login(email, password)
