@@ -14,7 +14,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.duco.const import BOX_NODE_ID, SCAN_INTERVAL
+from homeassistant.components.duco.const import BOX_NODE_ID
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     STATE_OFF,
@@ -26,9 +26,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_platform_integration
+from . import async_fire_coordinator_update, setup_platform_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 VENTILATION_PROBLEM_ENTITY_ID = "binary_sensor.living_ventilation"
 
@@ -36,13 +36,6 @@ DIAGNOSTIC_ERROR_TYPES = [
     pytest.param(DucoConnectionError, id="connection_error"),
     pytest.param(DucoError, id="duco_error"),
 ]
-
-
-async def _async_refresh(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-    """Trigger a coordinator refresh."""
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_diagnostic_binary_sensor_entity_registry_defaults(
@@ -144,7 +137,7 @@ async def test_diagnostic_binary_sensors_added_after_initial_empty_response(
         diagnostic_subsystems=(DiagComponent(component="Ventilation", status="Error"),)
     )
 
-    await _async_refresh(hass, freezer)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_ON)
 
@@ -155,7 +148,7 @@ async def test_diagnostic_binary_sensors_added_after_initial_empty_response(
         )
     )
 
-    await _async_refresh(hass, freezer)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert hass.states.is_state("binary_sensor.living_filter", STATE_OFF)
 
@@ -178,7 +171,7 @@ async def test_diagnostic_binary_sensors_wait_for_box_node(
     assert hass.states.get(VENTILATION_PROBLEM_ENTITY_ID) is None
 
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-    await _async_refresh(hass, freezer)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_OFF)
 
@@ -209,7 +202,7 @@ async def test_diagnostic_binary_sensor_becomes_unknown_without_known_status(
         diagnostic_subsystems=diagnostic_subsystems
     )
 
-    await _async_refresh(hass, freezer)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_UNKNOWN)
 
@@ -233,13 +226,13 @@ async def test_diagnostics_refresh_failure_is_isolated_and_recovers(
 
     mock_duco_client.async_get_diagnostics_info.side_effect = exception_type("error")
 
-    await _async_refresh(hass, freezer)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_UNAVAILABLE)
     assert hass.states.is_state("sensor.office_co2_carbon_dioxide", "405")
 
     mock_duco_client.async_get_diagnostics_info.side_effect = None
-    await _async_refresh(hass, freezer)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_OFF)
 
@@ -266,7 +259,7 @@ async def test_initial_diagnostics_failure_is_isolated_and_recovers(
     assert hass.states.is_state("sensor.office_co2_carbon_dioxide", "405")
 
     mock_duco_client.async_get_diagnostics_info.side_effect = None
-    await _async_refresh(hass, freezer)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert hass.states.is_state(VENTILATION_PROBLEM_ENTITY_ID, STATE_OFF)
 
@@ -283,11 +276,11 @@ async def test_diagnostics_availability_transitions_logged(
     mock_duco_client.async_get_diagnostics_info.side_effect = DucoError("error")
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
-    await _async_refresh(hass, freezer)
+    await async_fire_coordinator_update(hass, freezer)
 
     mock_duco_client.async_get_diagnostics_info.side_effect = None
-    await _async_refresh(hass, freezer)
-    await _async_refresh(hass, freezer)
+    await async_fire_coordinator_update(hass, freezer)
+    await async_fire_coordinator_update(hass, freezer)
 
     assert [
         record.message
