@@ -137,6 +137,10 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Process an action on the light."""
+        if not kwargs:
+            await self._device.turn_on()
+            return
+
         converted_brightness: int | None = None
         converted_color_temp: int | None = None
         rgb: tuple[int, int, int] | None = None
