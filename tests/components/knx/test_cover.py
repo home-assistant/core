@@ -1,7 +1,11 @@
 """Test KNX cover."""
 
+from datetime import timedelta
+import logging
 from typing import Any
+from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.cover import (
@@ -10,7 +14,8 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.components.knx.const import CONF_SYNC_STATE
+from homeassistant.components.knx.const import CONF_SYNC_STATE, CoverConf
+from homeassistant.components.knx.cover import POSITION_SEND_COOLDOWN
 from homeassistant.components.knx.schema import CoverSchema
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.const import (
@@ -26,8 +31,13 @@ from homeassistant.util import dt as dt_util
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
-from tests.common import async_capture_events, mock_restore_cache
+from tests.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    mock_restore_cache,
+)
 from tests.components.recorder.common import async_wait_recording_done
+from tests.typing import WebSocketGenerator
 
 
 async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -470,3 +480,290 @@ async def test_cover_ui_load(knx: KNXTestKit) -> None:
         | CoverEntityFeature.STOP
         | CoverEntityFeature.STOP_TILT,
     )
+
+
+async def test_cover_position_state_send(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test publishing the calculated position instead of listening on the address."""
+    mock_restore_cache(
+        hass,
+        (State("cover.test", CoverState.OPEN, {ATTR_CURRENT_POSITION: 80}),),
+    )
+    await knx.setup_integration(
+        {
+            CoverSchema.PLATFORM: {
+                CONF_NAME: "test",
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                CoverConf.POSITION_STATE_SEND: True,
+                CoverConf.TRAVELLING_TIME_UP: 10,
+                CoverConf.TRAVELLING_TIME_DOWN: 10,
+            }
+        }
+    )
+    # the restored position is published so a display can be answered before the
+    # first travel - 80 % open is 20 % for KNX, 51 of 255
+    await knx.assert_write("1/0/2", (0x33,))
+    # Home Assistant is the sender here, so the address is never read
+    await knx.assert_no_telegram()
+
+    # a display asking for the position is answered from the published value -
+    # that is what the publisher's respond_to_read is for
+    await knx.receive_read("1/0/2")
+    await knx.assert_response("1/0/2", (0x33,))
+
+    await hass.services.async_call(
+        "cover", "close_cover", {"entity_id": "cover.test"}, blocking=True
+    )
+    await knx.assert_write("1/0/0", True)
+
+
+async def test_cover_position_state_send_restored_position_only_once(
+    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the restored position is published once, not again after the cooldown.
+
+    The cooldown task compares against the remote value's `last_payload`, which is
+    only updated once the outgoing telegram has been processed. During startup that
+    can lag past the cooldown, and the seeded position would go out a second time.
+    """
+    mock_restore_cache(
+        hass,
+        (State("cover.test", CoverState.OPEN, {ATTR_CURRENT_POSITION: 80}),),
+    )
+    # a cooldown is needed here: with zero xknx creates no cooldown task at all,
+    # and it is exactly that task which used to send the duplicate
+    await knx.setup_integration(
+        {
+            CoverSchema.PLATFORM: {
+                CONF_NAME: "test",
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                CoverConf.POSITION_STATE_SEND: True,
+            }
+        }
+    )
+    await knx.assert_write("1/0/2", (0x33,))
+
+    freezer.tick(timedelta(seconds=POSITION_SEND_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
+
+
+async def test_cover_position_state_send_inverted(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test the published value follows invert_position.
+
+    The travel calculator counts 0 as open. With invert_position the group address
+    counts the other way round, which xknx normally handles in the RemoteValueScaling
+    ranges - the publishing device does not use those.
+    """
+    mock_restore_cache(
+        hass,
+        (State("cover.test", CoverState.OPEN, {ATTR_CURRENT_POSITION: 80}),),
+    )
+    await knx.setup_integration(
+        {
+            CoverSchema.PLATFORM: {
+                CONF_NAME: "test",
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                CoverConf.POSITION_STATE_SEND: True,
+                CoverConf.INVERT_POSITION: True,
+            }
+        }
+    )
+    # 80 % open is 20 % for the travel calculator - an inverted actuator expects 204
+    await knx.assert_write("1/0/2", (0xCC,))
+
+
+async def test_cover_position_state_send_is_not_a_state_address(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test a telegram on the address does not update the position.
+
+    This is what caused a feedback loop with a manual `expose` configuration: Home
+    Assistant read its own telegram back as actuator feedback.
+    """
+    mock_restore_cache(
+        hass,
+        (State("cover.test", CoverState.OPEN, {ATTR_CURRENT_POSITION: 80}),),
+    )
+    await knx.setup_integration(
+        {
+            CoverSchema.PLATFORM: {
+                CONF_NAME: "test",
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                CoverConf.POSITION_STATE_SEND: True,
+            }
+        }
+    )
+    await knx.assert_write("1/0/2", (0x33,))
+
+    await knx.receive_write("1/0/2", (0xFF,))
+    state = hass.states.get("cover.test")
+    assert state.attributes[ATTR_CURRENT_POSITION] == 80
+
+
+async def test_cover_position_state_send_requires_address(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, knx: KNXTestKit
+) -> None:
+    """Test position_state_send without a position state address is rejected."""
+    with caplog.at_level(logging.ERROR):
+        await knx.setup_integration(
+            {
+                CoverSchema.PLATFORM: {
+                    CONF_NAME: "test",
+                    CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                    CoverConf.POSITION_STATE_SEND: True,
+                }
+            }
+        )
+    assert "Invalid config for 'knx'" in caplog.text
+    assert hass.states.get("cover.test") is None
+
+
+async def test_cover_ui_position_state_send(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test publishing the position for a cover created from the UI."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.COVER,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_up_down": {"write": "1/0/0"},
+            "ga_position_state": {"state": "1/0/2"},
+            CoverConf.POSITION_STATE_SEND: True,
+            CoverConf.TRAVELLING_TIME_UP: 10,
+            CoverConf.TRAVELLING_TIME_DOWN: 10,
+        },
+    )
+    # the address is published to, so it is not read on creation
+    await knx.assert_no_telegram()
+
+    # and it is not a state address either - a telegram must not set the position
+    await knx.receive_write("1/0/2", (0xFF,))
+    state = hass.states.get("cover.test")
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+
+
+async def test_cover_ui_position_state_send_requires_address(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the UI schema rejects position_state_send without a position state address."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "knx/validate_entity",
+            "platform": Platform.COVER,
+            "data": {
+                "entity": {"name": "test"},
+                "knx": {
+                    "ga_up_down": {"write": "1/0/0"},
+                    CoverConf.POSITION_STATE_SEND: True,
+                    CoverConf.TRAVELLING_TIME_UP: 10,
+                    CoverConf.TRAVELLING_TIME_DOWN: 10,
+                },
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    assert res["result"]["error_base"].startswith(
+        "'Actively send the calculated position' requires a"
+        " 'Current position' group address."
+    )
+
+
+async def test_cover_position_state_send_while_travelling(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test the position is published when the travel calculator advances."""
+    mock_restore_cache(
+        hass,
+        (State("cover.test", CoverState.OPEN, {ATTR_CURRENT_POSITION: 80}),),
+    )
+    # no send cooldown here: xknx creates no cooldown task for 0, so the publish is
+    # immediate and the test does not have to wait for real time to pass
+    with patch("homeassistant.components.knx.cover.POSITION_SEND_COOLDOWN", 0):
+        await knx.setup_integration(
+            {
+                CoverSchema.PLATFORM: {
+                    CONF_NAME: "test",
+                    CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                    CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                    CoverConf.POSITION_STATE_SEND: True,
+                    CoverConf.TRAVELLING_TIME_UP: 10,
+                    CoverConf.TRAVELLING_TIME_DOWN: 10,
+                }
+            }
+        )
+    await knx.assert_write("1/0/2", (0x33,))
+
+    # the travel calculator is driven by xknx in the background, so advance it here
+    device = knx.xknx.devices["test"]
+    device.travelcalculator.set_position(60)
+    device.after_update()
+    await hass.async_block_till_done()
+    await knx.assert_write("1/0/2", (0x99,))
+
+    # standing still does not publish again
+    device.after_update()
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
+
+
+async def test_cover_position_state_send_address_is_mapped_to_entity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test the publisher address is registered for the cover entity.
+
+    The publisher is a separate xknx device, so its address is not part of the
+    cover device's `group_addresses()` that the base entity registers. Without
+    an explicit registration `knx/get_entities_by_group` would omit a configured
+    address and DataSecure issues on it would be dropped as unconfigured.
+    """
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    test_entity = await create_ui_entity(
+        platform=Platform.COVER,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_up_down": {"write": "1/0/0"},
+            "ga_position_state": {"state": "1/0/2"},
+            CoverConf.POSITION_STATE_SEND: True,
+            CoverConf.TRAVELLING_TIME_UP: 10,
+            CoverConf.TRAVELLING_TIME_DOWN: 10,
+        },
+    )
+    await knx.assert_no_telegram()
+
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    group_mapping = res["result"]
+    assert "1/0/2" in group_mapping
+    assert group_mapping["1/0/2"][0]["unique_id"] == test_entity.unique_id
+
+    # and it is unregistered again with the entity
+    await client.send_json_auto_id(
+        {"type": "knx/delete_entity", "entity_id": test_entity.entity_id}
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert "1/0/2" not in res["result"]

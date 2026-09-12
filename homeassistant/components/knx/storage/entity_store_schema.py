@@ -253,6 +253,9 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
             probatio.Optional(CONF_GA_POSITION_STATE): GASelector(
                 write=False, valid_dpt="5.001"
             ),
+            probatio.Optional(
+                CoverConf.POSITION_STATE_SEND, default=False
+            ): selector.BooleanSelector(),
             probatio.Optional(CoverConf.INVERT_POSITION): selector.BooleanSelector(),
             "section_tilt_control": KNXSectionFlat(collapsible=True),
             probatio.Optional(CONF_GA_ANGLE): GASelector(valid_dpt="5.001"),
@@ -296,6 +299,24 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
         msg=(
             "At least one of 'Open/Close control' or"
             " 'Position - Set position' is required."
+        ),
+    ),
+    probatio.Any(
+        probatio.Schema(
+            {probatio.Required(CoverConf.POSITION_STATE_SEND): False},
+            extra=probatio.ALLOW_EXTRA,
+        ),
+        probatio.Schema(
+            {
+                probatio.Required(CONF_GA_POSITION_STATE): GASelector(
+                    write=False, state_required=True
+                )
+            },
+            extra=probatio.ALLOW_EXTRA,
+        ),
+        msg=(
+            "'Actively send the calculated position' requires a"
+            " 'Current position' group address."
         ),
     ),
 )
