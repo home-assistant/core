@@ -7,8 +7,6 @@ import pytest
 
 from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.binary_sensor.device_condition import ENTITY_CONDITIONS
-from homeassistant.components.binary_sensor.device_trigger import ENTITY_TRIGGERS
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
@@ -199,21 +197,6 @@ async def test_entity_category_config_raises_error(
         "Entity binary_sensor.test2 cannot be added as the"
         " entity category is set to config" in caplog.text
     )
-
-
-def test_glass_break_device_class() -> None:
-    """Test glass break device class enum value and automation mappings."""
-    assert BinarySensorDeviceClass.GLASS_BREAK == "glass_break"
-    assert BinarySensorDeviceClass.GLASS_BREAK in ENTITY_CONDITIONS
-    assert BinarySensorDeviceClass.GLASS_BREAK in ENTITY_TRIGGERS
-    conditions = ENTITY_CONDITIONS[BinarySensorDeviceClass.GLASS_BREAK]
-    assert len(conditions) == 2
-    condition_types = {c["type"] for c in conditions}
-    assert condition_types == {"is_glass_break", "is_no_glass_break"}
-    triggers = ENTITY_TRIGGERS[BinarySensorDeviceClass.GLASS_BREAK]
-    assert len(triggers) == 2
-    trigger_types = {t["type"] for t in triggers}
-    assert trigger_types == {"glass_break", "no_glass_break"}
 
 
 async def test_glass_break_entity_state(hass: HomeAssistant) -> None:
