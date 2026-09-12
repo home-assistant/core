@@ -52,8 +52,8 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Z-Wave',
-    'model': 'aeotec-home-energy-meter-gen5',
+    'manufacturer': None,
+    'model': None,
     'model_id': None,
     'name': 'Aeotec Energy Monitor',
     'name_by_user': None,
@@ -82,8 +82,8 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Z-Wave',
-    'model': 'aeotec-ms6',
+    'manufacturer': None,
+    'model': None,
     'model_id': None,
     'name': "Parent's Bedroom Sensor",
     'name_by_user': None,
@@ -163,7 +163,7 @@
     'labels': set({
     }),
     'manufacturer': 'IKEA of Sweden',
-    'model': 'humidity-temp-dust-tvoc',
+    'model': None,
     'model_id': None,
     'name': 'aq-sensor-3-ikea',
     'name_by_user': None,
@@ -252,8 +252,8 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Z-Wave',
-    'model': 'base-electric-meter',
+    'manufacturer': None,
+    'model': None,
     'model_id': None,
     'name': 'Aeon Energy Monitor',
     'name_by_user': None,
@@ -377,7 +377,7 @@
     'labels': set({
     }),
     'manufacturer': 'CentraLite',
-    'model': 'plug-level-power',
+    'model': None,
     'model_id': None,
     'name': 'Dimmer Debian',
     'name_by_user': None,
@@ -411,7 +411,7 @@
     'labels': set({
     }),
     'manufacturer': 'Visonic',
-    'model': 'contact-profile',
+    'model': None,
     'model_id': None,
     'name': '.Front Door Open/Closed Sensor',
     'name_by_user': None,
@@ -1760,8 +1760,8 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Z-Wave',
-    'model': 'fake-fan',
+    'manufacturer': None,
+    'model': None,
     'model_id': None,
     'name': 'Fake fan',
     'name_by_user': None,
@@ -1790,8 +1790,8 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Z-Wave',
-    'model': 'fibaro-dimmer-2',
+    'manufacturer': None,
+    'model': None,
     'model_id': None,
     'name': 'Dimmer entré 1 1',
     'name_by_user': None,
@@ -1825,7 +1825,7 @@
     'labels': set({
     }),
     'manufacturer': '_TZE284_chbyv06x',
-    'model': 'generic-ef00-v1',
+    'model': None,
     'model_id': None,
     'name': 'Gas Detector',
     'name_by_user': None,
@@ -1884,8 +1884,8 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Z-Wave',
-    'model': 'GE Dimmer Switch',
+    'manufacturer': None,
+    'model': None,
     'model_id': None,
     'name': 'Basement Exit Light',
     'name_by_user': None,
@@ -1919,7 +1919,7 @@
     'labels': set({
     }),
     'manufacturer': '_TZE200_rxntag7i',
-    'model': 'generic-ef00-v1',
+    'model': None,
     'model_id': None,
     'name': 'Thermostat Küche',
     'name_by_user': None,
@@ -1948,8 +1948,8 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Z-Wave',
-    'model': 'GE In-Wall Smart Dimmer',
+    'manufacturer': None,
+    'model': None,
     'model_id': None,
     'name': 'Bedroom Fan',
     'name_by_user': None,
@@ -1978,8 +1978,8 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Z-Wave',
-    'model': 'heatit-zpushwall',
+    'manufacturer': None,
+    'model': None,
     'model_id': None,
     'name': 'Livingroom smart switch',
     'name_by_user': None,
@@ -2008,8 +2008,8 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Z-Wave',
-    'model': 'heatit-ztrm3-thermostat',
+    'manufacturer': None,
+    'model': None,
     'model_id': None,
     'name': 'Hall thermostat',
     'name_by_user': None,
@@ -2133,7 +2133,7 @@
     'labels': set({
     }),
     'manufacturer': 'IKEA of Sweden',
-    'model': 'window-treatment-battery',
+    'model': None,
     'model_id': None,
     'name': 'Kitchen IKEA KADRILJ Window blind',
     'name_by_user': None,
@@ -2227,7 +2227,7 @@
     'labels': set({
     }),
     'manufacturer': 'IKEA of Sweden',
-    'model': 'switch-dimmer-power-energy',
+    'model': None,
     'model_id': None,
     'name': 'IKEA Plug Powermeter',
     'name_by_user': None,
@@ -2351,7 +2351,7 @@
     'labels': set({
     }),
     'manufacturer': 'LUMI',
-    'model': 'temp-humid-press-therm-battery-05',
+    'model': None,
     'model_id': None,
     'name': 'Outdoor Temp',
     'name_by_user': None,
@@ -2415,7 +2415,7 @@
     'labels': set({
     }),
     'manufacturer': 'SmartThings',
-    'model': 'Multipurpose Sensor',
+    'model': None,
     'model_id': None,
     'name': 'Deck Door',
     'name_by_user': None,
@@ -2539,7 +2539,7 @@
     'labels': set({
     }),
     'manufacturer': 'LEDVANCE',
-    'model': 'SYLVANIA SMART+ Smart Plug',
+    'model': None,
     'model_id': None,
     'name': 'Arlo Beta Basestation',
     'name_by_user': None,
@@ -2873,7 +2873,7 @@
     'labels': set({
     }),
     'manufacturer': 'Yale',
-    'model': 'Yale Push Button Deadbolt Lock',
+    'model': None,
     'model_id': None,
     'name': 'Basement Door Lock',
     'name_by_user': None,
