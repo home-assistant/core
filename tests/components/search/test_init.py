@@ -1,6 +1,7 @@
 """Tests for Search integration."""
 
 import attr
+import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components.search import DOMAIN, ItemType, Searcher
@@ -1359,3 +1360,95 @@ async def test_search_child_devices(
         ItemType.CONFIG_ENTRY: {config_entry.entry_id},
         ItemType.INTEGRATION: {"test"},
     }
+
+
+ALL_ENTITIES = {
+    "light.enabled",
+    "light.disabled",
+    "light.disabled_area_override",
+    "light.child_enabled",
+    "light.child_disabled",
+}
+PARENT_DEVICE_DEFAULT = {"light.enabled", "light.child_enabled"}
+AREA_DEFAULT = {"light.enabled", "light.disabled_area_override", "light.child_enabled"}
+
+
+@pytest.mark.parametrize(
+    ("item_type", "item_key", "expected_default", "expected_included"),
+    [
+        pytest.param(
+            ItemType.DEVICE, "device", PARENT_DEVICE_DEFAULT, ALL_ENTITIES, id="device"
+        ),
+        pytest.param(
+            ItemType.DEVICE,
+            "child_device",
+            {"light.child_enabled"},
+            {"light.child_enabled", "light.child_disabled"},
+            id="child_device",
+        ),
+        pytest.param(ItemType.AREA, "area", AREA_DEFAULT, ALL_ENTITIES, id="area"),
+        pytest.param(ItemType.FLOOR, "floor", AREA_DEFAULT, ALL_ENTITIES, id="floor"),
+    ],
+)
+async def test_search_include_disabled_entities(
+    hass: HomeAssistant,
+    search_item_ids: dict[str, str],
+    item_type: ItemType,
+    item_key: str,
+    expected_default: set[str],
+    expected_included: set[str],
+) -> None:
+    """Test disabled entities are only returned when explicitly requested.
+
+    A child device is searched both directly and through the area and floor it
+    inherits from its parent. Searching the child does not return the parent's
+    entities, because the parent is only resolved up.
+    """
+    item_id = search_item_ids[item_key]
+
+    searcher = Searcher(hass, {})
+    assert (
+        searcher.async_search(item_type, item_id)[ItemType.ENTITY] == expected_default
+    )
+
+    searcher = Searcher(hass, {}, include_disabled_entities=True)
+    assert (
+        searcher.async_search(item_type, item_id)[ItemType.ENTITY] == expected_included
+    )
+
+
+@pytest.mark.parametrize(
+    ("extra_msg", "expected"),
+    [
+        pytest.param({}, PARENT_DEVICE_DEFAULT, id="key_omitted"),
+        pytest.param(
+            {"include_disabled_entities": False},
+            PARENT_DEVICE_DEFAULT,
+            id="explicit_false",
+        ),
+        pytest.param(
+            {"include_disabled_entities": True}, ALL_ENTITIES, id="explicit_true"
+        ),
+    ],
+)
+async def test_search_related_include_disabled_entities_websocket(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    search_item_ids: dict[str, str],
+    extra_msg: dict[str, bool],
+    expected: set[str],
+) -> None:
+    """Test the websocket command accepts the new option, and defaults it to False."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "search/related",
+            "item_type": "device",
+            "item_id": search_item_ids["device"],
+        }
+        | extra_msg
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"][ItemType.ENTITY] == unordered(list(expected))
