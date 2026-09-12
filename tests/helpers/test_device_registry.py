@@ -8384,23 +8384,128 @@ async def test_device_registry_deleted_device_collision(
     assert len(device_registry._deleted_devices) == 0
 
 
+@pytest.mark.parametrize(
+    ("initial", "update"),
+    [
+        pytest.param(
+            {
+                "connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+                "identifiers": {("bridgeid", "0123")},
+            },
+            {"new_connections": set(), "new_identifiers": set()},
+            id="clear_both",
+        ),
+        pytest.param(
+            {"identifiers": {("bridgeid", "0123")}},
+            {"new_identifiers": set()},
+            id="clear_only_identifiers_of_identifier_only_device",
+        ),
+        pytest.param(
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}},
+            {"new_connections": set()},
+            id="clear_only_connections_of_connection_only_device",
+        ),
+    ],
+)
 async def test_update_device_no_connections_or_identifiers(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    initial: dict[str, set[tuple[str, str]]],
+    update: dict[str, set[tuple[str, str]]],
+) -> None:
+    """Test an update leaving a device with no identity is rejected.
+
+    Clearing the last identity side would leave a device that can never be restored
+    once deleted, so it must be rejected whether both sides are cleared at once or one
+    side is cleared while the other is already empty.
+    """
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, **initial
+    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="A device must have at least one of identifiers or connections",
+    ):
+        device_registry.async_update_device(device.id, **update)
+
+    assert device_registry.async_get(device.id) == device
+    assert len(device_registry._deleted_devices) == 0
+
+
+async def test_update_device_can_clear_one_identity_side(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test clearing one identity side is allowed while the other remains."""
+    # Stored MAC connections are normalized to lowercase
+    connection = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+    identifier = ("bridgeid", "0123")
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={connection},
+        identifiers={identifier},
+    )
+
+    updated = device_registry.async_update_device(device.id, new_identifiers=set())
+    assert updated.identifiers == set()
+    assert updated.connections == {connection}
+
+    # Dropping all connections is allowed while an identifier remains
+    updated = device_registry.async_update_device(
+        device.id, new_identifiers={identifier}, new_connections=set()
+    )
+    assert updated.connections == set()
+    assert updated.identifiers == {identifier}
+
+
+async def test_update_device_empty_identity_rejected_before_mutation(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test updating a device clearing connections and identifiers."""
-    mock_config_entry = MockConfigEntry(domain="mqtt", title=None)
-    mock_config_entry.add_to_hass(hass)
+    """Test the empty-identity rejection runs before any sibling state is mutated.
 
-    device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        identifiers={("bridgeid", "0123")},
+    Completing a composite split's move clears its siblings' pending moves. An update
+    combining that move with an identity-emptying replacement must reject before that
+    mutation, so the rejected update leaves no partial state behind.
+    """
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry(domain="test")
+    entry_3.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
     )
-    with pytest.raises(HomeAssistantError):
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate two migration splits of one composite, each with a pending move to entry_3
+    pending_move = dr._PendingMove(entry_3.entry_id, None, None)
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id, pending_move=pending_move
+    )
+    device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id, pending_move=pending_move
+    )
+
+    # Removing device_1's owning entry completes its pending move (which would clear the
+    # sibling's pending move) while new_identifiers=set() empties its identity
+    with pytest.raises(
+        HomeAssistantError,
+        match="A device must have at least one of identifiers or connections",
+    ):
         device_registry.async_update_device(
-            device.id, new_connections=set(), new_identifiers=set()
+            device_1.id,
+            remove_config_entry_id=entry_1.entry_id,
+            new_identifiers=set(),
         )
+
+    # device_1 is untouched, and the sibling's pending move survives the rejected update
+    assert device_registry._devices[device_1.id].config_entry_id == entry_1.entry_id
+    assert device_registry._devices[device_1.id].identifiers == {("test", "1")}
+    assert device_registry._devices[device_2.id]._pending_move == pending_move
 
 
 async def test_connections_validator() -> None:
@@ -9902,6 +10007,44 @@ async def test_async_get_returns_restored_composite(
     )
 
 
+async def test_is_composite_device_main_and_child(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A plain main device and a child device are not composites."""
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    assert parent.is_composite_device is False
+    assert child_device.is_composite_device is False
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_is_composite_device_restored_composite(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A restored composite reports is_composite_device True."""
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    hass_storage[dr.STORAGE_KEY] = _composite_device_storage(entry_a, entry_b)
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    device_registry = dr.async_get(hass)
+
+    composite = device_registry.async_get(COMPOSITE_ID)
+    assert composite is not None
+    assert composite.is_composite_device is True
+    # The split devices the composite was restored from are not composites
+    split_a = _get_device_for_config_entry(
+        device_registry, entry_a.entry_id, identifiers={("domain_a", "1")}
+    )
+    assert split_a.is_composite_device is False
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_restored_composite_preserves_primary_config_entry(
     hass: HomeAssistant, hass_storage: dict[str, Any]
@@ -10039,6 +10182,137 @@ async def test_async_get_device_and_config_entry_for_domain_composite(
     assert device is not None
     assert device.id == COMPOSITE_ID
     assert device.config_entries == {entry_a.entry_id, entry_b.entry_id}
+
+
+async def test_async_get_device_and_config_entry_for_domain_child_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test getting the device and config entry of a domain owning a child device."""
+    entry = MockConfigEntry(domain="domain_a")
+    entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("domain_a", "1")}
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("domain_a", "1_1")},
+        parent_device_id=parent.id,
+    )
+
+    # A child device is paired with the entry owning it
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, child.id, domain="domain_a"
+    ) == (child, entry)
+    # A domain not owning the child still gets the child
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, child.id, domain="domain_b"
+    ) == (child, None)
+    # With include_child_devices=False the child is treated as absent
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, child.id, domain="domain_a", include_child_devices=False
+    ) == (None, None)
+    # A main device is unaffected by include_child_devices
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, parent.id, domain="domain_a"
+    ) == (parent, entry)
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, parent.id, domain="domain_a", include_child_devices=False
+    ) == (parent, entry)
+    # An unknown device id
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, "unknown_id", domain="domain_a"
+    ) == (None, None)
+
+
+async def test_async_get_device_and_config_entry_for_domain_no_main_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test getting the device and config entry with main devices excluded."""
+    entry = MockConfigEntry(domain="domain_a")
+    entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("domain_a", "1")}
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("domain_a", "1_1")},
+        parent_device_id=parent.id,
+    )
+
+    # A main device is not resolved
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, parent.id, domain="domain_a", include_main_devices=False
+    ) == (None, None)
+    # A child-only lookup resolves the child
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, child.id, domain="domain_a", include_main_devices=False
+    ) == (child, entry)
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, child.id, domain="domain_b", include_main_devices=False
+    ) == (child, None)
+    # Neither main nor child devices are resolved with both flags off
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass,
+        child.id,
+        domain="domain_a",
+        include_child_devices=False,
+        include_main_devices=False,
+    ) == (None, None)
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass,
+        parent.id,
+        domain="domain_a",
+        include_child_devices=False,
+        include_main_devices=False,
+    ) == (None, None)
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_async_get_device_and_config_entry_for_domain_composite_flags(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test the include_* flags for a composite device id."""
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    hass_storage[dr.STORAGE_KEY] = _composite_device_storage(entry_a, entry_b)
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    device_registry = dr.async_get(hass)
+
+    split_a = _get_device_for_config_entry(
+        device_registry, entry_a.entry_id, identifiers={("domain_a", "1")}
+    )
+
+    # A composite device id resolves to the domain's split regardless of
+    # include_child_devices
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, COMPOSITE_ID, domain="domain_a", include_child_devices=False
+    ) == (split_a, entry_a)
+    # A domain owning none of the splits still gets the restored composite
+    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, COMPOSITE_ID, domain="domain_c", include_child_devices=False
+    )
+    assert config_entry is None
+    assert device is not None
+    assert device.id == COMPOSITE_ID
+    # A composite device and its splits are main devices: include_main_devices=False
+    # suppresses both the split lookup and the restored composite
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, COMPOSITE_ID, domain="domain_a", include_main_devices=False
+    ) == (None, None)
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, COMPOSITE_ID, domain="domain_c", include_main_devices=False
+    ) == (None, None)
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass,
+        COMPOSITE_ID,
+        domain="domain_a",
+        include_child_devices=False,
+        include_main_devices=False,
+    ) == (None, None)
 
 
 @pytest.mark.parametrize("load_registries", [False])
