@@ -506,6 +506,11 @@ async def test_cover_position_state_send(hass: HomeAssistant, knx: KNXTestKit) -
     # Home Assistant is the sender here, so the address is never read
     await knx.assert_no_telegram()
 
+    # a display asking for the position is answered from the published value -
+    # that is what the publisher's respond_to_read is for
+    await knx.receive_read("1/0/2")
+    await knx.assert_response("1/0/2", (0x33,))
+
     await hass.services.async_call(
         "cover", "close_cover", {"entity_id": "cover.test"}, blocking=True
     )
