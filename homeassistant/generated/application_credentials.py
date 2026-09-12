@@ -11,6 +11,7 @@ APPLICATION_CREDENTIALS = [
     "electric_kiwi",
     "fitbit",
     "gentex_homelink",
+    "gentex_place",
     "geocaching",
     "google",
     "google_assistant_sdk",
