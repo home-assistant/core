@@ -10,6 +10,7 @@ from nexia.thermostat import NexiaThermostat
 from nexia.zone import NexiaThermostatZone
 import pytest
 
+from homeassistant.components.nexia.config_flow import NexiaConfigFlow
 from homeassistant.components.nexia.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -410,7 +411,8 @@ async def setup_integration(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"},
-        minor_version=2,
+        version=NexiaConfigFlow.VERSION,
+        minor_version=NexiaConfigFlow.MINOR_VERSION,
         unique_id=unique_id,
     )
     entry.add_to_hass(hass)
