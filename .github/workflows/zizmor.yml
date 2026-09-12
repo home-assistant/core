@@ -1,0 +1,101 @@
+name: Zizmor GitHub Actions security analysis
+
+# Audits GitHub Actions changes on pull requests and publishes accepted-code
+# findings to GitHub Code scanning.
+
+"on":
+  push:
+    branches:
+      - dev
+      - rc
+      - master
+    paths:
+      - .github/actions/**
+      - .github/dependabot.yaml
+      - .github/dependabot.yml
+      - .github/workflows/**
+      - .github/zizmor.yml
+      - .pre-commit-config.yaml
+  pull_request: ~
+  schedule:
+    # Weekly re-scan (Mondays 05:30 UTC) so the code scanning results stay fresh.
+    - cron: "30 5 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+
+jobs:
+  zizmor:
+    name: Check GitHub Actions workflows (code scanning)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read # To check out the repository
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Check for relevant changes
+        id: changes
+        shell: bash
+        run: |
+          if git diff --quiet HEAD^1 HEAD -- \
+            .github/actions \
+            .github/dependabot.yaml \
+            .github/dependabot.yml \
+            .github/workflows \
+            .github/zizmor.yml \
+            .pre-commit-config.yaml; then
+            echo "relevant=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Block medium and high pull request findings
+        if: steps.changes.outputs.relevant == 'true'
+        uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
+        with:
+          collect: all
+          persona: pedantic
+          advanced-security: false
+          annotations: true
+          config: .github/zizmor.yml
+          min-severity: medium
+          version: 1.29.0
+
+      - name: Skip scan for unrelated pull request
+        if: steps.changes.outputs.relevant == 'false'
+        run: echo "No GitHub Actions security-related files changed."
+
+  report:
+    name: Publish GitHub Actions findings (code scanning)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read # To check out the repository
+      security-events: write # To upload the SARIF results to code scanning
+      actions: read # To read workflow metadata
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Publish accepted-code findings
+        uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
+        with:
+          collect: all
+          persona: pedantic
+          advanced-security: true
+          config: .github/zizmor.yml
+          version: 1.29.0
