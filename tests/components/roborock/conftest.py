@@ -102,17 +102,22 @@ from tests.common import MockConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
+DYAD_VALUES: dict[RoborockDyadDataProtocol, Any] = {
+    RoborockDyadDataProtocol.STATUS: RoborockDyadStateCode.drying.name,
+    RoborockDyadDataProtocol.POWER: 100,
+    RoborockDyadDataProtocol.MESH_LEFT: 111,
+    RoborockDyadDataProtocol.BRUSH_LEFT: 222,
+    RoborockDyadDataProtocol.ERROR: DyadError.none.name,
+    RoborockDyadDataProtocol.TOTAL_RUN_TIME: 213,
+}
+
+
 def create_dyad_trait() -> Mock:
     """Create dyad trait for A01 devices."""
     dyad_trait = AsyncMock()
-    dyad_trait.query_values.return_value = {
-        RoborockDyadDataProtocol.STATUS: RoborockDyadStateCode.drying.name,
-        RoborockDyadDataProtocol.POWER: 100,
-        RoborockDyadDataProtocol.MESH_LEFT: 111,
-        RoborockDyadDataProtocol.BRUSH_LEFT: 222,
-        RoborockDyadDataProtocol.ERROR: DyadError.none.name,
-        RoborockDyadDataProtocol.TOTAL_RUN_TIME: 213,
-    }
+    dyad_trait.add_update_listener = Mock(return_value=Mock())
+    dyad_trait.values = dict(DYAD_VALUES)
+    dyad_trait.last_message_time = None
     return dyad_trait
 
 
@@ -261,6 +266,13 @@ def create_b01_q10_trait() -> Mock:
         Q10Room(id=9, raw_name="rr_bedroom", pixel_value=36, pixel_count=100),
         Q10Room(id=10, raw_name="rr_living_room", pixel_value=40, pixel_count=200),
     ]
+    q10_trait.map.as_dict = Mock(
+        return_value={"rooms": [room.as_dict() for room in q10_trait.map.rooms]}
+    )
+    # Mirror Q10PropertiesApi.as_dict, which only serializes RoborockBase traits.
+    q10_trait.as_dict = Mock(
+        return_value={"status": status.as_dict(), "map": q10_trait.map.as_dict()}
+    )
     return q10_trait
 
 
@@ -464,7 +476,7 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     v1_properties.device_features = make_device_features()
     _fan_speed_mapping = {m.code: m.value for m in VacuumModes}
     _water_mode_mapping = {m.code: m.value for m in WaterModes}
-    _mop_route_mapping = {m.code: m.value for m in CleanRoutes}
+    _mop_route_mapping = {m.code: m.display_name for m in CleanRoutes}
     v1_properties.status.fan_speed_options = list(VacuumModes)
     v1_properties.status.fan_speed_mapping = _fan_speed_mapping
     v1_properties.status.fan_speed_name = _fan_speed_mapping.get(STATUS.fan_power)

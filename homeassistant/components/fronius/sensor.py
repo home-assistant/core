@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final, override
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfTemperature,
 )
@@ -58,8 +59,6 @@ if TYPE_CHECKING:
 
 
 PARALLEL_UPDATES = 0
-
-ENERGY_VOLT_AMPERE_REACTIVE_HOUR: Final = "varh"
 
 
 async def async_setup_entry(
@@ -325,12 +324,12 @@ def _modbus_mppt_descriptions(
             translation_placeholders={"mppt_no": str(mppt_no)},
         ),
         FroniusSensorEntityDescription(
-            key=f"mppt_{mppt_no}_energy_dc",
+            key=f"mppt_{mppt_no}_energy",
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
             invalid_when_falsy=True,
-            translation_key="modbus_mppt_energy_dc",
+            translation_key="modbus_mppt_energy",
             translation_placeholders={"mppt_no": str(mppt_no)},
         ),
     ]
@@ -405,14 +404,14 @@ METER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
     FroniusSensorEntityDescription(
         key="energy_reactive_ac_consumed",
-        native_unit_of_measurement=ENERGY_VOLT_AMPERE_REACTIVE_HOUR,
+        native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
         invalid_when_falsy=True,
     ),
     FroniusSensorEntityDescription(
         key="energy_reactive_ac_produced",
-        native_unit_of_measurement=ENERGY_VOLT_AMPERE_REACTIVE_HOUR,
+        native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
         invalid_when_falsy=True,

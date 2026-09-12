@@ -8,7 +8,6 @@
       "invalid_zeroconf_data": "The coordinator has invalid Zeroconf service info and cannot be identified by ZHA",
       "not_zha_device": "This device is not a ZHA device",
       "reconfigure_successful": "ZHA has successfully migrated from your old adapter to the new one. Give your Zigbee network a few minutes to stabilize.\n\nIf you no longer need the old adapter, you can now unplug it.",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "usb_probe_failed": "Failed to probe the USB device",
       "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this."
     },

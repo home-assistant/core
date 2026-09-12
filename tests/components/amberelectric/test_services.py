@@ -41,8 +41,8 @@ async def test_get_general_forecasts(
     assert first["duration"] == 30
     assert first["date"] == "2021-09-21"
     assert first["nem_date"] == "2021-09-21T09:00:00+10:00"
-    assert first["per_kwh"] == 0.09
-    assert first["spot_per_kwh"] == 0.01
+    assert first["per_kwh"] == 8.8 / 100
+    assert first["spot_per_kwh"] == 1.1 / 100
     assert first["start_time"] == "2021-09-21T08:30:00+10:00"
     assert first["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first["renewables"] == 50
@@ -73,8 +73,8 @@ async def test_get_controlled_load_forecasts(
     assert first["duration"] == 30
     assert first["date"] == "2021-09-21"
     assert first["nem_date"] == "2021-09-21T09:00:00+10:00"
-    assert first["per_kwh"] == 0.04
-    assert first["spot_per_kwh"] == 0.01
+    assert first["per_kwh"] == 4.4 / 100
+    assert first["spot_per_kwh"] == 1.1 / 100
     assert first["start_time"] == "2021-09-21T08:30:00+10:00"
     assert first["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first["renewables"] == 50
@@ -105,8 +105,8 @@ async def test_get_feed_in_forecasts(
     assert first["duration"] == 30
     assert first["date"] == "2021-09-21"
     assert first["nem_date"] == "2021-09-21T09:00:00+10:00"
-    assert first["per_kwh"] == -0.01
-    assert first["spot_per_kwh"] == 0.01
+    assert first["per_kwh"] == -1.1 / 100
+    assert first["spot_per_kwh"] == 1.1 / 100
     assert first["start_time"] == "2021-09-21T08:30:00+10:00"
     assert first["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first["renewables"] == 50

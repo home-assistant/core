@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
         )
     )
 
-    async def _unload_entry_cleanup():
+    async def _unload_entry_cleanup() -> None:
         """Cleanup when unloading the config entry.
 
         Removes the device from the controller and disconnects it.

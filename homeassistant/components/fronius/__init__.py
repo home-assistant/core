@@ -42,13 +42,19 @@ from .coordinator import (
     FroniusLoggerUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
     FroniusModbusInverterUpdateCoordinator,
+    FroniusModbusSettingsUpdateCoordinator,
     FroniusOhmpilotUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
-PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
 
@@ -123,6 +129,9 @@ class FroniusSolarNet:
 
         self.modbus_inverter_coordinators: list[
             FroniusModbusInverterUpdateCoordinator
+        ] = []
+        self.modbus_settings_coordinators: list[
+            FroniusModbusSettingsUpdateCoordinator
         ] = []
         # one hold on the shared connection per inverter, kept across re-scans
         self.modbus_inverters: dict[SolarNetId, FroniusModbusInverter] = {}
@@ -358,37 +367,37 @@ class FroniusSolarNet:
                 err,
             )
             return
-        if modbus_inverter.mppt is None:
+        if modbus_inverter.mppt is not None:
+            readings = FroniusModbusInverterUpdateCoordinator(
+                hass=self.hass,
+                solar_net=self,
+                logger=_LOGGER,
+                name=f"{DOMAIN}_modbus_inverter_{inverter_info.solar_net_id}_{self.host}",
+                inverter_info=inverter_info,
+                modbus_inverter=modbus_inverter,
+                config_entry=self.config_entry,
+            )
+            if await self._start_modbus_coordinator(readings):
+                self.modbus_inverter_coordinators.append(readings)
+        else:
             _LOGGER.debug(
                 "No MPPT model exposed by inverter %s at Modbus unit %s",
                 inverter_info.solar_net_id,
                 unit_id,
             )
-            return
 
-        coordinator = FroniusModbusInverterUpdateCoordinator(
-            hass=self.hass,
-            solar_net=self,
-            logger=_LOGGER,
-            name=f"{DOMAIN}_modbus_inverter_{inverter_info.solar_net_id}_{self.host}",
-            inverter_info=inverter_info,
-            modbus_inverter=modbus_inverter,
-            config_entry=self.config_entry,
-        )
-        if self.config_entry.state is ConfigEntryState.LOADED:
-            await coordinator.async_refresh()
-        else:
-            try:
-                await coordinator.async_config_entry_first_refresh()
-            except ConfigEntryNotReady:
-                # never fail the whole entry for optional Modbus data
-                return
-        self.modbus_inverter_coordinators.append(coordinator)
-
-        # Only for re-scans. Initial setup adds entities
-        # through sensor.async_setup_entry
-        if self.config_entry.state is ConfigEntryState.LOADED:
-            async_dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, coordinator)
+        if await self._modbus_control_allowed(modbus_inverter, unit_id):
+            settings = FroniusModbusSettingsUpdateCoordinator(
+                hass=self.hass,
+                solar_net=self,
+                logger=_LOGGER,
+                name=f"{DOMAIN}_modbus_settings_{inverter_info.solar_net_id}_{self.host}",
+                inverter_info=inverter_info,
+                modbus_inverter=modbus_inverter,
+                config_entry=self.config_entry,
+            )
+            if await self._start_modbus_coordinator(settings):
+                self.modbus_settings_coordinators.append(settings)
 
         _LOGGER.debug(
             "Modbus enabled for inverter %s (UID: %s, unit ID: %s)",
@@ -396,6 +405,46 @@ class FroniusSolarNet:
             inverter_info.unique_id,
             unit_id,
         )
+
+    async def _start_modbus_coordinator(
+        self, coordinator: FroniusCoordinatorBase
+    ) -> bool:
+        """Do the first refresh of a Modbus coordinator, reporting success.
+
+        Not `async_config_entry_first_refresh`: Modbus data is optional, so a
+        device that doesn't answer must leave the rest of the entry alone
+        instead of raising `ConfigEntryNotReady`.
+        """
+        await coordinator.async_refresh()
+        if not coordinator.last_update_success:
+            return False
+        # Only for re-scans. Initial setup adds entities through the
+        # platforms' async_setup_entry.
+        if self.config_entry.state is ConfigEntryState.LOADED:
+            async_dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, coordinator)
+        return True
+
+    async def _modbus_control_allowed(
+        self, modbus_inverter: FroniusModbusInverter, unit_id: int
+    ) -> bool:
+        """Check whether the device accepts the writes the controls need.
+
+        "Inverter control via Modbus" has to be enabled on the device web
+        interface, and no register reports it - the only way to find out is
+        to write. `probe_write_access` writes a register's own value back.
+        """
+        if (controls := modbus_inverter.controls) is None:
+            return False
+        try:
+            allowed = await controls.probe_write_access()
+        except (ModbusError, SunSpecError) as err:
+            _LOGGER.debug("Modbus write probe failed for unit %s: %s", unit_id, err)
+            return False
+        if not allowed:
+            _LOGGER.debug(
+                "Inverter control via Modbus is not enabled on unit %s", unit_id
+            )
+        return allowed
 
     def _modbus_unit_id(self, solar_net_id: str) -> int | None:
         """Return the Modbus unit ID for an inverter."""

@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock, Mock, patch
 from besen.models import BesenData, ChargerConfig, ChargerInfo, ChargeStatus
 import pytest
 
-from homeassistant.components.besen.const import DOMAIN
+from homeassistant.components.besen.const import DOMAIN, PLATFORMS
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 
 from . import publish_besen_state
@@ -50,8 +50,12 @@ FAKE_SERVICE_INFO = BluetoothServiceInfoBleak(
 def charger_state(
     *,
     charger_status: bool | None = True,
+    charge_amps: int | None = 16,
+    output_max_amps: int | None = 32,
     available: bool = True,
     authenticated: bool = True,
+    phases: int = 1,
+    charge: ChargeStatus | None = None,
 ) -> BesenData:
     """Return a populated charger state."""
 
@@ -59,19 +63,41 @@ def charger_state(
         info=ChargerInfo(
             address=FIXTURE_ADDRESS,
             serial="SERIAL",
-            phases=1,
+            phases=phases,
             manufacturer="Besen",
             model="BS20",
             hardware_version="HW1",
             software_version="SW1",
+            output_max_amps=output_max_amps,
         ),
-        config=ChargerConfig(device_name="Garage", rssi=-55),
-        charge=ChargeStatus(
-            charger_status=charger_status,
-            current_energy=3500,
-            total_energy=1.2,
-            current_amount=12.3,
-            inner_temp_c=24.5,
+        config=ChargerConfig(
+            charge_amps=charge_amps,
+            device_name="Garage",
+            rssi=-55,
+        ),
+        charge=(
+            charge
+            if charge is not None
+            else ChargeStatus(
+                charger_status=charger_status,
+                error_details="No Error",
+                charging_status="Start",
+                charging_status_description="EV is connected, please press start",
+                plug_state="Connected Locked",
+                output_state="Charging",
+                current_state="Charging",
+                power=3500,
+                total_energy=12.3,
+                session_energy=1.2,
+                inner_temp_c=24.5,
+                outer_temp=22.5,
+                l1_voltage=230.0,
+                l1_amperage=15.2,
+                l2_voltage=231.0,
+                l2_amperage=15.1,
+                l3_voltage=232.0,
+                l3_amperage=15.0,
+            )
         ),
         available=available,
         authenticated=authenticated,
@@ -87,6 +113,7 @@ def _configure_client_mock(client: Mock) -> None:
     client.async_stop = AsyncMock()
     client.async_start_charging = AsyncMock()
     client.async_stop_charging = AsyncMock()
+    client.async_set_charge_amps = AsyncMock()
     client.add_listener.return_value = Mock()
 
 
@@ -144,8 +171,12 @@ def mock_besen_client() -> Generator[Mock]:
         async def async_stop_charging() -> None:
             publish_besen_state(client, charger_state(charger_status=False))
 
+        async def async_set_charge_amps(amps: int) -> None:
+            publish_besen_state(client, charger_state(charge_amps=amps))
+
         client.async_start_charging.side_effect = async_start_charging
         client.async_stop_charging.side_effect = async_stop_charging
+        client.async_set_charge_amps.side_effect = async_set_charge_amps
         yield client
 
 
@@ -179,9 +210,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 async def setup_integration(
     hass: HomeAssistant,
     entry: MockConfigEntry,
+    platforms: list[Platform] | None = None,
 ) -> None:
     """Set up the Besen integration."""
 
     entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.besen.PLATFORMS",
+        platforms if platforms is not None else PLATFORMS,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()

@@ -10,8 +10,13 @@ from librouteros.exceptions import ConnectionClosed, LibRouterosError
 import pytest
 
 from homeassistant.components.mikrotik.const import (
+    ARP,
+    CONF_ARP_PING,
+    CONF_FORCE_DHCP,
+    DHCP,
     IDENTITY,
     MIKROTIK_SERVICES,
+    PING,
     ROUTERBOARD,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -22,7 +27,7 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import MockConfigEntryFactory
-from .const import MOCK_DATA
+from .const import ARP_DATA, DHCP_DATA, MOCK_DATA
 
 from tests.common import async_fire_time_changed
 
@@ -272,6 +277,50 @@ async def test_connection_dropped_during_refresh_reconnects_and_succeeds(
 
     assert entry.state is ConfigEntryState.LOADED
     assert mock_get_api.call_count == 1
+
+
+async def test_connection_dropped_during_arp_ping_retries_with_params(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    mock_config_entry: MockConfigEntryFactory,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a dropped connection during an arp-ping reconnects and retries with params."""
+    entry = mock_config_entry(options={CONF_ARP_PING: True, CONF_FORCE_DHCP: True})
+    await setup_integration(hass, entry, command_responses={})
+    assert entry.state is ConfigEntryState.LOADED
+
+    ping_cmd = MIKROTIK_SERVICES[PING]
+    # a single tracked device keeps the arp-ping call count deterministic
+    responses = {
+        MIKROTIK_SERVICES[DHCP]: DHCP_DATA[:1],
+        MIKROTIK_SERVICES[ARP]: ARP_DATA[:1],
+    }
+    ping_calls = 0
+
+    def flaky_call(cmd: str, **params: Any) -> list[dict[str, Any]]:
+        nonlocal ping_calls
+        if cmd == ping_cmd:
+            ping_calls += 1
+            if ping_calls == 1:
+                raise ConnectionClosed
+            return [{"seq": "0"}]
+        return responses.get(cmd, [])
+
+    mock_api.side_effect = flaky_call
+
+    with patch(
+        "homeassistant.components.mikrotik.coordinator.get_api", return_value=mock_api
+    ) as mock_get_api:
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.last_update_success is True
+    # the arp-ping command carries params, so the reconnect retries it with them
+    assert mock_get_api.call_count == 1
+    assert ping_calls == 2
 
 
 async def test_scheduled_refresh_reuses_persistent_connection(

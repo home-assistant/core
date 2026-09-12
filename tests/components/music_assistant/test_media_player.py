@@ -15,6 +15,7 @@ from music_assistant_models.player import PlayerMedia
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
@@ -44,21 +45,25 @@ from homeassistant.components.music_assistant.const import (
     ATTR_AUTO_PLAY,
     ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
+    ATTR_MESSAGE,
     ATTR_PRE_ANNOUNCE_URL,
     ATTR_RADIO_MODE,
     ATTR_SOURCE_PLAYER,
+    ATTR_TTS_ENTITY_ID,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
     ATTR_USERNAME,
     DOMAIN,
 )
+from homeassistant.components.music_assistant.media_player import MusicAssistantPlayer
 from homeassistant.components.music_assistant.services import (
     SERVICE_GET_QUEUE,
     SERVICE_PLAY_ANNOUNCEMENT,
     SERVICE_PLAY_MEDIA_ADVANCED,
     SERVICE_TRANSFER_QUEUE,
 )
-from homeassistant.config_entries import HomeAssistantError
+from homeassistant.components.tts import DATA_TTS_MANAGER
+from homeassistant.config_entries import ConfigFlow, HomeAssistantError
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -74,19 +79,28 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import (
+    create_players_from_fixture,
     setup_integration_from_fixtures,
     snapshot_music_assistant_entities,
     trigger_subscription_callback,
 )
 
-from tests.common import AsyncMock, MockUser
+from tests.common import AsyncMock, MockUser, mock_config_flow, mock_platform
+from tests.components.tts.common import (
+    DEFAULT_LANG,
+    MockTTSEntity,
+    mock_config_entry_setup,
+)
 
 MOCK_TRACK = Track(
     item_id="1",
@@ -94,6 +108,56 @@ MOCK_TRACK = Track(
     name="Test Track",
     provider_mappings={},
 )
+MOCK_TTS_ENTITY_ID = "tts.test"
+MOCK_SECOND_TTS_ENTITY_ID = "tts.second"
+
+
+class MockTTSConfigFlow(ConfigFlow):
+    """Config flow for the mock text-to-speech integration."""
+
+
+class MockSecondTTSEntity(MockTTSEntity):
+    """Second mock text-to-speech entity."""
+
+    _attr_name = "Second"
+
+
+@pytest.fixture(name="tts_entities")
+async def tts_entities_fixture(hass: HomeAssistant) -> None:
+    """Set up two text-to-speech entities, of which the first is the default engine."""
+    assert await async_setup_component(hass, "media_source", {})
+    for test_domain, tts_entity in (
+        ("test", MockTTSEntity(DEFAULT_LANG)),
+        ("test2", MockSecondTTSEntity(DEFAULT_LANG)),
+    ):
+        mock_platform(hass, f"{test_domain}.config_flow")
+        with mock_config_flow(test_domain, MockTTSConfigFlow):
+            await mock_config_entry_setup(hass, tts_entity, test_domain=test_domain)
+
+
+@pytest.mark.parametrize(
+    ("mass_icon", "mdi_icon"),
+    [
+        pytest.param("speaker", "mdi:speaker", id="speaker"),
+        pytest.param("speakers", "mdi:speaker-multiple", id="speakers"),
+        pytest.param("tv", "mdi:television", id="tv"),
+        pytest.param("smartphone", "mdi:cellphone", id="smartphone"),
+        pytest.param("google-nest", "mdi:speaker", id="fallback"),
+        pytest.param("mdi-speaker", "mdi:speaker", id="legacy-mdi-dash"),
+        pytest.param("mdi:speaker", "mdi:speaker", id="legacy-mdi-colon"),
+    ],
+)
+def test_player_icon(
+    music_assistant_client: MagicMock, mass_icon: str, mdi_icon: str
+) -> None:
+    """Test Music Assistant player icon mapping."""
+    player = create_players_from_fixture()[0]
+    player.icon = mass_icon
+    music_assistant_client.players._players[player.player_id] = player
+
+    entity = MusicAssistantPlayer(music_assistant_client, player.player_id)
+
+    assert entity.icon == mdi_icon
 
 
 async def test_media_player(
@@ -978,6 +1042,131 @@ async def test_media_player_play_announcement_action(
         message=None,
         tts_engine=None,
     )
+
+
+@pytest.mark.parametrize(
+    "tts_entity_id",
+    [MOCK_TTS_ENTITY_ID, MOCK_SECOND_TTS_ENTITY_ID],
+    ids=["default tts entity", "non-default tts entity"],
+)
+@pytest.mark.usefixtures("mock_tts_cache_dir", "tts_entities")
+async def test_media_player_play_announcement_action_with_message(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    tts_entity_id: str,
+) -> None:
+    """Test media_player play_announcement action speaks a message with the given entity."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"}
+    )
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_ANNOUNCEMENT,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MESSAGE: "Dinner is ready!",
+            ATTR_TTS_ENTITY_ID: tts_entity_id,
+            ATTR_USE_PRE_ANNOUNCE: True,
+            ATTR_ANNOUNCE_VOLUME: 50,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    announcement_url = music_assistant_client.send_command.call_args.kwargs["url"]
+    assert announcement_url.startswith("http://example.local:8123/api/tts_proxy/")
+    stream = hass.data[DATA_TTS_MANAGER].token_to_stream[
+        announcement_url.rsplit("/", 1)[-1]
+    ]
+    assert stream.engine == tts_entity_id
+    assert music_assistant_client.send_command.call_args == call(
+        "players/cmd/play_announcement",
+        require_schema=None,
+        player_id=mass_player_id,
+        url=announcement_url,
+        pre_announce=True,
+        volume_level=50,
+        pre_announce_url=None,
+        message=None,
+        tts_engine=None,
+    )
+
+
+@pytest.mark.parametrize(
+    "announcement_data",
+    [
+        {},
+        {
+            ATTR_URL: "http://blah.com/announcement.mp3",
+            ATTR_MESSAGE: "Dinner is ready!",
+            ATTR_TTS_ENTITY_ID: MOCK_TTS_ENTITY_ID,
+        },
+        {ATTR_MESSAGE: "Dinner is ready!"},
+        {
+            ATTR_URL: "http://blah.com/announcement.mp3",
+            ATTR_TTS_ENTITY_ID: MOCK_TTS_ENTITY_ID,
+        },
+        {
+            ATTR_MESSAGE: "Dinner is ready!",
+            ATTR_TTS_ENTITY_ID: "media_player.test_player_2",
+        },
+    ],
+    ids=[
+        "neither url nor message",
+        "both url and message",
+        "message without tts entity",
+        "tts entity without message",
+        "entity outside the tts domain",
+    ],
+)
+async def test_media_player_play_announcement_action_invalid_input(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    announcement_data: dict[str, str],
+) -> None:
+    """Test play_announcement action requires either a url or a message with an entity."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_ANNOUNCEMENT,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player_1",
+                **announcement_data,
+            },
+            blocking=True,
+        )
+    assert music_assistant_client.send_command.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "tts_entity_id",
+    ["tts.does_not_exist", MOCK_TTS_ENTITY_ID],
+    ids=["unknown tts entity", "unavailable tts entity"],
+)
+async def test_media_player_play_announcement_action_unusable_tts_entity(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    tts_entity_id: str,
+) -> None:
+    """Test play_announcement action reports a text-to-speech entity it cannot use."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    hass.states.async_set(MOCK_TTS_ENTITY_ID, STATE_UNAVAILABLE)
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_ANNOUNCEMENT,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player_1",
+                ATTR_MESSAGE: "Dinner is ready!",
+                ATTR_TTS_ENTITY_ID: tts_entity_id,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "tts_entity_not_available"
+    assert music_assistant_client.send_command.call_count == 0
 
 
 async def test_media_player_transfer_queue_action(
