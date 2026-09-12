@@ -246,7 +246,11 @@ class MatterLight(MatterEntity, LightEntity):
             clusters.ColorControl.Attributes.ColorTemperatureMireds
         )
 
-        assert color_temp is not None
+        if color_temp is None:
+            # the caller only uses a value above zero, so a device that
+            # reports null has no color temperature to show
+            LOGGER.debug("Got no color temperature for %s", self.entity_id)
+            return 0
 
         LOGGER.debug(
             "Got color temperature %s for %s",
@@ -261,8 +265,10 @@ class MatterLight(MatterEntity, LightEntity):
 
         level_control = self._endpoint.get_cluster(clusters.LevelControl)
 
-        # We should not get here if brightness is not supported.
-        assert level_control is not None
+        if level_control is None:
+            # we should not get here if brightness is not supported
+            LOGGER.debug("Got no level control cluster for %s", self.entity_id)
+            return None
 
         LOGGER.debug(
             "Got brightness %s for %s",
@@ -289,9 +295,15 @@ class MatterLight(MatterEntity, LightEntity):
             clusters.ColorControl.Attributes.ColorMode
         )
 
-        assert color_mode is not None
-
-        ha_color_mode = COLOR_MODE_MAP[color_mode]
+        if (ha_color_mode := COLOR_MODE_MAP.get(color_mode)) is None:
+            # ColorMode is nullable and a device is free to report a value
+            # outside of the enum, neither of which we can map to a color
+            LOGGER.debug(
+                "Got unexpected color mode (%s) for %s",
+                color_mode,
+                self.entity_id,
+            )
+            return ColorMode.UNKNOWN
 
         LOGGER.debug(
             "Got color mode (%s) for %s",
