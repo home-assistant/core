@@ -10,6 +10,7 @@ from neopool_modbus.exceptions import (
 import pytest
 
 from homeassistant.components.neopool.const import (
+    CONF_AUTO_TIME_SYNC,
     CONF_USE_LIGHT,
     DEFAULT_UNIT_ID,
     DOMAIN,
@@ -215,11 +216,12 @@ async def test_options_flow_save_changes(
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {CONF_USE_LIGHT: True},
+        {CONF_USE_LIGHT: True, CONF_AUTO_TIME_SYNC: True},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options[CONF_USE_LIGHT] is True
+    assert mock_config_entry.options[CONF_AUTO_TIME_SYNC] is True
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

@@ -19,6 +19,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_AUTO_TIME_SYNC,
     CONF_USE_AUX1,
     CONF_USE_AUX2,
     CONF_USE_AUX3,
@@ -28,6 +29,7 @@ from .const import (
     DOMAIN,
     FOLLOW_UP_REFRESH_DELAY,
 )
+from .helpers import is_device_time_out_of_sync, prepare_device_time
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +66,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
         self.client = client
+        self.auto_time_sync = entry.options.get(CONF_AUTO_TIME_SYNC, False)
         self._corrupted_gpio_state: frozenset[tuple[str, int]] | None = None
         self._follow_up_unsub: CALLBACK_TYPE | None = None
 
@@ -169,6 +172,10 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             data = await self.client.async_read_all()
             await self._read_timers_into_data(data)
+
+            if self.auto_time_sync and is_device_time_out_of_sync(data, self.hass):
+                _LOGGER.debug("Device time is out of sync, updating")
+                await self.client.async_sync_device_time(prepare_device_time(self.hass))
         except (NeoPoolError, OSError, TimeoutError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

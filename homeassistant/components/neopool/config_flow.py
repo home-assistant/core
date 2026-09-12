@@ -20,6 +20,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
 from .const import (
+    CONF_AUTO_TIME_SYNC,
     CONF_MODBUS_FRAMER,
     CONF_UNIT_ID,
     CONF_USE_AUX1,
@@ -182,6 +183,10 @@ class NeoPoolOptionsFlowHandler(OptionsFlowWithReload):
                 vol.Optional(
                     CONF_USE_AUX4,
                     default=options.get(CONF_USE_AUX4, False),
+                ): bool,
+                vol.Optional(
+                    CONF_AUTO_TIME_SYNC,
+                    default=options.get(CONF_AUTO_TIME_SYNC, False),
                 ): bool,
             }
         )
