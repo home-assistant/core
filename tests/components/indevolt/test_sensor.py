@@ -13,7 +13,9 @@ from indevolt_api import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
+from homeassistant.components.indevolt.const import (
+    SCAN_INTERVAL_MEDIUM as SCAN_INTERVAL,
+)
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
