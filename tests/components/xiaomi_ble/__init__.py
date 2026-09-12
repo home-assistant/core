@@ -148,6 +148,28 @@ MISCALE_V2_SERVICE_INFO = BluetoothServiceInfoBleak(
     tx_power=-127,
 )
 
+S400_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="MJTZC01YM",
+    address="50:FB:19:1B:B5:DC",
+    device=generate_ble_device("00:00:00:00:00:00", None),
+    rssi=-60,
+    manufacturer_data={},
+    service_data={
+        # Body Composition Scale S400, the last packet of a measurement, which
+        # carries the 250 kHz impedance and no weight or heart rate
+        "0000fe95-0000-1000-8000-00805f9b34fb": (
+            b"\x50\x50\xd9\x30\x01\xdc\xb5\x1b\x19\xfb\x50"
+            b"\x16\x6e\x09\x01\x00\x00\x20\x4e\x00\x00\x00\x00"
+        )
+    },
+    service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
+    source="local",
+    advertisement=generate_advertisement_data(local_name="Not it"),
+    time=0,
+    connectable=False,
+    tx_power=-127,
+)
+
 MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfoBleak(
     name="LYWSD02MMC",
     address="A4:C1:38:56:53:84",
