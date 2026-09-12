@@ -445,6 +445,33 @@ async def test_available_flows(
         assert set(data) == result
 
 
+@pytest.mark.parametrize(
+    "type_filter",
+    [
+        # the frontend sends an array of types joined into a single value
+        "device,hub,service",
+        # not flow discovery buckets, FLOWS only has "helper" and "integration"
+        "device",
+        "hub",
+        "service",
+        "not_a_type",
+        "",
+    ],
+)
+async def test_available_flows_invalid_type(
+    client: TestClient, type_filter: str
+) -> None:
+    """Test an unknown type filter is rejected instead of raising.
+
+    Regression test for https://github.com/home-assistant/core/issues/176851
+    """
+    resp = await client.get(
+        "/api/config/config_entries/flow_handlers",
+        params={"type": type_filter},
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+
+
 ############################
 #  FLOW MANAGER API TESTS  #
 ############################
