@@ -1,0 +1,11 @@
+{
+  "domain": "netis",
+  "name": "Netis Router",
+  "codeowners": ["@netis-systems-app"],
+  "config_flow": true,
+  "documentation": "https://www.netis-systems.com",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "requirements": [],
+  "quality_scale": "silver"
+}
