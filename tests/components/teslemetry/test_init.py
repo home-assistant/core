@@ -675,17 +675,15 @@ async def test_energy_history_coordinator_retry_exceptions(
     # Entry stays loaded - UpdateFailed with retry_after doesn't break the entry
     assert entry.state is ConfigEntryState.LOADED
 
-    # expected_retry_after (5s/10s) is far shorter than ENERGY_HISTORY_INTERVAL
-    # (60s); a short tick well inside that window must not trigger a refresh yet.
-    freezer.tick(timedelta(seconds=1))
+    # Just before retry_after has elapsed since the failure, no refresh yet.
+    freezer.tick(timedelta(seconds=expected_retry_after - 1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert call_count == 1
 
-    # Once retry_after elapses - still far short of the normal interval - the
-    # coordinator refreshes again, proving retry_after (not the 60s interval)
-    # governs the reschedule.
-    freezer.tick(timedelta(seconds=expected_retry_after))
+    # The final second brings the elapsed time to exactly retry_after, and
+    # the coordinator refreshes right at that boundary.
+    freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert call_count == 2
