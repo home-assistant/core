@@ -1096,6 +1096,12 @@
         }
       }
     },
+    "clicky": {
+      "name": "Clicky Web Analytics",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "cloudflare": {
       "name": "Cloudflare",
       "integrations": {
