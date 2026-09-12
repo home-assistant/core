@@ -129,7 +129,11 @@ async def async_get_api(
 
 @callback
 def async_get_apis(hass: HomeAssistant) -> list[API]:
-    """Get all the LLM APIs."""
+    """Get all registered LLM APIs.
+
+    This is intended for discovery (e.g. config flows and UI listing).
+    To obtain an API instance with permission checks applied, use `async_get_api`.
+    """
     return list(_async_get_apis(hass).values())
 
 
@@ -226,7 +230,11 @@ class API(ABC):
 
     @abstractmethod
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
-        """Return the instance of the API."""
+        """Return the instance of the API.
+
+        This is used internally by `async_get_api`. Callers should use `async_get_api`
+        rather than calling this directly to ensure permission checks are enforced.
+        """
         raise NotImplementedError
 
 
