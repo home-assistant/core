@@ -13,10 +13,16 @@ from tuya_device_handlers.device_wrapper.common import (
 )
 from tuya_device_handlers.device_wrapper.sensor import (
     DeltaIntegerWrapper,
+    ElectricityApparentPowerJsonWrapper,
+    ElectricityApparentPowerRawWrapper,
     ElectricityCurrentJsonWrapper,
     ElectricityCurrentRawWrapper,
+    ElectricityPowerFactorJsonWrapper,
+    ElectricityPowerFactorRawWrapper,
     ElectricityPowerJsonWrapper,
     ElectricityPowerRawWrapper,
+    ElectricityReactivePowerJsonWrapper,
+    ElectricityReactivePowerRawWrapper,
     ElectricityVoltageJsonWrapper,
     ElectricityVoltageRawWrapper,
     WindDirectionEnumWrapper,
@@ -59,6 +65,18 @@ from .util import get_device_temp_unit_convert
 CURRENT_WRAPPER = (ElectricityCurrentRawWrapper, ElectricityCurrentJsonWrapper)
 POWER_WRAPPER = (ElectricityPowerRawWrapper, ElectricityPowerJsonWrapper)
 VOLTAGE_WRAPPER = (ElectricityVoltageRawWrapper, ElectricityVoltageJsonWrapper)
+REACTIVE_POWER_WRAPPER = (
+    ElectricityReactivePowerRawWrapper,
+    ElectricityReactivePowerJsonWrapper,
+)
+APPARENT_POWER_WRAPPER = (
+    ElectricityApparentPowerRawWrapper,
+    ElectricityApparentPowerJsonWrapper,
+)
+POWER_FACTOR_WRAPPER = (
+    ElectricityPowerFactorRawWrapper,
+    ElectricityPowerFactorJsonWrapper,
+)
 
 
 @dataclass(frozen=True)
@@ -67,6 +85,38 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
 
     dpcode: DPCode | None = None
     wrapper_class: tuple[type[DPCodeTypeInformationWrapper], ...] | None = None
+
+
+def _additional_phase_sensors(
+    dpcode: DPCode, phase: str
+) -> tuple[TuyaSensorEntityDescription, ...]:
+    """Build additional per-phase sensors for an electricity meter."""
+    return (
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}reactivepower",
+            dpcode=dpcode,
+            translation_key=f"phase_{phase}_reactive_power",
+            device_class=SensorDeviceClass.REACTIVE_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=REACTIVE_POWER_WRAPPER,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}apparentpower",
+            dpcode=dpcode,
+            translation_key=f"phase_{phase}_apparent_power",
+            device_class=SensorDeviceClass.APPARENT_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=APPARENT_POWER_WRAPPER,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}powerfactor",
+            dpcode=dpcode,
+            translation_key=f"phase_{phase}_power_factor",
+            device_class=SensorDeviceClass.POWER_FACTOR,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=POWER_FACTOR_WRAPPER,
+        ),
+    )
 
 
 # Commonly used battery sensors, that are reused in the sensors down below.
@@ -538,6 +588,9 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        *_additional_phase_sensors(DPCode.PHASE_A, "a"),
+        *_additional_phase_sensors(DPCode.PHASE_B, "b"),
+        *_additional_phase_sensors(DPCode.PHASE_C, "c"),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_A}electriccurrent",
             dpcode=DPCode.PHASE_A,
@@ -1685,6 +1738,9 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        *_additional_phase_sensors(DPCode.PHASE_A, "a"),
+        *_additional_phase_sensors(DPCode.PHASE_B, "b"),
+        *_additional_phase_sensors(DPCode.PHASE_C, "c"),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_A}electriccurrent",
             dpcode=DPCode.PHASE_A,
