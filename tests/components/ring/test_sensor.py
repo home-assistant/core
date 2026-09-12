@@ -1,7 +1,9 @@
 """The tests for the Ring sensor platform."""
 
+from datetime import UTC, datetime
 import logging
-from unittest.mock import Mock, patch
+from typing import cast
+from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -69,6 +71,12 @@ def create_deprecated_and_disabled_sensor_entities(
         create_entry("ingress", desc, INGRESS_DEVICE_ID)
         create_entry("front_door", desc, FRONT_DOOR_DEVICE_ID)
         create_entry("internal", desc, INTERNAL_DEVICE_ID)
+    for device_name, device_id in (
+        ("front", FRONT_DEVICE_ID),
+        ("front_door", FRONT_DOOR_DEVICE_ID),
+        ("internal", INTERNAL_DEVICE_ID),
+    ):
+        create_entry(device_name, "last_recording", device_id)
 
 
 async def test_states(
@@ -161,6 +169,12 @@ async def test_health_sensor(
             "last_activity",
             "2018-03-05T15:03:40+00:00",
         ),
+        (
+            FRONT_DOOR_DEVICE_ID,
+            "front_door",
+            "last_recording",
+            "2018-03-05T15:03:40+00:00",
+        ),
         (FRONT_DEVICE_ID, "front", "last_motion", "2017-03-05T15:03:40+00:00"),
         (INGRESS_DEVICE_ID, "ingress", "last_activity", "2024-02-02T11:21:24+00:00"),
     ],
@@ -168,6 +182,7 @@ async def test_health_sensor(
         "doorbell-motion",
         "doorbell-ding",
         "doorbell-activity",
+        "doorbell-recording",
         "stickup_cam-motion",
         "other-activity",
     ],
@@ -211,6 +226,61 @@ async def test_history_sensor(
     sensor_state = hass.states.get(entity_id)
     assert sensor_state is not None
     assert sensor_state.state == expected_value
+
+
+async def test_last_recording_sensor_handles_non_ready_history(
+    hass: HomeAssistant,
+    mock_ring_client: Ring,
+    mock_config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the last recording sensor handles non-ready history entries."""
+    front_door = cast(Mock, mock_ring_client.devices().get_device(FRONT_DOOR_DEVICE_ID))
+    front_door.configure_mock(
+        last_history=[
+            {
+                "created_at": datetime(2019, 3, 5, 15, 3, 40, tzinfo=UTC),
+                "recording": {"status": "processing"},
+            },
+            {
+                "created_at": datetime(2018, 3, 5, 15, 3, 40, tzinfo=UTC),
+                "recording": {"status": "ready"},
+            },
+        ]
+    )
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        domain=SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id=f"{FRONT_DOOR_DEVICE_ID}-last_recording",
+        suggested_object_id="front_door_last_recording",
+        config_entry=mock_config_entry,
+    )
+
+    with patch("homeassistant.components.ring.PLATFORMS", [Platform.SENSOR]):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    sensor_state = hass.states.get("sensor.front_door_last_recording")
+    assert sensor_state is not None
+    assert sensor_state.state == "2018-03-05T15:03:40+00:00"
+
+    front_door.configure_mock(
+        async_history=AsyncMock(),
+        last_history=[
+            {
+                "created_at": datetime(2020, 3, 5, 15, 3, 40, tzinfo=UTC),
+                "recording": {"status": "processing"},
+            }
+        ],
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    sensor_state = hass.states.get("sensor.front_door_last_recording")
+    assert sensor_state is not None
+    assert sensor_state.state == "2018-03-05T15:03:40+00:00"
 
 
 async def test_only_chime_devices(
