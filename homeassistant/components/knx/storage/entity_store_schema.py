@@ -1,7 +1,9 @@
 """KNX entity store schema."""
 
 from collections.abc import Hashable
+from dataclasses import dataclass
 from enum import StrEnum, unique
+from typing import Annotated
 
 import probatio
 from xknx.dpt import DPTBase, DPTBinary, DPTNumeric
@@ -50,7 +52,6 @@ from ..const import (
     FanConf,
     FanZeroMode,
     NumberConf,
-    SceneConf,
     SelectConf,
 )
 from ..dpt import get_supported_dpts, raw_payload_length
@@ -78,8 +79,6 @@ from .const import (
     CONF_GA_COLOR_TEMP,
     CONF_GA_CONTROLLER_MODE,
     CONF_GA_CONTROLLER_STATUS,
-    CONF_GA_DATE,
-    CONF_GA_DATETIME,
     CONF_GA_DAY_NIGHT,
     CONF_GA_FAN_SPEED,
     CONF_GA_FAN_SWING,
@@ -104,7 +103,6 @@ from .const import (
     CONF_GA_RED_BRIGHTNESS,
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
-    CONF_GA_SCENE,
     CONF_GA_SEND,
     CONF_GA_SENSOR,
     CONF_GA_SETPOINT_SHIFT,
@@ -116,7 +114,6 @@ from .const import (
     CONF_GA_TEMPERATURE_CURRENT,
     CONF_GA_TEMPERATURE_TARGET,
     CONF_GA_TEXT,
-    CONF_GA_TIME,
     CONF_GA_UP_DOWN,
     CONF_GA_VALVE,
     CONF_GA_WHITE_BRIGHTNESS,
@@ -132,13 +129,17 @@ from .const import (
 from .knx_selector import (
     AllSerializeFirst,
     GASelector,
+    GroupAddressConfig,
     GroupSelect,
     GroupSelectOption,
     KnxPayloadSelector,
     KNXSectionFlat,
     KnxSelectOptionsSelector,
     SyncStateSelector,
+    ga,
 )
+
+SyncState = Annotated[bool | str | int, SyncStateSelector()]
 
 BASE_ENTITY_SCHEMA = probatio.All(
     {
@@ -300,29 +301,31 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
     ),
 )
 
-DATE_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_DATE): GASelector(
-            write_required=True, valid_dpt="11.001"
-        ),
-        probatio.Optional(
-            CONF_RESPOND_TO_READ, default=False
-        ): selector.BooleanSelector(),
-        probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-    }
-)
 
-DATETIME_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_DATETIME): GASelector(
-            write_required=True, valid_dpt="19.001"
-        ),
-        probatio.Optional(
-            CONF_RESPOND_TO_READ, default=False
-        ): selector.BooleanSelector(),
-        probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-    }
-)
+@dataclass(kw_only=True, slots=True)
+class DateKnxConfig:
+    """UI configuration of a KNX date entity."""
+
+    ga_date: Annotated[GroupAddressConfig, ga(write_required=True, valid_dpt="11.001")]
+    respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
+    sync_state: SyncState = True
+
+
+DATE_KNX_SCHEMA = probatio.DataclassSchema(DateKnxConfig)
+
+
+@dataclass(kw_only=True, slots=True)
+class DatetimeKnxConfig:
+    """UI configuration of a KNX datetime entity."""
+
+    ga_datetime: Annotated[
+        GroupAddressConfig, ga(write_required=True, valid_dpt="19.001")
+    ]
+    respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
+    sync_state: SyncState = True
+
+
+DATETIME_KNX_SCHEMA = probatio.DataclassSchema(DatetimeKnxConfig)
 
 FAN_KNX_SCHEMA = AllSerializeFirst(
     probatio.Schema(
@@ -519,13 +522,17 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
 )
 
 
-NOTIFY_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_SEND): GASelector(
-            state=False, passive=False, write_required=True, dpt=["string"]
-        ),
-    }
-)
+@dataclass(kw_only=True, slots=True)
+class NotifyKnxConfig:
+    """UI configuration of a KNX notify entity."""
+
+    ga_send: Annotated[
+        GroupAddressConfig,
+        ga(state=False, passive=False, write_required=True, dpt=["string"]),
+    ]
+
+
+NOTIFY_KNX_SCHEMA = probatio.DataclassSchema(NotifyKnxConfig)
 
 
 def _number_limit_sub_validator(config: dict) -> dict:
@@ -584,24 +591,32 @@ NUMBER_KNX_SCHEMA = AllSerializeFirst(
     _number_limit_sub_validator,
 )
 
-SCENE_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_SCENE): GASelector(
+
+@dataclass(kw_only=True, slots=True)
+class SceneKnxConfig:
+    """UI configuration of a KNX scene."""
+
+    ga_scene: Annotated[
+        GroupAddressConfig,
+        ga(
             state=False,
             passive=False,
             write_required=True,
             valid_dpt=["17.001", "18.001"],
         ),
-        probatio.Required(SceneConf.SCENE_NUMBER): AllSerializeFirst(
-            selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=64, step=1, mode=selector.NumberSelectorMode.BOX
-                )
-            ),
-            probatio.Coerce(int),
+    ]
+    scene_number: Annotated[
+        int,
+        selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=1, max=64, step=1, mode=selector.NumberSelectorMode.BOX
+            )
         ),
-    },
-)
+        probatio.Coerce(int),
+    ]
+
+
+SCENE_KNX_SCHEMA = probatio.DataclassSchema(SceneKnxConfig)
 
 
 def _select_options_sub_validator(config: dict) -> dict:
@@ -724,18 +739,18 @@ SELECT_KNX_SCHEMA = AllSerializeFirst(
     _select_options_sub_validator,
 )
 
-SWITCH_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_SWITCH): GASelector(
-            write_required=True, valid_dpt="1"
-        ),
-        probatio.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
-        probatio.Optional(
-            CONF_RESPOND_TO_READ, default=False
-        ): selector.BooleanSelector(),
-        probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-    },
-)
+
+@dataclass(kw_only=True, slots=True)
+class SwitchKnxConfig:
+    """UI configuration of a KNX switch."""
+
+    ga_switch: Annotated[GroupAddressConfig, ga(write_required=True, valid_dpt="1")]
+    invert: Annotated[bool, selector.BooleanSelector()] = False
+    respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
+    sync_state: SyncState = True
+
+
+SWITCH_KNX_SCHEMA = probatio.DataclassSchema(SwitchKnxConfig)
 
 TEXT_KNX_SCHEMA = probatio.Schema(
     {
@@ -755,17 +770,17 @@ TEXT_KNX_SCHEMA = probatio.Schema(
     },
 )
 
-TIME_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_TIME): GASelector(
-            write_required=True, valid_dpt="10.001"
-        ),
-        probatio.Optional(
-            CONF_RESPOND_TO_READ, default=False
-        ): selector.BooleanSelector(),
-        probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-    }
-)
+
+@dataclass(kw_only=True, slots=True)
+class TimeKnxConfig:
+    """UI configuration of a KNX time entity."""
+
+    ga_time: Annotated[GroupAddressConfig, ga(write_required=True, valid_dpt="10.001")]
+    respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
+    sync_state: SyncState = True
+
+
+TIME_KNX_SCHEMA = probatio.DataclassSchema(TimeKnxConfig)
 
 
 @unique

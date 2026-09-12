@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Any, override
 
 import probatio
+from xknx.telegram.address import DeviceAddressableType
 
 from homeassistant.const import CONF_PAYLOAD
 from homeassistant.helpers import selector
@@ -311,11 +312,11 @@ class GroupAddressConfig:
     passive: list[str | int] = field(default_factory=list)
     dpt: str | None = None
 
-    def write_and_passive(self) -> list[str | int | None]:
+    def write_and_passive(self) -> list[DeviceAddressableType | None]:
         """Return the write address followed by the passive addresses."""
         return [self.write, *self.passive]
 
-    def state_and_passive(self) -> list[str | int | None]:
+    def state_and_passive(self) -> list[DeviceAddressableType | None]:
         """Return the state address followed by the passive addresses."""
         return [self.state, *self.passive]
 

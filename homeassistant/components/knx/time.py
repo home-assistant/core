@@ -1,7 +1,7 @@
 """Support for KNX time entities."""
 
 from datetime import time as dt_time
-from typing import Any, override
+from typing import override
 
 from xknx.devices import TimeDevice as XknxTimeDevice
 from xknx.dpt.dpt_10 import KNXTime as XknxTime
@@ -33,8 +33,8 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .storage.config_store import KnxEntityData
-from .storage.const import CONF_ENTITY, CONF_GA_TIME
-from .storage.util import ConfigExtractor
+from .storage.const import CONF_ENTITY
+from .storage.entity_store_schema import TimeKnxConfig
 
 
 async def async_setup_entry(
@@ -60,7 +60,9 @@ async def async_setup_entry(
             KnxYamlTime(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.TIME):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.TIME, TimeKnxConfig
+    ):
         entities.extend(
             KnxUiTime(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -126,7 +128,10 @@ class KnxUiTime(_KNXTime, KnxUiEntity):
     _device: XknxTimeDevice
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[TimeKnxConfig],
     ) -> None:
         """Initialize KNX time."""
         super().__init__(
@@ -134,13 +139,13 @@ class KnxUiTime(_KNXTime, KnxUiEntity):
             unique_id=unique_id,
             entity_config=config[CONF_ENTITY],
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = config[DOMAIN]
         self._device = XknxTimeDevice(
             knx_module.xknx,
             name=config[CONF_ENTITY][CONF_NAME],
             localtime=False,
-            group_address=knx_conf.get_write(CONF_GA_TIME),
-            group_address_state=knx_conf.get_state_and_passive(CONF_GA_TIME),
-            respond_to_read=knx_conf.get(CONF_RESPOND_TO_READ),
-            sync_state=knx_conf.get(CONF_SYNC_STATE),
+            group_address=knx_conf.ga_time.write,
+            group_address_state=knx_conf.ga_time.state_and_passive(),
+            respond_to_read=knx_conf.respond_to_read,
+            sync_state=knx_conf.sync_state,
         )
