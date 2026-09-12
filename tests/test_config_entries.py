@@ -632,7 +632,7 @@ async def test_migrate_handle_exceptions(
     assert entry.state is state
     assert entry.error_reason_translation_domain == translation_domain
     assert entry.error_reason_translation_key == translation_key
-    assert bool(log_message in caplog.text) is logs
+    assert (log_message in caplog.text) is logs
 
     assert hass.config_entries.flow.async_progress_by_handler("comp") == []
 

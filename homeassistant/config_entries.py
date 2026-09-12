@@ -292,6 +292,13 @@ UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
 
 
 class _SetupErrorReason(NamedTuple):
+    """Error details from a failed config entry setup or migration.
+
+    Field order matches the arguments of `_async_set_state` after `state`,
+    so an instance can be unpacked directly into it. All fields `None` means
+    no additional error information is available.
+    """
+
     reason: str | None = None
     translation_key: str | None = None
     translation_placeholders: dict[str, str] | None = None
@@ -725,38 +732,47 @@ class ConfigEntry[_DataT = Any]:
         *,
         migration: bool = False,
     ) -> tuple[_SetupErrorReason, bool]:
-        """Handle config entry setup error."""
+        """Log a config entry setup or migration error and extract its reason.
+
+        For `ConfigEntryNotReady` the state is set to `SETUP_RETRY` and a retry
+        is scheduled. An actual cancellation is re-raised.
+
+        Returns:
+            tuple[_SetupErrorReason, bool]: The error reason and whether a retry was scheduled, in which
+                case the caller must return without setting a state.
+        """
         logger = self.logger
 
-        error_reason: str | None = None
-        error_reason_translation_key: str | None = None
-        error_reason_translation_placeholders: dict[str, str] | None = None
-        error_reason_translation_domain: str | None = None
+        reason = _SetupErrorReason()
         retry_later = False
 
         if isinstance(exc, ConfigEntryError):
-            error_reason = str(exc) or "Unknown fatal config entry error"
-            error_reason_translation_key = exc.translation_key
-            error_reason_translation_placeholders = exc.translation_placeholders
-            error_reason_translation_domain = exc.translation_domain
+            reason = _SetupErrorReason(
+                reason=str(exc) or "Unknown fatal config entry error",
+                translation_key=exc.translation_key,
+                translation_placeholders=exc.translation_placeholders,
+                translation_domain=exc.translation_domain,
+            )
             logger.exception(
                 "Error migrating entry %s for %s: %s"
                 if migration
                 else "Error setting up entry %s for %s: %s",
                 self.title,
                 self.domain,
-                error_reason,
+                reason.reason,
             )
 
         elif isinstance(exc, ConfigEntryAuthFailed):
             message = str(exc)
             auth_base_message = "could not authenticate"
-            error_reason = message or auth_base_message
-            error_reason_translation_key = exc.translation_key
-            error_reason_translation_placeholders = exc.translation_placeholders
-            error_reason_translation_domain = exc.translation_domain
             auth_message = (
                 f"{auth_base_message}: {message}" if message else auth_base_message
+            )
+            reason = _SetupErrorReason(
+                reason=message or auth_base_message,
+                translation_key=exc.translation_key,
+                translation_placeholders=exc.translation_placeholders,
+                translation_domain=exc.translation_domain,
             )
             logger.warning(
                 "Config entry '%s' for %s integration %s",
@@ -770,24 +786,28 @@ class ConfigEntry[_DataT = Any]:
                 self.async_start_reauth_if_available(hass)
 
         elif isinstance(exc, ConfigEntryNotReady):
-            message = str(exc)
-            error_reason_translation_key = exc.translation_key
-            error_reason_translation_placeholders = exc.translation_placeholders
-            error_reason_translation_domain = exc.translation_domain
+            reason = _SetupErrorReason(
+                reason=str(exc),
+                translation_key=exc.translation_key,
+                translation_placeholders=exc.translation_placeholders,
+                translation_domain=exc.translation_domain,
+            )
             retry_later = True
             self._async_set_state(
                 hass,
                 ConfigEntryState.SETUP_RETRY,
-                message or None,
-                error_reason_translation_key,
-                error_reason_translation_placeholders,
-                error_reason_translation_domain,
+                reason.reason or None,
+                reason.translation_key,
+                reason.translation_placeholders,
+                reason.translation_domain,
             )
             wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
-            ready_message = f"ready yet: {message}" if message else "ready yet"
+            ready_message = (
+                f"ready yet: {msg}" if (msg := reason.reason) else "ready yet"
+            )
             logger.info(
                 "Config entry migration '%s' for %s integration not %s; Retrying in %d seconds"
                 if migration
@@ -852,15 +872,7 @@ class ConfigEntry[_DataT = Any]:
                 self.title,
                 integration.domain,
             )
-        return (
-            _SetupErrorReason(
-                reason=error_reason,
-                translation_key=error_reason_translation_key,
-                translation_placeholders=error_reason_translation_placeholders,
-                translation_domain=error_reason_translation_domain,
-            ),
-            retry_later,
-        )
+        return (reason, retry_later)
 
     async def __async_setup_with_context(
         self,
