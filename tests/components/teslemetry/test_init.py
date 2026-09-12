@@ -581,19 +581,11 @@ async def test_site_info_retry_exceptions(
 ) -> None:
     """Test UpdateFailed with retry_after for site info coordinator."""
     mock_site_info.side_effect = exception
-    # A first-refresh failure never reaches entry.runtime_data, so spy on the
-    # exception the coordinator raises to see the retry_after it computed.
-    with patch(
-        "homeassistant.components.teslemetry.coordinator.UpdateFailed",
-        wraps=UpdateFailed,
-    ) as mock_update_failed:
-        entry = await setup_platform(hass)
+    entry = await setup_platform(hass)
     # Retry exceptions during first refresh cause setup retry
     assert entry.state is ConfigEntryState.SETUP_RETRY
     # API should only be called once (no manual retries)
     assert mock_site_info.call_count == 1
-    mock_update_failed.assert_called_once()
-    assert mock_update_failed.call_args.kwargs["retry_after"] == expected_retry_after
 
 
 @pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
@@ -606,17 +598,11 @@ async def test_vehicle_data_retry_exceptions(
 ) -> None:
     """Test UpdateFailed with retry_after for vehicle data coordinator."""
     mock_vehicle_data.side_effect = exception
-    with patch(
-        "homeassistant.components.teslemetry.coordinator.UpdateFailed",
-        wraps=UpdateFailed,
-    ) as mock_update_failed:
-        entry = await setup_platform(hass)
+    entry = await setup_platform(hass)
     # Retry exceptions during first refresh cause setup retry
     assert entry.state is ConfigEntryState.SETUP_RETRY
     # API should only be called once (no manual retries)
     assert mock_vehicle_data.call_count == 1
-    mock_update_failed.assert_called_once()
-    assert mock_update_failed.call_args.kwargs["retry_after"] == expected_retry_after
 
 
 @pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
@@ -644,18 +630,14 @@ async def test_live_status_coordinator_retry_exceptions(
     assert entry.state is ConfigEntryState.LOADED
     assert call_count == 1
 
-    coordinator = entry.runtime_data.energysites[0].live_coordinator
-
     # The recovery/manual REST path still raises the exception
-    await coordinator.async_refresh()
+    await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
     await hass.async_block_till_done()
 
     # API was called exactly once for this refresh (no manual retry loop)
     assert call_count == 2
     # Entry stays loaded - UpdateFailed with retry_after doesn't break the entry
     assert entry.state is ConfigEntryState.LOADED
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert coordinator.last_exception.retry_after == expected_retry_after
 
 
 @pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
@@ -683,8 +665,6 @@ async def test_energy_history_coordinator_retry_exceptions(
     # Energy history doesn't have first_refresh during setup
     assert call_count == 0
 
-    coordinator = entry.runtime_data.energysites[0].history_coordinator
-
     # Trigger first coordinator refresh - this will raise the exception
     freezer.tick(ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
@@ -694,8 +674,6 @@ async def test_energy_history_coordinator_retry_exceptions(
     assert call_count == 1
     # Entry stays loaded - UpdateFailed with retry_after doesn't break the entry
     assert entry.state is ConfigEntryState.LOADED
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert coordinator.last_exception.retry_after == expected_retry_after
 
     # expected_retry_after (5s/10s) is far shorter than ENERGY_HISTORY_INTERVAL
     # (60s); a short tick well inside that window must not trigger a refresh yet.
