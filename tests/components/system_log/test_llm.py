@@ -155,6 +155,11 @@ async def test_filter_by_level(
         pytest.param(
             "custom_integration", ["custom_integration"], id="match_custom_logger"
         ),
+        pytest.param(
+            "test_llm",
+            ["custom_integration", "test_system_log_llm"],
+            id="match_source_path",
+        ),
         pytest.param("nonexistent", [], id="no_match"),
     ],
 )
