@@ -1,0 +1,156 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "missing_unique_id": "Device did not provide a stable unique identifier",
+      "unsupported_device": "This Marstek device type is not currently supported"
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the device",
+      "device_not_found": "Device not found at the specified IP address",
+      "discovery_failed": "Failed to discover devices. Please check your network connection and try again.",
+      "no_devices_found": "No Marstek devices found on the network. Please ensure your device is powered on and connected to the same network.",
+      "unsupported_device": "This Marstek device type is not currently supported"
+    },
+    "step": {
+      "discover": {
+        "data": {
+          "device": "Select Device"
+        },
+        "data_description": {
+          "device": "The Marstek device discovered on your local network."
+        },
+        "title": "Marstek Energy Storage"
+      },
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address of your Marstek device on your local network."
+        },
+        "description": "Enter the IP address of your Marstek device. The device must be on the same local network and have Open API enabled.",
+        "title": "Add Marstek device"
+      },
+      "user": {
+        "menu_options": {
+          "discover": "Search for devices on the local network",
+          "manual": "Enter device IP address"
+        },
+        "title": "Marstek Energy Storage"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_soc": {
+        "name": "Battery level"
+      },
+      "battery_status": {
+        "name": "Battery status",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "idle": "[%key:common::state::idle%]",
+          "selling": "Selling"
+        }
+      },
+      "device_mode": {
+        "name": "Device mode",
+        "state": {
+          "ai": "AI",
+          "auto": "Auto",
+          "manual": "Manual",
+          "passive": "Passive",
+          "ups": "UPS"
+        }
+      },
+      "pv1_current": {
+        "name": "PV1 current"
+      },
+      "pv1_power": {
+        "name": "PV1 power"
+      },
+      "pv1_state": {
+        "name": "PV1 state",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "working": "Working"
+        }
+      },
+      "pv1_voltage": {
+        "name": "PV1 voltage"
+      },
+      "pv2_current": {
+        "name": "PV2 current"
+      },
+      "pv2_power": {
+        "name": "PV2 power"
+      },
+      "pv2_state": {
+        "name": "PV2 state",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "working": "[%key:component::marstek::entity::sensor::pv1_state::state::working%]"
+        }
+      },
+      "pv2_voltage": {
+        "name": "PV2 voltage"
+      },
+      "pv3_current": {
+        "name": "PV3 current"
+      },
+      "pv3_power": {
+        "name": "PV3 power"
+      },
+      "pv3_state": {
+        "name": "PV3 state",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "working": "[%key:component::marstek::entity::sensor::pv1_state::state::working%]"
+        }
+      },
+      "pv3_voltage": {
+        "name": "PV3 voltage"
+      },
+      "pv4_current": {
+        "name": "PV4 current"
+      },
+      "pv4_power": {
+        "name": "PV4 power"
+      },
+      "pv4_state": {
+        "name": "PV4 state",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "working": "[%key:component::marstek::entity::sensor::pv1_state::state::working%]"
+        }
+      },
+      "pv4_voltage": {
+        "name": "PV4 voltage"
+      }
+    }
+  },
+  "exceptions": {
+    "device_connection_failed": {
+      "message": "Unable to connect to the Marstek device at {host}."
+    },
+    "device_update_failed": {
+      "message": "Unable to update the Marstek device at {host}."
+    },
+    "invalid_device_data": {
+      "message": "The Marstek device at {host} returned invalid data."
+    },
+    "missing_stable_id": {
+      "message": "The Marstek device at {host} did not provide a stable ID."
+    },
+    "udp_client_setup_failed": {
+      "message": "Unable to set up the Marstek UDP client."
+    },
+    "unsupported_device": {
+      "message": "The Marstek device type {device_type} is not currently supported."
+    }
+  }
+}
