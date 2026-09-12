@@ -166,11 +166,16 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except VehicleOffline:
             self.data["state"] = TeslaFleetState.ASLEEP
             return self.data
-        except RateLimited:
-            LOGGER.warning(
-                "%s rate limited, will skip refresh",
-                self.name,
-            )
+        except RateLimited as e:
+            if isinstance(e.data, dict) and "after" in e.data:
+                LOGGER.warning(
+                    "%s rate limited, will retry in %s seconds",
+                    self.name,
+                    e.data["after"],
+                )
+                self.update_interval = timedelta(seconds=int(e.data["after"]))
+            else:
+                LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
         except (InvalidToken, OAuthExpired) as e:
             _invalidate_access_token(self.hass, self.config_entry)

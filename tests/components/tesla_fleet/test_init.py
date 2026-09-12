@@ -377,21 +377,46 @@ async def test_vehicle_refresh_ratelimited(
     mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test coordinator refresh handles 429."""
+    """Test coordinator refresh handles 429 and backs off using the after hint."""
+
+    await setup_platform(hass, normal_config_entry)
+
+    after_seconds = VEHICLE_INTERVAL_SECONDS + 10
+    mock_vehicle_data.side_effect = RateLimited({"after": after_seconds})
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_vehicle_data.call_count == 2
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state == "77"
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Not yet past the after hint, must not call
+    assert mock_vehicle_data.call_count == 2
+
+    freezer.tick(timedelta(seconds=after_seconds - VEHICLE_INTERVAL_SECONDS))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Exactly past the after hint, must call
+    assert mock_vehicle_data.call_count == 3
+
+
+async def test_vehicle_refresh_ratelimited_on_first_refresh(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test coordinator handles 429 on the first refresh, before any data exists."""
 
     mock_vehicle_data.side_effect = RateLimited(
         {"after": VEHICLE_INTERVAL_SECONDS + 10}
     )
     await setup_platform(hass, normal_config_entry)
-
-    assert (state := hass.states.get("sensor.test_battery_level"))
-    assert state.state == "unknown"
-
-    mock_vehicle_data.reset_mock()
-
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
 
     assert (state := hass.states.get("sensor.test_battery_level"))
     assert state.state == "unknown"
