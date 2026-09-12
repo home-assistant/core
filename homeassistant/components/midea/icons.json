@@ -3,6 +3,9 @@
     "binary_sensor": {
       "header_exist": {
         "default": "mdi:air-filter"
+      },
+      "water_pump_running": {
+        "default": "mdi:water-pump"
       }
     },
     "climate": {
