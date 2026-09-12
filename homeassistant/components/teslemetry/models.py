@@ -3,6 +3,7 @@
 import asyncio
 from dataclasses import dataclass, field
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
@@ -46,6 +47,14 @@ class TeslemetryVehicleData:
     firmware: str
     device: DeviceInfo
     wakelock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    charge_on_solar_lower_limit: int = 20
+    charge_on_solar_enabled: bool = False
+    charge_on_solar_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+
+    @property
+    def polls_charge_limit(self) -> bool:
+        """Whether this vehicle's charge limit comes from polling rather than the stream."""
+        return self.poll or not firmware_at_least(self.firmware, "2024.26")
 
 
 @dataclass
