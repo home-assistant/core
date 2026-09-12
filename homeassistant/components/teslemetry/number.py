@@ -158,9 +158,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry number platform from a config entry."""
 
-    entities: list[NumberEntity] = list(
-        chain(
-            (
+    vehicle_entities: list[TeslemetryVehicleNumberEntity] = []
+    charge_limit_entities: dict[str, TeslemetryVehicleNumberEntity] = {}
+    for vehicle in entry.runtime_data.vehicles:
+        for description in VEHICLE_DESCRIPTIONS:
+            entity = (
                 TeslemetryVehiclePollingNumberEntity(
                     vehicle,
                     description,
@@ -172,9 +174,14 @@ async def async_setup_entry(
                     description,
                     entry.runtime_data.scopes,
                 )
-                for vehicle in entry.runtime_data.vehicles
-                for description in VEHICLE_DESCRIPTIONS
-            ),
+            )
+            vehicle_entities.append(entity)
+            if description.key == "charge_state_charge_limit_soc":
+                charge_limit_entities[vehicle.vin] = entity
+
+    entities: list[NumberEntity] = list(
+        chain(
+            vehicle_entities,
             (
                 TeslemetryEnergyInfoNumberSensorEntity(
                     energysite,
@@ -195,7 +202,7 @@ async def async_setup_entry(
     ):
         entities.extend(
             TeslemetryChargeOnSolarLowerLimitNumberEntity(
-                vehicle, entry.runtime_data.scopes
+                vehicle, charge_limit_entities[vehicle.vin], entry.runtime_data.scopes
             )
             for vehicle in entry.runtime_data.vehicles
         )
@@ -360,11 +367,16 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
     _attr_mode = NumberMode.AUTO
     api: Vehicle
 
-    def __init__(self, data: TeslemetryVehicleData, scopes: list[Scope]) -> None:
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        charge_limit_entity: TeslemetryVehicleNumberEntity,
+        scopes: list[Scope],
+    ) -> None:
         """Initialize the charge-on-solar lower limit number entity."""
         self.scoped = Scope.VEHICLE_CMDS in scopes
         self._attr_native_max_value = 100
-        self._charge_limit_soc: int | None = None
+        self._charge_limit_entity = charge_limit_entity
         super().__init__(data, CHARGE_ON_SOLAR_LOWER_LIMIT_KEY)
 
     @override
@@ -412,7 +424,6 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
 
     def _async_handle_charge_limit_soc(self, value: int | None) -> None:
         """Cap the lower limit at the current upper (charge limit SOC) value."""
-        self._charge_limit_soc = value
         upper_limit = value if value is not None else 100
         self._attr_native_max_value = upper_limit
         if (
@@ -435,11 +446,14 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
             self.async_write_ha_state()
             return
 
+        charge_limit_soc = self._charge_limit_entity.native_value
         sent_value = await async_set_charge_on_solar(
             self.api,
             enabled=True,
             lower_charge_limit=value,
-            charge_limit_soc=self._charge_limit_soc,
+            charge_limit_soc=(
+                int(charge_limit_soc) if charge_limit_soc is not None else None
+            ),
         )
         self._attr_native_value = sent_value
         self.vehicle.charge_on_solar_lower_limit = sent_value
