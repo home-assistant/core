@@ -109,3 +109,17 @@ set_home_cooling_mode:
       example: 3014xxxxxxxxxxxxxxxxxxxx
       selector:
         text:
+
+pull_latch:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: homematicip_cloud
+          multiple: true
+    pin:
+      example: "1234"
+      selector:
+        text:
+          type: password
