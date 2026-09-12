@@ -9,10 +9,12 @@ from typing import Any, cast, override
 
 from uiprotect.data import (
     NVR,
+    AlarmHubConnectionState,
     Camera,
     Fob,
     FobAwayState,
     Light,
+    LinkStation,
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
@@ -49,6 +51,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
+    BaseAlarmHubEntity,
     BaseProtectEntity,
     EventEntityMixin,
     PermRequired,
@@ -595,6 +598,51 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 }
 
 
+@dataclass(frozen=True, kw_only=True)
+class ProtectAlarmHubSensorEntityDescription(SensorEntityDescription):
+    """Describes a UniFi Protect alarm hub (public API) sensor."""
+
+    value_fn: Callable[[LinkStation], datetime | float | str | None]
+
+
+def _alarm_hub_battery_voltage(hub: LinkStation) -> float | None:
+    """Return the backup-battery voltage, or None when no battery is connected.
+
+    A disconnected, removed or fully flat backup battery all report
+    ``connection: disconnected`` with ``voltage: 0``; reading unknown rather
+    than 0.0 V avoids implying a real measurement when there is no usable cell.
+    """
+    battery = hub.alarm_hub_battery
+    if battery is None or battery.connection is not AlarmHubConnectionState.CONNECTED:
+        return None
+    return battery.voltage
+
+
+def _alarm_hub_last_event(hub: LinkStation) -> datetime | None:
+    """Return the last-event timestamp, if reported."""
+    return hub.last_event
+
+
+ALARM_HUB_SENSORS: tuple[ProtectAlarmHubSensorEntityDescription, ...] = (
+    ProtectAlarmHubSensorEntityDescription(
+        key="battery_voltage",
+        translation_key="alarm_hub_battery_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_alarm_hub_battery_voltage,
+    ),
+    ProtectAlarmHubSensorEntityDescription(
+        key="last_event",
+        translation_key="alarm_hub_last_event",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_alarm_hub_last_event,
+    ),
+)
+
+
 def _fob_battery_level(fob: Fob) -> int | None:
     """Return the key fob battery percentage, if it has been reported."""
     if (battery := fob.wireless_connection_state.battery_status) is not None:
@@ -657,6 +705,29 @@ FOB_SENSORS: tuple[ProtectFobSensorEntityDescription, ...] = (
 )
 
 
+class ProtectAlarmHubSensor(BaseAlarmHubEntity, SensorEntity):
+    """A sensor entity for a UniFi Protect alarm hub."""
+
+    entity_description: ProtectAlarmHubSensorEntityDescription
+
+    @callback
+    @override
+    def _async_update_attrs(self, hub: LinkStation) -> None:
+        super()._async_update_attrs(hub)
+        self._attr_native_value = self.entity_description.value_fn(hub)
+
+
+@callback
+def _async_alarm_hub_entities(
+    data: ProtectData, hub: LinkStation
+) -> list[ProtectAlarmHubSensor]:
+    """Build the sensor entities for one alarm hub."""
+    return [
+        ProtectAlarmHubSensor(data, hub, description)
+        for description in ALARM_HUB_SENSORS
+    ]
+
+
 class ProtectFobSensor(ProtectFobEntity, SensorEntity):
     """A sensor entity for a UniFi Protect key fob (Public API)."""
 
@@ -695,13 +766,15 @@ async def async_setup_entry(
                 ProtectFobSensor(data, device, description)
                 for description in FOB_SENSORS
             )
+        elif isinstance(device, LinkStation):
+            async_add_entities(_async_alarm_hub_entities(data, device))
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
     )
 
     # The public bootstrap is primed only with an API key and supported NVR
-    # firmware; without it there are no fobs to expose.
+    # firmware; without it there are no fobs or alarm hubs to expose.
     api = data.api
     if api.has_public_bootstrap:
         async_add_entities(
@@ -709,6 +782,8 @@ async def async_setup_entry(
             for fob in api.public_bootstrap.fobs.values()
             for description in FOB_SENSORS
         )
+        for hub in api.public_bootstrap.alarm_hubs.values():
+            async_add_entities(_async_alarm_hub_entities(data, hub))
 
     # Everything below is driven by the private bootstrap, which public-only
     # entries do not have.

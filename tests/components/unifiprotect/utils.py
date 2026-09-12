@@ -589,6 +589,7 @@ def setup_public_sensor(
     pb.relays = {}
     pb.sirens = {}
     pb.fobs = {}
+    pb.alarm_hubs = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
 
@@ -620,6 +621,7 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
     pb.relays = {}
     pb.sirens = {}
     pb.fobs = {}
+    pb.alarm_hubs = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
 
@@ -651,6 +653,7 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
     pb.relays = {}
     pb.sirens = {}
     pb.fobs = {}
+    pb.alarm_hubs = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
 

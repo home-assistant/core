@@ -200,6 +200,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.relays = {}
     client.public_bootstrap.sirens = {}
     client.public_bootstrap.fobs = {}
+    client.public_bootstrap.alarm_hubs = {}
     client.public_bootstrap.arm_profiles = {}
     client.public_bootstrap.arm_mode = None
     client.public_bootstrap.nvr = Mock()
@@ -655,6 +656,7 @@ def mock_ufp_public_only_client() -> Mock:
     pb.cameras = {}
     pb.lights = {}
     pb.fobs = {}
+    pb.alarm_hubs = {}
     device_maps = {
         ModelType.CAMERA: "cameras",
         ModelType.LIGHT: "lights",
