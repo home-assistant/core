@@ -254,6 +254,7 @@ FLOWS = {
         "forecast_solar",
         "forked_daapd",
         "foscam",
+        "free_mobile",
         "freebox",
         "freedompro",
         "freshr",
