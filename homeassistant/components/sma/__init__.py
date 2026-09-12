@@ -2,7 +2,7 @@
 
 import logging
 
-from pysma import SMAWebConnect
+from pysma import SMAModbus, SMAWebConnect
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -19,7 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_GROUP
 from .coordinator import SMADataUpdateCoordinator
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
         group=entry.data[CONF_GROUP],
     )
 
-    coordinator = SMADataUpdateCoordinator(hass, entry, sma)
+    sma_modbus = SMAModbus(
+        host=entry.data[CONF_HOST],
+        port=502,  # Default, maybe add options for this later on
+        sma_unit_id=3,  # default, maybe add options for this later on
+    )
+
+    coordinator = SMADataUpdateCoordinator(hass, entry, sma, sma_modbus)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

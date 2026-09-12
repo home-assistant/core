@@ -15,7 +15,7 @@ import pytest
 from homeassistant.components.sma.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_DEVICE, MOCK_USER_INPUT
+from . import MOCK_DEVICE, MOCK_USER_INPUT, OPERATING_STATUS_ACTIVATED_TAG
 
 from tests.common import MockConfigEntry
 
@@ -44,7 +44,22 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_sma_client() -> Generator[MagicMock]:
+def mock_sma_modbus() -> Generator[MagicMock]:
+    """Mock the SMA Modbus client."""
+    with patch("homeassistant.components.sma.SMAModbus", autospec=True) as modbus_cls:
+        modbus_instance: MagicMock = modbus_cls.return_value
+        modbus_instance.connect = AsyncMock(return_value=None)
+        modbus_instance.discover = AsyncMock(return_value=None)
+        modbus_instance.get_control_schema = MagicMock(return_value=None)
+        modbus_instance.get_control = AsyncMock(return_value=None)
+        modbus_instance.set_control = AsyncMock(return_value=None)
+        modbus_instance.close = AsyncMock(return_value=None)
+
+        yield modbus_instance
+
+
+@pytest.fixture
+def mock_sma_client(mock_sma_modbus: MagicMock) -> Generator[MagicMock]:
     """Mock the SMA client."""
     with patch(
         "homeassistant.components.sma.coordinator.SMAWebConnect", autospec=True
@@ -53,13 +68,13 @@ def mock_sma_client() -> Generator[MagicMock]:
         sma_instance.device_info = AsyncMock(return_value=MOCK_DEVICE)
         sma_instance.new_session = AsyncMock(return_value=True)
         sma_instance.close_session = AsyncMock(return_value=True)
-        sma_instance.get_sensors = AsyncMock(
-            return_value=Sensors(
-                sensor_map[GENERIC_SENSORS]
-                + sensor_map[OPTIMIZERS_VIA_INVERTER]
-                + sensor_map[ENERGY_METER_VIA_INVERTER]
-            )
+        sensors = Sensors(
+            sensor_map[GENERIC_SENSORS]
+            + sensor_map[OPTIMIZERS_VIA_INVERTER]
+            + sensor_map[ENERGY_METER_VIA_INVERTER]
         )
+        sensors["operating_status_general"].raw_value = OPERATING_STATUS_ACTIVATED_TAG
+        sma_instance.get_sensors = AsyncMock(return_value=sensors)
 
         default_sensor_values = {
             "6100_00499100": 5000,
