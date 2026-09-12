@@ -1,0 +1,15 @@
+{
+  "sensor_ready": true,
+  "latest_sensor_age_s": 2,
+  "temperature_c": 22.5,
+  "humidity_pct": 45,
+  "pressure_kpa": 101.3,
+  "co2_ppm": 500,
+  "tvoc_ppb": 75,
+  "pm25_ugm3": 1,
+  "pm10_ugm3": 1,
+  "pm25_count_cm3": 0.9,
+  "pm10_count_cm3": 0.9,
+  "airflow_mps": 1.25,
+  "airflow_duration_s": 30
+}
