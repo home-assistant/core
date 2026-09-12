@@ -219,8 +219,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=False)
 
+    # A failure logs at its natural level only the first time, or if it is
+    # more severe than anything seen so far in the outage; equal or lower
+    # repeats log at debug until recovery, so a stuck connection doesn't
+    # flood the log while an escalation stays visible.
+    highest_failure_level = logging.NOTSET
+
     async def splunk_event_listener(event: Event[EventStateChangedData]) -> None:
         """Listen for new messages on the bus and sends them to Splunk."""
+        nonlocal highest_failure_level
+
         state = event.data.get("new_state")
         if state is None or not entity_filter(state.entity_id):
             return
@@ -242,23 +250,62 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         }
 
+        level = logging.NOTSET
+        log_message = ""
+        log_args: tuple[Any, ...] = ()
+
         try:
-            await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=True)
+            sent = await event_collector.queue(
+                json.dumps(payload, cls=JSONEncoder), send=True
+            )
         except SplunkPayloadError as err:
             if err.status == HTTPStatus.UNAUTHORIZED:
-                _LOGGER.error("Splunk token unauthorized: %s", err)
-                # Trigger reauth flow
                 entry.async_start_reauth(hass)
+                level = logging.ERROR
+                log_message, log_args = "Splunk token unauthorized: %s", (err,)
             else:
-                _LOGGER.warning("Splunk payload error: %s", err)
+                level = logging.WARNING
+                log_message, log_args = "Splunk payload error: %s", (err,)
         except ClientConnectionError as err:
-            _LOGGER.debug("Connection error sending to Splunk: %s", err)
+            level = logging.DEBUG
+            log_message, log_args = "Connection error sending to Splunk: %s", (err,)
         except TimeoutError:
-            _LOGGER.debug("Timeout sending to Splunk at %s:%s", host, port)
+            level = logging.DEBUG
+            log_message = "Timeout sending to Splunk at %s:%s"
+            log_args = (host, port)
         except ClientResponseError as err:
-            _LOGGER.warning("Splunk response error: %s", err.message)
+            level = logging.WARNING
+            log_message, log_args = "Splunk response error: %s", (err.message,)
         except Exception:
-            _LOGGER.exception("Unexpected error sending event to Splunk")
+            # Logged here, not after the block below, so exc_info is captured
+            # while this exception is still the one being handled.
+            if highest_failure_level < logging.ERROR:
+                _LOGGER.exception("Unexpected error sending event to Splunk")
+            else:
+                _LOGGER.debug("Unexpected error sending event to Splunk")
+            highest_failure_level = max(highest_failure_level, logging.ERROR)
+            return
+
+        if log_message:
+            _LOGGER.log(
+                level if level > highest_failure_level else logging.DEBUG,
+                log_message,
+                *log_args,
+            )
+            highest_failure_level = max(highest_failure_level, level)
+            return
+
+        if not sent:
+            # Coalesced into an already in-flight send; not a fact about this
+            # send, so it must not be treated as a success or a recovery.
+            return
+
+        if highest_failure_level != logging.NOTSET:
+            _LOGGER.log(
+                min(highest_failure_level, logging.WARNING),
+                "Sending events to Splunk has recovered",
+            )
+        highest_failure_level = logging.NOTSET
 
     # Store the event listener cancellation callback
     entry.async_on_unload(
