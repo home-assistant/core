@@ -73,6 +73,9 @@ from .const import (
 from .helpers import async_get_ble_parent
 from .models import TeslemetryEnergyData
 
+# Bounds the best-effort wake so a stalled API call cannot hold back pairing.
+WAKE_TIMEOUT = 15
+
 
 class PowerwallLookupError(Exception):
     """Signal that the authorized-client lookup failed for a non-retryable reason."""
@@ -302,7 +305,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         if vehicle_data is None:
             return
         try:
-            await vehicle_data.api.wake_up()
+            async with asyncio.timeout(WAKE_TIMEOUT):
+                await vehicle_data.api.wake_up()
         except (TeslaFleetError, ClientError, TimeoutError) as err:
             # Tapping the key card also wakes the vehicle, so a failed wake is not fatal.
             LOGGER.debug("Failed to wake vehicle before Bluetooth pairing: %s", err)
