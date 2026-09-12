@@ -266,7 +266,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         )
 
     async def _async_wake_vehicle(self) -> None:
-        """Ask Teslemetry to wake the vehicle before scanning."""
+        """Ask Teslemetry to wake the vehicle before pairing."""
         entry = self._get_entry()
         # runtime_data exists only while the entry is loaded; core clears it on unload.
         if entry.state is not ConfigEntryState.LOADED:
@@ -284,19 +284,23 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         try:
             await vehicle_data.api.wake_up()
         except (TeslaFleetError, ClientError, TimeoutError) as err:
-            # BLE pairing works on a sleeping vehicle, so a failed wake is not fatal.
-            LOGGER.debug("Failed to wake vehicle before Bluetooth scan: %s", err)
+            # Tapping the key card also wakes the vehicle, so a failed wake is not fatal.
+            LOGGER.debug("Failed to wake vehicle before Bluetooth pairing: %s", err)
+
+    async def _async_wake_and_pair(self, vehicle: VehicleBluetooth) -> None:
+        """Wake the vehicle, then add the virtual key over Bluetooth."""
+        await self._async_wake_vehicle()
+        await vehicle.pair()
 
     async def async_step_scan(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Wake the vehicle, then find it over Bluetooth and connect to it."""
+        """Find the vehicle over Bluetooth and connect to it."""
         if TYPE_CHECKING:
             assert self._vin is not None
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self._async_wake_vehicle()
             try:
                 parent = await async_get_ble_parent(self.hass)
             except _BLE_KEY_ERRORS as err:
@@ -387,7 +391,9 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             if TYPE_CHECKING:
                 assert self._vehicle is not None
             # pair() can take minutes, so run it as a progress task rather than blocking the flow.
-            self._pair_task = self.hass.async_create_task(self._vehicle.pair())
+            self._pair_task = self.hass.async_create_task(
+                self._async_wake_and_pair(self._vehicle)
+            )
 
         if not self._pair_task.done():
             return self.async_show_progress(
