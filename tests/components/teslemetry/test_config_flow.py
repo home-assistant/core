@@ -1,8 +1,9 @@
 """Test the Teslemetry config flow."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from copy import deepcopy
+from datetime import timedelta
 import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
@@ -39,6 +40,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.teslemetry.config_flow import WAKE_TIMEOUT
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -65,11 +67,12 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import mock_config_entry, setup_platform
 from .const import CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -796,7 +799,9 @@ async def _start_pairing_at_scan(
     return result
 
 
-async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None:
+async def test_subentry_pairing_already_whitelisted(
+    hass: HomeAssistant, mock_wake_up: AsyncMock
+) -> None:
     """The add flow creates the subentry when the key is already whitelisted."""
     entry = await _setup_account_entry(hass)
     vehicle = _mock_vehicle(on_whitelist=True)
@@ -824,6 +829,8 @@ async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None
     # The subentry is created atomically with its credentials, never identity-only.
     assert subentries[0].unique_id == VIN
     assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+    # Only the key install needs the vehicle awake, so scan and handshake never wake it.
+    mock_wake_up.assert_not_awaited()
     vehicle.connect.assert_awaited_once()
     vehicle.disconnect.assert_awaited_once()
 
@@ -866,13 +873,30 @@ async def test_subentry_pairing_duplicate_vin_aborts(hass: HomeAssistant) -> Non
     assert len(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)) == 1
 
 
-async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> None:
-    """Pairing walks through instructions and key install when not whitelisted."""
+async def _hang_forever(*args: Any) -> None:
+    """Never return, like a stalled API call."""
+    await asyncio.Event().wait()
+
+
+@pytest.mark.parametrize(
+    "wake_side_effect",
+    [None, InvalidResponse(), ClientError("nope"), TimeoutError(), _hang_forever],
+    ids=["success", "fleet_error", "client_error", "timeout", "stalled"],
+)
+async def test_subentry_pairing_requires_key_approval(
+    hass: HomeAssistant,
+    mock_wake_up: AsyncMock,
+    wake_side_effect: Exception | Callable[..., Awaitable[None]] | None,
+) -> None:
+    """Pairing wakes the vehicle, then installs the key, even if the wake fails."""
     entry = await _setup_account_entry(hass)
     vehicle = _mock_vehicle(on_whitelist=False)
+    mock_wake_up.side_effect = wake_side_effect
     release = asyncio.Event()
+    wakes_before_pair: list[int] = []
 
     async def _pair() -> None:
+        wakes_before_pair.append(mock_wake_up.await_count)
         await release.wait()
 
     vehicle.pair = AsyncMock(side_effect=_pair)
@@ -902,6 +926,10 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
         assert result["progress_action"] == "pair"
 
         release.set()
+        # Lets a stalled wake hit its timeout so pairing can proceed.
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=WAKE_TIMEOUT)
+        )
         await hass.async_block_till_done()
         result = await hass.config_entries.subentries.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -910,6 +938,78 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
     subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
     assert len(subentries) == 1
     assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+    vehicle.pair.assert_awaited_once()
+    assert wakes_before_pair == [1]
+
+
+async def _unload_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Unload the account entry mid-flow."""
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def _reload_without_vehicles(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Reload the account entry after its vehicle left the account mid-flow."""
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.products",
+            return_value={"response": []},
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+    assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "lose_vehicle",
+    [_unload_entry, _reload_without_vehicles],
+    ids=["entry_not_loaded", "vehicle_missing"],
+)
+async def test_subentry_pair_wake_skipped_without_vehicle_data(
+    hass: HomeAssistant,
+    mock_wake_up: AsyncMock,
+    lose_vehicle: Callable[[HomeAssistant, MockConfigEntry], Awaitable[None]],
+) -> None:
+    """Pairing skips waking, but still installs the key, if the vehicle data is gone."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle(on_whitelist=False)
+    release = asyncio.Event()
+
+    async def _pair() -> None:
+        await release.wait()
+
+    vehicle.pair = AsyncMock(side_effect=_pair)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["step_id"] == "instructions"
+
+        await lose_vehicle(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        release.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_wake_up.assert_not_awaited()
     vehicle.pair.assert_awaited_once()
 
 
