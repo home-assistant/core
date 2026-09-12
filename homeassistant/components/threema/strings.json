@@ -1,0 +1,96 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "key_generation_failed": "Failed to generate encryption keys.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_gateway_id": "Gateway ID must start with * followed by 7 alphanumeric characters.",
+      "invalid_key": "Key must be a 64-character hex string (32 bytes).",
+      "key_mismatch": "The public key does not match the private key.",
+      "public_key_requires_private_key": "Enter the private key too to verify it against the public key.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "credentials": {
+        "data": {
+          "api_secret": "API secret",
+          "gateway_id": "Gateway ID",
+          "private_key": "Private key (optional, enables E2E encryption)",
+          "public_key": "Public key to verify against (optional)"
+        },
+        "data_description": {
+          "api_secret": "Secret you received from Threema",
+          "gateway_id": "ID of your Gateway, including '*', e.g.: *ABCD123",
+          "private_key": "Private key as hex string (64 characters). A 'private:' prefix, as used by Threema's key export tools, is accepted and stripped automatically. Leave empty for simple (non-E2E) mode.",
+          "public_key": "Never stored — only checked once against the private key above to catch copy-paste mistakes. Paste the public key you registered at gateway.threema.ch (a 'public:' prefix is accepted)."
+        },
+        "description": "Enter your Threema Gateway ID and secret obtained from gateway.threema.ch. Threema enables end-to-end mode for a Gateway ID manually after you register a public key, which can take a few days — so you may well be completing this step long after the keys were generated.",
+        "title": "Gateway credentials"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_secret": "API secret"
+        },
+        "data_description": {
+          "api_secret": "New secret for your Threema Gateway {gateway_id}"
+        },
+        "description": "The API secret for {gateway_id} has expired or is no longer valid. Enter a new secret from gateway.threema.ch.",
+        "title": "Re-authenticate Threema"
+      },
+      "setup_new": {
+        "description": "Your keys have been generated. Save them now before continuing!\n\nPublic key: `{public_key}`\nPrivate key: `{private_key}`\n\nWhen registering at gateway.threema.ch, paste the public key as shown above. Store the private key securely — it cannot be recovered.",
+        "title": "Keys generated"
+      },
+      "user": {
+        "menu_options": {
+          "credentials": "Add existing Gateway ID",
+          "setup_new": "Generate new encryption keys"
+        },
+        "title": "Threema setup"
+      }
+    }
+  },
+  "config_subentries": {
+    "recipient": {
+      "abort": {
+        "already_configured": "This recipient is already configured."
+      },
+      "entry_type": "Recipient",
+      "error": {
+        "invalid_recipient_id": "Threema ID must be exactly 8 alphanumeric characters."
+      },
+      "initiate_flow": {
+        "user": "Add recipient"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "name": "Display name",
+            "recipient": "Threema ID"
+          },
+          "data_description": {
+            "name": "Optional friendly name for this recipient (e.g. 'Dad').",
+            "recipient": "The 8-character Threema ID of the recipient."
+          },
+          "description": "Enter the Threema ID of the person you want to send messages to.",
+          "title": "Add recipient"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "send_error": {
+      "message": "Error sending message: {error}"
+    }
+  }
+}
