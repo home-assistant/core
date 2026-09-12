@@ -1,7 +1,17 @@
 {
   "entity": {
     "sensor": {
-      "syncthing": {
+      "syncthing_device": {
+        "default": "mdi:sync-alert",
+        "state": {
+          "connected": "mdi:cellphone-link",
+          "disconnected": "mdi:cellphone-link-off",
+          "online": "mdi:server",
+          "paused": "mdi:television-pause",
+          "unknown": "mdi:devices"
+        }
+      },
+      "syncthing_folder": {
         "default": "mdi:folder-alert",
         "state": {
           "idle": "mdi:folder",

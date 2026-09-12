@@ -1,0 +1,10 @@
+{
+  "id": 4,
+  "globalID": 4,
+  "type": "DeviceDisconnected",
+  "time": "2024-01-01T00:03:00.000000000Z",
+  "data": {
+    "id": "ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD",
+    "error": ""
+  }
+}
