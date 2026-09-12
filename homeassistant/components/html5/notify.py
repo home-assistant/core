@@ -20,7 +20,6 @@ from pywebpush import WebPusher, WebPushException, webpush_async
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -31,10 +30,9 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
 )
-from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, URL_ROOT
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -54,7 +52,6 @@ from .const import (
     ATTR_TTL,
     ATTR_VAPID_EMAIL,
     ATTR_VAPID_PRV_KEY,
-    ATTR_VAPID_PUB_KEY,
     DOMAIN,
     REGISTRATIONS_FILE,
     SERVICE_DISMISS,
@@ -89,11 +86,6 @@ DEFAULT_BADGE = "/static/images/notification-badge.png"
 DEFAULT_ICON = "/static/icons/favicon-192x192.png"
 
 ATTR_JWT = "jwt"
-
-WS_TYPE_APPKEY = "notify/html5/appkey"
-SCHEMA_WS_APPKEY = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_APPKEY}
-)
 
 # The number of days after the moment a notification is sent that a JWT
 # is valid.
@@ -178,19 +170,8 @@ async def async_get_service(
 
     registrations = await hass.async_add_executor_job(_load_config, json_path)
 
-    vapid_pub_key: str = discovery_info[ATTR_VAPID_PUB_KEY]
     vapid_prv_key: str = discovery_info[ATTR_VAPID_PRV_KEY]
     vapid_email: str = discovery_info[ATTR_VAPID_EMAIL]
-
-    @callback
-    def websocket_appkey(
-        _hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-    ) -> None:
-        connection.send_message(websocket_api.result_message(msg["id"], vapid_pub_key))
-
-    websocket_api.async_register_command(
-        hass, WS_TYPE_APPKEY, websocket_appkey, SCHEMA_WS_APPKEY
-    )
 
     hass.http.register_view(HTML5PushRegistrationView(registrations, json_path))
     hass.http.register_view(HTML5PushCallbackView(registrations))
