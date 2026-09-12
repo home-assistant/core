@@ -20,7 +20,11 @@ from homeassistant.components.climate import (
     SERVICE_TURN_ON,
     HVACMode,
 )
-from homeassistant.components.zhong_hong.const import ALL_FAN_MODES, FAN_MEDIUM_HIGH
+from homeassistant.components.zhong_hong.const import (
+    ALL_FAN_MODES,
+    DOMAIN,
+    FAN_MEDIUM_HIGH,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -31,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
 
 from . import setup_integration
 from .conftest import DEVICE_ADDRESS, ENTITY_ID, FakeGateway, build_status
@@ -385,3 +390,45 @@ async def test_device_address_is_used_for_the_entity(
 
     assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get("climate.ac_1_2") is not None
+
+
+async def test_every_fan_mode_has_a_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test every speed the entity offers is named in the interface.
+
+    The climate component names three of the five speeds the gateway can
+    address. The other two have to be named here, or they reach the user as
+    the keys themselves.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    entry = entity_registry.async_get(ENTITY_ID)
+    assert entry
+
+    # Asked for one integration at a time, these come back as the cache itself
+    # rather than a copy of it, so neither is merged into the other.
+    named_by_component = await async_get_translations(
+        hass, "en", "entity_component", [CLIMATE_DOMAIN]
+    )
+    named_here = await async_get_translations(hass, "en", "entity", [DOMAIN])
+
+    by_component = (
+        f"component.{CLIMATE_DOMAIN}.entity_component._"
+        ".state_attributes.fan_mode.state."
+    )
+    by_integration = (
+        f"component.{DOMAIN}.entity.climate.{entry.translation_key}"
+        ".state_attributes.fan_mode.state."
+    )
+
+    for fan_mode in state.attributes[ATTR_FAN_MODES]:
+        assert (
+            f"{by_component}{fan_mode}" in named_by_component
+            or f"{by_integration}{fan_mode}" in named_here
+        ), f"{fan_mode} has no name to show"
