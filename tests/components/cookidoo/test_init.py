@@ -1,8 +1,15 @@
 """Unit tests for the cookidoo integration."""
 
+from dataclasses import asdict
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from cookidoo_api import CookidooAuthException, CookidooRequestException
+from cookidoo_api import (
+    CookidooAuthException,
+    CookidooParseException,
+    CookidooRequestException,
+)
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.cookidoo.const import DOMAIN
@@ -12,15 +19,24 @@ from homeassistant.const import (
     CONF_EMAIL,
     CONF_LANGUAGE,
     CONF_PASSWORD,
+    CONF_TOKEN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-from .conftest import COUNTRY, EMAIL, LANGUAGE, PASSWORD, TEST_UUID
+from .conftest import (
+    AUTH_DATA,
+    COUNTRY,
+    EMAIL,
+    LANGUAGE,
+    PASSWORD,
+    STALE_AUTH_DATA,
+    TEST_UUID,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_cookidoo_client")
@@ -45,6 +61,7 @@ async def test_load_unload(
     [
         (CookidooRequestException, ConfigEntryState.SETUP_RETRY),
         (CookidooAuthException, ConfigEntryState.SETUP_ERROR),
+        (CookidooParseException, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_init_failure(
@@ -55,6 +72,8 @@ async def test_init_failure(
     cookidoo_config_entry: MockConfigEntry,
 ) -> None:
     """Test an initialization error on integration load."""
+    # No tokens on the config entry, so the coordinator logs in with credentials
+    mock_cookidoo_client.auth_data = None
     mock_cookidoo_client.login.side_effect = exception
     await setup_integration(hass, cookidoo_config_entry)
     assert cookidoo_config_entry.state is status
@@ -85,11 +104,27 @@ async def test_config_entry_not_ready(
 
 
 @pytest.mark.parametrize(
-    ("login_exception", "status"),
+    ("login_exception", "status", "reason"),
     [
-        (None, ConfigEntryState.LOADED),
-        (CookidooRequestException(), ConfigEntryState.SETUP_RETRY),
-        (CookidooAuthException(), ConfigEntryState.SETUP_ERROR),
+        pytest.param(None, ConfigEntryState.LOADED, None, id="relogin_succeeds"),
+        pytest.param(
+            CookidooRequestException(),
+            ConfigEntryState.SETUP_RETRY,
+            "Failed to connect to server, try again later",
+            id="request",
+        ),
+        pytest.param(
+            CookidooAuthException(),
+            ConfigEntryState.SETUP_ERROR,
+            "Authentication failed for test-email, check your email and password",
+            id="auth",
+        ),
+        pytest.param(
+            CookidooParseException(),
+            ConfigEntryState.SETUP_RETRY,
+            "Failed to connect to server, try again later",
+            id="parse",
+        ),
     ],
 )
 async def test_config_entry_not_ready_auth_error(
@@ -98,6 +133,7 @@ async def test_config_entry_not_ready_auth_error(
     mock_cookidoo_client: AsyncMock,
     login_exception: Exception | None,
     status: ConfigEntryState,
+    reason: str | None,
 ) -> None:
     """Test config entry recovery when data fetch hits an auth error.
 
@@ -105,6 +141,8 @@ async def test_config_entry_not_ready_auth_error(
     raises CookidooAuthException (expired session), then re-login either
     succeeds or fails. On success, the next data fetch returns valid data.
     """
+    # No tokens on the config entry, so the coordinator logs in with credentials
+    mock_cookidoo_client.auth_data = None
     # get_ingredient_items raises auth error once, then returns valid data
     default_return = mock_cookidoo_client.get_ingredient_items.return_value
     mock_cookidoo_client.get_ingredient_items.side_effect = [
@@ -121,6 +159,8 @@ async def test_config_entry_not_ready_auth_error(
     await hass.async_block_till_done()
 
     assert cookidoo_config_entry.state is status
+    # A translated reason proves the exception was handled rather than escaping
+    assert cookidoo_config_entry.reason == reason
 
 
 MOCK_CONFIG_ENTRY_MIGRATION = {
@@ -344,6 +384,20 @@ async def test_migration_from_partial_duplicate_unique_ids(
             "old_ciam_sub_uuid",
             CookidooAuthException,
         ),
+        (
+            1,
+            1,
+            MOCK_CONFIG_ENTRY_MIGRATION,
+            None,
+            CookidooParseException,
+        ),
+        (
+            1,
+            2,
+            MOCK_CONFIG_ENTRY_MIGRATION,
+            "old_ciam_sub_uuid",
+            CookidooParseException,
+        ),
     ],
 )
 async def test_migration_from_with_error(
@@ -356,6 +410,7 @@ async def test_migration_from_with_error(
     unique_id,
     login_exception: Exception,
     mock_cookidoo_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test different expected migration paths but with connection issues."""
     # Migration can fail due to connection issues as we have to fetch the uuid
@@ -406,6 +461,8 @@ async def test_migration_from_with_error(
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    # A handled failure, rather than the exception escaping async_migrate_entry
+    assert "Could not migrate config entry" in caplog.text
 
     assert entity_registry.async_is_registered(
         entity_registry.entities.get_entity_id(
@@ -434,3 +491,119 @@ async def test_migration_from_with_error(
             )
         )
     )
+
+
+async def test_login_persists_tokens(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+) -> None:
+    """Test the OAuth2 tokens of a credential login are stored on the entry."""
+    mock_cookidoo_client.auth_data = None
+    mock_cookidoo_client.login.side_effect = lambda: setattr(
+        mock_cookidoo_client, "auth_data", AUTH_DATA
+    )
+
+    await setup_integration(hass, cookidoo_config_entry)
+
+    assert cookidoo_config_entry.state is ConfigEntryState.LOADED
+    mock_cookidoo_client.login.assert_awaited_once()
+    assert cookidoo_config_entry.data[CONF_TOKEN] == asdict(AUTH_DATA)
+
+
+async def test_tokens_persisted_when_user_info_fails(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+) -> None:
+    """Test tokens of a successful login survive a failing user info fetch."""
+    mock_cookidoo_client.auth_data = None
+    mock_cookidoo_client.login.side_effect = lambda: setattr(
+        mock_cookidoo_client, "auth_data", AUTH_DATA
+    )
+    mock_cookidoo_client.get_user_info.side_effect = CookidooRequestException()
+
+    await setup_integration(hass, cookidoo_config_entry)
+
+    assert cookidoo_config_entry.state is ConfigEntryState.SETUP_RETRY
+    # Without this the next attempt would replay the whole login
+    assert cookidoo_config_entry.data[CONF_TOKEN] == asdict(AUTH_DATA)
+
+
+async def test_stored_tokens_skip_login(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry_with_token: MockConfigEntry,
+) -> None:
+    """Test the persisted OAuth2 tokens are reused instead of logging in again."""
+    await setup_integration(hass, cookidoo_config_entry_with_token)
+
+    assert cookidoo_config_entry_with_token.state is ConfigEntryState.LOADED
+    mock_cookidoo_client.apply_auth_data.assert_called_once_with(STALE_AUTH_DATA)
+    mock_cookidoo_client.login.assert_not_awaited()
+    assert cookidoo_config_entry_with_token.data[CONF_TOKEN] == asdict(STALE_AUTH_DATA)
+
+
+async def test_expired_tokens_fall_back_to_login(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry_with_token: MockConfigEntry,
+) -> None:
+    """Test expired persisted tokens fall back to a credential login."""
+    user_info = mock_cookidoo_client.get_user_info.return_value
+    mock_cookidoo_client.get_user_info.side_effect = [
+        CookidooAuthException(),
+        user_info,
+    ]
+    mock_cookidoo_client.login.side_effect = lambda: setattr(
+        mock_cookidoo_client, "auth_data", AUTH_DATA
+    )
+
+    await setup_integration(hass, cookidoo_config_entry_with_token)
+
+    assert cookidoo_config_entry_with_token.state is ConfigEntryState.LOADED
+    mock_cookidoo_client.login.assert_awaited_once()
+    assert cookidoo_config_entry_with_token.data[CONF_TOKEN] == asdict(AUTH_DATA)
+
+
+async def test_rotated_tokens_persisted_when_update_fails(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry_with_token: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test tokens rotated during an update survive a later call failing."""
+    await setup_integration(hass, cookidoo_config_entry_with_token)
+
+    # The library rotates the tokens on the first call, a later one then fails
+    def _rotate() -> list:
+        mock_cookidoo_client.auth_data = AUTH_DATA
+        return []
+
+    mock_cookidoo_client.get_ingredient_items.side_effect = _rotate
+    mock_cookidoo_client.get_active_subscription.side_effect = (
+        CookidooRequestException()
+    )
+
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert cookidoo_config_entry_with_token.data[CONF_TOKEN] == asdict(AUTH_DATA)
+
+
+async def test_refreshed_tokens_are_persisted(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry_with_token: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test tokens refreshed by the library during an update are persisted."""
+    await setup_integration(hass, cookidoo_config_entry_with_token)
+
+    mock_cookidoo_client.auth_data = AUTH_DATA
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert cookidoo_config_entry_with_token.data[CONF_TOKEN] == asdict(AUTH_DATA)

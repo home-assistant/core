@@ -1,6 +1,7 @@
 """Config flow for Cookidoo integration."""
 
 from collections.abc import Mapping
+from dataclasses import asdict
 import logging
 from typing import Any, override
 
@@ -18,7 +19,13 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_EMAIL,
+    CONF_LANGUAGE,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+)
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
@@ -61,6 +68,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
 
     user_input: dict[str, Any]
     user_uuid: str
+    token: dict[str, Any]
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any]
@@ -119,7 +127,12 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             if self.source == SOURCE_USER:
                 return self.async_create_entry(
-                    title="Cookidoo", data={**self.user_input, **language_input}
+                    title="Cookidoo",
+                    data={
+                        **self.user_input,
+                        **language_input,
+                        CONF_TOKEN: self.token,
+                    },
                 )
             reconfigure_entry = self._get_reconfigure_entry()
             return self.async_update_reload_and_abort(
@@ -128,6 +141,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                     **reconfigure_entry.data,
                     **self.user_input,
                     **language_input,
+                    CONF_TOKEN: self.token,
                 },
             )
 
@@ -160,7 +174,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(self.user_uuid)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
-                    reauth_entry, data_updates=user_input
+                    reauth_entry, data_updates={**user_input, CONF_TOKEN: self.token}
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -229,6 +243,9 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             self.user_uuid = user_info.id
             if language_input:
                 await cookidoo.get_additional_items()
+            # Snapshot the tokens after the last request, as any of them can
+            # refresh the access token and rotate the refresh token with it
+            self.token = asdict(cookidoo.auth_data) if cookidoo.auth_data else {}
         except CookidooRequestException:
             errors["base"] = "cannot_connect"
         except CookidooAuthException:

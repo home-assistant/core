@@ -1,7 +1,10 @@
 """Test the Cookidoo config flow."""
 
+from dataclasses import asdict
+from typing import Any
 from unittest.mock import AsyncMock
 
+from cookidoo_api import CookidooAuthData
 from cookidoo_api.exceptions import (
     CookidooAuthException,
     CookidooException,
@@ -11,11 +14,17 @@ import pytest
 
 from homeassistant.components.cookidoo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_EMAIL,
+    CONF_LANGUAGE,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import COUNTRY, EMAIL, LANGUAGE, PASSWORD
+from .conftest import AUTH_DATA, COUNTRY, EMAIL, LANGUAGE, PASSWORD
 from .test_init import setup_integration
 
 from tests.common import MockConfigEntry
@@ -29,6 +38,8 @@ MOCK_DATA_USER_STEP = {
 MOCK_DATA_LANGUAGE_STEP = {
     CONF_LANGUAGE: LANGUAGE,
 }
+
+MOCK_TOKEN = asdict(AUTH_DATA)
 
 
 async def test_flow_user_success(
@@ -57,8 +68,45 @@ async def test_flow_user_success(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Cookidoo"
-    assert result["data"] == {**MOCK_DATA_USER_STEP, **MOCK_DATA_LANGUAGE_STEP}
+    assert result["data"] == {
+        **MOCK_DATA_USER_STEP,
+        **MOCK_DATA_LANGUAGE_STEP,
+        CONF_TOKEN: MOCK_TOKEN,
+    }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_flow_user_stores_token_rotated_during_validation(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cookidoo_client: AsyncMock
+) -> None:
+    """Test the tokens are snapshotted after the last validation request."""
+    rotated = CookidooAuthData(
+        access_token="rotated-access-token",
+        refresh_token="rotated-refresh-token",
+        expires_at=1763000000.0,
+    )
+
+    async def _rotate(*args: Any, **kwargs: Any) -> list:
+        # A request can transparently refresh and rotate the refresh token
+        mock_cookidoo_client.auth_data = rotated
+        return []
+
+    mock_cookidoo_client.get_additional_items.side_effect = _rotate
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_USER_STEP,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_LANGUAGE_STEP,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_TOKEN] == asdict(rotated)
 
 
 @pytest.mark.parametrize(
@@ -108,7 +156,11 @@ async def test_flow_user_init_data_unknown_error_and_recover_on_step_1(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == "Cookidoo"
 
-    assert result["data"] == {**MOCK_DATA_USER_STEP, **MOCK_DATA_LANGUAGE_STEP}
+    assert result["data"] == {
+        **MOCK_DATA_USER_STEP,
+        **MOCK_DATA_LANGUAGE_STEP,
+        CONF_TOKEN: MOCK_TOKEN,
+    }
 
 
 @pytest.mark.parametrize(
@@ -158,7 +210,11 @@ async def test_flow_user_init_data_unknown_error_and_recover_on_step_2(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == "Cookidoo"
 
-    assert result["data"] == {**MOCK_DATA_USER_STEP, **MOCK_DATA_LANGUAGE_STEP}
+    assert result["data"] == {
+        **MOCK_DATA_USER_STEP,
+        **MOCK_DATA_LANGUAGE_STEP,
+        CONF_TOKEN: MOCK_TOKEN,
+    }
 
 
 async def test_flow_user_init_data_already_configured(
@@ -224,6 +280,7 @@ async def test_flow_reconfigure_success(
         CONF_PASSWORD: "new-password",
         CONF_COUNTRY: "DE",
         CONF_LANGUAGE: "de-DE",
+        CONF_TOKEN: MOCK_TOKEN,
     }
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -283,6 +340,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
         **MOCK_DATA_USER_STEP,
         CONF_COUNTRY: "DE",
         CONF_LANGUAGE: "de-DE",
+        CONF_TOKEN: MOCK_TOKEN,
     }
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -343,6 +401,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_2(
         **MOCK_DATA_USER_STEP,
         CONF_COUNTRY: "DE",
         CONF_LANGUAGE: "de-DE",
+        CONF_TOKEN: MOCK_TOKEN,
     }
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -401,6 +460,7 @@ async def test_flow_reauth(
         CONF_PASSWORD: "new-password",
         CONF_COUNTRY: COUNTRY,
         CONF_LANGUAGE: LANGUAGE,
+        CONF_TOKEN: MOCK_TOKEN,
     }
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -451,6 +511,7 @@ async def test_flow_reauth_error_and_recover(
         CONF_PASSWORD: "new-password",
         CONF_COUNTRY: COUNTRY,
         CONF_LANGUAGE: LANGUAGE,
+        CONF_TOKEN: MOCK_TOKEN,
     }
     assert len(hass.config_entries.async_entries()) == 1
 

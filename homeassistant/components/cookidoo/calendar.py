@@ -4,11 +4,7 @@ from datetime import date, datetime, timedelta
 import logging
 from typing import override
 
-from cookidoo_api import (
-    CookidooAuthException,
-    CookidooException,
-    CookidooRequestException,
-)
+from cookidoo_api import CookidooAuthException, CookidooException
 from cookidoo_api.types import CookidooCalendarDayRecipe
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -18,7 +14,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
+from .coordinator import (
+    CookidooConfigEntry,
+    CookidooDataUpdateCoordinator,
+    persist_auth_data,
+)
 from .entity import CookidooBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +73,7 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
                 return recipe_to_event(day_date, recipe)
         return None
 
+    @persist_auth_data
     async def _fetch_week_plan(self, week_day: date) -> list:
         """Fetch a single Cookidoo week plan, retrying once on auth failure."""
         try:
@@ -82,14 +83,14 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
         except CookidooAuthException:
             try:
                 await self.coordinator.cookidoo.login()
-            except (CookidooAuthException, CookidooRequestException) as exc:
+                return await self.coordinator.cookidoo.get_recipes_in_calendar_week(
+                    week_day
+                )
+            except CookidooException as exc:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="calendar_fetch_failed",
                 ) from exc
-            return await self.coordinator.cookidoo.get_recipes_in_calendar_week(
-                week_day
-            )
         except CookidooException as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
