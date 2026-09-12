@@ -53,14 +53,36 @@ LOCATION_UPDATE_SCHEMA = vol.All(
     cv.key_dependency(ATTR_GPS, ATTR_GPS_ACCURACY),
     vol.Schema(
         {
-            vol.Optional(ATTR_LOCATION_NAME): cv.string,
-            vol.Optional(ATTR_GPS): cv.gps,
-            vol.Optional(ATTR_GPS_ACCURACY): cv.positive_float,
-            vol.Optional(ATTR_BATTERY): cv.positive_int,
-            vol.Optional(ATTR_SPEED): cv.positive_int,
-            vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
-            vol.Optional(ATTR_COURSE): cv.positive_int,
-            vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
+            vol.Optional(
+                ATTR_LOCATION_NAME,
+                description="Name of the zone containing the device.",
+            ): cv.string,
+            vol.Optional(
+                ATTR_GPS, description="Latitude and longitude of the device."
+            ): cv.gps,
+            vol.Optional(
+                ATTR_GPS_ACCURACY,
+                description="GPS accuracy in meters, zero or greater.",
+            ): cv.positive_float,
+            vol.Optional(
+                ATTR_BATTERY,
+                description="Device battery percentage, zero or greater.",
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_SPEED,
+                description="Device speed in meters per second, zero or greater.",
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_ALTITUDE, description="Device altitude in meters."
+            ): vol.Coerce(float),
+            vol.Optional(
+                ATTR_COURSE,
+                description="Direction of travel in degrees from north, zero or greater.",
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_VERTICAL_ACCURACY,
+                description="Altitude accuracy in meters, zero or greater.",
+            ): cv.positive_int,
             vol.Optional(ATTR_IN_ZONES): cv.entities_domain(ZONE_DOMAIN),
         },
     ),

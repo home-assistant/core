@@ -130,6 +130,8 @@ def ws_require_user(
 
 def websocket_command(
     schema: VolDictType | vol.All,
+    *,
+    result: Any | None = None,
 ) -> Callable[[const.WebSocketCommandHandler], const.WebSocketCommandHandler]:
     """Tag a function as a websocket command.
 
@@ -158,6 +160,7 @@ def websocket_command(
             )
             func._ws_schema = extended_schema  # type: ignore[attr-defined]  # noqa: SLF001
         func._ws_command = command  # type: ignore[attr-defined]  # noqa: SLF001
+        func._ws_result = result  # type: ignore[attr-defined]  # noqa: SLF001
         return func
 
     return decorate

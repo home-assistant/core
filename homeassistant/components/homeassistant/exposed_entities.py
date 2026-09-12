@@ -392,6 +392,12 @@ class ExposedEntities:
         }
 
 
+class ExposedEntitiesResult(TypedDict):
+    """Explicit entity exposure preferences by assistant."""
+
+    exposed_entities: dict[str, dict[str, bool]]
+
+
 @callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
@@ -419,12 +425,13 @@ def ws_expose_entity(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "homeassistant/expose_entity/list",
-    }
+    },
+    result=ExposedEntitiesResult,
 )
 def ws_list_exposed_entities(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """List entities which are exposed to assistants."""
+    """List explicit entity exposure preferences for every assistant."""
     result: dict[str, Any] = {}
 
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]

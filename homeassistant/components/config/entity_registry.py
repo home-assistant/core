@@ -66,7 +66,8 @@ _ENTITY_CATEGORIES_JSON = json_dumps(er.ENTITY_CATEGORY_INDEX_TO_VALUE)
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "config/entity_registry/list_for_display"}
+    {vol.Required("type"): "config/entity_registry/list_for_display"},
+    result=er.EntityRegistryDisplayResult,
 )
 @callback
 def websocket_list_entities_for_display(
@@ -74,7 +75,11 @@ def websocket_list_entities_for_display(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Handle list registry entries command."""
+    """List enabled entity registry entries optimized for display clients.
+
+    The response uses abbreviated keys to reduce bandwidth. `entity_categories`
+    maps the numeric `ec` values back to entity category names.
+    """
     registry = er.async_get(hass)
     # Build start of response message
     msg_json_prefix = (

@@ -1,6 +1,7 @@
 """The Intent integration."""
 
 from collections.abc import Collection
+from http import HTTPStatus
 import logging
 from typing import Any, Protocol, override
 
@@ -639,6 +640,7 @@ class IntentHandleView(http.HomeAssistantView):
     url = "/api/intent/handle"
     name = "api:intent:handle"
 
+    @http.api_response(HTTPStatus.OK, intent.IntentResponseDict)
     @RequestDataValidator(
         vol.Schema(
             {

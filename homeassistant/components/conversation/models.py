@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 
 from homeassistant.core import Context
 from homeassistant.helpers import intent, llm
@@ -71,6 +71,14 @@ class ConversationInput:
         )
 
 
+class ConversationResultDict(TypedDict):
+    """Serialized conversation result."""
+
+    response: intent.IntentResponseDict
+    conversation_id: str | None
+    continue_conversation: bool
+
+
 @dataclass(slots=True)
 class ConversationResult:
     """Result of async_process."""
@@ -79,7 +87,7 @@ class ConversationResult:
     conversation_id: str | None = None
     continue_conversation: bool = False
 
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(self) -> ConversationResultDict:
         """Return result as a dict."""
         return {
             "response": self.response.as_dict(),

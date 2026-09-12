@@ -271,6 +271,20 @@ class UrlManager:
         self._on_change("removed", url)
 
 
+class PanelResponse(TypedDict):
+    """Represent the panel response type."""
+
+    component_name: str
+    icon: str | None
+    title: str | None
+    default_visible: bool
+    config: dict[str, Any] | None
+    url_path: str
+    require_admin: bool
+    config_panel_domain: str | None
+    show_in_sidebar: bool
+
+
 class Panel:
     """Abstract class for panels."""
 
@@ -952,11 +966,13 @@ async def websocket_get_icons(
 
 
 @callback
-@websocket_api.websocket_command({"type": "get_panels"})
+@websocket_api.websocket_command(
+    {"type": "get_panels"}, result=dict[str, PanelResponse]
+)
 def websocket_get_panels(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle get panels command."""
+    """List frontend panels visible to the authenticated user."""
     user_is_admin = connection.user.is_admin
     panels_config = hass.data[DATA_PANELS_CONFIG]
     panels: dict[str, PanelResponse] = {}
@@ -1110,17 +1126,3 @@ async def websocket_update_panel(
     )
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
     connection.send_result(msg["id"])
-
-
-class PanelResponse(TypedDict):
-    """Represent the panel response type."""
-
-    component_name: str
-    icon: str | None
-    title: str | None
-    default_visible: bool
-    config: dict[str, Any] | None
-    url_path: str
-    require_admin: bool
-    config_panel_domain: str | None
-    show_in_sidebar: bool

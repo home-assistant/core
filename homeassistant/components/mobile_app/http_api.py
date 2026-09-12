@@ -3,13 +3,14 @@
 from contextlib import suppress
 from http import HTTPStatus
 import secrets
+from typing import TypedDict
 
 from aiohttp.web import Request, Response
 from nacl.secret import SecretBox
 import voluptuous as vol
 
 from homeassistant.components import cloud
-from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView, api_response
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -39,12 +40,22 @@ from .const import (
 from .util import async_create_cloud_hook
 
 
+class RegistrationResponse(TypedDict):
+    """Response returned after registering a mobile app."""
+
+    cloudhook_url: str | None
+    remote_ui_url: str | None
+    secret: str | None
+    webhook_id: str
+
+
 class RegistrationsView(HomeAssistantView):
     """A view that accepts registration requests."""
 
     url = "/api/mobile_app/registrations"
     name = "api:mobile_app:register"
 
+    @api_response(HTTPStatus.CREATED, RegistrationResponse)
     @RequestDataValidator(
         vol.Schema(
             {

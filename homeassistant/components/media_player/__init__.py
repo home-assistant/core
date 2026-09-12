@@ -1264,6 +1264,7 @@ class MediaPlayerImageView(HomeAssistantView):
     """Media player view to serve an image."""
 
     requires_auth = False
+    openapi_security = ["bearerAuth", "queryToken"]
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
     extra_urls = [
