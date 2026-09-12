@@ -42,8 +42,8 @@
           'screen_off': None,
           'time_based': dict({
             'enabled': True,
-            'end_time': None,
-            'local_end_time': None,
+            'end_time': '06:30:00',
+            'local_end_time': '07:30:00',
             'local_start_time': '01:00:39',
             'start_time': '00:00:39',
           }),

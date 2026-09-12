@@ -91,6 +91,19 @@
       "bluetooth": {
         "name": "Bluetooth"
       }
+    },
+    "time": {
+      "screensaver_end_time": {
+        "name": "Screensaver end time"
+      },
+      "screensaver_start_time": {
+        "name": "Screensaver start time"
+      }
+    }
+  },
+  "exceptions": {
+    "screensaver_times_incomplete": {
+      "message": "The screensaver start and end time can only be changed together, but the device has no screensaver times configured yet. Set up the time-based screensaver in the LaMetric app first."
     }
   },
   "selector": {
