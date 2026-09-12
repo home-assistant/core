@@ -61,7 +61,8 @@ class SmaEntity(CoordinatorEntity[SmaCoordinator]):
         serial_number = getattr(device, "serial_number", None)
         firmware_version = getattr(device, "firmware_version", None)
 
-        entry_data = coordinator.config_entry.data
+        entry = coordinator.config_entry
+        entry_data = entry.data  # type: ignore[union-attr]
         host = entry_data.get(CONF_HOST)
         if host is not None:
             web_port = entry_data.get(CONF_WEB_PORT, 80)
@@ -70,15 +71,17 @@ class SmaEntity(CoordinatorEntity[SmaCoordinator]):
         else:
             configuration_url = None
 
+        unique_id = entry.unique_id  # type: ignore[union-attr]
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
+            identifiers={(DOMAIN, unique_id)},  # type: ignore[arg-type]
             manufacturer=vendor.name if vendor else "SMA",
             name=(
                 f"SMA{serial_number}"
                 if serial_number is not None
                 else DEVICE_NAMES[coordinator.device_type]
             ),
-            model=_MODEL_NAMES.get(device_type, DEVICE_NAMES[coordinator.device_type]),
+            model=_MODEL_NAMES.get(device_type, DEVICE_NAMES[coordinator.device_type]),  # type: ignore[arg-type]
             serial_number=str(serial_number) if serial_number is not None else None,
             sw_version=str(firmware_version) if firmware_version is not None else None,
             configuration_url=configuration_url,

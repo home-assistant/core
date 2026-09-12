@@ -1725,6 +1725,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/slimproto/ @marcelveldt
 /homeassistant/components/sma/ @kellerza @rklomp @erwindouna
 /tests/components/sma/ @kellerza @rklomp @erwindouna
+/homeassistant/components/sma_modbus/ @burmistrzak
+/tests/components/sma_modbus/ @burmistrzak
 /homeassistant/components/smappee/ @bsmappee
 /tests/components/smappee/ @bsmappee
 /homeassistant/components/smarla/ @explicatis @johannes-exp

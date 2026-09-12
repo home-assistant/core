@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 from modbus_connection import ModbusError, ModbusTcpParams
 from sma_modbus import DEVICE_CLASSES, DeviceType, DiscoveryInfo, discover
@@ -110,6 +110,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_data: dict[str, Any] = {}
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -166,6 +167,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

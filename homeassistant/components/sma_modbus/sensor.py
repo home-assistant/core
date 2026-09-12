@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Final
+from typing import Final, override
 
 from sma_modbus import DeviceType
 from sma_modbus.home_manager import SystemStatus
@@ -511,7 +511,7 @@ class SmaSensor(SmaEntity, SensorEntity):
         """Initialize a SMA sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-{description.key}"  # type: ignore[union-attr]
         self._attr_native_value = self._read_value()
 
     def _read_value(self) -> StateType:
@@ -524,6 +524,7 @@ class SmaSensor(SmaEntity, SensorEntity):
         return value
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self._read_value()

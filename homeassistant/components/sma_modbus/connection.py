@@ -11,10 +11,13 @@ extracts the underlying connection from it and creates fresh unit handles
 for each requested ID, all sharing the same TCP socket.
 """
 
+from typing import override
+
 from modbus_connection import ModbusConnection, ModbusUnit
+from modbus_connection._client import BaseModbusConnection
 
 
-class ModbusUnitConnection:
+class ModbusUnitConnection(BaseModbusConnection):
     """Present a borrowed ``ModbusUnit`` as a ``ModbusConnection``."""
 
     def __init__(self, unit: ModbusUnit) -> None:
@@ -23,8 +26,21 @@ class ModbusUnitConnection:
         The underlying connection is extracted so ``for_unit()`` can create
         units with different unit IDs on the same socket.
         """
-        self._connection: ModbusConnection = unit._conn  # noqa: SLF001
+        connection: ModbusConnection = unit._conn  # type: ignore[attr-defined]  # noqa: SLF001
+        super().__init__(connection._params)  # noqa: SLF001
+        self._connection = connection
 
+    @override
     def for_unit(self, unit_id: int) -> ModbusUnit:
         """Return a unit handle for ``unit_id`` on the shared connection."""
         return self._connection.for_unit(unit_id)
+
+    @override
+    async def _connect_client(self) -> object:
+        """Delegate to the underlying connection."""
+        return await self._connection._connect_client()  # noqa: SLF001
+
+    @override
+    async def _close_client(self, client: object) -> None:
+        """Delegate to the underlying connection."""
+        await self._connection._close_client(client)  # noqa: SLF001

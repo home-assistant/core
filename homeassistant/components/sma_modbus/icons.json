@@ -21,7 +21,7 @@
       "battery_temperature_max": { "default": "mdi:thermometer-high" },
       "battery_temperature_min": { "default": "mdi:thermometer-low" },
       "bms_operating_status": {
-        "default": "mdi:circuit-board",
+        "default": "mdi:integrated-circuit-chip",
         "state": {
           "battery_wait": "mdi:battery-clock",
           "device_fault": "mdi:alert-circle-outline",

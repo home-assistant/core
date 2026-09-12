@@ -46,3 +46,33 @@ rules:
     status: exempt
     comment: Local Modbus TCP; there is no authentication that can expire or be invalidated.
   test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery: done
+  discovery-update-info: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: todo
+  inject-websession:
+    status: exempt
+    comment: We are talking Modbus TCP.
+  strict-typing: todo

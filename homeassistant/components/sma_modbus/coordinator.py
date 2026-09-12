@@ -1,6 +1,7 @@
 """DataUpdateCoordinator that polls an SMA device."""
 
 import logging
+from typing import override
 
 from modbus_connection import ModbusError
 from sma_modbus import DeviceType, SmaComponent
@@ -39,6 +40,7 @@ class SmaCoordinator(DataUpdateCoordinator[SmaComponent]):
         self.device_type = device_type
         self._was_available = False
 
+    @override
     async def _async_update_data(self) -> SmaComponent:
         """Refresh all SMA data."""
         try:
@@ -47,7 +49,7 @@ class SmaCoordinator(DataUpdateCoordinator[SmaComponent]):
             if self._was_available:
                 _LOGGER.warning(
                     "SMA device at %s became unavailable: %s",
-                    self.config_entry.data.get(CONF_HOST),
+                    self.config_entry.data.get(CONF_HOST),  # type: ignore[union-attr]
                     err,
                 )
                 self._was_available = False
@@ -55,7 +57,7 @@ class SmaCoordinator(DataUpdateCoordinator[SmaComponent]):
         if not self._was_available:
             _LOGGER.info(
                 "SMA device at %s is now available",
-                self.config_entry.data.get(CONF_HOST),
+                self.config_entry.data.get(CONF_HOST),  # type: ignore[union-attr]
             )
             self._was_available = True
         return self.device
