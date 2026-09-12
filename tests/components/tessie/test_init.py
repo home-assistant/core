@@ -1,5 +1,6 @@
 """Test the Tessie init."""
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientConnectionError, ClientError
@@ -154,6 +155,25 @@ async def test_aiohttp_client_error_on_live_status_retries(
     ):
         entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_energy_first_refresh_timeout(hass: HomeAssistant) -> None:
+    """Test a slow energy site first refresh retries instead of blocking setup."""
+    never = asyncio.Event()
+
+    async def _hang(*args: object, **kwargs: object) -> None:
+        await never.wait()
+
+    # site_info() is only awaited by the info coordinator's first refresh, so setup
+    # reaches the bounded gather instead of hanging on the inline live_status() call.
+    with (
+        patch("tesla_fleet_api.tessie.EnergySite.site_info", side_effect=_hang),
+        patch("homeassistant.components.tessie.FIRST_REFRESH_TIMEOUT", 0),
+    ):
+        entry = await setup_platform(hass)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    never.set()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
