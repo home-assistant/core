@@ -25,9 +25,9 @@ from homeassistant.helpers.trigger_template_entity import (
     ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEFAULT_BINARY_SENSOR_NAME
+from .coordinator import RestCoordinator
 from .data import RestData
 from .entity import (
     RestEntity,
@@ -78,7 +78,7 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: DataUpdateCoordinator[None] | None,
+        coordinator: RestCoordinator | None,
         rest: RestData,
         config: ConfigType,
         trigger_entity_config: ConfigType,
