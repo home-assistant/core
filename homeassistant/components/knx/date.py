@@ -32,6 +32,7 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
+from .storage.config_store import KnxEntityData
 from .storage.const import CONF_ENTITY, CONF_GA_DATE
 from .storage.util import ConfigExtractor
 
@@ -125,7 +126,7 @@ class KnxUiDate(_KNXDate, KnxUiEntity):
     _device: XknxDateDevice
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize KNX date."""
         super().__init__(

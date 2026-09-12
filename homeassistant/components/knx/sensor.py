@@ -47,6 +47,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import SensorSchema
+from .storage.config_store import KnxEntityData
 from .storage.const import CONF_ALWAYS_CALLBACK, CONF_ENTITY, CONF_GA_SENSOR
 from .storage.util import ConfigExtractor
 
@@ -244,7 +245,7 @@ class KnxUiSensor(_KnxSensor, KnxUiEntity):
     _device: XknxSensor
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize KNX sensor."""
         super().__init__(

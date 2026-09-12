@@ -1,8 +1,23 @@
 """KNX entity configuration store."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
+import dataclasses
 import logging
-from typing import Any, Final, TypedDict, override
+from typing import (
+    Annotated,
+    Any,
+    Final,
+    TypedDict,
+    cast,
+    get_args,
+    get_origin,
+    get_type_hints,
+    overload,
+    override,
+)
+
+from probatio import Key
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, Platform
@@ -14,12 +29,13 @@ from homeassistant.util.ulid import ulid_now
 from ..const import DOMAIN, KNX_MODULE_KEY
 from ..repairs import async_create_entity_validation_issue
 from . import migration
-from .const import CONF_DATA
+from .const import CONF_DATA, CONF_ENTITY
 from .entity_store_validation import (
     EntityStoreValidationException,
     validate_entity_data,
 )
 from .expose_controller import KNXExposeStoreConfigModel, KNXExposeStoreModel
+from .knx_selector import GroupAddressSelector, knx_selector_in
 from .time_server import KNXTimeServerStoreModel
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,16 +58,70 @@ class KNXConfigStoreModel(TypedDict):
     time_server: KNXTimeServerStoreModel
 
 
+class KnxEntityData[KnxT](TypedDict):
+    """Validated entity data: the common `entity` and the platform `knx` part."""
+
+    entity: dict[str, Any]
+    knx: KnxT
+
+
+def to_storage_dict(data: KnxEntityData[Any]) -> dict[str, Any]:
+    """Render validated entity data to its JSON serializable storage form."""
+    knx_config = data[DOMAIN]
+    if isinstance(knx_config, dict):
+        return cast(dict[str, Any], data)  # platform not yet migrated to a typed config
+    return {
+        CONF_ENTITY: data[CONF_ENTITY],
+        DOMAIN: {
+            name: encode(getattr(knx_config, name))
+            for name, encode in _storage_encoders(type(knx_config))
+        },
+    }
+
+
+def _unchanged(value: Any) -> Any:
+    return value
+
+
+type _StorageEncoders = tuple[tuple[str, Callable[[Any], Any]], ...]
+_STORAGE_ENCODERS: dict[type, _StorageEncoders] = {}
+
+
+def _storage_encoders(config_type: type) -> _StorageEncoders:
+    """Return a storage encoder per field of a typed config.
+
+    Section fields are dropped, group addresses are rendered by their selector.
+    """
+    if (cached := _STORAGE_ENCODERS.get(config_type)) is not None:
+        return cached
+    hints = get_type_hints(config_type, include_extras=True)
+    encoders: list[tuple[str, Callable[[Any], Any]]] = []
+    for dc_field in dataclasses.fields(config_type):
+        hint = hints[dc_field.name]
+        metadata = get_args(hint)[1:] if get_origin(hint) is Annotated else ()
+        if any(isinstance(item, Key) and item.remove for item in metadata):
+            continue
+        field_selector = knx_selector_in(metadata)
+        encode = (
+            field_selector.to_storage
+            if isinstance(field_selector, GroupAddressSelector)
+            else _unchanged
+        )
+        encoders.append((dc_field.name, encode))
+    _STORAGE_ENCODERS[config_type] = tuple(encoders)
+    return _STORAGE_ENCODERS[config_type]
+
+
 class PlatformControllerBase(ABC):
     """Entity platform controller base class."""
 
     @abstractmethod
-    async def create_entity(self, unique_id: str, config: dict[str, Any]) -> None:
+    async def create_entity(self, unique_id: str, config: KnxEntityData[Any]) -> None:
         """Create a new entity."""
 
     @abstractmethod
     async def update_entity(
-        self, entity_entry: er.RegistryEntry, config: dict[str, Any]
+        self, entity_entry: er.RegistryEntry, config: KnxEntityData[Any]
     ) -> None:
         """Update an existing entities configuration."""
 
@@ -123,14 +193,26 @@ class KNXConfigStore:
         """Add platform controller."""
         self._platform_controllers[platform] = controller
 
+    @overload
+    def get_entity_configs(
+        self, platform: Platform
+    ) -> dict[str, KnxEntityData[Any]]: ...
+
+    @overload
+    def get_entity_configs[KnxT](
+        self, platform: Platform, config_type: type[KnxT]
+    ) -> dict[str, KnxEntityData[KnxT]]: ...
+
     @callback
-    def get_entity_configs(self, platform: Platform) -> KNXPlatformStoreModel:
+    def get_entity_configs(
+        self, platform: Platform, config_type: type | None = None
+    ) -> dict[str, KnxEntityData[Any]]:
         """Return validated entity configurations for a platform.
 
         Invalid configurations are reported as a repair issue and stay in
         `self.data` so they aren't dropped from storage.
         """
-        validated: KNXPlatformStoreModel = {}
+        validated: dict[str, KnxEntityData[Any]] = {}
         invalid: list[str] = []
         for unique_id, config in self.data["entities"].get(platform, {}).items():
             try:
@@ -139,21 +221,29 @@ class KNXConfigStore:
                 )
             except EntityStoreValidationException:
                 invalid.append(unique_id)
-            else:
-                validated[unique_id] = result[CONF_DATA]
+                continue
+            data: KnxEntityData[Any] = result[CONF_DATA]
+            if config_type is not None and not isinstance(data[DOMAIN], config_type):
+                raise TypeError(
+                    f"{platform} schema yields {type(data[DOMAIN]).__name__},"
+                    f" not {config_type.__name__}"
+                )
+            validated[unique_id] = data
         if invalid:
             async_create_entity_validation_issue(self.hass, platform, invalid)
         return validated
 
     async def create_entity(
-        self, platform: Platform, data: dict[str, Any]
+        self, platform: Platform, data: KnxEntityData[Any]
     ) -> str | None:
         """Create a new entity."""
         platform_controller = self._platform_controllers[platform]
         unique_id = f"knx_es_{ulid_now()}"
         await platform_controller.create_entity(unique_id, data)
         # store data after entity was added to be sure config didn't raise exceptions
-        self.data["entities"].setdefault(platform, {})[unique_id] = data
+        self.data["entities"].setdefault(platform, {})[unique_id] = to_storage_dict(
+            data
+        )
         await self._store.async_save(self.data)
 
         entity_registry = er.async_get(self.hass)
@@ -174,7 +264,7 @@ class KNXConfigStore:
             raise ConfigStoreException(f"Entity data not found: {entity_id}") from err
 
     async def update_entity(
-        self, platform: Platform, entity_id: str, data: dict[str, Any]
+        self, platform: Platform, entity_id: str, data: KnxEntityData[Any]
     ) -> None:
         """Update an existing entity."""
         platform_controller = self._platform_controllers[platform]
@@ -191,7 +281,7 @@ class KNXConfigStore:
             )
         await platform_controller.update_entity(entry, data)
         # store data after entity is added to make sure config doesn't raise exceptions
-        self.data["entities"][platform][unique_id] = data
+        self.data["entities"][platform][unique_id] = to_storage_dict(data)
         await self._store.async_save(self.data)
 
     async def delete_entity(self, entity_id: str) -> None:

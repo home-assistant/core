@@ -38,6 +38,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import SwitchSchema
+from .storage.config_store import KnxEntityData
 from .storage.const import CONF_ENTITY, CONF_GA_SWITCH
 from .storage.util import ConfigExtractor
 
@@ -134,7 +135,7 @@ class KnxUiSwitch(_KnxSwitch, KnxUiEntity):
     _device: XknxSwitch
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize KNX switch."""
         super().__init__(
