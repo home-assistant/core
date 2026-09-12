@@ -89,6 +89,7 @@
     "vehicle": {
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to add a vehicle over Bluetooth.",
         "entry_not_loaded": "The Teslemetry configuration entry is not loaded. Please ensure it is set up correctly before adding a vehicle.",
         "no_vehicles": "Every vehicle in your Teslemetry account has already been added over Bluetooth."
       },
