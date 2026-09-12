@@ -107,7 +107,7 @@ class HueBLELight(LightEntity):
         )
         try:
             use_effect = EffectType[effect]
-        except ValueError as e:
+        except KeyError as e:
             raise ServiceValidationError("Unknown effect") from e
 
         if use_color_temp:

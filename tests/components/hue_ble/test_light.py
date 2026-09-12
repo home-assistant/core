@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from HueBLE import EffectType
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hue_ble.const import EFFECT_SPEED
@@ -18,6 +19,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -294,3 +296,45 @@ async def test_light_control_effect_temp(
     assert attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
     assert mock_light.effect == (EffectType.CANDLE, EFFECT_SPEED)
     assert mock_light.colour_temp_mode
+
+
+async def test_light_bad_effect(
+    hass: HomeAssistant,
+    mock_light: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test trying to set an invalid effect."""
+
+    mock_light.supports_effects = True
+    mock_light.effect = EffectType.NONE, EFFECT_SPEED
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"light.{TEST_DEVICE_NAME.lower().replace(' ', '_')}"
+
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    attributes = state.attributes
+    assert attributes[ATTR_EFFECT] == EffectType.NONE.name
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "turn_on",
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_EFFECT: "invalid_effect_name",
+                ATTR_XY_COLOR: (0.3, 0.3),
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    attributes = state.attributes
+    assert attributes[ATTR_EFFECT] == EffectType.NONE.name
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
