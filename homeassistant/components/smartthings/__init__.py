@@ -559,12 +559,10 @@ def create_devices(
         # device's Basic cluster during pairing), so use it directly. Both
         # fall back to the device's driver-assigned name for the model,
         # since SmartThings doesn't expose a separate model field for either.
-        if device.device.type is DeviceType.ZWAVE:
-            kwargs.setdefault(ATTR_MANUFACTURER, "Z-Wave")
-            kwargs.setdefault(ATTR_MODEL, device.device.name)
-        elif device.device.type is DeviceType.ZIGBEE:
-            kwargs.setdefault(ATTR_MANUFACTURER, device.device.device_manufacturer_code)
-            kwargs.setdefault(ATTR_MODEL, device.device.name)
+if device.device.type is DeviceType.ZIGBEE:
+    kwargs.setdefault(
+        ATTR_MANUFACTURER, device.device.device_manufacturer_code
+    )
         if (main_component := device.status.get(MAIN)) is not None:
             if (
                 device_identification := main_component.get(
