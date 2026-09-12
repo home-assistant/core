@@ -727,6 +727,7 @@ FLOWS = {
         "slide_local",
         "slimproto",
         "sma",
+        "sma_modbus",
         "smappee",
         "smarla",
         "smart_meter_texas",

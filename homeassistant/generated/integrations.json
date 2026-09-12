@@ -6730,10 +6730,21 @@
       "iot_class": "local_push"
     },
     "sma": {
-      "name": "SMA Solar",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "name": "SMA",
+      "integrations": {
+        "sma": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "SMA Solar"
+        },
+        "sma_modbus": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "SMA Modbus"
+        }
+      }
     },
     "smappee": {
       "name": "Smappee",
