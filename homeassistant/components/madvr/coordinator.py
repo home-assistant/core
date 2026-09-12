@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from madvr.madvr import Madvr
+from pymadvr.madvr import Madvr
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -49,4 +49,4 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         _LOGGER.debug("Using loop: %s", self.client.loop)
         # tell the library to start background tasks
         await self.client.async_add_tasks()
-        _LOGGER.debug("Added %s tasks to client", len(self.client.tasks))
+        _LOGGER.debug("Added background tasks to client")

@@ -150,6 +150,7 @@ def _format_structured_output(
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer
         ),
+        openapi_version="3.1.0",
     )
 
     _adjust_schema(result)
@@ -162,7 +163,9 @@ def _format_tool(
 ) -> FunctionToolParam:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf", "enum", "not"}
-    schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
+    schema = to_openapi(
+        tool.parameters, custom_serializer=custom_serializer, openapi_version="3.1.0"
+    )
     if unsupported_keys.intersection(schema):
         schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 
