@@ -53,7 +53,13 @@ async def test_validation(
     extra,
 ) -> None:
     """Test validating success."""
-    for key in ("device_cons", "battery_import", "battery_export", "solar_production"):
+    for key in (
+        "device_cons",
+        "battery_import",
+        "battery_export",
+        "solar_production",
+        "ev_charging",
+    ):
         hass.states.async_set(
             f"sensor.{key}",
             "123",
@@ -74,12 +80,13 @@ async def test_validation(
                     "stat_energy_to": "sensor.battery_export",
                 },
                 {"type": "solar", "stat_energy_from": "sensor.solar_production"},
+                {"type": "ev", "stat_energy_from": "sensor.ev_charging"},
             ],
             "device_consumption": [{"stat_consumption": "sensor.device_cons"}],
         }
     )
     assert (await validate.async_validate(hass)).as_dict() == {
-        "energy_sources": [[], []],
+        "energy_sources": [[], [], []],
         "device_consumption": [[]],
         "device_consumption_water": [],
     }

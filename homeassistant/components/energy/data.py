@@ -155,6 +155,25 @@ class SolarSourceType(TypedDict):
     name: NotRequired[str]
 
 
+class EVSourceType(TypedDict):
+    """Dictionary holding the source of electric vehicle charging.
+
+    An EV is a consumer rather than a producer: its energy is deducted from
+    the home consumption total and shown as its own consumer in the energy
+    graphs. It is configured as a source (not as a device consumption entry)
+    because device consumption entries are, by definition, a breakdown of
+    home consumption.
+    """
+
+    type: Literal["ev"]
+
+    stat_energy_from: str
+    stat_rate: NotRequired[str]
+
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
+
+
 class BatterySourceType(TypedDict):
     """Dictionary holding the source of battery storage."""
 
@@ -229,6 +248,7 @@ type SourceType = (
     GridSourceType
     | SolarSourceType
     | BatterySourceType
+    | EVSourceType
     | GasSourceType
     | WaterSourceType
 )
@@ -499,6 +519,14 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
         vol.Optional("name"): str,
     }
 )
+EV_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): "ev",
+        vol.Required("stat_energy_from"): str,
+        vol.Optional("stat_rate"): str,
+        vol.Optional("name"): str,
+    }
+)
 BATTERY_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): "battery",
@@ -604,6 +632,7 @@ ENERGY_SOURCE_SCHEMA = vol.All(
                     "grid": GRID_SOURCE_SCHEMA,
                     "solar": SOLAR_SOURCE_SCHEMA,
                     "battery": BATTERY_SOURCE_SCHEMA,
+                    "ev": EV_SOURCE_SCHEMA,
                     "gas": GAS_SOURCE_SCHEMA,
                     "water": WATER_SOURCE_SCHEMA,
                 },
