@@ -343,18 +343,30 @@ async def test_the_endpoint_of_a_yaml_hub_follows_its_transport(
     assert result["connections"][0]["endpoint"] == endpoint
 
 
-async def test_a_yaml_hub_dropped_by_a_reload_is_not_listed(
+@pytest.mark.parametrize(
+    "fixture",
+    [
+        pytest.param("configuration_empty.yaml", id="modbus gone from yaml"),
+        pytest.param("configuration_no_entities.yaml", id="hub without entities"),
+    ],
+)
+async def test_a_yaml_hub_a_reload_leaves_behind_is_not_listed(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_pymodbus: AsyncMock,
+    fixture: str,
 ) -> None:
-    """A reload that leaves no Modbus config leaves no connection behind."""
+    """A reload that sets no hub up again leaves no connection behind.
+
+    The reload closes the hubs before reading the new config, so one it does
+    not set up again is a link to a device nothing talks to.
+    """
     mock_pymodbus.connected = True
     assert await async_setup_component(
         hass, "modbus", {"modbus": [yaml_hub(TCP_TRANSPORT)]}
     )
 
-    yaml_path = get_fixture_path("configuration_empty.yaml", "modbus")
+    yaml_path = get_fixture_path(fixture, "modbus")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call("modbus", SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()

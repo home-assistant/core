@@ -29,7 +29,9 @@ async def _async_reload_config(call: ServiceCall) -> None:
         hubs.clear()
         return
     LOGGER.debug("Modbus reloading")
-    await async_modbus_setup(hass, reload_config)
+    # Setup replaces the hubs only once it has new ones to replace them with
+    if not await async_modbus_setup(hass, reload_config):
+        hubs.clear()
 
 
 @callback
