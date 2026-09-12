@@ -98,7 +98,9 @@ async def test_unsupported_sensor_not_added(
     entity_id: str,
 ) -> None:
     """Test unsupported sensor descriptions are skipped."""
-    mock_device.supports.side_effect = lambda command: command is not unsupported_command
+    mock_device.supports.side_effect = lambda command: (
+        command is not unsupported_command
+    )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

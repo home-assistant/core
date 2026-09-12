@@ -14,10 +14,15 @@ from homeassistant.components.jvc_projector.coordinator import (
     INTERVAL_FAST,
     INTERVAL_SLOW,
 )
+from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.dt import utcnow
+
+from . import MOCK_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -106,14 +111,31 @@ async def test_coordinator_command_error_keeps_other_entities_available(
 
 @pytest.mark.parametrize(
     "mock_device",
-    [{"fixture_override": {cmd.Version: JvcProjectorTimeoutError}}],
+    [{"version_recovery": True}],
     indirect=True,
 )
-async def test_coordinator_version_timeout_does_not_fail_setup(
+async def test_coordinator_version_timeout_recovers_and_updates_device(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_device: AsyncMock,
     mock_integration: MockConfigEntry,
 ) -> None:
-    """Test a version timeout does not prevent setup."""
+    """Test a version timeout does not prevent setup and later recovers."""
     assert mock_integration.state is ConfigEntryState.LOADED
-    assert mock_integration.runtime_data.software_version is None
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, format_mac(MOCK_MAC)), mock_integration.entry_id
+    )
+    assert device is not None
+    assert device.sw_version is None
+
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=INTERVAL_FAST.seconds + 1)
+    )
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, format_mac(MOCK_MAC)), mock_integration.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "3.01"
