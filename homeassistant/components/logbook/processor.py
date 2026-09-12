@@ -111,6 +111,8 @@ class LogbookRun:
     entity_name_cache: EntityNameCache
     include_entity_name: bool
     timestamp: bool
+    # Per-entity read check, or None when the caller may read everything.
+    entity_filter: Callable[[str], bool] | None = None
     memoize_new_contexts: bool = True
     # True when this run will switch to a live stream; gates population of
     # context_user_ids (wasted work for one-shot REST/get_events callers).
@@ -135,6 +137,7 @@ class EventProcessor:
         timestamp: bool = False,
         include_entity_name: bool = True,
         for_live_stream: bool = False,
+        entity_filter: Callable[[str], bool] | None = None,
     ) -> None:
         """Init the event stream."""
         assert not (context_id and (entity_ids or device_ids)), (
@@ -155,6 +158,7 @@ class EventProcessor:
             entity_name_cache=EntityNameCache(self.hass),
             include_entity_name=include_entity_name,
             timestamp=timestamp,
+            entity_filter=entity_filter,
             for_live_stream=for_live_stream,
         )
         self.context_augmenter = ContextAugmenter(self.logbook_run)
@@ -265,16 +269,63 @@ class EventProcessor:
         query_parent_user_ids: dict[bytes, bytes] | None = None,
     ) -> list[dict[str, Any]]:
         """Humanify rows."""
-        return list(
-            _humanify(
-                self.hass,
-                rows,
-                self.ent_reg,
-                self.logbook_run,
-                self.context_augmenter,
-                query_parent_user_ids,
-            )
+        entries = _humanify(
+            self.hass,
+            rows,
+            self.ent_reg,
+            self.logbook_run,
+            self.context_augmenter,
+            query_parent_user_ids,
         )
+        # A request without entity_ids covers everything, so entries the caller
+        # may not read are dropped here rather than at the query. The check is
+        # skipped entirely for callers that may read every entity.
+        if (entity_filter := self.logbook_run.entity_filter) is not None:
+            return _filter_readable_entries(entries, entity_filter)
+
+        return list(entries)
+
+
+# Everything an augmented context says about the entity that triggered an
+# entry. The remaining context keys name an integration, a service or a user,
+# which say nothing about the entity itself.
+_DENIED_CONTEXT_KEYS = (
+    CONTEXT_ENTITY_ID,
+    CONTEXT_ENTITY_ID_NAME,
+    CONTEXT_STATE,
+    CONTEXT_NAME,
+    CONTEXT_MESSAGE,
+    CONTEXT_SOURCE,
+)
+
+
+def _filter_readable_entries(
+    entries: Generator[dict[str, Any]], entity_filter: Callable[[str], bool]
+) -> list[dict[str, Any]]:
+    """Return the entries a caller is allowed to read.
+
+    An entry that belongs to no entity, a plain event for example, carries no
+    entity to test and stays. The entity an entry was triggered by is a
+    different one than the entry's own, so its attribution is dropped by itself
+    and the entry survives without pointing at something the caller cannot see.
+    """
+    readable: list[dict[str, Any]] = []
+
+    for entry in entries:
+        if (entity_id := entry.get(LOGBOOK_ENTRY_ENTITY_ID)) and not entity_filter(
+            entity_id
+        ):
+            continue
+
+        if (context_entity_id := entry.get(CONTEXT_ENTITY_ID)) and not entity_filter(
+            context_entity_id
+        ):
+            for key in _DENIED_CONTEXT_KEYS:
+                entry.pop(key, None)
+
+        readable.append(entry)
+
+    return readable
 
 
 def _exposed_state_attributes(

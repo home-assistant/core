@@ -8,7 +8,12 @@ from typing import Any
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.auth.permissions import (
+    entity_permission_filter,
+    filter_entity_ids_by_permission,
+)
+from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.core import HomeAssistant, callback
@@ -94,6 +99,12 @@ class LogbookView(HomeAssistantView):
                 "Can't combine entity with context_id", HTTPStatus.BAD_REQUEST
             )
 
+        user = request[KEY_HASS_USER]
+        if entity_ids:
+            entity_ids = filter_entity_ids_by_permission(user, entity_ids, POLICY_READ)
+            if not entity_ids:
+                return self.json([])
+
         event_types = async_determine_event_types(hass, entity_ids, None)
         event_processor = EventProcessor(
             hass,
@@ -103,6 +114,7 @@ class LogbookView(HomeAssistantView):
             context_id,
             timestamp=False,
             include_entity_name=True,
+            entity_filter=entity_permission_filter(user, POLICY_READ),
         )
 
         def json_events() -> web.Response:

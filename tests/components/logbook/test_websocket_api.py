@@ -50,7 +50,7 @@ from .common import (
     simulate_thermostat_context_chain,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, MockUser, async_fire_time_changed
 from tests.components.recorder.common import (
     async_block_recorder,
     async_recorder_block_till_done,
@@ -3693,3 +3693,273 @@ async def test_logbook_stream_live_parent_service_call_only(
     assert len(heater_entries) == 1
     assert heater_entries[0]["state"] == "on"
     assert heater_entries[0]["context_user_id"] == user_id
+
+
+def _entity_ids(entries: list[dict[str, Any]]) -> list[str]:
+    """Return the entity ids of the entries that have one."""
+    return [entry["entity_id"] for entry in entries if "entity_id" in entry]
+
+
+async def test_get_events_filters_unauthorized_entities(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test logbook/get_events filters by per-entity read permissions."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy(
+        {"entities": {"entity_ids": {"light.allowed": True}}}
+    )
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    hass.states.async_set("light.allowed", STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set("light.allowed", STATE_ON)
+    await hass.async_block_till_done()
+    hass.states.async_set("light.forbidden", STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set("light.forbidden", STATE_ON)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
+
+    # Without entity_ids every entity is in scope, so the entries are filtered
+    await client.send_json_auto_id(
+        {"type": "logbook/get_events", "start_time": now.isoformat()}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert _entity_ids(response["result"]) == ["light.allowed"]
+    # An entry that belongs to no entity, the start message here, has no
+    # entity policy to test against and is kept
+    assert any("entity_id" not in entry for entry in response["result"])
+
+    await client.send_json_auto_id(
+        {
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "entity_ids": ["light.allowed", "light.forbidden"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert _entity_ids(response["result"]) == ["light.allowed"]
+
+    await client.send_json_auto_id(
+        {
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "entity_ids": ["light.forbidden"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+
+async def test_get_events_all_entities_for_unrestricted_users(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a user with blanket read access sees every entity."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy({"entities": {"all": {"read": True}}})
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    hass.states.async_set("light.one", STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set("light.one", STATE_ON)
+    await hass.async_block_till_done()
+    hass.states.async_set("light.two", STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set("light.two", STATE_ON)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
+    await client.send_json_auto_id(
+        {"type": "logbook/get_events", "start_time": now.isoformat()}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert _entity_ids(response["result"]) == ["light.one", "light.two"]
+
+
+async def test_event_stream_filters_unauthorized_entities(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test logbook/event_stream filters by per-entity read permissions."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy(
+        {"entities": {"entity_ids": {"light.allowed": True}}}
+    )
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
+    await client.send_json_auto_id(
+        {"type": "logbook/event_stream", "start_time": now.isoformat()}
+    )
+    response = await asyncio.wait_for(client.receive_json(), 2)
+    assert response["success"]
+
+    # The historical batch carries the start message, which has no entity
+    response = await asyncio.wait_for(client.receive_json(), 2)
+    assert _entity_ids(response["event"]["events"]) == []
+
+    # End of the historical events
+    response = await asyncio.wait_for(client.receive_json(), 2)
+    assert response["event"]["events"] == []
+
+    hass.states.async_set("light.forbidden", STATE_OFF)
+    hass.states.async_set("light.forbidden", STATE_ON)
+    hass.states.async_set("light.allowed", STATE_OFF)
+    hass.states.async_set("light.allowed", STATE_ON)
+    await hass.async_block_till_done()
+
+    response = await asyncio.wait_for(client.receive_json(), 2)
+    assert _entity_ids(response["event"]["events"]) == ["light.allowed"]
+
+
+async def test_get_events_filters_unauthorized_context_entities(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the entity an entry was triggered by is filtered as well."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy(
+        {"entities": {"entity_ids": {"switch.allowed": True}}}
+    )
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+
+    context = core.Context(
+        id="01GTDGKBCH00GW0X276W5TEDDD",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+    hass.states.async_set("climate.forbidden", STATE_OFF, context=context)
+    await hass.async_block_till_done()
+    hass.states.async_set("climate.forbidden", STATE_ON, context=context)
+    await hass.async_block_till_done()
+    hass.states.async_set("switch.allowed", STATE_OFF, context=context)
+    await hass.async_block_till_done()
+    hass.states.async_set("switch.allowed", STATE_ON, context=context)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
+    await client.send_json_auto_id(
+        {"type": "logbook/get_events", "start_time": now.isoformat()}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    assert _entity_ids(response["result"]) == ["switch.allowed"]
+    # The entry itself is readable, the entity it was triggered by is not
+    for entry in response["result"]:
+        assert "context_entity_id" not in entry
+        assert "context_entity_id_name" not in entry
+        assert "context_state" not in entry
+
+
+async def test_get_events_filters_unauthorized_context_description(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test what a denied context entity is described by is filtered as well."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy(
+        {"entities": {"entity_ids": {"switch.allowed": True}}}
+    )
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+
+    context = core.Context(
+        id="01GTDGKBCH00GW0X276W5TEDDD",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+    hass.bus.async_fire(
+        EVENT_AUTOMATION_TRIGGERED,
+        {
+            ATTR_NAME: "Secret automation",
+            ATTR_ENTITY_ID: "automation.forbidden",
+            "source": "state of binary_sensor.forbidden",
+        },
+        context=context,
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set("switch.allowed", STATE_OFF, context=context)
+    await hass.async_block_till_done()
+    hass.states.async_set("switch.allowed", STATE_ON, context=context)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
+    await client.send_json_auto_id(
+        {"type": "logbook/get_events", "start_time": now.isoformat()}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    assert _entity_ids(response["result"]) == ["switch.allowed"]
+    # The name, the message and the source all describe the automation the
+    # caller may not read, and the source names another denied entity
+    for entry in response["result"]:
+        assert "context_entity_id" not in entry
+        assert "context_name" not in entry
+        assert "context_message" not in entry
+        assert "context_source" not in entry
+        assert "binary_sensor.forbidden" not in str(entry)
+        assert "Secret automation" not in str(entry)

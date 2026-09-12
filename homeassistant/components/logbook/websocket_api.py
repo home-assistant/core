@@ -9,6 +9,11 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.auth.permissions import (
+    entity_permission_filter,
+    filter_entity_ids_by_permission,
+)
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import ActiveConnection, messages
@@ -283,10 +288,14 @@ async def ws_event_stream(
     entity_ids = msg.get("entity_ids")
     if entity_ids:
         entity_ids = async_filter_entities(hass, entity_ids)
+        entity_ids = filter_entity_ids_by_permission(
+            connection.user, entity_ids, POLICY_READ
+        )
         if not entity_ids and not device_ids:
             _async_send_empty_response(connection, msg_id, start_time, end_time)
             return
 
+    entity_filter = entity_permission_filter(connection.user, POLICY_READ)
     event_types = async_determine_event_types(hass, entity_ids, device_ids)
     # A past end_time makes this a one-shot fetch that never goes live.
     will_go_live = not (end_time and end_time <= utc_now)
@@ -299,6 +308,7 @@ async def ws_event_stream(
         timestamp=True,
         include_entity_name=False,
         for_live_stream=will_go_live,
+        entity_filter=entity_filter,
     )
 
     if end_time and end_time <= utc_now:
@@ -491,6 +501,9 @@ async def ws_get_events(
     context_id = msg.get("context_id")
     if entity_ids:
         entity_ids = async_filter_entities(hass, entity_ids)
+        entity_ids = filter_entity_ids_by_permission(
+            connection.user, entity_ids, POLICY_READ
+        )
         if not entity_ids and not device_ids:
             # Everything has been filtered away
             connection.send_result(msg["id"], [])
@@ -506,6 +519,7 @@ async def ws_get_events(
         context_id,
         timestamp=True,
         include_entity_name=False,
+        entity_filter=entity_permission_filter(connection.user, POLICY_READ),
     )
 
     connection.send_message(
