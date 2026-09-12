@@ -1,14 +1,16 @@
 """Helpers for automation."""
 
-from collections.abc import Mapping
+from collections.abc import Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Final, Self
+import functools
+import inspect
+from typing import Any, Final, Protocol, Self
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIONS
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 
 from .entity import get_device_class_or_undefined
 from .typing import UNDEFINED, ConfigType, UndefinedType
@@ -162,3 +164,120 @@ class ThresholdConfig:
             entity = config["entity"]
 
         return cls(numerical=numerical, number=number, entity=entity, unit=unit)
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class ValidationFinding:
+    """A non-fatal problem detected while validating a trigger, condition or action config.
+
+    A validator reports findings through the optional ``issue_reporter`` passed to config
+    validation (e.g. ``async_validate_trigger_config``). The validator does not know which
+    automation, script or template entity owns the config; the code that initiated the
+    validation adds that owner context and materializes a repair issue via
+    ``async_create_validation_issue``.
+
+    ``finding_type`` is a stable identifier for the kind of problem; it is part of the
+    repair issue id so different finding types from one owner do not collide.
+    ``translation_domain`` and ``translation_key`` locate the repair issue's strings (in
+    that integration's ``strings.json``); the issue is filed under ``translation_domain`` so
+    its translations resolve. ``issue_key`` discriminates findings of the same type within
+    one owner (e.g. the offending device id). ``placeholders`` are the finding-specific
+    translation placeholders.
+    """
+
+    finding_type: str
+    translation_domain: str
+    translation_key: str
+    issue_key: str
+    placeholders: Mapping[str, str]
+
+
+class ValidationIssueReporter(Protocol):
+    """Reports a non-fatal problem found while validating a config."""
+
+    @callback
+    def __call__(self, finding: ValidationFinding, /) -> None:
+        """Report a validation finding."""
+
+
+@functools.cache
+def _validator_accepts_issue_reporter(validator: Callable[..., Any]) -> bool:
+    """Return True if a platform validator opts in to an ``issue_reporter``."""
+    try:
+        return "issue_reporter" in inspect.signature(validator).parameters
+    except TypeError, ValueError:
+        return False
+
+
+async def async_call_platform_validator(
+    validator: Callable[..., ConfigType | Coroutine[Any, Any, ConfigType]],
+    hass: HomeAssistant,
+    conf: ConfigType,
+    issue_reporter: ValidationIssueReporter | None,
+) -> ConfigType:
+    """Call a platform config validator, making the ``issue_reporter`` opt-in.
+
+    This helper exists solely so ``issue_reporter`` can be an optional parameter of
+    platform validators: the reporter is forwarded only to validators that declare it,
+    leaving legacy two-argument validators (including those in custom integrations)
+    called unchanged. The validator may be a coroutine function or a plain function.
+    """
+    if issue_reporter is not None and _validator_accepts_issue_reporter(validator):
+        result = validator(hass, conf, issue_reporter=issue_reporter)
+    else:
+        result = validator(hass, conf)
+    if isinstance(result, Coroutine):
+        return await result
+    return result
+
+
+@callback
+def async_create_validation_issue(
+    hass: HomeAssistant,
+    finding: ValidationFinding,
+    *,
+    issue_domain: str,
+    owner_key: str,
+    name: str,
+    entity_id: str,
+    edit_url: str | None,
+) -> tuple[str, str]:
+    """Materialize a repair issue for a validation finding.
+
+    Returns the ``(translation_domain, issue_id)`` pair the issue was filed under.
+    """
+    from .issue_registry import IssueSeverity, async_create_issue  # noqa: PLC0415
+
+    issue_id = f"{issue_domain}_{finding.finding_type}_{owner_key}_{finding.issue_key}"
+    placeholders = {"name": name, "entity_id": entity_id, **finding.placeholders}
+    if edit_url is not None:
+        translation_key = finding.translation_key
+        placeholders["edit"] = edit_url
+    else:
+        translation_key = f"{finding.translation_key}_no_edit"
+    async_create_issue(
+        hass,
+        finding.translation_domain,
+        issue_id,
+        is_fixable=False,
+        issue_domain=issue_domain,
+        severity=IssueSeverity.ERROR,
+        translation_key=translation_key,
+        translation_placeholders=placeholders,
+    )
+    return finding.translation_domain, issue_id
+
+
+@callback
+def async_clear_validation_issues(
+    hass: HomeAssistant, issues: Iterable[tuple[str, str]]
+) -> None:
+    """Delete repair issues previously created from validation findings.
+
+    Each item is a ``(translation_domain, issue_id)`` pair as returned by
+    ``async_create_validation_issue``.
+    """
+    from .issue_registry import async_delete_issue  # noqa: PLC0415
+
+    for translation_domain, issue_id in issues:
+        async_delete_issue(hass, translation_domain, issue_id)

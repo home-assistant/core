@@ -74,6 +74,8 @@ from . import config_validation as cv, selector
 from .automation import (
     DomainSpec,
     ThresholdConfig,
+    ValidationIssueReporter,
+    async_call_platform_validator,
     filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
@@ -1649,7 +1651,10 @@ async def _async_get_trigger_platform(
 
 
 async def async_validate_trigger_config(
-    hass: HomeAssistant, trigger_config: list[ConfigType]
+    hass: HomeAssistant,
+    trigger_config: list[ConfigType],
+    *,
+    issue_reporter: ValidationIssueReporter | None = None,
 ) -> list[ConfigType]:
     """Validate triggers."""
     config = []
@@ -1663,10 +1668,14 @@ async def async_validate_trigger_config(
             )
             if not (trigger := trigger_descriptors.get(relative_trigger_key)):
                 raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified")
-            conf = await trigger.async_validate_complete_config(hass, conf)
+            conf = await async_call_platform_validator(
+                trigger.async_validate_complete_config, hass, conf, issue_reporter
+            )
         elif hasattr(platform, "async_validate_trigger_config"):
             conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
-            conf = await platform.async_validate_trigger_config(hass, conf)
+            conf = await async_call_platform_validator(
+                platform.async_validate_trigger_config, hass, conf, issue_reporter
+            )
         else:
             conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
             conf = platform.TRIGGER_SCHEMA(conf)

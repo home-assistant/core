@@ -26,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, script
+from homeassistant.helpers.automation import ValidationFinding
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
@@ -214,9 +215,11 @@ async def _async_validate_config_item(  # noqa: C901
     automation_config.raw_blueprint_inputs = raw_blueprint_inputs
     automation_config.raw_config = raw_config
 
+    findings: list[ValidationFinding] = []
+
     try:
         automation_config[CONF_TRIGGERS] = await async_validate_trigger_config(
-            hass, validated_config[CONF_TRIGGERS]
+            hass, validated_config[CONF_TRIGGERS], issue_reporter=findings.append
         )
     except (
         vol.Invalid,
@@ -235,7 +238,9 @@ async def _async_validate_config_item(  # noqa: C901
     if CONF_CONDITIONS in validated_config:
         try:
             automation_config[CONF_CONDITIONS] = await async_validate_conditions_config(
-                hass, validated_config[CONF_CONDITIONS]
+                hass,
+                validated_config[CONF_CONDITIONS],
+                issue_reporter=findings.append,
             )
         except (
             vol.Invalid,
@@ -256,7 +261,7 @@ async def _async_validate_config_item(  # noqa: C901
 
     try:
         automation_config[CONF_ACTIONS] = await script.async_validate_actions_config(
-            hass, validated_config[CONF_ACTIONS]
+            hass, validated_config[CONF_ACTIONS], issue_reporter=findings.append
         )
     except (
         vol.Invalid,
@@ -271,6 +276,8 @@ async def _async_validate_config_item(  # noqa: C901
             automation_config, ValidationStatus.FAILED_ACTIONS, err, validated_config
         )
         return automation_config
+
+    automation_config.validation_findings = findings
 
     return automation_config
 
@@ -293,6 +300,7 @@ class AutomationConfig(dict):
     raw_blueprint_inputs: dict[str, Any] | None = None
     validation_status: ValidationStatus = ValidationStatus.OK
     validation_error: str | None = None
+    validation_findings: list[ValidationFinding] | None = None
 
 
 async def _try_async_validate_config_item(

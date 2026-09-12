@@ -90,6 +90,7 @@ from . import (
     template,
     trigger as trigger_helper,
 )
+from .automation import ValidationIssueReporter, async_call_platform_validator
 from .condition import ConditionChecker, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
@@ -321,16 +322,25 @@ REPEAT_TERMINATE_ITERATIONS = 10000
 
 
 async def async_validate_actions_config(
-    hass: HomeAssistant, actions: list[ConfigType]
+    hass: HomeAssistant,
+    actions: list[ConfigType],
+    *,
+    issue_reporter: ValidationIssueReporter | None = None,
 ) -> list[ConfigType]:
     """Validate a list of actions."""
     # No gather here because async_validate_action_config is unlikely
     # to suspend and the overhead of creating many tasks is not worth it
-    return [await async_validate_action_config(hass, action) for action in actions]
+    return [
+        await async_validate_action_config(hass, action, issue_reporter=issue_reporter)
+        for action in actions
+    ]
 
 
 async def async_validate_action_config(
-    hass: HomeAssistant, config: ConfigType
+    hass: HomeAssistant,
+    config: ConfigType,
+    *,
+    issue_reporter: ValidationIssueReporter | None = None,
 ) -> ConfigType:
     """Validate config."""
     action_type = cv.determine_script_action(config)
@@ -339,67 +349,73 @@ async def async_validate_action_config(
         pass
 
     elif action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
-        config = await device_action.async_validate_action_config(hass, config)
+        config = await async_call_platform_validator(
+            device_action.async_validate_action_config, hass, config, issue_reporter
+        )
 
     elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
-        config = await condition.async_validate_condition_config(hass, config)
+        config = await condition.async_validate_condition_config(
+            hass, config, issue_reporter=issue_reporter
+        )
 
     elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
         config[
             CONF_WAIT_FOR_TRIGGER
         ] = await trigger_helper.async_validate_trigger_config(
-            hass, config[CONF_WAIT_FOR_TRIGGER]
+            hass, config[CONF_WAIT_FOR_TRIGGER], issue_reporter=issue_reporter
         )
 
     elif action_type == cv.SCRIPT_ACTION_REPEAT:
         if CONF_UNTIL in config[CONF_REPEAT]:
             conditions = await condition.async_validate_conditions_config(
-                hass, config[CONF_REPEAT][CONF_UNTIL]
+                hass, config[CONF_REPEAT][CONF_UNTIL], issue_reporter=issue_reporter
             )
             config[CONF_REPEAT][CONF_UNTIL] = conditions
         if CONF_WHILE in config[CONF_REPEAT]:
             conditions = await condition.async_validate_conditions_config(
-                hass, config[CONF_REPEAT][CONF_WHILE]
+                hass, config[CONF_REPEAT][CONF_WHILE], issue_reporter=issue_reporter
             )
             config[CONF_REPEAT][CONF_WHILE] = conditions
         config[CONF_REPEAT][CONF_SEQUENCE] = await async_validate_actions_config(
-            hass, config[CONF_REPEAT][CONF_SEQUENCE]
+            hass, config[CONF_REPEAT][CONF_SEQUENCE], issue_reporter=issue_reporter
         )
 
     elif action_type == cv.SCRIPT_ACTION_CHOOSE:
         if CONF_DEFAULT in config:
             config[CONF_DEFAULT] = await async_validate_actions_config(
-                hass, config[CONF_DEFAULT]
+                hass, config[CONF_DEFAULT], issue_reporter=issue_reporter
             )
 
         for choose_conf in config[CONF_CHOOSE]:
             conditions = await condition.async_validate_conditions_config(
-                hass, choose_conf[CONF_CONDITIONS]
+                hass, choose_conf[CONF_CONDITIONS], issue_reporter=issue_reporter
             )
             choose_conf[CONF_CONDITIONS] = conditions
             choose_conf[CONF_SEQUENCE] = await async_validate_actions_config(
-                hass, choose_conf[CONF_SEQUENCE]
+                hass, choose_conf[CONF_SEQUENCE], issue_reporter=issue_reporter
             )
 
     elif action_type == cv.SCRIPT_ACTION_IF:
         config[CONF_IF] = await condition.async_validate_conditions_config(
-            hass, config[CONF_IF]
+            hass, config[CONF_IF], issue_reporter=issue_reporter
         )
-        config[CONF_THEN] = await async_validate_actions_config(hass, config[CONF_THEN])
+        config[CONF_THEN] = await async_validate_actions_config(
+            hass, config[CONF_THEN], issue_reporter=issue_reporter
+        )
         if CONF_ELSE in config:
             config[CONF_ELSE] = await async_validate_actions_config(
-                hass, config[CONF_ELSE]
+                hass, config[CONF_ELSE], issue_reporter=issue_reporter
             )
 
     elif action_type == cv.SCRIPT_ACTION_PARALLEL:
         for parallel_conf in config[CONF_PARALLEL]:
             parallel_conf[CONF_SEQUENCE] = await async_validate_actions_config(
-                hass, parallel_conf[CONF_SEQUENCE]
+                hass, parallel_conf[CONF_SEQUENCE], issue_reporter=issue_reporter
             )
 
     elif action_type == cv.SCRIPT_ACTION_SEQUENCE:
         config[CONF_SEQUENCE] = await async_validate_actions_config(
-            hass, config[CONF_SEQUENCE]
+            hass, config[CONF_SEQUENCE], issue_reporter=issue_reporter
         )
 
     else:
