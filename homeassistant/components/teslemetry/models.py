@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
-from tesla_fleet_api.tesla.vehicle.stream_glue import BleBroadcastStreamGlue
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
@@ -47,7 +46,6 @@ class TeslemetryVehicleData:
     firmware: str
     device: DeviceInfo
     wakelock: asyncio.Lock = field(default_factory=asyncio.Lock)
-    ble_broadcast_glue: BleBroadcastStreamGlue | None = None
 
 
 @dataclass
