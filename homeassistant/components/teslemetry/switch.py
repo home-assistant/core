@@ -488,23 +488,26 @@ class TeslemetryChargeOnSolarSwitchEntity(
 
     async def _async_set_charge_on_solar(self, enabled: bool) -> None:
         """Set charge-on-solar mode, omitting the upper bound if it isn't known yet."""
-        charge_limit: int | None
-        if self.vehicle.poll:
-            value = self.vehicle.coordinator.data.get("charge_state_charge_limit_soc")
-            charge_limit = int(value) if isinstance(value, int | float) else None
-        else:
-            charge_limit = self._charge_limit_soc
-
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await async_set_charge_on_solar(
-            self.api,
-            enabled=enabled,
-            lower_charge_limit=self.vehicle.charge_on_solar_lower_limit,
-            charge_limit_soc=charge_limit,
-        )
-        self.vehicle.charge_on_solar_enabled = enabled
-        self._attr_is_on = enabled
-        self.async_write_ha_state()
+        async with self.vehicle.charge_on_solar_lock:
+            charge_limit: int | None
+            if self.vehicle.poll:
+                value = self.vehicle.coordinator.data.get(
+                    "charge_state_charge_limit_soc"
+                )
+                charge_limit = int(value) if isinstance(value, int | float) else None
+            else:
+                charge_limit = self._charge_limit_soc
+
+            await async_set_charge_on_solar(
+                self.api,
+                enabled=enabled,
+                lower_charge_limit=self.vehicle.charge_on_solar_lower_limit,
+                charge_limit_soc=charge_limit,
+            )
+            self.vehicle.charge_on_solar_enabled = enabled
+            self._attr_is_on = enabled
+            self.async_write_ha_state()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -440,21 +440,22 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
         self.raise_for_scope(Scope.VEHICLE_CMDS)
         value = int(value)
 
-        if not self.vehicle.charge_on_solar_enabled:
-            self._attr_native_value = value
-            self.vehicle.charge_on_solar_lower_limit = value
-            self.async_write_ha_state()
-            return
+        async with self.vehicle.charge_on_solar_lock:
+            if not self.vehicle.charge_on_solar_enabled:
+                self._attr_native_value = value
+                self.vehicle.charge_on_solar_lower_limit = value
+                self.async_write_ha_state()
+                return
 
-        charge_limit_soc = self._charge_limit_entity.native_value
-        sent_value = await async_set_charge_on_solar(
-            self.api,
-            enabled=True,
-            lower_charge_limit=value,
-            charge_limit_soc=(
-                int(charge_limit_soc) if charge_limit_soc is not None else None
-            ),
-        )
-        self._attr_native_value = sent_value
-        self.vehicle.charge_on_solar_lower_limit = sent_value
-        self.async_write_ha_state()
+            charge_limit_soc = self._charge_limit_entity.native_value
+            sent_value = await async_set_charge_on_solar(
+                self.api,
+                enabled=True,
+                lower_charge_limit=value,
+                charge_limit_soc=(
+                    int(charge_limit_soc) if charge_limit_soc is not None else None
+                ),
+            )
+            self._attr_native_value = sent_value
+            self.vehicle.charge_on_solar_lower_limit = sent_value
+            self.async_write_ha_state()

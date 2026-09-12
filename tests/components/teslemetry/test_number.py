@@ -1,6 +1,8 @@
 """Test the Teslemetry number platform."""
 
+import asyncio
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -435,6 +437,79 @@ async def test_charge_on_solar_lower_limit_uses_live_charge_limit(
             lower_charge_limit=35,
             upper_charge_limit=95,
         )
+
+
+async def test_charge_on_solar_switch_and_lower_limit_are_serialized(
+    hass: HomeAssistant,
+) -> None:
+    """Test a concurrent switch turn-on and lower-limit set don't diverge from the vehicle."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc"
+    ) as listener:
+        listener.return_value = lambda: None
+        await setup_platform(hass, [Platform.SWITCH, Platform.NUMBER])
+
+        for call in listener.call_args_list:
+            call.args[0](80)
+        await hass.async_block_till_done()
+
+    switch_call_started = asyncio.Event()
+    release_switch_call = asyncio.Event()
+
+    async def slow_charge_on_solar(**kwargs: Any) -> dict[str, Any]:
+        switch_call_started.set()
+        await release_switch_call.wait()
+        return COMMAND_OK
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        side_effect=slow_charge_on_solar,
+    ) as command:
+        turn_on = hass.async_create_task(
+            hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+                blocking=True,
+            ),
+            "test turn on charge-on-solar",
+        )
+        await switch_call_started.wait()
+
+        set_lower_limit = hass.async_create_task(
+            hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {
+                    ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                    ATTR_VALUE: 35,
+                },
+                blocking=True,
+            ),
+            "test set charge-on-solar lower limit",
+        )
+
+        # Give the number update every chance to run ahead of the switch
+        # finishing, if nothing is serializing them.
+        for _ in range(5):
+            await asyncio.sleep(0)
+
+        release_switch_call.set()
+        await turn_on
+        await set_lower_limit
+
+        assert command.call_count == 2
+        command.assert_called_with(
+            enabled=True,
+            lower_charge_limit=35,
+            upper_charge_limit=80,
+        )
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.state == "35"
 
 
 async def test_charge_on_solar_lower_limit_set_value_command_failure(
