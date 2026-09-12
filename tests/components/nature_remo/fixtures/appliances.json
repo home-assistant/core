@@ -1,0 +1,825 @@
+[
+  {
+    "id": "appliance-ac-1",
+    "device": {
+      "id": "device-remo3-1",
+      "name": "Living Remo"
+    },
+    "model": {
+      "id": "model-ac-1",
+      "country": "JP",
+      "manufacturer": "daikin",
+      "remote_name": "ARC478A30",
+      "series": "Daikin AC",
+      "name": "Daikin AC 001",
+      "image": "ico_ac_1"
+    },
+    "type": "AC",
+    "nickname": "Living AC",
+    "image": "ico_ac_1",
+    "settings": {
+      "temp": "26",
+      "temp_unit": "c",
+      "mode": "cool",
+      "vol": "auto",
+      "dir": "swing",
+      "dirh": "",
+      "button": "",
+      "updated_at": "2026-07-18T06:00:00Z",
+      "extra": {
+        "autoclean": "on"
+      }
+    },
+    "aircon": {
+      "range": {
+        "modes": {
+          "cool": {
+            "temp": ["24", "25", "26", "27", "28"],
+            "vol": ["1", "2", "3", "auto"],
+            "dir": ["1", "2", "swing", "auto"],
+            "dirh": ["1", "2", "3", "swing"]
+          },
+          "warm": {
+            "temp": ["18", "19", "20", "21", "22"],
+            "vol": ["1", "2", "3", "auto"],
+            "dir": ["1", "2", "swing", "auto"],
+            "dirh": [""]
+          },
+          "dry": {
+            "temp": ["-2", "-1", "0", "1", "2"],
+            "vol": ["auto"],
+            "dir": [],
+            "dirh": [""]
+          },
+          "blow": {
+            "temp": [],
+            "vol": ["1", "2", "auto"],
+            "dir": [],
+            "dirh": [""]
+          },
+          "auto": {
+            "temp": [
+              "-5",
+              "-4",
+              "-3",
+              "-2",
+              "-1",
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5"
+            ],
+            "vol": ["auto"],
+            "dir": [],
+            "dirh": [""]
+          }
+        },
+        "fixedButtons": ["airdir-swing", "airdir-tilt", "power-off"],
+        "extras": [
+          {
+            "id": "autoclean",
+            "text": "Mold Proof",
+            "description": "Dries the inside after cool/dry operation.",
+            "type": "choice",
+            "options": [
+              {
+                "value": "off",
+                "text": "Off",
+                "default": true
+              },
+              {
+                "value": "on",
+                "text": "On"
+              }
+            ],
+            "availability": "available"
+          }
+        ]
+      },
+      "tempUnit": "c"
+    },
+    "signals": []
+  },
+  {
+    "id": "appliance-tv-1",
+    "device": {
+      "id": "device-remo3-1",
+      "name": "Living Remo"
+    },
+    "model": {
+      "id": "model-tv-1",
+      "country": "JP",
+      "manufacturer": "sony",
+      "remote_name": "RM-JD030",
+      "series": "Sony TV",
+      "name": "Sony TV 001",
+      "image": "ico_tv"
+    },
+    "type": "TV",
+    "nickname": "Living TV",
+    "image": "ico_tv",
+    "tv": {
+      "state": {
+        "input": "t"
+      },
+      "buttons": [
+        {
+          "name": "power",
+          "image": "ico_io",
+          "label": "TV_power"
+        },
+        {
+          "name": "input-terrestrial",
+          "image": "ico_input_t",
+          "label": "Terrestrial"
+        },
+        {
+          "name": "input-bs",
+          "image": "ico_input_bs",
+          "label": "BS"
+        },
+        {
+          "name": "input-cs",
+          "image": "ico_input_cs",
+          "label": "CS"
+        },
+        {
+          "name": "select-input-src",
+          "image": "ico_input",
+          "label": "Source"
+        },
+        {
+          "name": "vol-up",
+          "image": "ico_vol_up",
+          "label": "TV_vol_up"
+        },
+        {
+          "name": "vol-down",
+          "image": "ico_vol_down",
+          "label": "TV_vol_down"
+        },
+        {
+          "name": "mute",
+          "image": "ico_mute",
+          "label": "TV_mute"
+        },
+        {
+          "name": "ch-up",
+          "image": "ico_ch_up",
+          "label": "TV_ch_up"
+        },
+        {
+          "name": "ch-down",
+          "image": "ico_ch_down",
+          "label": "TV_ch_down"
+        },
+        {
+          "name": "input",
+          "image": "ico_input_legacy",
+          "label": "TV_input"
+        },
+        {
+          "name": "",
+          "image": "",
+          "label": ""
+        }
+      ]
+    },
+    "signals": []
+  },
+  {
+    "id": "appliance-light-1",
+    "device": {
+      "id": "device-mini-1",
+      "name": "Bedroom Remo mini"
+    },
+    "model": {
+      "id": "model-light-1",
+      "country": "JP",
+      "manufacturer": "panasonic",
+      "remote_name": "HK9493",
+      "series": "Panasonic Light",
+      "name": "Panasonic Light 001",
+      "image": "ico_light"
+    },
+    "type": "LIGHT",
+    "nickname": "Bedroom Light",
+    "image": "ico_light",
+    "light": {
+      "state": {
+        "brightness": "100",
+        "power": "on",
+        "last_button": "on"
+      },
+      "buttons": [
+        {
+          "name": "on",
+          "image": "ico_on",
+          "label": "Light_on"
+        },
+        {
+          "name": "off",
+          "image": "ico_off",
+          "label": "Light_off"
+        },
+        {
+          "name": "night",
+          "image": "ico_light_night",
+          "label": "Light_night"
+        },
+        {
+          "name": "on-100",
+          "image": "ico_light_all",
+          "label": "Light_all"
+        },
+        {
+          "name": "bright-up",
+          "image": "ico_arrow_top",
+          "label": "Light_bright_up"
+        },
+        {
+          "name": "bright-down",
+          "image": "ico_arrow_bottom",
+          "label": "Light_bright_down"
+        }
+      ]
+    },
+    "signals": []
+  },
+  {
+    "id": "appliance-ir-1",
+    "device": {
+      "id": "device-remo3-1",
+      "name": "Living Remo"
+    },
+    "model": null,
+    "type": "IR",
+    "nickname": "Fan",
+    "image": "ico_ir",
+    "signals": [
+      {
+        "id": "signal-1",
+        "name": "Power",
+        "image": "ico_io"
+      },
+      {
+        "id": "signal-2",
+        "name": "Speed",
+        "image": "ico_arrow_top"
+      }
+    ]
+  },
+  {
+    "id": "appliance-meter-1",
+    "device": {
+      "id": "device-remoe-1",
+      "name": "Remo E lite"
+    },
+    "model": null,
+    "type": "EL_SMART_METER",
+    "nickname": "Smart meter",
+    "image": "ico_smartmeter",
+    "smart_meter": {
+      "echonetlite_properties": [
+        {
+          "name": "coefficient",
+          "epc": 211,
+          "val": "1",
+          "updated_at": "2026-07-18T07:55:00Z"
+        },
+        {
+          "name": "cumulative_electric_energy_effective_digits",
+          "epc": 215,
+          "val": "6",
+          "updated_at": "2026-07-18T07:55:00Z"
+        },
+        {
+          "name": "normal_direction_cumulative_electric_energy",
+          "epc": 224,
+          "val": "123456",
+          "updated_at": "2026-07-18T07:55:00Z"
+        },
+        {
+          "name": "cumulative_electric_energy_unit",
+          "epc": 225,
+          "val": "1",
+          "updated_at": "2026-07-18T07:55:00Z"
+        },
+        {
+          "name": "reverse_direction_cumulative_electric_energy",
+          "epc": 227,
+          "val": "1234",
+          "updated_at": "2026-07-18T07:55:00Z"
+        },
+        {
+          "name": "measured_instantaneous",
+          "epc": 231,
+          "val": "520",
+          "updated_at": "2026-07-18T07:58:00Z"
+        }
+      ]
+    },
+    "signals": []
+  },
+  {
+    "id": "appliance-ac-2",
+    "device": {
+      "id": "device-mini-1",
+      "name": "Bedroom Remo mini"
+    },
+    "model": {
+      "id": "model-ac-2",
+      "country": "JP",
+      "manufacturer": "Daikin",
+      "remote_name": "arc472a82",
+      "series": "",
+      "name": "Daikin AC 401",
+      "image": "ico_ac_1"
+    },
+    "type": "AC",
+    "nickname": "Bedroom AC",
+    "image": "ico_ac_1",
+    "settings": {
+      "temp": "22",
+      "temp_unit": "c",
+      "mode": "warm",
+      "vol": "auto",
+      "dir": "auto",
+      "dirh": "auto",
+      "button": "",
+      "updated_at": "2026-07-25T02:52:00Z",
+      "extra": {
+        "powerful": "off"
+      }
+    },
+    "aircon": {
+      "range": {
+        "modes": {
+          "cool": {
+            "temp": ["24", "24.5", "25", "25.5", "26"],
+            "vol": ["1", "auto"],
+            "dir": ["1", "auto", "swing"],
+            "dirh": ["1", "auto", "swing"]
+          },
+          "warm": {
+            "temp": ["20", "20.5", "21", "21.5", "22"],
+            "vol": ["1", "auto"],
+            "dir": ["1", "auto", "swing"],
+            "dirh": ["1", "auto", "swing"]
+          }
+        },
+        "fixedButtons": ["power-off"],
+        "extras": [
+          {
+            "id": "new_sleep",
+            "text": "Night Set Mode",
+            "description": "Adjusts the set temperature toward the wake-up time. Can only be used in cool or warm mode.",
+            "type": "time",
+            "defaultTime": "21:00",
+            "availability": "available"
+          },
+          {
+            "id": "hotwind",
+            "text": "Hot Airflow",
+            "description": "Blows air at a higher temperature than normal warm mode for about 30 minutes.",
+            "type": "choice",
+            "options": [
+              {
+                "value": "off",
+                "text": "Off",
+                "default": true
+              },
+              {
+                "value": "on",
+                "text": "On"
+              }
+            ],
+            "availability": "available"
+          },
+          {
+            "id": "humid",
+            "text": "Humidify",
+            "description": "Humidifies a room by drawing in moisture from the outside air. Can only be used in warm mode.",
+            "type": "choice",
+            "options": [
+              {
+                "value": "off",
+                "text": "Off",
+                "default": true
+              },
+              {
+                "value": "40%",
+                "text": "40%"
+              },
+              {
+                "value": "45%",
+                "text": "45%"
+              },
+              {
+                "value": "50%",
+                "text": "50%"
+              },
+              {
+                "value": "continuous",
+                "text": "Continuous"
+              },
+              {
+                "value": "beauty",
+                "text": "Beauty skin"
+              }
+            ],
+            "availability": "available"
+          },
+          {
+            "id": "dehumid",
+            "text": "Dehumidify",
+            "description": "Lower the humidity in the room.",
+            "type": "choice",
+            "options": [
+              {
+                "value": "off",
+                "text": "Off",
+                "default": true
+              },
+              {
+                "value": "60%",
+                "text": "60%"
+              },
+              {
+                "value": "55%",
+                "text": "55%"
+              },
+              {
+                "value": "50%",
+                "text": "50%"
+              },
+              {
+                "value": "continuous",
+                "text": "Continuous"
+              },
+              {
+                "value": "beauty",
+                "text": "Beauty skin"
+              }
+            ],
+            "availability": "hidden"
+          },
+          {
+            "id": "powerful",
+            "text": "Powerful",
+            "description": "Quickly change the room temperature by changing the temperature setting to 18C for cool mode and to 30C for warm mode.",
+            "type": "choice",
+            "options": [
+              {
+                "value": "off",
+                "text": "Off",
+                "default": true
+              },
+              {
+                "value": "on",
+                "text": "On"
+              }
+            ],
+            "availability": "available"
+          },
+          {
+            "id": "autoclean",
+            "text": "Mold Proof",
+            "description": "Automatically dries the inside after cool or dry operation.",
+            "type": "choice",
+            "options": [
+              {
+                "value": "off",
+                "text": "Off",
+                "default": true
+              },
+              {
+                "value": "on",
+                "text": "On"
+              }
+            ],
+            "availability": "hidden"
+          },
+          {
+            "id": "aroma",
+            "text": "Aroma",
+            "description": "Diffuses aroma while running.",
+            "type": "choice",
+            "options": [
+              {
+                "value": "off",
+                "text": "Off",
+                "default": true
+              },
+              {
+                "value": "low",
+                "text": "Low"
+              },
+              {
+                "value": "high",
+                "text": "High"
+              }
+            ],
+            "availability": "available"
+          },
+          {
+            "id": "off_timer",
+            "text": "Off Timer",
+            "description": "Stops operation at the set time.",
+            "type": "time",
+            "defaultTime": "23:00",
+            "availability": "available"
+          }
+        ]
+      },
+      "tempUnit": "c"
+    },
+    "signals": []
+  },
+  {
+    "id": "appliance-floorheater-1",
+    "device": {
+      "id": "device-mini-1",
+      "name": "Bedroom Remo mini"
+    },
+    "model": {
+      "id": "model-floorheater-1",
+      "country": "JP",
+      "manufacturer": "Corona",
+      "remote_name": "rfc-a04",
+      "series": "",
+      "name": "Corona Floor Heater 001",
+      "image": "ico_floor_heater"
+    },
+    "type": "FLOOR_HEATER",
+    "nickname": "Floor heater",
+    "image": "ico_floor_heater",
+    "settings": {
+      "temp": "0",
+      "temp_unit": "c",
+      "mode": "auto",
+      "vol": "",
+      "dir": "",
+      "dirh": "",
+      "button": "power-off",
+      "updated_at": "2026-07-25T02:41:25Z",
+      "extra": {
+        "save_energy": "off"
+      }
+    },
+    "aircon": null,
+    "floor_heater": {
+      "range": {
+        "modes": {
+          "auto": {
+            "temp": ["-2", "-1", "0", "1", "2"],
+            "dir": [""],
+            "dirh": [""],
+            "vol": [""]
+          },
+          "warm": {
+            "temp": [
+              "17",
+              "18",
+              "19",
+              "20",
+              "21",
+              "22",
+              "23",
+              "24",
+              "25",
+              "26",
+              "27",
+              "28",
+              "29",
+              "30"
+            ],
+            "dir": [""],
+            "dirh": [""],
+            "vol": [""]
+          }
+        },
+        "fixedButtons": ["power-off"],
+        "extras": [
+          {
+            "id": "save_energy",
+            "text": "Save energy",
+            "description": "Reduce heating power",
+            "type": "choice",
+            "options": [
+              {
+                "value": "off",
+                "text": "Off",
+                "default": true
+              },
+              {
+                "value": "on",
+                "text": "On"
+              }
+            ],
+            "availability": "available"
+          }
+        ]
+      },
+      "tempUnit": "c"
+    },
+    "signals": []
+  },
+  {
+    "id": "appliance-projector-1",
+    "device": {
+      "id": "device-mini-1",
+      "name": "Bedroom Remo mini"
+    },
+    "model": {
+      "id": "model-projector-1",
+      "country": "JP",
+      "manufacturer": "Anker Japan",
+      "remote_name": "Nebula Nova",
+      "name": "Nebula Nova",
+      "image": "ico_projector"
+    },
+    "type": "LIGHT_PROJECTOR",
+    "nickname": "Projector",
+    "image": "ico_light_projector",
+    "settings": null,
+    "aircon": null,
+    "light_projector": {
+      "layout": {
+        "type": "root",
+        "name": "root",
+        "uuid": "",
+        "image": "",
+        "label": "",
+        "text": "",
+        "x_size": 4,
+        "y_size": 0,
+        "templates": [
+          {
+            "type": "template",
+            "name": "template-1",
+            "uuid": "00000000-0000-0000-0000-0000000000t1",
+            "label": "",
+            "x_size": 4,
+            "y_size": 2,
+            "templates": [
+              {
+                "type": "plus_minus_buttons_1",
+                "name": "plus-minus-1",
+                "uuid": "00000000-0000-0000-0000-0000000000p0",
+                "label": "",
+                "x_size": 1,
+                "y_size": 2,
+                "templates": [
+                  {
+                    "type": "button",
+                    "name": "plus",
+                    "uuid": "00000000-0000-0000-0000-0000000000p1",
+                    "image": "ico_plus",
+                    "label": "",
+                    "text": "Volume Up",
+                    "x_size": 1,
+                    "y_size": 1
+                  },
+                  {
+                    "type": "button",
+                    "name": "minus",
+                    "uuid": "00000000-0000-0000-0000-0000000000p2",
+                    "image": "ico_minus",
+                    "label": "",
+                    "text": "Volume Down",
+                    "x_size": 1,
+                    "y_size": 1
+                  }
+                ]
+              },
+              {
+                "type": "control_buttons_1",
+                "name": "control-1",
+                "uuid": "00000000-0000-0000-0000-0000000000c0",
+                "label": "",
+                "x_size": 2,
+                "y_size": 2,
+                "templates": [
+                  {
+                    "type": "button",
+                    "name": "arrow-top",
+                    "uuid": "00000000-0000-0000-0000-0000000000c1",
+                    "image": "ico_arrow_top",
+                    "label": "",
+                    "text": "Top",
+                    "x_size": 1,
+                    "y_size": 1
+                  },
+                  {
+                    "type": "button",
+                    "name": "arrow-left",
+                    "uuid": "00000000-0000-0000-0000-0000000000c2",
+                    "image": "ico_arrow_left",
+                    "label": "",
+                    "text": "Left",
+                    "x_size": 1,
+                    "y_size": 1
+                  },
+                  {
+                    "type": "button",
+                    "name": "record",
+                    "uuid": "00000000-0000-0000-0000-0000000000c3",
+                    "image": "ico_record",
+                    "label": "",
+                    "text": "Ok",
+                    "x_size": 1,
+                    "y_size": 1
+                  },
+                  {
+                    "type": "button",
+                    "name": "arrow-right",
+                    "uuid": "00000000-0000-0000-0000-0000000000c4",
+                    "image": "ico_arrow_right",
+                    "label": "",
+                    "text": "Right",
+                    "x_size": 1,
+                    "y_size": 1
+                  },
+                  {
+                    "type": "button",
+                    "name": "arrow-bottom",
+                    "uuid": "00000000-0000-0000-0000-0000000000c5",
+                    "image": "ico_arrow_bottom",
+                    "label": "",
+                    "text": "Bottom",
+                    "x_size": 1,
+                    "y_size": 1
+                  }
+                ]
+              },
+              {
+                "type": "button",
+                "name": "light-all",
+                "uuid": "00000000-0000-0000-0000-0000000000b1",
+                "image": "ico_light_all",
+                "label": "",
+                "text": "Light",
+                "x_size": 1,
+                "y_size": 1
+              },
+              {
+                "type": "button",
+                "name": "focus",
+                "uuid": "00000000-0000-0000-0000-0000000000b2",
+                "image": "ico_focus",
+                "label": "",
+                "text": "Auto Forcus",
+                "x_size": 1,
+                "y_size": 1
+              }
+            ]
+          },
+          {
+            "type": "button",
+            "name": "io",
+            "uuid": "00000000-0000-0000-0000-0000000000b3",
+            "image": "ico_io",
+            "label": "",
+            "text": "Power",
+            "x_size": 1,
+            "y_size": 1
+          },
+          {
+            "type": "button",
+            "name": "home",
+            "uuid": "00000000-0000-0000-0000-0000000000b4",
+            "image": "ico_home",
+            "label": "",
+            "text": "Home",
+            "x_size": 1,
+            "y_size": 1
+          },
+          {
+            "type": "button",
+            "name": "return",
+            "uuid": "00000000-0000-0000-0000-0000000000b5",
+            "image": "ico_return",
+            "label": "",
+            "text": "Back",
+            "x_size": 1,
+            "y_size": 1
+          },
+          {
+            "type": "button",
+            "name": "setting",
+            "uuid": "00000000-0000-0000-0000-0000000000b6",
+            "image": "ico_setting",
+            "label": "",
+            "text": "Settings",
+            "x_size": 1,
+            "y_size": 1
+          }
+        ]
+      }
+    },
+    "signals": []
+  }
+]
