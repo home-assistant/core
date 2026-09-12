@@ -44,6 +44,30 @@ def test_invalid_base_schema(schema) -> None:
         selector.validate_selector(schema)
 
 
+def test_allowed_context_keys_not_shared_between_instances() -> None:
+    """Test allowed_context_keys is isolated between selector instances."""
+
+    class TestSelectorConfig(selector.BaseSelectorConfig, total=False):
+        """Test selector config class."""
+
+    class TestSelector(selector.Selector):
+        """Test selector used to verify instance isolation."""
+
+        CONFIG_SCHEMA = selector.make_selector_config_schema({})
+
+        selector_type = "test"
+
+        def __call__(self, data: Any) -> Any:
+            """Validate the passed selection."""
+            return data
+
+    test_selector = TestSelector(TestSelectorConfig())
+    other_selector = TestSelector(TestSelectorConfig())
+    test_selector.allowed_context_keys["some_key"] = set()
+    assert test_selector.allowed_context_keys
+    assert not other_selector.allowed_context_keys
+
+
 def _test_selector(
     selector_type: str,
     schema: dict | None,
@@ -1697,6 +1721,73 @@ def test_device_class_selector_schema(
 ) -> None:
     """Test device class selector."""
     _test_selector("device_class", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "raises"),
+    [
+        (None, does_not_raise()),
+        ({}, does_not_raise()),
+        ({"multiple": False}, does_not_raise()),
+        ({"multiple": True}, does_not_raise()),
+        ({"state_classes": "total"}, does_not_raise()),
+        ({"state_classes": ["total"]}, does_not_raise()),
+        ({"state_classes": ["total", "measurement"]}, does_not_raise()),
+        ({"state_classes": ["cat"]}, pytest.raises(vol.Invalid)),
+        ({"state_classes": ["total", "beer"]}, pytest.raises(vol.Invalid)),
+        ({"state_classes": ["cat", "total"]}, pytest.raises(vol.Invalid)),
+    ],
+)
+def test_state_class_selector_validate_schema(
+    schema: dict, raises: AbstractContextManager
+) -> None:
+    """Test state class selector schemas."""
+    # Validate selector configuration
+
+    with raises:
+        selector.validate_selector({"state_class": schema})
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {},
+            ("measurement", "total", "total_increasing", "measurement_angle"),
+            ("cat", 0, None, ["measurement"]),
+        ),
+        (
+            None,
+            ("measurement", "total", "total_increasing", "measurement_angle"),
+            ("cat", 0, None, ["measurement"]),
+        ),
+        (
+            {"multiple": True},
+            (["measurement"], ["total", "total_increasing", "measurement_angle"]),
+            ("measurement", 0, None, ["cat"]),
+        ),
+        (
+            {
+                "state_classes": ["measurement", "total", "total_increasing"],
+                "multiple": True,
+            },
+            (["measurement"], ["total", "total_increasing"]),
+            ("measurement", 0, None, ["cat"], ["measurement_angle"]),
+        ),
+        (
+            {
+                "state_classes": ["measurement", "total", "total_increasing"],
+            },
+            ("measurement", "total", "total_increasing"),
+            (["measurement"], 0, None, "dog", "measurement_angle"),
+        ),
+    ],
+)
+def test_state_class_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test state class selector."""
+    _test_selector("state_class", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(

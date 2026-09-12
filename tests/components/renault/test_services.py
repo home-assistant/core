@@ -14,7 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.components.renault.services import RenaultServiceArgument
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
@@ -412,7 +412,8 @@ async def test_service_invalid_device_id(
         await hass.services.async_call(
             DOMAIN, RenaultService.AC_CANCEL, service_data=data, blocking=True
         )
-    assert err.value.translation_key == "invalid_device_id"
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "service_device_not_found"
     assert err.value.translation_placeholders == {"device_id": "some_random_id"}
 
 
@@ -442,6 +443,24 @@ async def test_service_invalid_device_id2(
         )
     assert err.value.translation_key == "no_config_entry_for_device"
     assert err.value.translation_placeholders == {"device_id": "REG-NUMBER"}
+
+
+async def test_service_unloaded_config_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that service fails if the config entry is not loaded."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = {RenaultServiceArgument.VEHICLE: get_device_id(hass)}
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN, RenaultService.AC_CANCEL, service_data=data, blocking=True
+        )
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_service_exception(
