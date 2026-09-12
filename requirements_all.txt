@@ -311,6 +311,9 @@ aioimaplib==2.0.1
 # homeassistant.components.immich
 aioimmich==0.17.0
 
+# homeassistant.components.indi_allsky
+aioindiallsky==0.1.1
+
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
 
