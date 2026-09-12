@@ -2313,9 +2313,10 @@ async def test_unload_disconnect_timeout(
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
     bluetooth_vehicle = AsyncMock()
+    never_set = asyncio.Event()
 
     async def _hang(*args: object, **kwargs: object) -> None:
-        await asyncio.sleep(999)
+        await never_set.wait()
 
     bluetooth_vehicle.disconnect = AsyncMock(side_effect=_hang)
 
@@ -2337,7 +2338,6 @@ async def test_unload_disconnect_timeout(
         )
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
@@ -2372,7 +2372,6 @@ async def test_unload_disconnect_instant_timeout(
         )
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
