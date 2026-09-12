@@ -39,6 +39,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import CoverSchema
+from .storage.config_store import KnxEntityData
 from .storage.const import (
     CONF_ENTITY,
     CONF_GA_ANGLE,
@@ -306,7 +307,7 @@ class KnxUiCover(_KnxCover, KnxUiEntity):
     _device: XknxCover
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize KNX cover."""
         super().__init__(

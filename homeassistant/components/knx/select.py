@@ -1,7 +1,7 @@
 """Support for KNX select entities."""
 
 import logging
-from typing import override
+from typing import Any, override
 
 from xknx.devices import RawValue
 from xknx.dpt import DPTBase, DPTEnum
@@ -42,6 +42,7 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
+from .storage.config_store import KnxEntityData
 from .storage.const import CONF_ENTITY
 from .storage.util import ConfigExtractor
 
@@ -202,7 +203,7 @@ class KnxUiSelect(_KNXSelect, KnxUiEntity):
     _device: RawValue
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: ConfigType
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize a KNX select."""
         knx_conf = ConfigExtractor(config[DOMAIN])
