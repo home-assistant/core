@@ -661,6 +661,7 @@ FLOWS = {
         "redgtech",
         "refoss",
         "rehlko",
+        "rejseplanen",
         "remember_the_milk",
         "remote_calendar",
         "renault",

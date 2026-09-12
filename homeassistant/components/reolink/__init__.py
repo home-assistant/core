@@ -355,7 +355,7 @@ async def async_remove_config_entry_device(
         # This integration does not create child devices.
         return False
     host: ReolinkHost = config_entry.runtime_data.host
-    (_device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
+    (_device_uid, ch, is_chime) = get_device_uid_and_ch(device.identifiers, host)
 
     if is_chime:
         await host.api.get_state(cmd="GetDingDongList")
@@ -442,7 +442,7 @@ def migrate_entity_ids(
     devices = dr.async_entries_for_config_entry(device_reg, config_entry_id)
     ch_device_ids = {}
     for device in devices:
-        (device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
+        (device_uid, ch, is_chime) = get_device_uid_and_ch(device.identifiers, host)
 
         if host.api.supported(None, "UID") and device_uid[0] != host.unique_id:
             if ch is None:
@@ -465,7 +465,7 @@ def migrate_entity_ids(
             remove_ids = True  # NVR/Hub in identifiers, keep that one, remove others
         for old_id in device.identifiers:
             (old_device_uid, _old_ch, _old_is_chime) = get_device_uid_and_ch(
-                old_id, host
+                {old_id}, host
             )
             if (
                 not old_device_uid

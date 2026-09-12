@@ -260,7 +260,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==46.4.0
+aioesphomeapi==46.4.1
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -603,7 +603,7 @@ asyncpysupla==0.0.5
 asyncsleepiq==1.7.1
 
 # homeassistant.components.sftp_storage
-asyncssh==2.21.0
+asyncssh==2.23.1
 
 # homeassistant.components.aurora
 auroranoaa==0.0.5
@@ -845,7 +845,7 @@ defusedxml==0.7.1
 deluge-client==1.10.2
 
 # homeassistant.components.lametric
-demetriek==1.3.0
+demetriek==1.4.1
 
 # homeassistant.components.denon_rs232
 denon-rs232==4.2.2
@@ -1235,7 +1235,7 @@ guntamatic==1.12.0
 guppy3==3.1.7
 
 # homeassistant.components.iaqualink
-h2==4.3.0
+h2==4.4.1
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.2.2
@@ -1309,10 +1309,10 @@ hole==0.9.2
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.103
+holidays==0.104
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260826.6
+home-assistant-frontend==20260826.7
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.8.28
@@ -1587,7 +1587,7 @@ mbddns==0.1.2
 
 # homeassistant.components.mcp
 # homeassistant.components.mcp_server
-mcp==1.26.0
+mcp==1.28.1
 
 # homeassistant.components.minecraft_server
 mcstatus==13.1.0
@@ -1987,7 +1987,7 @@ py-dormakaba-dkey==1.0.6
 py-improv-ble-client==2.0.1
 
 # homeassistant.components.madvr
-py-madvr2==1.6.40
+py-madvr2==1.9.1
 
 # homeassistant.components.melissa
 py-melissa-climate==3.0.3
@@ -2217,7 +2217,7 @@ pyegps==0.2.5
 pyemoncms==0.1.3
 
 # homeassistant.components.enphase_envoy
-pyenphase==4.0.1
+pyenphase==4.0.3
 
 # homeassistant.components.envertech_evt800
 pyenvertechevt800==0.2.4
@@ -2403,7 +2403,7 @@ pylitterbot==2025.6.5
 pylutron-caseta==0.29.0
 
 # homeassistant.components.lutron
-pylutron==0.4.2
+pylutron==0.4.4
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -2569,6 +2569,9 @@ pyrate-limiter==4.5.0
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
 
+# homeassistant.components.rejseplanen
+pyrejseplan==1.0.9
+
 # homeassistant.components.repetier
 pyrepetierng==0.1.0
 
@@ -2711,7 +2714,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.15.0
+python-duco-connectivity==0.16.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
@@ -2808,7 +2811,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==7.4.1
+python-roborock==7.4.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2938,7 +2941,7 @@ qbittorrent-api==2026.5.1
 qbusmqttapi==1.5.1
 
 # homeassistant.components.qingping
-qingping-ble==1.1.5
+qingping-ble==1.1.6
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
@@ -2993,9 +2996,6 @@ ring-doorbell==0.9.14
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
-
-# homeassistant.components.rejseplanen
-rjpl==0.3.6
 
 # homeassistant.components.rocketchat
 rocketchat-API==0.6.1
@@ -3162,7 +3162,7 @@ speedtest-cli==2.1.3
 spotifyaio==2.0.2
 
 # homeassistant.components.sql
-sqlparse==0.5.5
+sqlparse==0.6.0
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.8
@@ -3434,7 +3434,7 @@ wallbox==0.9.0
 watchdog==6.0.0
 
 # homeassistant.components.waterfurnace
-waterfurnace==1.9.0
+waterfurnace==1.9.2
 
 # homeassistant.components.watergate
 watergate-local-api==2026.2.2
@@ -3555,7 +3555,7 @@ zha-quirks==2.2.2
 zha==2.2.2
 
 # homeassistant.components.zhong_hong
-zhong-hong-hvac==1.0.19
+zhong-hong-hvac==1.0.21
 
 # homeassistant.components.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.1.0

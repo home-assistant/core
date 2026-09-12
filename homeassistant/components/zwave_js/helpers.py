@@ -286,7 +286,7 @@ def async_get_node_from_device_id(hass: HomeAssistant, device_id: str) -> ZwaveN
     # Use the device config entry to validate that this is a valid zwave_js device
     # and to get the client
     device, config_entry = cast(
-        tuple[dr.DeviceEntry | None, ZwaveJSConfigEntry | None],
+        tuple[dr.AnyDeviceEntry | None, ZwaveJSConfigEntry | None],
         dr.async_get_device_and_config_entry_for_domain(hass, device_id, domain=DOMAIN),
     )
     if device is None:
@@ -340,7 +340,7 @@ async def async_get_provisioning_entry_from_device_id(
     # Use the device config entry to validate that this is a valid zwave_js device
     # and to get the client
     device, config_entry = cast(
-        tuple[dr.DeviceEntry | None, ZwaveJSConfigEntry | None],
+        tuple[dr.AnyDeviceEntry | None, ZwaveJSConfigEntry | None],
         dr.async_get_device_and_config_entry_for_domain(hass, device_id, domain=DOMAIN),
     )
     if device is None:
