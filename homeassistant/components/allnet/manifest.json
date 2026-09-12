@@ -1,0 +1,17 @@
+{
+  "domain": "allnet",
+  "name": "ALLNET",
+  "codeowners": ["@polsa"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/allnet",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["allnet==0.1.0"],
+  "zeroconf": [
+    {
+      "name": "all*",
+      "type": "_http._tcp.local."
+    }
+  ]
+}
