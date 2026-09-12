@@ -50,6 +50,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import ClimateSchema
+from .storage.config_store import KnxEntityData
 from .storage.const import (
     CONF_ENTITY,
     CONF_GA_ACTIVE,
@@ -698,7 +699,7 @@ class KnxUiClimate(_KnxClimate, KnxUiEntity):
     _device: XknxClimate
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: ConfigType
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize of a KNX climate device."""
         super().__init__(

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
-from typing import Any, override
+from typing import override
 
 from xknx.core.connection_state import XknxConnectionState, XknxConnectionType
 from xknx.devices import Device as XknxDevice, Sensor as XknxSensor
@@ -47,8 +47,9 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import SensorSchema
-from .storage.const import CONF_ALWAYS_CALLBACK, CONF_ENTITY, CONF_GA_SENSOR
-from .storage.util import ConfigExtractor
+from .storage.config_store import KnxEntityData
+from .storage.const import CONF_ENTITY
+from .storage.entity_store_schema import SensorKnxConfig
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -156,7 +157,9 @@ async def async_setup_entry(
             KnxYamlSensor(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.SENSOR):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.SENSOR, SensorKnxConfig
+    ):
         entities.extend(
             KnxUiSensor(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -244,7 +247,10 @@ class KnxUiSensor(_KnxSensor, KnxUiEntity):
     _device: XknxSensor
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[SensorKnxConfig],
     ) -> None:
         """Initialize KNX sensor."""
         super().__init__(
@@ -252,39 +258,39 @@ class KnxUiSensor(_KnxSensor, KnxUiEntity):
             unique_id=unique_id,
             entity_config=config[CONF_ENTITY],
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
-        dpt_string = knx_conf.get_dpt(CONF_GA_SENSOR)
+        knx_conf = config[DOMAIN]
+        dpt_string = knx_conf.ga_sensor.dpt
         assert dpt_string is not None  # required for sensor
         dpt_info = get_supported_dpts()[dpt_string]
 
         self._device = XknxSensor(
             knx_module.xknx,
             name=config[CONF_ENTITY][CONF_NAME],
-            group_address_state=knx_conf.get_state_and_passive(CONF_GA_SENSOR),
-            sync_state=knx_conf.get(CONF_SYNC_STATE),
+            group_address_state=knx_conf.ga_sensor.state_and_passive(),
+            sync_state=knx_conf.sync_state,
             always_callback=True,
             value_type=dpt_string,
         )
 
-        if device_class_override := knx_conf.get(CONF_DEVICE_CLASS):
+        if knx_conf.device_class:
             self._attr_device_class = try_parse_enum(
-                SensorDeviceClass, device_class_override
+                SensorDeviceClass, knx_conf.device_class
             )
         else:
             self._attr_device_class = dpt_info["sensor_device_class"]
 
-        if state_class_override := knx_conf.get(CONF_STATE_CLASS):
+        if knx_conf.state_class:
             self._attr_state_class = try_parse_enum(
-                SensorStateClass, state_class_override
+                SensorStateClass, knx_conf.state_class
             )
         else:
             self._attr_state_class = dpt_info["sensor_state_class"]
 
         self._attr_native_unit_of_measurement = (
-            knx_conf.get(CONF_UNIT_OF_MEASUREMENT) or dpt_info["unit"]
+            knx_conf.unit_of_measurement or dpt_info["unit"]
         )
 
-        self._attr_force_update = knx_conf.get(CONF_ALWAYS_CALLBACK, default=False)
+        self._attr_force_update = knx_conf.always_callback
         self._attr_extra_state_attributes = {}
 
 

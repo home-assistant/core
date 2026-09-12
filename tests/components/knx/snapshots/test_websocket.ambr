@@ -62,6 +62,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': False,
         'name': 'invert',
         'optional': True,
         'required': False,
@@ -78,6 +79,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': False,
         'name': 'ignore_internal_state',
         'optional': True,
         'required': False,
@@ -88,6 +90,7 @@
         'type': 'ha_selector',
       }),
       dict({
+        'default': None,
         'name': 'context_timeout',
         'optional': True,
         'required': False,
@@ -103,6 +106,7 @@
         'type': 'ha_selector',
       }),
       dict({
+        'default': None,
         'name': 'reset_after',
         'optional': True,
         'required': False,
@@ -1731,6 +1735,7 @@
         'type': 'ha_selector',
       }),
       dict({
+        'default': None,
         'name': 'min',
         'optional': True,
         'required': False,
@@ -1743,6 +1748,7 @@
         'type': 'ha_selector',
       }),
       dict({
+        'default': None,
         'name': 'max',
         'optional': True,
         'required': False,
@@ -1755,6 +1761,7 @@
         'type': 'ha_selector',
       }),
       dict({
+        'default': None,
         'name': 'step',
         'optional': True,
         'required': False,
@@ -1768,6 +1775,7 @@
         'type': 'ha_selector',
       }),
       dict({
+        'default': None,
         'name': 'unit_of_measurement',
         'optional': True,
         'required': False,
@@ -1960,6 +1968,7 @@
         'type': 'ha_selector',
       }),
       dict({
+        'default': None,
         'name': 'device_class',
         'optional': True,
         'required': False,
@@ -2146,6 +2155,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'unit_of_measurement',
         'optional': True,
         'required': False,
@@ -2339,6 +2349,7 @@
         'type': 'ha_selector',
       }),
       dict({
+        'default': None,
         'name': 'device_class',
         'optional': True,
         'required': False,
@@ -2416,6 +2427,7 @@
         'type': 'ha_selector',
       }),
       dict({
+        'default': None,
         'name': 'state_class',
         'optional': True,
         'required': False,
@@ -2427,6 +2439,7 @@
         'type': 'ha_selector',
       }),
       dict({
+        'default': False,
         'name': 'always_callback',
         'optional': True,
         'required': False,
