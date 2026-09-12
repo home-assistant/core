@@ -143,6 +143,9 @@
     "cannot_connect": {
       "message": "Could not connect to the SMA device: {error}"
     },
+    "device_error": {
+      "message": "Error communicating with SMA device: {error}"
+    },
     "wrong_device": {
       "message": "Discovered device does not match config entry."
     }

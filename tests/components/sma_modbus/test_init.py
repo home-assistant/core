@@ -27,6 +27,7 @@ from . import HOST, make_config_entry, make_seeded_connection, mock_discovery_in
 )
 async def test_setup_and_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_type: DeviceType,
 ) -> None:
     """Test the integration sets up and exposes the device sensors."""
@@ -52,7 +53,6 @@ async def test_setup_and_sensors(
     coordinator: SmaCoordinator = entry.runtime_data
     assert coordinator.device_type is device_type
 
-    entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert len(entities) == len(SENSOR_DESCRIPTIONS[device_type])
 

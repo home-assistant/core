@@ -53,11 +53,14 @@ async def _setup_entry(
     return entry, connection
 
 
-async def test_device_info(hass: HomeAssistant) -> None:
+async def test_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test the device registry entry is created with the right info."""
     entry, _ = await _setup_entry(hass)
 
-    device = dr.async_get(hass).async_get_device_by_identifier(
+    device = device_registry.async_get_device_by_identifier(
         (DOMAIN, entry.unique_id), entry.entry_id
     )
     assert device is not None
@@ -69,7 +72,10 @@ async def test_device_info(hass: HomeAssistant) -> None:
     assert device.configuration_url == f"http://{HOST}:80"
 
 
-async def test_device_info_web_port_https(hass: HomeAssistant) -> None:
+async def test_device_info_web_port_https(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test the configuration_url uses https when web port is 443."""
     connection = make_seeded_connection(DEVICE_TYPE)
     entry = make_config_entry(DEVICE_TYPE, extra_data={"web_port": 443})
@@ -88,23 +94,28 @@ async def test_device_info_web_port_https(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    device = dr.async_get(hass).async_get_device_by_identifier(
+    device = device_registry.async_get_device_by_identifier(
         (DOMAIN, entry.unique_id), entry.entry_id
     )
     assert device is not None
     assert device.configuration_url == f"https://{HOST}:443"
 
 
-async def test_sensor_entity_count(hass: HomeAssistant) -> None:
+async def test_sensor_entity_count(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test the correct number of sensor entities are created."""
     entry, _ = await _setup_entry(hass)
 
-    entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert len(entities) == len(SENSOR_DESCRIPTIONS[DEVICE_TYPE])
 
 
-async def test_sensor_enum_value(hass: HomeAssistant) -> None:
+async def test_sensor_enum_value(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test an enum sensor returns the lowercase member name."""
     entry, connection = await _setup_entry(hass)
 
@@ -116,7 +127,7 @@ async def test_sensor_enum_value(hass: HomeAssistant) -> None:
     coordinator: SmaCoordinator = entry.runtime_data
     coordinator.async_set_updated_data(device)
 
-    entity_id = er.async_get(hass).async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.unique_id}-system_status"
     )
     state = hass.states.get(entity_id)
@@ -124,7 +135,10 @@ async def test_sensor_enum_value(hass: HomeAssistant) -> None:
     assert state.state == "ok"
 
 
-async def test_sensor_numeric_value(hass: HomeAssistant) -> None:
+async def test_sensor_numeric_value(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test a numeric sensor returns the rounded value."""
     entry, connection = await _setup_entry(hass)
 
@@ -135,7 +149,7 @@ async def test_sensor_numeric_value(hass: HomeAssistant) -> None:
     coordinator: SmaCoordinator = entry.runtime_data
     coordinator.async_set_updated_data(device)
 
-    entity_id = er.async_get(hass).async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.unique_id}-ac_power"
     )
     state = hass.states.get(entity_id)
@@ -143,7 +157,10 @@ async def test_sensor_numeric_value(hass: HomeAssistant) -> None:
     assert state.state == "5000"
 
 
-async def test_sensor_nan_value_is_none(hass: HomeAssistant) -> None:
+async def test_sensor_nan_value_is_none(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test a sensor with a NaN sentinel returns unknown."""
     entry, connection = await _setup_entry(hass)
 
@@ -154,7 +171,7 @@ async def test_sensor_nan_value_is_none(hass: HomeAssistant) -> None:
     coordinator: SmaCoordinator = entry.runtime_data
     coordinator.async_set_updated_data(device)
 
-    entity_id = er.async_get(hass).async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.unique_id}-ac_power"
     )
     state = hass.states.get(entity_id)
@@ -162,22 +179,27 @@ async def test_sensor_nan_value_is_none(hass: HomeAssistant) -> None:
     assert state.state is None or state.state == "unknown"
 
 
-async def test_sensor_unique_ids(hass: HomeAssistant) -> None:
+async def test_sensor_unique_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test sensor unique IDs are based on the config entry unique id."""
     entry, _ = await _setup_entry(hass)
 
-    entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert len(entities) > 0
     for entity in entities:
         assert entity.unique_id.startswith(f"{entry.unique_id}-")
 
 
-async def test_sensor_device_class(hass: HomeAssistant) -> None:
+async def test_sensor_device_class(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test power sensor has the power device class."""
     entry, _ = await _setup_entry(hass)
 
-    entity_id = er.async_get(hass).async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.unique_id}-ac_power"
     )
     state = hass.states.get(entity_id)

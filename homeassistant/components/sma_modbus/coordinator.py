@@ -53,7 +53,11 @@ class SmaCoordinator(DataUpdateCoordinator[SmaComponent]):
                     err,
                 )
                 self._was_available = False
-            raise UpdateFailed(f"Error communicating with SMA device: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         if not self._was_available:
             _LOGGER.info(
                 "SMA device at %s is now available",
