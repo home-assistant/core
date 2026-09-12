@@ -13,6 +13,7 @@ CONF_SUBTYPE = "subtype"
 CONF_ACCOUNT = "account"
 CONF_SERVER = "server"
 CONF_SN = "sn"
+CONF_POWER_ANALYSIS_METHOD = "power_analysis_method"
 
 PRESET_MODE_NONE = "none"
 

@@ -17,7 +17,12 @@ from midealocal.discover import discover
 from midealocal.exceptions import MideaCloudError
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
@@ -33,12 +38,17 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_ACCOUNT,
     CONF_KEY,
+    CONF_POWER_ANALYSIS_METHOD,
     CONF_SERVER,
     CONF_SN,
     CONF_SUBTYPE,
@@ -128,6 +138,12 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         self.preset_account: str = preset_account["username"]
         self.preset_password: str = preset_account["password"]
         self.preset_cloud_name: str = preset_account["cloud_name"]
+
+    @staticmethod
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return MideaOptionsFlow(config_entry)
 
     def _clear_login_state(self) -> None:
         """Clear flow-scoped credentials and cloud.
@@ -897,3 +913,50 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         return self.async_abort(reason="no_devices_found")
+
+
+class MideaOptionsFlow(OptionsFlow):
+    """Handle Midea options."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self._config_entry = config_entry
+
+    @override
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage options."""
+        if self._config_entry.data.get(CONF_TYPE) != DeviceType.AC:
+            return self.async_create_entry(title="", data=self._config_entry.options)
+
+        if user_input is not None:
+            try:
+                analysis_method = int(user_input[CONF_POWER_ANALYSIS_METHOD])
+            except TypeError, ValueError:
+                analysis_method = 1
+
+            new_options = {
+                **self._config_entry.options,
+                CONF_POWER_ANALYSIS_METHOD: analysis_method,
+            }
+            return self.async_create_entry(title="", data=new_options)
+
+        current = str(self._config_entry.options.get(CONF_POWER_ANALYSIS_METHOD, 1))
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_POWER_ANALYSIS_METHOD,
+                        default=current,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=["1", "2", "3", "101", "12"],
+                            translation_key="power_analysis_method",
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                }
+            ),
+        )

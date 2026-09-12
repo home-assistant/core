@@ -113,6 +113,18 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "power_analysis_method": "Power/Energy decode method"
+        },
+        "data_description": {
+          "power_analysis_method": "Select how your AC reports power and energy counters."
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "arofene_link": {
@@ -756,6 +768,15 @@
       "options": {
         "account": "Your account credentials",
         "preset": "Preset cloud credentials"
+      }
+    },
+    "power_analysis_method": {
+      "options": {
+        "1": "BCD (Default)",
+        "2": "Binary",
+        "3": "Mixed",
+        "101": "BCD Energy + Binary Power",
+        "12": "Binary (1/10 scale)"
       }
     }
   }
