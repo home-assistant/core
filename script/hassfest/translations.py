@@ -399,6 +399,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         translation_value_validator,
                         slug_validator=translation_key_validator,
                     ),
+                    vol.Optional("value"): translation_value_validator,
                     vol.Optional("fields"): vol.Any(
                         # Old format:
                         # "key": "translation"

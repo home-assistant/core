@@ -1,4 +1,9 @@
 {
+  "conditions": {
+    "is_before": {
+      "condition": "mdi:calendar-clock"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:calendar-clock"
