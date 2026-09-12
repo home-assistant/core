@@ -608,8 +608,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 vehicle,
             )
 
-            # Bluetooth-paired only: feeds the router's own primary broadcast
-            # listeners into the same stream sink a native stream event reaches.
             ble_broadcast_glue = (
                 BleBroadcastStreamGlue(
                     vehicle_api.primary, cast(StreamSink, stream_vehicle)

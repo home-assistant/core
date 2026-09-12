@@ -2134,7 +2134,6 @@ async def _paired_entry(
         router.secondary.flash_lights = cloud
         yield router, bluetooth_vehicle, cloud
 
-        # Exercises the real BleBroadcastStreamGlue.stop() unsub list, not a mocked-away unload.
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -2252,7 +2251,6 @@ async def test_vehicle_paired_but_never_seen(hass: HomeAssistant) -> None:
             not in mock_parent.return_value.vehicles.createBluetooth.call_args.kwargs
         )
 
-        # Exercises the real BleBroadcastStreamGlue.stop() unsub list, not a mocked-away unload.
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
