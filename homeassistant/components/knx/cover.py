@@ -36,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_MODULE_KEY, CoverConf
 from .entity import (
+    KnxEntityIdentifier,
     KnxUiEntity,
     KnxUiEntityPlatformController,
     KnxYamlEntity,
@@ -127,6 +128,10 @@ class _KnxCover(CoverEntity, RestoreEntity):
     """Representation of a KNX cover."""
 
     _device: XknxCover
+    # provided by the KNX entity mixin, which is only applied in the concrete
+    # YAML and UI classes below - declared here so this mixin can use them
+    _knx_module: KNXModule
+    _knx_entity_identifier: KnxEntityIdentifier | None
     _position_publisher: XknxExposeSensor | None = None
     _published_position: int | None = None
 
