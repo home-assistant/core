@@ -637,6 +637,57 @@
     'state': '1200',
   })
 # ---
+# name: test_sensors[sensor.power_meter_month_peak_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.power_meter_month_peak_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Month peak time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Month peak time',
+    'platform': 'youless',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'month_peak_time',
+    'unique_id': 'youless_localhost_month_peak_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.power_meter_month_peak_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power meter Month peak time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.power_meter_month_peak_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-31T00:21:00+00:00',
+  })
+# ---
 # name: test_sensors[sensor.power_meter_power_phase_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
