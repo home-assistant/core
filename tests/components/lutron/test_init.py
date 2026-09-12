@@ -2,6 +2,7 @@
 
 from typing import Any, cast
 from unittest.mock import MagicMock
+from urllib.error import URLError
 
 from pylutron import LutronException
 import pytest
@@ -52,16 +53,29 @@ async def test_unload_entry(
 
 
 @pytest.mark.parametrize("method", ["load_xml_db", "connect"])
+@pytest.mark.parametrize(
+    "error",
+    [
+        LutronException("boom"),
+        # load_xml_db() fetches DbXmlInfo.xml with urllib, so a repeater that is
+        # unreachable or still booting surfaces as URLError, not LutronException.
+        URLError(OSError(111, "Connection refused")),
+        OSError(113, "No route to host"),
+        TimeoutError("timed out"),
+    ],
+    ids=["lutron", "urlerror", "oserror", "timeout"],
+)
 async def test_setup_entry_not_ready(
     hass: HomeAssistant,
     mock_lutron: MagicMock,
     mock_config_entry: MockConfigEntry,
     method: str,
+    error: Exception,
 ) -> None:
-    """Test setting up the integration when Lutron repeater is not ready."""
+    """Test that transient failures retry setup rather than failing the entry."""
     mock_config_entry.add_to_hass(hass)
 
-    getattr(mock_lutron, method).side_effect = LutronException(f"{method} failed")
+    getattr(mock_lutron, method).side_effect = error
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
