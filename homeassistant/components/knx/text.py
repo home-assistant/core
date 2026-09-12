@@ -1,6 +1,6 @@
 """Support for KNX text entities."""
 
-from typing import Any, override
+from typing import override
 
 from propcache.api import cached_property
 from xknx.devices import Notification as XknxNotification
@@ -40,8 +40,8 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .storage.config_store import KnxEntityData
-from .storage.const import CONF_ENTITY, CONF_GA_TEXT
-from .storage.util import ConfigExtractor
+from .storage.const import CONF_ENTITY
+from .storage.entity_store_schema import TextKnxConfig
 
 
 async def async_setup_entry(
@@ -67,7 +67,9 @@ async def async_setup_entry(
             KnxYamlText(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.TEXT):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.TEXT, TextKnxConfig
+    ):
         entities.extend(
             KnxUiText(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -147,7 +149,7 @@ class KnxUiText(_KnxText, KnxUiEntity):
         self,
         knx_module: KNXModule,
         unique_id: str,
-        config: KnxEntityData[Any],
+        config: KnxEntityData[TextKnxConfig],
     ) -> None:
         """Initialize a KNX text."""
         super().__init__(
@@ -155,17 +157,17 @@ class KnxUiText(_KnxText, KnxUiEntity):
             unique_id=unique_id,
             entity_config=config[CONF_ENTITY],
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = config[DOMAIN]
         self._device = XknxNotification(
             knx_module.xknx,
             name=config[CONF_ENTITY][CONF_NAME],
-            group_address=knx_conf.get_write(CONF_GA_TEXT),
-            group_address_state=knx_conf.get_state_and_passive(CONF_GA_TEXT),
-            respond_to_read=knx_conf.get(CONF_RESPOND_TO_READ),
-            sync_state=knx_conf.get(CONF_SYNC_STATE),
-            value_type=knx_conf.get_dpt(CONF_GA_TEXT),
+            group_address=knx_conf.ga_text.write,
+            group_address_state=knx_conf.ga_text.state_and_passive(),
+            respond_to_read=knx_conf.respond_to_read,
+            sync_state=knx_conf.sync_state,
+            value_type=knx_conf.ga_text.dpt,
         )
-        self._attr_mode = TextMode(knx_conf.get(CONF_MODE))
+        self._attr_mode = TextMode(knx_conf.mode)
         self._attr_native_max_length = (
             self._device.remote_value.dpt_class.payload_length
         )
