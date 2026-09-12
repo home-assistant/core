@@ -2883,7 +2883,7 @@ def async_add_external_statistics(
 
     if "mean_type" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
         report_usage(  # type: ignore[unreachable]
-            "doesn't specify mean_type when calling async_import_statistics",
+            "doesn't specify mean_type when calling async_add_external_statistics",
             breaks_in_ha_version="2026.11",
             exclude_integrations={DOMAIN},
         )
