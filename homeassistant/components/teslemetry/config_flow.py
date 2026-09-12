@@ -392,6 +392,10 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             LOGGER.error("Bluetooth pairing was rejected: %s", err)
             self._pair_error = {"base": "pair_failed"}
             return self.async_show_progress_done(next_step_id="instructions")
+        except Exception:
+            # async_remove() only runs if the flow is still tracked when this step raises.
+            await self._async_disconnect()
+            raise
         return self.async_show_progress_done(next_step_id="pair")
 
     async def _async_disconnect(self) -> None:
