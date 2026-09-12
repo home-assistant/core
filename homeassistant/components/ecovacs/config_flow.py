@@ -34,6 +34,7 @@ from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.ssl import get_default_no_verify_context
 
 from .const import (
+    CONF_CREDENTIALS,
     CONF_OVERRIDE_MQTT_URL,
     CONF_OVERRIDE_REST_URL,
     CONF_VERIFICATION_CODE,
@@ -206,6 +207,17 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
     def _finish_flow(self) -> ConfigFlowResult:
         """Create or update the config entry."""
         self._input[CONF_DEVICE_ID] = self._device_id
+        # Persist account credentials so the runtime can seed the Authenticator
+        # on subsequent loads, avoiding the password login that re-triggers the
+        # device-verification challenge.
+        if (
+            (authenticator := self._authenticator) is not None
+            and (account := authenticator.account_credentials) is not None
+        ):
+            self._input[CONF_CREDENTIALS] = {
+                "access_token": account.access_token,
+                "user_id": account.user_id,
+            }
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data_updates=self._input
