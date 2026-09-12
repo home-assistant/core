@@ -17,6 +17,7 @@ from homeassistant.components.light import (
     filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
@@ -104,19 +105,23 @@ class HueBLELight(LightEntity):
         use_color_temp = ATTR_COLOR_TEMP_KELVIN in attrs or (
             self.color_mode is ColorMode.COLOR_TEMP and ATTR_XY_COLOR not in attrs
         )
+        try:
+            use_effect = EffectType[effect]
+        except ValueError as e:
+            raise ServiceValidationError("Unknown effect") from e
 
         if use_color_temp:
             mireds = color_util.color_temperature_kelvin_to_mired(
                 attrs.get(ATTR_COLOR_TEMP_KELVIN, self.color_temp_kelvin)
             )
             await self._api.set_temperature_effect(
-                mireds, brightness, EffectType[effect], EFFECT_SPEED
+                mireds, brightness, use_effect, EFFECT_SPEED
             )
 
         else:
             xy_color = attrs.get(ATTR_XY_COLOR, self.xy_color)
             await self._api.set_colour_effect(
-                xy_color[0], xy_color[1], brightness, EffectType[effect], EFFECT_SPEED
+                xy_color[0], xy_color[1], brightness, use_effect, EFFECT_SPEED
             )
 
         await self._api.set_power(True)
@@ -132,7 +137,7 @@ class HueBLELight(LightEntity):
             else None
         )
         self._attr_xy_color = self._api.colour_xy
-        self._attr_effect = self._api.effect.name if self._api.effect else None
+        self._attr_effect = self._api.effect[0].name if self._api.effect else None
 
     def _state_change_callback(self) -> None:
         """Run when light informs of state update. Updates local properties."""

@@ -84,7 +84,6 @@ def mock_light() -> Generator[AsyncMock]:
         client.colour_xy = (0.0, 0.0)
         client.colour_temp_mode = True
         client.effect = None
-        client.effect_speed = None
         client._state_changed_callbacks = []
 
         def add_callback_on_state_changed(function: Callable[[], None]):
@@ -119,8 +118,7 @@ def mock_light() -> Generator[AsyncMock]:
         ):
             client.colour_xy = (x, y)
             client.brightness = brightness
-            client.effect = effect
-            client.effect_speed = effect_speed
+            client.effect = effect, effect_speed
             client.colour_temp_mode = False
             run_callbacks()
 
@@ -129,8 +127,7 @@ def mock_light() -> Generator[AsyncMock]:
         ):
             client.colour_temp = colour_temp
             client.brightness = brightness
-            client.effect = effect
-            client.effect_speed = effect_speed
+            client.effect = effect, effect_speed
             client.colour_temp_mode = True
             run_callbacks()
 

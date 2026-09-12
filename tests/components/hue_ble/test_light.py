@@ -176,8 +176,7 @@ async def test_light_control_effect_xy(
     """Test color effect control."""
 
     mock_light.supports_effects = True
-    mock_light.effect = EffectType.NONE
-    mock_light.effect_speed = EFFECT_SPEED
+    mock_light.effect = EffectType.NONE, EFFECT_SPEED
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -209,8 +208,7 @@ async def test_light_control_effect_xy(
     assert attributes[ATTR_EFFECT] == EffectType.CANDLE.name
     assert attributes[ATTR_XY_COLOR] == (0.3, 0.3)
     assert attributes[ATTR_COLOR_MODE] == ColorMode.XY
-    assert mock_light.effect == EffectType.CANDLE
-    assert mock_light.effect_speed == EFFECT_SPEED
+    assert mock_light.effect == (EffectType.CANDLE, EFFECT_SPEED)
     assert not mock_light.colour_temp_mode
 
     await hass.services.async_call(
@@ -229,8 +227,7 @@ async def test_light_control_effect_xy(
     assert attributes[ATTR_EFFECT] == EffectType.CANDLE.name
     assert attributes[ATTR_XY_COLOR] == (0.5, 0.5)
     assert attributes[ATTR_COLOR_MODE] == ColorMode.XY
-    assert mock_light.effect == EffectType.CANDLE
-    assert mock_light.effect_speed == EFFECT_SPEED
+    assert mock_light.effect == (EffectType.CANDLE, EFFECT_SPEED)
     assert not mock_light.colour_temp_mode
 
 
@@ -242,8 +239,7 @@ async def test_light_control_effect_temp(
     """Test temperature effect control."""
 
     mock_light.supports_effects = True
-    mock_light.effect = EffectType.NONE
-    mock_light.effect_speed = EFFECT_SPEED
+    mock_light.effect = EffectType.NONE, EFFECT_SPEED
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -270,8 +266,7 @@ async def test_light_control_effect_temp(
     attributes = state.attributes
     assert attributes[ATTR_EFFECT] == EffectType.COSMOS.name
     assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
-    assert mock_light.effect == EffectType.COSMOS
-    assert mock_light.effect_speed == EFFECT_SPEED
+    assert mock_light.effect == (EffectType.COSMOS, EFFECT_SPEED)
     assert mock_light.colour_temp_mode
 
     await hass.services.async_call(
@@ -297,6 +292,5 @@ async def test_light_control_effect_temp(
     assert attributes[ATTR_EFFECT] == EffectType.CANDLE.name
     assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
-    assert mock_light.effect == EffectType.CANDLE
-    assert mock_light.effect_speed == EFFECT_SPEED
+    assert mock_light.effect == (EffectType.CANDLE, EFFECT_SPEED)
     assert mock_light.colour_temp_mode
