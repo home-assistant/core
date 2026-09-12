@@ -133,19 +133,6 @@ def entity_unit_id(entity_config: dict[str, Any]) -> int:
     return int(entity_config.get(CONF_DEVICE_ADDRESS, 1))
 
 
-def _hub_endpoint(client_config: dict[str, Any]) -> ModbusEndpoint:
-    """Return the device a hub config addresses, keyed as a connection endpoint.
-
-    Keyed like `ModbusParams.endpoint`, so a hub and a shared connection to
-    one device can be told apart from two devices, even though the two links
-    are separate.
-    """
-    if client_config[CONF_TYPE] == SERIAL:
-        return ("serial", client_config[CONF_PORT])
-    transport = "udp" if client_config[CONF_TYPE] == UDP else "tcp"
-    return (transport, client_config[CONF_HOST].lower(), client_config[CONF_PORT])
-
-
 async def async_modbus_setup(
     hass: HomeAssistant,
     config: ConfigType,
@@ -276,7 +263,6 @@ class ModbusHub:
         self.event_connected = asyncio.Event()
         self.hass = hass
         self.name = client_config[CONF_NAME]
-        self.endpoint = _hub_endpoint(client_config)
         self._config_type = client_config[CONF_TYPE]
         self.config_delay = client_config[CONF_DELAY]
         self._pb_request: dict[str, RunEntry] = {}
@@ -293,8 +279,11 @@ class ModbusHub:
             "timeout": client_config[CONF_TIMEOUT],
             "retries": 3,
         }
+        # The endpoint is keyed like `ModbusParams.endpoint`, so that a hub and
+        # a shared connection to one device can be told apart from two devices
         if self._config_type == SERIAL:
             # serial configuration
+            self.endpoint: ModbusEndpoint = ("serial", client_config[CONF_PORT])
             if client_config[CONF_METHOD] == "ascii":
                 self._pb_params["framer"] = FramerType.ASCII
             else:
@@ -310,6 +299,11 @@ class ModbusHub:
         else:
             # network configuration
             self._pb_params["host"] = client_config[CONF_HOST]
+            self.endpoint = (
+                "udp" if self._config_type == UDP else "tcp",
+                client_config[CONF_HOST].lower(),
+                client_config[CONF_PORT],
+            )
             if self._config_type == RTUOVERTCP:
                 self._pb_params["framer"] = FramerType.RTU
             else:
