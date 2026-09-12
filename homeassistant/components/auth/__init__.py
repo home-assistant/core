@@ -14,7 +14,8 @@ Exchange the authorization code retrieved from the login flow for tokens.
 {
     "client_id": "https://hassbian.local:8123/",
     "grant_type": "authorization_code",
-    "code": "411ee2f916e648d691e937ae9344681e"
+    "code": "411ee2f916e648d691e937ae9344681e",
+    "code_verifier": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
 }
 
 Return value will be the access and refresh tokens. The access token will have
@@ -132,6 +133,7 @@ import hashlib
 import hmac
 from http import HTTPStatus
 from logging import getLogger
+import re
 from typing import Any, Protocol, cast
 import uuid
 
@@ -258,15 +260,15 @@ class RevokeTokenView(HomeAssistantView):
         return web.Response(status=HTTPStatus.OK)
 
 
+# RFC 7636 4.1: code_verifier is 43-128 unreserved characters.
+_CODE_VERIFIER_RE = re.compile(r"^[A-Za-z0-9._~-]{43,128}\Z")
+
+
 def _verify_code_verifier(code_verifier: str, code_challenge: str) -> bool:
     """Verify code_verifier against code_challenge per RFC 7636 (S256)."""
-    if not 43 <= len(code_verifier) <= 128:
+    if not _CODE_VERIFIER_RE.match(code_verifier):
         return False
-    try:
-        ascii_verifier = code_verifier.encode("ascii")
-    except UnicodeEncodeError:
-        return False
-    hashed = hashlib.sha256(ascii_verifier).digest()
+    hashed = hashlib.sha256(code_verifier.encode("ascii")).digest()
     computed_challenge = base64.urlsafe_b64encode(hashed).decode("ascii").rstrip("=")
     return hmac.compare_digest(computed_challenge, code_challenge)
 

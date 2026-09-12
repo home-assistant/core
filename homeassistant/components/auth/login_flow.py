@@ -22,13 +22,18 @@ Pass in parameter 'client_id' and 'redirect_url' validate by indieauth.
 Pass in parameter 'handler' to specify the auth provider to use. Auth providers
 are identified by type and id.
 
+Pass in optional parameters 'code_challenge' and 'code_challenge_method' for
+PKCE (RFC 7636). The only supported method is 'S256'.
+
 The default 'type' is 'authorize'.
 
 {
     "client_id": "https://hassbian.local:8123/",
     "handler": ["local_provider", null],
     "redirect_url": "https://hassbian.local:8123/",
-    "type': "authorize"
+    "type': "authorize",
+    "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+    "code_challenge_method": "S256"
 }
 
 Return value will be a step in a data entry flow. See the docs for data entry
@@ -349,10 +354,9 @@ class LoginFlowIndexView(LoginFlowBaseView):
                     [vol.Any(str, None)], vol.Length(2, 2), vol.Coerce(tuple)
                 ),
                 vol.Required("redirect_uri"): str,
-                vol.Optional("code_challenge"): vol.All(
-                    str, vol.Length(min=43, max=128)
-                ),
-                vol.Optional("code_challenge_method"): vol.In(["S256"]),
+                # S256 challenges are always 43 unpadded base64url characters.
+                vol.Optional("code_challenge"): vol.Match(r"^[A-Za-z0-9_-]{43}\Z"),
+                vol.Optional("code_challenge_method"): str,
                 vol.Optional(
                     "type", default="authorize"
                 ): str,  # not used, kept for backwards compatibility
@@ -375,7 +379,8 @@ class LoginFlowIndexView(LoginFlowBaseView):
                 "code_challenge required when code_challenge_method is provided",
                 HTTPStatus.BAD_REQUEST,
             )
-        if code_challenge and not code_challenge_method:
+        # RFC 7636 4.3: the method defaults to "plain", which is not supported.
+        if code_challenge is not None and code_challenge_method != "S256":
             return self.json_message(
                 "Transform algorithm not supported", HTTPStatus.BAD_REQUEST
             )

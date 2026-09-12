@@ -497,3 +497,70 @@ async def test_well_known_protected_resource_no_url(
         "/.well-known/oauth-protected-resource",
     )
     assert resp.status == 404
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected_message"),
+    [
+        (
+            {
+                "code_challenge_method": "S256",
+            },
+            "code_challenge required when code_challenge_method is provided",
+        ),
+        (
+            {
+                "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+            },
+            "Transform algorithm not supported",
+        ),
+        (
+            {
+                "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+                "code_challenge_method": "plain",
+            },
+            "Transform algorithm not supported",
+        ),
+        (
+            {
+                "code_challenge": "short",
+                "code_challenge_method": "S256",
+            },
+            "Message format incorrect",
+        ),
+        (
+            {
+                "code_challenge": "a" * 43 + "=",
+                "code_challenge_method": "S256",
+            },
+            "Message format incorrect",
+        ),
+    ],
+    ids=[
+        "method_without_challenge",
+        "challenge_without_method",
+        "unsupported_plain_method",
+        "challenge_too_short",
+        "challenge_padded",
+    ],
+)
+async def test_login_flow_pkce_validation(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    payload: dict[str, str],
+    expected_message: str,
+) -> None:
+    """Test PKCE parameter validation in login_flow."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+            **payload,
+        },
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    result = await resp.json()
+    assert expected_message in result["message"]
