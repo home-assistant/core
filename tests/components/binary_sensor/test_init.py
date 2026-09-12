@@ -6,6 +6,7 @@ from unittest import mock
 import pytest
 
 from homeassistant.components import binary_sensor
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
@@ -196,3 +197,53 @@ async def test_entity_category_config_raises_error(
         "Entity binary_sensor.test2 cannot be added as the"
         " entity category is set to config" in caplog.text
     )
+
+
+async def test_glass_break_entity_state(hass: HomeAssistant) -> None:
+    """Test a glass break binary sensor reports the correct state and attributes."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.BINARY_SENSOR]
+        )
+        return True
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    entity = binary_sensor.BinarySensorEntity()
+    entity.entity_id = "binary_sensor.glass_break_1"
+    entity._attr_device_class = BinarySensorDeviceClass.GLASS_BREAK
+    entity._attr_is_on = True
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Set up test binary_sensor platform via config entry."""
+        async_add_entities([entity])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{binary_sensor.DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.glass_break_1")
+    assert state.state == STATE_ON
+    assert state.attributes["device_class"] == "glass_break"

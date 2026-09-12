@@ -37,6 +37,8 @@ CONF_IS_CONNECTED = "is_connected"
 CONF_IS_NOT_CONNECTED = "is_not_connected"
 CONF_IS_GAS = "is_gas"
 CONF_IS_NO_GAS = "is_no_gas"
+CONF_IS_GLASS_BREAK = "is_glass_break"
+CONF_IS_NO_GLASS_BREAK = "is_no_glass_break"
 CONF_IS_HOT = "is_hot"
 CONF_IS_NOT_HOT = "is_not_hot"
 CONF_IS_LIGHT = "is_light"
@@ -83,6 +85,7 @@ IS_ON = [
     CONF_IS_COLD,
     CONF_IS_CONNECTED,
     CONF_IS_GAS,
+    CONF_IS_GLASS_BREAK,
     CONF_IS_HOT,
     CONF_IS_LIGHT,
     CONF_IS_NOT_LOCKED,
@@ -123,6 +126,7 @@ IS_OFF = [
     CONF_IS_NOT_UNSAFE,
     CONF_IS_NO_CO,
     CONF_IS_NO_GAS,
+    CONF_IS_NO_GLASS_BREAK,
     CONF_IS_NO_LIGHT,
     CONF_IS_NO_MOTION,
     CONF_IS_NO_PROBLEM,
@@ -166,6 +170,10 @@ ENTITY_CONDITIONS = {
     BinarySensorDeviceClass.GAS: [
         {CONF_TYPE: CONF_IS_GAS},
         {CONF_TYPE: CONF_IS_NO_GAS},
+    ],
+    BinarySensorDeviceClass.GLASS_BREAK: [
+        {CONF_TYPE: CONF_IS_GLASS_BREAK},
+        {CONF_TYPE: CONF_IS_NO_GLASS_BREAK},
     ],
     BinarySensorDeviceClass.HEAT: [
         {CONF_TYPE: CONF_IS_HOT},
