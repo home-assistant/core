@@ -1,0 +1,11 @@
+{
+  "domain": "redfish",
+  "name": "Redfish",
+  "codeowners": ["@jyundt"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/redfish",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["redfish[aiohttp]==3.4.0"]
+}
