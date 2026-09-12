@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import DOMAIN
 from .helpers import async_get_zha_device_proxy, convert_zha_error_to_ha_error
-from .websocket_api import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
+from .services import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
 
 # mypy: disallow-any-generics
 
