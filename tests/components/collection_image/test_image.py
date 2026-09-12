@@ -22,6 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .conftest import MediaSourceMocks, MediaSourceState
 from .const import (
     DEFAULT_ENTITY_ID,
+    MOCK_MEDIA_DIR_URI_1,
     MOCK_MEDIA_DIR_URI_2,
     MOCK_MEDIA_DIR_URI_BROWSE_ERROR,
     MOCK_MEDIA_DIR_URI_EMPTY,
@@ -73,6 +74,80 @@ async def test_image(
 
     assert state and state.state == TEST_TIME
 
+    await _verify_path_image(hass, hass_client)
+
+
+@pytest.mark.usefixtures("mock_media_source")
+@pytest.mark.parametrize(
+    ("uris", "expected_images"),
+    [
+        (
+            [MOCK_MEDIA_DIR_URI_1, MOCK_MEDIA_DIR_URI_2],
+            [
+                MOCK_MEDIA_IMAGE_URI_1,
+                MOCK_MEDIA_IMAGE_URI_2,
+                MOCK_MEDIA_IMAGE_URI_3,
+                MOCK_MEDIA_IMAGE_URI_4,
+            ],
+        ),
+        (
+            [MOCK_MEDIA_DIR_URI_2, MOCK_MEDIA_DIR_URI_1],
+            [
+                MOCK_MEDIA_IMAGE_URI_2,
+                MOCK_MEDIA_IMAGE_URI_3,
+                MOCK_MEDIA_IMAGE_URI_4,
+                MOCK_MEDIA_IMAGE_URI_1,
+            ],
+        ),
+        (
+            [MOCK_MEDIA_DIR_URI_1, MOCK_MEDIA_DIR_URI_BROWSE_ERROR],
+            [MOCK_MEDIA_IMAGE_URI_1],
+        ),
+        (
+            [
+                MOCK_MEDIA_DIR_URI_BROWSE_ERROR,
+                MOCK_MEDIA_DIR_URI_1,
+                MOCK_MEDIA_DIR_URI_EMPTY,
+            ],
+            [MOCK_MEDIA_IMAGE_URI_1],
+        ),
+        (
+            [
+                MOCK_MEDIA_DIR_URI_EMPTY,
+                MOCK_MEDIA_DIR_URI_1,
+            ],
+            [MOCK_MEDIA_IMAGE_URI_1],
+        ),
+    ],
+)
+async def test_image_multi(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    media_source_state: MediaSourceState,
+    uris: list[str],
+    expected_images: list[str],
+) -> None:
+    """Test multiple media sources."""
+    with (
+        freeze_time(TEST_TIME),
+        patch(
+            "homeassistant.components.collection_image.image.random.choice",
+            return_value=media_source_state.browse_results[
+                MOCK_MEDIA_DIR_URI_2
+            ].children[2],
+        ) as mock_choice,
+    ):
+        config_entry = config_entry_from_uri(uris)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert [
+        image.media_content_id for image in mock_choice.call_args.args[0]
+    ] == expected_images
+    state = hass.states.get(DEFAULT_ENTITY_ID)
+    assert state and state.state == TEST_TIME
     await _verify_path_image(hass, hass_client)
 
 
@@ -152,42 +227,36 @@ async def test_image_url(
 
 
 @pytest.mark.usefixtures("mock_media_source")
-async def test_no_images(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test when there are no images in the media folder."""
-    config_entry = config_entry_from_uri(MOCK_MEDIA_DIR_URI_EMPTY)
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(DEFAULT_ENTITY_ID)
-
-    assert state and state.state == STATE_UNAVAILABLE
-
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert (
-        f"image.random_image: No valid images in {MOCK_MEDIA_DIR_URI_EMPTY}"
-        in caplog.text
-    )
-
-    client = await hass_client()
-    resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
-
-
-@pytest.mark.usefixtures("mock_media_source")
+@pytest.mark.parametrize(
+    ("uris", "error_messages"),
+    [
+        (
+            MOCK_MEDIA_DIR_URI_EMPTY,
+            [f"image.random_image: No valid images in {MOCK_MEDIA_DIR_URI_EMPTY}"],
+        ),
+        (
+            [MOCK_MEDIA_DIR_URI_BROWSE_ERROR],
+            ["image.random_image: Mock directory failed to browse"],
+        ),
+        (
+            [MOCK_MEDIA_DIR_URI_EMPTY, MOCK_MEDIA_DIR_URI_BROWSE_ERROR],
+            [
+                f"image.random_image: No valid images in {MOCK_MEDIA_DIR_URI_EMPTY}",
+                "image.random_image: Mock directory failed to browse",
+            ],
+        ),
+    ],
+)
 async def test_media_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
+    uris: str | list[str],
+    error_messages: list[str],
 ) -> None:
-    """Test when media browse throws an error."""
+    """Test various cases where media fails to browse images."""
 
-    config_entry = config_entry_from_uri(MOCK_MEDIA_DIR_URI_BROWSE_ERROR)
+    config_entry = config_entry_from_uri(uris)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -198,7 +267,8 @@ async def test_media_error(
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "image.random_image: Mock directory failed to browse" in caplog.text
+    for err in error_messages:
+        assert err in caplog.text
 
     client = await hass_client()
     resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
