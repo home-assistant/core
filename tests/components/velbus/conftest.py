@@ -33,6 +33,8 @@ def mock_controller(
     mock_temperature: AsyncMock,
     mock_select: AsyncMock,
     mock_buttoncounter: AsyncMock,
+    mock_gascounter: AsyncMock,
+    mock_watercounter: AsyncMock,
     mock_sensornumber: AsyncMock,
     mock_lightsensor: AsyncMock,
     mock_dimmer: AsyncMock,
@@ -57,6 +59,8 @@ def mock_controller(
         cont.get_all_select.return_value = [mock_select]
         cont.get_all_sensor.return_value = [
             mock_buttoncounter,
+            mock_gascounter,
+            mock_watercounter,
             mock_temperature,
             mock_sensornumber,
             mock_lightsensor,
@@ -209,9 +213,67 @@ def mock_buttoncounter() -> AsyncMock:
     channel.is_temperature.return_value = False
     channel.get_state.return_value = 100
     channel.get_unit.return_value = "W"
+    channel.is_gas.return_value = False
+    channel.is_water.return_value = False
+    channel.is_electricity.return_value = True
     channel.get_counter_state.return_value = 100
     type(channel).energy = PropertyMock(return_value=100.0)
     channel.get_counter_unit.return_value = "kWh"
+    return channel
+
+
+@pytest.fixture
+def mock_gascounter() -> AsyncMock:
+    """Mock a VMB7IN gas counter channel (m³)."""
+    channel = AsyncMock(spec=ButtonCounter)
+    channel.get_categories.return_value = ["sensor"]
+    channel.get_name.return_value = "GasCounter"
+    channel.get_module_address.return_value = 88
+    channel.get_channel_number.return_value = 5
+    channel.get_module_type_name.return_value = "VMB7IN"
+    channel.get_module_type.return_value = 4
+    channel.get_full_name.return_value = "Input"
+    channel.get_module_sw_version.return_value = "1.0.0"
+    channel.get_module_serial.return_value = "a1b2c3d4e5f6"
+    channel.is_sub_device.return_value = True
+    channel.is_counter_channel.return_value = True
+    channel.is_temperature.return_value = False
+    channel.is_gas.return_value = True
+    channel.is_water.return_value = False
+    channel.is_electricity.return_value = False
+    channel.get_state.return_value = 5.0
+    channel.get_unit.return_value = "m3"
+    channel.get_counter_state.return_value = 1234.0
+    # A gas counter does not expose energy (kWh); energy is only valid for kWh.
+    type(channel).energy = PropertyMock(return_value=None)
+    channel.get_counter_unit.return_value = "m³/h"
+    return channel
+
+
+@pytest.fixture
+def mock_watercounter() -> AsyncMock:
+    """Mock a VMB7IN water counter channel (L)."""
+    channel = AsyncMock(spec=ButtonCounter)
+    channel.get_categories.return_value = ["sensor"]
+    channel.get_name.return_value = "WaterCounter"
+    channel.get_module_address.return_value = 88
+    channel.get_channel_number.return_value = 4
+    channel.get_module_type_name.return_value = "VMB7IN"
+    channel.get_module_type.return_value = 4
+    channel.get_full_name.return_value = "Input"
+    channel.get_module_sw_version.return_value = "1.0.0"
+    channel.get_module_serial.return_value = "a1b2c3d4e5f6"
+    channel.is_sub_device.return_value = True
+    channel.is_counter_channel.return_value = True
+    channel.is_temperature.return_value = False
+    channel.is_gas.return_value = False
+    channel.is_water.return_value = True
+    channel.is_electricity.return_value = False
+    channel.get_state.return_value = 2.5
+    channel.get_unit.return_value = "L"
+    channel.get_counter_state.return_value = 5678.0
+    type(channel).energy = PropertyMock(return_value=None)
+    channel.get_counter_unit.return_value = "L/h"
     return channel
 
 
