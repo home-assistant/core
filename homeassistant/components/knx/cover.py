@@ -167,6 +167,7 @@ class _KnxCover(CoverEntity, RestoreEntity):
         if self._position_publisher is not None:
             self._device.register_device_updated_cb(self._publish_position)
             self._position_publisher.xknx.devices.async_add(self._position_publisher)
+            self._register_publisher_addresses()
         if (last_state := await self.async_get_last_state()) is None or (
             last_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
@@ -197,8 +198,30 @@ class _KnxCover(CoverEntity, RestoreEntity):
         if self._position_publisher is not None:
             self._device.unregister_device_updated_cb(self._publish_position)
             self._position_publisher.xknx.devices.async_remove(self._position_publisher)
+            self._register_publisher_addresses(remove=True)
             self._position_publisher = None
         await super().async_will_remove_from_hass()
+
+    def _register_publisher_addresses(self, remove: bool = False) -> None:
+        """Add or remove the publisher address in the group address map.
+
+        The publisher is a separate xknx device, so its address is not part of
+        `self._device.group_addresses()` - the only source the base class uses
+        (`entity.py`). Without this the address would be missing from
+        `knx/get_entities_by_group`, and DataSecure issues on it would be
+        dropped as unconfigured (`repairs.py`).
+        """
+        if self._position_publisher is None or self._knx_entity_identifier is None:
+            return
+        register = (
+            self._knx_module.remove_from_group_address_entities
+            if remove
+            else self._knx_module.add_to_group_address_entities
+        )
+        register(
+            group_addresses=self._position_publisher.group_addresses(),
+            identifier=self._knx_entity_identifier,
+        )
 
     def _payload_position(self) -> int | None:
         """Return the position in the group address value domain.

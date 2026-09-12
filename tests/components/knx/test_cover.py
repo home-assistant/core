@@ -715,3 +715,50 @@ async def test_cover_position_state_send_while_travelling(
     device.after_update()
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
+
+
+async def test_cover_position_state_send_address_is_mapped_to_entity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test the publisher address is registered for the cover entity.
+
+    The publisher is a separate xknx device, so its address is not part of the
+    cover device's `group_addresses()` that the base entity registers. Without
+    an explicit registration `knx/get_entities_by_group` would omit a configured
+    address and DataSecure issues on it would be dropped as unconfigured.
+    """
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    test_entity = await create_ui_entity(
+        platform=Platform.COVER,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_up_down": {"write": "1/0/0"},
+            "ga_position_state": {"state": "1/0/2"},
+            CoverConf.POSITION_STATE_SEND: True,
+            CoverConf.TRAVELLING_TIME_UP: 10,
+            CoverConf.TRAVELLING_TIME_DOWN: 10,
+        },
+    )
+    await knx.assert_no_telegram()
+
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    group_mapping = res["result"]
+    assert "1/0/2" in group_mapping
+    assert group_mapping["1/0/2"][0]["unique_id"] == test_entity.unique_id
+
+    # and it is unregistered again with the entity
+    await client.send_json_auto_id(
+        {"type": "knx/delete_entity", "entity_id": test_entity.entity_id}
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert "1/0/2" not in res["result"]
