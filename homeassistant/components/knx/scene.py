@@ -24,6 +24,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import SceneSchema
+from .storage.config_store import KnxEntityData
 from .storage.const import CONF_ENTITY, CONF_GA_SCENE
 from .storage.util import ConfigExtractor
 
@@ -108,7 +109,7 @@ class KnxUiScene(_KnxScene, KnxUiEntity):
         self,
         knx_module: KNXModule,
         unique_id: str,
-        config: ConfigType,
+        config: KnxEntityData[Any],
     ) -> None:
         """Initialize KNX scene."""
         super().__init__(

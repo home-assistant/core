@@ -1,6 +1,6 @@
 """Support for KNX number entities."""
 
-from typing import cast, override
+from typing import Any, cast, override
 
 from xknx.devices import NumericValue
 
@@ -41,6 +41,7 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
+from .storage.config_store import KnxEntityData
 from .storage.const import CONF_ENTITY, CONF_GA_SENSOR
 from .storage.util import ConfigExtractor
 
@@ -169,7 +170,7 @@ class KnxUiNumber(_KnxNumber, KnxUiEntity):
         self,
         knx_module: KNXModule,
         unique_id: str,
-        config: ConfigType,
+        config: KnxEntityData[Any],
     ) -> None:
         """Initialize a KNX number."""
         super().__init__(

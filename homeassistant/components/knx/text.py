@@ -1,6 +1,6 @@
 """Support for KNX text entities."""
 
-from typing import override
+from typing import Any, override
 
 from propcache.api import cached_property
 from xknx.devices import Notification as XknxNotification
@@ -39,6 +39,7 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
+from .storage.config_store import KnxEntityData
 from .storage.const import CONF_ENTITY, CONF_GA_TEXT
 from .storage.util import ConfigExtractor
 
@@ -146,7 +147,7 @@ class KnxUiText(_KnxText, KnxUiEntity):
         self,
         knx_module: KNXModule,
         unique_id: str,
-        config: ConfigType,
+        config: KnxEntityData[Any],
     ) -> None:
         """Initialize a KNX text."""
         super().__init__(

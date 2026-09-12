@@ -32,6 +32,7 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
+from .storage.config_store import KnxEntityData
 from .storage.const import CONF_ENTITY, CONF_GA_TIME
 from .storage.util import ConfigExtractor
 
@@ -125,7 +126,7 @@ class KnxUiTime(_KNXTime, KnxUiEntity):
     _device: XknxTimeDevice
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize KNX time."""
         super().__init__(
