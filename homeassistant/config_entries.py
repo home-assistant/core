@@ -2463,7 +2463,7 @@ class ConfigEntries:
         raise OperationNotAllowed(
             f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
             f" '{entry.entry_id}' cannot retry the migration as it is not in the"
-            f" 'migration_error' state but is in the state {entry.state}"
+            f" state '{ConfigEntryState.MIGRATION_ERROR}' but is in the state {entry.state}"
         )
 
     async def async_unload(self, entry_id: str, _lock: bool = True) -> bool:
