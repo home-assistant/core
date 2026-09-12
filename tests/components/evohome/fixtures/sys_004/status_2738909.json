@@ -1,0 +1,138 @@
+{
+  "locationId": "2738909",
+  "gateways": [
+    {
+      "gatewayId": "2499896",
+      "temperatureControlSystems": [
+        {
+          "systemId": "3432522",
+          "zones": [
+            {
+              "zoneId": "3432521",
+              "temperatureStatus": {
+                "isAvailable": false
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 5.0,
+                "setpointMode": "PermanentOverride"
+              },
+              "name": "Dead Zone"
+            },
+            {
+              "zoneId": "3432576",
+              "temperatureStatus": {
+                "temperature": 19.5,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 14.9,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Main Room"
+            },
+            {
+              "zoneId": "3432577",
+              "temperatureStatus": {
+                "temperature": 20.0,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 20.0,
+                "setpointMode": "TemporaryOverride",
+                "until": "2023-10-19T22:30:00Z"
+              },
+              "name": "Front Room"
+            },
+            {
+              "zoneId": "3432578",
+              "temperatureStatus": {
+                "temperature": 20.0,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 14.9,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Kitchen"
+            },
+            {
+              "zoneId": "3432579",
+              "temperatureStatus": {
+                "temperature": 19.5,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 5.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Bathroom Dn"
+            },
+            {
+              "zoneId": "3432580",
+              "temperatureStatus": {
+                "temperature": 21.0,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 5.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Main Bedroom"
+            },
+            {
+              "zoneId": "3449703",
+              "temperatureStatus": {
+                "temperature": 20.0,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 5.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Kids Room"
+            },
+            {
+              "zoneId": "3449740",
+              "temperatureStatus": {
+                "temperature": 19.5,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 5.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Bathroom Up"
+            },
+            {
+              "zoneId": "3450733",
+              "temperatureStatus": {
+                "temperature": 19.0,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 14.0,
+                "setpointMode": "PermanentOverride"
+              },
+              "name": "Spare Room"
+            }
+          ],
+          "activeFaults": [],
+          "systemModeStatus": {
+            "mode": "Auto",
+            "isPermanent": true
+          }
+        }
+      ],
+      "activeFaults": []
+    }
+  ]
+}
