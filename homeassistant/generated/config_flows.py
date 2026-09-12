@@ -418,6 +418,7 @@ FLOWS = {
         "lacrosse_view",
         "lamarzocco",
         "lametric",
+        "lanbon",
         "landisgyr_heat_meter",
         "lastfm",
         "launch_library",
