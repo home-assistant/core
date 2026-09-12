@@ -802,12 +802,14 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_KB_SOUND,
-            translation_key="keyboard_tone",
+            # Poorly translated as "Key tone switch of host" in the official Tuya app
+            translation_key="keypad_sound",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_ALARM_PROPEL,
-            translation_key="alarm_push",
+            # Poorly translated as "alarm push switch" in the official Tuya app
+            translation_key="alarm_push_notifications",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
