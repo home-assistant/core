@@ -8,6 +8,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.zone import condition as zone_condition
+from homeassistant.components.zone.condition import CONDITIONS
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConditionError
@@ -15,9 +16,11 @@ from homeassistant.helpers import condition, config_validation as cv
 
 from tests.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
@@ -334,6 +337,15 @@ IN_ZONES_NONE: dict[str, list[str]] = {"in_zones": []}
 TARGET_ZONE = ZONE_HOME
 
 
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "_": TargetSupport.NONE,
+    "in_zone": TargetSupport.STANDARD,
+    "not_in_zone": TargetSupport.STANDARD,
+    "occupancy_is_detected": TargetSupport.NONE,
+    "occupancy_is_not_detected": TargetSupport.NONE,
+}
+
+
 @pytest.mark.parametrize(
     (
         "condition_key",
@@ -366,6 +378,11 @@ async def test_zone_condition_options_validation(
         supports_duration=supports_duration,
         supports_target=supports_target,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

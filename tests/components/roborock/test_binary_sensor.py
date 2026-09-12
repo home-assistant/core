@@ -7,11 +7,12 @@ import pytest
 from roborock.data import RoborockDockTypeCode
 from roborock.device_features import RoborockDockFeatures
 from roborock.exceptions import RoborockException
+from roborock.roborock_message import RoborockZeoProtocol
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.roborock.const import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -127,6 +128,22 @@ async def test_zeo_request_protocols_filtered_by_schema(
     # Verify that the second Zeo device has detergent entities but NOT softener entities
     assert hass.states.get("binary_sensor.zeo_two_detergent") is not None
     assert hass.states.get("binary_sensor.zeo_two_softener") is None
+
+
+async def test_zeo_unreported_protocol_is_unknown(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test a protocol the device has not reported yet reads as unknown."""
+    zeo = next(device.zeo for device in fake_devices if device.zeo is not None)
+    del zeo.query_values.return_value[RoborockZeoProtocol.DETERGENT_EMPTY]
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.zeo_one_detergent").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.zeo_one_softener").state == "off"
 
 
 @pytest.fixture

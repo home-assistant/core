@@ -50,6 +50,8 @@ FAKE_SERVICE_INFO = BluetoothServiceInfoBleak(
 def charger_state(
     *,
     charger_status: bool | None = True,
+    charge_amps: int | None = 16,
+    output_max_amps: int | None = 32,
     language: str | None = "English",
     temperature_unit: str | None = "Celsius",
     available: bool = True,
@@ -68,8 +70,10 @@ def charger_state(
             model="BS20",
             hardware_version="HW1",
             software_version="SW1",
+            output_max_amps=output_max_amps,
         ),
         config=ChargerConfig(
+            charge_amps=charge_amps,
             language=language,
             temperature_unit=temperature_unit,
             device_name="Garage",
@@ -80,6 +84,12 @@ def charger_state(
             if charge is not None
             else ChargeStatus(
                 charger_status=charger_status,
+                error_details="No Error",
+                charging_status="Start",
+                charging_status_description="EV is connected, please press start",
+                plug_state="Connected Locked",
+                output_state="Charging",
+                current_state="Charging",
                 power=3500,
                 total_energy=12.3,
                 session_energy=1.2,
@@ -107,6 +117,7 @@ def _configure_client_mock(client: Mock) -> None:
     client.async_stop = AsyncMock()
     client.async_start_charging = AsyncMock()
     client.async_stop_charging = AsyncMock()
+    client.async_set_charge_amps = AsyncMock()
     client.async_set_language = AsyncMock()
     client.async_set_temperature_unit = AsyncMock()
     client.add_listener.return_value = Mock()
@@ -166,6 +177,9 @@ def mock_besen_client() -> Generator[Mock]:
         async def async_stop_charging() -> None:
             publish_besen_state(client, charger_state(charger_status=False))
 
+        async def async_set_charge_amps(amps: int) -> None:
+            publish_besen_state(client, charger_state(charge_amps=amps))
+
         async def async_set_language(language: str) -> None:
             publish_besen_state(client, charger_state(language=language))
 
@@ -174,6 +188,7 @@ def mock_besen_client() -> Generator[Mock]:
 
         client.async_start_charging.side_effect = async_start_charging
         client.async_stop_charging.side_effect = async_stop_charging
+        client.async_set_charge_amps.side_effect = async_set_charge_amps
         client.async_set_language.side_effect = async_set_language
         client.async_set_temperature_unit.side_effect = async_set_temperature_unit
         yield client

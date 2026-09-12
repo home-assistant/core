@@ -251,7 +251,13 @@ async def async_get_device_automations(
         combined_results[device_id] = []
         if (device := device_registry.async_get(device_id)) is None:
             raise DeviceNotFound
-        for entry_id in device.config_entries:
+        if device.is_composite_device:
+            # A restored composite has no single owning config entry; the union
+            # of the split devices' config entries covers every owning domain.
+            entry_ids = device.config_entries
+        else:
+            entry_ids = {device.config_entry_id}
+        for entry_id in entry_ids:
             if config_entry := hass.config_entries.async_get_entry(entry_id):
                 domain_devices.setdefault(config_entry.domain, set()).add(device_id)
         for domain in device_entities_domains.get(device_id, []):

@@ -39,3 +39,18 @@ async def test_binary_sensor_states_api_push(
     """Test binary sensor state when the API pushes data via SSE."""
 
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.parametrize("load_device_file", ["coffee_system.json"])
+@pytest.mark.parametrize("platforms", [(BINARY_SENSOR_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_coffee_system_binary_sensor_states(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test coffee system binary sensor state."""
+
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
