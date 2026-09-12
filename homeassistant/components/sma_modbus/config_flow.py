@@ -85,9 +85,9 @@ async def _async_discover(
 
     Uses the shared modbus connection to probe the device.  When
     ``unit_id`` is ``None`` (auto-detect), unit 1 is probed first, then
-    unit 3 — the standard measurement unit for SMA inverters.  Each probe
-    opens its own temporary unit because the borrowed ``ModbusUnit`` is
-    bound to one unit ID and cannot be retargeted.
+    unit 3 — the standard measurement unit for SMA inverters.  Each
+    probe is tried in its own temporary unit context so a failure on one
+    unit ID cleanly falls through to the next.
     """
     probe_ids = [unit_id] if unit_id is not None else [1, 3]
     params = ModbusTcpParams(host=host, port=port)
