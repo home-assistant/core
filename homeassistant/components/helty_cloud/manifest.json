@@ -1,0 +1,12 @@
+{
+  "domain": "helty_cloud",
+  "name": "Helty Flow Cloud",
+  "codeowners": ["@ebaschiera"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/helty_cloud",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyheltycloud"],
+  "quality_scale": "bronze",
+  "requirements": ["pyheltycloud==0.1.0"]
+}
