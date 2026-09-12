@@ -111,7 +111,7 @@ async def test_coordinator_command_error_keeps_other_entities_available(
 
 @pytest.mark.parametrize(
     "mock_device",
-    [{"version_recovery": True}],
+    [{"fixture_override": {cmd.Version: JvcProjectorTimeoutError}}],
     indirect=True,
 )
 async def test_coordinator_version_timeout_recovers_and_updates_device(
@@ -122,6 +122,15 @@ async def test_coordinator_version_timeout_recovers_and_updates_device(
 ) -> None:
     """Test a version timeout does not prevent setup and later recovers."""
     assert mock_integration.state is ConfigEntryState.LOADED
+
+    initial_get = mock_device.get.side_effect
+
+    async def recover_version(command) -> str:
+        if command is cmd.Version:
+            return "0301PJ"
+        return await initial_get(command)
+
+    mock_device.get.side_effect = recover_version
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, format_mac(MOCK_MAC)), mock_integration.entry_id

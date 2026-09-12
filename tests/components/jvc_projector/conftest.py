@@ -97,7 +97,6 @@ def fixture_mock_device(
     """Return a mocked JVC Projector device."""
     target = "homeassistant.components.jvc_projector.JvcProjector"
     fixture = FIXTURES["on"].copy()
-    version_recovery = False
 
     if hasattr(request, "param"):
         target = request.param.get("target", target)
@@ -109,16 +108,8 @@ def fixture_mock_device(
 
         if "fixture_override" in request.param:
             fixture.update(request.param["fixture_override"])
-        version_recovery = request.param.get("version_recovery", False)
-
-    version_attempts = 0
 
     async def device_get(command) -> str:
-        nonlocal version_attempts
-        if version_recovery and command is cmd.Version:
-            version_attempts += 1
-            if version_attempts == 1:
-                raise JvcProjectorTimeoutError
         if command in fixture:
             value = fixture[command]
             if isinstance(value, type) and issubclass(value, Exception):

@@ -38,6 +38,8 @@ async def test_diagnostic_sensor_state(
     entity_registry.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(mock_integration.entry_id)
     await hass.async_block_till_done()
+    await mock_integration.runtime_data.async_refresh()
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
