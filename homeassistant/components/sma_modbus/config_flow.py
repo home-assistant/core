@@ -83,16 +83,22 @@ async def _async_discover(
 ) -> DiscoveryInfo | None:
     """Discover the SMA device at ``host:port``.
 
-    Uses the shared modbus connection to probe the device.
+    Uses the shared modbus connection to probe the device.  When
+    ``unit_id`` is ``None`` (auto-detect), unit 1 is probed first, then
+    unit 3 — the standard measurement unit for SMA inverters.  Each probe
+    opens its own temporary unit because the borrowed ``ModbusUnit`` is
+    bound to one unit ID and cannot be retargeted.
     """
-    try:
-        async with async_get_temporary_unit(
-            hass, ModbusTcpParams(host=host, port=port), unit_id
-        ) as unit:
-            adapter = ModbusUnitConnection(unit)
-            return await discover(adapter, unit_id=unit_id)
-    except ModbusError, OSError:
-        return None
+    probe_ids = [unit_id] if unit_id is not None else [1, 3]
+    params = ModbusTcpParams(host=host, port=port)
+    for probe_unit_id in probe_ids:
+        try:
+            async with async_get_temporary_unit(hass, params, probe_unit_id) as unit:
+                adapter = ModbusUnitConnection(unit)
+                return await discover(adapter, unit_id=probe_unit_id)
+        except ModbusError, OSError:
+            continue
+    return None
 
 
 class SmaConfigFlow(ConfigFlow, domain=DOMAIN):

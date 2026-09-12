@@ -54,16 +54,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmaConfigEntry) -> bool:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
+            translation_placeholders={"error": str(err)},
         ) from err
 
     adapter = ModbusUnitConnection(unit)
 
     try:
-        info = await discover(adapter, unit_id=unit_id)
+        info = await discover(adapter)
     except ModbusError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
+            translation_placeholders={"error": str(err)},
         ) from err
 
     if f"SMA{info.serial_number}" != entry.unique_id:
