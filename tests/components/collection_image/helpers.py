@@ -1,5 +1,7 @@
 """Helper utilities for collection image tests."""
 
+from typing import Any
+
 from homeassistant.components.collection_image.const import CONF_MEDIA, DOMAIN
 from homeassistant.components.media_player import BrowseMedia, MediaClass
 from homeassistant.components.media_source import BrowseMediaSource
@@ -7,17 +9,17 @@ from homeassistant.components.media_source import BrowseMediaSource
 from tests.common import MockConfigEntry
 
 
-def data_from_uri(uri: str | list[str]) -> dict[str, str] | list[dict[str, str]]:
+def data_from_uri(uri: str | list[str]) -> dict[str, Any]:
     """Construct a data entry from one URI or a list of URIs."""
 
-    def media_item(content_id: str) -> dict[str, str]:
+    def media_item(content_id: str) -> dict[str, Any]:
         return {
             "media_content_id": content_id,
             "media_content_type": "",
             "metadata": {"a": "b"},
         }
 
-    media: dict[str, str] | list[dict[str, str]]
+    media: dict[str, Any] | list[dict[str, Any]]
     if isinstance(uri, str):
         media = media_item(uri)
     else:
