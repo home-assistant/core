@@ -822,6 +822,47 @@ async def test_hmip_tilt_vibration_sensor_tilt_angle(
     assert ha_state.state == "89"
 
 
+async def test_hmip_temperature_tilt_vibration_sensor(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test the ELV-SH-TACO, whose tilt channel sits at index 2, not 1."""
+    device_model = "ELV-SH-TACO"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wassertemperatursensor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "sensor.wassertemperatursensor_tilt_state",
+        "Wassertemperatursensor Tilt State",
+        device_model,
+    )
+    assert ha_state.state == "non_neutral"
+
+    await async_manipulate_test_data(hass, hmip_device, "tiltState", "TILTED", 2)
+    ha_state = hass.states.get("sensor.wassertemperatursensor_tilt_state")
+    assert ha_state.state == "tilted"
+
+    ha_state, _ = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "sensor.wassertemperatursensor_tilt_angle",
+        "Wassertemperatursensor Tilt angle",
+        device_model,
+    )
+    assert ha_state.state == "92"
+
+    ha_state, _ = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "sensor.wassertemperatursensor_temperature",
+        "Wassertemperatursensor Temperature",
+        device_model,
+    )
+    assert ha_state.state == "22.9"
+
+
 async def test_hmip_absolute_humidity_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:

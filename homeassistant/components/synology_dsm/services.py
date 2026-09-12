@@ -4,9 +4,11 @@ import logging
 from typing import cast
 
 from synology_dsm.exceptions import SynologyDSMException
+import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service import async_register_admin_service
 
 from .const import CONF_SERIAL, DOMAIN, SERVICE_REBOOT, SERVICE_SHUTDOWN, SERVICES
 from .coordinator import SynologyDSMConfigEntry
@@ -86,4 +88,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Service handler setup."""
 
     for service in SERVICES:
-        hass.services.async_register(DOMAIN, service, _service_handler)
+        # The call data is left as permissive as it has always been here, the
+        # helper would otherwise reject the optional serial with its default
+        # empty schema.
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            service,
+            _service_handler,
+            vol.Schema({}, extra=vol.ALLOW_EXTRA),
+        )
