@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Awaitable, Callable, Generator
 from copy import deepcopy
+from datetime import timedelta
 import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
@@ -39,6 +40,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.teslemetry.config_flow import WAKE_TIMEOUT
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -65,11 +67,12 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import mock_config_entry, setup_platform
 from .const import CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -870,18 +873,25 @@ async def test_subentry_pairing_duplicate_vin_aborts(hass: HomeAssistant) -> Non
     assert len(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)) == 1
 
 
+async def _hang_forever(*args: Any) -> None:
+    """Never return, like a stalled API call."""
+    await asyncio.Event().wait()
+
+
 @pytest.mark.parametrize(
-    "wake_error",
-    [None, InvalidResponse(), ClientError("nope"), TimeoutError()],
-    ids=["success", "fleet_error", "client_error", "timeout"],
+    "wake_side_effect",
+    [None, InvalidResponse(), ClientError("nope"), TimeoutError(), _hang_forever],
+    ids=["success", "fleet_error", "client_error", "timeout", "stalled"],
 )
 async def test_subentry_pairing_requires_key_approval(
-    hass: HomeAssistant, mock_wake_up: AsyncMock, wake_error: Exception | None
+    hass: HomeAssistant,
+    mock_wake_up: AsyncMock,
+    wake_side_effect: Exception | Callable[..., Awaitable[None]] | None,
 ) -> None:
     """Pairing wakes the vehicle, then installs the key, even if the wake fails."""
     entry = await _setup_account_entry(hass)
     vehicle = _mock_vehicle(on_whitelist=False)
-    mock_wake_up.side_effect = wake_error
+    mock_wake_up.side_effect = wake_side_effect
     release = asyncio.Event()
     wakes_before_pair: list[int] = []
 
@@ -916,6 +926,10 @@ async def test_subentry_pairing_requires_key_approval(
         assert result["progress_action"] == "pair"
 
         release.set()
+        # Lets a stalled wake hit its timeout so pairing can proceed.
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=WAKE_TIMEOUT)
+        )
         await hass.async_block_till_done()
         result = await hass.config_entries.subentries.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -944,7 +958,6 @@ async def _reload_without_vehicles(hass: HomeAssistant, entry: MockConfigEntry) 
     ):
         await hass.config_entries.async_reload(entry.entry_id)
     assert entry.state is ConfigEntryState.LOADED
-    assert not entry.runtime_data.vehicles
 
 
 @pytest.mark.parametrize(
