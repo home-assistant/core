@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any, Literal, TypeGuard, override
+from typing import Any, Literal, TypeIs, override
 
 import voluptuous as vol
 
@@ -35,6 +35,7 @@ from .const import (
     CONF_AFTER_TIME,
     CONF_BEFORE_OFFSET,
     CONF_BEFORE_TIME,
+    MAX_OFFSET,
 )
 
 type SunEventType = Literal["sunrise", "sunset"]
@@ -45,10 +46,15 @@ ATTR_AFTER = "after"
 ATTR_BEFORE = "before"
 ATTR_NEXT_UPDATE = "next_update"
 
+TIME_OR_SUN_EVENT = vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event))
+CONFIG_ENTRY_OFFSET = vol.All(
+    cv.time_period, vol.Range(min=-MAX_OFFSET, max=MAX_OFFSET)
+)
+
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_AFTER): vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event)),
-        vol.Required(CONF_BEFORE): vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event)),
+        vol.Required(CONF_AFTER): TIME_OR_SUN_EVENT,
+        vol.Required(CONF_BEFORE): TIME_OR_SUN_EVENT,
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
         vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
@@ -67,10 +73,14 @@ async def async_setup_entry(
         _LOGGER.error("Timezone is not set in Home Assistant configuration")  # type: ignore[unreachable]
         return
 
-    after = cv.time(config_entry.options[CONF_AFTER_TIME])
-    after_offset = timedelta(0)
-    before = cv.time(config_entry.options[CONF_BEFORE_TIME])
-    before_offset = timedelta(0)
+    after = TIME_OR_SUN_EVENT(config_entry.options[CONF_AFTER_TIME])
+    after_offset = CONFIG_ENTRY_OFFSET(
+        config_entry.options.get(CONF_AFTER_OFFSET, timedelta(0))
+    )
+    before = TIME_OR_SUN_EVENT(config_entry.options[CONF_BEFORE_TIME])
+    before_offset = CONFIG_ENTRY_OFFSET(
+        config_entry.options.get(CONF_BEFORE_OFFSET, timedelta(0))
+    )
     name = config_entry.title
     unique_id = config_entry.entry_id
 
@@ -101,7 +111,7 @@ async def async_setup_platform(
     async_add_entities([sensor])
 
 
-def _is_sun_event(sun_event: time | SunEventType) -> TypeGuard[SunEventType]:
+def _is_sun_event(sun_event: time | SunEventType) -> TypeIs[SunEventType]:
     """Return true if event is sun event not time."""
     return sun_event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 
@@ -117,9 +127,9 @@ class TodSensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
-        after: time,
+        after: time | SunEventType,
         after_offset: timedelta,
-        before: time,
+        before: time | SunEventType,
         before_offset: timedelta,
         unique_id: str | None,
     ) -> None:
@@ -161,6 +171,20 @@ class TodSensor(BinarySensorEntity):
         # calculate utc datetime corresponding to local time
         return dt_util.as_utc(datetime.combine(current_local_date, naive_time))
 
+    def _get_astral_event_previous(
+        self, event_type: SunEventType, utc_point_in_time: datetime
+    ) -> datetime:
+        """Calculate the previous specified solar event."""
+        for days_ago in range(367):
+            event_date = get_astral_event_date(
+                self.hass, event_type, utc_point_in_time - timedelta(days=days_ago)
+            )
+            if event_date is not None and event_date <= utc_point_in_time:
+                return event_date
+        raise ValueError(
+            f"Unable to find a previous {event_type} event within one year"
+        )
+
     def _calculate_boundary_time(self) -> None:
         """Calculate internal absolute time boundaries."""
         nowutc = dt_util.utcnow()
@@ -168,69 +192,123 @@ class TodSensor(BinarySensorEntity):
         if _is_sun_event(self._after):
             # Calculate the today's event utc time or
             # if not available take next
-            after_event_date = get_astral_event_date(
-                self.hass, self._after, nowutc
-            ) or get_astral_event_next(self.hass, self._after, nowutc)
+            after_event_date = get_astral_event_date(self.hass, self._after, nowutc)
+            after_event_is_today = after_event_date is not None
+            if after_event_date is None:
+                after_event_date = get_astral_event_next(self.hass, self._after, nowutc)
         else:
             # Convert local time provided to UTC today
             # datetime.combine(date, time, tzinfo) is not supported
             # in python 3.5. The self._after is provided
             # with hass configured TZ not system wide
             after_event_date = self._naive_time_to_utc_datetime(self._after)
-
-        self._time_after = after_event_date
+            after_event_is_today = False
 
         # If before value is a sun event instead of absolute time
         if _is_sun_event(self._before):
             # Calculate the today's event utc time or  if not available take
             # next
-            before_event_date = get_astral_event_date(
-                self.hass, self._before, nowutc
-            ) or get_astral_event_next(self.hass, self._before, nowutc)
-            # Before is earlier than after
-            if before_event_date < after_event_date:
-                # Take next day for before
+            before_event_date = get_astral_event_date(self.hass, self._before, nowutc)
+            before_event_is_today = before_event_date is not None
+            if before_event_date is None:
                 before_event_date = get_astral_event_next(
-                    self.hass, self._before, after_event_date
+                    self.hass, self._before, nowutc
                 )
         else:
             # Convert local time provided to UTC today, see above
             before_event_date = self._naive_time_to_utc_datetime(self._before)
+            before_event_is_today = False
 
-            # It is safe to add timedelta days=1 to UTC as there is no DST
-            if before_event_date < after_event_date + self._after_offset:
-                before_event_date += timedelta(days=1)
+        after_time = after_event_date + self._after_offset
+        before_time = before_event_date + self._before_offset
 
-        self._time_before = before_event_date
-
-        # We are calculating the _time_after value assuming that it will happen today
-        # But that is not always true, e.g. after 23:00, before 12:00 and now is 10:00
-        # If _time_before and _time_after are ahead of nowutc:
-        # _time_before is set to 12:00 next day
-        # _time_after is set to 23:00 today
-        # nowutc is set to 10:00 today
+        # Before is earlier than after once the configured offsets are applied.
+        if before_time < after_time:
+            if _is_sun_event(self._before):
+                before_event_date = get_astral_event_next(
+                    self.hass,
+                    self._before,
+                    after_event_date + self._after_offset - self._before_offset,
+                )
+            else:
+                before_event_date = self._get_fixed_time_next(
+                    self._before, after_time - self._before_offset
+                )
+            before_time = before_event_date + self._before_offset
 
         if (
-            not _is_sun_event(self._after)
-            and self._time_after > nowutc
-            and self._time_before > nowutc + timedelta(days=1)
+            (not _is_sun_event(self._after) or after_event_is_today)
+            and (not _is_sun_event(self._before) or before_event_is_today)
+            and nowutc < after_time
         ):
-            # remove one day from _time_before and _time_after
-            self._time_after -= timedelta(days=1)
-            self._time_before -= timedelta(days=1)
+            if _is_sun_event(self._after):
+                previous_after_event_date = self._get_astral_event_previous(
+                    self._after, nowutc - self._after_offset
+                )
+            else:
+                previous_after_event_date = self._subtract_one_dst_aware_day(
+                    after_event_date, self._after
+                )
+            previous_after_time = previous_after_event_date + self._after_offset
 
-        # Add offset to utc boundaries according to the configuration
-        self._time_after += self._after_offset
-        self._time_before += self._before_offset
+            if _is_sun_event(self._before):
+                previous_before_event_date = get_astral_event_next(
+                    self.hass,
+                    self._before,
+                    previous_after_time - self._before_offset,
+                )
+            else:
+                previous_before_event_date = self._get_fixed_time_next(
+                    self._before, previous_after_time - self._before_offset
+                )
+            previous_before_time = previous_before_event_date + self._before_offset
+
+            if (
+                previous_after_time <= nowutc < previous_before_time
+                or nowutc < previous_after_time
+            ):
+                after_time = previous_after_time
+                before_time = previous_before_time
+
+        self._time_after = after_time
+        self._time_before = before_time
+
+    def _get_fixed_time_next(
+        self, target_time: time, utc_point_in_time: datetime
+    ) -> datetime:
+        """Calculate the next fixed-time boundary."""
+        target_date = utc_point_in_time.astimezone(
+            dt_util.get_default_time_zone()
+        ).date()
+        boundary_time = dt_util.as_utc(datetime.combine(target_date, target_time))
+        if boundary_time <= utc_point_in_time:
+            return self._add_one_dst_aware_day(boundary_time, target_time)
+        return boundary_time
 
     def _add_one_dst_aware_day(self, a_date: datetime, target_time: time) -> datetime:
-        """Add 24 hours (1 day) but account for DST."""
+        """Add one local calendar day, accounting for DST."""
         tentative_new_date = a_date + timedelta(days=1)
         tentative_new_date = dt_util.as_local(tentative_new_date)
         tentative_new_date = tentative_new_date.replace(
             hour=target_time.hour, minute=target_time.minute
         )
         # The following call addresses missing time during DST jumps
+        return dt_util.find_next_time_expression_time(
+            tentative_new_date,
+            dt_util.parse_time_expression("*", 0, 59),
+            dt_util.parse_time_expression("*", 0, 59),
+            dt_util.parse_time_expression("*", 0, 23),
+        )
+
+    def _subtract_one_dst_aware_day(
+        self, a_date: datetime, target_time: time
+    ) -> datetime:
+        """Subtract one local calendar day, accounting for DST."""
+        tentative_new_date = a_date - timedelta(days=1)
+        tentative_new_date = dt_util.as_local(tentative_new_date)
+        tentative_new_date = tentative_new_date.replace(
+            hour=target_time.hour, minute=target_time.minute
+        )
         return dt_util.find_next_time_expression_time(
             tentative_new_date,
             dt_util.parse_time_expression("*", 0, 59),
@@ -246,10 +324,10 @@ class TodSensor(BinarySensorEntity):
             )
             self._time_after += self._after_offset
         else:
-            # Offset is already there
             self._time_after = self._add_one_dst_aware_day(
-                self._time_after, self._after
+                self._time_after - self._after_offset, self._after
             )
+            self._time_after += self._after_offset
 
         if _is_sun_event(self._before):
             self._time_before = get_astral_event_next(
@@ -257,10 +335,10 @@ class TodSensor(BinarySensorEntity):
             )
             self._time_before += self._before_offset
         else:
-            # Offset is already there
             self._time_before = self._add_one_dst_aware_day(
-                self._time_before, self._before
+                self._time_before - self._before_offset, self._before
             )
+            self._time_before += self._before_offset
 
     @override
     async def async_added_to_hass(self) -> None:

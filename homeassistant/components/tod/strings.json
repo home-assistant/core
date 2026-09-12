@@ -1,24 +1,75 @@
 {
   "config": {
+    "error": {
+      "after_offset_range": "The After offset must be less than 24 hours",
+      "after_one_value": "Select either a specific time or a sun event for After, but not both",
+      "before_offset_range": "The Before offset must be less than 24 hours",
+      "before_one_value": "Select either a specific time or a sun event for Before, but not both"
+    },
     "step": {
       "user": {
         "data": {
-          "after_time": "On time",
-          "before_time": "Off time",
           "name": "[%key:common::config_flow::data::name%]"
         },
         "description": "Create a binary sensor that turns on or off depending on the time.",
+        "sections": {
+          "after": {
+            "data": {
+              "offset": "Offset",
+              "sun_event": "Sun event",
+              "time": "Specific time"
+            },
+            "name": "After (turn on)"
+          },
+          "before": {
+            "data": {
+              "offset": "Offset",
+              "sun_event": "Sun event",
+              "time": "Specific time"
+            },
+            "name": "Before (turn off)"
+          }
+        },
         "title": "Create Times of the Day Sensor"
       }
     }
   },
   "options": {
+    "error": {
+      "after_offset_range": "[%key:component::tod::config::error::after_offset_range%]",
+      "after_one_value": "[%key:component::tod::config::error::after_one_value%]",
+      "before_offset_range": "[%key:component::tod::config::error::before_offset_range%]",
+      "before_one_value": "[%key:component::tod::config::error::before_one_value%]"
+    },
     "step": {
       "init": {
-        "data": {
-          "after_time": "[%key:component::tod::config::step::user::data::after_time%]",
-          "before_time": "[%key:component::tod::config::step::user::data::before_time%]"
+        "data": {},
+        "sections": {
+          "after": {
+            "data": {
+              "offset": "[%key:component::tod::config::step::user::sections::after::data::offset%]",
+              "sun_event": "[%key:component::tod::config::step::user::sections::after::data::sun_event%]",
+              "time": "[%key:component::tod::config::step::user::sections::after::data::time%]"
+            },
+            "name": "[%key:component::tod::config::step::user::sections::after::name%]"
+          },
+          "before": {
+            "data": {
+              "offset": "[%key:component::tod::config::step::user::sections::before::data::offset%]",
+              "sun_event": "[%key:component::tod::config::step::user::sections::before::data::sun_event%]",
+              "time": "[%key:component::tod::config::step::user::sections::before::data::time%]"
+            },
+            "name": "[%key:component::tod::config::step::user::sections::before::name%]"
+          }
         }
+      }
+    }
+  },
+  "selector": {
+    "sun_event": {
+      "options": {
+        "sunrise": "Sunrise",
+        "sunset": "Sunset"
       }
     }
   },
