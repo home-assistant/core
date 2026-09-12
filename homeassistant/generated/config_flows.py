@@ -319,6 +319,7 @@ FLOWS = {
         "harmony",
         "hdfury",
         "hegel",
+        "heiman_home",
         "helty",
         "heos",
         "here_travel_time",
