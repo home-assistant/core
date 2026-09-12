@@ -4,16 +4,31 @@
       "port_name_in_use": "An accessory or bridge with the same name or port is already configured."
     },
     "step": {
+      "include": {
+        "data": {
+          "exclude_targets": "Exclude",
+          "include_targets": "Also include"
+        },
+        "description": "Include or exclude additional targets. More specific selections override less specific ones. When selections are equally specific, exclusions win.",
+        "title": "Refine entity selection"
+      },
       "pairing": {
-        "description": "To complete pairing follow the instructions in “Notifications” under “HomeKit Pairing”.",
+        "description": "Home Assistant will create a bridge and a separate HomeKit accessory for each selected camera, lock, TV, receiver, projector, or activity-based remote. Pair each one using the instructions in “Notifications” under “HomeKit Pairing”.",
         "title": "Pair HomeKit"
+      },
+      "review": {
+        "data": {
+          "entities": "Entities shared with HomeKit"
+        },
+        "description": "HomeKit will expose the following {count} entities:",
+        "title": "Review shared entities"
       },
       "user": {
         "data": {
           "include_domains": "Domains to include"
         },
-        "description": "Choose the domains to be included. All supported entities in the domain will be included except for categorized entities. A separate HomeKit instance in accessory mode will be created for each tv/receiver media player, activity based remote, lock, and camera.",
-        "title": "Select domains to be included"
+        "description": "Choose the domains to include in HomeKit.",
+        "title": "Choose domains to include"
       }
     }
   },
@@ -44,28 +59,28 @@
         "description": "Choose which accessory each climate entity uses in HomeKit. Heater Cooler puts the mode, temperature, and the supported fan speed and swing controls on one air conditioner style tile; Thermostat is the classic temperature dial with a separate fan. Automatic keeps the accessory the entity already uses and picks the best fit when it is bridged for the first time. Changing the accessory type keeps the room and name, but HomeKit scenes or automations that used the old controls may need to be recreated.",
         "title": "Climate accessory configuration"
       },
-      "exclude": {
-        "data": {
-          "entities": "[%key:component::homekit::options::step::include::data::entities%]"
-        },
-        "description": "All “{domains}” entities will be included except for the excluded entities and categorized entities.",
-        "title": "Select the entities to be excluded"
-      },
       "include": {
         "data": {
-          "entities": "Entities"
+          "exclude_targets": "[%key:component::homekit::config::step::include::data::exclude_targets%]",
+          "include_targets": "[%key:component::homekit::config::step::include::data::include_targets%]"
         },
-        "description": "Select entities from each domain in “{domains}”. The include will cover the entire domain if you do not select any entities for a given domain.",
-        "title": "Select the entities to be included"
+        "description": "[%key:component::homekit::config::step::include::description%]",
+        "title": "[%key:component::homekit::config::step::include::title%]"
       },
       "init": {
         "data": {
           "domains": "[%key:component::homekit::config::step::user::data::include_domains%]",
-          "include_exclude_mode": "Inclusion mode",
           "mode": "HomeKit mode"
         },
-        "description": "HomeKit can be configured to expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV or RECEIVER device class to function properly. Entities in the “Domains to include” will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
-        "title": "Select mode and domains."
+        "description": "Choose Bridge to share several entities, or Accessory to share one. Cameras, locks, TVs, receivers, projectors, and activity-based remotes require Accessory mode. Choose the domains to include in HomeKit.",
+        "title": "Choose mode and domains"
+      },
+      "review": {
+        "data": {
+          "entities": "[%key:component::homekit::config::step::review::data::entities%]"
+        },
+        "description": "[%key:component::homekit::config::step::review::description%]",
+        "title": "[%key:component::homekit::config::step::review::title%]"
       },
       "yaml": {
         "description": "This entry is controlled via YAML",

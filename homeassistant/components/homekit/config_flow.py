@@ -1,6 +1,6 @@
 """Config flow for HomeKit integration."""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from copy import deepcopy
 from operator import itemgetter
 import random
@@ -43,11 +43,14 @@ from homeassistant.helpers import (
 )
 from homeassistant.loader import async_get_integrations
 
+from .accessories import get_accessory_type
 from .const import (
     CONF_ENTITY_CONFIG,
     CONF_EXCLUDE_ACCESSORY_MODE,
+    CONF_EXCLUDE_TARGETS,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
+    CONF_INCLUDE_TARGETS,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
     DEFAULT_CONFIG_FLOW_PORT,
@@ -62,11 +65,16 @@ from .const import (
     VIDEO_CODEC_COPY,
 )
 from .models import HomeKitEntryData
+from .target import (
+    TargetEntityFilter,
+    async_is_bridge_target_entity,
+    async_target_entity_ids_by_type,
+    should_include_entity,
+)
 from .util import async_find_next_available_port, state_needs_accessory_mode
 
 CONF_CAMERA_AUDIO = "camera_audio"
 CONF_CAMERA_COPY = "camera_copy"
-CONF_INCLUDE_EXCLUDE_MODE = "include_exclude_mode"
 
 CLIMATE_TYPE_AUTOMATIC = "automatic"
 # Display names for the accessory classes a climate entity can use
@@ -74,11 +82,6 @@ CLIMATE_ACCESSORY_NAMES = {
     "Thermostat": "Thermostat",
     "HeaterCooler": "Heater Cooler",
 }
-
-MODE_INCLUDE = "include"
-MODE_EXCLUDE = "exclude"
-
-INCLUDE_EXCLUDE_MODES = [MODE_EXCLUDE, MODE_INCLUDE]
 
 DOMAINS_NEED_ACCESSORY_MODE = {
     CAMERA_DOMAIN,
@@ -151,6 +154,8 @@ class EntityFilterDict(TypedDict, total=False):
     include_entities: list[str]
     exclude_domains: list[str]
     exclude_entities: list[str]
+    include_targets: dict[str, list[str]]
+    exclude_targets: dict[str, list[str]]
 
 
 def _make_entity_filter(
@@ -158,14 +163,21 @@ def _make_entity_filter(
     include_entities: list[str] | None = None,
     exclude_domains: list[str] | None = None,
     exclude_entities: list[str] | None = None,
+    include_targets: dict[str, list[str]] | None = None,
+    exclude_targets: dict[str, list[str]] | None = None,
 ) -> EntityFilterDict:
     """Create a filter dict."""
-    return EntityFilterDict(
+    entity_filter = EntityFilterDict(
         include_domains=include_domains or [],
         include_entities=include_entities or [],
         exclude_domains=exclude_domains or [],
         exclude_entities=exclude_entities or [],
     )
+    if include_targets:
+        entity_filter["include_targets"] = include_targets
+    if exclude_targets:
+        entity_filter["exclude_targets"] = exclude_targets
+    return entity_filter
 
 
 async def _async_domain_names(hass: HomeAssistant, domains: list[str]) -> str:
@@ -178,40 +190,92 @@ async def _async_domain_names(hass: HomeAssistant, domains: list[str]) -> str:
 
 @callback
 def _async_build_entities_filter(
-    domains: list[str], entities: list[str]
+    domains: list[str], targets: dict[str, list[str]]
 ) -> EntityFilterDict:
-    """Build an entities filter from domains and entities."""
-    # Include all of the domain if there are no entities
-    # explicitly included as the user selected the domain
-    return _make_entity_filter(
-        include_domains=sorted(
-            set(domains).difference(_domains_set_from_entities(entities))
-        ),
-        include_entities=entities,
+    """Build an additive entities filter from domains and targets."""
+    return _make_entity_filter(include_domains=sorted(domains), include_targets=targets)
+
+
+def _async_entity_ids_matching_filter(
+    hass: HomeAssistant,
+    entity_filter: EntityFilterDict,
+    domains: Iterable[str],
+    entity_config: Mapping[str, dict[str, Any]] | None = None,
+    *,
+    target_entity_filter: TargetEntityFilter | None = async_is_bridge_target_entity,
+) -> list[str]:
+    """Return supported entities selected by the shared precedence rules."""
+    include_targets = entity_filter.get("include_targets", {})
+    exclude_targets = entity_filter.get("exclude_targets", {})
+    included_entity_ids = async_target_entity_ids_by_type(
+        hass, include_targets, entity_filter=target_entity_filter
     )
-
-
-def _async_entities_in_domain(entities: list[str], domain: str) -> list[str]:
+    excluded_entity_ids = async_target_entity_ids_by_type(
+        hass, exclude_targets, entity_filter=target_entity_filter
+    )
+    explicitly_included = {
+        *entity_filter.get(CONF_INCLUDE_ENTITIES, []),
+        *include_targets.get(CONF_ENTITY_ID, []),
+    }
+    ent_reg = er.async_get(hass)
+    entity_config = entity_config or {}
+    has_include_rules = bool(
+        any(
+            entity_filter.get(key)
+            for key in (
+                CONF_INCLUDE_DOMAINS,
+                CONF_INCLUDE_ENTITIES,
+                "include_entity_globs",
+            )
+        )
+        or any(include_targets.values())
+    )
     return [
-        entity_id for entity_id in entities if split_entity_id(entity_id)[0] == domain
+        entity_id
+        for entity_id in _async_get_matching_entities(
+            hass,
+            list(domains),
+            include_entity_category=True,
+            include_hidden=True,
+        )
+        if (state := hass.states.get(entity_id)) is not None
+        and get_accessory_type(
+            state, entity_config.get(entity_id, {}), log_errors=False
+        )
+        is not None
+        and (
+            entity_id in explicitly_included
+            or not _exclude_by_entity_registry(ent_reg, entity_id, False, False)
+        )
+        and should_include_entity(
+            entity_id,
+            entity_filter,
+            included_entity_ids,
+            excluded_entity_ids,
+            has_include_rules,
+        )
     ]
 
 
-@callback
-def _async_included_domain_entities(
-    hass: HomeAssistant,
-    entity_filter: EntityFilterDict,
-    entities: list[str],
-    domain: str,
-) -> list[str]:
-    """Return a domain's included entities, expanding a whole domain include.
+def _entity_review_schema(entity_ids: list[str]) -> vol.Schema:
+    """Return a read-only entity selector for reviewing selected entities."""
+    return vol.Schema(
+        {
+            vol.Optional(CONF_ENTITIES, default=entity_ids): selector.EntitySelector(
+                selector.EntitySelectorConfig(
+                    include_entities=entity_ids,
+                    multiple=True,
+                    read_only=True,
+                )
+            )
+        }
+    )
 
-    The whole domain is included when none of its entities are selected
-    explicitly.
-    """
-    if domain in entity_filter[CONF_INCLUDE_DOMAINS]:
-        return _async_get_matching_entities(hass, [domain])
-    return _async_entities_in_domain(entities, domain)
+
+def _async_entities_in_domain(entities: Iterable[str], domain: str) -> list[str]:
+    return [
+        entity_id for entity_id in entities if split_entity_id(entity_id)[0] == domain
+    ]
 
 
 async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
@@ -241,10 +305,8 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Choose specific domains in bridge mode."""
         if user_input is not None:
-            self.hk_data[CONF_FILTER] = _make_entity_filter(
-                include_domains=user_input[CONF_INCLUDE_DOMAINS]
-            )
-            return await self.async_step_pairing()
+            self.hk_data[CONF_DOMAINS] = user_input[CONF_INCLUDE_DOMAINS]
+            return await self.async_step_include()
 
         self.hk_data[CONF_HOMEKIT_MODE] = HOMEKIT_MODE_BRIDGE
         default_domains = (
@@ -253,6 +315,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         name_to_type_map = await _async_name_to_type_map(self.hass)
         return self.async_show_form(
             step_id="user",
+            last_step=False,
             data_schema=vol.Schema(
                 {
                     vol.Required(
@@ -260,6 +323,63 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): cv.multi_select(name_to_type_map),
                 }
             ),
+        )
+
+    async def async_step_include(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Choose targets to include and exclude on the bridge."""
+        domains = self.hk_data[CONF_DOMAINS]
+        if user_input is not None:
+            include_targets: dict[str, list[str]] = user_input.get(
+                CONF_INCLUDE_TARGETS, {}
+            )
+            entity_filter = (
+                _async_build_entities_filter(domains, include_targets)
+                if include_targets
+                else _make_entity_filter(include_domains=domains)
+            )
+            if exclude_targets := user_input.get(CONF_EXCLUDE_TARGETS, {}):
+                entity_filter["exclude_targets"] = exclude_targets
+            self.hk_data[CONF_FILTER] = entity_filter
+            self.hk_data.pop(CONF_DOMAINS)
+            return await self.async_step_review()
+
+        target_selector = selector.TargetSelector(
+            selector.TargetSelectorConfig(
+                entity={"domain": SUPPORTED_DOMAINS},
+                primary_entities_only=True,
+            )
+        )
+        return self.async_show_form(
+            step_id="include",
+            last_step=False,
+            description_placeholders={
+                "domains": await _async_domain_names(self.hass, domains)
+            },
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_INCLUDE_TARGETS): target_selector,
+                    vol.Optional(CONF_EXCLUDE_TARGETS): target_selector,
+                }
+            ),
+        )
+
+    async def async_step_review(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Review the selected entities."""
+        if user_input is not None:
+            return await self.async_step_pairing()
+
+        entity_ids = _async_entity_ids_matching_filter(
+            self.hass, self.hk_data[CONF_FILTER], SUPPORTED_DOMAINS
+        )
+        return self.async_show_form(
+            step_id="review",
+            last_step=False,
+            description_placeholders={"count": str(len(entity_ids))},
+            data_schema=_entity_review_schema(entity_ids),
         )
 
     async def async_step_pairing(
@@ -287,6 +407,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         hk_data[CONF_EXCLUDE_ACCESSORY_MODE] = True
         return self.async_show_form(
             step_id="pairing",
+            last_step=True,
             description_placeholders={CONF_NAME: hk_data[CONF_NAME]},
         )
 
@@ -294,9 +415,17 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         self, last_assigned_port: int
     ) -> None:
         """Generate new flows for entities that need their own instances."""
-        accessory_mode_entity_ids = _async_get_entity_ids_for_accessory_mode(
-            self.hass, self.hk_data[CONF_FILTER][CONF_INCLUDE_DOMAINS]
-        )
+        conf_filter = self.hk_data[CONF_FILTER]
+        accessory_mode_entity_ids = [
+            entity_id
+            for domain in DOMAINS_NEED_ACCESSORY_MODE
+            for entity_id in _async_entity_ids_matching_filter(
+                self.hass, conf_filter, [domain]
+            )
+            if (state := self.hass.states.get(entity_id)) is not None
+            and state_needs_accessory_mode(state)
+        ]
+
         exiting_entity_ids_accessory_mode = _async_entity_ids_with_accessory_mode(
             self.hass
         )
@@ -470,7 +599,11 @@ class OptionsFlowHandler(OptionsFlow):
                 for label, entity_id in self._climate_choices.items()
             }
         )
-        return self.async_show_form(step_id="climate", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="climate",
+            last_step=hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY,
+            data_schema=data_schema,
+        )
 
     @callback
     def _async_current_climate_accessories(self) -> dict[str, str]:
@@ -504,7 +637,7 @@ class OptionsFlowHandler(OptionsFlow):
             # at the moment
             return self.async_create_entry(title="", data=self.config_entry.options)
 
-        return self.async_show_form(step_id="yaml")
+        return self.async_show_form(step_id="yaml", last_step=True)
 
     async def async_step_bridged_device_triggers(
         self, user_input: dict[str, Any] | None = None
@@ -521,7 +654,6 @@ class OptionsFlowHandler(OptionsFlow):
 
             hk_options.pop(CONF_DOMAINS, None)
             hk_options.pop(CONF_ENTITIES, None)
-            hk_options.pop(CONF_INCLUDE_EXCLUDE_MODE, None)
             return self.async_create_entry(title="", data=self.hk_options)
 
         all_supported_devices = await _async_get_supported_devices(self.hass)
@@ -533,6 +665,7 @@ class OptionsFlowHandler(OptionsFlow):
         ]
         return self.async_show_form(
             step_id="bridged_device_triggers",
+            last_step=True,
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_DEVICES, default=devices): cv.multi_select(
@@ -602,7 +735,11 @@ class OptionsFlowHandler(OptionsFlow):
                 ),
             }
         )
-        return self.async_show_form(step_id="cameras", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="cameras",
+            last_step=hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY,
+            data_schema=data_schema,
+        )
 
     async def async_step_accessory(
         self, user_input: dict[str, Any] | None = None
@@ -614,17 +751,26 @@ class OptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
-            entity_filter = _async_build_entities_filter(domains, entities)
+            entity_filter = _make_entity_filter(include_entities=entities)
             self.included_cameras = _async_entities_in_domain(entities, CAMERA_DOMAIN)
             self.included_climates = _async_entities_in_domain(entities, CLIMATE_DOMAIN)
             hk_options[CONF_FILTER] = entity_filter
-            return await self.async_step_cameras()
+            return await self.async_step_review()
 
         entity_filter = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-        all_supported_entities = _async_get_matching_entities(
-            self.hass, domains, include_entity_category=True, include_hidden=True
-        )
+        entity_config = hk_options.get(CONF_ENTITY_CONFIG, {})
+        all_supported_entities = [
+            entity_id
+            for entity_id in _async_get_matching_entities(
+                self.hass, domains, include_entity_category=True, include_hidden=True
+            )
+            if (state := self.hass.states.get(entity_id)) is not None
+            and get_accessory_type(
+                state, entity_config.get(entity_id, {}), log_errors=False
+            )
+            is not None
+        ]
         # In accessory mode we can only have one
         default_value = next(
             iter(
@@ -637,6 +783,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="accessory",
+            last_step=False,
             data_schema=vol.Schema(
                 {
                     vol.Required(
@@ -653,105 +800,112 @@ class OptionsFlowHandler(OptionsFlow):
     async def async_step_include(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose entities to include from the domain on the bridge."""
+        """Choose entities to include and exclude on the bridge."""
         hk_options = self.hk_options
         domains = hk_options[CONF_DOMAINS]
         if user_input is not None:
-            entities = cv.ensure_list(user_input[CONF_ENTITIES])
-            entity_filter = _async_build_entities_filter(domains, entities)
-            self.included_cameras = _async_included_domain_entities(
-                self.hass, entity_filter, entities, CAMERA_DOMAIN
+            include_targets: dict[str, list[str]] = user_input.get(
+                CONF_INCLUDE_TARGETS, {}
             )
-            self.included_climates = _async_included_domain_entities(
-                self.hass, entity_filter, entities, CLIMATE_DOMAIN
-            )
+            previous_filter = hk_options.get(CONF_FILTER, {})
+            entity_filter = _async_build_entities_filter(domains, include_targets)
+            exclude_targets = user_input.get(CONF_EXCLUDE_TARGETS)
+            if exclude_targets is None:
+                exclude_targets = deepcopy(
+                    previous_filter.get(CONF_EXCLUDE_TARGETS, {})
+                )
+                if legacy_excludes := previous_filter.get(CONF_EXCLUDE_ENTITIES):
+                    valid_legacy_excludes = [
+                        entity_id
+                        for entity_id in legacy_excludes
+                        if self.hass.states.get(entity_id) is not None
+                    ]
+                    if valid_legacy_excludes:
+                        exclude_targets.setdefault(CONF_ENTITY_ID, []).extend(
+                            valid_legacy_excludes
+                        )
+            if exclude_targets:
+                entity_filter["exclude_targets"] = exclude_targets
             hk_options[CONF_FILTER] = entity_filter
-            return await self.async_step_cameras()
+            entity_config = hk_options.get(CONF_ENTITY_CONFIG)
+            self.included_cameras = _async_entity_ids_matching_filter(
+                self.hass, entity_filter, [CAMERA_DOMAIN], entity_config
+            )
+            self.included_climates = _async_entity_ids_matching_filter(
+                self.hass, entity_filter, [CLIMATE_DOMAIN], entity_config
+            )
+            return await self.async_step_review()
 
         entity_filter = hk_options.get(CONF_FILTER, {})
-        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        include_targets = deepcopy(entity_filter.get(CONF_INCLUDE_TARGETS, {}))
+        exclude_targets = deepcopy(entity_filter.get(CONF_EXCLUDE_TARGETS, {}))
         all_supported_entities = _async_get_matching_entities(
-            self.hass, domains, include_entity_category=True, include_hidden=True
+            self.hass,
+            SUPPORTED_DOMAINS,
+            include_entity_category=True,
+            include_hidden=True,
         )
-        # Strip out entities that no longer exist to prevent error in the UI
-        default_value = [
-            entity_id for entity_id in entities if entity_id in all_supported_entities
-        ]
+        if legacy_entities := entity_filter.get(CONF_INCLUDE_ENTITIES):
+            if valid_entities := [
+                entity_id
+                for entity_id in legacy_entities
+                if entity_id in all_supported_entities
+            ]:
+                include_targets.setdefault(CONF_ENTITY_ID, []).extend(valid_entities)
+        if legacy_excludes := entity_filter.get(CONF_EXCLUDE_ENTITIES):
+            if valid_legacy_excludes := [
+                entity_id
+                for entity_id in legacy_excludes
+                if entity_id in all_supported_entities
+            ]:
+                exclude_targets.setdefault(CONF_ENTITY_ID, []).extend(
+                    valid_legacy_excludes
+                )
 
+        target_selector = selector.TargetSelector(
+            selector.TargetSelectorConfig(
+                entity={"domain": SUPPORTED_DOMAINS},
+                primary_entities_only=True,
+            )
+        )
         return self.async_show_form(
             step_id="include",
+            last_step=False,
             description_placeholders={
                 "domains": await _async_domain_names(self.hass, domains)
             },
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_ENTITIES, default=default_value
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(
-                            multiple=True,
-                            include_entities=all_supported_entities,
-                        )
-                    ),
+                        CONF_INCLUDE_TARGETS, default=include_targets
+                    ): target_selector,
+                    vol.Optional(
+                        CONF_EXCLUDE_TARGETS, default=exclude_targets
+                    ): target_selector,
                 }
             ),
         )
 
-    async def async_step_exclude(
+    async def async_step_review(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose entities to exclude from the domain on the bridge."""
-        hk_options = self.hk_options
-        domains = hk_options[CONF_DOMAINS]
-
+        """Review the selected entities."""
         if user_input is not None:
-            entities = cv.ensure_list(user_input[CONF_ENTITIES])
-
-            def _remaining_in_domain(domain: str) -> list[str]:
-                if domain not in domains:
-                    return []
-                return [
-                    entity_id
-                    for entity_id in _async_get_matching_entities(self.hass, [domain])
-                    if entity_id not in entities
-                ]
-
-            self.included_cameras = _remaining_in_domain(CAMERA_DOMAIN)
-            self.included_climates = _remaining_in_domain(CLIMATE_DOMAIN)
-            hk_options[CONF_FILTER] = _make_entity_filter(
-                include_domains=domains, exclude_entities=entities
-            )
             return await self.async_step_cameras()
 
-        entity_filter = self.hk_options.get(CONF_FILTER, {})
-        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-
-        all_supported_entities = _async_get_matching_entities(self.hass, domains)
-        if not entities:
-            entities = entity_filter.get(CONF_EXCLUDE_ENTITIES, [])
-
-        # Strip out entities that no longer exist to prevent error in the UI
-        default_value = [
-            entity_id for entity_id in entities if entity_id in all_supported_entities
-        ]
-
+        entity_ids = _async_entity_ids_matching_filter(
+            self.hass,
+            self.hk_options[CONF_FILTER],
+            SUPPORTED_DOMAINS,
+            self.hk_options.get(CONF_ENTITY_CONFIG),
+        )
+        bridge_mode = self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE
         return self.async_show_form(
-            step_id="exclude",
-            description_placeholders={
-                "domains": await _async_domain_names(self.hass, domains)
-            },
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_ENTITIES, default=default_value
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(
-                            multiple=True,
-                            include_entities=all_supported_entities,
-                        )
-                    ),
-                }
-            ),
+            step_id="review",
+            last_step=not bridge_mode
+            and not (self.included_cameras or self.included_climates),
+            description_placeholders={"count": str(len(entity_ids))},
+            data_schema=_entity_review_schema(entity_ids),
         )
 
     async def async_step_init(
@@ -763,33 +917,26 @@ class OptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             self.hk_options.update(user_input)
-            if self.hk_options.get(CONF_HOMEKIT_MODE) == HOMEKIT_MODE_ACCESSORY:
+            if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
                 return await self.async_step_accessory()
-            if user_input[CONF_INCLUDE_EXCLUDE_MODE] == MODE_INCLUDE:
-                return await self.async_step_include()
-            return await self.async_step_exclude()
+            return await self.async_step_include()
 
         self.hk_options = deepcopy(dict(self.config_entry.options))
         homekit_mode = self.hk_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
         entity_filter: EntityFilterDict = self.hk_options.get(CONF_FILTER, {})
-        include_exclude_mode = MODE_INCLUDE
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-        if homekit_mode != HOMEKIT_MODE_ACCESSORY:
-            include_exclude_mode = MODE_INCLUDE if entities else MODE_EXCLUDE
-        domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
-        if include_entities := entity_filter.get(CONF_INCLUDE_ENTITIES):
-            domains.extend(_domains_set_from_entities(include_entities))
+        domains = list(entity_filter.get(CONF_INCLUDE_DOMAINS, []))
+        if homekit_mode == HOMEKIT_MODE_ACCESSORY and entities:
+            domains.extend(_domains_set_from_entities(entities))
         name_to_type_map = await _async_name_to_type_map(self.hass)
         return self.async_show_form(
             step_id="init",
+            last_step=False,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOMEKIT_MODE, default=homekit_mode): vol.In(
                         HOMEKIT_MODES
                     ),
-                    vol.Required(
-                        CONF_INCLUDE_EXCLUDE_MODE, default=include_exclude_mode
-                    ): vol.In(INCLUDE_EXCLUDE_MODES),
                     vol.Required(
                         CONF_DOMAINS,
                         default=domains,
@@ -810,6 +957,11 @@ async def _async_get_supported_devices(hass: HomeAssistant) -> dict[str, str]:
         entry = dev_reg.async_get(device_id)
         unsorted[device_id] = entry.name or device_id if entry else device_id
     return dict(sorted(unsorted.items(), key=itemgetter(1)))
+
+
+def _domains_set_from_entities(entity_ids: Iterable[str]) -> set[str]:
+    """Build a set of domains for the given entity ids."""
+    return {split_entity_id(entity_id)[0] for entity_id in entity_ids}
 
 
 def _exclude_by_entity_registry(
@@ -845,30 +997,6 @@ def _async_get_matching_entities(
         if not _exclude_by_entity_registry(
             ent_reg, state.entity_id, include_entity_category, include_hidden
         )
-    ]
-
-
-def _domains_set_from_entities(entity_ids: Iterable[str]) -> set[str]:
-    """Build a set of domains for the given entity ids."""
-    return {split_entity_id(entity_id)[0] for entity_id in entity_ids}
-
-
-@callback
-def _async_get_entity_ids_for_accessory_mode(
-    hass: HomeAssistant, include_domains: Iterable[str]
-) -> list[str]:
-    """Build a list of entities that should be paired in accessory mode."""
-    accessory_mode_domains = {
-        domain for domain in include_domains if domain in DOMAINS_NEED_ACCESSORY_MODE
-    }
-
-    if not accessory_mode_domains:
-        return []
-
-    return [
-        state.entity_id
-        for state in hass.states.async_all(accessory_mode_domains)
-        if state_needs_accessory_mode(state)
     ]
 
 

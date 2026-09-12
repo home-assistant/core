@@ -69,6 +69,12 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
     BASE_FILTER_SCHEMA,
+    CONF_EXCLUDE_DOMAINS,
+    CONF_EXCLUDE_ENTITIES,
+    CONF_EXCLUDE_ENTITY_GLOBS,
+    CONF_INCLUDE_DOMAINS,
+    CONF_INCLUDE_ENTITIES,
+    CONF_INCLUDE_ENTITY_GLOBS,
     FILTER_SCHEMA,
     EntityFilter,
 )
@@ -115,8 +121,10 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_ENTRY_INDEX,
     CONF_EXCLUDE_ACCESSORY_MODE,
+    CONF_EXCLUDE_TARGETS,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
+    CONF_INCLUDE_TARGETS,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
@@ -137,10 +145,17 @@ from .const import (
     SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
     SIGNAL_RELOAD_ENTITIES,
+    TARGET_CHANGE_RELOAD_COOLDOWN as TARGET_CHANGE_RELOAD_COOLDOWN,
     TYPE_AIR_PURIFIER,
 )
 from .iidmanager import AccessoryIIDStorage
 from .models import HomeKitConfigEntry, HomeKitEntryData
+from .target import (
+    async_is_bridge_target_entity,
+    async_target_entity_ids_by_type,
+    async_track_target_entity_change,
+    should_include_entity,
+)
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
@@ -196,6 +211,30 @@ def _has_all_unique_names_and_ports(
     return bridges
 
 
+HOMEKIT_FILTER_SCHEMA = vol.Schema(
+    {
+        **BASE_FILTER_SCHEMA.schema,
+        vol.Optional(CONF_INCLUDE_TARGETS, default={}): vol.Schema(cv.TARGET_FIELDS),
+        vol.Optional(CONF_EXCLUDE_TARGETS, default={}): vol.Schema(cv.TARGET_FIELDS),
+    }
+)
+
+
+def _entity_filter_config(config: dict[str, Any]) -> dict[str, Any]:
+    """Return the shared entity filter portion of a HomeKit filter config."""
+    return {
+        key: config[key]
+        for key in (
+            CONF_EXCLUDE_DOMAINS,
+            CONF_EXCLUDE_ENTITIES,
+            CONF_EXCLUDE_ENTITY_GLOBS,
+            CONF_INCLUDE_DOMAINS,
+            CONF_INCLUDE_ENTITIES,
+            CONF_INCLUDE_ENTITY_GLOBS,
+        )
+    }
+
+
 BRIDGE_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -210,7 +249,7 @@ BRIDGE_SCHEMA = vol.All(
             vol.Optional(CONF_ADVERTISE_IP): vol.All(
                 cv.ensure_list, [ipaddress.ip_address], [cv.string]
             ),
-            vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
+            vol.Optional(CONF_FILTER, default={}): HOMEKIT_FILTER_SCHEMA,
             vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
             vol.Optional(CONF_DEVICES): cv.ensure_list,
         },
@@ -368,7 +407,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
     )
     homekit_mode: str = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
     entity_config: dict[str, Any] = options.get(CONF_ENTITY_CONFIG, {}).copy()
-    entity_filter: EntityFilter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
+    filter_config = HOMEKIT_FILTER_SCHEMA(options.get(CONF_FILTER, {}))
+    entity_filter: EntityFilter = FILTER_SCHEMA(_entity_filter_config(filter_config))
     devices: list[str] = options.get(CONF_DEVICES, [])
 
     homekit = HomeKit(
@@ -380,6 +420,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
         exclude_accessory_mode,
         entity_config,
         homekit_mode,
+        filter_config[CONF_INCLUDE_TARGETS],
+        filter_config[CONF_EXCLUDE_TARGETS],
         advertise_ips,
         entry.entry_id,
         entry.title,
@@ -390,6 +432,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
     )
+
+    include_targets = filter_config[CONF_INCLUDE_TARGETS]
+    exclude_targets = filter_config[CONF_EXCLUDE_TARGETS]
+    if include_targets or exclude_targets:
+        reload_scheduled = False
+
+        @callback
+        def _async_reload_on_target_change(added: set[str], removed: set[str]) -> None:
+            """Reload HomeKit when an expanded target changes."""
+            nonlocal reload_scheduled
+            if reload_scheduled:
+                return
+            reload_scheduled = True
+            hass.config_entries.async_schedule_reload(entry.entry_id)
+
+        for targets in (include_targets, exclude_targets):
+            for target_type, target_ids in targets.items():
+                if not target_ids:
+                    continue
+                entry.async_on_unload(
+                    await async_track_target_entity_change(
+                        hass,
+                        {target_type: target_ids},
+                        _async_reload_on_target_change,
+                        entity_filter=(
+                            async_is_bridge_target_entity
+                            if exclude_accessory_mode
+                            else None
+                        ),
+                    )
+                )
 
     entry_data = HomeKitEntryData(
         homekit=homekit, pairing_qr=None, pairing_qr_secret=None
@@ -555,6 +628,8 @@ class HomeKit:
         exclude_accessory_mode: bool,
         entity_config: dict[str, Any],
         homekit_mode: str,
+        include_targets: ConfigType,
+        exclude_targets: ConfigType,
         advertise_ips: list[str],
         entry_id: str,
         entry_title: str,
@@ -574,6 +649,9 @@ class HomeKit:
         self._entry_id = entry_id
         self._entry_title = entry_title
         self._homekit_mode = homekit_mode
+        self._include_targets = include_targets
+        self._exclude_targets = exclude_targets
+        self._include_target_selection = TargetSelection(include_targets)
         self._devices = devices or []
         self.aid_storage: AccessoryAidStorage | None = None
         self.iid_storage: AccessoryIIDStorage | None = None
@@ -851,24 +929,77 @@ class HomeKit:
             return cast(HomeAccessory, acc)
         return None
 
+    @callback
+    def _explicitly_included(self, entity_id: str) -> bool:
+        """Return whether an entity is explicitly included."""
+        return (
+            entity_id in self._include_target_selection.entity_ids
+            or self._filter.explicitly_included(entity_id)
+        )
+
+    @callback
+    def _should_include_entity(
+        self,
+        entity_id: str,
+        targeted_included_entity_ids: dict[str, set[str]],
+        targeted_excluded_entity_ids: dict[str, set[str]],
+        has_include_rules: bool,
+    ) -> bool:
+        """Resolve include and exclude rules by specificity."""
+        return should_include_entity(
+            entity_id,
+            self._filter.config,
+            targeted_included_entity_ids,
+            targeted_excluded_entity_ids,
+            has_include_rules,
+        )
+
     async def async_configure_accessories(self) -> list[State]:
         """Configure accessories for the included states."""
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)
         device_lookup: dict[str, dict[tuple[str, str | None], str]] = {}
         entity_states: list[State] = []
-        entity_filter = self._filter.get_filter()
+        target_entity_filter = (
+            async_is_bridge_target_entity if self._exclude_accessory_mode else None
+        )
+        targeted_included_entity_ids = async_target_entity_ids_by_type(
+            self.hass,
+            self._include_targets,
+            entity_filter=target_entity_filter,
+        )
+        targeted_excluded_entity_ids = async_target_entity_ids_by_type(
+            self.hass,
+            self._exclude_targets,
+            entity_filter=target_entity_filter,
+        )
+        has_include_rules = bool(
+            any(
+                self._filter.config[key]
+                for key in (
+                    CONF_INCLUDE_DOMAINS,
+                    CONF_INCLUDE_ENTITIES,
+                    CONF_INCLUDE_ENTITY_GLOBS,
+                )
+            )
+            or any(self._include_targets.values())
+        )
         entries = ent_reg.entities
         for state in self.hass.states.async_all():
             entity_id = state.entity_id
-            if not entity_filter(entity_id):
+            if not self._should_include_entity(
+                entity_id,
+                targeted_included_entity_ids,
+                targeted_excluded_entity_ids,
+                has_include_rules,
+            ):
                 continue
 
             if ent_reg_ent := ent_reg.async_get(entity_id):
                 if (
                     ent_reg_ent.entity_category is not None
                     or ent_reg_ent.hidden_by is not None
-                ) and not self._filter.explicitly_included(entity_id):
+                ) and not self._explicitly_included(entity_id):
                     continue
 
                 await self._async_set_device_info_attributes(

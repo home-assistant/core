@@ -4,20 +4,32 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.homekit.accessories import HomeDriver
+from homeassistant.components.homekit.config_flow import SUPPORTED_DOMAINS
 from homeassistant.components.homekit.const import (
+    CONF_EXCLUDE_TARGETS,
     CONF_FILTER,
+    CONF_INCLUDE_TARGETS,
     DOMAIN,
     SHORT_BRIDGE_NAME,
 )
-from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_PORT, EntityCategory
+from homeassistant.components.media_player import MediaPlayerDeviceClass
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT, ConfigFlowResult
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
+    CONF_ENTITIES,
+    CONF_NAME,
+    CONF_PORT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, label_registry as lr
 from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component
 
@@ -49,19 +61,40 @@ def _mock_config_entry_with_options_populated():
 
 async def test_setup_in_bridge_mode(hass: HomeAssistant) -> None:
     """Test we can setup a new instance in bridge mode."""
+    hass.states.async_set("camera.target_only", "on")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
+    assert result["last_step"] is False
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"include_domains": ["light"]},
     )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "pairing"
+    assert result2["step_id"] == "include"
+    assert result2["last_step"] is False
+
+    include_targets = {
+        ATTR_ENTITY_ID: ["camera.target_only"],
+        ATTR_LABEL_ID: ["homekit"],
+    }
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_INCLUDE_TARGETS: include_targets},
+    )
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "review"
+    assert result3["last_step"] is False
+    assert result3["description_placeholders"] == {"count": "0"}
+
+    result3 = await hass.config_entries.flow.async_configure(result3["flow_id"], {})
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "pairing"
+    assert result3["last_step"] is True
 
     with (
         patch(
@@ -76,21 +109,22 @@ async def test_setup_in_bridge_mode(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
             {},
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    bridge_name = (result3["title"].split(":"))[0]
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    bridge_name = (result4["title"].split(":"))[0]
     assert bridge_name == SHORT_BRIDGE_NAME
-    assert result3["data"] == {
+    assert result4["data"] == {
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
             "include_domains": ["light"],
             "include_entities": [],
+            CONF_INCLUDE_TARGETS: include_targets,
         },
         "exclude_accessory_mode": True,
         "mode": "bridge",
@@ -99,6 +133,70 @@ async def test_setup_in_bridge_mode(hass: HomeAssistant) -> None:
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_setup_in_bridge_mode_entity_review(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test the review lists entities expanded from combined targets."""
+    include_label = label_registry.async_create("HomeKit")
+    exclude_label = label_registry.async_create("Private")
+
+    for entity_id, labels in (
+        ("light.included_by_domain", set()),
+        ("switch.included_by_label", {include_label.label_id}),
+        ("light.excluded_by_label", {exclude_label.label_id}),
+        (
+            "switch.excluded_at_equal_specificity",
+            {include_label.label_id, exclude_label.label_id},
+        ),
+        ("sensor.unsupported_by_homekit", {include_label.label_id}),
+    ):
+        domain, object_id = entity_id.split(".", 1)
+        entry = entity_registry.async_get_or_create(
+            domain, "demo", object_id, suggested_object_id=object_id
+        )
+        entity_registry.async_update_entity(entry.entity_id, labels=labels)
+        hass.states.async_set(entry.entity_id, "on")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_INCLUDE_DOMAINS: ["light"]}
+    )
+
+    assert result["step_id"] == "include"
+    assert {key.schema for key in result["data_schema"].schema} == {
+        CONF_INCLUDE_TARGETS,
+        CONF_EXCLUDE_TARGETS,
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_INCLUDE_TARGETS: {ATTR_LABEL_ID: [include_label.label_id]},
+            CONF_EXCLUDE_TARGETS: {ATTR_LABEL_ID: [exclude_label.label_id]},
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "review"
+    assert result["description_placeholders"] == {"count": "2"}
+    selected_entities = {
+        "light.included_by_domain",
+        "switch.included_by_label",
+    }
+    schema = result["data_schema"].schema
+    assert set(_get_schema_default(schema, CONF_ENTITIES)) == selected_entities
+    entity_selector = next(
+        value for key, value in schema.items() if key.schema == CONF_ENTITIES
+    )
+    assert entity_selector.config["read_only"] is True
+    assert entity_selector.config["multiple"] is True
+    assert set(entity_selector.config["include_entities"]) == selected_entities
 
 
 async def test_setup_in_bridge_mode_name_taken(hass: HomeAssistant) -> None:
@@ -120,6 +218,7 @@ async def test_setup_in_bridge_mode_name_taken(hass: HomeAssistant) -> None:
         result["flow_id"],
         {"include_domains": ["light"]},
     )
+    result2 = await _async_complete_config_entity_selection(hass, result2)
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "pairing"
 
@@ -206,6 +305,7 @@ async def test_setup_creates_entries_for_accessory_mode_devices(
         result["flow_id"],
         {"include_domains": ["camera", "media_player", "light", "lock", "remote"]},
     )
+    result2 = await _async_complete_config_entity_selection(hass, result2)
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "pairing"
 
@@ -302,8 +402,8 @@ async def test_import(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 2
 
 
-async def test_options_flow_exclude_mode(hass: HomeAssistant) -> None:
-    """Test config flow options in exclude mode."""
+async def test_options_flow_exclude_targets(hass: HomeAssistant) -> None:
+    """Test excluding targets in the options flow."""
 
     config_entry = _mock_config_entry_with_options_populated()
     config_entry.add_to_hass(hass)
@@ -321,23 +421,29 @@ async def test_options_flow_exclude_mode(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             "domains": ["fan", "vacuum", "climate", "humidifier"],
-            "include_exclude_mode": "exclude",
         },
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "exclude"
-    entities = result["data_schema"]({})["entities"]
-    assert entities == ["climate.front_gate"]
+    assert result["step_id"] == "include"
+    assert result["data_schema"]({})[CONF_EXCLUDE_TARGETS] == {
+        ATTR_ENTITY_ID: ["climate.front_gate"]
+    }
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_INCLUDE_TARGETS: {},
+            CONF_EXCLUDE_TARGETS: {ATTR_ENTITY_ID: ["climate.old"]},
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "review"
 
     # Inject garbage to ensure the options data
     # is being deep copied and we cannot mutate it in flight
     config_entry.options[CONF_FILTER][CONF_INCLUDE_DOMAINS].append("garbage")
 
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"entities": ["climate.old"]},
-    )
+    result2 = await _async_submit_options_review_step(hass, result)
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "climate"
     result2 = await hass.config_entries.options.async_configure(
@@ -359,8 +465,9 @@ async def test_options_flow_exclude_mode(hass: HomeAssistant) -> None:
         "mode": "bridge",
         "filter": {
             "exclude_domains": [],
-            "exclude_entities": ["climate.old"],
-            "include_domains": ["fan", "vacuum", "climate", "humidifier"],
+            "exclude_entities": [],
+            CONF_EXCLUDE_TARGETS: {ATTR_ENTITY_ID: ["climate.old"]},
+            "include_domains": ["climate", "fan", "humidifier", "vacuum"],
             "include_entities": [],
         },
     }
@@ -418,23 +525,24 @@ async def test_options_flow_devices(
             result["flow_id"],
             user_input={
                 "domains": ["fan", "vacuum", "climate"],
-                "include_exclude_mode": "exclude",
             },
         )
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "exclude"
+        assert result["step_id"] == "include"
 
         entry = entity_registry.async_get("light.ceiling_lights")
         assert entry is not None
         device_id = entry.device_id
 
-        result2 = await hass.config_entries.options.async_configure(
+        result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                "entities": ["climate.old"],
+                CONF_INCLUDE_TARGETS: {},
+                CONF_EXCLUDE_TARGETS: {ATTR_ENTITY_ID: ["climate.old"]},
             },
         )
+        result2 = await _async_submit_options_review_step(hass, result)
 
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "climate"
@@ -462,8 +570,9 @@ async def test_options_flow_devices(
             "mode": "bridge",
             "filter": {
                 "exclude_domains": [],
-                "exclude_entities": ["climate.old"],
-                "include_domains": ["fan", "vacuum", "climate"],
+                "exclude_entities": [],
+                CONF_EXCLUDE_TARGETS: {ATTR_ENTITY_ID: ["climate.old"]},
+                "include_domains": ["climate", "fan", "vacuum"],
                 "include_entities": [],
             },
         }
@@ -474,13 +583,16 @@ async def test_options_flow_devices(
             result["flow_id"],
             user_input={
                 "domains": ["fan", "vacuum", "climate"],
-                "include_exclude_mode": "exclude",
             },
         )
-        result2 = await hass.config_entries.options.async_configure(
+        result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={"entities": ["climate.old"]},
+            user_input={
+                CONF_INCLUDE_TARGETS: {},
+                CONF_EXCLUDE_TARGETS: {ATTR_ENTITY_ID: ["climate.old"]},
+            },
         )
+        result2 = await _async_submit_options_review_step(hass, result)
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "climate"
         result2 = await hass.config_entries.options.async_configure(
@@ -494,22 +606,34 @@ async def test_options_flow_devices(
         await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_options_flow_include_mode_with_non_existant_entity(
+async def test_options_flow_migrates_legacy_include_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test config flow options in include mode with a non-existent entity."""
+    """Test valid legacy include entities migrate to direct targets."""
+    hidden_switch = entity_registry.async_get_or_create(
+        "switch",
+        "demo",
+        "hidden",
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+    )
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_NAME: "mock_name", CONF_PORT: 12345},
         options={
             "filter": {
-                "include_entities": ["climate.not_exist", "climate.front_gate"],
+                "include_entities": [
+                    "climate.not_exist",
+                    "climate.front_gate",
+                    hidden_switch.entity_id,
+                ],
             },
         },
     )
     config_entry.add_to_hass(hass)
     hass.states.async_set("climate.front_gate", "off")
     hass.states.async_set("climate.new", "off")
+    hass.states.async_set(hidden_switch.entity_id, "off")
 
     await hass.async_block_till_done()
 
@@ -522,22 +646,34 @@ async def test_options_flow_include_mode_with_non_existant_entity(
         result["flow_id"],
         user_input={
             "domains": ["fan", "vacuum", "climate"],
-            "include_exclude_mode": "include",
         },
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "include"
 
-    entities = result["data_schema"]({})["entities"]
-    assert "climate.not_exist" not in entities
+    assert result["data_schema"]({})[CONF_INCLUDE_TARGETS] == {
+        ATTR_ENTITY_ID: ["climate.front_gate", hidden_switch.entity_id]
+    }
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "entities": ["climate.new", "climate.front_gate"],
+            CONF_INCLUDE_TARGETS: {
+                ATTR_ENTITY_ID: [
+                    "climate.new",
+                    "climate.front_gate",
+                    hidden_switch.entity_id,
+                ]
+            },
         },
     )
+    assert set(_get_schema_default(result2["data_schema"].schema, CONF_ENTITIES)) == {
+        "climate.front_gate",
+        "climate.new",
+        hidden_switch.entity_id,
+    }
+    result2 = await _async_submit_options_review_step(hass, result2)
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "climate"
     result2 = await hass.config_entries.options.async_configure(
@@ -558,18 +694,25 @@ async def test_options_flow_include_mode_with_non_existant_entity(
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
-            "include_domains": ["fan", "vacuum"],
-            "include_entities": ["climate.new", "climate.front_gate"],
+            "include_domains": ["climate", "fan", "vacuum"],
+            "include_entities": [],
+            CONF_INCLUDE_TARGETS: {
+                ATTR_ENTITY_ID: [
+                    "climate.new",
+                    "climate.front_gate",
+                    hidden_switch.entity_id,
+                ]
+            },
         },
     }
     await hass.async_block_till_done()
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_options_flow_exclude_mode_with_non_existant_entity(
+async def test_options_flow_exclude_targets_with_nonexistent_entity(
     hass: HomeAssistant,
 ) -> None:
-    """Test config flow options in exclude mode with a non-existent entity."""
+    """Test exclude targets omit nonexistent stored entities."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_NAME: "mock_name", CONF_PORT: 12345},
@@ -595,81 +738,24 @@ async def test_options_flow_exclude_mode_with_non_existant_entity(
         result["flow_id"],
         user_input={
             "domains": ["climate"],
-            "include_exclude_mode": "exclude",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "exclude"
-
-    entities = result["data_schema"]({})["entities"]
-    assert "climate.not_exist" not in entities
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "entities": ["climate.new", "climate.front_gate"],
-        },
-    )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "bridged_device_triggers"
-
-    result3 = await hass.config_entries.options.async_configure(
-        result2["flow_id"],
-        user_input={},
-    )
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {
-        "devices": [],
-        "mode": "bridge",
-        "filter": {
-            "exclude_domains": [],
-            "exclude_entities": ["climate.new", "climate.front_gate"],
-            "include_domains": ["climate"],
-            "include_entities": [],
-        },
-    }
-    await hass.async_block_till_done()
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-
-async def test_options_flow_include_mode_basic(hass: HomeAssistant) -> None:
-    """Test config flow options in include mode."""
-
-    config_entry = _mock_config_entry_with_options_populated()
-    config_entry.add_to_hass(hass)
-
-    hass.states.async_set("climate.old", "off")
-    hass.states.async_set("climate.new", "off")
-
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "domains": ["fan", "vacuum", "climate"],
-            "include_exclude_mode": "include",
         },
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "include"
-
-    result2 = await hass.config_entries.options.async_configure(
+    assert result["data_schema"]({})[CONF_EXCLUDE_TARGETS] == {
+        ATTR_ENTITY_ID: ["climate.front_gate"]
+    }
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"entities": ["climate.new"]},
+        user_input={
+            CONF_INCLUDE_TARGETS: {},
+            CONF_EXCLUDE_TARGETS: {
+                ATTR_ENTITY_ID: ["climate.new", "climate.front_gate"]
+            },
+        },
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "climate"
-    result2 = await hass.config_entries.options.async_configure(
-        result2["flow_id"],
-        user_input={},
-    )
+    result2 = await _async_submit_options_review_step(hass, result)
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "bridged_device_triggers"
 
@@ -684,15 +770,126 @@ async def test_options_flow_include_mode_basic(hass: HomeAssistant) -> None:
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
+            CONF_EXCLUDE_TARGETS: {
+                ATTR_ENTITY_ID: ["climate.new", "climate.front_gate"]
+            },
+            "include_domains": ["climate"],
+            "include_entities": [],
+        },
+    }
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_options_flow_with_include_and_exclude_targets(
+    hass: HomeAssistant,
+) -> None:
+    """Test config flow stores include and exclude targets together."""
+    config_entry = _mock_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    hass.states.async_set("climate.old", "off")
+    hass.states.async_set("climate.new", "off")
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+    assert result["last_step"] is False
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["fan", "vacuum"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "include"
+    assert result["last_step"] is False
+    assert _get_schema_default(result["data_schema"].schema, CONF_INCLUDE_TARGETS) == {}
+
+    include_targets = {
+        ATTR_AREA_ID: ["kitchen"],
+        ATTR_DEVICE_ID: ["device-id"],
+        ATTR_ENTITY_ID: ["climate.new"],
+        ATTR_FLOOR_ID: ["ground-floor"],
+        ATTR_LABEL_ID: ["homekit"],
+    }
+    exclude_targets = {
+        ATTR_ENTITY_ID: ["climate.old"],
+        ATTR_LABEL_ID: ["private"],
+    }
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_INCLUDE_TARGETS: include_targets,
+            CONF_EXCLUDE_TARGETS: exclude_targets,
+        },
+    )
+    assert result2["description_placeholders"] == {"count": "1"}
+    assert result2["last_step"] is False
+    assert _get_schema_default(result2["data_schema"].schema, CONF_ENTITIES) == [
+        "climate.new"
+    ]
+    result2 = await _async_submit_options_review_step(hass, result2)
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "climate"
+    assert result2["last_step"] is False
+
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"], user_input=result2["data_schema"]({})
+    )
+    assert result3["step_id"] == "bridged_device_triggers"
+    assert result3["last_step"] is True
+
+    result4 = await hass.config_entries.options.async_configure(
+        result3["flow_id"], user_input={}
+    )
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "devices": [],
+        "mode": "bridge",
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": [],
             "include_domains": ["fan", "vacuum"],
-            "include_entities": ["climate.new"],
+            "include_entities": [],
+            CONF_INCLUDE_TARGETS: include_targets,
+            CONF_EXCLUDE_TARGETS: exclude_targets,
         },
     }
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_options_flow_exclude_mode_with_cameras(hass: HomeAssistant) -> None:
-    """Test config flow options in exclude mode with cameras."""
+async def test_options_flow_target_selectors_allow_supported_domains(
+    hass: HomeAssistant,
+) -> None:
+    """Test target selectors allow every supported domain."""
+    config_entry = _mock_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"domains": ["light"]}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "include"
+    for target_key in (CONF_INCLUDE_TARGETS, CONF_EXCLUDE_TARGETS):
+        target_selector = next(
+            value
+            for key, value in result["data_schema"].schema.items()
+            if key.schema == target_key
+        )
+        assert target_selector.config == {
+            "entity": [{"domain": SUPPORTED_DOMAINS}],
+            "primary_entities_only": True,
+        }
+
+
+async def test_options_flow_camera_targets(hass: HomeAssistant) -> None:
+    """Test including and excluding camera targets in the options flow."""
 
     config_entry = _mock_config_entry_with_options_populated()
     config_entry.add_to_hass(hass)
@@ -713,123 +910,6 @@ async def test_options_flow_exclude_mode_with_cameras(hass: HomeAssistant) -> No
         result["flow_id"],
         user_input={
             "domains": ["fan", "vacuum", "climate", "camera"],
-            "include_exclude_mode": "exclude",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "exclude"
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "entities": ["climate.old", "camera.excluded"],
-        },
-    )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "cameras"
-
-    result3 = await hass.config_entries.options.async_configure(
-        result2["flow_id"],
-        user_input={"camera_copy": ["camera.native_h264"]},
-    )
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["step_id"] == "bridged_device_triggers"
-
-    result4 = await hass.config_entries.options.async_configure(
-        result3["flow_id"],
-        user_input={},
-    )
-    assert result4["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {
-        "devices": [],
-        "mode": "bridge",
-        "filter": {
-            "exclude_domains": [],
-            "exclude_entities": ["climate.old", "camera.excluded"],
-            "include_domains": ["fan", "vacuum", "climate", "camera"],
-            "include_entities": [],
-        },
-        "entity_config": {"camera.native_h264": {"video_codec": "copy"}},
-    }
-
-    # Now run though again and verify we can turn off copy
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "domains": ["fan", "vacuum", "climate", "camera"],
-            "include_exclude_mode": "exclude",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "exclude"
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "entities": ["climate.old", "camera.excluded"],
-        },
-    )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "cameras"
-
-    result3 = await hass.config_entries.options.async_configure(
-        result2["flow_id"],
-        user_input={"camera_copy": ["camera.native_h264"]},
-    )
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["step_id"] == "bridged_device_triggers"
-
-    result4 = await hass.config_entries.options.async_configure(
-        result3["flow_id"],
-        user_input={},
-    )
-    assert result4["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {
-        "devices": [],
-        "mode": "bridge",
-        "filter": {
-            "exclude_domains": [],
-            "exclude_entities": ["climate.old", "camera.excluded"],
-            "include_domains": ["fan", "vacuum", "climate", "camera"],
-            "include_entities": [],
-        },
-        "entity_config": {"camera.native_h264": {"video_codec": "copy"}},
-    }
-    await hass.async_block_till_done()
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-
-async def test_options_flow_include_mode_with_cameras(hass: HomeAssistant) -> None:
-    """Test config flow options in include mode with cameras."""
-
-    config_entry = _mock_config_entry_with_options_populated()
-    config_entry.add_to_hass(hass)
-
-    hass.states.async_set("climate.old", "off")
-    hass.states.async_set("camera.native_h264", "off")
-    hass.states.async_set("camera.transcode_h264", "off")
-    hass.states.async_set("camera.excluded", "off")
-
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "domains": ["fan", "vacuum", "climate", "camera"],
-            "include_exclude_mode": "include",
         },
     )
 
@@ -839,9 +919,12 @@ async def test_options_flow_include_mode_with_cameras(hass: HomeAssistant) -> No
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "entities": ["camera.native_h264", "camera.transcode_h264"],
+            CONF_INCLUDE_TARGETS: {
+                ATTR_ENTITY_ID: ["camera.native_h264", "camera.transcode_h264"]
+            },
         },
     )
+    result2 = await _async_submit_options_review_step(hass, result2)
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "cameras"
 
@@ -870,8 +953,11 @@ async def test_options_flow_include_mode_with_cameras(hass: HomeAssistant) -> No
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
-            "include_domains": ["climate", "fan", "vacuum"],
-            "include_entities": ["camera.native_h264", "camera.transcode_h264"],
+            "include_domains": ["camera", "climate", "fan", "vacuum"],
+            "include_entities": [],
+            CONF_INCLUDE_TARGETS: {
+                ATTR_ENTITY_ID: ["camera.native_h264", "camera.transcode_h264"]
+            },
         },
         "entity_config": {"camera.native_h264": {"video_codec": "copy"}},
     }
@@ -883,54 +969,33 @@ async def test_options_flow_include_mode_with_cameras(hass: HomeAssistant) -> No
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["data_schema"]({}) == {
-        "domains": ["climate", "fan", "vacuum", "camera"],
+        "domains": ["camera", "climate", "fan", "vacuum"],
         "mode": "bridge",
-        "include_exclude_mode": "include",
     }
-    schema = result["data_schema"].schema
-    assert _get_schema_default(schema, "domains") == [
-        "climate",
-        "fan",
-        "vacuum",
-        "camera",
-    ]
-    assert _get_schema_default(schema, "mode") == "bridge"
-    assert _get_schema_default(schema, "include_exclude_mode") == "include"
-
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             "domains": ["climate", "fan", "vacuum", "camera"],
-            "include_exclude_mode": "exclude",
         },
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "exclude"
-    assert result["data_schema"]({}) == {
-        "entities": ["camera.native_h264", "camera.transcode_h264"],
-    }
-    schema = result["data_schema"].schema
-    assert _get_schema_default(schema, "entities") == [
-        "camera.native_h264",
-        "camera.transcode_h264",
-    ]
-
-    result2 = await hass.config_entries.options.async_configure(
+    assert result["step_id"] == "include"
+    assert result["data_schema"]({})[CONF_EXCLUDE_TARGETS] == {}
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "entities": ["climate.old", "camera.excluded"],
+            CONF_INCLUDE_TARGETS: {},
+            CONF_EXCLUDE_TARGETS: {ATTR_ENTITY_ID: ["climate.old", "camera.excluded"]},
         },
     )
+    result2 = await _async_submit_options_review_step(hass, result)
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "cameras"
     assert result2["data_schema"]({}) == {
         "camera_copy": ["camera.native_h264"],
         "camera_audio": [],
     }
-    schema = result2["data_schema"].schema
-    assert _get_schema_default(schema, "camera_copy") == ["camera.native_h264"]
-
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
         user_input={"camera_copy": []},
@@ -948,8 +1013,9 @@ async def test_options_flow_include_mode_with_cameras(hass: HomeAssistant) -> No
         "entity_config": {},
         "filter": {
             "exclude_domains": [],
-            "exclude_entities": ["climate.old", "camera.excluded"],
-            "include_domains": ["climate", "fan", "vacuum", "camera"],
+            "exclude_entities": [],
+            CONF_EXCLUDE_TARGETS: {ATTR_ENTITY_ID: ["climate.old", "camera.excluded"]},
+            "include_domains": ["camera", "climate", "fan", "vacuum"],
             "include_entities": [],
         },
         "mode": "bridge",
@@ -980,7 +1046,6 @@ async def test_options_flow_with_camera_audio(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             "domains": ["fan", "vacuum", "climate", "camera"],
-            "include_exclude_mode": "include",
         },
     )
 
@@ -990,9 +1055,10 @@ async def test_options_flow_with_camera_audio(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "entities": ["camera.audio", "camera.no_audio"],
+            CONF_INCLUDE_TARGETS: {ATTR_ENTITY_ID: ["camera.audio", "camera.no_audio"]},
         },
     )
+    result2 = await _async_submit_options_review_step(hass, result2)
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "cameras"
 
@@ -1021,8 +1087,9 @@ async def test_options_flow_with_camera_audio(hass: HomeAssistant) -> None:
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
-            "include_domains": ["climate", "fan", "vacuum"],
-            "include_entities": ["camera.audio", "camera.no_audio"],
+            "include_domains": ["camera", "climate", "fan", "vacuum"],
+            "include_entities": [],
+            CONF_INCLUDE_TARGETS: {ATTR_ENTITY_ID: ["camera.audio", "camera.no_audio"]},
         },
         "entity_config": {"camera.audio": {"support_audio": True}},
     }
@@ -1034,54 +1101,33 @@ async def test_options_flow_with_camera_audio(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["data_schema"]({}) == {
-        "domains": ["climate", "fan", "vacuum", "camera"],
+        "domains": ["camera", "climate", "fan", "vacuum"],
         "mode": "bridge",
-        "include_exclude_mode": "include",
     }
-    schema = result["data_schema"].schema
-    assert _get_schema_default(schema, "domains") == [
-        "climate",
-        "fan",
-        "vacuum",
-        "camera",
-    ]
-    assert _get_schema_default(schema, "mode") == "bridge"
-    assert _get_schema_default(schema, "include_exclude_mode") == "include"
-
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "include_exclude_mode": "exclude",
             "domains": ["climate", "fan", "vacuum", "camera"],
         },
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "exclude"
-    assert result["data_schema"]({}) == {
-        "entities": ["camera.audio", "camera.no_audio"],
-    }
-    schema = result["data_schema"].schema
-    assert _get_schema_default(schema, "entities") == [
-        "camera.audio",
-        "camera.no_audio",
-    ]
-
-    result2 = await hass.config_entries.options.async_configure(
+    assert result["step_id"] == "include"
+    assert result["data_schema"]({})[CONF_EXCLUDE_TARGETS] == {}
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "entities": ["climate.old", "camera.excluded"],
+            CONF_INCLUDE_TARGETS: {},
+            CONF_EXCLUDE_TARGETS: {ATTR_ENTITY_ID: ["climate.old", "camera.excluded"]},
         },
     )
+    result2 = await _async_submit_options_review_step(hass, result)
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "cameras"
     assert result2["data_schema"]({}) == {
         "camera_copy": [],
         "camera_audio": ["camera.audio"],
     }
-    schema = result2["data_schema"].schema
-    assert _get_schema_default(schema, "camera_audio") == ["camera.audio"]
-
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
         user_input={"camera_audio": []},
@@ -1099,8 +1145,9 @@ async def test_options_flow_with_camera_audio(hass: HomeAssistant) -> None:
         "entity_config": {},
         "filter": {
             "exclude_domains": [],
-            "exclude_entities": ["climate.old", "camera.excluded"],
-            "include_domains": ["climate", "fan", "vacuum", "camera"],
+            "exclude_entities": [],
+            CONF_EXCLUDE_TARGETS: {ATTR_ENTITY_ID: ["climate.old", "camera.excluded"]},
+            "include_domains": ["camera", "climate", "fan", "vacuum"],
             "include_entities": [],
         },
         "mode": "bridge",
@@ -1151,16 +1198,20 @@ async def test_options_flow_blocked_when_from_yaml(hass: HomeAssistant) -> None:
 
 @patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
 @pytest.mark.usefixtures("mock_async_zeroconf")
-async def test_options_flow_include_mode_basic_accessory(
+async def test_options_flow_accessory_mode_entity_selection(
     port_mock,
     hass: HomeAssistant,
     hk_driver,
 ) -> None:
-    """Test config flow options in include mode with a single accessory."""
+    """Test accessory mode entity selection."""
     config_entry = _mock_config_entry_with_options_populated()
     await async_init_entry(hass, config_entry)
 
-    hass.states.async_set("media_player.tv", "off")
+    hass.states.async_set(
+        "media_player.tv",
+        "off",
+        {"device_class": MediaPlayerDeviceClass.TV},
+    )
     hass.states.async_set("media_player.sonos", "off")
 
     await hass.async_block_till_done()
@@ -1179,7 +1230,6 @@ async def test_options_flow_include_mode_basic_accessory(
             "alarm_control_panel",
         ],
         "mode": "bridge",
-        "include_exclude_mode": "exclude",
     }
 
     result2 = await hass.config_entries.options.async_configure(
@@ -1189,12 +1239,25 @@ async def test_options_flow_include_mode_basic_accessory(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "accessory"
-    assert _get_schema_default(result2["data_schema"].schema, "entities") is None
+    schema = result2["data_schema"].schema
+    assert _get_schema_default(schema, CONF_ENTITIES) is None
+    entity_selector = next(
+        value for key, value in schema.items() if key.schema == CONF_ENTITIES
+    )
+    assert entity_selector.config["include_entities"] == ["media_player.tv"]
 
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
         user_input={"entities": "media_player.tv"},
     )
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "review"
+    assert result3["last_step"] is True
+    assert _get_schema_default(result3["data_schema"].schema, CONF_ENTITIES) == [
+        "media_player.tv"
+    ]
+
+    result3 = await _async_submit_options_review_step(hass, result3)
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         "mode": "accessory",
@@ -1216,7 +1279,6 @@ async def test_options_flow_include_mode_basic_accessory(
     assert result["data_schema"]({}) == {
         "domains": ["media_player"],
         "mode": "accessory",
-        "include_exclude_mode": "include",
     }
 
     result2 = await hass.config_entries.options.async_configure(
@@ -1235,6 +1297,7 @@ async def test_options_flow_include_mode_basic_accessory(
         result2["flow_id"],
         user_input={"entities": "media_player.tv"},
     )
+    result3 = await _async_submit_options_review_step(hass, result3)
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         "mode": "accessory",
@@ -1264,6 +1327,7 @@ async def test_converting_bridge_to_accessory_mode(
         result["flow_id"],
         {"include_domains": ["light"]},
     )
+    result2 = await _async_complete_config_entity_selection(hass, result2)
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "pairing"
 
@@ -1330,7 +1394,13 @@ async def test_converting_bridge_to_accessory_mode(
         user_input={"entities": "camera.tv"},
     )
     assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "review"
+    assert result2["last_step"] is False
+
+    result2 = await _async_submit_options_review_step(hass, result2)
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "cameras"
+    assert result2["last_step"] is True
 
     with (
         patch(
@@ -1369,294 +1439,29 @@ def _get_schema_default(schema, key_name):
     raise KeyError(f"{key_name} not found in schema")
 
 
-@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
-@pytest.mark.usefixtures("mock_async_zeroconf")
-async def test_options_flow_exclude_mode_skips_category_entities(
-    port_mock,
-    hass: HomeAssistant,
-    hk_driver,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Ensure exclude mode does not offer category entities."""
-    config_entry = _mock_config_entry_with_options_populated()
-    await async_init_entry(hass, config_entry)
-
-    hass.states.async_set("media_player.tv", "off")
-    hass.states.async_set("media_player.sonos", "off")
-    hass.states.async_set("switch.other", "off")
-
-    sonos_config_switch = entity_registry.async_get_or_create(
-        "switch",
-        "sonos",
-        "config",
-        entity_category=EntityCategory.CONFIG,
-    )
-    hass.states.async_set(sonos_config_switch.entity_id, "off")
-
-    sonos_notconfig_switch = entity_registry.async_get_or_create(
-        "switch",
-        "sonos",
-        "notconfig",
-        entity_category=None,
-    )
-    hass.states.async_set(sonos_notconfig_switch.entity_id, "off")
-
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
+async def _async_complete_config_entity_selection(
+    hass: HomeAssistant, result: ConfigFlowResult
+) -> ConfigFlowResult:
+    """Complete config flow entity refinement and review."""
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["data_schema"]({}) == {
-        "domains": [
-            "fan",
-            "humidifier",
-            "vacuum",
-            "media_player",
-            "climate",
-            "alarm_control_panel",
-        ],
-        "mode": "bridge",
-        "include_exclude_mode": "exclude",
-    }
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "domains": ["media_player", "switch"],
-            "mode": "bridge",
-            "include_exclude_mode": "exclude",
-        },
+    assert result["step_id"] == "include"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_INCLUDE_TARGETS: {}}
     )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "exclude"
-    assert _get_schema_default(result2["data_schema"].schema, "entities") == []
-
-    # sonos_config_switch.entity_id is a config category entity
-    # so it should not be selectable since it will always be excluded
-    with pytest.raises(vol.error.Invalid):
-        await hass.config_entries.options.async_configure(
-            result2["flow_id"],
-            user_input={"entities": [sonos_config_switch.entity_id]},
-        )
-
-    result4 = await hass.config_entries.options.async_configure(
-        result2["flow_id"],
-        user_input={
-            "entities": [
-                "media_player.tv",
-                "switch.other",
-                sonos_notconfig_switch.entity_id,
-            ]
-        },
-    )
-    assert result4["type"] is FlowResultType.FORM
-    assert result4["step_id"] == "bridged_device_triggers"
-
-    result5 = await hass.config_entries.options.async_configure(
-        result4["flow_id"],
-        user_input={},
-    )
-    assert result5["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {
-        "devices": [],
-        "mode": "bridge",
-        "filter": {
-            "exclude_domains": [],
-            "exclude_entities": [
-                "media_player.tv",
-                "switch.other",
-                sonos_notconfig_switch.entity_id,
-            ],
-            "include_domains": ["media_player", "switch"],
-            "include_entities": [],
-        },
-    }
-    await hass.async_block_till_done()
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-
-@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
-@pytest.mark.usefixtures("mock_async_zeroconf")
-async def test_options_flow_exclude_mode_skips_hidden_entities(
-    port_mock,
-    hass: HomeAssistant,
-    hk_driver,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Ensure exclude mode does not offer hidden entities."""
-    config_entry = _mock_config_entry_with_options_populated()
-    await async_init_entry(hass, config_entry)
-
-    hass.states.async_set("media_player.tv", "off")
-    hass.states.async_set("media_player.sonos", "off")
-    hass.states.async_set("switch.other", "off")
-
-    sonos_hidden_switch = entity_registry.async_get_or_create(
-        "switch",
-        "sonos",
-        "config",
-        hidden_by=er.RegistryEntryHider.INTEGRATION,
-    )
-    hass.states.async_set(sonos_hidden_switch.entity_id, "off")
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["data_schema"]({}) == {
-        "domains": [
-            "fan",
-            "humidifier",
-            "vacuum",
-            "media_player",
-            "climate",
-            "alarm_control_panel",
-        ],
-        "mode": "bridge",
-        "include_exclude_mode": "exclude",
-    }
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "domains": ["media_player", "switch"],
-            "mode": "bridge",
-            "include_exclude_mode": "exclude",
-        },
-    )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "exclude"
-    assert _get_schema_default(result2["data_schema"].schema, "entities") == []
-
-    # sonos_hidden_switch.entity_id is a hidden entity
-    # so it should not be selectable since it will always be excluded
-    with pytest.raises(vol.error.Invalid):
-        await hass.config_entries.options.async_configure(
-            result2["flow_id"],
-            user_input={"entities": [sonos_hidden_switch.entity_id]},
-        )
-
-    result4 = await hass.config_entries.options.async_configure(
-        result2["flow_id"],
-        user_input={"entities": ["media_player.tv", "switch.other"]},
-    )
-    assert result4["type"] is FlowResultType.FORM
-    assert result4["step_id"] == "bridged_device_triggers"
-
-    result5 = await hass.config_entries.options.async_configure(
-        result4["flow_id"],
-        user_input={},
-    )
-    assert result5["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {
-        "devices": [],
-        "mode": "bridge",
-        "filter": {
-            "exclude_domains": [],
-            "exclude_entities": ["media_player.tv", "switch.other"],
-            "include_domains": ["media_player", "switch"],
-            "include_entities": [],
-        },
-    }
-    await hass.async_block_till_done()
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    assert result["step_id"] == "review"
+    return await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
 
-@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
-@pytest.mark.usefixtures("mock_async_zeroconf")
-async def test_options_flow_include_mode_allows_hidden_entities(
-    port_mock,
-    hass: HomeAssistant,
-    hk_driver,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Ensure include mode does not offer hidden entities."""
-    config_entry = _mock_config_entry_with_options_populated()
-    await async_init_entry(hass, config_entry)
-
-    hass.states.async_set("media_player.tv", "off")
-    hass.states.async_set("media_player.sonos", "off")
-    hass.states.async_set("switch.other", "off")
-
-    sonos_hidden_switch = entity_registry.async_get_or_create(
-        "switch",
-        "sonos",
-        "config",
-        hidden_by=er.RegistryEntryHider.INTEGRATION,
-    )
-    hass.states.async_set(sonos_hidden_switch.entity_id, "off")
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
+async def _async_submit_options_review_step(
+    hass: HomeAssistant, result: ConfigFlowResult
+) -> ConfigFlowResult:
+    """Submit the options flow entity-selection review step."""
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["data_schema"]({}) == {
-        "domains": [
-            "fan",
-            "humidifier",
-            "vacuum",
-            "media_player",
-            "climate",
-            "alarm_control_panel",
-        ],
-        "mode": "bridge",
-        "include_exclude_mode": "exclude",
-    }
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "domains": ["media_player", "switch"],
-            "mode": "bridge",
-            "include_exclude_mode": "include",
-        },
+    assert result["step_id"] == "review"
+    return await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
     )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "include"
-    assert _get_schema_default(result2["data_schema"].schema, "entities") == []
-
-    # sonos_hidden_switch.entity_id is a hidden entity
-    # we allow it to be selected in include mode only
-    result3 = await hass.config_entries.options.async_configure(
-        result2["flow_id"],
-        user_input={
-            "entities": [
-                sonos_hidden_switch.entity_id,
-                "media_player.tv",
-                "switch.other",
-            ]
-        },
-    )
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["step_id"] == "bridged_device_triggers"
-
-    result4 = await hass.config_entries.options.async_configure(
-        result3["flow_id"],
-        user_input={},
-    )
-    assert result4["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {
-        "devices": [],
-        "mode": "bridge",
-        "filter": {
-            "exclude_domains": [],
-            "exclude_entities": [],
-            "include_domains": [],
-            "include_entities": [
-                sonos_hidden_switch.entity_id,
-                "media_player.tv",
-                "switch.other",
-            ],
-        },
-    }
-    await hass.async_block_till_done()
-    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_options_flow_climate_accessory_type_round_trip(
@@ -1675,13 +1480,13 @@ async def test_options_flow_climate_accessory_type_round_trip(
             result["flow_id"],
             user_input={
                 "domains": ["climate"],
-                "include_exclude_mode": "include",
             },
         )
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={"entities": ["climate.new"]},
+            user_input={CONF_INCLUDE_TARGETS: {ATTR_ENTITY_ID: ["climate.new"]}},
         )
+        result2 = await _async_submit_options_review_step(hass, result2)
         assert result2["step_id"] == "climate"
         result2 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
@@ -1725,7 +1530,6 @@ async def test_options_flow_cameras_step_with_whole_domain_included(
         result["flow_id"],
         user_input={
             "domains": ["fan", "camera"],
-            "include_exclude_mode": "include",
         },
     )
     assert result["step_id"] == "include"
@@ -1734,8 +1538,9 @@ async def test_options_flow_cameras_step_with_whole_domain_included(
     # and the camera options are still offered
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"entities": []},
+        user_input={CONF_INCLUDE_TARGETS: {}},
     )
+    result2 = await _async_submit_options_review_step(hass, result2)
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "cameras"
     await hass.config_entries.async_unload(config_entry.entry_id)
@@ -1752,9 +1557,9 @@ async def test_options_flow_cameras_step_with_whole_domain_included(
     [
         pytest.param(
             {},
-            {"domains": ["climate"], "include_exclude_mode": "include"},
+            {"domains": ["climate"]},
             "include",
-            {"entities": ["climate.new"]},
+            {CONF_INCLUDE_TARGETS: {ATTR_ENTITY_ID: ["climate.new"]}},
             [{}],
             id="bridge",
         ),
@@ -1762,7 +1567,6 @@ async def test_options_flow_cameras_step_with_whole_domain_included(
             {"mode": "accessory"},
             {
                 "domains": ["climate"],
-                "include_exclude_mode": "include",
                 "mode": "accessory",
             },
             "accessory",
@@ -1821,7 +1625,10 @@ async def test_options_flow_climate_step_shows_current_accessory(
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input=entities_input
         )
+        if result2["step_id"] == "review":
+            result2 = await _async_submit_options_review_step(hass, result2)
         assert result2["step_id"] == "climate"
+        assert result2["last_step"] is (mode_options.get("mode") == "accessory")
         assert [str(key) for key in result2["data_schema"].schema] == [
             "new (climate.new) [Thermostat]"
         ]
@@ -1859,7 +1666,6 @@ async def test_options_flow_climate_step_with_whole_domain_included(
         result["flow_id"],
         user_input={
             "domains": ["fan", "climate"],
-            "include_exclude_mode": "include",
         },
     )
     assert result["step_id"] == "include"
@@ -1868,8 +1674,9 @@ async def test_options_flow_climate_step_with_whole_domain_included(
     # included and every climate entity is offered in the climate step.
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"entities": []},
+        user_input={CONF_INCLUDE_TARGETS: {}},
     )
+    result2 = await _async_submit_options_review_step(hass, result2)
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "climate"
     assert [str(key) for key in result2["data_schema"].schema] == [
