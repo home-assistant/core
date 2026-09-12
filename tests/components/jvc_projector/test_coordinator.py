@@ -102,3 +102,18 @@ async def test_coordinator_command_error_keeps_other_entities_available(
     light_time = hass.states.get("sensor.jvc_projector_light_time")
     assert light_time is not None
     assert light_time.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "mock_device",
+    [{"fixture_override": {cmd.Version: JvcProjectorTimeoutError}}],
+    indirect=True,
+)
+async def test_coordinator_version_timeout_does_not_fail_setup(
+    hass: HomeAssistant,
+    mock_device: AsyncMock,
+    mock_integration: MockConfigEntry,
+) -> None:
+    """Test a version timeout does not prevent setup."""
+    assert mock_integration.state is ConfigEntryState.LOADED
+    assert mock_integration.runtime_data.software_version is None
