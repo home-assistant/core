@@ -220,12 +220,12 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                     phase = None
                     with suppress(PyViCareNotSupportedFeatureError):
                         phase = compressor.getPhase()
+                    # Devices do not agree on how to spell the phase, and
+                    # some do not expose one at all, so a running compressor
+                    # heats unless it says it is cooling.
                     if phase == "cooling":
                         cooling_active = True
-                    elif phase == "heating" or phase is None:
-                        # Phase is unset on hybrid devices that do not
-                        # expose it: fall back to HEATING to match the
-                        # pre-cooling-support behaviour.
+                    else:
                         heating_active = True
 
             if cooling_active:
