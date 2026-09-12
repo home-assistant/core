@@ -1,5 +1,6 @@
 """Support for Calendar event device sensors."""
 
+from collections import defaultdict
 from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
@@ -719,8 +720,18 @@ class CalendarEntity(Entity):
         if not self._event_listeners:
             return
 
+        # Expanding the events is the expensive part, and every dashboard
+        # showing the same days asks for the same range, so those listeners
+        # are served from a single fetch.
+        listeners_by_range: defaultdict[
+            tuple[datetime.datetime, datetime.datetime],
+            list[Callable[[list[JsonValueType] | None], None]],
+        ] = defaultdict(list)
         for start_date, end_date, listener in self._event_listeners:
-            self.async_update_single_event_listener(start_date, end_date, listener)
+            listeners_by_range[(start_date, end_date)].append(listener)
+
+        for (start_date, end_date), listeners in listeners_by_range.items():
+            self._async_schedule_listener_update(start_date, end_date, listeners)
 
     @final
     @callback
@@ -731,17 +742,27 @@ class CalendarEntity(Entity):
         listener: Callable[[list[JsonValueType] | None], None],
     ) -> None:
         """Schedule an event fetch and push to a single listener."""
-        self.hass.async_create_task(
-            self._async_update_listener(start_date, end_date, listener)
-        )
+        self._async_schedule_listener_update(start_date, end_date, [listener])
 
-    async def _async_update_listener(
+    @callback
+    def _async_schedule_listener_update(
         self,
         start_date: datetime.datetime,
         end_date: datetime.datetime,
-        listener: Callable[[list[JsonValueType] | None], None],
+        listeners: list[Callable[[list[JsonValueType] | None], None]],
     ) -> None:
-        """Fetch events and push to a single listener."""
+        """Schedule an event fetch and push to the given listeners."""
+        self.hass.async_create_task(
+            self._async_update_listeners(start_date, end_date, listeners)
+        )
+
+    async def _async_update_listeners(
+        self,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+        listeners: list[Callable[[list[JsonValueType] | None], None]],
+    ) -> None:
+        """Fetch events and push them to the listeners of that range."""
         try:
             events = await self.async_get_events(self.hass, start_date, end_date)
         except HomeAssistantError as err:
@@ -750,11 +771,13 @@ class CalendarEntity(Entity):
                 self.entity_id,
                 err,
             )
-            listener(None)
+            for listener in listeners:
+                listener(None)
             return
 
         event_list: list[JsonValueType] = [event.as_dict() for event in events]
-        listener(event_list)
+        for listener in listeners:
+            listener(event_list)
 
     async def async_get_events(
         self,
