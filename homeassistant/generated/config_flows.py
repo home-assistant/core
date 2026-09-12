@@ -165,6 +165,7 @@ FLOWS = {
         "directv",
         "discord",
         "discovergy",
+        "disneyland_paris",
         "dlink",
         "dlna_dmr",
         "dlna_dms",
