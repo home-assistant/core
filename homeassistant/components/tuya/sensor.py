@@ -1255,6 +1255,12 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         *BATTERY_SENSORS,
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_TOTAL,
+            translation_key="total_water",
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
     ),
     DeviceCategory.SGBJ: BATTERY_SENSORS,
     DeviceCategory.SJ: BATTERY_SENSORS,
