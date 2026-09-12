@@ -149,7 +149,11 @@ class ModbusBaseEntity(Entity):
             )
         )
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_disable)
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_STOP_ENTITY.format(self._hub.name),
+                self.async_disable,
+            )
         )
 
 

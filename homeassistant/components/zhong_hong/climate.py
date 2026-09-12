@@ -28,8 +28,8 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DeviceAddress, ZhongHongConfigEntry, device_unique_id
 from .const import (
     ALL_FAN_MODES,
     BREAKS_IN_HA_VERSION,
@@ -41,6 +41,12 @@ from .const import (
     FAN_MODE_REVERSE_MAP,
     INTEGRATION_TITLE,
     LOGGER,
+)
+from .coordinator import (
+    DeviceAddress,
+    ZhongHongConfigEntry,
+    ZhongHongCoordinator,
+    device_unique_id,
 )
 
 # The gateway serializes everything onto a single socket, so there is nothing
@@ -154,13 +160,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ZhongHong climate entities from a config entry."""
+    data = entry.runtime_data
     async_add_entities(
-        ZhongHongClimate(entry, address, device)
-        for address, device in entry.runtime_data.devices.items()
+        ZhongHongClimate(data.coordinator, entry, address, device)
+        for address, device in data.devices.items()
     )
 
 
-class ZhongHongClimate(ClimateEntity):
+class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
     """Representation of an air conditioner behind a ZhongHong gateway."""
 
     _attr_fan_modes = ALL_FAN_MODES
@@ -171,9 +178,6 @@ class ZhongHongClimate(ClimateEntity):
         HVACMode.FAN_ONLY,
         HVACMode.OFF,
     ]
-    # The gateway reports every change on its own socket, so there is nothing
-    # to poll for.
-    _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -185,29 +189,17 @@ class ZhongHongClimate(ClimateEntity):
 
     def __init__(
         self,
+        coordinator: ZhongHongCoordinator,
         entry: ZhongHongConfigEntry,
         address: DeviceAddress,
         device: ZhongHongHVAC,
     ) -> None:
         """Set up a ZhongHong climate device."""
+        super().__init__(coordinator)
         self._device = device
         addr_out, addr_in = address
         self._attr_name = f"AC {addr_out}-{addr_in}"
         self._attr_unique_id = device_unique_id(entry, address)
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Take the state the gateway pushes for this air conditioner."""
-        self._device.register_update_callback(self._handle_device_update)
-
-    def _handle_device_update(self, device: ZhongHongHVAC) -> None:
-        """Handle a state push from the gateway.
-
-        The library writes the new state into the device object before calling
-        this, and it does so on its own listener thread, so all that is left is
-        to ask for the entity to be written from that thread.
-        """
-        self.schedule_update_ha_state()
 
     @property
     @override
