@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from functools import wraps
-from http import HTTPStatus
 import logging
 from typing import Any, Concatenate, override
 
@@ -120,15 +119,13 @@ class XboxRemote(XboxConsoleBaseEntity, RemoteEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Xbox on."""
-        try:
+        if (
             await self.client.smartglass.wake_up(self._console.id)
-        except HTTPStatusError as e:
-            if e.response.status_code == HTTPStatus.NOT_FOUND:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="turn_on_failed",
-                ) from e
-            raise
+        ).status.error_code != "OK":
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_on_failed",
+            )
 
     @exception_handler
     @override

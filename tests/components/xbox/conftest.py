@@ -10,6 +10,7 @@ from pythonxbox.api.provider.gameclips.models import GameclipsResponse
 from pythonxbox.api.provider.people.models import PeopleResponse
 from pythonxbox.api.provider.screenshots.models import ScreenshotResponse
 from pythonxbox.api.provider.smartglass.models import (
+    CommandResponse,
     InstalledPackagesList,
     SmartglassConsoleList,
     SmartglassConsoleStatus,
@@ -152,6 +153,9 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         )
         client.smartglass.get_installed_apps.return_value = InstalledPackagesList(
             **load_json_object_fixture("smartglass_installed_applications.json", DOMAIN)
+        )
+        client.smartglass.wake_up.return_value = CommandResponse(
+            **load_json_object_fixture("smartglass_command_response.json", DOMAIN)
         )
 
         client.catalog = AsyncMock()
