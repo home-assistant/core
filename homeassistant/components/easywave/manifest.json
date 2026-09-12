@@ -1,0 +1,20 @@
+{
+  "domain": "easywave",
+  "name": "Easywave",
+  "codeowners": ["@eldateas"],
+  "config_flow": true,
+  "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/easywave",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["easywave_home_control"],
+  "quality_scale": "bronze",
+  "requirements": ["pyserial==3.5", "easywave-home-control==0.4.0"],
+  "single_config_entry": true,
+  "usb": [
+    {
+      "pid": "1014",
+      "vid": "155A"
+    }
+  ]
+}
