@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber.const import DOMAIN
+from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -278,7 +279,6 @@ async def test_data_api_sensors_with_empty_external_ids(
         ("energyFlow.month.grid.exported", 20000.0, "Monthly grid exported"),
         ("energyFlow.month.load.consumed", 60000.0, "Monthly load consumed"),
         ("energyFlow.month.load.generated", 5000.0, "Monthly load generated"),
-        ("range.remaining", 250.5, "Remaining range"),
         ("charging.current.max", 32.0, "Max charging current"),
         ("charging.current.offlineFallback", 16.0, "Offline fallback charging current"),
         ("temp.setpoint", 22.5, "Temperature setpoint"),
@@ -315,6 +315,39 @@ async def test_new_data_api_sensor_values(
     assert float(state.state) == expected_value, (
         f"Expected {expected_value} for {description}, got {state.state}"
     )
+
+
+async def test_range_remaining_sensor_unit_conversion(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    data_api_client_mock: AsyncMock,
+    setup_credentials: None,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that the remaining range is reported in meters natively but shown in km.
+
+    The Tibber Data API reports range.remaining in meters. The sensor should
+    keep that as its native unit (so history/statistics stay precise), while
+    suggesting kilometers for display, since a remaining driving range is
+    naturally read in kilometers rather than meters.
+    """
+    device = create_tibber_device(sensor_values={"range.remaining": 205000.0})
+    data_api_client_mock.get_all_devices = AsyncMock(return_value={"device-id": device})
+    data_api_client_mock.update_devices = AsyncMock(return_value={"device-id": device})
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "device-id_range.remaining"
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["unit_of_measurement"] == UnitOfLength.KILOMETERS
+    assert float(state.state) == 205.0
 
 
 async def test_new_data_api_sensors_with_disabled_by_default(
