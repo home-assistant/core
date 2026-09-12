@@ -28,6 +28,7 @@ from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
+from .services import async_setup_services
 from .util import async_entry_is_legacy, async_get_legacy_entry, formatted_serial
 
 CONF_SERVER = "server"
@@ -154,6 +155,8 @@ class LIFXDiscoveryManager:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LIFX component."""
+    async_setup_services(hass)
+
     migrating = bool(async_get_legacy_entry(hass))
     discovery_manager = LIFXDiscoveryManager(hass, migrating)
 
@@ -195,9 +198,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool
 
     assert entry.unique_id is not None
     if DATA_LIFX_MANAGER not in hass.data:
-        manager = LIFXManager(hass)
-        hass.data[DATA_LIFX_MANAGER] = manager
-        manager.async_setup()
+        hass.data[DATA_LIFX_MANAGER] = LIFXManager(hass)
 
     host = entry.data[CONF_HOST]
     connection = LIFXConnection(host, TARGET_ANY)
@@ -238,6 +239,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> boo
         entry.runtime_data.connection.async_stop()
     # Only the DATA_LIFX_MANAGER left, remove it.
     if len(hass.config_entries.async_loaded_entries(DOMAIN)) == 0:
-        manager = hass.data.pop(DATA_LIFX_MANAGER)
-        manager.async_unload()
+        hass.data.pop(DATA_LIFX_MANAGER)
     return unload_ok

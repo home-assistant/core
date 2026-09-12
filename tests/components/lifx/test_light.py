@@ -9,13 +9,12 @@ import pytest
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
-from homeassistant.components.lifx.const import ATTR_POWER
-from homeassistant.components.lifx.light import ATTR_INFRARED, ATTR_ZONES
-from homeassistant.components.lifx.manager import (
+from homeassistant.components.lifx.const import (
     ATTR_CLOUD_SATURATION_MAX,
     ATTR_CLOUD_SATURATION_MIN,
     ATTR_DIRECTION,
     ATTR_PALETTE,
+    ATTR_POWER,
     ATTR_SATURATION_MAX,
     ATTR_SATURATION_MIN,
     ATTR_SKY_TYPE,
@@ -27,6 +26,7 @@ from homeassistant.components.lifx.manager import (
     SERVICE_EFFECT_SKY,
     SERVICE_PAINT_THEME,
 )
+from homeassistant.components.lifx.light import ATTR_INFRARED, ATTR_ZONES
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
