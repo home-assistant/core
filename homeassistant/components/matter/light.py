@@ -239,7 +239,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         return hs_color
 
-    def _get_color_temperature(self) -> int:
+    def _get_color_temperature(self) -> int | None:
         """Get color temperature from matter."""
 
         color_temp = self.get_matter_attribute_value(
@@ -247,10 +247,8 @@ class MatterLight(MatterEntity, LightEntity):
         )
 
         if color_temp is None:
-            # the caller only uses a value above zero, so a device that
-            # reports null has no color temperature to show
             LOGGER.debug("Got no color temperature for %s", self.entity_id)
-            return 0
+            return None
 
         LOGGER.debug(
             "Got color temperature %s for %s",
@@ -431,12 +429,14 @@ class MatterLight(MatterEntity, LightEntity):
         if self._supports_brightness:
             self._attr_brightness = self._get_brightness()
 
-        if (
-            self._supports_color_temperature
-            and (color_temperature := self._get_color_temperature()) > 0
-        ):
-            self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
-                color_temperature
+        if self._supports_color_temperature:
+            # a device without a usable value has no color temperature to
+            # report, rather than the one it gave us last time
+            color_temperature = self._get_color_temperature()
+            self._attr_color_temp_kelvin = (
+                color_util.color_temperature_mired_to_kelvin(color_temperature)
+                if color_temperature
+                else None
             )
 
         if self._supports_color:

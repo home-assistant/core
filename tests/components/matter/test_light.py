@@ -490,6 +490,31 @@ async def test_extended_color_light(
     matter_client.send_device_command.reset_mock()
 
 
+@pytest.mark.parametrize("node_fixture", ["color_temperature_light"])
+async def test_light_null_color_temperature(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a light that stops reporting a color temperature."""
+    entity_id = "light.mock_color_temperature_light"
+
+    set_node_attribute(matter_node, 1, 768, 7, 300)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["color_temp_kelvin"] == 3333
+
+    set_node_attribute(matter_node, 1, 768, 7, NullValue)
+    await trigger_subscription_callback(hass, matter_client)
+
+    # the last known value is not the current one, so it is not reported
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["color_temp_kelvin"] is None
+
+
 @pytest.mark.parametrize(
     "color_mode",
     [

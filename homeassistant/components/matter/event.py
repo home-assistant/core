@@ -118,6 +118,12 @@ class MatterEventEntity(MatterEntity, EventEntity):
         """Call on NodeEvent."""
         if data.endpoint_id != self._endpoint.endpoint_id:
             return
+
+        # event ids are only unique within a cluster, and an endpoint can host
+        # more clusters than the switch this entity was made for
+        if data.cluster_id != clusters.Switch.id:
+            return
+
         event_type: str | None = EVENT_TYPES_MAP.get(data.event_id)
         if data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
             # multi press event
@@ -125,10 +131,8 @@ class MatterEventEntity(MatterEntity, EventEntity):
             event_type = f"multi_press_{presses}"
 
         if event_type is None:
-            # event ids are only unique within a cluster, so an endpoint that
-            # hosts more than the switch cluster can send us ids we cannot map
             LOGGER.debug(
-                "Ignoring event id %s for %s, it is not a switch event",
+                "Ignoring unknown switch event id %s for %s",
                 data.event_id,
                 self.entity_id,
             )
