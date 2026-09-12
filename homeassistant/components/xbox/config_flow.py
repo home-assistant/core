@@ -91,8 +91,6 @@ class OAuth2FlowHandler(
             reauth_entry = self._get_reauth_entry()
             result = self.async_update_and_abort(reauth_entry, data=data)
 
-            # Reauth can replace the credentials and is the only way to recover
-            # from an authentication failure, so the entry has to be reloaded
             self.hass.config_entries.async_schedule_reload(reauth_entry.entry_id)
 
             return result
