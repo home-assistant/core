@@ -111,7 +111,7 @@
           "title": "Approve the virtual key"
         },
         "scan": {
-          "description": "Home Assistant will look for vehicle {vin} over Bluetooth to enable local command control. Make sure the vehicle is awake and within Bluetooth range of a Home Assistant Bluetooth adapter, then continue.",
+          "description": "Home Assistant will try to wake vehicle {vin} and look for it over Bluetooth within range of a Home Assistant Bluetooth adapter to enable local command control.",
           "title": "Set up Bluetooth control"
         },
         "user": {

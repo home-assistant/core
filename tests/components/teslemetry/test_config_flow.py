@@ -796,10 +796,21 @@ async def _start_pairing_at_scan(
     return result
 
 
-async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None:
-    """The add flow creates the subentry when the key is already whitelisted."""
+@pytest.mark.parametrize(
+    "wake_error",
+    [None, InvalidResponse(), ClientError("nope"), TimeoutError()],
+    ids=["success", "fleet_error", "client_error", "timeout"],
+)
+async def test_subentry_pairing_already_whitelisted(
+    hass: HomeAssistant, mock_wake_up: AsyncMock, wake_error: Exception | None
+) -> None:
+    """The add flow creates the subentry when the key is already whitelisted.
+
+    A failed or timed-out wake never blocks the Bluetooth scan.
+    """
     entry = await _setup_account_entry(hass)
     vehicle = _mock_vehicle(on_whitelist=True)
+    mock_wake_up.side_effect = wake_error
 
     with (
         patch(
@@ -824,6 +835,8 @@ async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None
     # The subentry is created atomically with its credentials, never identity-only.
     assert subentries[0].unique_id == VIN
     assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+    # The scan step wakes the vehicle before looking for it over Bluetooth.
+    mock_wake_up.assert_awaited_once()
     vehicle.connect.assert_awaited_once()
     vehicle.disconnect.assert_awaited_once()
 
@@ -911,6 +924,65 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
     assert len(subentries) == 1
     assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
     vehicle.pair.assert_awaited_once()
+
+
+async def test_subentry_scan_wake_skipped_when_entry_not_loaded(
+    hass: HomeAssistant, mock_wake_up: AsyncMock
+) -> None:
+    """The scan step skips waking, but still scans, if the entry unloaded mid-flow."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle()
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        await hass.config_entries.async_unload(entry.entry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_wake_up.assert_not_awaited()
+
+
+async def test_subentry_scan_wake_skipped_when_vehicle_missing(
+    hass: HomeAssistant, mock_wake_up: AsyncMock
+) -> None:
+    """The scan step skips waking, but still scans, if the vehicle data is gone."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle()
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        # Simulate the vehicle disappearing from the account between steps.
+        entry.runtime_data.vehicles.clear()
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_wake_up.assert_not_awaited()
 
 
 async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:

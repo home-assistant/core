@@ -265,15 +265,42 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             ),
         )
 
+    async def _async_wake_vehicle(self) -> None:
+        """Ask Teslemetry to wake the vehicle; a failure here is not fatal.
+
+        BLE pairing does not require the vehicle to be online, so a failed or
+        unauthorized wake still leaves the scan able to succeed once the
+        vehicle wakes on its own.
+        """
+        entry = self._get_entry()
+        # runtime_data exists only while the entry is loaded; core clears it on unload.
+        if entry.state is not ConfigEntryState.LOADED:
+            return
+        vehicle_data = next(
+            (
+                vehicle
+                for vehicle in entry.runtime_data.vehicles
+                if vehicle.vin == self._vin
+            ),
+            None,
+        )
+        if vehicle_data is None:
+            return
+        try:
+            await vehicle_data.api.wake_up()
+        except (TeslaFleetError, ClientError, TimeoutError) as err:
+            LOGGER.debug("Failed to wake vehicle before Bluetooth scan: %s", err)
+
     async def async_step_scan(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Find the vehicle over Bluetooth and connect to it."""
+        """Wake the vehicle, then find it over Bluetooth and connect to it."""
         if TYPE_CHECKING:
             assert self._vin is not None
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            await self._async_wake_vehicle()
             try:
                 parent = await async_get_ble_parent(self.hass)
             except _BLE_KEY_ERRORS as err:
