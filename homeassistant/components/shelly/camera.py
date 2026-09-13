@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from typing import Final, override
 from urllib.parse import quote
 
+import aiohttp
+from aioshelly.exceptions import HttpCallError, InvalidAuthError
+
 from homeassistant.components.camera import (
     Camera,
     CameraEntityDescription,
@@ -11,8 +14,10 @@ from homeassistant.components.camera import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
@@ -134,7 +139,33 @@ class ShellyCameraEntity(ShellyRpcAttributeEntity, Camera):
         return f"rtsp://{host}/stream/{self.entity_description.stream}"
 
     @override
-    @property
-    def use_stream_for_stills(self) -> bool:
-        """Use the RTSP stream to generate still images."""
-        return True
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Return a still image from the camera snapshot endpoint."""
+        try:
+            return await self.coordinator.device.camera_get_image(
+                self.entity_description.stream
+            )
+        except (TimeoutError, OSError, aiohttp.ClientError) as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except HttpCallError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rpc_call_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except InvalidAuthError:
+            await self.coordinator.async_shutdown_device_and_start_reauth()
+            return None
