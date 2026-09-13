@@ -48,6 +48,7 @@ class RainbowMinerCoordinator(DataUpdateCoordinator[RainbowMinerData]):
     """Coordinator for polling RainbowMiner API state."""
 
     config_entry: RainbowMinerConfigEntry
+    version: Version
 
     def __init__(
         self,
@@ -69,7 +70,7 @@ class RainbowMinerCoordinator(DataUpdateCoordinator[RainbowMinerData]):
     async def _async_setup(self) -> None:
         """Fetch the version once during setup."""
         try:
-            await self.api.get_version()
+            self.version = await self.api.get_version()
         except RainbowMinerAuthError as err:
             raise ConfigEntryAuthFailed from err
         except RainbowMinerError as err:
@@ -84,14 +85,12 @@ class RainbowMinerCoordinator(DataUpdateCoordinator[RainbowMinerData]):
                 current_profit,
                 uptime,
                 active_miners,
-                version,
                 balances,
             ) = await asyncio.gather(
                 self.api.get_status(),
                 self.api.get_current_profit(),
                 self.api.get_uptime(),
                 self.api.get_active_miners(),
-                self.api.get_version(),
                 self.api.get_balances(add_btc=True),
             )
         except RainbowMinerAuthError as err:
@@ -105,6 +104,6 @@ class RainbowMinerCoordinator(DataUpdateCoordinator[RainbowMinerData]):
             current_profit,
             uptime,
             active_miners,
-            version,
+            self.version,
             balances,
         )
