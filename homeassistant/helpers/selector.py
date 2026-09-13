@@ -132,6 +132,13 @@ def _validate_selector_reorder_config(config: Any) -> Any:
     return config
 
 
+def _validate_media_selector_config(config: Any) -> Any:
+    """Validate media selectors with image_upload option."""
+    if config.get("image_upload") and not config.get("accept"):
+        raise vol.Invalid("image_upload can only be used when accept is not empty")
+    return config
+
+
 def make_selector_config_schema(schema_dict: dict | None = None) -> vol.Schema:
     """Make selector config schema."""
     if schema_dict is None:
@@ -1346,6 +1353,7 @@ class MediaSelectorConfig(BaseSelectorConfig, total=False):
 
     accept: list[str]
     multiple: bool
+    image_upload: bool
 
 
 @SELECTORS.register("media")
@@ -1354,11 +1362,15 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            vol.Optional("accept"): [str],
-            vol.Optional("multiple", default=False): cv.boolean,
-        }
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                vol.Optional("accept"): [str],
+                vol.Optional("multiple", default=False): cv.boolean,
+                vol.Optional("image_upload", default=False): cv.boolean,
+            }
+        ),
+        _validate_media_selector_config,
     )
     DATA_SCHEMA = vol.Schema(
         {
