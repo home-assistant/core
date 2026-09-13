@@ -340,12 +340,15 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._host,
                     self._model,
                 )
-                self._bridge = SamsungTVBridge.get_bridge(
+                encrypted_bridge = SamsungTVBridge.get_bridge(
                     self.hass,
                     METHOD_ENCRYPTED_WEBSOCKET,
                     self._host,
                     ENCRYPTED_WEBSOCKET_PORT,
                 )
+                if await encrypted_bridge.async_try_connect() == RESULT_CANNOT_CONNECT:
+                    raise AbortFlow(RESULT_CANNOT_CONNECT)
+                self._bridge = encrypted_bridge
                 return await self.async_step_encrypted_pairing()
             if result != RESULT_AUTH_MISSING:
                 raise AbortFlow(result)
