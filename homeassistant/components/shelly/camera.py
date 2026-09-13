@@ -1,11 +1,10 @@
 """Support for Shelly cameras."""
 
 from dataclasses import dataclass
-from typing import Final, override
+from typing import TYPE_CHECKING, Final, override
 from urllib.parse import quote
 
-import aiohttp
-from aioshelly.exceptions import HttpCallError, InvalidAuthError
+from aioshelly.exceptions import DeviceConnectionError, HttpCallError, InvalidAuthError
 
 from homeassistant.components.camera import (
     Camera,
@@ -143,26 +142,25 @@ class ShellyCameraEntity(ShellyRpcAttributeEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image from the camera snapshot endpoint."""
+        if TYPE_CHECKING:
+            assert self._id is not None
+
         try:
-            return await self.coordinator.device.camera_get_image(
-                self.entity_description.stream
-            )
-        except (TimeoutError, OSError, aiohttp.ClientError) as err:
+            return await self.coordinator.device.camera_get_image(self._id)
+        except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="device_communication_action_error",
+                translation_key="device_communication_error",
                 translation_placeholders={
-                    "entity": self.entity_id,
                     "device": self.coordinator.name,
                 },
             ) from err
         except HttpCallError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="rpc_call_action_error",
+                translation_key="http_call_error",
                 translation_placeholders={
-                    "entity": self.entity_id,
                     "device": self.coordinator.name,
                 },
             ) from err
