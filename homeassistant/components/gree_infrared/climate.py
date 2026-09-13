@@ -151,11 +151,12 @@ class GreeAcClimateEntity(
     ) -> None:
         """Send a full-state frame for the given target state."""
         power = hvac_mode is not HVACMode.OFF
+        active_hvac_mode = hvac_mode if power else self._last_active_hvac_mode
+        await self._send_command(
+            self._build_command(active_hvac_mode, power, temp, fan_mode)
+        )
         if power:
             self._last_active_hvac_mode = hvac_mode
-        await self._send_command(
-            self._build_command(self._last_active_hvac_mode, power, temp, fan_mode)
-        )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
