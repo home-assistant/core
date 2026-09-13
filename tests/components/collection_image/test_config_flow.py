@@ -193,6 +193,8 @@ async def test_options_flow(
         options=entry_options,
     )
     entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -209,6 +211,21 @@ async def test_options_flow(
         media_key.description["suggested_value"][0]["media_content_id"] == expected_uri
     )
 
+    # First try new data with error
+    new_data = data_from_uri([MOCK_MEDIA_DIR_URI_EMPTY])
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        new_data,
+    )
+    await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("data") is None
+    assert result.get("options") is None
+    assert result.get("errors") == {CONF_MEDIA: "selected_media_no_images"}
+
+    # Now update again with a valid option, to recover
     new_data = data_from_uri([MOCK_MEDIA_DIR_URI_2])
 
     result = await hass.config_entries.options.async_configure(
