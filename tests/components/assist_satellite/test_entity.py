@@ -135,6 +135,36 @@ async def test_entity_state(
     assert state.state == AssistSatelliteState.IDLE
 
 
+async def test_immediate_pipeline_audio_state(
+    hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
+) -> None:
+    """Test immediate pipeline audio keeps the satellite responding."""
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream"
+    ) as mock_start_pipeline:
+        await entity.async_accept_pipeline_from_satellite(object())
+
+    event_callback = mock_start_pipeline.call_args.kwargs["event_callback"]
+    event_callback(
+        PipelineEvent(
+            PipelineEventType.RUN_START,
+            {
+                "tts_output": {
+                    "token": "pipeline-output",
+                    "start_streaming": True,
+                }
+            },
+        )
+    )
+    assert entity.state == AssistSatelliteState.RESPONDING
+
+    event_callback(PipelineEvent(PipelineEventType.RUN_END))
+    assert entity.state == AssistSatelliteState.RESPONDING
+
+    entity.tts_response_finished()
+    assert entity.state == AssistSatelliteState.IDLE
+
+
 async def test_new_pipeline_cancels_pipeline(
     hass: HomeAssistant,
     init_components: ConfigEntry,
@@ -199,7 +229,7 @@ async def test_pipeline_validation_error_ends_pipeline(
     )
 
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.PipelineRun.prepare_speech_to_text"
+        "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.prepare_speech_to_text"
     ):
         await entity.async_accept_pipeline_from_satellite(
             object(),  # type: ignore[arg-type]
@@ -927,7 +957,7 @@ async def test_ask_question(
     )
 
     async def speech_to_text(self, *args, **kwargs):
-        self.process_event(
+        self.host.process_event(
             PipelineEvent(
                 PipelineEventType.STT_END, {"stt_output": {"text": response_text}}
             )
@@ -950,10 +980,10 @@ async def test_ask_question(
         audio_stream = object()
         with (
             patch(
-                "homeassistant.components.assist_pipeline.pipeline.PipelineRun.prepare_speech_to_text"
+                "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.prepare_speech_to_text"
             ),
             patch(
-                "homeassistant.components.assist_pipeline.pipeline.PipelineRun.speech_to_text",
+                "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.speech_to_text",
                 speech_to_text,
             ),
         ):
