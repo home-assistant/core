@@ -1,0 +1,10 @@
+{
+  "exceptions": {
+    "turn_off_failed": {
+      "message": "Failed to turn off X10 device: {error}"
+    },
+    "turn_on_failed": {
+      "message": "Failed to turn on X10 device: {error}"
+    }
+  }
+}
