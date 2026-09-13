@@ -95,9 +95,7 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         self.main_device = self.executor.linked_device(1)
         assert self.main_device is not None
 
-        self.main_executor = OverkizExecutor(
-            self.main_device.device_url, coordinator
-        )
+        self.main_executor = OverkizExecutor(self.main_device.device_url, coordinator)
         self.client = coordinator.client
 
     @property
@@ -109,7 +107,10 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         res = None
 
         if self.temperature_device is not None:
-            res = self.temperature_device.states.get_value(OverkizState.CORE_TEMPERATURE)
+            res = cast(
+                float | None,
+                self.temperature_device.states.get_value(OverkizState.CORE_TEMPERATURE),
+            )
 
         LOGGER.debug("OVERKIZCUSTOM: current_temperature res=%s", res)
         return res
