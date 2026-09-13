@@ -77,15 +77,14 @@ class MyPVFirmwareUpdate(MyPVBaseEntity, UpdateEntity):
         self._attr_update_percentage = 0
         self.async_write_ha_state()
 
-        try:
-            if not await self.coordinator.update_firmware():
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="unknown_error"
-                )
-        finally:
-            self._attr_in_progress = False
-            self._attr_update_percentage = None
-            self.async_write_ha_state()
+        if not await self.coordinator.update_firmware():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="unknown_error"
+            )
+
+        self._attr_in_progress = False
+        self._attr_update_percentage = None
+        self.async_write_ha_state()
 
     @override
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
