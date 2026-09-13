@@ -1,6 +1,5 @@
 """The CCL Electronics integration."""
 
-import contextlib
 import logging
 from typing import Any
 
@@ -39,6 +38,8 @@ def register_webhook(hass: HomeAssistant, webhook_id: str, device: CCLDevice) ->
         allowed_methods=[METH_POST],
     )
 
+    _LOGGER.debug("Webhook registered at hass: %s", webhook_id)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Set up a config entry for a single CCL device."""
@@ -46,11 +47,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     # Create the device and register a webhook after restart
     device = CCLDevice(webhook_id)
 
+    @callback
+    def push_update_callback(data: dict[str, Any]) -> None:
+        """Handle data pushed from the device."""
+        coordinator.async_set_updated_data(data)
+
+    device.set_update_callback(push_update_callback)
+
     coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 
     # Ensure any previously-registered webhook is removed
-    with contextlib.suppress(ValueError):
-        webhook.async_unregister(hass, webhook_id)
+    webhook.async_unregister(hass, webhook_id)
 
     try:
         register_webhook(hass, webhook_id, device)
@@ -61,14 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
             translation_key="failed_to_register_webhook",
             translation_placeholders={"error": str(err)},
         ) from err
-    _LOGGER.debug("Webhook registered at hass: %s", webhook_id)
-
-    @callback
-    def push_update_callback(data: dict[str, Any]) -> None:
-        """Handle data pushed from the device."""
-        coordinator.async_set_updated_data(data)
-
-    device.set_update_callback(push_update_callback)
 
     await coordinator.async_config_entry_first_refresh()
 

@@ -70,7 +70,6 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.data = {}
                 self.webhook_id = ""
                 return self.async_abort(reason="invalid_webhook")
-            _LOGGER.debug("Webhook registered at hass: %s", self.webhook_id)
 
         # Create a task to wait for the first update from the device
         if not self.task_one:
@@ -172,8 +171,3 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         # Cancel the task if it's still running
         if self.task_one and not self.task_one.done():
             self.task_one.cancel()
-
-        # Unregister the webhook and remove the device
-        webhook_id = self.data.get(CONF_WEBHOOK_ID)
-        if webhook_id:
-            webhook.async_unregister(self.hass, webhook_id)
