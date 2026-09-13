@@ -4,7 +4,7 @@ from asyncio import shield
 from collections.abc import Callable
 from http import HTTPStatus
 import logging
-from typing import Any, NoReturn, override
+from typing import Any, NoReturn, get_args, override
 
 from aiohttp import web
 import aiohttp.web_exceptions
@@ -30,6 +30,7 @@ from homeassistant.helpers.json import (
     json_fragment,
 )
 from homeassistant.loader import (
+    ConfigFlowTypeFilter,
     Integration,
     IntegrationNotFound,
     async_get_config_flows,
@@ -39,6 +40,8 @@ from homeassistant.loader import (
 from homeassistant.util.json import format_unserializable_data
 
 _LOGGER = logging.getLogger(__name__)
+
+VALID_FLOW_TYPE_FILTERS = frozenset(get_args(ConfigFlowTypeFilter))
 
 
 @callback
@@ -269,8 +272,13 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
         """List available flow handlers."""
         hass = request.app[KEY_HASS]
         kwargs: dict[str, Any] = {}
-        if "type" in request.query:
-            kwargs["type_filter"] = request.query["type"]
+        if (type_filter := request.query.get("type")) is not None:
+            if type_filter not in VALID_FLOW_TYPE_FILTERS:
+                return self.json_message(
+                    f"Invalid type filter specified: {type_filter}",
+                    HTTPStatus.BAD_REQUEST,
+                )
+            kwargs["type_filter"] = type_filter
         return self.json(await async_get_config_flows(hass, **kwargs))
 
 
