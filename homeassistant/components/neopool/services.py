@@ -156,6 +156,12 @@ async def _async_set_timer(call: ServiceCall) -> None:
     period = call.data.get(ATTR_PERIOD)
     enable = call.data.get(ATTR_ENABLE)
 
+    if stop is not None and start is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="timer_stop_without_start",
+        )
+
     try:
         start_sec = hhmm_to_seconds(start) if start is not None else None
         stop_sec = hhmm_to_seconds(stop) if stop is not None else None
@@ -178,6 +184,12 @@ async def _async_set_timer(call: ServiceCall) -> None:
         timer_data["period"] = period
     if enable is not None:
         timer_data["enable"] = enable
+
+    if not timer_data:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="timer_no_fields",
+        )
 
     _LOGGER.debug("Setting timer %s with data: %s", timer_name, timer_data)
     try:

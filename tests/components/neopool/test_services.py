@@ -320,6 +320,44 @@ async def test_set_timer_empty_time_string_raises(
     mock_neopool_client.write_timer.assert_not_awaited()
 
 
+async def test_set_timer_stop_without_start_raises(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """A stop time without a start time is rejected, not silently dropped."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TIMER,
+            {"timer": "filtration1", "stop": "10:00"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "timer_stop_without_start"
+    mock_neopool_client.write_timer.assert_not_awaited()
+
+
+async def test_set_timer_no_fields_raises(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """An update with no editable fields is rejected instead of a no-op write."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TIMER,
+            {"timer": "filtration1"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "timer_no_fields"
+    mock_neopool_client.write_timer.assert_not_awaited()
+
+
 async def test_set_timer_client_failure_translates_to_validation_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

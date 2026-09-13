@@ -345,6 +345,12 @@
     "timer_failed": {
       "message": "Timer setting failed: {error}"
     },
+    "timer_no_fields": {
+      "message": "No timer fields to update. Provide at least one of start, stop, period or enable."
+    },
+    "timer_stop_without_start": {
+      "message": "A stop time requires a start time. Provide both start and stop."
+    },
     "write_failed": {
       "message": "Write to register {address} failed"
     },
