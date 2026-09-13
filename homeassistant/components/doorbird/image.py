@@ -1,10 +1,5 @@
 """Last motion and last ring image entities for a DoorBird device."""
 
-# These replace the same-named camera entities, which exposed stills through the
-# camera UI even though no live video is involved. The legacy camera entities are
-# kept to avoid breaking existing dashboards and automations; a follow-up should
-# deprecate them via a repair issue once users have had time to migrate.
-
 from dataclasses import dataclass
 from typing import override
 
@@ -83,11 +78,7 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
             else "motionsensor"
         )
         self._image_url = self._door_station.device.history_image_url(1, history_type)
-        self._matching_event_names = [
-            event.event
-            for event in self._door_station.event_descriptions
-            if event.event_type == description.doorbird_event_type
-        ]
+        self._registered_event_names: list[str] = []
 
     @override
     async def async_image(self) -> bytes | None:
@@ -113,7 +104,13 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to the underlying DoorBird events."""
         await super().async_added_to_hass()
-        for event_name in self._matching_event_names:
+        event_to_entity_id = self._door_bird_data.event_entity_ids
+        # Remembered so removal drops exactly what was registered here.
+        self._registered_event_names = self._door_station.image_event_names.get(
+            self.entity_description.doorbird_event_type, []
+        )
+        for event_name in self._registered_event_names:
+            event_to_entity_id[event_name] = self.entity_id
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
@@ -121,6 +118,17 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
                     self._async_handle_event,
                 )
             )
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from events."""
+        event_to_entity_id = self._door_bird_data.event_entity_ids
+        for event_name in self._registered_event_names:
+            # Defensive: the resolver gives an event to one image, so this
+            # should always be ours.
+            if event_to_entity_id.get(event_name) == self.entity_id:
+                del event_to_entity_id[event_name]
+        await super().async_will_remove_from_hass()
 
     @callback
     def _async_handle_event(self) -> None:
