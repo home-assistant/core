@@ -23,17 +23,20 @@ from homeassistant.components.climate import (
     ATTR_PRESET_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DOMAIN as CLIMATE_DOMAIN,
     FAN_LOW,
     FAN_OFF,
     FAN_ON,
     PRESET_ECO,
     PRESET_NONE,
     PRESET_SLEEP,
+    SERVICE_TURN_ON,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
@@ -499,6 +502,88 @@ async def test_thermostat_set_hvac_mode(
     assert thermostat is not None
     assert thermostat.state == HVACMode.HEAT
     assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
+
+
+@pytest.mark.parametrize(
+    ("sdm_mode", "expected_mode"),
+    [
+        ("COOL", HVACMode.COOL),
+        ("HEAT", HVACMode.HEAT),
+        ("HEATCOOL", HVACMode.HEAT_COOL),
+    ],
+)
+async def test_thermostat_turn_on_already_on(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+    sdm_mode: str,
+    expected_mode: HVACMode,
+) -> None:
+    """Test calling turn_on on a thermostat that is already running."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": sdm_mode,
+            },
+        }
+    )
+    await setup_platform()
+
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == expected_mode
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "climate.my_thermostat"},
+        blocking=True,
+    )
+
+    assert auth.method is None
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == expected_mode
+
+
+async def test_thermostat_turn_on_from_off(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
+    """Test calling turn_on on a thermostat that is off."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "OFF",
+            },
+        }
+    )
+    await setup_platform()
+
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == HVACMode.OFF
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "climate.my_thermostat"},
+        blocking=True,
+    )
+
+    assert auth.method == "post"
+    assert auth.url == DEVICE_COMMAND
+    assert auth.json == {
+        "command": "sdm.devices.commands.ThermostatMode.SetMode",
+        "params": {"mode": "HEATCOOL"},
+    }
 
 
 async def test_thermostat_invalid_hvac_mode(
