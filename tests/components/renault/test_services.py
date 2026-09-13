@@ -231,6 +231,41 @@ async def test_service_get_charge_schedule(
     assert response == snapshot
 
 
+async def test_service_get_charge_schedule_empty(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that service returns empty charge schedules."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = {
+        RenaultServiceArgument.VEHICLE.value: get_device_id(hass),
+    }
+
+    with (
+        patch("renault_api.renault_vehicle.RenaultVehicle.get_full_endpoint"),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.http_get",
+            return_value=schemas.KamereonResponseSchema.loads(
+                await async_load_fixture(hass, "charging_settings_always.json", DOMAIN)
+            ),
+        ) as mock_action,
+    ):
+        response = await hass.services.async_call(
+            DOMAIN,
+            RenaultService.CHARGE_GET_SCHEDULES,
+            service_data=data,
+            blocking=True,
+            return_response=True,
+        )
+    assert len(mock_action.mock_calls) == 1
+    assert response == {
+        "schedule_count": 0,
+        "active_schedule_count": 0,
+        "schedules": [],
+    }
+
+
 async def test_service_get_charge_schedule_formats_local_time(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
