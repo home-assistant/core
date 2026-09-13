@@ -296,6 +296,7 @@ async def test_install_controller_firmware_rejected_without_hardware(
 @pytest.mark.parametrize(
     ("entity_name", "expected_notes"),
     [
+        ("oc200_test_omada_controller", "Release notes for Omada SDN Controller."),
         ("test_router", None),
         ("test_poe_switch", "Bug fixes and performance improvements"),
     ],
