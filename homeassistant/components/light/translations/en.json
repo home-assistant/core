@@ -1,0 +1,550 @@
+{
+    "common": {
+        "condition_behavior_name": "Condition passes if",
+        "condition_for_name": "For at least",
+        "condition_threshold_name": "Threshold type",
+        "field_brightness_description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
+        "field_brightness_name": "Brightness value",
+        "field_brightness_pct_description": "Number indicating the percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness, and 100 is the maximum brightness.",
+        "field_brightness_pct_name": "Brightness",
+        "field_brightness_step_description": "Change brightness by an amount.",
+        "field_brightness_step_name": "Brightness step value",
+        "field_brightness_step_pct_description": "Change brightness by a percentage.",
+        "field_brightness_step_pct_name": "Brightness step",
+        "field_color_name_description": "A human-readable color name.",
+        "field_color_name_name": "Color name",
+        "field_color_temp_kelvin_description": "Color temperature in Kelvin.",
+        "field_color_temp_kelvin_name": "Color temperature",
+        "field_effect_description": "Light effect.",
+        "field_effect_name": "Effect",
+        "field_flash_description": "Tell light to flash, can be either value short or long.",
+        "field_flash_name": "Flash",
+        "field_hs_color_description": "Color in hue/sat format. A list of two integers. Hue is 0-360 and Sat is 0-100.",
+        "field_hs_color_name": "Hue/Sat color",
+        "field_profile_description": "Name of a light profile to use.",
+        "field_profile_name": "Profile",
+        "field_rgb_color_description": "The color in RGB format. A list of three integers between 0 and 255 representing the values of red, green, and blue.",
+        "field_rgb_color_name": "Color",
+        "field_rgbw_color_description": "The color in RGBW format. A list of four integers between 0 and 255 representing the values of red, green, blue, and white.",
+        "field_rgbw_color_name": "RGBW-color",
+        "field_rgbww_color_description": "The color in RGBWW format. A list of five integers between 0 and 255 representing the values of red, green, blue, cold white, and warm white.",
+        "field_rgbww_color_name": "RGBWW-color",
+        "field_transition_description": "Duration it takes to get to next state.",
+        "field_transition_name": "Transition",
+        "field_white_description": "Set the light to white mode.",
+        "field_white_name": "White",
+        "field_xy_color_description": "Color in XY-format. A list of two decimal numbers between 0 and 1.",
+        "field_xy_color_name": "XY-color",
+        "section_additional_fields_name": "Additional options",
+        "trigger_behavior_name": "Trigger when",
+        "trigger_for_name": "For at least",
+        "trigger_threshold_name": "Threshold type"
+    },
+    "conditions": {
+        "is_brightness": {
+            "description": "Tests the brightness of one or more lights.",
+            "fields": {
+                "behavior": {
+                    "name": "Condition passes if"
+                },
+                "for": {
+                    "name": "For at least"
+                },
+                "threshold": {
+                    "name": "Threshold type"
+                }
+            },
+            "name": "Light brightness"
+        },
+        "is_off": {
+            "description": "Tests if one or more lights are off.",
+            "fields": {
+                "behavior": {
+                    "name": "Condition passes if"
+                },
+                "for": {
+                    "name": "For at least"
+                }
+            },
+            "name": "Light is off"
+        },
+        "is_on": {
+            "description": "Tests if one or more lights are on.",
+            "fields": {
+                "behavior": {
+                    "name": "Condition passes if"
+                },
+                "for": {
+                    "name": "For at least"
+                }
+            },
+            "name": "Light is on"
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "brightness_decrease": "Decrease {entity_name} brightness",
+            "brightness_increase": "Increase {entity_name} brightness",
+            "flash": "Flash {entity_name}",
+            "toggle": "Toggle {entity_name}",
+            "turn_off": "Turn off {entity_name}",
+            "turn_on": "Turn on {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} is off",
+            "is_on": "{entity_name} is on"
+        },
+        "extra_fields": {
+            "brightness_pct": "Brightness",
+            "flash": "Flash",
+            "for": "Duration"
+        },
+        "trigger_type": {
+            "changed_states": "{entity_name} turned on or off",
+            "turned_off": "{entity_name} turned off",
+            "turned_on": "{entity_name} turned on"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Light",
+            "state": {
+                "off": "Off",
+                "on": "On"
+            },
+            "state_attributes": {
+                "brightness": {
+                    "name": "Brightness"
+                },
+                "color_mode": {
+                    "name": "Color mode",
+                    "state": {
+                        "brightness": "Brightness only",
+                        "color_temp": "Color temperature",
+                        "hs": "HS",
+                        "onoff": "On/Off",
+                        "rgb": "RGB",
+                        "rgbw": "RGBW",
+                        "rgbww": "RGBWW",
+                        "unknown": "Unknown",
+                        "white": "White",
+                        "xy": "XY"
+                    }
+                },
+                "color_temp_kelvin": {
+                    "name": "Color temperature (Kelvin)"
+                },
+                "effect": {
+                    "name": "Effect",
+                    "state": {
+                        "off": "Off"
+                    }
+                },
+                "effect_list": {
+                    "name": "Available effects"
+                },
+                "max_color_temp_kelvin": {
+                    "name": "Maximum color temperature (Kelvin)"
+                },
+                "min_color_temp_kelvin": {
+                    "name": "Minimum color temperature (Kelvin)"
+                },
+                "supported_color_modes": {
+                    "name": "Available color modes",
+                    "state": {
+                        "brightness": "Brightness only",
+                        "color_temp": "Color temperature",
+                        "hs": "HS",
+                        "onoff": "On/Off",
+                        "rgb": "RGB",
+                        "rgbw": "RGBW",
+                        "rgbww": "RGBWW",
+                        "unknown": "Unknown",
+                        "white": "White",
+                        "xy": "XY"
+                    }
+                }
+            }
+        }
+    },
+    "selector": {
+        "color_name": {
+            "options": {
+                "aliceblue": "Alice blue",
+                "antiquewhite": "Antique white",
+                "aqua": "Aqua",
+                "aquamarine": "Aquamarine",
+                "azure": "Azure",
+                "beige": "Beige",
+                "bisque": "Bisque",
+                "blanchedalmond": "Blanched almond",
+                "blue": "Blue",
+                "blueviolet": "Blue violet",
+                "brown": "Brown",
+                "burlywood": "Burlywood",
+                "cadetblue": "Cadet blue",
+                "chartreuse": "Chartreuse",
+                "chocolate": "Chocolate",
+                "coral": "Coral",
+                "cornflowerblue": "Cornflower blue",
+                "cornsilk": "Cornsilk",
+                "crimson": "Crimson",
+                "cyan": "Cyan",
+                "darkblue": "Dark blue",
+                "darkcyan": "Dark cyan",
+                "darkgoldenrod": "Dark goldenrod",
+                "darkgray": "Dark gray",
+                "darkgreen": "Dark green",
+                "darkgrey": "Dark grey",
+                "darkkhaki": "Dark khaki",
+                "darkmagenta": "Dark magenta",
+                "darkolivegreen": "Dark olive green",
+                "darkorange": "Dark orange",
+                "darkorchid": "Dark orchid",
+                "darkred": "Dark red",
+                "darksalmon": "Dark salmon",
+                "darkseagreen": "Dark sea green",
+                "darkslateblue": "Dark slate blue",
+                "darkslategray": "Dark slate gray",
+                "darkslategrey": "Dark slate grey",
+                "darkturquoise": "Dark turquoise",
+                "darkviolet": "Dark violet",
+                "deeppink": "Deep pink",
+                "deepskyblue": "Deep sky blue",
+                "dimgray": "Dim gray",
+                "dimgrey": "Dim grey",
+                "dodgerblue": "Dodger blue",
+                "firebrick": "Fire brick",
+                "floralwhite": "Floral white",
+                "forestgreen": "Forest green",
+                "fuchsia": "Fuchsia",
+                "gainsboro": "Gainsboro",
+                "ghostwhite": "Ghost white",
+                "gold": "Gold",
+                "goldenrod": "Goldenrod",
+                "gray": "Gray",
+                "green": "Green",
+                "greenyellow": "Green yellow",
+                "grey": "Grey",
+                "homeassistant": "Home Assistant",
+                "honeydew": "Honeydew",
+                "hotpink": "Hot pink",
+                "indianred": "Indian red",
+                "indigo": "Indigo",
+                "ivory": "Ivory",
+                "khaki": "Khaki",
+                "lavender": "Lavender",
+                "lavenderblush": "Lavender blush",
+                "lawngreen": "Lawn green",
+                "lemonchiffon": "Lemon chiffon",
+                "lightblue": "Light blue",
+                "lightcoral": "Light coral",
+                "lightcyan": "Light cyan",
+                "lightgoldenrodyellow": "Light goldenrod yellow",
+                "lightgray": "Light gray",
+                "lightgreen": "Light green",
+                "lightgrey": "Light grey",
+                "lightpink": "Light pink",
+                "lightsalmon": "Light salmon",
+                "lightseagreen": "Light sea green",
+                "lightskyblue": "Light sky blue",
+                "lightslategray": "Light slate gray",
+                "lightslategrey": "Light slate grey",
+                "lightsteelblue": "Light steel blue",
+                "lightyellow": "Light yellow",
+                "lime": "Lime",
+                "limegreen": "Lime green",
+                "linen": "Linen",
+                "magenta": "Magenta",
+                "maroon": "Maroon",
+                "mediumaquamarine": "Medium aquamarine",
+                "mediumblue": "Medium blue",
+                "mediumorchid": "Medium orchid",
+                "mediumpurple": "Medium purple",
+                "mediumseagreen": "Medium sea green",
+                "mediumslateblue": "Medium slate blue",
+                "mediumspringgreen": "Medium spring green",
+                "mediumturquoise": "Medium turquoise",
+                "mediumvioletred": "Medium violet red",
+                "midnightblue": "Midnight blue",
+                "mintcream": "Mint cream",
+                "mistyrose": "Misty rose",
+                "moccasin": "Moccasin",
+                "navajowhite": "Navajo white",
+                "navy": "Navy",
+                "navyblue": "Navy blue",
+                "oldlace": "Old lace",
+                "olive": "Olive",
+                "olivedrab": "Olive drab",
+                "orange": "Orange",
+                "orangered": "Orange red",
+                "orchid": "Orchid",
+                "palegoldenrod": "Pale goldenrod",
+                "palegreen": "Pale green",
+                "paleturquoise": "Pale turquoise",
+                "palevioletred": "Pale violet red",
+                "papayawhip": "Papaya whip",
+                "peachpuff": "Peach puff",
+                "peru": "Peru",
+                "pink": "Pink",
+                "plum": "Plum",
+                "powderblue": "Powder blue",
+                "purple": "Purple",
+                "red": "Red",
+                "rosybrown": "Rosy brown",
+                "royalblue": "Royal blue",
+                "saddlebrown": "Saddle brown",
+                "salmon": "Salmon",
+                "sandybrown": "Sandy brown",
+                "seagreen": "Sea green",
+                "seashell": "Seashell",
+                "sienna": "Sienna",
+                "silver": "Silver",
+                "skyblue": "Sky blue",
+                "slateblue": "Slate blue",
+                "slategray": "Slate gray",
+                "slategrey": "Slate grey",
+                "snow": "Snow",
+                "springgreen": "Spring green",
+                "steelblue": "Steel blue",
+                "tan": "Tan",
+                "teal": "Teal",
+                "thistle": "Thistle",
+                "tomato": "Tomato",
+                "turquoise": "Turquoise",
+                "violet": "Violet",
+                "wheat": "Wheat",
+                "white": "White",
+                "whitesmoke": "White smoke",
+                "yellow": "Yellow",
+                "yellowgreen": "Yellow green"
+            }
+        },
+        "flash": {
+            "options": {
+                "long": "Long",
+                "short": "Short"
+            }
+        },
+        "state": {
+            "options": {
+                "off": "Off",
+                "on": "On"
+            }
+        }
+    },
+    "services": {
+        "toggle": {
+            "description": "Toggles one or more lights, from on to off, or off to on, based on their current state.",
+            "fields": {
+                "brightness": {
+                    "description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
+                    "name": "Brightness value"
+                },
+                "brightness_pct": {
+                    "description": "Number indicating the percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness, and 100 is the maximum brightness.",
+                    "name": "Brightness"
+                },
+                "color_name": {
+                    "description": "A human-readable color name.",
+                    "name": "Color name"
+                },
+                "color_temp_kelvin": {
+                    "description": "Color temperature in Kelvin.",
+                    "name": "Color temperature"
+                },
+                "effect": {
+                    "description": "Light effect.",
+                    "name": "Effect"
+                },
+                "flash": {
+                    "description": "Tell light to flash, can be either value short or long.",
+                    "name": "Flash"
+                },
+                "hs_color": {
+                    "description": "Color in hue/sat format. A list of two integers. Hue is 0-360 and Sat is 0-100.",
+                    "name": "Hue/Sat color"
+                },
+                "profile": {
+                    "description": "Name of a light profile to use.",
+                    "name": "Profile"
+                },
+                "rgb_color": {
+                    "description": "The color in RGB format. A list of three integers between 0 and 255 representing the values of red, green, and blue.",
+                    "name": "Color"
+                },
+                "rgbw_color": {
+                    "description": "The color in RGBW format. A list of four integers between 0 and 255 representing the values of red, green, blue, and white.",
+                    "name": "RGBW-color"
+                },
+                "rgbww_color": {
+                    "description": "The color in RGBWW format. A list of five integers between 0 and 255 representing the values of red, green, blue, cold white, and warm white.",
+                    "name": "RGBWW-color"
+                },
+                "transition": {
+                    "description": "Duration it takes to get to next state.",
+                    "name": "Transition"
+                },
+                "white": {
+                    "description": "Set the light to white mode.",
+                    "name": "White"
+                },
+                "xy_color": {
+                    "description": "Color in XY-format. A list of two decimal numbers between 0 and 1.",
+                    "name": "XY-color"
+                }
+            },
+            "name": "Toggle light",
+            "sections": {
+                "additional_fields": {
+                    "name": "Additional options"
+                }
+            }
+        },
+        "turn_off": {
+            "description": "Turns off one or more lights.",
+            "fields": {
+                "flash": {
+                    "description": "Tell light to flash, can be either value short or long.",
+                    "name": "Flash"
+                },
+                "transition": {
+                    "description": "Duration it takes to get to next state.",
+                    "name": "Transition"
+                }
+            },
+            "name": "Turn off light",
+            "sections": {
+                "additional_fields": {
+                    "name": "Additional options"
+                }
+            }
+        },
+        "turn_on": {
+            "description": "Turns on one or more lights and adjusts their properties, even when they are turned on already.",
+            "fields": {
+                "brightness": {
+                    "description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
+                    "name": "Brightness value"
+                },
+                "brightness_pct": {
+                    "description": "Number indicating the percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness, and 100 is the maximum brightness.",
+                    "name": "Brightness"
+                },
+                "brightness_step": {
+                    "description": "Change brightness by an amount.",
+                    "name": "Brightness step value"
+                },
+                "brightness_step_pct": {
+                    "description": "Change brightness by a percentage.",
+                    "name": "Brightness step"
+                },
+                "color_name": {
+                    "description": "A human-readable color name.",
+                    "name": "Color name"
+                },
+                "color_temp_kelvin": {
+                    "description": "Color temperature in Kelvin.",
+                    "name": "Color temperature"
+                },
+                "effect": {
+                    "description": "Light effect.",
+                    "name": "Effect"
+                },
+                "flash": {
+                    "description": "Tell light to flash, can be either value short or long.",
+                    "name": "Flash"
+                },
+                "hs_color": {
+                    "description": "Color in hue/sat format. A list of two integers. Hue is 0-360 and Sat is 0-100.",
+                    "name": "Hue/Sat color"
+                },
+                "profile": {
+                    "description": "Name of a light profile to use.",
+                    "name": "Profile"
+                },
+                "rgb_color": {
+                    "description": "The color in RGB format. A list of three integers between 0 and 255 representing the values of red, green, and blue.",
+                    "name": "Color"
+                },
+                "rgbw_color": {
+                    "description": "The color in RGBW format. A list of four integers between 0 and 255 representing the values of red, green, blue, and white.",
+                    "name": "RGBW-color"
+                },
+                "rgbww_color": {
+                    "description": "The color in RGBWW format. A list of five integers between 0 and 255 representing the values of red, green, blue, cold white, and warm white.",
+                    "name": "RGBWW-color"
+                },
+                "transition": {
+                    "description": "Duration it takes to get to next state.",
+                    "name": "Transition"
+                },
+                "white": {
+                    "description": "Set the light to white mode.",
+                    "name": "White"
+                },
+                "xy_color": {
+                    "description": "Color in XY-format. A list of two decimal numbers between 0 and 1.",
+                    "name": "XY-color"
+                }
+            },
+            "name": "Turn on light",
+            "sections": {
+                "additional_fields": {
+                    "name": "Additional options"
+                }
+            }
+        }
+    },
+    "title": "Light",
+    "triggers": {
+        "brightness_changed": {
+            "description": "Triggers when the brightness of one or more lights changes.",
+            "fields": {
+                "threshold": {
+                    "name": "Threshold type"
+                }
+            },
+            "name": "Light brightness changed"
+        },
+        "brightness_crossed_threshold": {
+            "description": "Triggers when the brightness of one or more lights crosses a threshold.",
+            "fields": {
+                "behavior": {
+                    "name": "Trigger when"
+                },
+                "for": {
+                    "name": "For at least"
+                },
+                "threshold": {
+                    "name": "Threshold type"
+                }
+            },
+            "name": "Light brightness crossed threshold"
+        },
+        "turned_off": {
+            "description": "Triggers when one or more lights turn off.",
+            "fields": {
+                "behavior": {
+                    "name": "Trigger when"
+                },
+                "for": {
+                    "name": "For at least"
+                }
+            },
+            "name": "Light turned off"
+        },
+        "turned_on": {
+            "description": "Triggers when one or more lights turn on.",
+            "fields": {
+                "behavior": {
+                    "name": "Trigger when"
+                },
+                "for": {
+                    "name": "For at least"
+                }
+            },
+            "name": "Light turned on"
+        }
+    }
+}
