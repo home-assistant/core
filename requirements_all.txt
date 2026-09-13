@@ -2714,7 +2714,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.16.0
+python-duco-connectivity==0.17.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
@@ -2811,7 +2811,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==7.4.2
+python-roborock==7.7.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
