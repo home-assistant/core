@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -13,10 +14,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfPower, UnitOfTime
+from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .coordinator import RainbowMinerConfigEntry, RainbowMinerCoordinator
 from .entity import RainbowMinerEntity
@@ -77,11 +79,16 @@ def _sum_btc(balances: list[Balance], field: str) -> float | None:
     return total if found else None
 
 
+def _uptime_to_timestamp(seconds: int) -> datetime:
+    """Return the time RainbowMiner was started."""
+    return dt_util.utcnow() - timedelta(seconds=seconds)
+
+
 @dataclass(frozen=True, kw_only=True)
 class RainbowMinerSensorEntityDescription(SensorEntityDescription):
     """Description of a RainbowMiner sensor."""
 
-    value_fn: Callable[[RainbowMinerCoordinator, str | None], StateType]
+    value_fn: Callable[[RainbowMinerCoordinator, str | None], StateType | datetime]
 
 
 ALWAYS_SENSORS: tuple[RainbowMinerSensorEntityDescription, ...] = (
@@ -150,10 +157,8 @@ ALWAYS_SENSORS: tuple[RainbowMinerSensorEntityDescription, ...] = (
     RainbowMinerSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda coord, _cur: coord.data.uptime.Seconds,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda coord, _cur: _uptime_to_timestamp(coord.data.uptime.Seconds),
     ),
     RainbowMinerSensorEntityDescription(
         key="version",
@@ -266,6 +271,6 @@ class RainbowMinerSensor(RainbowMinerEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the sensor's native value."""
         return self.entity_description.value_fn(self.coordinator, self._currency)

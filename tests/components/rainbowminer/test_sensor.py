@@ -1,11 +1,15 @@
 """Test the RainbowMiner sensors."""
 
+from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import patch
+
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.rainbowminer.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     TEST_HOST,
@@ -73,9 +77,12 @@ async def _setup(
 
 
 async def test_always_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the non-currency sensors."""
+    freezer.move_to("2026-09-13 12:00:00+00:00")
     await _setup(hass, aioclient_mock)
 
     state = hass.states.get("sensor.rainbowminer_active_miners")
@@ -90,7 +97,10 @@ async def test_always_sensors(
 
     state = hass.states.get("sensor.rainbowminer_uptime")
     assert state is not None
-    assert state.state == str(VALID_UPTIME["Seconds"])
+    start = dt_util.parse_datetime(state.state)
+    assert start is not None
+    assert start == dt_util.utcnow() - timedelta(seconds=VALID_UPTIME["Seconds"])
+    assert start == datetime.fromisoformat("2026-09-12 12:00:00+00:00")
 
     state = hass.states.get("sensor.rainbowminer_version")
     assert state is not None
