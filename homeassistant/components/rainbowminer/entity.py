@@ -1,5 +1,7 @@
 """Common entity for the RainbowMiner integration."""
 
+from yarl import URL
+
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -31,5 +33,5 @@ class RainbowMinerEntity(CoordinatorEntity[RainbowMinerCoordinator]):
             manufacturer="RainbowMiner",
             name="RainbowMiner",
             sw_version=coordinator.data.version.version_string(),
-            configuration_url=f"http://{host}:{port}",
+            configuration_url=str(URL.build(scheme="http", host=host, port=port)),
         )
