@@ -232,12 +232,15 @@ async def test_mbtc_sensors_unavailable_without_balances(
 
 
 async def test_device_info(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the device registry entry contains the software version."""
     entry = await _setup(hass, aioclient_mock)
 
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "5.0.0"
