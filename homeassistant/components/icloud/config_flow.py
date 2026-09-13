@@ -106,6 +106,26 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=self._description_placeholders,
         )
 
+    def _login_without_stored_session(self) -> PyiCloudService:
+        """Log in after discarding a stored session iCloud has rejected.
+
+        The service validates the stored session while it is constructed, so
+        it has to be built without authenticating for the session to be
+        cleared before the login is attempted. Runs in the executor.
+        """
+        api = PyiCloudService(
+            self._username,
+            self._password,
+            Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
+            True,
+            None,
+            self._with_family,
+            authenticate=False,
+        )
+        api.session.clear_persistence()
+        api.authenticate()
+        return api
+
     async def _request_2fa_code(self, errors: dict[str, str]) -> dict[str, str]:
         """Request an Apple 2FA code."""
         if TYPE_CHECKING:
@@ -180,17 +200,36 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 PyiCloudAPIResponseException,
             ) as error:
                 # PyiCloudService validates the stored session while it is
-                # constructed, so a session iCloud is rejecting fails here
-                # before the password is tried. Report it rather than letting
-                # it escape the flow.
-                _LOGGER.error(
-                    "Stored iCloud session for %s was rejected: %s",
+                # constructed, so a session iCloud is rejecting fails before
+                # the password is tried and re-entering it would run into the
+                # same rejection. Discard the session and log in again.
+                _LOGGER.debug(
+                    "Stored iCloud session for %s was rejected, logging in again: %s",
                     self._username,
                     error,
                 )
-                self.api = None
-                errors = {"base": "unknown"}
-                return self._show_setup_form(user_input, errors, step_id)
+                try:
+                    self.api = await self.hass.async_add_executor_job(
+                        self._login_without_stored_session
+                    )
+                except PyiCloudFailedLoginException as retry_error:
+                    _LOGGER.error("Error logging into iCloud service: %s", retry_error)
+                    self.api = None
+                    errors = {CONF_PASSWORD: "invalid_auth"}
+                    return self._show_setup_form(user_input, errors, step_id)
+                except (
+                    PyiCloud2FARequiredException,
+                    PyiCloudAuthRequiredException,
+                    PyiCloudAPIResponseException,
+                ) as retry_error:
+                    _LOGGER.error(
+                        "Could not log in to iCloud for %s: %s",
+                        self._username,
+                        retry_error,
+                    )
+                    self.api = None
+                    errors = {"base": "unknown"}
+                    return self._show_setup_form(user_input, errors, step_id)
 
         if self._requires_2fa:
             return await self.async_step_verification_code()

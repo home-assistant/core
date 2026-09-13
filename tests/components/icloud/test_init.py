@@ -1,6 +1,6 @@
 """Tests for the iCloud config flow."""
 
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
@@ -482,14 +482,14 @@ async def test_2fa_required_exception_at_login_starts_reauth(
     ]
 
 
-async def test_password_reauth_reports_a_rejected_session(
+async def test_password_reauth_reports_a_login_it_cannot_complete(
     hass: HomeAssistant, service_auth_required: Mock
 ) -> None:
-    """Test that a session iCloud keeps rejecting does not break the flow.
+    """Test that a login iCloud keeps rejecting is reported, not raised.
 
-    PyiCloudService validates the persisted session while it is constructed,
-    so the password form runs into the same rejection before the password is
-    ever tried. The user has to be told, not shown an unknown error.
+    Discarding the stored session and logging in again is the way out of a
+    rejected session, but when that fails as well the user has to be told
+    rather than shown an unknown error.
     """
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
@@ -519,3 +519,59 @@ async def test_password_reauth_reports_a_rejected_session(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+
+async def test_password_reauth_recovers_from_a_rejected_session(
+    hass: HomeAssistant, service_auth_required: Mock
+) -> None:
+    """Test that reauth discards a stored session iCloud is rejecting.
+
+    The service validates the stored session while it is constructed, so the
+    password the user submits is never reached until that session is gone.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+    fresh_api = MagicMock()
+    fresh_api.requires_2fa = False
+    fresh_api.requires_2sa = False
+    fresh_api.devices = MockDevices([MockDevice(DEVICE)])
+
+    def build_service(*args, **kwargs):
+        """Reject the stored session, accept a login that does not use it."""
+        if kwargs.get("authenticate", True):
+            raise PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response))
+        return fresh_api
+
+    # The account's own login works again once the session has been cleared.
+    service_auth_required.side_effect = None
+    service_auth_required.return_value = fresh_api
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=build_service,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flows[0]["flow_id"], {CONF_PASSWORD: "new-password"}
+        )
+        await hass.async_block_till_done()
+
+    # The rejected session is dropped and the submitted password is what the
+    # login actually uses.
+    fresh_api.session.clear_persistence.assert_called_once()
+    fresh_api.authenticate.assert_called_once()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
