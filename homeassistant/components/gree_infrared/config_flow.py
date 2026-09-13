@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.infrared import (
@@ -39,23 +39,25 @@ _DEFAULT_HVAC_MODES = [HVACMode.COOL, HVACMode.DRY]
 
 
 @callback
-def _user_schema(hass: HomeAssistant) -> vol.Schema:
+def _user_schema(hass: HomeAssistant) -> probatio.Schema:
     """Return the emitter/receiver/mode selection schema."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
+            probatio.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
                 EntitySelectorConfig(
                     domain=INFRARED_DOMAIN,
                     include_entities=async_get_emitters(hass),
                 )
             ),
-            vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
+            probatio.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
                 EntitySelectorConfig(
                     domain=INFRARED_DOMAIN,
                     include_entities=async_get_receivers(hass),
                 )
             ),
-            vol.Required(CONF_HVAC_MODES, default=_DEFAULT_HVAC_MODES): vol.All(
+            probatio.Required(
+                CONF_HVAC_MODES, default=_DEFAULT_HVAC_MODES
+            ): probatio.All(
                 SelectSelector(
                     SelectSelectorConfig(
                         options=[mode.value for mode in _HVAC_MODE_OPTIONS],
@@ -64,7 +66,7 @@ def _user_schema(hass: HomeAssistant) -> vol.Schema:
                         multiple=True,
                     )
                 ),
-                vol.Length(min=1, msg="no_hvac_modes"),
+                probatio.Length(min=1, msg="no_hvac_modes"),
             ),
         }
     )
