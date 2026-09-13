@@ -144,7 +144,7 @@ def test_send_message_with_bad_data_throws_vol_error(
         signal_notification_service.send_message(MESSAGE, data={"test": "test"})
 
     assert "Sending signal message" in caplog.text
-    assert "extra keys not allowed" in str(exc.value)
+    assert "not a valid option" in str(exc.value)
 
 
 def test_send_message_styled_with_bad_data_throws_vol_error(
@@ -162,10 +162,7 @@ def test_send_message_styled_with_bad_data_throws_vol_error(
         signal_notification_service.send_message(MESSAGE, data={"text_mode": "test"})
 
     assert "Sending signal message" in caplog.text
-    assert (
-        "value must be one of ['normal', 'styled'] for dictionary"
-        " value @ data['text_mode']" in str(exc.value)
-    )
+    assert "value must be one of ['normal', 'styled'] at 'text_mode'" in str(exc.value)
 
 
 def test_send_message_with_attachment(
@@ -452,6 +449,7 @@ def assert_sending_requests(
     assert body_request["message"] == MESSAGE
     assert body_request["number"] == NUMBER_FROM
     assert body_request["recipients"] == (recipients or NUMBERS_TO)
+    assert body_request["notify_self"] is True
     assert len(body_request.get("base64_attachments", [])) == attachments_num
 
     for attachment in body_request.get("base64_attachments", []):

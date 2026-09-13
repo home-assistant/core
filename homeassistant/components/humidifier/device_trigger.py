@@ -25,7 +25,8 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import ATTR_CURRENT_HUMIDITY, DOMAIN
+from . import DOMAIN
+from .const import HumidifierEntityStateAttribute
 
 # mypy: disallow-any-generics
 
@@ -94,7 +95,10 @@ async def async_get_triggers(
             }
         )
 
-        if state and ATTR_CURRENT_HUMIDITY in state.attributes:
+        if (
+            state
+            and HumidifierEntityStateAttribute.CURRENT_HUMIDITY in state.attributes
+        ):
             triggers.append(
                 {
                     **base_trigger,

@@ -2,13 +2,13 @@
 
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
+from dataclasses import replace
 from datetime import timedelta
 import time
 from unittest.mock import MagicMock
 
 from habluetooth import CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
 from opendisplay import voltage_to_percent
-from opendisplay.models.config import PowerOption
 from opendisplay.models.enums import CapacityEstimator, PowerMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -78,21 +78,10 @@ async def test_sensor_entities_battery_device(
 ) -> None:
     """Test sensor entities for a battery-powered Flex device with LI_ION chemistry."""
     device_config = deepcopy(DEVICE_CONFIG)
-    power = device_config.power
-    device_config.power = PowerOption(
+    device_config.power = replace(
+        device_config.power,
         power_mode=PowerMode.BATTERY,
-        battery_capacity_mah=power.battery_capacity_mah,
-        sleep_timeout_ms=power.sleep_timeout_ms,
-        tx_power=power.tx_power,
-        sleep_flags=power.sleep_flags,
-        battery_sense_pin=power.battery_sense_pin,
-        battery_sense_enable_pin=power.battery_sense_enable_pin,
-        battery_sense_flags=power.battery_sense_flags,
         capacity_estimator=1,  # LI_ION
-        voltage_scaling_factor=power.voltage_scaling_factor,
-        deep_sleep_current_ua=power.deep_sleep_current_ua,
-        deep_sleep_time_seconds=power.deep_sleep_time_seconds,
-        reserved=power.reserved,
     )
     mock_opendisplay_device.config = device_config
 
@@ -199,21 +188,10 @@ async def test_battery_sensor_defaults_to_liion_when_capacity_estimator_unset(
 ) -> None:
     """Test battery % uses LI_ION when capacity_estimator is 0."""
     device_config = deepcopy(DEVICE_CONFIG)
-    power = device_config.power
-    device_config.power = PowerOption(
+    device_config.power = replace(
+        device_config.power,
         power_mode=PowerMode.BATTERY,
-        battery_capacity_mah=power.battery_capacity_mah,
-        sleep_timeout_ms=power.sleep_timeout_ms,
-        tx_power=power.tx_power,
-        sleep_flags=power.sleep_flags,
-        battery_sense_pin=power.battery_sense_pin,
-        battery_sense_enable_pin=power.battery_sense_enable_pin,
-        battery_sense_flags=power.battery_sense_flags,
         capacity_estimator=0,  # not configured — defaults to LI_ION in sensor.py
-        voltage_scaling_factor=power.voltage_scaling_factor,
-        deep_sleep_current_ua=power.deep_sleep_current_ua,
-        deep_sleep_time_seconds=power.deep_sleep_time_seconds,
-        reserved=power.reserved,
     )
     mock_opendisplay_device.config = device_config
 

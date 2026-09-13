@@ -1,0 +1,35 @@
+[
+  {
+    "locationID": 35202000168931,
+    "name": "Ocala P01",
+    "devices": [
+      {
+        "vacationHold": { "Enabled": true },
+        "scheduleStatus": "Resume",
+        "settings": { "devicePairingEnabled": true },
+        "deviceClass": "Thermostat",
+        "deviceType": "Thermostat",
+        "deviceID": "LCC-7f86b153-8480-f111-b78f-6045bdb25006",
+        "name": "Ocala",
+        "macID": "5CFCE1B67035",
+        "units": "Fahrenheit",
+        "indoorTemperature": 79,
+        "deviceModel": "T9-T10"
+      },
+      {
+        "vacationHold": { "Enabled": false },
+        "scheduleStatus": "Resume",
+        "settings": { "devicePairingEnabled": true },
+        "deviceClass": "Thermostat",
+        "deviceType": "Thermostat",
+        "deviceID": "LCC-8f86b153-8480-f111-b78f-6045bdb25007",
+        "name": "Bedroom",
+        "macID": "5CFCE1B67036",
+        "units": "Fahrenheit",
+        "indoorTemperature": 72,
+        "deviceModel": "T9-T10"
+      }
+    ],
+    "users": []
+  }
+]

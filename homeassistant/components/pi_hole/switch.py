@@ -7,12 +7,12 @@ from hole.exceptions import HoleError
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SERVICE_DISABLE, SERVICE_DISABLE_ATTR_DURATION
+from .const import DOMAIN, SERVICE_DISABLE, SERVICE_DISABLE_ATTR_DURATION
 from .coordinator import PiHoleConfigEntry
 from .entity import PiHoleEntity
 
@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole switch."""
-    name = entry.data[CONF_NAME]
+    name = entry.title
     hole_data = entry.runtime_data
     switches = [
         PiHoleSwitch(
@@ -79,9 +79,12 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
         try:
             await self.api.enable()
             await self.async_update()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HoleError as err:
-            _LOGGER.error("Unable to enable Pi-hole: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="enable_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -102,6 +105,9 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
         try:
             await self.api.disable(duration_seconds)
             await self.async_update()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HoleError as err:
-            _LOGGER.error("Unable to disable Pi-hole: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="disable_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err

@@ -503,7 +503,7 @@ async def ws_change_statistics_unit(
         vol.Required("type"): "recorder/adjust_sum_statistics",
         vol.Required("statistic_id"): str,
         vol.Required("start_time"): str,
-        vol.Required("adjustment"): vol.Any(float, int),
+        vol.Required("adjustment"): vol.Any(int, float),
         vol.Required("adjustment_unit_of_measurement"): vol.Any(str, None),
     }
 )
@@ -583,12 +583,12 @@ async def ws_adjust_sum_statistics(
         vol.Required("stats"): [
             {
                 vol.Required("start"): cv.datetime,
-                vol.Optional("mean"): vol.Any(float, int),
-                vol.Optional("min"): vol.Any(float, int),
-                vol.Optional("max"): vol.Any(float, int),
+                vol.Optional("mean"): vol.Any(int, float),
+                vol.Optional("min"): vol.Any(int, float),
+                vol.Optional("max"): vol.Any(int, float),
                 vol.Optional("last_reset"): vol.Any(cv.datetime, None),
-                vol.Optional("state"): vol.Any(float, int),
-                vol.Optional("sum"): vol.Any(float, int),
+                vol.Optional("state"): vol.Any(int, float),
+                vol.Optional("sum"): vol.Any(int, float),
             }
         ],
     }

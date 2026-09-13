@@ -10,6 +10,7 @@ from librehardwaremonitor_api import (
     LibreHardwareMonitorNoDevicesError,
     LibreHardwareMonitorUnauthorizedError,
 )
+from librehardwaremonitor_api.model import LibreHardwareMonitorData
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -39,7 +40,9 @@ REAUTH_SCHEMA = vol.Schema(
 )
 
 
-async def _validate_connection(user_input: dict[str, Any]) -> str:
+async def _validate_connection(
+    user_input: dict[str, Any],
+) -> LibreHardwareMonitorData:
     """Ensure a connection can be established."""
     api = LibreHardwareMonitorClient(
         host=user_input[CONF_HOST],
@@ -48,7 +51,7 @@ async def _validate_connection(user_input: dict[str, Any]) -> str:
         password=user_input.get(CONF_PASSWORD),
     )
 
-    return (await api.get_data()).computer_name
+    return await api.get_data()
 
 
 class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -73,7 +76,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(user_input)
 
             try:
-                computer_name = await _validate_connection(user_input)
+                lhm_data = await _validate_connection(user_input)
             except LibreHardwareMonitorConnectionError as exception:
                 _LOGGER.error(exception)
                 errors["base"] = "cannot_connect"
@@ -84,14 +87,17 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             except LibreHardwareMonitorNoDevicesError:
                 errors["base"] = "no_devices"
             else:
-                return self.async_create_entry(
-                    title=(
-                        f"{computer_name}"
-                        f" ({user_input[CONF_HOST]}"
-                        f":{user_input[CONF_PORT]})"
-                    ),
-                    data=user_input,
-                )
+                if lhm_data.is_deprecated_version:
+                    errors["base"] = "deprecated_version"
+                else:
+                    return self.async_create_entry(
+                        title=(
+                            f"{lhm_data.computer_name}"
+                            f" ({user_input[CONF_HOST]}"
+                            f":{user_input[CONF_PORT]})"
+                        ),
+                        data=user_input,
+                    )
 
         return self.async_show_form(
             step_id="user",
@@ -123,7 +129,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
                 **user_input,
             }
             try:
-                computer_name = await _validate_connection(data)
+                lhm_data = await _validate_connection(data)
             except LibreHardwareMonitorConnectionError as exception:
                 _LOGGER.error(exception)
                 errors["base"] = "cannot_connect"
@@ -132,17 +138,20 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             except LibreHardwareMonitorNoDevicesError:
                 errors["base"] = "no_devices"
             else:
-                if self.source == SOURCE_REAUTH:
+                if lhm_data.is_deprecated_version:
+                    errors["base"] = "deprecated_version"
+                elif self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
                         entry=reauth_entry,  # type: ignore[arg-type]
                         data_updates=user_input,
                     )
-                # the initial connection was unauthorized,
-                # now we can create the config entry
-                return self.async_create_entry(
-                    title=f"{computer_name} ({self._host}:{self._port})",
-                    data=data,
-                )
+                else:
+                    # the initial connection was unauthorized,
+                    # now we can create the config entry
+                    return self.async_create_entry(
+                        title=f"{lhm_data.computer_name} ({self._host}:{self._port})",
+                        data=data,
+                    )
 
         return self.async_show_form(
             step_id="reauth_confirm",

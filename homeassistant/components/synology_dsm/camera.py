@@ -16,6 +16,7 @@ from homeassistant.components.camera import (
     CameraEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -100,9 +101,13 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
             identifiers={(DOMAIN, f"{information.serial}_{self.camera_data.id}")},
             name=self.camera_data.name,
             model=self.camera_data.model,
-            via_device=(
-                DOMAIN,
-                f"{information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (
+                    DOMAIN,
+                    f"{information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
+                ),
+                config_entry_id=self.coordinator.config_entry.entry_id,
             ),
         )
 

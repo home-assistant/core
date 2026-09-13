@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
@@ -46,7 +46,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Saunum Leil Fan duration',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,

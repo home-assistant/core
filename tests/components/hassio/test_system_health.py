@@ -102,6 +102,7 @@ async def test_hassio_system_health(
     )
     hass.data[DATA_OS_INFO] = OSInfo(
         version="5.9",
+        version_pending=None,
         version_latest="5.9",
         update_available=False,
         board="odroid-n2",
@@ -293,6 +294,7 @@ async def test_hassio_system_health_with_issues(
     )
     hass.data[DATA_OS_INFO] = OSInfo(
         version=None,
+        version_pending=None,
         version_latest=None,
         update_available=False,
         board=None,

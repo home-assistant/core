@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.service_info.ssdp import (
@@ -308,7 +308,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=title, data=data, options=options)
 
 
-class UpnpOptionsFlowHandler(OptionsFlow):
+class UpnpOptionsFlowHandler(OptionsFlowWithReload):
     """Handle an options flow."""
 
     async def async_step_init(
@@ -316,7 +316,7 @@ class UpnpOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         data_schema = vol.Schema(
             {

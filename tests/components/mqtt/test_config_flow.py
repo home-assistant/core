@@ -4163,7 +4163,9 @@ async def test_subentry_reconfigure_remove_entity(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we have an entity for all subentry components
@@ -4288,7 +4290,9 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we have an entity for all subentry components
@@ -4729,7 +4733,9 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we have an entity for the subentry component
@@ -4868,7 +4874,9 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we have an entity for the subentry component
@@ -5003,7 +5011,9 @@ async def test_subentry_reconfigure_add_entity(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we have an entity for the subentry component
@@ -5109,7 +5119,9 @@ async def test_subentry_reconfigure_update_device_properties(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we have an entity for all subentry components
@@ -5390,7 +5402,9 @@ async def test_subentry_reconfigure_export_settings(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we entity for all subentry components

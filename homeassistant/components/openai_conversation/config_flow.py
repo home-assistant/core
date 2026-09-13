@@ -3,11 +3,11 @@
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 import openai
+from probatio import to_openapi
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
@@ -20,12 +20,11 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_LLM_HASS_API,
     CONF_NAME,
     CONF_PROMPT,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -49,6 +48,7 @@ from .const import (
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
+    CONF_PRO_MODE,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
@@ -78,6 +78,7 @@ from .const import (
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_PRO_MODE,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_SERVICE_TIER,
@@ -116,7 +117,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     client = openai.AsyncOpenAI(
-        api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
+        api_key=data[CONF_API_KEY],
+        # Legacy HTTPX clients are supported at runtime only.
+        http_client=cast(Any, get_async_client(hass)),
     )
     await client.models.list(timeout=10.0)
 
@@ -308,7 +311,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         ] = bool
 
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
+            if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
 
             if user_input[CONF_RECOMMENDED]:
@@ -422,7 +425,19 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_REASONING_EFFORT in options:
             options.pop(CONF_REASONING_EFFORT)
 
-        if model.startswith("gpt-5"):
+        if model.startswith(("gpt-5.6", "gpt-6")):
+            step_schema.update(
+                {
+                    vol.Optional(
+                        CONF_PRO_MODE,
+                        default=RECOMMENDED_PRO_MODE,
+                    ): bool,
+                }
+            )
+        elif CONF_PRO_MODE in options:
+            options.pop(CONF_PRO_MODE)
+
+        if model.startswith(("gpt-5", "gpt-6")):
             step_schema.update(
                 {
                     vol.Optional(
@@ -440,7 +455,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_VERBOSITY in options:
             options.pop(CONF_VERBOSITY)
 
-        if model.startswith(("o", "gpt-5")):
+        if model.startswith(("o", "gpt-5", "gpt-6")):
             reasoning_summary_options = ["off", "auto", "concise", "detailed"]
             if model.startswith("o"):
                 reasoning_summary_options.remove("concise")
@@ -540,6 +555,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             ] = SelectSelector(
                 SelectSelectorConfig(
                     options=[
+                        "gpt-image-2.5-sunburst",
+                        "gpt-image-2.5-flare",
                         "gpt-image-2",
                         "gpt-image-1.5",
                         "gpt-image-1",
@@ -589,10 +606,14 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
 
     def _get_reasoning_options(self, model: str) -> list[str]:
         """Get reasoning effort options based on model."""
-        if not model.startswith(("o", "gpt-5")) or model.startswith("gpt-5-pro"):
+        if not model.startswith(("o", "gpt-5", "gpt-6")) or model.startswith(
+            "gpt-5-pro"
+        ):
             return []
 
         models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
+            "gpt-6": ["low", "medium", "high", "xhigh", "max"],
+            "gpt-5.6": ["none", "low", "medium", "high", "xhigh", "max"],
             ("gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro"): ["medium", "high", "xhigh"],
             ("gpt-5.2", "gpt-5.3", "gpt-5.4", "gpt-5.5"): [
                 "none",
@@ -632,7 +653,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if zone_home is not None:
             client = openai.AsyncOpenAI(
                 api_key=self._get_entry().data[CONF_API_KEY],
-                http_client=get_async_client(self.hass),
+                http_client=cast(Any, get_async_client(self.hass)),
             )
             location_schema = vol.Schema(
                 {
@@ -654,8 +675,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     {
                         "role": "system",
                         "content": "Where are the following coordinates located: "
-                        f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
+                        f"({zone_home.attributes[EntityStateAttribute.LATITUDE]},"
+                        f" {zone_home.attributes[EntityStateAttribute.LONGITUDE]})?",
                     }
                 ],
                 text={
@@ -664,7 +685,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         "name": "approximate_location",
                         "description": "Approximate location data of the user "
                         "for refined web search results",
-                        "schema": convert(location_schema),
+                        "schema": to_openapi(location_schema, openapi_version="3.1.0"),
                         "strict": False,
                     }
                 },

@@ -192,7 +192,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Telegram."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback

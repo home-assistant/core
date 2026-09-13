@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
 
@@ -87,13 +87,8 @@ ZONE_AND_OUTPUT_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(
             CONF_ZONE_TYPE, default=BinarySensorDeviceClass.MOTION
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[cls.value for cls in BinarySensorDeviceClass],
-                mode=selector.SelectSelectorMode.DROPDOWN,
-                translation_key="binary_sensor_device_class",
-                sort=True,
-            ),
+        ): selector.DeviceClassSelector(
+            selector.DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR),
         ),
     }
 )

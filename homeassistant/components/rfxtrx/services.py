@@ -1,4 +1,5 @@
 """Support for RFXtrx services."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from typing import Any
 

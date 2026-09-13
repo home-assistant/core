@@ -261,10 +261,10 @@ async def websocket_delete_device(
     device_config = get_device_config(msg[CONF_ADDRESS], config_entry)
 
     device_registry = dr.async_get(hass)
-    identifiers = {
-        (DOMAIN, generate_unique_id(config_entry.entry_id, msg[CONF_ADDRESS]))
-    }
-    device = device_registry.async_get_device(identifiers, set())
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, generate_unique_id(config_entry.entry_id, msg[CONF_ADDRESS])),
+        config_entry.entry_id,
+    )
 
     if not (device and device_config):
         connection.send_result(msg["id"], False)

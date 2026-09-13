@@ -8,7 +8,14 @@ from enum import Enum
 import logging
 from typing import Any, cast
 
-from hass_nabucasa import Cloud, NabuCasaBaseError
+from hass_nabucasa import (
+    Cloud,
+    CloudEvent,
+    CloudEventType,
+    LoginFailedEvent,
+    NabuCasaBaseError,
+    RemoteNotConnected,
+)
 import voluptuous as vol
 
 from homeassistant.components import alexa, google_assistant
@@ -45,6 +52,7 @@ from . import (
     backup,  # noqa: F401
     http_api,
 )
+from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
     CONF_ACCOUNT_LINK_SERVER,
@@ -63,12 +71,15 @@ from .const import (
     CONF_USER_POOL_ID,
     DATA_CLOUD,
     DATA_CLOUD_LOG_HANDLER,
+    DATA_PENDING_AUTO_LOGIN,
     DATA_PLATFORMS_SETUP,
     DOMAIN,
+    EVENT_CLOUD_EVENT,
     MODE_DEV,
     MODE_PROD,
 )
 from .helpers import FixedSizeQueueLogHandler
+from .models import auto_login_failure_key
 from .prefs import CloudPreferences
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
@@ -364,12 +375,60 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Update preferences."""
         await prefs.async_update(remote_domain=cloud.remote.instance_domain)
 
+    hass.data[DATA_PENDING_AUTO_LOGIN] = None
+
+    async def _on_cloud_login(event: CloudEvent) -> None:
+        """Handle a successful login, interactive or auto-login alike."""
+        # Never cancel the controller here, hass_nabucasa cancels the retry loop
+        # itself and this may be running inside that very loop.
+        hass.data[DATA_PENDING_AUTO_LOGIN] = None
+        if "assist_pipeline" in hass.config.components:
+            await async_create_cloud_pipeline(hass)
+        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
+
+    def _on_cloud_login_failed(event: CloudEvent) -> None:
+        """Handle hass_nabucasa giving up on a pending auto-login."""
+        # The event bus types every handler against the CloudEvent base class.
+        if not isinstance(event, LoginFailedEvent) or not event.auto:
+            return
+
+        async_dispatcher_send(
+            hass,
+            EVENT_CLOUD_EVENT,
+            {
+                "type": "auto_login_failed",
+                "translation_key": auto_login_failure_key(event.reason),
+            },
+        )
+
+    async def _on_cloud_logout(event: CloudEvent) -> None:
+        """Clean up after a logout."""
+        nonlocal loaded
+
+        # Forget a pending auto-login, hass_nabucasa cancels it on logout.
+        # No frontend event here, hass_nabucasa publishes LOGOUT before it clears
+        # the tokens, so a client re-reading the status would still see a session.
+        hass.data[DATA_PENDING_AUTO_LOGIN] = None
+        # Allow _on_start to create a new config entry on the next login.
+        loaded = False
+        await _async_remove_config_entry(hass)
+
     cloud.register_on_start(_on_start)
     cloud.iot.register_on_connect(_on_connect)
     cloud.iot.register_on_disconnect(_on_disconnect)
     cloud.register_on_initialized(_on_initialized)
+    cloud.events.subscribe(event_type=CloudEventType.LOGIN, handler=_on_cloud_login)
+    cloud.events.subscribe(
+        event_type=CloudEventType.LOGIN_FAILED, handler=_on_cloud_login_failed
+    )
+    cloud.events.subscribe(event_type=CloudEventType.LOGOUT, handler=_on_cloud_logout)
 
     await cloud.initialize()
+
+    if not cloud.is_logged_in:
+        # Remove leftover config entries if the user is not logged in.
+        await _async_remove_config_entry(hass)
+
     http_api.async_setup(hass)
 
     account_link.async_setup(hass)
@@ -397,6 +456,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def _async_remove_config_entry(hass: HomeAssistant) -> None:
+    """Remove the config entry, it's recreated when a user logs in again."""
+    if entries := hass.config_entries.async_entries(DOMAIN):
+        # The manifest sets single_config_entry, so there is at most one entry.
+        await hass.config_entries.async_remove(entries[0].entry_id)
+
+
 @callback
 def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> None:
     """Register handler for cloud preferences updates."""
@@ -421,7 +487,10 @@ def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> Non
             if cur_remote_enabled := prefs.remote_enabled:
                 await cloud.remote.connect()
             else:
-                await cloud.remote.disconnect()
+                # Prefs are reset when a new user logs in, before the remote
+                # backend exists.
+                with suppress(RemoteNotConnected):
+                    await cloud.remote.disconnect()
 
     cloud.client.prefs.async_listen_updates(on_prefs_updated)
 

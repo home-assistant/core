@@ -50,7 +50,6 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.helper = Helper()
         self.creds: str | None = None
-        self.name = None
         self.host = None
         self.region = None
         self.pin: str | None = None
@@ -166,7 +165,6 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         # Login to PS4 with user data.
         if user_input is not None:
             self.region = user_input[CONF_REGION]
-            self.name = user_input[CONF_NAME]
             # Assume pin had leading zeros, before coercing to int.
             self.pin = str(user_input[CONF_CODE]).zfill(PIN_LENGTH)
             self.host = user_input[CONF_IP_ADDRESS]
@@ -187,7 +185,7 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 device = {
                     CONF_HOST: self.host,
-                    CONF_NAME: self.name,
+                    CONF_NAME: DEFAULT_NAME,
                     CONF_REGION: self.region,
                 }
 
@@ -216,9 +214,6 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         link_schema[vol.Required(CONF_CODE)] = vol.All(
             vol.Strip, vol.Length(max=PIN_LENGTH), vol.Coerce(int)
         )
-        # Name field is no longer allowed in config flow schemas
-        # pylint: disable-next=home-assistant-config-flow-name-field
-        link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
 
         return self.async_show_form(
             step_id="link", data_schema=vol.Schema(link_schema), errors=errors

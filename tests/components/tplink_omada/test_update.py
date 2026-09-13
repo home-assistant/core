@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
+from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
@@ -131,15 +132,15 @@ async def test_install_firmware_success(
 
 
 @pytest.mark.parametrize(
-    ("exception_type", "error_message"),
+    ("exception_type", "translation_key"),
     [
         (
             RequestFailed(500, "Update rejected"),
-            "Firmware update request rejected",
+            "firmware_update_rejected",
         ),
         (
             OmadaClientException("Connection error"),
-            "Unable to send Firmware update request. Check the controller is online.",
+            "firmware_update_failed",
         ),
     ],
 )
@@ -148,7 +149,7 @@ async def test_install_firmware_exceptions(
     init_integration: MockConfigEntry,
     mock_omada_site_client: MagicMock,
     exception_type: Exception,
-    error_message: str,
+    translation_key: str,
 ) -> None:
     """Test firmware installation exception handling."""
     entity_id = "update.test_poe_switch_firmware"
@@ -159,16 +160,16 @@ async def test_install_firmware_exceptions(
     )
 
     # Call install service and expect error
-    with pytest.raises(
-        HomeAssistantError,
-        match=error_message,
-    ):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_domain == DOMAIN
 
 
 @pytest.mark.parametrize(

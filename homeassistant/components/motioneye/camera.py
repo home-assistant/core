@@ -219,7 +219,11 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
             self._authentication == HTTP_BASIC_AUTHENTICATION
             and self._username is not None
         ):
-            self._auth = aiohttp.BasicAuth(self._username, password=self._password)
+            self._auth_headers = {
+                "Authorization": aiohttp.encode_basic_auth(
+                    self._username, self._password
+                )
+            }
 
     def _is_acceptable_streaming_camera(self) -> bool:
         """Determine if a camera is streaming/usable."""

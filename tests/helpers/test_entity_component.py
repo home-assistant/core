@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
+    Context,
     EntityServiceResponse,
     HomeAssistant,
     ServiceCall,
@@ -24,7 +25,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady, Unauthorized
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,6 +39,7 @@ from tests.common import (
     MockEntity,
     MockModule,
     MockPlatform,
+    MockUser,
     async_fire_time_changed,
     mock_integration,
     mock_platform,
@@ -418,13 +420,19 @@ async def test_unload_entry_resets_platform(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids()) == 0
 
 
-async def test_unload_entry_fails_if_never_loaded(hass: HomeAssistant) -> None:
-    """."""
+async def test_unload_entry_tolerates_never_loaded(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test unloading an entry that was never loaded succeeds with a warning."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entry = MockConfigEntry(domain="entry_domain")
 
-    with pytest.raises(ValueError):
-        await component.async_unload_entry(entry)
+    assert await component.async_unload_entry(entry)
+    assert (
+        f"Ignored unload request for config entry Mock Title ({entry.entry_id}) "
+        f"in entry_domain.{DOMAIN}; no platform is loaded, it was never set up "
+        "or has already been unloaded"
+    ) in caplog.text
 
 
 async def test_update_entity(hass: HomeAssistant) -> None:
@@ -575,6 +583,52 @@ async def test_register_entity_service(
         DOMAIN, "hello", {"area_id": ENTITY_MATCH_NONE} | service_data, blocking=True
     )
     assert len(calls) == 2
+
+
+async def test_register_entity_service_admin_only(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test an admin-only entity service."""
+    # Grant control of all entities, so the call is only rejected for not being admin
+    hass_read_only_user.mock_policy({"entities": {"all": {"control": True}}})
+    entity = MockEntity(entity_id=f"{DOMAIN}.entity")
+    calls: list[MockEntity] = []
+
+    @callback
+    def handle_service(target: MockEntity, call: ServiceCall) -> None:
+        calls.append(target)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
+    await component.async_add_entities([entity])
+
+    component.async_register_entity_service(
+        "hello",
+        None,
+        handle_service,
+        admin_only=True,
+    )
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            "hello",
+            {"entity_id": entity.entity_id},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    assert calls == []
+
+    await hass.services.async_call(
+        DOMAIN,
+        "hello",
+        {"entity_id": entity.entity_id},
+        blocking=True,
+        context=Context(user_id=hass_admin_user.id),
+    )
+    assert calls == [entity]
 
 
 async def test_register_entity_service_response_data(hass: HomeAssistant) -> None:

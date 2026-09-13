@@ -14,7 +14,9 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     FanEntity,
+    FanEntityCapabilityAttribute,
     FanEntityFeature,
+    FanEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -91,12 +93,12 @@ DEFAULT_NAME = "MQTT Fan"
 
 MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
     {
-        fan.ATTR_DIRECTION,
-        fan.ATTR_OSCILLATING,
-        fan.ATTR_PERCENTAGE_STEP,
-        fan.ATTR_PERCENTAGE,
-        fan.ATTR_PRESET_MODE,
-        fan.ATTR_PRESET_MODES,
+        FanEntityStateAttribute.DIRECTION,
+        FanEntityStateAttribute.OSCILLATING,
+        FanEntityStateAttribute.PERCENTAGE_STEP,
+        FanEntityStateAttribute.PERCENTAGE,
+        FanEntityStateAttribute.PRESET_MODE,
+        FanEntityCapabilityAttribute.PRESET_MODES,
     }
 )
 

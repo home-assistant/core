@@ -69,12 +69,11 @@ def zeroconf_discovery_info_different_mac() -> ZeroconfServiceInfo:
 # Helper functions to reduce repetition
 
 
-async def _init_user_flow(hass: HomeAssistant, user_input: dict | None = None):
+async def _init_user_flow(hass: HomeAssistant):
     """Initialize a user config flow."""
     return await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data=user_input,
     )
 
 
@@ -255,8 +254,12 @@ async def test_connection_error(
     """Test we show user form on BSBLan connection error."""
     mock_bsblan.device.side_effect = BSBLANConnectionError
 
-    result = await _init_user_flow(
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
         hass,
+        result["flow_id"],
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
@@ -284,10 +287,13 @@ async def test_authentication_error(
         CONF_PASSWORD: "wrongpassword",
     }
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        user_input,
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -332,8 +338,12 @@ async def test_authentication_error_vs_connection_error(
     # Test connection error first
     mock_bsblan.device.side_effect = BSBLANConnectionError
 
-    result = await _init_user_flow(
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
         hass,
+        result["flow_id"],
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
@@ -345,8 +355,12 @@ async def test_authentication_error_vs_connection_error(
     # Reset and test authentication error
     mock_bsblan.device.side_effect = BSBLANAuthError
 
-    result = await _init_user_flow(
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
         hass,
+        result["flow_id"],
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
@@ -366,8 +380,12 @@ async def test_user_device_exists_abort(
     """Test we abort flow if BSBLAN device already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await _init_user_flow(
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
         hass,
+        result["flow_id"],
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
@@ -591,8 +609,12 @@ async def test_user_flow_can_update_existing_host_port(
     entry.add_to_hass(hass)
 
     # Try to configure the same device with different host/port via user flow
-    result = await _init_user_flow(
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
         hass,
+        result["flow_id"],
         {
             CONF_HOST: "10.0.2.60",  # Different IP
             CONF_PORT: 80,  # Different port
@@ -675,8 +697,12 @@ async def test_connection_error_recovery(
     # First attempt fails with connection error
     mock_bsblan.device.side_effect = BSBLANConnectionError
 
-    result = await _init_user_flow(
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
         hass,
+        result["flow_id"],
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,

@@ -192,7 +192,7 @@ class PicnicConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_ACCESS_TOKEN: auth_token,
             CONF_COUNTRY_CODE: user_input[CONF_COUNTRY_CODE],
         }
-        existing_entry = await self.async_set_unique_id(user_data["user_id"])
+        existing_entry = await self.async_set_unique_id(user_data.user_id)
 
         # Abort if we're adding a new config and the unique id
         # is already in use, else create the entry

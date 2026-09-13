@@ -2,8 +2,8 @@
 
 import asyncio
 from collections.abc import Mapping
-from datetime import datetime, timedelta
 import logging
+import time
 from typing import Any, override
 
 import httpx
@@ -75,7 +75,7 @@ class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
     _last_image: bytes | None
-    _last_update: datetime
+    _last_update: float
     _update_lock: asyncio.Lock
 
     def __init__(
@@ -114,7 +114,7 @@ class GenericCamera(Camera):
 
         self._last_url = None
         self._last_image = None
-        self._last_update = datetime.min
+        self._last_update = 0.0
         self._update_lock = asyncio.Lock()
 
         self._attr_device_info = DeviceInfo(
@@ -155,13 +155,12 @@ class GenericCamera(Camera):
             if (
                 self._last_image is not None
                 and url == self._last_url
-                and self._last_update + timedelta(0, self._attr_frame_interval)
-                > datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+                and self._last_update + self._attr_frame_interval > time.time()
             ):
                 return self._last_image
 
             try:
-                update_time = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+                update_time = time.time()
                 async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
                 response = await async_client.get(
                     url,

@@ -29,7 +29,7 @@ logging.getLogger("tuya_sharing").setLevel(logging.CRITICAL)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tuya Services."""
-    await async_setup_services(hass)
+    async_setup_services(hass)
 
     return True
 
@@ -78,9 +78,7 @@ async def cleanup_device_registry(
     ):
         for item in device_entry.identifiers:
             if item[0] == DOMAIN and item[1] not in device_manager.device_map:
-                device_registry.async_update_device(
-                    device_entry.id, remove_config_entry_id=entry.entry_id
-                )
+                device_registry.async_remove_device(device_entry.id)
                 break
 
 

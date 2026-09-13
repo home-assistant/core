@@ -53,7 +53,7 @@
       <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 43,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.2,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test ABC Type',
-      <ClimateEntityStateAttribute.HUMIDITY: 'humidity'>: 45,
+      <ClimateEntityStateAttribute.TARGET_HUMIDITY: 'humidity'>: 45,
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -68,7 +68,7 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 391>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 20.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_abc_type',

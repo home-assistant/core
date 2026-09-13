@@ -77,10 +77,18 @@ async def test_categorized_hidden_entities(
     assert not msg["payload"]["endpoints"]
 
 
-async def test_serialize_discovery(hass: HomeAssistant) -> None:
+async def test_serialize_discovery(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test we can serialize a discovery."""
     request = get_new_request("Alexa.Discovery", "Discover")
 
+    entity_entry = entity_registry.async_get_or_create(
+        "switch", "test", "bla", suggested_object_id="bla"
+    )
+    entity_registry.async_update_entity(
+        entity_entry.entity_id, aliases=["Alexa Switch"]
+    )
     hass.states.async_set("switch.bla", "on", {"friendly_name": "Boop Woz"})
 
     msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
@@ -89,6 +97,7 @@ async def test_serialize_discovery(hass: HomeAssistant) -> None:
     msg = msg["event"]
     endpoint = msg["payload"]["endpoints"][0]
 
+    assert endpoint["friendlyName"] == "Alexa Switch"
     assert endpoint["additionalAttributes"] == {
         "manufacturer": "Home Assistant",
         "model": "switch",

@@ -7,6 +7,7 @@ from typing import Any
 
 from pyHomee.model import HomeeNode
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
@@ -15,8 +16,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def setup_homee_platform(
+    hass: HomeAssistant,
     add_platform_entities: Callable[
-        [HomeeConfigEntry, AddConfigEntryEntitiesCallback, list[HomeeNode]],
+        [
+            HomeAssistant,
+            HomeeConfigEntry,
+            AddConfigEntryEntitiesCallback,
+            list[HomeeNode],
+        ],
         Coroutine[Any, Any, None],
     ],
     async_add_entities: AddConfigEntryEntitiesCallback,
@@ -24,13 +31,13 @@ async def setup_homee_platform(
 ) -> None:
     """Set up a homee platform."""
     await add_platform_entities(
-        config_entry, async_add_entities, config_entry.runtime_data.nodes
+        hass, config_entry, async_add_entities, config_entry.runtime_data.nodes
     )
 
     async def add_device(node: HomeeNode, add: bool) -> None:
         """Dynamically add entities."""
         if add:
-            await add_platform_entities(config_entry, async_add_entities, [node])
+            await add_platform_entities(hass, config_entry, async_add_entities, [node])
 
     config_entry.async_on_unload(
         config_entry.runtime_data.add_nodes_listener(add_device)

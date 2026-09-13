@@ -24,6 +24,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import UTC, utcnow
 
 from .conftest import (
@@ -537,9 +538,7 @@ async def test_add_event_date_time(
     mock_events_list({})
     assert await component_setup()
 
-    start_datetime = datetime.datetime.now(  # pylint: disable=home-assistant-enforce-now
-        tz=zoneinfo.ZoneInfo("America/Regina")
-    )
+    start_datetime = dt_util.now(time_zone=zoneinfo.ZoneInfo("America/Regina"))
     delta = datetime.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
 
@@ -602,9 +601,7 @@ async def test_unsupported_create_event(
     mock_events_list({})
     assert await component_setup()
 
-    start_datetime = datetime.datetime.now(  # pylint: disable=home-assistant-enforce-now
-        tz=zoneinfo.ZoneInfo("America/Regina")
-    )
+    start_datetime = dt_util.now(time_zone=zoneinfo.ZoneInfo("America/Regina"))
     delta = datetime.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
     entity_id = "calendar.backyard_light"

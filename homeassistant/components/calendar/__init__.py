@@ -69,6 +69,7 @@ from .const import (
     LIST_EVENT_FIELDS,
     CalendarEntityFeature,
     CalendarEntityStateAttribute,
+    CalendarEventStatus,
 )
 
 # mypy: disallow-any-generics
@@ -379,6 +380,7 @@ class CalendarEvent:
     uid: str | None = None
     recurrence_id: str | None = None
     rrule: str | None = None
+    status: CalendarEventStatus | None = None
 
     @property
     def start_datetime_local(self) -> datetime.datetime:

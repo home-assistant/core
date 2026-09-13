@@ -186,14 +186,16 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         mac = discovery_info.macaddress
         registry = dr.async_get(self.hass)
         if not (
-            device := registry.async_get_device(
+            devices := registry.async_get_devices(
                 connections={(dr.CONNECTION_NETWORK_MAC, mac)}
             )
         ):
             return self.async_abort(reason="no_devices_found")
-        for entry_id in device.config_entries:
+        for device in devices:
             if (
-                not (entry := hass.config_entries.async_get_entry(entry_id))
+                not (
+                    entry := hass.config_entries.async_get_entry(device.config_entry_id)
+                )
                 or entry.domain != DOMAIN
                 or entry.state is ConfigEntryState.LOADED
             ):
@@ -201,7 +203,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             if hass.config_entries.async_update_entry(
                 entry, data=entry.data | {CONF_HOST: discovery_info.ip}
             ):
-                hass.async_create_task(self.hass.config_entries.async_reload(entry_id))
+                hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
         return self.async_abort(reason="already_configured")
 
     async def async_step_device(

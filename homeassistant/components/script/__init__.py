@@ -250,6 +250,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not script_entities:
             return
 
+        for script_entity in script_entities:
+            script_entity.async_set_context(service.context)
+
         await asyncio.wait(
             [
                 create_eager_task(script_entity.async_turn_off())
@@ -779,6 +782,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
 
 
 @websocket_api.websocket_command({"type": "script/config", "entity_id": str})
+@websocket_api.require_admin
 def websocket_config(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,

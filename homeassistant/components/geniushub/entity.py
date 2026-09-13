@@ -8,7 +8,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-from . import ATTR_DURATION, ATTR_ZONE_MODE, DOMAIN, SVC_SET_ZONE_OVERRIDE
+from .const import ATTR_DURATION, ATTR_ZONE_MODE, DOMAIN, SVC_SET_ZONE_OVERRIDE
 
 # temperature is repeated here, as it gives access to high-precision temps
 GH_ZONE_ATTRS = ["mode", "temperature", "type", "occupied", "override"]

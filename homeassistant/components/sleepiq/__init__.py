@@ -6,6 +6,7 @@ from typing import Any
 from asyncsleepiq import (
     AsyncSleepIQ,
     SleepIQAPIException,
+    SleepIQBed,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
@@ -92,6 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
     except SleepIQAPIException as err:
         raise ConfigEntryNotReady(str(err) or "Error reading from SleepIQ API") from err
 
+    _filter_duplicate_beds(gateway)
     await _async_migrate_unique_ids(hass, entry, gateway)
 
     coordinator = SleepIQDataUpdateCoordinator(hass, entry, gateway)
@@ -118,6 +120,59 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> bool:
     """Unload the config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+def _foundation_feature_count(bed: SleepIQBed) -> int:
+    """Count foundation features on a bed."""
+    f = bed.foundation
+    return (
+        len(f.lights)
+        + len(f.actuators)
+        + len(f.presets)
+        + len(f.foot_warmers)
+        + len(f.core_climates)
+    )
+
+
+def _filter_duplicate_beds(gateway: AsyncSleepIQ) -> None:
+    """Remove duplicate bed objects that share sleeper IDs.
+
+    Groups beds whose sleeper-ID sets overlap and keeps the one with
+    the most foundation features so the real bed survives regardless
+    of API ordering.
+    """
+    groups: dict[frozenset[str], list[str]] = {}
+    for bed_id, bed in gateway.beds.items():
+        bed_sleeper_ids = frozenset(s.sleeper_id for s in bed.sleepers if s.sleeper_id)
+        if not bed_sleeper_ids:
+            continue
+        matched = None
+        for key in groups:
+            if key & bed_sleeper_ids:
+                matched = key
+                break
+        if matched is not None:
+            groups[matched].append(bed_id)
+        else:
+            groups[bed_sleeper_ids] = [bed_id]
+
+    for bed_ids in groups.values():
+        if len(bed_ids) < 2:
+            continue
+        best = max(
+            bed_ids, key=lambda bid: _foundation_feature_count(gateway.beds[bid])
+        )
+        for bed_id in bed_ids:
+            if bed_id != best:
+                _LOGGER.debug(
+                    "Removing duplicate bed '%s' (id=%s), keeping '%s' (id=%s)"
+                    " which has more foundation features",
+                    gateway.beds[bed_id].name,
+                    bed_id,
+                    gateway.beds[best].name,
+                    best,
+                )
+                del gateway.beds[bed_id]
 
 
 async def _async_migrate_unique_ids(
