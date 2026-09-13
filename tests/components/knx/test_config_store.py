@@ -777,12 +777,12 @@ async def test_migration_1_to_2(
     assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data
 
 
-async def test_migration_2_1_to_2_4(
+async def test_migration_2_1_to_2_5(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test migration from schema 2.1 to schema 2.4."""
+    """Test migration from schema 2.1 to schema 2.5."""
     await knx.setup_integration(
         config_store_fixture="config_store_binarysensor_v2_1.json",
         state_updater=False,
@@ -791,3 +791,23 @@ async def test_migration_2_1_to_2_4(
         hass, "config_store_binarysensor.json", "knx"
     )
     assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data
+
+
+async def test_migration_2_4_to_2_5(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test migration from schema 2.4 to schema 2.5."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_entity_category_v2_4.json",
+        state_updater=False,
+    )
+    new_data = await async_load_json_object_fixture(
+        hass, "config_store_entity_category.json", "knx"
+    )
+    assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data
+
+    # entities that could not be set up before are now created
+    assert hass.states.get("sensor.test_sensor")
+    assert hass.states.get("binary_sensor.test_binary_sensor")
