@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_update[update.my_pv_ac_elwa_2_firmware-entry]
+# name: test_update_available[update.my_pv_ac_elwa_2_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update[update.my_pv_ac_elwa_2_firmware-state]
+# name: test_update_available[update.my_pv_ac_elwa_2_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
@@ -46,7 +46,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-PV AC ELWA 2 Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'e0002200',
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'e0002201',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'e0002200',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -59,6 +59,69 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
+  })
+# ---
+# name: test_update_not_available[update.my_pv_ac_elwa_2_firmware-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.my_pv_ac_elwa_2_firmware',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Firmware',
+    'options': dict({
+    }),
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+    'original_icon': None,
+    'original_name': 'Firmware',
+    'platform': 'my_pv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 5>,
+    'translation_key': None,
+    'unique_id': '1601500000000000-firmware_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_not_available[update.my_pv_ac_elwa_2_firmware-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/my_pv/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-PV AC ELWA 2 Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'e0002200',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'e0002200',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.my_pv_ac_elwa_2_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
