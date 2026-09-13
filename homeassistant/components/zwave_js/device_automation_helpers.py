@@ -8,8 +8,6 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 
-NODE_STATUSES = ["asleep", "awake", "dead", "alive"]
-
 CONF_SUBTYPE = "subtype"
 CONF_VALUE_ID = "value_id"
 
