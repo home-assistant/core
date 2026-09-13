@@ -1,5 +1,6 @@
 """The tests for the denonavr media player platform."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -95,7 +96,9 @@ def client_fixture():
 
 
 async def setup_denonavr(
-    hass: HomeAssistant, serial_number: str | None = TEST_SERIALNUMBER
+    hass: HomeAssistant,
+    serial_number: str | None = TEST_SERIALNUMBER,
+    options: dict | None = None,
 ) -> MockConfigEntry:
     """Initialize media_player for tests."""
     entry_data = {
@@ -110,6 +113,7 @@ async def setup_denonavr(
         domain=DOMAIN,
         unique_id=TEST_UNIQUE_ID if serial_number else None,
         data=entry_data,
+        options=options or {},
     )
 
     mock_entry.add_to_hass(hass)
@@ -194,6 +198,57 @@ async def test_update_audyssey(hass: HomeAssistant, client) -> None:
     await hass.async_block_till_done()
 
     assert client.async_update_audyssey.call_count == calls_before_service + 1
+
+
+async def test_update_audyssey_restores_availability(
+    hass: HomeAssistant, client
+) -> None:
+    """A successful call recovers Audyssey entities from a prior failure.
+
+    Calling the receiver directly instead of going through the
+    coordinator would change its properties without updating the
+    Audyssey coordinator's last_update_success, so a prior failure
+    would keep every Audyssey-backed entity unavailable even after
+    this succeeds.
+    """
+    entry = await setup_denonavr(hass)
+    entry.runtime_data.audyssey_coordinator.last_update_success = False
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_AUDYSSEY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+    )
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.audyssey_coordinator.last_update_success is True
+
+
+async def test_set_dynamic_eq_always_refreshes_audyssey(
+    hass: HomeAssistant, client
+) -> None:
+    """Refreshes Audyssey after this action regardless of the option.
+
+    "Update Audyssey settings" only governs the recurring poll - this
+    action just changed Audyssey-scoped data directly, so the new
+    select/switch entities need to hear about it either way.
+    """
+    with patch(
+        "homeassistant.components.denonavr.coordinator.ACTION_REFRESH_DEBOUNCE_COOLDOWN",
+        0,
+    ):
+        await setup_denonavr(hass, options={"update_audyssey": False})
+        calls_before = client.async_update_audyssey.await_count
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_DYNAMIC_EQ,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DYNAMIC_EQ: False},
+        )
+        await asyncio.sleep(0)
+        await hass.async_block_till_done()
+
+    assert client.async_update_audyssey.await_count > calls_before
 
 
 @pytest.mark.parametrize(

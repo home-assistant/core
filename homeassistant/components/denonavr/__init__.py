@@ -127,14 +127,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
 
     @callback
     def _propagate_connectivity_to_audyssey() -> None:
-        """Reflect the status coordinator's own connectivity into this one.
+        """Reflect the status coordinator's connectivity into this one.
 
-        The Audyssey coordinator often isn't polling on its own
-        schedule (update_interval=None unless "Update Audyssey
-        settings" is on), so it would otherwise never learn the
-        receiver went offline and just keep reporting its last cached
-        values as available indefinitely.
+        Only when the Audyssey coordinator has no recurring poll of
+        its own (update_interval=None) - otherwise it would never
+        learn the receiver went offline. When it does poll on its own
+        schedule, an unrelated general-status success shouldn't
+        overwrite its own last_update_success - that would mark it
+        recovered without an actual Audyssey refresh confirming it.
         """
+        if audyssey_coordinator.update_interval is not None:
+            return
         if audyssey_coordinator.last_update_success != coordinator.last_update_success:
             audyssey_coordinator.last_update_success = coordinator.last_update_success
             audyssey_coordinator.async_update_listeners()

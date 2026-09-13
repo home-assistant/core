@@ -22,7 +22,7 @@ from denonavr.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -138,3 +138,17 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
                     self.receiver.name,
                     err,
                 )
+
+
+@callback
+def mark_unavailable(coordinator: DenonAvrDataUpdateCoordinator) -> None:
+    """Mark a coordinator unavailable after a confirmed connectivity failure.
+
+    For use outside the coordinator's own refresh cycle - e.g. an
+    entity's or media_player.py's own command failing with a
+    connectivity-type error - so availability reflects that
+    immediately rather than waiting for the next scheduled poll.
+    """
+    if coordinator.last_update_success:
+        coordinator.last_update_success = False
+        coordinator.async_update_listeners()

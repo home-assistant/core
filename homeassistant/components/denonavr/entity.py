@@ -19,7 +19,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import PENDING_VALUE_TIMEOUT
-from .coordinator import DenonAvrDataUpdateCoordinator
+from .coordinator import UNAVAILABLE_ON, DenonAvrDataUpdateCoordinator, mark_unavailable
 
 
 class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordinator]):
@@ -127,6 +127,15 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
         async with self._action_lock:
             try:
                 await send()
+            except UNAVAILABLE_ON as err:
+                # A confirmed connectivity failure, not just a
+                # rejected command - mark unavailable now rather than
+                # leave stale data looking current until the next poll.
+                mark_unavailable(self.coordinator)
+                raise HomeAssistantError(
+                    f"Could not set {error_label} to {value} on"
+                    f" {self._receiver.name}: {err}"
+                ) from err
             except DenonAvrError as err:
                 raise HomeAssistantError(
                     f"Could not set {error_label} to {value} on"

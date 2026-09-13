@@ -49,7 +49,7 @@ from .const import (
     DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
 )
-from .coordinator import DenonAvrDataUpdateCoordinator
+from .coordinator import DenonAvrDataUpdateCoordinator, mark_unavailable
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +142,10 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
     """Log command errors and refresh the coordinator after success.
 
     The refresh is needed because this entity has should_poll=False,
-    so nothing else refreshes it after a successful command.
+    so nothing else refreshes it after a successful command. A
+    connectivity-type failure (timeout, network, forbidden, malformed
+    response) also marks the coordinator unavailable immediately,
+    rather than leaving stale data looking current until the next poll.
     """
 
     @wraps(func)
@@ -158,6 +161,7 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
                     self._receiver.host,
                     err,
                 )
+                mark_unavailable(self.coordinator)
                 return None
             except AvrNetworkError as err:
                 _LOGGER.warning(
@@ -165,6 +169,7 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
                     self._receiver.host,
                     err,
                 )
+                mark_unavailable(self.coordinator)
                 return None
             except AvrProcessingError as err:
                 _LOGGER.warning(
@@ -182,6 +187,7 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
                     self._receiver.host,
                     err,
                 )
+                mark_unavailable(self.coordinator)
                 return None
             except (AvrInvalidResponseError, AvrIncompleteResponseError) as err:
                 _LOGGER.warning(
@@ -189,6 +195,7 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
                     self._receiver.host,
                     err,
                 )
+                mark_unavailable(self.coordinator)
                 return None
             except AvrCommandError as err:
                 _LOGGER.error(
@@ -506,18 +513,14 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
         """Send generic command."""
         return await self._receiver.async_get_command(command)
 
-    @async_log_errors
     async def async_update_audyssey(self) -> None:
         """Get the latest audyssey information from device."""
-        await self._receiver.async_update_audyssey()
-        # The direct call above already refreshed the shared receiver
-        # object - the Audyssey-backed select/switch entities just
-        # need telling to re-read it, not another fetch, so this only
-        # notifies listeners rather than calling
-        # async_request_refresh() (which would also deadlock: it's
-        # still under this method's own decorator-held lock at this
-        # point, and async_update_listeners doesn't touch that lock).
-        self._audyssey_coordinator.async_update_listeners()
+        # Routed through the coordinator, not the receiver directly, so
+        # this correctly updates last_update_success (not just the
+        # receiver's cached values). Undecorated: async_refresh()
+        # already acquires the shared lock itself, so decorating this
+        # too would deadlock.
+        await self._audyssey_coordinator.async_refresh()
 
     @async_log_errors
     async def async_set_dynamic_eq(self, dynamic_eq: bool) -> None:
@@ -527,6 +530,10 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
         else:
             await self._receiver.async_dynamic_eq_off()
 
-        if self._update_audyssey:
-            await self._receiver.async_update_audyssey()
-            self._audyssey_coordinator.async_update_listeners()
+        # Always refreshes Audyssey, regardless of "Update Audyssey
+        # settings" - that option only governs the recurring poll, not
+        # confirming an action that just changed Audyssey data. Safe
+        # to call from inside the decorator's lock: async_request_refresh()
+        # (immediate=False) only schedules and returns here, it
+        # doesn't acquire the lock itself.
+        await self._audyssey_coordinator.async_request_refresh()

@@ -220,6 +220,35 @@ async def test_set_reference_level_offset_raises_on_avr_error(
         )
 
 
+async def test_connectivity_error_during_action_marks_unavailable(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A connectivity failure while sending a command marks it unavailable.
+
+    Unlike a rejected command (AvrCommandError, see the test above),
+    this indicates the receiver itself is unreachable - the entity
+    shouldn't keep showing available with stale data until the next
+    scheduled poll happens to notice.
+    """
+    await setup_denonavr(hass)
+    entity_id = _entity_id(hass, "reference_level_offset")
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    client.async_set_reflevoffset.side_effect = AvrNetworkError(
+        "Connection refused", "SetAudyssey"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "+5dB"},
+            blocking=True,
+        )
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
 async def test_dynamic_volume(hass: HomeAssistant, client: MagicMock) -> None:
     """Test the dynamic volume select reads and writes correctly."""
     await setup_denonavr(hass)
