@@ -158,6 +158,7 @@ async def test_remove_entry(hass: HomeAssistant, mock_light, mock_entry) -> None
 
     assert mock_disconnect.called
     assert DATA_ADDRESSES not in hass.data
+    assert DATA_DISCOVERY_SUBSCRIPTION not in hass.data
 
 
 async def test_remove_entry_exceptions_caught(
