@@ -70,7 +70,7 @@ async def test_handler_failing(hass: HomeAssistant, websocket_client) -> None:
     assert msg["error"]["code"] == const.ERR_UNKNOWN_ERROR
 
 
-async def test_invalid_vol(hass: HomeAssistant, websocket_client) -> None:
+async def test_invalid_probatio(hass: HomeAssistant, websocket_client) -> None:
     """Test a command that raises invalid probatio error."""
     async_register_command(
         hass,

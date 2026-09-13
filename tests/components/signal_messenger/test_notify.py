@@ -129,7 +129,7 @@ def test_send_message_to_api_with_bad_data_throws_error(
     assert "send message" in str(exc.value).lower()
 
 
-def test_send_message_with_bad_data_throws_vol_error(
+def test_send_message_with_bad_data_throws_probatio_error(
     signal_notification_service: SignalNotificationService,
     signal_requests_mock_factory: Mocker,
     caplog: pytest.LogCaptureFixture,
@@ -147,7 +147,7 @@ def test_send_message_with_bad_data_throws_vol_error(
     assert "not a valid option" in str(exc.value)
 
 
-def test_send_message_styled_with_bad_data_throws_vol_error(
+def test_send_message_styled_with_bad_data_throws_probatio_error(
     signal_notification_service: SignalNotificationService,
     signal_requests_mock_factory: Mocker,
     caplog: pytest.LogCaptureFixture,

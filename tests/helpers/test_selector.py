@@ -93,14 +93,14 @@ def _test_selector(
     assert not any(isinstance(val, Enum) for val in selector_instance.config.values())
 
     # Use selector in schema and validate
-    vol_schema = probatio.Schema({"selection": selector_instance})
+    validation_schema = probatio.Schema({"selection": selector_instance})
     for selection in valid_selections:
-        assert vol_schema({"selection": selection}) == {
+        assert validation_schema({"selection": selection}) == {
             "selection": converter(selection)
         }
     for selection in invalid_selections:
         with pytest.raises(probatio.Invalid):
-            vol_schema({"selection": selection})
+            validation_schema({"selection": selection})
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})
@@ -798,10 +798,10 @@ def test_numeric_threshold_selector_active_choice_extraction(
     value_in: Any, value_out: Any
 ) -> None:
     """Test that active_choice is stripped and only the active field is kept."""
-    vol_schema = probatio.Schema(
+    validation_schema = probatio.Schema(
         {"selection": selector.selector({"numeric_threshold": {"mode": "changed"}})}
     )
-    assert vol_schema({"selection": value_in}) == {"selection": value_out}
+    assert validation_schema({"selection": value_in}) == {"selection": value_out}
 
 
 @pytest.mark.parametrize(

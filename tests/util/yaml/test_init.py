@@ -529,7 +529,7 @@ def test_string_annotated() -> None:
 
 
 @pytest.mark.usefixtures("try_both_loaders")
-def test_string_used_as_vol_schema() -> None:
+def test_string_used_as_probatio_schema() -> None:
     """Test the subclassed strings can be used in probatio schemas."""
     conf = "wanted_data:\n  key_1: value_1\n  key_2: value_2\n"
     with io.StringIO(conf) as file:

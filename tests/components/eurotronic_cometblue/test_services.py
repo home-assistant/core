@@ -121,7 +121,7 @@ async def test_set_schedule_errors(
     """Test set_schedule service error handling."""
     await setup_with_selected_platforms(hass, mock_config_entry)
 
-    # voloptuous schema should catch invalid time formats and incorrect data
+    # probatio schema should catch invalid time formats and incorrect data
     with pytest.raises(probatio.Invalid, match="Invalid time specified"):
         await hass.services.async_call(
             DOMAIN,
@@ -172,7 +172,7 @@ async def test_set_schedule_errors(
             blocking=True,
         )
 
-    # Errors not caught by voluptous schema
+    # Errors not caught by probatio schema
     with pytest.raises(ServiceValidationError, match="Missing from/to in entry"):
         await hass.services.async_call(
             DOMAIN,
