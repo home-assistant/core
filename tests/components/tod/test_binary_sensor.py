@@ -205,9 +205,7 @@ async def test_from_sunrise_to_sunset(
     sunrise = dt_util.as_local(
         get_astral_event_date(hass, "sunrise", dt_util.as_utc(test_time))
     )
-    sunset = dt_util.as_local(
-        get_astral_event_date(hass, "sunset", dt_util.as_utc(test_time))
-    )
+    sunset = dt_util.as_local(get_astral_event_next(hass, "sunset", sunrise))
     config = {
         "binary_sensor": [
             {
@@ -544,12 +542,11 @@ async def test_sun_offset(
 ) -> None:
     """Test sun event with offset."""
     test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
-    sunrise = dt_util.as_local(
-        get_astral_event_date(hass, "sunrise", dt_util.as_utc(test_time))
-        + timedelta(hours=-1, minutes=-30)
-    )
+    sunrise_event = get_astral_event_date(hass, "sunrise", dt_util.as_utc(test_time))
+    assert sunrise_event is not None
+    sunrise = dt_util.as_local(sunrise_event + timedelta(hours=-1, minutes=-30))
     sunset = dt_util.as_local(
-        get_astral_event_date(hass, "sunset", dt_util.as_utc(test_time))
+        get_astral_event_next(hass, "sunset", sunrise_event)
         + timedelta(hours=1, minutes=30)
     )
     config = {
