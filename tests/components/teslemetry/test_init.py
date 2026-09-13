@@ -20,6 +20,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
     BluetoothCommandFailed,
+    BluetoothTimeout,
     BluetoothTransportError,
     BluetoothUnconfirmedCommand,
     Forbidden,
@@ -27,6 +28,7 @@ from tesla_fleet_api.exceptions import (
     InvalidResponse,
     InvalidToken,
     LoginRequired,
+    NotOnWhitelistFault,
     PrivateKeyError,
     RateLimited,
     SubscriptionRequired,
@@ -46,6 +48,7 @@ from homeassistant.components.teslemetry.const import (
     CONF_SITE_ID,
     CONF_VIN,
     DOMAIN,
+    ISSUE_TYPE_BLE_KEY_REJECTED,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
 )
@@ -82,7 +85,11 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -2224,6 +2231,122 @@ async def test_vehicle_router_fails_over_on_stale_cache_hit(
 
         bluetooth_vehicle.flash_lights.assert_awaited_once()
         cloud.assert_awaited_once()
+
+
+async def test_ble_key_rejection_raises_repair_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """A genuine key rejection over Bluetooth raises a per-vehicle repair issue."""
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        _cloud,
+    ):
+        bluetooth_vehicle.flash_lights.side_effect = NotOnWhitelistFault()
+
+        assert await router.flash_lights() == CLOUD_RESULT
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    issue_id = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{VIN}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == ISSUE_TYPE_BLE_KEY_REJECTED
+    assert issue.data == {
+        "entry_id": entry.entry_id,
+        "vin": VIN,
+        "issue_type": ISSUE_TYPE_BLE_KEY_REJECTED,
+        "vehicle": "Test",
+    }
+
+
+@pytest.mark.parametrize(
+    "unreachable_error",
+    [
+        pytest.param(BluetoothTimeout(), id="asleep_or_out_of_range_timeout"),
+        pytest.param(BluetoothTransportError(), id="transport_failure"),
+        pytest.param(BleakError("no route"), id="unreachable"),
+    ],
+)
+async def test_ble_key_rejection_not_raised_when_unreachable(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    unreachable_error: Exception,
+) -> None:
+    """A vehicle that is merely asleep, out of range or unreachable is not a key rejection."""
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        _cloud,
+    ):
+        bluetooth_vehicle.flash_lights.side_effect = unreachable_error
+
+        assert await router.flash_lights() == CLOUD_RESULT
+
+    issue_id = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{VIN}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_ble_key_rejection_not_raised_when_out_of_range(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """A vehicle out of Bluetooth range never reaches the primary, so nothing is raised."""
+    async with _paired_entry(hass, MagicMock(return_value=None)) as (
+        router,
+        bluetooth_vehicle,
+        _cloud,
+    ):
+        # Even a mock that would reject the key must never be reached.
+        bluetooth_vehicle.flash_lights.side_effect = NotOnWhitelistFault()
+
+        assert await router.flash_lights() == CLOUD_RESULT
+        bluetooth_vehicle.flash_lights.assert_not_called()
+
+    issue_id = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{VIN}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_ble_key_rejection_clears_when_key_works_again(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """The repair issue clears once a command succeeds over Bluetooth again."""
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        _cloud,
+    ):
+        issue_id = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{VIN}"
+
+        bluetooth_vehicle.flash_lights.side_effect = NotOnWhitelistFault()
+        assert await router.flash_lights() == CLOUD_RESULT
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+        bluetooth_vehicle.flash_lights.side_effect = None
+        bluetooth_vehicle.flash_lights.return_value = BLE_RESULT
+        assert await router.flash_lights() == BLE_RESULT
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_ble_key_rejection_survives_metadata_refresh(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """A locally-raised key rejection must not be cleared by a metadata refresh that never reports it."""
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        _cloud,
+    ):
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        issue_id = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{VIN}"
+
+        bluetooth_vehicle.flash_lights.side_effect = NotOnWhitelistFault()
+        assert await router.flash_lights() == CLOUD_RESULT
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+        await entry.runtime_data.metadata_coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
 
 async def test_vehicle_paired_but_never_seen(hass: HomeAssistant) -> None:

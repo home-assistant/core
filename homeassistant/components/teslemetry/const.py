@@ -2,6 +2,7 @@
 
 from enum import StrEnum
 import logging
+from typing import Final
 
 DOMAIN = "teslemetry"
 
@@ -48,6 +49,10 @@ ENERGY_HISTORY_FIELDS = [
     "total_grid_energy_exported",
 ]
 
+
+# A Bluetooth key the vehicle has stopped accepting, detected locally at
+# runtime rather than from vehicle metadata (see VEHICLE_ISSUE_LEARN_MORE).
+ISSUE_TYPE_BLE_KEY_REJECTED: Final = "ble_key_rejected"
 
 # Vehicle metadata "issue" values that map to an actionable repair issue, with
 # an optional "learn more" URL the user can visit to resolve it. The "no_data"

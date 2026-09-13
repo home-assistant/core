@@ -1296,6 +1296,20 @@
     }
   },
   "issues": {
+    "ble_key_rejected": {
+      "fix_flow": {
+        "abort": {
+          "vehicle_removed": "This vehicle's Bluetooth pairing was removed before the fix could run."
+        },
+        "step": {
+          "confirm": {
+            "description": "{vehicle} has stopped accepting commands over its local Bluetooth key, so Home Assistant is sending commands through the cloud instead. This usually means the key was removed from the vehicle's Locks screen.\n\nSelect **Submit** to re-pair the Bluetooth key.",
+            "title": "[%key:component::teslemetry::issues::ble_key_rejected::title%]"
+          }
+        }
+      },
+      "title": "Re-pair the Bluetooth key for {vehicle}"
+    },
     "key": {
       "fix_flow": {
         "error": {
