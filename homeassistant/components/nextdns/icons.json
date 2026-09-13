@@ -99,14 +99,8 @@
       "block_dailymotion": {
         "default": "mdi:movie-search-outline"
       },
-      "block_data_drop_services": {
-        "default": "mdi:database-off-outline"
-      },
       "block_dating": {
         "default": "mdi:candelabra"
-      },
-      "block_decentralized_web_gateways": {
-        "default": "mdi:web-off"
       },
       "block_discord": {
         "default": "mdi:message-text"
@@ -122,9 +116,6 @@
       },
       "block_fortnite": {
         "default": "mdi:tank"
-      },
-      "block_free_hosting_domains": {
-        "default": "mdi:server-off"
       },
       "block_gambling": {
         "default": "mdi:slot-machine"
@@ -183,9 +174,6 @@
       "block_reddit": {
         "default": "mdi:reddit"
       },
-      "block_residential_hosting": {
-        "default": "mdi:home-off-outline"
-      },
       "block_roblox": {
         "default": "mdi:robot"
       },
@@ -220,7 +208,7 @@
         "default": "mdi:image-outline"
       },
       "block_tunneling_endpoints": {
-        "default": "mdi:tunnel-outline"
+        "default": "mdi:vpn"
       },
       "block_twitch": {
         "default": "mdi:twitch"
