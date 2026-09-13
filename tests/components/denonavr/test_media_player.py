@@ -6,6 +6,7 @@ from unittest.mock import patch
 from denonavr.exceptions import AvrIncompleteResponseError, AvrInvalidResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+
 from homeassistant.components import media_player
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
@@ -60,6 +61,8 @@ def client_fixture():
         mock_client_class.return_value.input_func_list = []
         mock_client_class.return_value.sound_mode_list = []
         mock_client_class.return_value.zones = {"Main": mock_client_class.return_value}
+        mock_client_class.return_value.telnet_connected = False
+        mock_client_class.return_value.telnet_healthy = False
         yield mock_client_class.return_value
 
 
@@ -145,9 +148,9 @@ async def test_update_audyssey(hass: HomeAssistant, client) -> None:
     """Test that dynamic eq method works."""
     await setup_denonavr(hass)
 
-    # The select/switch platforms also fetch Audyssey status once at
-    # setup (see homeassistant/components/denonavr/__init__.py), so the
-    # mock has already been called by the time the service below runs -
+    # The Audyssey coordinator also fetches this once at setup (see
+    # homeassistant/components/denonavr/coordinator.py), so the mock
+    # has already been called by the time the service below runs -
     # assert the service adds exactly one more call, rather than a
     # fixed total.
     calls_before_service = client.async_update_audyssey.call_count

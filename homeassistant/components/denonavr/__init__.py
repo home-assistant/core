@@ -1,9 +1,12 @@
 """The Denon AVR Network Receivers integration."""
 
+import asyncio
+from dataclasses import dataclass
+from datetime import timedelta
 import logging
 
 from denonavr import DenonAVR
-from denonavr.exceptions import AvrNetworkError, AvrTimoutError, DenonAvrError
+from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
@@ -19,6 +22,7 @@ from .const import (
     CONF_USE_TELNET,
     CONF_ZONE2,
     CONF_ZONE3,
+    COORDINATOR_UPDATE_INTERVAL,
     DEFAULT_SHOW_SOURCES,
     DEFAULT_TIMEOUT,
     DEFAULT_UPDATE_AUDYSSEY,
@@ -27,6 +31,7 @@ from .const import (
     DEFAULT_ZONE3,
     DOMAIN,
 )
+from .coordinator import DenonAvrDataUpdateCoordinator, async_refresh_status
 from .receiver import ConnectDenonAVR
 from .services import async_setup_services
 
@@ -35,7 +40,17 @@ PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SELECT, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
-type DenonavrConfigEntry = ConfigEntry[DenonAVR]
+
+@dataclass
+class DenonAvrData:
+    """Runtime data for a Denon AVR config entry."""
+
+    receiver: DenonAVR
+    coordinator: DenonAvrDataUpdateCoordinator
+    audyssey_coordinator: DenonAvrDataUpdateCoordinator
+
+
+type DenonavrConfigEntry = ConfigEntry[DenonAvrData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -64,28 +79,66 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     receiver = connect_denonavr.receiver
     assert receiver is not None
 
-    entry.runtime_data = receiver
+    update_audyssey = entry.options.get(CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY)
+    update_interval = timedelta(seconds=COORDINATOR_UPDATE_INTERVAL)
 
+    # Shared by both coordinators below, every select/switch entity, and
+    # media_player.py's own commands - the receiver's HTTP/Telnet
+    # interface can't safely handle concurrent requests. Created once
+    # here (not looked up from the receiver object) since denonavr's
+    # attrs classes are unhashable, so they can't be dict/weak-ref keys.
+    lock = asyncio.Lock()
+
+    coordinator = DenonAvrDataUpdateCoordinator(
+        hass,
+        entry,
+        receiver,
+        lock,
+        name="status",
+        update_interval=update_interval,
+        refresh_fn=async_refresh_status,
+    )
+    # A receiver that can't be reached for basic status right after a
+    # successful connection is exceptional enough to treat as "not
+    # ready" (matches this integration's existing behavior).
+    await coordinator.async_config_entry_first_refresh()
+
+    audyssey_coordinator = DenonAvrDataUpdateCoordinator(
+        hass,
+        entry,
+        receiver,
+        lock,
+        name="audyssey",
+        # Only polls on a recurring schedule if the (opt-in, since a
+        # fetch can reportedly take up to ~10s on some receivers)
+        # "Update Audyssey settings" option is on. Either way, it can
+        # still be asked to refresh on demand via async_request_refresh
+        # - the select/switch entities do exactly that right after
+        # their own actions, regardless of this option.
+        update_interval=update_interval if update_audyssey else None,
+        refresh_fn=lambda r: r.async_update_audyssey(),
+    )
     # Audyssey values (dynamic_eq, reference_level_offset, dynamic_volume,
-    # multi_eq) aren't populated by the receiver's regular status queries -
-    # fetch them once here, centrally, before the select/switch platforms
-    # set up. Doing it here (rather than in each platform's own setup)
-    # avoids both platforms firing an identical request at the receiver
-    # at the same time, since async_forward_entry_setups sets them up
-    # concurrently.
-    try:
-        await receiver.async_update_audyssey()
-    except DenonAvrError as ex:
-        _LOGGER.debug(
-            "Could not fetch initial Audyssey status for %s: %s", receiver.name, ex
-        )
+    # multi_eq) aren't populated by the receiver's regular status queries
+    # at all, so without this the entities backed by them would start
+    # (and without Telnet, stay) unavailable. Not every receiver
+    # supports Audyssey though, so a failure here shouldn't block setup
+    # the way the main coordinator's failure does - just leave those
+    # entities unavailable, as expected.
+    await audyssey_coordinator.async_refresh()
+
+    entry.runtime_data = DenonAvrData(
+        receiver=receiver,
+        coordinator=coordinator,
+        audyssey_coordinator=audyssey_coordinator,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     use_telnet = entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET)
 
     async def _async_disconnect(event: Event) -> None:
         """Disconnect from Telnet."""
-        if use_telnet and receiver is not None:
+        if use_telnet:
             await receiver.async_telnet_disconnect()
 
     if use_telnet:
@@ -105,7 +158,7 @@ async def async_unload_entry(
     )
 
     if config_entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET):
-        receiver = config_entry.runtime_data
+        receiver = config_entry.runtime_data.receiver
         await receiver.async_telnet_disconnect()
 
     # Remove zone2 and zone3 entities if needed

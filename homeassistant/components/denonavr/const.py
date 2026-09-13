@@ -24,14 +24,22 @@ DEFAULT_USE_TELNET = False
 # documented worst case (~10s) for the slowest refresh (GetAudyssey).
 PENDING_VALUE_TIMEOUT = 15
 
-# Poll interval for the select/switch entities in this integration.
-# Longer than the default (~15s) since several of them share the same
-# underlying refresh call (e.g. three selects all trigger GetAudyssey);
-# a longer interval keeps that redundancy from adding up to frequent
-# receiver traffic while still letting external changes (made outside
-# HA) surface without depending on the media player entity staying
-# enabled.
-ENTITY_SCAN_INTERVAL = 60
+# Shared by both DenonAvrDataUpdateCoordinator instances (general status
+# and Audyssey) - matches media_player.py's existing poll rate, since
+# the general one replaces what media_player.py already polled at this
+# interval, and there's no reason for Audyssey to be checked more often.
+COORDINATOR_UPDATE_INTERVAL = 10
+
+# Debounce for action-triggered refreshes specifically (not the
+# recurring poll above, which is unaffected by this). Matches the
+# established pattern for exactly this situation (see e.g. tplink's own
+# coordinator): immediate=False rather than a plain
+# async_request_refresh(), since the receiver needs a moment to settle
+# after a command anyway, so waiting a short beat before confirming is
+# correct, not just tolerated - and it coalesces near-simultaneous
+# actions (e.g. two Audyssey-scoped settings changed in quick
+# succession) into a single shared refresh instead of one each.
+ACTION_REFRESH_DEBOUNCE_COOLDOWN = 0.5
 
 # denonavr.const has no "list of valid options" helper for these three
 # (unlike reference_level_offset/dynamic_volume/multi_eq); their option

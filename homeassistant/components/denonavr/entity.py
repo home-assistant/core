@@ -6,74 +6,44 @@ refresh, then reconciles once it actually catches up (bounded by a
 timeout so a command that never applied doesn't mask reality forever).
 """
 
-import asyncio
 from collections.abc import Callable, Coroutine
-import logging
 import time
 from typing import Any, override
-import weakref
 
-from denonavr import DenonAVR
 from denonavr.exceptions import DenonAvrError
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import PENDING_VALUE_TIMEOUT
-
-_LOGGER = logging.getLogger(__name__)
-
-# Keyed by receiver instance rather than per-entity: the receiver's
-# HTTP/Telnet interface can't safely handle concurrent requests
-# (PARALLEL_UPDATES=1 in each platform only serializes calls that
-# target multiple entities at once, not repeated calls to one entity or
-# calls split across select.py/switch.py), so every entity acting on a
-# given receiver shares one lock instead of racing its own.
-_receiver_locks: weakref.WeakKeyDictionary[DenonAVR, asyncio.Lock] = (
-    weakref.WeakKeyDictionary()
-)
+from .coordinator import DenonAvrDataUpdateCoordinator
 
 
-def _get_receiver_lock(receiver: DenonAVR) -> asyncio.Lock:
-    """Return the lock shared by every entity acting on this receiver."""
-    if receiver not in _receiver_locks:
-        _receiver_locks[receiver] = asyncio.Lock()
-    return _receiver_locks[receiver]
-
-
-class DenonAvrPendingValueEntity[_T](Entity):
+class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordinator]):
     """Base for entities that show an optimistic value until confirmed."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        receiver: DenonAVR,
+        coordinator: DenonAvrDataUpdateCoordinator,
         unique_id: str,
         device_info: DeviceInfo,
-        refresh_fn: Callable[[], Coroutine[Any, Any, None]] | None = None,
-        poll_refresh_enabled: Callable[[], bool] | None = None,
     ) -> None:
-        """Initialize the entity.
-
-        `poll_refresh_enabled`, if given, is checked before the
-        *recurring* poll (async_update) refreshes - not the one-time
-        setup fetch in __init__.py, and not the refresh right after
-        this entity's own action, both of which stay unconditional
-        regardless (see the module docstrings for why). Used to let
-        Audyssey-backed entities' periodic polling honor the existing
-        "Update Audyssey settings" option, matching the precedent
-        already established for media_player.py's own recurring poll.
-        """
-        self._receiver = receiver
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._receiver = coordinator.receiver
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
-        self._action_lock = _get_receiver_lock(receiver)
-        self._refresh_fn = refresh_fn
-        self._poll_refresh_enabled = poll_refresh_enabled
+        # Only guards the "send the command" step. The coordinator's own
+        # refresh shares this same lock (see coordinator.py), so this
+        # closes the gap PARALLEL_UPDATES leaves: it only serializes
+        # calls that target multiple entities at once, not repeated
+        # calls to one entity or calls split across platforms.
+        self._action_lock = coordinator.lock
         self._pending_value: _T | None = None
         self._pending_value_set_at: float | None = None
         self._pending_value_expiry_unsub: Callable[[], None] | None = None
@@ -106,9 +76,8 @@ class DenonAvrPendingValueEntity[_T](Entity):
 
         Without this, HA's own stored state (what automations and the
         frontend see) would keep showing the optimistic value until
-        something else happens to re-evaluate it - the next poll, or
-        whenever a user opens the entity - rather than within the
-        documented timeout.
+        something else happens to re-evaluate it, rather than within
+        the documented timeout.
         """
         self._pending_value_expiry_unsub = None
         self._pending_value = None
@@ -121,6 +90,24 @@ class DenonAvrPendingValueEntity[_T](Entity):
         if self._pending_value is not None:
             return self._pending_value
         return self._read_value()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Reconcile a still-pending value once the coordinator refreshes.
+
+        Runs whenever the coordinator's data actually changes, whether
+        from this entity's own action, another entity sharing the same
+        coordinator, or the recurring poll - not right after requesting
+        a refresh, since the coordinator's debounced refresh (see
+        coordinator.py) doesn't complete synchronously with that call.
+        """
+        if (
+            self._pending_value is not None
+            and self._read_value() == self._pending_value
+        ):
+            self._clear_pending_value()
+        super()._handle_coordinator_update()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -136,13 +123,15 @@ class DenonAvrPendingValueEntity[_T](Entity):
         value: _T,
         error_label: str,
     ) -> None:
-        """Send a command, show it immediately, then reconcile.
+        """Send a command, show it immediately, then request confirmation.
 
         `send` is a zero-arg callable returning a fresh coroutine each
-        time (e.g. a lambda), not an already-awaited one. Held under
-        the receiver-wide lock together with the post-command refresh,
-        so an older, slower refresh from another call can't land after
-        (and overwrite) a newer one.
+        time (e.g. a lambda), not an already-awaited one. Reconciling
+        the pending value once the receiver actually confirms it
+        happens in _handle_coordinator_update, not here - the
+        coordinator's refresh is debounced (immediate=False, see
+        coordinator.py) and doesn't complete synchronously with the
+        request below.
         """
         async with self._action_lock:
             try:
@@ -153,48 +142,11 @@ class DenonAvrPendingValueEntity[_T](Entity):
                     f" {self._receiver.name}: {err}"
                 ) from err
 
-            self._set_pending_value(value)
-            self.async_write_ha_state()
-
-            if self._refresh_fn is not None:
-                try:
-                    await self._refresh_fn()
-                except DenonAvrError as err:
-                    # The command above already succeeded - a refresh
-                    # failure shouldn't fail the whole action, just
-                    # leave the pending value showing until the next
-                    # poll or its own timeout.
-                    _LOGGER.debug(
-                        "Could not refresh %s after setting %s: %s",
-                        self.entity_id,
-                        error_label,
-                        err,
-                    )
-                else:
-                    if self._read_value() == value:
-                        self._clear_pending_value()
+        self._set_pending_value(value)
         self.async_write_ha_state()
 
-    async def async_update(self) -> None:
-        """Refresh from the receiver and reconcile any pending value.
-
-        Actively refreshes (rather than only checking already-cached
-        data) so external changes - made outside HA, or while the
-        media player entity that would otherwise drive this refresh is
-        individually disabled - still surface here. Skipped when
-        poll_refresh_enabled says not to (see __init__).
-        """
-        if self._refresh_fn is not None and (
-            self._poll_refresh_enabled is None or self._poll_refresh_enabled()
-        ):
-            async with self._action_lock:
-                try:
-                    await self._refresh_fn()
-                except DenonAvrError as err:
-                    _LOGGER.debug("Could not refresh %s: %s", self.entity_id, err)
-
-        if (
-            self._pending_value is not None
-            and self._read_value() == self._pending_value
-        ):
-            self._clear_pending_value()
+        # Confirms via the coordinator this entity belongs to - which
+        # also refreshes and notifies every other entity sharing it, so
+        # e.g. toggling Dynamic EQ correctly updates Reference Level
+        # Offset's availability too, without a separate notification.
+        await self.coordinator.async_request_refresh()

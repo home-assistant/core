@@ -1,7 +1,6 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 
 from collections.abc import Awaitable, Callable, Coroutine
-from datetime import timedelta
 from functools import wraps
 import logging
 from typing import Any, Concatenate, override
@@ -39,6 +38,7 @@ from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DenonavrConfigEntry
 from .const import (
@@ -49,6 +49,7 @@ from .const import (
     DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
 )
+from .coordinator import DenonAvrDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +74,6 @@ SUPPORT_MEDIA_MODES = (
     | MediaPlayerEntityFeature.STOP
 )
 
-SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
 
 # HA Telnet events
@@ -109,17 +109,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DenonAVR receiver from a config entry."""
     entities = []
-    receiver = config_entry.runtime_data
+    data = config_entry.runtime_data
+    receiver = data.receiver
     update_audyssey = config_entry.options.get(
         CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
     )
     for receiver_zone in receiver.zones.values():
-        if config_entry.data[CONF_SERIAL_NUMBER] is not None:
+        if config_entry.data.get(CONF_SERIAL_NUMBER) is not None:
             unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
         else:
             unique_id = f"{config_entry.entry_id}-{receiver_zone.zone}"
         entities.append(
             DenonDevice(
+                data.coordinator,
                 receiver_zone,
                 unique_id,
                 config_entry,
@@ -130,7 +132,7 @@ async def async_setup_entry(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
     )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
@@ -138,97 +140,69 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
 ) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
     """Log errors occurred when calling a Denon AVR receiver.
 
-    Decorates methods of DenonDevice class.
-    Declaration of staticmethod for this method is at the end of this class.
+    Availability isn't tracked here - the coordinator's
+    last_update_success (see coordinator.py) is the single source of
+    truth for that, matching select.py/switch.py. Also shares the
+    coordinator's lock, closing the gap where this platform's commands
+    used to bypass it entirely.
     """
 
     @wraps(func)
     async def wrapper(
         self: _DenonDeviceT, *args: _P.args, **kwargs: _P.kwargs
     ) -> _R | None:
-        available = True
-        try:
-            return await func(self, *args, **kwargs)
-        except AvrTimoutError:
-            available = False
-            if self.available:
+        async with self.coordinator.lock:
+            try:
+                return await func(self, *args, **kwargs)
+            except AvrTimoutError as err:
+                _LOGGER.warning(
+                    "Timeout connecting to Denon AVR receiver at host %s: %s",
+                    self._receiver.host,
+                    err,
+                )
+            except AvrNetworkError as err:
+                _LOGGER.warning(
+                    "Network error connecting to Denon AVR receiver at host %s: %s",
+                    self._receiver.host,
+                    err,
+                )
+            except AvrProcessingError as err:
+                _LOGGER.warning(
+                    "Update of Denon AVR receiver at host %s not complete: %s",
+                    self._receiver.host,
+                    err,
+                )
+            except AvrForbiddenError as err:
                 _LOGGER.warning(
                     (
-                        "Timeout connecting to Denon AVR receiver at host %s. "
-                        "Device is unavailable"
+                        "Denon AVR receiver at host %s responded with HTTP 403"
+                        " error. Please consider power cycling your receiver: %s"
                     ),
                     self._receiver.host,
+                    err,
                 )
-                self._attr_available = False
-        except AvrNetworkError:
-            available = False
-            if self.available:
+            except (AvrInvalidResponseError, AvrIncompleteResponseError) as err:
                 _LOGGER.warning(
-                    (
-                        "Network error connecting to Denon AVR receiver at host %s. "
-                        "Device is unavailable"
-                    ),
+                    "Denon AVR receiver at host %s returned malformed response: %s",
                     self._receiver.host,
+                    err,
                 )
-                self._attr_available = False
-        except AvrProcessingError:
-            available = True
-            if self.available:
-                _LOGGER.warning(
-                    (
-                        "Update of Denon AVR receiver at host %s not complete. "
-                        "Device is still available"
-                    ),
-                    self._receiver.host,
+            except AvrCommandError as err:
+                _LOGGER.error(
+                    "Command %s failed with error: %s",
+                    func.__name__,
+                    err,
                 )
-        except AvrForbiddenError:
-            available = False
-            if self.available:
-                _LOGGER.warning(
-                    (
-                        "Denon AVR receiver at host %s responded with HTTP 403 error. "
-                        "Device is unavailable. Please consider power cycling your "
-                        "receiver"
-                    ),
-                    self._receiver.host,
+            except DenonAvrError:
+                _LOGGER.exception(
+                    "Error occurred in method %s for Denon AVR receiver", func.__name__
                 )
-                self._attr_available = False
-        except AvrInvalidResponseError, AvrIncompleteResponseError:
-            available = False
-            if self.available:
-                _LOGGER.warning(
-                    (
-                        "Denon AVR receiver at host %s returned malformed response. "
-                        "Device is unavailable"
-                    ),
-                    self._receiver.host,
-                )
-                self._attr_available = False
-        except AvrCommandError as err:
-            available = False
-            _LOGGER.error(
-                "Command %s failed with error: %s",
-                func.__name__,
-                err,
-            )
-        except DenonAvrError:
-            available = False
-            _LOGGER.exception(
-                "Error occurred in method %s for Denon AVR receiver", func.__name__
-            )
-        finally:
-            if available and not self.available:
-                _LOGGER.warning(
-                    "Denon AVR receiver at host %s is available again",
-                    self._receiver.host,
-                )
-                self._attr_available = True
         return None
 
     return wrapper
 
 
-class DenonDevice(MediaPlayerEntity):
+class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
     _attr_has_entity_name = True
@@ -237,12 +211,14 @@ class DenonDevice(MediaPlayerEntity):
 
     def __init__(
         self,
+        coordinator: DenonAvrDataUpdateCoordinator,
         receiver: DenonAVR,
         unique_id: str,
         config_entry: DenonavrConfigEntry,
         update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
+        super().__init__(coordinator)
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
@@ -283,7 +259,8 @@ class DenonDevice(MediaPlayerEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Register for telnet events."""
+        """Register for coordinator updates and telnet events."""
+        await super().async_added_to_hass()
         self._receiver.register_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     @override
@@ -292,21 +269,6 @@ class DenonDevice(MediaPlayerEntity):
         if self._receiver.telnet_connected:
             await self._receiver.async_telnet_disconnect()
         self._receiver.unregister_callback(ALL_TELNET_EVENTS, self._telnet_callback)
-
-    @async_log_errors
-    async def async_update(self) -> None:
-        """Get the latest status information from device."""
-        receiver = self._receiver
-
-        # We skip the update if telnet is healthy.
-        # When telnet recovers it automatically updates all properties.
-        if receiver.telnet_connected and receiver.telnet_healthy:
-            return
-
-        await receiver.async_update()
-
-        if self._update_audyssey:
-            await receiver.async_update_audyssey()
 
     @property
     @override

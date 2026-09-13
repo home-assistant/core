@@ -3,8 +3,9 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
-from denonavr.exceptions import AvrCommandError
+from denonavr.exceptions import AvrCommandError, AvrNetworkError
 import pytest
+
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
@@ -20,6 +21,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
     SERVICE_SELECT_OPTION,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -36,6 +38,23 @@ TEST_MANUFACTURER = "Denon"
 TEST_RECEIVER_TYPE = "avr-x"
 TEST_ZONE = "Main"
 TEST_UNIQUE_ID = f"{TEST_MODEL}-{TEST_SERIALNUMBER}"
+
+
+@pytest.fixture(autouse=True)
+def _fast_action_refresh_debounce():
+    """Patch the action-refresh debounce cooldown down for every test.
+
+    The real cooldown (see const.py) is a deliberately-short but still
+    real delay so the receiver has a moment to settle before the
+    post-action confirmation fetch. None of these tests are about that
+    timing itself, so patch it down to keep the suite fast and
+    deterministic - same reasoning as patching PENDING_VALUE_TIMEOUT.
+    """
+    with patch(
+        "homeassistant.components.denonavr.coordinator.ACTION_REFRESH_DEBOUNCE_COOLDOWN",
+        0,
+    ):
+        yield
 
 
 @pytest.fixture(name="client")
@@ -57,6 +76,8 @@ def client_fixture():
         mock_client_class.return_value.input_func_list = []
         mock_client_class.return_value.sound_mode_list = []
         mock_client_class.return_value.zones = {"Main": mock_client_class.return_value}
+        mock_client_class.return_value.telnet_connected = False
+        mock_client_class.return_value.telnet_healthy = False
 
         # Audyssey defaults used by the select entities.
         mock_client_class.return_value.dynamic_eq = True
@@ -113,6 +134,19 @@ async def setup_denonavr(
     await hass.async_block_till_done()
 
     return mock_entry
+
+
+async def _wait_for_debounced_refresh(hass: HomeAssistant) -> None:
+    """Let a coordinator's debounced confirmation refresh actually fire.
+
+    async_request_refresh() with immediate=False (see coordinator.py)
+    schedules a raw event-loop timer rather than a tracked task, so
+    hass.async_block_till_done() alone doesn't wait for it - this gives
+    the loop a tick first, which is enough since the patched cooldown
+    (see _fast_action_refresh_debounce) is 0.
+    """
+    await asyncio.sleep(0)
+    await hass.async_block_till_done()
 
 
 def _entity_id(hass: HomeAssistant, key: str, domain: str = SELECT_DOMAIN) -> str:
@@ -287,6 +321,34 @@ async def test_auto_standby(hass: HomeAssistant, client: MagicMock) -> None:
     client.async_auto_standby.assert_awaited_once_with("30M")
 
 
+async def test_unavailable_after_connectivity_error_then_recovers(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A connectivity-type refresh failure marks the entity unavailable.
+
+    Matching media_player.py's own precedent (AvrTimoutError,
+    AvrNetworkError, etc. mark unavailable; a rejected command like
+    AvrCommandError does not - see
+    test_refresh_failure_does_not_fail_an_already_successful_action).
+    Recovers automatically once a later refresh succeeds. Calls
+    coordinator.async_refresh() directly rather than going through an
+    entity, since this needs a synchronous, deterministic refresh for
+    its own assertions - entity actions go through the debounced
+    async_request_refresh() instead (see coordinator.py).
+    """
+    entry = await setup_denonavr(hass)
+    entity_id = _entity_id(hass, "dimmer")
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    client.async_update.side_effect = AvrNetworkError("Connection refused", "GET")
+    await entry.runtime_data.coordinator.async_refresh()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    client.async_update.side_effect = None
+    await entry.runtime_data.coordinator.async_refresh()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
 async def test_dimmer_refreshes_and_shows_new_state_immediately(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
@@ -310,9 +372,13 @@ async def test_dimmer_refreshes_and_shows_new_state_immediately(
         {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Dark"},
         blocking=True,
     )
+    # blocking=True only waits for the service handler itself - see
+    # _wait_for_debounced_refresh for why this extra step is needed.
+    await _wait_for_debounced_refresh(hass)
 
-    # The refresh call happened (our own explicit one, plus HA's own
-    # built-in post-service-call poll for should_poll=True entities)...
+    # One call from setup's initial refresh, one from confirming this
+    # action (CoordinatorEntity sets should_poll=False, so there's no
+    # separate forced poll on top of that)...
     assert client.async_update.await_count == 2
     # ...and the new value is visible right away, with no time-based
     # polling trick needed to observe it.
@@ -324,6 +390,7 @@ async def test_eco_mode_and_auto_standby_also_refresh_immediately(
 ) -> None:
     """Same fix, the other two plain-appcommand settings."""
     await setup_denonavr(hass)
+    baseline_calls = client.async_update.await_count
 
     eco_entity_id = _entity_id(hass, "eco_mode")
     await hass.services.async_call(
@@ -332,6 +399,7 @@ async def test_eco_mode_and_auto_standby_also_refresh_immediately(
         {ATTR_ENTITY_ID: eco_entity_id, ATTR_OPTION: "Off"},
         blocking=True,
     )
+    await _wait_for_debounced_refresh(hass)
     client.async_update.assert_awaited()
 
     standby_entity_id = _entity_id(hass, "auto_standby")
@@ -341,9 +409,11 @@ async def test_eco_mode_and_auto_standby_also_refresh_immediately(
         {ATTR_ENTITY_ID: standby_entity_id, ATTR_OPTION: "15M"},
         blocking=True,
     )
-    # Two calls per action (our own explicit refresh plus HA's built-in
-    # post-service-call poll for should_poll=True entities).
-    assert client.async_update.await_count == 4
+    await _wait_for_debounced_refresh(hass)
+    # One call per action - CoordinatorEntity sets should_poll=False, so
+    # there's no separate forced poll on top of our own explicit
+    # confirmation the way a plain polling entity would get.
+    assert client.async_update.await_count == baseline_calls + 2
 
 
 async def test_reference_level_offset_always_refreshes_after_change(
@@ -371,43 +441,59 @@ async def test_reference_level_offset_always_refreshes_after_change(
         {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "+5dB"},
         blocking=True,
     )
-    # Just one call: our own explicit refresh (unconditional). HA's
-    # built-in post-service-call poll would add a second, but that one
-    # now correctly respects "Update Audyssey settings" (off here), so
-    # it's skipped rather than firing regardless like the explicit one.
+    await _wait_for_debounced_refresh(hass)
+    # Just one call, since this is the only entity acting - HA's own
+    # post-service-call poll doesn't apply here (should_poll=False).
     assert client.async_update_audyssey.await_count == baseline_calls + 1
 
 
-async def test_reference_level_offset_poll_refresh_respects_audyssey_option(
+async def test_coordinators_share_one_lock_not_a_receiver_keyed_one(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """The recurring poll honors the "Update Audyssey settings" option.
+    """The action/refresh lock is a single shared object, not looked up.
+
+    Regression test for a real production bug: an earlier version kept
+    a WeakKeyDictionary keyed by the receiver object to hand out a lock
+    per receiver. denonavr's attrs classes define a field-based
+    __eq__ without a matching __hash__, so real receiver instances are
+    unhashable and that lookup crashed outright - something this
+    suite's mocks (hashable by default, unlike the real class) could
+    never have caught. The fix creates the lock once and passes it
+    through directly instead of deriving it from the receiver at all.
+    """
+    entry = await setup_denonavr(hass)
+    assert (
+        entry.runtime_data.coordinator.lock
+        is entry.runtime_data.audyssey_coordinator.lock
+    )
+
+
+async def test_audyssey_coordinator_polls_when_option_on(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """The Audyssey coordinator's recurring poll is enabled when the option is on.
 
     Matches the existing precedent for media_player.py's own recurring
     poll - unlike the post-change refresh, which stays unconditional
-    regardless.
+    regardless. Checked directly on the coordinator rather than by
+    exercising a poll, since a poll triggered so soon after setup's own
+    refresh would be unreliably debounced either way.
     """
-    await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
-    entity_id = _entity_id(hass, "reference_level_offset")
-
-    baseline_calls = client.async_update_audyssey.await_count
-    await async_update_entity(hass, entity_id)
-    assert client.async_update_audyssey.await_count == baseline_calls + 1
+    entry = await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
+    assert entry.runtime_data.audyssey_coordinator.update_interval is not None
 
 
-async def test_reference_level_offset_poll_refresh_skipped_when_option_off(
+async def test_audyssey_coordinator_does_not_poll_when_option_off(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """The recurring poll is skipped, not just left unconfirmed, when off.
+    """The Audyssey coordinator has no recurring poll (on-demand only) when off.
 
-    Confirms it doesn't silently query the receiver anyway.
+    Confirms it doesn't silently query the receiver on a schedule
+    anyway - it can still be asked to refresh on demand (e.g. right
+    after an action), just not automatically.
     """
-    await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
-    entity_id = _entity_id(hass, "reference_level_offset")
-
-    baseline_calls = client.async_update_audyssey.await_count
-    await async_update_entity(hass, entity_id)
-    assert client.async_update_audyssey.await_count == baseline_calls
+    entry = await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
+    assert entry.runtime_data.audyssey_coordinator.update_interval is None
 
 
 async def test_refresh_failure_does_not_fail_an_already_successful_action(
@@ -490,15 +576,12 @@ async def test_rapid_consecutive_selections_do_not_race(
 async def test_audyssey_entities_not_unavailable_on_fresh_setup(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Reproduces the reported bug: a fresh integration load starts unavailable.
+    """Audyssey-dependent entities aren't unavailable after a fresh setup.
 
-    On a fresh integration load, the library hasn't fetched Audyssey
-    data yet (dynamic_eq/reflevoffset/dynamic_volume/multi_eq all start
-    as None), and nothing in the regular poll loop ever fetches them
-    unless "Update Audyssey settings" is on. Without the one-time
-    initial fetch, every Audyssey-dependent entity would be permanently
-    unavailable from the moment it's created - reference_level_offset
-    especially, since it also gates on dynamic_eq being true.
+    Nothing in the regular poll loop fetches Audyssey data unless
+    "Update Audyssey settings" is on - without the one-time initial
+    fetch, these entities (reference_level_offset especially, since it
+    also gates on dynamic_eq) would stay unavailable indefinitely.
     """
     # Simulate a fresh receiver: nothing fetched yet.
     client.dynamic_eq = None

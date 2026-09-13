@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from denonavr.exceptions import AvrCommandError
 import pytest
+
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
@@ -12,6 +13,7 @@ from homeassistant.components.denonavr.config_flow import (
     DOMAIN,
 )
 from homeassistant.components.denonavr.const import CONF_UPDATE_AUDYSSEY
+from homeassistant.components.denonavr.switch import DYNAMIC_EQ_DESCRIPTION
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -40,6 +42,19 @@ TEST_UNIQUE_ID = f"{TEST_MODEL}-{TEST_SERIALNUMBER}"
 SWITCH_ENTITY_ID = f"{SWITCH_DOMAIN}.{TEST_NAME.lower()}_dynamic_eq"
 
 
+@pytest.fixture(autouse=True)
+def _fast_action_refresh_debounce():
+    """Patch the action-refresh debounce cooldown down for every test.
+
+    See the matching fixture/comment in test_select.py.
+    """
+    with patch(
+        "homeassistant.components.denonavr.coordinator.ACTION_REFRESH_DEBOUNCE_COOLDOWN",
+        0,
+    ):
+        yield
+
+
 @pytest.fixture(name="client")
 def client_fixture():
     """Patch of client library for tests."""
@@ -59,6 +74,8 @@ def client_fixture():
         mock_client_class.return_value.input_func_list = []
         mock_client_class.return_value.sound_mode_list = []
         mock_client_class.return_value.zones = {"Main": mock_client_class.return_value}
+        mock_client_class.return_value.telnet_connected = False
+        mock_client_class.return_value.telnet_healthy = False
         mock_client_class.return_value.dynamic_eq = True
         yield mock_client_class.return_value
 
@@ -86,12 +103,38 @@ async def setup_denonavr(
     return mock_entry
 
 
+async def _wait_for_debounced_refresh(hass: HomeAssistant) -> None:
+    """Let a coordinator's debounced confirmation refresh actually fire.
+
+    See the matching helper/comment in test_select.py.
+    """
+    await asyncio.sleep(0)
+    await hass.async_block_till_done()
+
+
 def _entity_id(hass: HomeAssistant, domain: str, key: str) -> str:
     """Look up an entity_id by its unique_id suffix."""
     registry = er.async_get(hass)
     entity_id = registry.async_get_entity_id(domain, DOMAIN, f"{TEST_UNIQUE_ID}-{key}")
     assert entity_id is not None
     return entity_id
+
+
+async def test_has_a_fallback_name_if_translation_lookup_fails() -> None:
+    """The switch has an entity_description providing a fallback name.
+
+    Regression test for a real bug: an earlier version set _attr_name
+    directly, which Entity._name_internal checks *before*
+    translation_key - permanently blocking the translation rather than
+    just backing it up if it failed to load (e.g. a custom_components
+    install missing translations/en.json, which happened in practice).
+    Removing that fallback entirely then left the entity with no name
+    at all when translation loading failed. entity_description.name is
+    the correct fallback tier - checked only *after* translation_key,
+    matching how every select entity already behaves.
+    """
+    assert DYNAMIC_EQ_DESCRIPTION.name == "Dynamic EQ"
+    assert DYNAMIC_EQ_DESCRIPTION.translation_key == "dynamic_eq"
 
 
 async def test_dynamic_eq_state_on(hass: HomeAssistant, client: MagicMock) -> None:
@@ -227,18 +270,16 @@ async def test_reference_level_offset_unavailable_at_setup_when_dynamic_eq_off(
     assert hass.states.get(reflevoffset_entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_toggling_switch_does_not_instantly_update_dependent_select(
+async def test_toggling_switch_updates_dependent_select(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Document a known limitation with the dependent select entity.
+    """Toggling Dynamic EQ off also updates Reference Level Offset.
 
-    Turning Dynamic EQ off immediately updates the switch (it's the
-    one that acted), but Reference Level Offset's availability - which
-    depends on the same dynamic_eq value - only catches up once its
-    own poll runs, not instantly. Fixing this properly needs a way to
-    notify dependent entities directly (or a shared coordinator);
-    until then, this documents the gap rather than relying on a test
-    that never actually exercised a toggle.
+    Both entities share the same Audyssey coordinator, so refreshing
+    after the switch's own action notifies every entity subscribed to
+    it - not just the switch itself. This used to be a documented gap
+    (the select only caught up on its own next poll); confirmed fixed
+    by the move to a shared coordinator.
     """
     client.reference_level_offset = "0dB"
     client.reference_level_offset_setting_list = ["0dB", "+5dB", "+10dB", "+15dB"]
@@ -268,14 +309,12 @@ async def test_toggling_switch_does_not_instantly_update_dependent_select(
         {ATTR_ENTITY_ID: switch_entity_id},
         blocking=True,
     )
+    await _wait_for_debounced_refresh(hass)
 
-    # The switch itself updates immediately...
+    # The switch itself updates...
     assert hass.states.get(switch_entity_id).state == "off"
-    # ...but the select does not, until something explicitly refreshes
-    # it - this is the documented gap, not the desired end state.
-    assert hass.states.get(reflevoffset_entity_id).state != STATE_UNAVAILABLE
-
-    await async_update_entity(hass, reflevoffset_entity_id)
+    # ...and so does the select, from the very same refresh - no
+    # separate poll or explicit cross-notification needed.
     assert hass.states.get(reflevoffset_entity_id).state == STATE_UNAVAILABLE
 
 
@@ -326,11 +365,10 @@ async def test_turn_on_always_refreshes_audyssey_after_change(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+    await _wait_for_debounced_refresh(hass)
 
-    # Just one call: our own explicit refresh (unconditional). HA's
-    # built-in post-service-call poll would add a second, but that one
-    # now correctly respects "Update Audyssey settings" (off here), so
-    # it's skipped rather than firing regardless like the explicit one.
+    # Just one call, since this is the only entity acting - HA's own
+    # post-service-call poll doesn't apply here (should_poll=False).
     assert client.async_update_audyssey.await_count == baseline_calls + 1
 
 
