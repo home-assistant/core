@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.overkiz.climate import AtlanticPassAPCHeatingAndCoolingZone
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES
 
 from ..coordinator import OverkizDataUpdateCoordinator
@@ -77,7 +78,7 @@ OVERKIZ_THERMAL_CONFIGURATION_TO_HVAC_MODE: dict[
 
 # Those device depends on a main probe that choose the
 # operating mode (heating, cooling, ...).
-class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
+class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingAndCoolingZone):
     """Representation of Atlantic Pass APC Heating And Cooling Zone Control."""
 
     _attr_target_temperature_step = PRECISION_HALVES
