@@ -4,7 +4,12 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
-from denonavr.exceptions import AvrIncompleteResponseError, AvrInvalidResponseError
+from denonavr.const import POWER_ON
+from denonavr.exceptions import (
+    AvrIncompleteResponseError,
+    AvrInvalidResponseError,
+    AvrNetworkError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -153,6 +158,57 @@ async def test_get_command(hass: HomeAssistant, client) -> None:
     await hass.async_block_till_done()
 
     client.async_get_command.assert_awaited_with("test_command")
+
+
+async def test_dynamic_eq_attribute_updates_from_audyssey_coordinator(
+    hass: HomeAssistant, client
+) -> None:
+    """The dynamic_eq attribute refreshes when the Audyssey coordinator does.
+
+    It's Audyssey-scoped data, but this entity's own coordinator
+    subscription (from CoordinatorEntity) only covers general status -
+    without a separate subscription to the Audyssey coordinator too,
+    a switch toggle, the update/set services, or a periodic Audyssey
+    refresh would leave this attribute stale until something unrelated
+    (e.g. Telnet or the next general poll) happened to rewrite state.
+    """
+    entry = await setup_denonavr(hass)
+    client.power = POWER_ON
+    client.dynamic_eq = True
+    entry.runtime_data.audyssey_coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_DYNAMIC_EQ] is True
+
+    client.dynamic_eq = False
+    entry.runtime_data.audyssey_coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_DYNAMIC_EQ] is False
+
+
+async def test_set_dynamic_eq_connectivity_error_marks_audyssey_unavailable(
+    hass: HomeAssistant, client
+) -> None:
+    """A connectivity failure here also affects the Audyssey coordinator.
+
+    This command is Audyssey-scoped, sent directly to the receiver
+    rather than through that coordinator - so on a connectivity
+    failure, only marking the general coordinator unavailable (what
+    the decorator already does) would leave Audyssey-backed entities
+    still showing available with stale data.
+    """
+    entry = await setup_denonavr(hass)
+    client.async_dynamic_eq_on.side_effect = AvrNetworkError(
+        "Connection refused", "SetAudyssey"
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_DYNAMIC_EQ,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DYNAMIC_EQ: True},
+    )
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.audyssey_coordinator.last_update_success is False
 
 
 async def test_dynamic_eq(hass: HomeAssistant, client) -> None:

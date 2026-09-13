@@ -50,7 +50,7 @@ from .const import (
     DOMAIN,
     TELNET_EVENTS,
 )
-from .coordinator import DenonAvrDataUpdateCoordinator, mark_unavailable
+from .coordinator import UNAVAILABLE_ON, DenonAvrDataUpdateCoordinator, mark_unavailable
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -260,6 +260,16 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
     async def async_added_to_hass(self) -> None:
         """Register for coordinator updates and telnet events."""
         await super().async_added_to_hass()
+        # super() only subscribes to self.coordinator (general status)
+        # - dynamic_eq is Audyssey-scoped, so this entity also needs
+        # the Audyssey coordinator's updates to keep it from going
+        # stale after a switch toggle, the update/set services, or a
+        # periodic Audyssey refresh.
+        self.async_on_remove(
+            self._audyssey_coordinator.async_add_listener(
+                self._handle_coordinator_update
+            )
+        )
         self._receiver.register_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     @override
@@ -500,10 +510,17 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
     @async_log_errors
     async def async_set_dynamic_eq(self, dynamic_eq: bool) -> None:
         """Turn DynamicEQ on or off."""
-        if dynamic_eq:
-            await self._receiver.async_dynamic_eq_on()
-        else:
-            await self._receiver.async_dynamic_eq_off()
+        try:
+            if dynamic_eq:
+                await self._receiver.async_dynamic_eq_on()
+            else:
+                await self._receiver.async_dynamic_eq_off()
+        except UNAVAILABLE_ON:
+            # This command is Audyssey-scoped - a connectivity failure
+            # here means that coordinator's data can't be trusted
+            # either, not just the general one the decorator marks.
+            mark_unavailable(self._audyssey_coordinator)
+            raise
 
         # Always refreshes Audyssey, regardless of "Update Audyssey
         # settings" - that option only governs the recurring poll, not
