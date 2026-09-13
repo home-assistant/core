@@ -133,7 +133,9 @@ SCHEMA_MEDIA = probatio.Schema(
         probatio.Optional(ATTR_FOCUS_Y): probatio.All(
             float, probatio.Range(min=-1, max=1)
         ),
-        probatio.Optional(ATTR_THUMBNAIL): MediaSelector({"accept": ["image/*"]}),
+        probatio.Optional(ATTR_THUMBNAIL): MediaSelector(
+            {"accept": ["image/*", "video/*", "application/*"]}
+        ),
     }
 )
 SERVICE_POST_SCHEMA = probatio.Schema(
