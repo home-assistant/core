@@ -180,6 +180,19 @@ def test_ga_selector_invalid(
         selector(data)
 
 
+@pytest.mark.parametrize(
+    "selector_config",
+    [
+        {"write": False, "dpa_write": ["417.52"]},
+        {"state": False, "dpa_state": ["417.51"]},
+    ],
+)
+def test_ga_selector_invalid_dpa_config(selector_config: dict[str, Any]) -> None:
+    """Test GASelector raising on DPAs annotated for disallowed keys."""
+    with pytest.raises(ValueError):
+        GASelector(**selector_config)
+
+
 def test_sync_state_selector() -> None:
     """Test SyncStateSelector."""
     selector = SyncStateSelector()
@@ -220,6 +233,18 @@ def test_sync_state_selector() -> None:
                     "state": False,
                     "passive": False,
                     "validDPTs": [{"main": 5, "sub": 1}],
+                },
+            },
+        ),
+        (
+            # dpa_write/dpa_state are not serialized
+            GASelector(dpa_write=["417.52"], dpa_state=["417.51"]),
+            {
+                "type": "knx_group_address",
+                "options": {
+                    "write": {"required": False},
+                    "state": {"required": False},
+                    "passive": True,
                 },
             },
         ),
