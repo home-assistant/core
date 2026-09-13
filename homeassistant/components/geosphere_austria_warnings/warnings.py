@@ -96,13 +96,7 @@ def sort_warnings(warnings: Iterable[WeatherWarning]) -> list[WeatherWarning]:
 def select_highest_warning(
     warnings: Iterable[WeatherWarning],
 ) -> WeatherWarning | None:
-    """Return the highest-priority warning, or ``None`` for an empty bucket.
-
-    Coordinator provides sorted lists, this makes this function robust and to
-    _always_ return the highest-priority warning. Also allows for unsorted
-    fixtures, otherwise fixtures require manual sorting with every update of
-    sorting logic.
-    """
+    """Return the highest-priority warning, or ``None`` for an empty iterable."""
     sorted_warnings = sort_warnings(warnings)
     return sorted_warnings[0] if sorted_warnings else None
 
@@ -110,7 +104,7 @@ def select_highest_warning(
 def warning_sensor_attributes(
     warnings: Iterable[WeatherWarning],
 ) -> dict[str, Any]:
-    """Return the four agreed attributes for the selected warning.
+    """Return the five agreed attributes for the selected warning.
 
     The full warning payload is intentionally not exposed on sensor entities.
     """
@@ -120,6 +114,7 @@ def warning_sensor_attributes(
 
     return {
         "type": warning_type_slug(warning.warning_type),
+        "level": warning_level_slug(warning.level),
         "start": warning.start.isoformat(),
         "end": warning.end.isoformat(),
         "warning_id": warning.warning_id,
