@@ -167,13 +167,13 @@ async def test_setup_auth_required(hass: HomeAssistant) -> None:
     assert in_progress_flows[0]["context"]["unique_id"] == config_entry.unique_id
 
 
-async def test_auth_required_on_first_fetch_is_retried(
+async def test_auth_required_on_first_fetch_fails_authentication(
     hass: HomeAssistant, service_2fa: Mock
 ) -> None:
-    """Test that losing the session before the first fetch is retried.
+    """Test that losing the session before the first fetch fails setup as auth.
 
-    The fetch timer is only armed once update_devices() completes, so an entry
-    that gives up here would stay loaded and never poll again.
+    Only the user can resolve it, so the entry has to end up asking them
+    rather than retrying a login that cannot succeed until they are done.
     """
     service_2fa.return_value.requires_2fa = False
     type(service_2fa.return_value).devices = PropertyMock(
@@ -188,9 +188,14 @@ async def test_auth_required_on_first_fetch_is_retried(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # SETUP_RETRY, so Home Assistant retries with backoff instead of leaving a
-    # loaded entry that never polls.
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    # SETUP_ERROR with a reauth flow: Home Assistant owns the reauth lifecycle
+    # and stops re-attempting the login while the user is being asked.
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
 
 
 async def test_invalid_token_on_first_fetch_starts_reauth(
@@ -214,7 +219,7 @@ async def test_invalid_token_on_first_fetch_starts_reauth(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
@@ -255,7 +260,7 @@ async def test_2fa_required_exception_on_first_fetch_starts_reauth(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     flows = [
         flow
         for flow in hass.config_entries.flow.async_progress()
@@ -310,7 +315,7 @@ async def test_auth_response_on_first_fetch_starts_reauth(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
@@ -406,6 +411,7 @@ async def test_2fa_status_on_first_fetch_asks_for_a_code(
 
     # The session is kept for the code to go through, as it is for the
     # dedicated exception carrying the same challenge.
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert config_entry.runtime_data.api is not None
     flows = [
         flow

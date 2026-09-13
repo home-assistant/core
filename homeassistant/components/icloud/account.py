@@ -22,7 +22,7 @@ from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME, EntityStateAttribute
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
@@ -197,18 +197,22 @@ class IcloudAccount:
             # the devices rather than while logging in, and does not set
             # requires_2fa for it, so ask for a code explicitly. The session is
             # kept so the reauth flow can send the code through it.
-            self._handle_auth_required(two_factor=True, keep_session=True)
-            raise ConfigEntryNotReady from err
+            self._handle_auth_required(
+                two_factor=True, keep_session=True, start_reauth=False
+            )
+            raise ConfigEntryAuthFailed from err
         except (PyiCloudFailedLoginException, PyiCloudAuthRequiredException) as err:
             # Reading the devices refreshes the session, and a stored token
             # that iCloud has since invalidated is only rejected here, not
-            # while logging in. Ask for reauth so the user has something to
-            # act on, and still raise: the fetch timer is only armed at the
-            # end of update_devices(), so returning here would leave an entry
-            # that is loaded and never polls again.
+            # while logging in. Only the user can resolve it, so this fails
+            # setup as an authentication failure rather than something to
+            # retry: Home Assistant starts the reauth flow and stops
+            # re-attempting a login that cannot succeed until they are done.
             challenged = self.api is not None and self.api.requires_2fa
-            self._handle_auth_required(two_factor=challenged, keep_session=challenged)
-            raise ConfigEntryNotReady from err
+            self._handle_auth_required(
+                two_factor=challenged, keep_session=challenged, start_reauth=False
+            )
+            raise ConfigEntryAuthFailed from err
         except (
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
@@ -227,8 +231,10 @@ class IcloudAccount:
             # rejections do not: the session has just failed to refresh, so a
             # reauth flow sending a code through it would fail as well.
             challenge = _is_2fa_status(err)
-            self._handle_auth_required(two_factor=challenge, keep_session=challenge)
-            raise ConfigEntryNotReady from err
+            self._handle_auth_required(
+                two_factor=challenge, keep_session=challenge, start_reauth=False
+            )
+            raise ConfigEntryAuthFailed from err
 
         if user_info is None:
             raise ConfigEntryNotReady("No user info found in iCloud devices response")
@@ -247,13 +253,18 @@ class IcloudAccount:
         self._devices = {}
         self.update_devices()
 
-    def _handle_auth_required(self, *, two_factor: bool, keep_session: bool) -> None:
+    def _handle_auth_required(
+        self, *, two_factor: bool, keep_session: bool, start_reauth: bool = True
+    ) -> None:
         """Report why authentication failed and start the reauth flow.
 
         two_factor says what iCloud asked for, keep_session whether there is a
         session to ask through: a 2FA challenge raised before the session was
         established leaves nothing to send a code over, so the user has to log
         in again even though a code is what iCloud wants.
+
+        start_reauth is for callers that raise ConfigEntryAuthFailed, which
+        starts the flow itself.
         """
         if not keep_session:
             # Without a session the reauth flow goes to the password form,
@@ -292,7 +303,8 @@ class IcloudAccount:
         # authenticate() never sets api.requires_2fa, which is what the reauth
         # flow reads to decide whether to ask for a code.
         self.requires_verification_code = two_factor and keep_session
-        self._require_reauth()
+        if start_reauth:
+            self._require_reauth()
 
     def update_devices(self) -> None:
         """Update iCloud devices."""
