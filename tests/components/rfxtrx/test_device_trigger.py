@@ -7,12 +7,12 @@ from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.components.rfxtrx import DOMAIN, device_trigger
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import create_rfx_test_entry
+from .conftest import create_rfx_test_entry, get_device_identifier
 
 from tests.common import (
     MockConfigEntry,
@@ -87,7 +87,8 @@ async def test_get_triggers(
     mock_entry = await setup_entry(hass, {event.code: {}})
 
     device_entry = device_registry.async_get_device_by_identifier(
-        event.device_identifier, mock_entry.entry_id
+        get_device_identifier(mock_entry, event.device_identifier[1]),
+        mock_entry.entry_id,
     )
     assert device_entry
 
@@ -125,7 +126,8 @@ async def test_firing_event(
     mock_entry = await setup_entry(hass, {event.code: {"fire_event": True}})
 
     device_entry = device_registry.async_get_device_by_identifier(
-        event.device_identifier, mock_entry.entry_id
+        get_device_identifier(mock_entry, event.device_identifier[1]),
+        mock_entry.entry_id,
     )
     assert device_entry
 
@@ -160,6 +162,53 @@ async def test_firing_event(
     assert calls[0].data["some"] == "device"
 
 
+async def test_get_triggers_missing_identifier(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test getting triggers for a device without a rfxtrx identifier fails."""
+    mock_entry = await setup_entry(hass, {})
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_entry.entry_id,
+        identifiers={("dummy_only", "id")},
+    )
+
+    with pytest.raises(ValueError, match="no rfxtrx identifier"):
+        await device_trigger.async_get_triggers(hass, device_entry.id)
+
+
+async def test_get_triggers_missing_subentry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test getting triggers for a device pointing at a removed subentry fails."""
+    mock_entry = await setup_entry(hass, {})
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_entry.entry_id,
+        identifiers={(DOMAIN, "not_a_real_subentry_id")},
+    )
+
+    with pytest.raises(ValueError, match="no subentry"):
+        await device_trigger.async_get_triggers(hass, device_entry.id)
+
+
+async def test_get_triggers_invalid_event_code(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test getting triggers for a device with an invalid event code fails."""
+    mock_entry = await setup_entry(hass, {"invalid": {}})
+    subentry = next(iter(mock_entry.subentries.values()))
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_entry.entry_id,
+        config_subentry_id=subentry.subentry_id,
+        identifiers={(DOMAIN, subentry.subentry_id)},
+    )
+
+    with pytest.raises(ValueError, match="invalid event code"):
+        await device_trigger.async_get_triggers(hass, device_entry.id)
+
+
 async def test_invalid_trigger(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -171,7 +220,8 @@ async def test_invalid_trigger(
     mock_entry = await setup_entry(hass, {event.code: {"fire_event": True}})
 
     device_entry = device_registry.async_get_device_by_identifier(
-        event.device_identifier, mock_entry.entry_id
+        get_device_identifier(mock_entry, event.device_identifier[1]),
+        mock_entry.entry_id,
     )
     assert device_entry
 

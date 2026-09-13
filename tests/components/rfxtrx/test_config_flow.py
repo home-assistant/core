@@ -1,5 +1,6 @@
 """Test the Rfxtrx config flow."""
 
+import asyncio
 from unittest.mock import patch
 
 from RFXtrx import RFXtrxTransportError
@@ -41,6 +42,28 @@ async def start_options_flow(
     return await hass.config_entries.options.async_init(entry.entry_id)
 
 
+async def start_add_device_flow(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> config_entries.ConfigFlowResult:
+    """Start the add device subentry flow with the entry under test."""
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+
+async def async_wait_for_reload(hass: HomeAssistant) -> None:
+    """Wait for the entry's debounced reload to complete."""
+    await hass.async_block_till_done()
+    await asyncio.sleep(0)
+    await hass.async_block_till_done()
+
+
 async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
@@ -72,7 +95,6 @@ async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
         "port": 1234,
         "device": None,
         "automatic_add": False,
-        "devices": {},
     }
 
 
@@ -113,7 +135,6 @@ async def test_setup_serial(com_mock, transport_mock, hass: HomeAssistant) -> No
         "port": None,
         "device": port.device,
         "automatic_add": False,
-        "devices": {},
     }
 
 
@@ -162,7 +183,6 @@ async def test_setup_serial_manual(
         "port": None,
         "device": "/dev/ttyUSB0",
         "automatic_add": False,
-        "devices": {},
     }
 
 
@@ -284,7 +304,6 @@ async def test_options_global(hass: HomeAssistant) -> None:
             "device": "/dev/tty123",
             "automatic_add": False,
             "protocols": None,
-            "devices": {},
         },
         unique_id=DOMAIN,
         version=ENTRY_VERSION,
@@ -293,7 +312,7 @@ async def test_options_global(hass: HomeAssistant) -> None:
         result = await start_options_flow(hass, entry)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "prompt_options"
+    assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -320,7 +339,6 @@ async def test_no_protocols(hass: HomeAssistant) -> None:
             "device": "/dev/tty123",
             "automatic_add": True,
             "protocols": SOME_PROTOCOLS,
-            "devices": {},
         },
         unique_id=DOMAIN,
         version=ENTRY_VERSION,
@@ -329,7 +347,7 @@ async def test_no_protocols(hass: HomeAssistant) -> None:
         result = await start_options_flow(hass, entry)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "prompt_options"
+    assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -355,51 +373,46 @@ async def test_options_add_device(hass: HomeAssistant) -> None:
             "port": None,
             "device": "/dev/tty123",
             "automatic_add": False,
-            "devices": {},
         },
         unique_id=DOMAIN,
         version=ENTRY_VERSION,
     )
-    result = await start_options_flow(hass, entry)
+    result = await start_add_device_flow(hass, entry)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "prompt_options"
+    assert result["step_id"] == "user"
 
     # Try with invalid event code
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={"automatic_add": True, "event_code": "1234"},
+        user_input={"event_code": "1234"},
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "prompt_options"
+    assert result["step_id"] == "user"
     assert result["errors"]
     assert result["errors"]["event_code"] == "invalid_event_code"
 
     # Try with valid event code
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={
-            "automatic_add": True,
-            "event_code": "0b1100cd0213c7f230010f71",
-        },
+        user_input={"event_code": "0b1100cd0213c7f230010f71"},
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "set_device_options"
+    assert result["step_id"] == "device_options"
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], user_input={}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    await hass.async_block_till_done()
+    await async_wait_for_reload(hass)
 
-    assert entry.data["automatic_add"]
-
-    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
-    assert "delay_off" not in entry.data["devices"]["0b1100cd0213c7f230010f71"]
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.data["event_code"] == "0b1100cd0213c7f230010f71"
+    assert "off_delay" not in subentry.data
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
     assert state
@@ -407,8 +420,18 @@ async def test_options_add_device(hass: HomeAssistant) -> None:
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
 
-async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
-    """Test we can add a device."""
+async def test_options_replace_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    rfxtrx,
+) -> None:
+    """Test pointing a configured device at different hardware.
+
+    The device, its entities, and their identity (unique_id, entity_id,
+    area/name customizations) are preserved across the radio address change
+    since they are keyed by the subentry, not the RF address.
+    """
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -416,40 +439,488 @@ async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
             "host": None,
             "port": None,
             "device": "/dev/tty123",
-            "debug": False,
             "automatic_add": False,
-            "devices": {"0b1100cd0213c7f230010f71": {}},
         },
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+    result = await start_add_device_flow(hass, entry)
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f230010f71"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    await async_wait_for_reload(hass)
+
+    subentry = next(iter(entry.subentries.values()))
+    device_entry = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+    entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, subentry.subentry_id
+    )
+    assert entity_id
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
+
+    device_registry.async_update_device(device_entry.id, name_by_user="My custom name")
+
+    # Point the same configured device at a different physical device
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100100118cdea02010f70"},
+    )
+    assert result["step_id"] == "device_options"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    await async_wait_for_reload(hass)
+
+    subentry = entry.subentries[subentry.subentry_id]
+    assert subentry.data["event_code"] == "0b1100100118cdea02010f70"
+
+    # Same device, same entity, same customization - only the underlying
+    # radio address changed.
+    device_entry = device_registry.async_get(device_entry.id)
+    assert device_entry
+    assert device_entry.name_by_user == "My custom name"
+    assert device_entry.name == "AC 118cdea:2"
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.unique_id == subentry.subentry_id
+
+    # The old radio address no longer applies to this entity
+    state_before = hass.states.get(entity_id)
+    assert state_before
+    await rfxtrx.signal("0b1100cd0213c7f230010f71")
+    state = hass.states.get(entity_id)
+    assert state.last_updated == state_before.last_updated
+
+    # The new radio address does
+    await rfxtrx.signal("0b1100100118cdea02010f70")
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+
+
+async def test_options_reconfigure_invalid_and_duplicate_event_code(
+    hass: HomeAssistant,
+) -> None:
+    """Test entering an invalid or already configured event code on reconfigure."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+
+    # Add device A
+    result = await start_add_device_flow(hass, entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f230010f71"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    subentry_a = next(iter(entry.subentries.values()))
+
+    # Add device B, so there's another device to collide with
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100100118cdea02010f70"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    # Reconfigure A with an invalid event code
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry_a.subentry_id)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "invalid"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["event_code"] == "invalid_event_code"
+
+    # Reconfigure A, manually typing B's event code
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100100118cdea02010f70"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["event_code"] == "already_configured_device"
+
+    # Reconfigure A, manually typing an event code for a different protocol
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0716000100900970"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["event_code"] == "incompatible_device"
+
+
+async def test_options_reconfigure_ignores_broken_subentries(
+    hass: HomeAssistant,
+) -> None:
+    """Test add/reconfigure ignore non-device and invalid-event subentries."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        subentries_data=(
+            {
+                "data": {},
+                "subentry_type": "other",
+                "title": "Not a device",
+                "unique_id": None,
+            },
+            {
+                "data": {"event_code": "invalid"},
+                "subentry_type": "device",
+                "title": "Broken device",
+                "unique_id": None,
+            },
+        ),
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+
+    # Add a device - exercises _can_add_device skipping the "other" and
+    # broken subentries instead of erroring on them.
+    result = await start_add_device_flow(hass, entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f230010f71"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    device_subentry = next(
+        s
+        for s in entry.subentries.values()
+        if s.data.get("event_code") == "0b1100cd0213c7f230010f71"
+    )
+
+    # Reconfiguring it exercises _get_replace_devices skipping the same
+    # "other" and broken subentries.
+    result = await entry.start_subentry_reconfigure_flow(
+        hass, device_subentry.subentry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+
+async def test_options_replace_device_with_existing(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test picking another configured device to take over an address from.
+
+    Device A keeps its identity (device, entities, customization); device
+    B's event code is moved onto it and B's now-redundant subentry is
+    removed.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+
+    # Add device A
+    result = await start_add_device_flow(hass, entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f230010f71"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await async_wait_for_reload(hass)
+
+    subentry_a = next(iter(entry.subentries.values()))
+    device_a = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+    entity_id_a = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, subentry_a.subentry_id
+    )
+    assert entity_id_a
+    device_registry.async_update_device(device_a.id, name_by_user="My custom name")
+
+    # Add device B (same protocol/type as A)
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100100118cdea02010f70"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await async_wait_for_reload(hass)
+
+    subentry_b_id = next(
+        s.subentry_id for s in entry.subentries.values() if s != subentry_a
+    )
+
+    # Reconfigure A, picking B as the device to take over
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry_a.subentry_id)
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"replace_device": subentry_b_id},
+    )
+    assert result["step_id"] == "device_options"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await async_wait_for_reload(hass)
+
+    # A kept its identity and customization, but now has B's event code
+    assert entry.subentries.keys() == {subentry_a.subentry_id}
+    subentry_a = entry.subentries[subentry_a.subentry_id]
+    assert subentry_a.data["event_code"] == "0b1100100118cdea02010f70"
+
+    device_a = device_registry.async_get(device_a.id)
+    assert device_a
+    assert device_a.name_by_user == "My custom name"
+    assert device_a.name == "AC 118cdea:2"
+
+    entity_a = entity_registry.async_get(entity_id_a)
+    assert entity_a
+    assert entity_a.unique_id == subentry_a.subentry_id
+
+
+async def test_options_replace_device_coalesces_reload(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test replacing a device only reloads the entry once.
+
+    The replace flow both removes the source subentry and updates the
+    target subentry, each of which notifies the entry's update listener;
+    those should be coalesced into a single reload.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+
+    # Add device A
+    result = await start_add_device_flow(hass, entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f230010f71"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await async_wait_for_reload(hass)
+
+    subentry_a = next(iter(entry.subentries.values()))
+
+    # Add device B (same protocol/type as A)
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100100118cdea02010f70"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await async_wait_for_reload(hass)
+
+    subentry_b_id = next(
+        s.subentry_id for s in entry.subentries.values() if s != subentry_a
+    )
+
+    # Reconfigure A, picking B as the device to take over. This removes B's
+    # subentry and updates A's, each of which notifies the update listener.
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        wraps=hass.config_entries.async_reload,
+    ) as mock_reload:
+        result = await entry.start_subentry_reconfigure_flow(
+            hass, subentry_a.subentry_id
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={"replace_device": subentry_b_id},
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.ABORT
+        await async_wait_for_reload(hass)
+
+        assert mock_reload.call_count == 1
+
+
+async def test_options_add_device_data_bits_conflict(hass: HomeAssistant) -> None:
+    """Test data_bits masking a new device onto an already-configured one.
+
+    The unmasked event code is validated as free before `data_bits` is even
+    asked for, so the collision can only be caught once it's applied.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        subentries_data=(
+            {
+                "data": {"event_code": "0913000022670e013970", "data_bits": 4},
+                "subentry_type": "device",
+                "title": "PT2262 226700",
+                "unique_id": "13_0_226700",
+            },
+        ),
         unique_id=DOMAIN,
         version=ENTRY_VERSION,
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "prompt_options"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "automatic_add": True,
-            "event_code": "0b1100cd0213c7f230010f71",
-        },
+    # A different raw event code doesn't collide before data_bits is applied.
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
     )
-
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "09130000226707013970"},
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "prompt_options"
-    assert result["errors"]
+    assert result["step_id"] == "device_options"
+
+    # Applying data_bits masks it onto the already-configured device.
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"data_bits": 4},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device_options"
+    assert result["errors"]["data_bits"] == "already_configured_device"
+
+
+async def test_options_add_device_matching_masked_device_unmasked(
+    hass: HomeAssistant,
+) -> None:
+    """Test entering a masked device's exact event code is caught as a duplicate.
+
+    Comparing only the existing subentry's configured (masked) tuple would
+    miss this, since the new device's tuple starts out unmasked (data_bits
+    is only asked for in a later step) - it must also be checked against
+    the existing subentry's unmasked tuple.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        subentries_data=(
+            {
+                "data": {"event_code": "0913000022670e013970", "data_bits": 4},
+                "subentry_type": "device",
+                "title": "PT2262 226700",
+                "unique_id": "13_0_226700",
+            },
+        ),
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0913000022670e013970"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"]["event_code"] == "already_configured_device"
 
 
-async def test_options_replace_sensor_device(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test we can replace a sensor device."""
+async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
+    """Test we can not add a duplicate device."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -458,260 +929,46 @@ async def test_options_replace_sensor_device(
             "port": None,
             "device": "/dev/tty123",
             "automatic_add": False,
-            "devices": {
-                "0a520101f00400e22d0189": {"device_id": ["52", "1", "f0:04"]},
-                "0a520105230400c3260279": {"device_id": ["52", "1", "23:04"]},
-            },
         },
+        subentries_data=(
+            {
+                "data": {"event_code": "0b1100cd0213c7f230010f71"},
+                "subentry_type": "device",
+                "title": "AC 213c7f2:48",
+                "unique_id": "11_0_213c7f2:48",
+            },
+        ),
         unique_id=DOMAIN,
         version=ENTRY_VERSION,
     )
-    await start_options_flow(hass, entry)
+    entry.add_to_hass(hass)
 
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_signal_strength"
-    )
-    assert state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_battery"
-    )
-    assert state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_humidity"
-    )
-    assert state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_humidity_status"
-    )
-    assert state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_temperature"
-    )
-    assert state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_signal_strength"
-    )
-    assert state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_battery"
-    )
-    assert state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_humidity"
-    )
-    assert state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_humidity_status"
-    )
-    assert state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_temperature"
-    )
-    assert state
-
-    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-
-    old_device = next(
-        (
-            elem.id
-            for elem in device_entries
-            if next(iter(elem.identifiers))[1] == "52_1_f0:04"
-        ),
-        None,
-    )
-    new_device = next(
-        (
-            elem.id
-            for elem in device_entries
-            if next(iter(elem.identifiers))[1] == "52_1_23:04"
-        ),
-        None,
-    )
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "prompt_options"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "automatic_add": False,
-            "device": old_device,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "set_device_options"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "replace_device": new_device,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_signal_strength"
-    )
-    assert entry
-    assert entry.device_id == new_device
-    entry = entity_registry.async_get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_humidity"
-    )
-    assert entry
-    assert entry.device_id == new_device
-    entry = entity_registry.async_get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_humidity_status"
-    )
-    assert entry
-    assert entry.device_id == new_device
-    entry = entity_registry.async_get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_battery"
-    )
-    assert entry
-    assert entry.device_id == new_device
-    entry = entity_registry.async_get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_temperature"
-    )
-    assert entry
-    assert entry.device_id == new_device
-
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_signal_strength"
-    )
-    assert not state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_battery"
-    )
-    assert not state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_humidity"
-    )
-    assert not state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_humidity_status"
-    )
-    assert not state
-    state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_temperature"
-    )
-    assert not state
-
-
-async def test_options_replace_control_device(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test we can replace a control device."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": None,
-            "port": None,
-            "device": "/dev/tty123",
-            "automatic_add": False,
-            "devices": {
-                "0b1100100118cdea02010f70": {
-                    "device_id": ["11", "0", "118cdea:2"],
-                },
-                "0b1100101118cdea02010f70": {
-                    "device_id": ["11", "0", "1118cdea:2"],
-                },
-            },
-        },
-        unique_id=DOMAIN,
-        version=ENTRY_VERSION,
-    )
-    await start_options_flow(hass, entry)
-
-    state = hass.states.get("binary_sensor.ac_118cdea_2")
-    assert state
-    state = hass.states.get("sensor.ac_118cdea_2_signal_strength")
-    assert state
-    state = hass.states.get("switch.ac_118cdea_2")
-    assert state
-    state = hass.states.get("binary_sensor.ac_1118cdea_2")
-    assert state
-    state = hass.states.get("sensor.ac_1118cdea_2_signal_strength")
-    assert state
-    state = hass.states.get("switch.ac_1118cdea_2")
-    assert state
-
-    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-
-    old_device = next(
-        (
-            elem.id
-            for elem in device_entries
-            if next(iter(elem.identifiers))[1] == "11_0_118cdea:2"
-        ),
-        None,
-    )
-    new_device = next(
-        (
-            elem.id
-            for elem in device_entries
-            if next(iter(elem.identifiers))[1] == "11_0_1118cdea:2"
-        ),
-        None,
-    )
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "prompt_options"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "automatic_add": False,
-            "device": old_device,
-        },
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "set_device_options"
+    assert result["step_id"] == "user"
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={
-            "replace_device": new_device,
-        },
+        user_input={"event_code": "0b1100cd0213c7f230010f71"},
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-    await hass.async_block_till_done()
-
-    entry = entity_registry.async_get("binary_sensor.ac_118cdea_2")
-    assert entry
-    assert entry.device_id == new_device
-    entry = entity_registry.async_get("sensor.ac_118cdea_2_signal_strength")
-    assert entry
-    assert entry.device_id == new_device
-    entry = entity_registry.async_get("switch.ac_118cdea_2")
-    assert entry
-    assert entry.device_id == new_device
-
-    state = hass.states.get("binary_sensor.ac_1118cdea_2")
-    assert not state
-    state = hass.states.get("sensor.ac_1118cdea_2_signal_strength")
-    assert not state
-    state = hass.states.get("switch.ac_1118cdea_2")
-    assert not state
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]
+    assert result["errors"]["event_code"] == "already_configured_device"
 
 
 async def test_options_add_and_configure_device(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test we can add a device."""
+    """Test we can add and reconfigure a device."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -720,28 +977,24 @@ async def test_options_add_and_configure_device(
             "port": None,
             "device": "/dev/tty123",
             "automatic_add": False,
-            "devices": {},
         },
         unique_id=DOMAIN,
         version=ENTRY_VERSION,
     )
-    result = await start_options_flow(hass, entry)
+    result = await start_add_device_flow(hass, entry)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "prompt_options"
+    assert result["step_id"] == "user"
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={
-            "automatic_add": True,
-            "event_code": "0913000022670e013970",
-        },
+        user_input={"event_code": "0913000022670e013970"},
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "set_device_options"
+    assert result["step_id"] == "device_options"
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
             "data_bits": 4,
@@ -751,12 +1004,12 @@ async def test_options_add_and_configure_device(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "set_device_options"
+    assert result["step_id"] == "device_options"
     assert result["errors"]
     assert result["errors"]["command_on"] == "invalid_input_2262_on"
     assert result["errors"]["command_off"] == "invalid_input_2262_off"
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
             "data_bits": 4,
@@ -768,12 +1021,11 @@ async def test_options_add_and_configure_device(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    await hass.async_block_till_done()
+    await async_wait_for_reload(hass)
 
-    assert entry.data["automatic_add"]
-
-    assert entry.data["devices"]["0913000022670e013970"]
-    assert entry.data["devices"]["0913000022670e013970"]["off_delay"] == 9
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.data["event_code"] == "0913000022670e013970"
+    assert subentry.data["off_delay"] == 9
 
     state = hass.states.get("binary_sensor.pt2262_226700")
     assert state
@@ -784,23 +1036,20 @@ async def test_options_add_and_configure_device(
 
     assert device_entries[0].id
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "prompt_options"
+    assert result["step_id"] == "reconfigure"
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={
-            "automatic_add": False,
-            "device": device_entries[0].id,
-        },
+        user_input={"event_code": "0913000022670e013970"},
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "set_device_options"
+    assert result["step_id"] == "device_options"
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
             "data_bits": 4,
@@ -809,12 +1058,14 @@ async def test_options_add_and_configure_device(
         },
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     await hass.async_block_till_done()
 
-    assert entry.data["devices"]["0913000022670e013970"]
-    assert "delay_off" not in entry.data["devices"]["0913000022670e013970"]
+    subentry = entry.subentries[subentry.subentry_id]
+    assert subentry.data["event_code"] == "0913000022670e013970"
+    assert "off_delay" not in subentry.data
 
 
 async def test_options_configure_rfy_cover_device(
@@ -829,65 +1080,24 @@ async def test_options_configure_rfy_cover_device(
             "port": None,
             "device": "/dev/tty123",
             "automatic_add": False,
-            "devices": {},
         },
         unique_id=DOMAIN,
         version=ENTRY_VERSION,
     )
-    result = await start_options_flow(hass, entry)
+    result = await start_add_device_flow(hass, entry)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "prompt_options"
+    assert result["step_id"] == "user"
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={
-            "automatic_add": True,
-            "event_code": "0C1a0000010203010000000000",
-        },
+        user_input={"event_code": "0C1a0000010203010000000000"},
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "set_device_options"
+    assert result["step_id"] == "device_options"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "venetian_blind_mode": "EU",
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    assert (
-        entry.data["devices"]["0C1a0000010203010000000000"]["venetian_blind_mode"]
-        == "EU"
-    )
-    assert isinstance(
-        entry.data["devices"]["0C1a0000010203010000000000"]["device_id"], list
-    )
-
-    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-
-    assert device_entries[0].id
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "prompt_options"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "automatic_add": False,
-            "device": device_entries[0].id,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "set_device_options"
-
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
             "venetian_blind_mode": "EU",
@@ -896,12 +1106,41 @@ async def test_options_configure_rfy_cover_device(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
+    await async_wait_for_reload(hass)
+
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.data["event_code"] == "0C1a0000010203010000000000"
+    assert subentry.data["venetian_blind_mode"] == "EU"
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    assert device_entries[0].id
+
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0C1a0000010203010000000000"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device_options"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "venetian_blind_mode": "EU",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
     await hass.async_block_till_done()
 
-    assert (
-        entry.data["devices"]["0C1a0000010203010000000000"]["venetian_blind_mode"]
-        == "EU"
-    )
-    assert isinstance(
-        entry.data["devices"]["0C1a0000010203010000000000"]["device_id"], list
-    )
+    subentry = entry.subentries[subentry.subentry_id]
+    assert subentry.data["event_code"] == "0C1a0000010203010000000000"
+    assert subentry.data["venetian_blind_mode"] == "EU"
