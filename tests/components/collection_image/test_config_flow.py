@@ -228,5 +228,7 @@ async def test_reconfigure_flow(
     assert updated_entry is not None
     assert updated_entry.data == new_data
 
+    await hass.async_block_till_done()
+
     state = hass.states.get("image.test_collection")
     assert state and state.state == TEST_TIME_NEXT
