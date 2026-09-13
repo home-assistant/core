@@ -179,7 +179,7 @@
         },
         "media_source": {
           "description": "Attach an image, video, or audio to the post.",
-          "name": "Media"
+          "name": "Media source"
         },
         "thumbnail": {
           "description": "Upload a custom thumbnail image for an audio attachment.",

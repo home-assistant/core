@@ -270,7 +270,7 @@ post:
     media:
       selector:
         object:
-          label_field: "media"
+          label_field: "media_source"
           description_field: "media_description"
           multiple: true
           translation_key: media
