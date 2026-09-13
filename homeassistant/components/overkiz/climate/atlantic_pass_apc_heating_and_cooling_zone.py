@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
-from pyoverkiz.models import Command, Action
+from pyoverkiz.models import Command
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -176,6 +176,7 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         return res
 
     async def async_cancel_absence(self) -> None:
+        """Cancel absence mode."""
         LOGGER.debug("OVERKIZCUSTOM: async_cancel_absence")
 
         zero_date = {
@@ -258,6 +259,7 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         await self.main_executor.async_execute_commands(commands)
 
     def is_absence_mode(self) -> bool:
+        """Return whether absence mode is active."""
         LOGGER.debug("OVERKIZCUSTOM: is_absence_mode")
 
         absence_status = self.main_device.states.get_value(
