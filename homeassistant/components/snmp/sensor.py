@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 from struct import unpack
+from time import monotonic
 from typing import override
 
 from pyasn1.codec.ber import decoder
@@ -75,6 +76,14 @@ from .util import async_create_request_cmd_args
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
+
+# A host that stays unreachable is polled with an exponentially increasing
+# delay instead of once per scan interval forever. The first few failures are
+# still retried at the normal interval so that a transient timeout recovers
+# immediately.
+FAILURES_BEFORE_BACKOFF = 3
+MIN_BACKOFF = 60
+MAX_BACKOFF = 600
 
 TRIGGER_ENTITY_OPTIONS = (
     CONF_AVAILABILITY,
@@ -222,12 +231,30 @@ class SnmpData:
         self._accept_errors = accept_errors
         self._default_value = default_value
         self.value = None
+        self._failures = 0
+        self._skip_until = 0.0
 
     async def async_update(self):
         """Get the latest data from the remote SNMP capable host."""
 
+        now = monotonic()
+        if now < self._skip_until:
+            # Backing off after repeated failures; keep the previous value.
+            return
+
         get_result = await get_cmd(*self._request_args)
         errindication, errstatus, errindex, restable = get_result
+
+        if errindication or errstatus:
+            self._failures += 1
+            if self._failures > FAILURES_BEFORE_BACKOFF:
+                self._skip_until = now + min(
+                    MAX_BACKOFF,
+                    MIN_BACKOFF * 2 ** (self._failures - FAILURES_BEFORE_BACKOFF - 1),
+                )
+        else:
+            self._failures = 0
+            self._skip_until = 0.0
 
         if errindication and not self._accept_errors:
             _LOGGER.error("SNMP error: %s", errindication)
