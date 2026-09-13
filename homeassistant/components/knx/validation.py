@@ -63,11 +63,9 @@ def entity_category_validator(
 
     Works for both, UI and YAML configuration schema.
     """
-    valid_categories = (
-        (EntityCategory.DIAGNOSTIC,)
-        if platform in PLATFORMS_WITHOUT_CONFIG_CATEGORY
-        else tuple(EntityCategory)
-    )
+    valid_categories = set(EntityCategory)
+    if platform in PLATFORMS_WITHOUT_CONFIG_CATEGORY:
+        valid_categories -= {EntityCategory.CONFIG}
 
     def validate(value: Any) -> EntityCategory | None:
         """Validate the entity category."""
