@@ -191,8 +191,11 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if (
-            await self.client.smartglass.wake_up(self._console.id)
+            err := await self.client.smartglass.wake_up(self._console.id)
         ).status.error_code != "OK":
+            _LOGGER.debug(
+                "Xbox error: %s (%s)", err.status.error_message, err.status.error_code
+            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_on_failed",
