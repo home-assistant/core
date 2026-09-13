@@ -324,7 +324,7 @@ aiokef==0.2.16
 aiokem==1.0.1
 
 # homeassistant.components.librenms
-aiolibrenms==0.0.3
+aiolibrenms==0.0.4
 
 # homeassistant.components.lichess
 aiolichess==1.3.0
