@@ -106,18 +106,12 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
 
     def _update_attrs(self) -> None:
         """Update installed and latest controller versions."""
-        installed_version = self.coordinator.data.current_version
         update = self._update_coordinator.data
-        if update is None:
-            self._attr_installed_version = installed_version
-            self._attr_latest_version = installed_version
-            self._attr_supported_features = 0
-            return
-
-        self._attr_installed_version = installed_version or update.current_version
-        self._attr_latest_version = (
-            update.latest_version or self._attr_installed_version
+        installed_version = (
+            update.current_version or self.coordinator.data.current_version
         )
+        self._attr_installed_version = installed_version
+        self._attr_latest_version = update.latest_version or installed_version
         self._attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
         if update.hardware is not None:
             self._attr_supported_features |= UpdateEntityFeature.INSTALL
@@ -125,31 +119,23 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
     @override
     def release_notes(self) -> str | None:
         """Return the release notes for the latest controller update."""
-        if (update := self._update_coordinator.data) is None:
-            return None
-        return update.release_notes
+        return self._update_coordinator.data.release_notes
 
     @property
     @override
     def release_url(self) -> str | None:
         """Return the URL for the latest controller release notes."""
-        if (update := self._update_coordinator.data) is None:
-            return None
-        return update.release_url
+        return self._update_coordinator.data.release_url
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the controller update download URL."""
-        update = self._update_coordinator.data
-        if (
-            update is None
-            or update.update is None
-            or update.update.download_link is None
-        ):
+        update = self._update_coordinator.data.update
+        if update is None or update.download_link is None:
             return None
 
-        return {"download_url": update.update.download_link}
+        return {"download_url": update.download_link}
 
     @override
     async def async_install(
@@ -158,7 +144,7 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
         """Install a controller firmware update."""
         update = self._update_coordinator.data
 
-        if update is None or update.hardware is None:
+        if update.hardware is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="firmware_update_rejected",

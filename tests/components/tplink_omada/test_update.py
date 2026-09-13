@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tplink_omada_client import OmadaControllerStatus, OmadaControllerUpdateInfo
+from tplink_omada_client import OmadaControllerUpdateInfo
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
@@ -14,7 +14,6 @@ from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
-    ATTR_INSTALLED_VERSION,
     DATA_COMPONENT,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
@@ -23,9 +22,7 @@ from homeassistant.components.update import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -183,64 +180,6 @@ async def test_install_controller_firmware_success(
 
     mock_omada_client.install_controller_firmware.assert_awaited_once_with("1.0.1")
     mock_omada_client.check_firmware_updates.assert_awaited()
-
-
-async def test_controller_update_check_failure_does_not_block_setup(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_omada_client: MagicMock,
-) -> None:
-    """Test controller update check failures do not block setup."""
-    entity_id = "update.oc200_test_omada_controller_firmware"
-    mock_omada_client.check_firmware_updates.side_effect = OmadaClientException(
-        "Connection error"
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.tplink_omada.PLATFORMS", [Platform.UPDATE]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity = hass.states.get(entity_id)
-    assert entity is not None
-    assert entity.state == STATE_UNAVAILABLE
-
-
-async def test_controller_update_installed_version_prefers_status_coordinator(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_omada_client: MagicMock,
-) -> None:
-    """Test controller update installed version prefers controller status."""
-    entity_id = "update.oc200_test_omada_controller_firmware"
-    mock_omada_client.get_controller_status.return_value = OmadaControllerStatus(
-        {
-            "name": "Test Omada Controller",
-            "macAddress": "00-11-22-33-44-55",
-            "upTime": 123456,
-            "controllerVersion": "6.3.0.45",
-            "model": "OC200",
-        }
-    )
-    mock_omada_client.check_firmware_updates.return_value = OmadaControllerUpdateInfo(
-        {
-            "software": {
-                "upgrade": True,
-                "currentVersion": "6.2.10.17",
-                "latestVersion": "6.3.0.45",
-            }
-        }
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.tplink_omada.PLATFORMS", [Platform.UPDATE]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity = hass.states.get(entity_id)
-    assert entity is not None
-    assert entity.state == STATE_OFF
-    assert entity.attributes[ATTR_INSTALLED_VERSION] == "6.3.0.45"
 
 
 @pytest.mark.parametrize(
