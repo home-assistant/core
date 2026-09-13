@@ -1,4 +1,4 @@
-"""Voluptuous schemas for Music Assistant integration service responses."""
+"""Probatio schemas for Music Assistant integration service responses."""
 
 from typing import TYPE_CHECKING, Any
 

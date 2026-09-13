@@ -315,7 +315,7 @@ class CloudLoginView(HomeAssistantView):
                 ):
                     raise MFAExpiredOrNotStarted
 
-                # Voluptuous should ensure that code is not None because password is
+                # Probatio should ensure that code is not None because password is
                 assert code is not None
 
                 await cloud.login_verify_totp(

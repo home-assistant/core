@@ -1,4 +1,4 @@
-"""Voluptuous schemas for the Modbus integration."""
+"""Probatio schemas for the Modbus integration."""
 
 import probatio
 

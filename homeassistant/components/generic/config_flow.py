@@ -347,7 +347,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         hass = self.hass
         if user_input:
-            # Secondary validation because serialised vol can't
+            # Secondary validation because serialised probatio can't
             # seem to handle this complexity:
             if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
                 CONF_STREAM_SOURCE
@@ -433,7 +433,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
         hass = self.hass
 
         if user_input:
-            # Secondary validation because serialised vol can't
+            # Secondary validation because serialised probatio can't
             # seem to handle this complexity:
             if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
                 CONF_STREAM_SOURCE

@@ -1,4 +1,4 @@
-"""Voluptuous schemas for eq3btsmart."""
+"""Probatio schemas for eq3btsmart."""
 
 from eq3btsmart.const import EQ3_MAX_TEMP, EQ3_MIN_TEMP
 import probatio

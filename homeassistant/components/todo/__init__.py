@@ -62,7 +62,7 @@ class TodoItemFieldDescription:
     """Field name for TodoItem."""
 
     validation: Callable[[Any], Any]
-    """Voluptuous validation function."""
+    """Probatio validation function."""
 
     required_feature: TodoListEntityFeature
     """Entity feature that enables this field."""

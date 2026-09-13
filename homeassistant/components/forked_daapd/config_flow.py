@@ -28,7 +28,7 @@ from .coordinator import ForkedDaapdConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-# Can't use all vol types: https://github.com/home-assistant/core/issues/32819
+# Can't use all probatio types: https://github.com/home-assistant/core/issues/32819
 DATA_SCHEMA_DICT = {
     probatio.Required(CONF_HOST): str,
     probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,

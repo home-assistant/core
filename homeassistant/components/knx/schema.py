@@ -1,4 +1,4 @@
-"""Voluptuous schemas for the KNX integration."""
+"""Probatio schemas for the KNX integration."""
 
 from abc import ABC
 from collections import OrderedDict
@@ -176,7 +176,7 @@ def _sensor_attribute_sub_validator(config: dict) -> dict:
 
 
 class EventSchema:
-    """Voluptuous schema for KNX events."""
+    """Probatio schema for KNX events."""
 
     KNX_EVENT_FILTER_SCHEMA = probatio.Schema(
         {
@@ -214,7 +214,7 @@ def _unique_id_duplicate_validator(entities: list[dict]) -> list[dict]:
 
 
 class KNXPlatformSchema(ABC):
-    """Voluptuous schema for KNX platform entity configuration."""
+    """Probatio schema for KNX platform entity configuration."""
 
     PLATFORM: ClassVar[Platform | str]
     ENTITY_SCHEMA: ClassVar[probatio.Schema | probatio.All | probatio.Any]
@@ -269,7 +269,7 @@ def _entity_base_schema(platform: Platform) -> probatio.Schema:
 
 
 class BinarySensorSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX binary sensors."""
+    """Probatio schema for KNX binary sensors."""
 
     PLATFORM = Platform.BINARY_SENSOR
 
@@ -295,7 +295,7 @@ class BinarySensorSchema(KNXPlatformSchema):
 
 
 class ButtonSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX buttons."""
+    """Probatio schema for KNX buttons."""
 
     PLATFORM = Platform.BUTTON
 
@@ -351,7 +351,7 @@ class ButtonSchema(KNXPlatformSchema):
 
 
 class ClimateSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX climate devices."""
+    """Probatio schema for KNX climate devices."""
 
     PLATFORM = Platform.CLIMATE
 
@@ -497,7 +497,7 @@ class ClimateSchema(KNXPlatformSchema):
 
 
 class CoverSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX covers."""
+    """Probatio schema for KNX covers."""
 
     PLATFORM = Platform.COVER
 
@@ -554,7 +554,7 @@ class CoverSchema(KNXPlatformSchema):
 
 
 class DateSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX date."""
+    """Probatio schema for KNX date."""
 
     PLATFORM = Platform.DATE
 
@@ -569,7 +569,7 @@ class DateSchema(KNXPlatformSchema):
 
 
 class DateTimeSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX date."""
+    """Probatio schema for KNX date."""
 
     PLATFORM = Platform.DATETIME
 
@@ -584,7 +584,7 @@ class DateTimeSchema(KNXPlatformSchema):
 
 
 class ExposeSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX exposures."""
+    """Probatio schema for KNX exposures."""
 
     PLATFORM = CONF_KNX_EXPOSE
 
@@ -632,7 +632,7 @@ class ExposeSchema(KNXPlatformSchema):
 
 
 class FanSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX fans."""
+    """Probatio schema for KNX fans."""
 
     PLATFORM = Platform.FAN
 
@@ -673,7 +673,7 @@ class FanSchema(KNXPlatformSchema):
 
 
 class LightSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX lights."""
+    """Probatio schema for KNX lights."""
 
     PLATFORM = Platform.LIGHT
 
@@ -822,7 +822,7 @@ class LightSchema(KNXPlatformSchema):
 
 
 class NotifySchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX notifications."""
+    """Probatio schema for KNX notifications."""
 
     PLATFORM = Platform.NOTIFY
 
@@ -835,7 +835,7 @@ class NotifySchema(KNXPlatformSchema):
 
 
 class NumberSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX numbers."""
+    """Probatio schema for KNX numbers."""
 
     PLATFORM = Platform.NUMBER
 
@@ -864,7 +864,7 @@ class NumberSchema(KNXPlatformSchema):
 
 
 class SceneSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX scenes."""
+    """Probatio schema for KNX scenes."""
 
     PLATFORM = Platform.SCENE
 
@@ -881,7 +881,7 @@ class SceneSchema(KNXPlatformSchema):
 
 
 class SelectSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX selects."""
+    """Probatio schema for KNX selects."""
 
     PLATFORM = Platform.SELECT
 
@@ -908,7 +908,7 @@ class SelectSchema(KNXPlatformSchema):
 
 
 class SensorSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX sensors."""
+    """Probatio schema for KNX sensors."""
 
     PLATFORM = Platform.SENSOR
 
@@ -933,7 +933,7 @@ class SensorSchema(KNXPlatformSchema):
 
 
 class SwitchSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX switches."""
+    """Probatio schema for KNX switches."""
 
     PLATFORM = Platform.SWITCH
 
@@ -955,7 +955,7 @@ class SwitchSchema(KNXPlatformSchema):
 
 
 class TextSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX text."""
+    """Probatio schema for KNX text."""
 
     PLATFORM = Platform.TEXT
 
@@ -976,7 +976,7 @@ class TextSchema(KNXPlatformSchema):
 
 
 class TimeSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX time."""
+    """Probatio schema for KNX time."""
 
     PLATFORM = Platform.TIME
 
@@ -991,7 +991,7 @@ class TimeSchema(KNXPlatformSchema):
 
 
 class WeatherSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX weather station."""
+    """Probatio schema for KNX weather station."""
 
     PLATFORM = Platform.WEATHER
 

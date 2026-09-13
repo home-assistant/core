@@ -58,7 +58,7 @@ class WemoOptionsFlow(OptionsFlow):
 
 
 def _schema_for_options(options: Options) -> probatio.Schema:
-    """Return the Voluptuous schema for the Options instance.
+    """Return the Probatio schema for the Options instance.
 
     All values are optional. The default value is set to the current value and
     the type hint is set to the value of the field type annotation.
