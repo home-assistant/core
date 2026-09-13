@@ -12,10 +12,10 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_unordered import unordered
 from sqlalchemy.exc import SQLAlchemyError
-import voluptuous as vol
 
 from homeassistant.components.device_automation import (
     DOMAIN as DEVICE_AUTOMATION_DOMAIN,
@@ -175,7 +175,7 @@ def assert_condition_trace(expected):
 )
 async def test_invalid_condition(hass: HomeAssistant, config: dict, error: str) -> None:
     """Test if validating an invalid condition raises."""
-    with pytest.raises(vol.Invalid, match=error):
+    with pytest.raises(probatio.Invalid, match=error):
         cv.CONDITION_SCHEMA(config)
 
 
@@ -538,7 +538,7 @@ async def test_malformed_and_condition_list_shorthand(hass: HomeAssistant) -> No
         "condition": ["bad", "syntax"],
     }
 
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         cv.CONDITION_SCHEMA(config)
 
 
@@ -1518,7 +1518,7 @@ def test_state_for_not_allowed(extra_config: dict[str, Any], error: str) -> None
         "for": {"seconds": 5},
         **extra_config,
     }
-    with pytest.raises(vol.Invalid, match=error):
+    with pytest.raises(probatio.Invalid, match=error):
         cv.CONDITION_SCHEMA(config)
 
 
@@ -2548,7 +2548,7 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     assert await async_validate_condition_config(hass, config_1) == config_1
     assert await async_validate_condition_config(hass, config_2) == config_2
     with pytest.raises(
-        vol.Invalid, match="Invalid condition 'test.unknown_cond' specified"
+        probatio.Invalid, match="Invalid condition 'test.unknown_cond' specified"
     ):
         await async_validate_condition_config(hass, config_3)
 
@@ -2566,8 +2566,8 @@ async def test_platform_migrate_condition(hass: HomeAssistant) -> None:
     """Test a condition platform with a migration."""
 
     OPTIONS_SCHEMA_DICT = {
-        vol.Required("option_1"): str,
-        vol.Optional("option_2"): int,
+        probatio.Required("option_1"): str,
+        probatio.Optional("option_2"): int,
     }
 
     class MockCondition(Condition):
@@ -3683,7 +3683,7 @@ async def test_numerical_condition_schema_requires_above_or_below(
         CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {},
     }
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_condition_config(hass, config)
 
 
@@ -3691,7 +3691,7 @@ async def test_numerical_condition_schema_requires_above_or_below(
     ("above", "below", "expected_result"),
     [
         (10.0, 10.0, does_not_raise()),
-        (20.0, 10.0, pytest.raises(vol.Invalid, match="must not be greater")),
+        (20.0, 10.0, pytest.raises(probatio.Invalid, match="must not be greater")),
     ],
 )
 async def test_numerical_condition_schema_above_must_be_less_than_below(
@@ -4143,7 +4143,7 @@ async def test_numerical_condition_with_unit_schema_rejects_invalid_units(
             }
         },
     }
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_condition_config(hass, config)
 
 

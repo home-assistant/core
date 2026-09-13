@@ -10,8 +10,8 @@ import zoneinfo
 
 from aiohttp.client_exceptions import ClientError
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.google import DOMAIN
 from homeassistant.components.google.calendar import SERVICE_CREATE_EVENT
@@ -289,35 +289,35 @@ async def test_multiple_config_entries(
     [
         (
             {},
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "must contain at least one of start_date, start_date_time, in",
         ),
         (
             {
                 "start_date": "2022-04-01",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
             {
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "must contain at least one of start_date, start_date_time, in.",
         ),
         (
             {
                 "start_date_time": "2022-04-01T06:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end datetimes must both be specified",
         ),
         (
             {
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "must contain at least one of start_date, start_date_time, in.",
         ),
         (
@@ -326,7 +326,7 @@ async def test_multiple_config_entries(
                 "start_date_time": "2022-04-01T06:00:00",
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "must contain at most one of start_date, start_date_time, in.",
         ),
         (
@@ -335,7 +335,7 @@ async def test_multiple_config_entries(
                 "end_date_time": "2022-04-01T07:00:00",
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -343,7 +343,7 @@ async def test_multiple_config_entries(
                 "start_date": "2022-04-01",
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -351,7 +351,7 @@ async def test_multiple_config_entries(
                 "start_date_time": "2022-04-01T07:00:00",
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -361,7 +361,7 @@ async def test_multiple_config_entries(
                     "weeks": 2,
                 }
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "two or more values in the same group of exclusion 'event_types'",
         ),
         (
@@ -372,7 +372,7 @@ async def test_multiple_config_entries(
                     "days": 2,
                 },
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "must contain at most one of start_date, start_date_time, in.",
         ),
         (
@@ -383,7 +383,7 @@ async def test_multiple_config_entries(
                     "days": 2,
                 },
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "must contain at most one of start_date, start_date_time, in.",
         ),
     ],

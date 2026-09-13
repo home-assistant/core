@@ -9,8 +9,8 @@ from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
-import voluptuous as vol
 import yaml
 
 from homeassistant import config as module_hass_config
@@ -1290,7 +1290,7 @@ async def help_test_default_availability_list_single(
 
     with (
         patch("homeassistant.config.load_yaml_config_file", return_value=config),
-        suppress(vol.MultipleInvalid),
+        suppress(probatio.MultipleInvalid),
     ):
         await mqtt_mock_entry()
 
