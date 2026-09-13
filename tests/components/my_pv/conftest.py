@@ -77,6 +77,9 @@ def mock_my_pv_client() -> Generator[AsyncMock]:
         client.setup_uri = "http://127.0.0.1/"
         client.hardware_version = "v1.5A"
         client.firmware_version = "e0002200"
+        client.latest_firmware_version = "e0002201"
+        client.firmware_update_available = True
+        client.firmware_update_progress = None
         client.current_temperature = 54.3
         client.target_temperature = 62.1
         client.get_setup_configuration = Mock(side_effect=_setup_configuration_lookup)
