@@ -6,6 +6,15 @@
       "selected_media_no_images": "The selected media has no images. Please select a media directory with images."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "media": "[%key:component::collection_image::config::step::user::data::media%]"
+        },
+        "data_description": {
+          "media": "[%key:component::collection_image::config::step::user::data_description::media%]"
+        },
+        "description": "Update the source media used for the collection."
+      },
       "user": {
         "data": {
           "media": "Media"
@@ -21,24 +30,6 @@
   "exceptions": {
     "image_read_error": {
       "message": "Error reading image from {path}: {error}"
-    }
-  },
-  "options": {
-    "error": {
-      "failed_browse": "[%key:component::collection_image::config::error::failed_browse%]",
-      "invalid_selection": "[%key:component::collection_image::config::error::invalid_selection%]",
-      "selected_media_no_images": "[%key:component::collection_image::config::error::selected_media_no_images%]"
-    },
-    "step": {
-      "init": {
-        "data": {
-          "media": "[%key:component::collection_image::config::step::user::data::media%]"
-        },
-        "data_description": {
-          "media": "[%key:component::collection_image::config::step::user::data_description::media%]"
-        },
-        "description": "Update the source media used for the collection."
-      }
     }
   },
   "services": {

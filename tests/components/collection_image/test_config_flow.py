@@ -1,6 +1,7 @@
 """Test the Collection Image config flow."""
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import config_entries
@@ -21,6 +22,7 @@ from .helpers import data_from_uri
 from tests.common import MockConfigEntry
 
 TEST_TIME = "2026-09-12T07:12:00+00:00"
+TEST_TIME_NEXT = "2026-09-12T07:30:00+00:00"
 
 
 @pytest.mark.parametrize(
@@ -50,8 +52,7 @@ async def test_config_flow(
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == expected_title
-    assert result.get("data") == {}
-    assert result.get("options") == data
+    assert result.get("data") == data
 
     await hass.async_block_till_done()
 
@@ -116,7 +117,6 @@ async def test_config_flow_error(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("title") is None
     assert result.get("data") is None
-    assert result.get("options") is None
 
     media_key = next(
         key
@@ -141,65 +141,53 @@ async def test_config_flow_error(
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == expected_title
-    assert result.get("data") == {}
-    assert result.get("options") == data
+    assert result.get("data") == data
 
     state = hass.states.get(f"image.{slugify(expected_title)}")
     assert state and state.state == TEST_TIME
 
 
 @pytest.mark.parametrize(
-    ("entry_data", "entry_options", "expected_uri"),
+    ("entry_data", "expected_uri"),
     [
         pytest.param(
             data_from_uri([MOCK_MEDIA_DIR_URI_1]),
-            {},
             MOCK_MEDIA_DIR_URI_1,
             id="legacy-data-array",
         ),
         pytest.param(
             data_from_uri(MOCK_MEDIA_DIR_URI_1),
-            {},
             MOCK_MEDIA_DIR_URI_1,
             id="legacy-data-scalar",
         ),
-        pytest.param(
-            {},
-            data_from_uri([MOCK_MEDIA_DIR_URI_1]),
-            MOCK_MEDIA_DIR_URI_1,
-            id="options-only",
-        ),
-        pytest.param(
-            data_from_uri([MOCK_MEDIA_DIR_URI_2]),
-            data_from_uri([MOCK_MEDIA_DIR_URI_1]),
-            MOCK_MEDIA_DIR_URI_1,
-            id="options-overrides-data",
-        ),
     ],
 )
-@freeze_time(TEST_TIME)
 @pytest.mark.usefixtures("mock_media_source")
-async def test_options_flow(
+async def test_reconfigure_flow(
     hass: HomeAssistant,
     entry_data: dict,
-    entry_options: dict,
     expected_uri: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test options flow reads the effective media value and updates options."""
+    """Test reconfigure flow loads the original data and can update media."""
+    freezer.move_to(TEST_TIME)
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Test collection",
         data=entry_data,
-        options=entry_options,
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    state = hass.states.get("image.test_collection")
+    assert state and state.state == TEST_TIME
+
+    freezer.move_to(TEST_TIME_NEXT)
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     media_key = next(
@@ -214,34 +202,29 @@ async def test_options_flow(
     # First try new data with error
     new_data = data_from_uri([MOCK_MEDIA_DIR_URI_EMPTY])
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         new_data,
     )
-    await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("data") is None
-    assert result.get("options") is None
     assert result.get("errors") == {CONF_MEDIA: "selected_media_no_images"}
 
     # Now update again with a valid option, to recover
     new_data = data_from_uri([MOCK_MEDIA_DIR_URI_2])
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         new_data,
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == ""
-    assert result["data"] == new_data
-
-    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
     assert updated_entry is not None
-    assert updated_entry.options == new_data
+    assert updated_entry.data == new_data
 
     state = hass.states.get("image.test_collection")
-    assert state and state.state == TEST_TIME
+    assert state and state.state == TEST_TIME_NEXT

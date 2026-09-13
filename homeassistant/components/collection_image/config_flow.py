@@ -7,13 +7,9 @@ import voluptuous as vol
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import URI_SCHEME, async_browse_media
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlowWithReload,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import MediaSelector
 
 from .const import CONF_MEDIA, DOMAIN
@@ -70,61 +66,35 @@ async def _async_validate_media(
     return (title if not errors else None), errors, placeholders
 
 
-def _get_media(entry: ConfigEntry) -> list[Any]:
-    """Get media from options, or legacy config-entry data. Migrate to array if scalar."""
-    media: Any
-    if CONF_MEDIA in entry.options:
-        media = entry.options[CONF_MEDIA]
-    else:
-        media = entry.data[CONF_MEDIA]
+class CollectionImageConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Collection Image."""
 
-    return media if isinstance(media, list) else [media]
-
-
-class CollectionImageOptionsFlow(OptionsFlowWithReload):
-    """Handle Collection Image options."""
-
-    async def async_step_init(
-        self,
-        user_input: dict[str, Any] | None = None,
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Edit the collection's media directories."""
+        """Handle reconfiguration."""
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
-
+        entry = self._get_reconfigure_entry()
         if user_input is not None:
-            _title, errors, placeholders = await _async_validate_media(
+            title, errors, placeholders = await _async_validate_media(
                 self.hass,
                 user_input,
             )
-            if not errors:
-                return self.async_create_entry(
-                    title="",
-                    data=user_input,
+            if title is not None:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
                 )
 
         return self.async_show_form(
-            step_id="init",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA,
-                user_input or {CONF_MEDIA: _get_media(self.config_entry)},
+                user_input or {CONF_MEDIA: cv.ensure_list(entry.data[CONF_MEDIA])},
             ),
             errors=errors,
             description_placeholders=placeholders,
         )
-
-
-class CollectionImageConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Collection Image."""
-
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(
-        _config_entry: ConfigEntry,
-    ) -> CollectionImageOptionsFlow:
-        """Return the options flow."""
-        return CollectionImageOptionsFlow()
 
     @override
     async def async_step_user(
@@ -143,8 +113,7 @@ class CollectionImageConfigFlow(ConfigFlow, domain=DOMAIN):
             if title is not None:
                 return self.async_create_entry(
                     title=title,
-                    data={},
-                    options=user_input,
+                    data=user_input,
                 )
 
         return self.async_show_form(

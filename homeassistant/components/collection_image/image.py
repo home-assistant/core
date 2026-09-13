@@ -36,10 +36,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Collection Image image entities."""
-    if CONF_MEDIA in entry.options:
-        media = entry.options[CONF_MEDIA]
-    else:
-        media = entry.data[CONF_MEDIA]
+    media = entry.data[CONF_MEDIA]
     if isinstance(media, dict):
         content_ids = [media["media_content_id"]]
     else:
