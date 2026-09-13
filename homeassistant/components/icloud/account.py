@@ -86,6 +86,16 @@ def _is_auth_error(err: PyiCloudAPIResponseException) -> bool:
     return isinstance(err.code, int) and err.code in _AUTH_REQUIRED_STATUSES
 
 
+def _is_2fa_status(err: PyiCloudAPIResponseException) -> bool:
+    """Return True if the status reports a challenge rather than a rejection.
+
+    The same challenge reaches us either as PyiCloud2FARequiredException or,
+    when the body is not the hsa2 JSON pyicloud looks for, as this status on a
+    plain response. Both mean a verification code is what is missing.
+    """
+    return err.code == AppleAuthError.TWO_FACTOR_REQUIRED
+
+
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
 
@@ -165,8 +175,14 @@ class IcloudAccount:
 
         except PyiCloudAPIResponseException as err:
             if not _is_auth_error(err):
-                raise
-            self._handle_auth_required(two_factor=False, keep_session=False)
+                # Anything else is iCloud failing rather than refusing, so let
+                # Home Assistant retry the setup with its own backoff.
+                raise ConfigEntryNotReady from err
+            # self.api was never assigned, so there is no session to send a
+            # code through even when the status asks for one.
+            self._handle_auth_required(
+                two_factor=_is_2fa_status(err), keep_session=False
+            )
             return
 
         if self.api.requires_2fa:
@@ -204,11 +220,14 @@ class IcloudAccount:
             # Has to stay below the clause above: PyiCloudServiceNotActivatedException
             # is a subclass of this one and would otherwise never be reached.
             if not _is_auth_error(err):
-                raise
-            # Drop the session instead of keeping it for a code: it has just
-            # failed to refresh, so a reauth flow sending a code through it
-            # would fail as well.
-            self._handle_auth_required(two_factor=False, keep_session=False)
+                # Anything else is iCloud failing rather than refusing, so let
+                # Home Assistant retry the setup with its own backoff.
+                raise ConfigEntryNotReady from err
+            # A challenge keeps its session for the code to go through. The
+            # rejections do not: the session has just failed to refresh, so a
+            # reauth flow sending a code through it would fail as well.
+            challenge = _is_2fa_status(err)
+            self._handle_auth_required(two_factor=challenge, keep_session=challenge)
             raise ConfigEntryNotReady from err
 
         if user_info is None:

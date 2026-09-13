@@ -339,11 +339,81 @@ async def test_other_api_error_on_first_fetch_does_not_start_reauth(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # A server-side failure is transient, so setup has to be retried rather
+    # than recorded as an error that never comes back.
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert not [
         flow
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
+
+
+async def test_other_api_error_at_login_is_retried(
+    hass: HomeAssistant, service_2fa: Mock
+) -> None:
+    """Test that a server-side failure while logging in is retried.
+
+    The 500 that pyicloud groups with the authentication statuses is excluded
+    from them on purpose, so it has to land in the retry path rather than
+    escape setup as an unexpected error.
+    """
+    service_2fa.side_effect = PyiCloudAPIResponseException(
+        "Internal server error", AppleAuthError.GENERAL_AUTH_ERROR
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+async def test_2fa_status_on_first_fetch_asks_for_a_code(
+    hass: HomeAssistant, service_2fa: Mock
+) -> None:
+    """Test that a 409 status is treated as the challenge it reports.
+
+    The same challenge reaches the integration either as a dedicated exception
+    or as a plain response carrying the status, and both have to end up asking
+    for a verification code rather than for the password.
+    """
+    service_2fa.return_value.requires_2fa = False
+    service_2fa.return_value.requires_2sa = False
+    type(service_2fa.return_value).devices = PropertyMock(
+        side_effect=PyiCloudAPIResponseException(
+            "Authentication required for Account.",
+            AppleAuthError.TWO_FACTOR_REQUIRED,
+        )
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The session is kept for the code to go through, as it is for the
+    # dedicated exception carrying the same challenge.
+    assert config_entry.runtime_data.api is not None
+    flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "verification_code"
 
 
 async def test_service_not_activated_is_not_treated_as_auth_error(
