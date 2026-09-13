@@ -14,7 +14,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.overkiz.climate import AtlanticPassAPCHeatingAndCoolingZone
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES
 
 from ..coordinator import OverkizDataUpdateCoordinator
