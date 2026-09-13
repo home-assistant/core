@@ -16,9 +16,28 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_my_pv_client")
-async def test_update(
+async def test_update_not_available(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test successful setup of a update platform."""
+
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.UPDATE]):
+        mock_config_entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_my_pv_client")
+async def test_update_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -40,6 +59,9 @@ async def test_update_unavailable_not_connected(
 ) -> None:
     """Test if a update is unavailable when not connected."""
 
+    mock_my_pv_client.latest_firmware_version = "e0002201"
+    mock_my_pv_client.firmware_update_available = True
+
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.UPDATE]):
         mock_config_entry.add_to_hass(hass)
 
@@ -58,6 +80,9 @@ async def test_update_install(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test successful press of a update."""
+
+    mock_my_pv_client.latest_firmware_version = "e0002201"
+    mock_my_pv_client.firmware_update_available = True
 
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.UPDATE]):
         mock_config_entry.add_to_hass(hass)
@@ -80,6 +105,9 @@ async def test_update_press_update_firmware_returns_false(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for HomeAssistantError when update_firmware returns False."""
+
+    mock_my_pv_client.latest_firmware_version = "e0002201"
+    mock_my_pv_client.firmware_update_available = True
 
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.UPDATE]):
         mock_config_entry.add_to_hass(hass)
@@ -125,6 +153,9 @@ async def test_update_press_update_firmware_throws_error(
     expected_ha_error: type[HomeAssistantError],
 ) -> None:
     """Test for HomeAssistantError when update_firmware throws error."""
+
+    mock_my_pv_client.latest_firmware_version = "e0002201"
+    mock_my_pv_client.firmware_update_available = True
 
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.UPDATE]):
         mock_config_entry.add_to_hass(hass)
