@@ -324,7 +324,7 @@ aiokef==0.2.16
 aiokem==1.0.1
 
 # homeassistant.components.librenms
-aiolibrenms==0.0.3
+aiolibrenms==0.0.4
 
 # homeassistant.components.lichess
 aiolichess==1.3.0
@@ -896,7 +896,7 @@ dynalite-panel==0.0.4
 eagle100==0.1.1
 
 # homeassistant.components.earn_e_p1
-earn-e-p1==0.2.0
+earn-e-p1==0.3.0
 
 # homeassistant.components.easyenergy
 easyenergy==3.0.1
@@ -1728,7 +1728,7 @@ nextcloudmonitor==1.5.1
 nextcord==3.1.0
 
 # homeassistant.components.nextdns
-nextdns==5.0.1
+nextdns==5.1.0
 
 # homeassistant.components.niko_home_control
 nhc==0.8.1
