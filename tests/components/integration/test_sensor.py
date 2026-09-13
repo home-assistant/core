@@ -892,7 +892,7 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get("sensor.mock_title") is not None
 
     integration_config_entry = MockConfigEntry(
         data={},
@@ -901,7 +901,7 @@ async def test_device_id(
             "method": "trapezoidal",
             "name": "integration",
             "round": 1.0,
-            "source": "sensor.test_source",
+            "source": "sensor.mock_title",
             "unit_prefix": "k",
             "unit_time": "min",
         },
@@ -913,9 +913,53 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(integration_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    integration_entity = entity_registry.async_get("sensor.integration")
+    integration_entity = entity_registry.async_get("sensor.mock_title_integration")
     assert integration_entity is not None
     assert integration_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured Riemann sum integral."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "integration",
+                "name": "integration",
+                "source": "sensor.test_source",
+                "method": "right",
+                "unique_id": "integration_yaml",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    integration_entity = entity_registry.async_get("sensor.integration")
+    assert integration_entity is not None
+    assert integration_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
 
 
 def _integral_sensor_config(max_sub_interval: dict[str, int] | None) -> dict[str, Any]:

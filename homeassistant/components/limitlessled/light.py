@@ -13,7 +13,7 @@ from limitlessled.group.rgbww import RgbwwGroup
 from limitlessled.group.white import WhiteGroup
 from limitlessled.pipeline import Pipeline
 from limitlessled.presets import COLORLOOP
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -29,6 +29,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightEntityStateAttribute,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -75,25 +76,25 @@ SUPPORT_LIMITLESSLED_RGBWW = (
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_BRIDGES): vol.All(
+        probatio.Required(CONF_BRIDGES): probatio.All(
             cv.ensure_list,
             [
                 {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Optional(
+                    probatio.Required(CONF_HOST): cv.string,
+                    probatio.Optional(
                         CONF_VERSION, default=DEFAULT_VERSION
                     ): cv.positive_int,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                    vol.Required(CONF_GROUPS): vol.All(
+                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    probatio.Required(CONF_GROUPS): probatio.All(
                         cv.ensure_list,
                         [
                             {
-                                vol.Required(CONF_NAME): cv.string,
-                                vol.Optional(
+                                probatio.Required(CONF_NAME): cv.string,
+                                probatio.Optional(
                                     CONF_TYPE, default=DEFAULT_LED_TYPE
-                                ): vol.In(LED_TYPE),
-                                vol.Required(CONF_NUMBER): cv.positive_int,
-                                vol.Optional(
+                                ): probatio.In(LED_TYPE),
+                                probatio.Required(CONF_NUMBER): cv.positive_int,
+                                probatio.Optional(
                                     CONF_FADE, default=DEFAULT_FADE
                                 ): cv.boolean,
                             }
@@ -259,11 +260,15 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         await super().async_added_to_hass()
         if last_state := await self.async_get_last_state():
             self._attr_is_on = last_state.state == STATE_ON
-            self._attr_brightness = last_state.attributes.get("brightness")
-            self._attr_color_temp_kelvin = last_state.attributes.get(
-                "color_temp_kelvin"
+            self._attr_brightness = last_state.attributes.get(
+                LightEntityStateAttribute.BRIGHTNESS
             )
-            self._attr_hs_color = last_state.attributes.get("hs_color")
+            self._attr_color_temp_kelvin = last_state.attributes.get(
+                LightEntityStateAttribute.COLOR_TEMP_KELVIN
+            )
+            self._attr_hs_color = last_state.attributes.get(
+                LightEntityStateAttribute.HS_COLOR
+            )
 
     @property
     @override

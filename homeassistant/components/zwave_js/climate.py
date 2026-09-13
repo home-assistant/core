@@ -557,7 +557,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         # and cool to mirror previous behavior. If none of those are available, set it
         # to the first available mode that is not off.
         try:
-            hvac_mode = next(
+            hvac_mode: HVACMode = next(
                 mode
                 for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL)
                 if mode in self._hvac_modes

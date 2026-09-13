@@ -51,16 +51,18 @@ class NextDnsUpdateCoordinator[CoordinatorDataT: NextDnsData](
         config_entry: NextDnsConfigEntry,
         nextdns: NextDns,
         profile_id: str,
+        subentry_id: str,
     ) -> None:
         """Initialize."""
         self.nextdns = nextdns
         self.profile_id = profile_id
+        self.subentry_id = subentry_id
 
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{subentry_id}",
             update_interval=self._update_interval,
         )
 

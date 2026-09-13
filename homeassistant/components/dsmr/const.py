@@ -11,6 +11,7 @@ LOGGER = logging.getLogger(__package__)
 PLATFORMS = [Platform.SENSOR]
 CONF_DSMR_VERSION = "dsmr_version"
 CONF_TIME_BETWEEN_UPDATE = "time_between_update"
+CONF_ENCRYPTION_KEY = "encryption_key"
 
 CONF_SERIAL_ID = "serial_id"
 CONF_SERIAL_ID_GAS = "serial_id_gas"
@@ -26,7 +27,28 @@ DEVICE_NAME_GAS = "Gas Meter"
 DEVICE_NAME_WATER = "Water Meter"
 DEVICE_NAME_HEAT = "Heat Meter"
 
-DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S", "Q3D", "5EONHU"}
+# Maps each dsmr_version token to the label shown in the config-flow picker; the
+# label disambiguates the Luxembourg Smarty (MSn) from the Austrian Sagemcom.
+# Labels are hardcoded rather than translated because the tokens (e.g. "2.2",
+# "MSn") are not valid translation keys.
+DSMR_VERSIONS = {
+    "5": "DSMR 5",
+    "MSn": "Luxembourg Smarty / Sagemcom T210-D, encrypted (Creos)",
+    "SAGEMCOM_T210_D_R": "Sagemcom T210-D-R, encrypted (Austria, Energienetze Steiermark)",
+    "5B": "DSMR 5B (Belgium, Fluvius)",
+    "5L": "DSMR 5L (Luxembourg, unencrypted)",
+    "5S": "DSMR 5S (Sweden)",
+    "Q3D": "Q3D (Austria)",
+    "5EONHU": "DSMR 5 (E.ON Hungary)",
+    "4": "DSMR 4",
+    "2.2": "DSMR 2.2",
+}
+
+# Versions with AES-128-GCM encrypted telegrams that require an encryption key.
+ENCRYPTED_DSMR_VERSIONS = {"MSn", "SAGEMCOM_T210_D_R"}
+
+# Versions whose telegrams carry no equipment identifier.
+DSMR_VERSIONS_WITHOUT_EQUIPMENT_ID = {"5S", "SAGEMCOM_T210_D_R"}
 
 DSMR_PROTOCOL = "dsmr_protocol"
 RFXTRX_DSMR_PROTOCOL = "rfxtrx_dsmr_protocol"

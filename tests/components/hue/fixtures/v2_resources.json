@@ -1509,8 +1509,8 @@
       "on": true
     },
     "owner": {
-      "rid": "7cee478d-6455-483a-9e32-9f9fdcbcc4f6",
-      "rtype": "zone"
+      "rid": "a3fbc86a-bf4c-4c69-899d-d6eafc37e288",
+      "rtype": "bridge_home"
     },
     "type": "grouped_light"
   },
@@ -2235,6 +2235,7 @@
     "description": "Countdown Timer",
     "id": "e73bc72d-96b1-46f8-aa57-729861f80c78",
     "metadata": {
+      "category": "automation",
       "name": "Timers"
     },
     "state_schema": {
@@ -2535,7 +2536,7 @@
   },
   {
     "id": "5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b",
-    "name": "Test clip resource",
+    "resources": ["clip", "zigbee_device_discovery"],
     "type": "clip"
   },
   {
@@ -2554,7 +2555,15 @@
     "type": "time"
   },
   {
+    "action": {
+      "action_type_values": ["search", "search_allow_default_link_key"]
+    },
+    "add_install_codes": {},
     "id": "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e",
+    "owner": {
+      "rid": "4a507550-8742-4087-8bf5-c2334f29891c",
+      "rtype": "device"
+    },
     "status": "ready",
     "type": "zigbee_device_discovery"
   }

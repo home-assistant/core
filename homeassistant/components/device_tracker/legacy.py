@@ -9,8 +9,8 @@ from types import ModuleType
 from typing import Any, Final, Protocol, final, override
 
 import attr
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components import zone
@@ -24,8 +24,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
     ATTR_ICON,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_ICON,
     CONF_MAC,
@@ -34,10 +32,15 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_HOME,
     STATE_NOT_HOME,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import (
     async_create_platform_config_not_supported_issue,
 )
@@ -77,7 +80,9 @@ from .const import (
     LOGGER,
     PLATFORM_TYPE_LEGACY,
     SCAN_INTERVAL,
+    DeviceTrackerEntityStateAttribute,
     SourceType,
+    TrackerEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,26 +91,30 @@ SERVICE_SEE: Final = "see"
 
 SOURCE_TYPES = [cls.value for cls in SourceType]
 
-NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(
+NEW_DEVICE_DEFAULTS_SCHEMA = probatio.Any(
     None,
-    vol.Schema({vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean}),
+    probatio.Schema(
+        {probatio.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean}
+    ),
 )
 PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
-        vol.Optional(CONF_TRACK_NEW): cv.boolean,
-        vol.Optional(CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME): vol.All(
-            cv.time_period, cv.positive_timedelta
-        ),
-        vol.Optional(CONF_NEW_DEVICE_DEFAULTS, default={}): NEW_DEVICE_DEFAULTS_SCHEMA,
+        probatio.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+        probatio.Optional(CONF_TRACK_NEW): cv.boolean,
+        probatio.Optional(
+            CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME
+        ): probatio.All(cv.time_period, cv.positive_timedelta),
+        probatio.Optional(
+            CONF_NEW_DEVICE_DEFAULTS, default={}
+        ): NEW_DEVICE_DEFAULTS_SCHEMA,
     }
 )
-PLATFORM_SCHEMA_BASE: Final[vol.Schema] = cv.PLATFORM_SCHEMA_BASE.extend(
+PLATFORM_SCHEMA_BASE: Final[probatio.Schema] = cv.PLATFORM_SCHEMA_BASE.extend(
     PLATFORM_SCHEMA.schema
 )
 
-SERVICE_SEE_PAYLOAD_SCHEMA: Final[vol.Schema] = vol.Schema(
-    vol.All(
+SERVICE_SEE_PAYLOAD_SCHEMA: Final[probatio.Schema] = probatio.Schema(
+    probatio.All(
         cv.has_at_least_one_key(ATTR_MAC, ATTR_DEV_ID),
         {
             ATTR_MAC: cv.string,
@@ -116,11 +125,11 @@ SERVICE_SEE_PAYLOAD_SCHEMA: Final[vol.Schema] = vol.Schema(
             ATTR_GPS_ACCURACY: cv.positive_int,
             ATTR_BATTERY: cv.positive_int,
             ATTR_ATTRIBUTES: dict,
-            ATTR_SOURCE_TYPE: vol.Coerce(SourceType),
+            ATTR_SOURCE_TYPE: probatio.Coerce(SourceType),
             ATTR_CONSIDER_HOME: cv.time_period,
             # Temp workaround for iOS app introduced in 0.65
-            vol.Optional("battery_status"): str,
-            vol.Optional("hostname"): str,
+            probatio.Optional("battery_status"): str,
+            probatio.Optional("hostname"): str,
         },
     )
 )
@@ -225,6 +234,21 @@ async def async_setup_integration(
                 SERVICE_SEE,
             )
             warned_called_see = True
+        # Recreate the issue on every call so it reappears if the user
+        # confirmed (deleted) it while still using the deprecated action.
+        docs_url = "https://www.home-assistant.io/integrations/template/#device-tracker"
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_see_action",
+            breaks_in_ha_version="2027.5.0",
+            is_fixable=True,
+            is_persistent=True,
+            learn_more_url=docs_url,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_see_action",
+            translation_placeholders={"docs_url": docs_url},
+        )
         # Temp workaround for iOS, introduced in 0.65
         data = dict(call.data)
         data.pop("hostname", None)
@@ -509,8 +533,8 @@ def async_setup_scanner_platform(
             zone_home = hass.states.get(ENTITY_ID_HOME)
             if zone_home is not None:
                 kwargs["gps"] = [
-                    zone_home.attributes[ATTR_LATITUDE],
-                    zone_home.attributes[ATTR_LONGITUDE],
+                    zone_home.attributes[EntityStateAttribute.LATITUDE],
+                    zone_home.attributes[EntityStateAttribute.LONGITUDE],
                 ]
                 kwargs["gps_accuracy"] = 0
 
@@ -840,12 +864,14 @@ class Device(RestoreEntity):
     @override
     def state_attributes(self) -> dict[str, StateType]:
         """Return the device state attributes."""
-        attributes: dict[str, StateType] = {ATTR_SOURCE_TYPE: self.source_type}
+        attributes: dict[str, StateType] = {
+            DeviceTrackerEntityStateAttribute.SOURCE_TYPE: self.source_type
+        }
 
         if self.gps is not None:
-            attributes[ATTR_LATITUDE] = self.gps[0]
-            attributes[ATTR_LONGITUDE] = self.gps[1]
-            attributes[ATTR_GPS_ACCURACY] = self.gps_accuracy
+            attributes[EntityStateAttribute.LATITUDE] = self.gps[0]
+            attributes[EntityStateAttribute.LONGITUDE] = self.gps[1]
+            attributes[TrackerEntityStateAttribute.GPS_ACCURACY] = self.gps_accuracy
 
         if self.battery is not None:
             attributes[ATTR_BATTERY] = self.battery
@@ -952,17 +978,17 @@ class Device(RestoreEntity):
         self.last_seen = dt_util.utcnow()
 
         for attribute, var in (
-            (ATTR_SOURCE_TYPE, "source_type"),
-            (ATTR_GPS_ACCURACY, "gps_accuracy"),
+            (DeviceTrackerEntityStateAttribute.SOURCE_TYPE, "source_type"),
+            (TrackerEntityStateAttribute.GPS_ACCURACY, "gps_accuracy"),
             (ATTR_BATTERY, "battery"),
         ):
             if attribute in state.attributes:
                 setattr(self, var, state.attributes[attribute])
 
-        if ATTR_LONGITUDE in state.attributes:
+        if EntityStateAttribute.LONGITUDE in state.attributes:
             self.gps = (
-                state.attributes[ATTR_LATITUDE],
-                state.attributes[ATTR_LONGITUDE],
+                state.attributes[EntityStateAttribute.LATITUDE],
+                state.attributes[EntityStateAttribute.LONGITUDE],
             )
 
 
@@ -1012,17 +1038,17 @@ async def async_load_config(
 
     This method is a coroutine.
     """
-    dev_schema = vol.Schema(
+    dev_schema = probatio.Schema(
         {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_ICON, default=None): vol.Any(None, cv.icon),
-            vol.Optional("track", default=False): cv.boolean,
-            vol.Optional(CONF_MAC, default=None): vol.Any(
-                None, vol.All(cv.string, vol.Upper)
+            probatio.Required(CONF_NAME): cv.string,
+            probatio.Optional(CONF_ICON, default=None): probatio.Any(None, cv.icon),
+            probatio.Optional("track", default=False): cv.boolean,
+            probatio.Optional(CONF_MAC, default=None): probatio.Any(
+                None, probatio.All(cv.string, probatio.Upper)
             ),
-            vol.Optional("gravatar", default=None): vol.Any(None, cv.string),
-            vol.Optional("picture", default=None): vol.Any(None, cv.string),
-            vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
+            probatio.Optional("gravatar", default=None): probatio.Any(None, cv.string),
+            probatio.Optional("picture", default=None): probatio.Any(None, cv.string),
+            probatio.Optional(CONF_CONSIDER_HOME, default=consider_home): probatio.All(
                 cv.time_period, cv.positive_timedelta
             ),
         }
@@ -1043,7 +1069,7 @@ async def async_load_config(
         try:
             device = dev_schema(device)
             device["dev_id"] = cv.slugify(dev_id)
-        except vol.Invalid as exp:
+        except probatio.Invalid as exp:
             async_log_schema_error(exp, dev_id, devices, hass)
             async_notify_setup_error(hass, DOMAIN)
         else:

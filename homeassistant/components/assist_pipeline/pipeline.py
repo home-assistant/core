@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 import wave
 
 import hass_nabucasa
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import (
     conversation,
@@ -25,7 +25,7 @@ from homeassistant.components import (
     wake_word,
     websocket_api,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, MATCH_ALL
+from homeassistant.const import MATCH_ALL, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -109,24 +109,26 @@ def validate_language(data: dict[str, Any]) -> Any:
     """Validate language settings."""
     for engine, language in ENGINE_LANGUAGE_PAIRS:
         if data[engine] is not None and data[language] is None:
-            raise vol.Invalid(f"Need language {language} for {engine} {data[engine]}")
+            raise probatio.Invalid(
+                f"Need language {language} for {engine} {data[engine]}"
+            )
     return data
 
 
 PIPELINE_FIELDS: VolDictType = {
-    vol.Required("conversation_engine"): str,
-    vol.Required("conversation_language"): str,
-    vol.Required("language"): str,
-    vol.Required("name"): str,
-    vol.Required("stt_engine"): vol.Any(str, None),
-    vol.Required("stt_language"): vol.Any(str, None),
-    vol.Required("tts_engine"): vol.Any(str, None),
-    vol.Required("tts_language"): vol.Any(str, None),
-    vol.Required("tts_voice"): vol.Any(str, None),
-    vol.Required("wake_word_entity"): vol.Any(str, None),
-    vol.Required("wake_word_id"): vol.Any(str, None),
-    vol.Optional("prefer_local_intents"): bool,
-    vol.Optional("acknowledge_media_id"): str,
+    probatio.Required("conversation_engine"): str,
+    probatio.Required("conversation_language"): str,
+    probatio.Required("language"): str,
+    probatio.Required("name"): str,
+    probatio.Required("stt_engine"): probatio.Any(str, None),
+    probatio.Required("stt_language"): probatio.Any(str, None),
+    probatio.Required("tts_engine"): probatio.Any(str, None),
+    probatio.Required("tts_language"): probatio.Any(str, None),
+    probatio.Required("tts_voice"): probatio.Any(str, None),
+    probatio.Required("wake_word_entity"): probatio.Any(str, None),
+    probatio.Required("wake_word_id"): probatio.Any(str, None),
+    probatio.Optional("prefer_local_intents"): bool,
+    probatio.Optional("acknowledge_media_id"): str,
 }
 
 STORED_PIPELINE_RUNS = 10
@@ -342,13 +344,13 @@ async def async_update_pipeline(
     conversation_language: str | UndefinedType = UNDEFINED,
     language: str | UndefinedType = UNDEFINED,
     name: str | UndefinedType = UNDEFINED,
-    stt_engine: str | None | UndefinedType = UNDEFINED,
-    stt_language: str | None | UndefinedType = UNDEFINED,
-    tts_engine: str | None | UndefinedType = UNDEFINED,
-    tts_language: str | None | UndefinedType = UNDEFINED,
-    tts_voice: str | None | UndefinedType = UNDEFINED,
-    wake_word_entity: str | None | UndefinedType = UNDEFINED,
-    wake_word_id: str | None | UndefinedType = UNDEFINED,
+    stt_engine: str | UndefinedType | None = UNDEFINED,
+    stt_language: str | UndefinedType | None = UNDEFINED,
+    tts_engine: str | UndefinedType | None = UNDEFINED,
+    tts_language: str | UndefinedType | None = UNDEFINED,
+    tts_voice: str | UndefinedType | None = UNDEFINED,
+    wake_word_entity: str | UndefinedType | None = UNDEFINED,
+    wake_word_id: str | UndefinedType | None = UNDEFINED,
     prefer_local_intents: bool | UndefinedType = UNDEFINED,
 ) -> None:
     """Update a pipeline."""
@@ -1255,7 +1257,7 @@ class PipelineRun:
                     if (
                         intent_agent_state := self.hass.states.get(self.intent_agent.id)
                     ) and intent_agent_state.attributes.get(
-                        ATTR_SUPPORTED_FEATURES, 0
+                        EntityStateAttribute.SUPPORTED_FEATURES, 0
                     ) & conversation.ConversationEntityFeature.CONTROL:
                         intent_filter = _async_local_fallback_intent_filter
 
@@ -1382,7 +1384,7 @@ class PipelineRun:
             if device_entry is None:
                 return False
 
-            area_id = device_entry.area_id
+            area_id = dr.async_get_effective_area_id(self.hass, device_entry)
             if area_id is None:
                 return False
 
@@ -1402,7 +1404,9 @@ class PipelineRun:
                 if target_device_entry is None:
                     return False
 
-                target_area_id = target_device_entry.area_id
+                target_area_id = dr.async_get_effective_area_id(
+                    self.hass, target_device_entry
+                )
 
             if target_area_id != area_id:
                 return False
@@ -2019,8 +2023,8 @@ class PipelineStorageCollectionWebsocket(
             self.ws_get_item,
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
                 {
-                    vol.Required("type"): f"{self.api_prefix}/get",
-                    vol.Optional(self.item_id_key): str,
+                    probatio.Required("type"): f"{self.api_prefix}/get",
+                    probatio.Optional(self.item_id_key): str,
                 }
             ),
         )
@@ -2033,8 +2037,8 @@ class PipelineStorageCollectionWebsocket(
             ),
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
                 {
-                    vol.Required("type"): f"{self.api_prefix}/set_preferred",
-                    vol.Required(self.item_id_key): str,
+                    probatio.Required("type"): f"{self.api_prefix}/set_preferred",
+                    probatio.Required(self.item_id_key): str,
                 }
             ),
         )

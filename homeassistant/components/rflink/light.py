@@ -4,7 +4,7 @@ import logging
 import re
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -12,6 +12,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
+    LightEntityStateAttribute,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -50,29 +51,29 @@ TYPE_HYBRID = "hybrid"
 TYPE_TOGGLE = "toggle"
 
 RFLINK_PLATFORM = {
-    vol.Optional(
+    probatio.Optional(
         CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
     ): DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-    vol.Optional(CONF_DEVICES, default={}): {
-        cv.string: vol.Schema(
+    probatio.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
+    probatio.Optional(CONF_DEVICES, default={}): {
+        cv.string: probatio.Schema(
             {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_TYPE): vol.Any(
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Optional(CONF_TYPE): probatio.Any(
                     TYPE_DIMMABLE, TYPE_SWITCHABLE, TYPE_HYBRID, TYPE_TOGGLE
                 ),
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
+                probatio.Optional(CONF_GROUP_ALIASES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
+                probatio.Optional(CONF_NOGROUP_ALIASES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_FIRE_EVENT): cv.boolean,
-                vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-                vol.Optional(CONF_GROUP, default=True): cv.boolean,
+                probatio.Optional(CONF_FIRE_EVENT): cv.boolean,
+                probatio.Optional(CONF_SIGNAL_REPETITIONS): probatio.Coerce(int),
+                probatio.Optional(CONF_GROUP, default=True): cv.boolean,
             }
         )
     },
@@ -80,7 +81,7 @@ RFLINK_PLATFORM = {
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -215,10 +216,13 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         old_state = await self.async_get_last_state()
         if (
             old_state is not None
-            and old_state.attributes.get(ATTR_BRIGHTNESS) is not None
+            and old_state.attributes.get(LightEntityStateAttribute.BRIGHTNESS)
+            is not None
         ):
             # restore also brightness in dimmables devices
-            self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
+            self._brightness = int(
+                old_state.attributes[LightEntityStateAttribute.BRIGHTNESS]
+            )
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -7,6 +7,7 @@ from typing import Any, NamedTuple, override
 from urllib.parse import urlsplit
 
 from aiohttp import CookieJar
+import probatio
 from tplink_omada_client import OmadaClient, OmadaSite
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
@@ -14,7 +15,6 @@ from tplink_omada_client.exceptions import (
     OmadaClientException,
     UnsupportedControllerVersion,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
@@ -31,12 +31,12 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SITE = "site"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -132,9 +132,9 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle step to select site to manage."""
 
         if user_input is None:
-            schema = vol.Schema(
+            schema = probatio.Schema(
                 {
-                    vol.Required(CONF_SITE, "site"): selector.SelectSelector(
+                    probatio.Required(CONF_SITE, "site"): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=[
                                 selector.SelectOptionDict(value=s.id, label=s.name)
@@ -193,10 +193,10 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

@@ -375,14 +375,13 @@ async def test_reauth_connection_closed_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_reauth_flow(hass: HomeAssistant) -> None:
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test reauth flow."""
-    mock_config = MockConfigEntry(
-        domain=DOMAIN, unique_id=FIXTURE_UUID, data=FIXTURE_USER_INPUT
-    )
-    mock_config.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    result = await mock_config.start_reauth_flow(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"

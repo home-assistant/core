@@ -4,9 +4,9 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
+import probatio
 from travispy import TravisPy
 from travispy.errors import TravisError
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import (
@@ -75,13 +75,15 @@ NOTIFICATION_TITLE = "Travis CI Sensor Setup"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): probatio.All(
+            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
         ),
-        vol.Required(CONF_BRANCH, default=DEFAULT_BRANCH_NAME): cv.string,
-        vol.Optional(CONF_REPOSITORY, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+        probatio.Required(CONF_BRANCH, default=DEFAULT_BRANCH_NAME): cv.string,
+        probatio.Optional(CONF_REPOSITORY, default=[]): probatio.All(
+            cv.ensure_list, [cv.string]
+        ),
+        probatio.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
     }
 )
 

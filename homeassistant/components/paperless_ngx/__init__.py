@@ -67,7 +67,7 @@ async def _get_paperless_api(
 ) -> Paperless:
     """Create and initialize paperless-ngx API."""
 
-    api = Paperless(
+    api = Paperless(  # type: ignore[abstract]
         entry.data[CONF_URL],
         entry.data[CONF_API_KEY],
         session=async_get_clientsession(hass, entry.data.get(CONF_VERIFY_SSL, True)),

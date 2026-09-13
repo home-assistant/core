@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_entities[media_player.dining_room-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.dining_room',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'harman_luxury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 21565>,
+    'translation_key': None,
+    'unique_id': '48b782c2-60ac-40c1-a169-8d7ccb81dcc1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[media_player.dining_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/media_player_proxy/media_player.dining_room?token=deterministic&cache=1f1d8cd564c70097',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: 'Graveyard Shift',
+      <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Motionless In White',
+      <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 228,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 42,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: HAFakeDatetime(2024, 1, 1, 12, 0, tzinfo=datetime.timezone.utc),
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Necessary Evil',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 21565>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.45454545454545453,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.dining_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---

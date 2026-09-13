@@ -12,8 +12,8 @@ from unittest.mock import ANY, MagicMock, Mock, mock_open, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from paho.mqtt.client import MQTTMessage, Properties
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.components import mqtt
@@ -271,7 +271,7 @@ async def test_service_call_without_topic_does_not_publish(
 ) -> None:
     """Test the service call if topic is missing."""
     mqtt_mock = await mqtt_mock_entry()
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             mqtt.SERVICE_PUBLISH,
@@ -311,7 +311,7 @@ async def test_service_call_with_template_topic_renders_invalid_topic(
     If a wildcard topic is rendered, then fail.
     """
     mqtt_mock = await mqtt_mock_entry()
-    with pytest.raises(vol.Invalid) as exc:
+    with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
             DOMAIN,
             mqtt.SERVICE_PUBLISH,
@@ -321,10 +321,7 @@ async def test_service_call_with_template_topic_renders_invalid_topic(
             },
             blocking=True,
         )
-    assert (
-        str(exc.value) == "Wildcards cannot be used in topic names "
-        "for dictionary value @ data['topic']"
-    )
+    assert str(exc.value) == "Wildcards cannot be used in topic names at 'topic'"
     assert not mqtt_mock.async_publish.called
 
 
@@ -531,44 +528,44 @@ async def test_publish_api_with_falback_to_none(
 def test_validate_topic() -> None:
     """Test topic name/filter validation."""
     # Invalid UTF-8, must not contain U+D800 to U+DFFF.
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ud800")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\udfff")
     # Topic MUST NOT be empty
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("")
     # Topic MUST NOT be longer than 65535 encoded bytes.
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("ü" * 32768)
     # UTF-8 MUST NOT include null character
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("bad\0one")
 
     # Topics "SHOULD NOT" include these special characters
     # (not MUST NOT, RFC2119). The receiver MAY close the connection.
     # We enforce this because mosquitto does: https://github.com/eclipse/mosquitto/commit/94fdc9cb44c829ff79c74e1daa6f7d04283dfffd
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\u0001")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\u001f")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\u007f")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\u009f")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ufdd0")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ufdef")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ufffe")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ufffe")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\uffff")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\U0001fffe")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\U0001ffff")
 
 
@@ -576,24 +573,24 @@ def test_validate_subscribe_topic() -> None:
     """Test invalid subscribe topics."""
     mqtt.valid_subscribe_topic("#")
     mqtt.valid_subscribe_topic("sport/#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport/#/")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("foo/bar#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("foo/#/bar")
 
     mqtt.valid_subscribe_topic("+")
     mqtt.valid_subscribe_topic("+/tennis/#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport+")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport+/")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport/+1")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport/+#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("bad+topic")
     mqtt.valid_subscribe_topic("sport/+/player1")
     mqtt.valid_subscribe_topic("/finance")
@@ -603,13 +600,13 @@ def test_validate_subscribe_topic() -> None:
 
 def test_validate_publish_topic() -> None:
     """Test invalid publish topics."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_publish_topic("pub+")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_publish_topic("pub/+")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_publish_topic("1#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_publish_topic("bad+topic")
     mqtt.valid_publish_topic("//")
 
@@ -660,7 +657,7 @@ def test_entity_device_info_schema() -> None:
         }
     )
     # no identifiers
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {
                 "manufacturer": "Whatever",
@@ -670,13 +667,13 @@ def test_entity_device_info_schema() -> None:
             }
         )
     # empty identifiers
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {"identifiers": [], "connections": [], "name": "Beer"}
         )
 
     # not a valid URL
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {
                 "manufacturer": "Whatever",
@@ -906,7 +903,7 @@ async def test_setup_manual_mqtt_with_platform_key(
     """Test set up a manual MQTT item with a platform key."""
     assert await mqtt_mock_entry()
     assert (
-        "extra keys not allowed @ data['platform']"
+        "not a valid option at 'platform'"
         " for manually configured MQTT light item" in caplog.text
     )
 
@@ -949,7 +946,9 @@ async def test_default_entry_setting_are_applied(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), entry.entry_id
+    )
     assert device_entry is not None
 
 
@@ -1135,17 +1134,23 @@ async def test_mqtt_ws_remove_discovered_device(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
     mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    response = await client.remove_device(device_entry.id, mqtt_config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
 
     # Verify device entry is cleared
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
-    assert device_entry is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            ("mqtt", "0AFFD2"), mqtt_config_entry.entry_id
+        )
+        is None
+    )
 
 
 async def test_mqtt_ws_get_device_debug_info(
@@ -1178,7 +1183,9 @@ async def test_mqtt_ws_get_device_debug_info(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
@@ -1190,7 +1197,7 @@ async def test_mqtt_ws_get_device_debug_info(
     expected_result = {
         "entities": [
             {
-                "entity_id": "sensor.mqtt_sensor",
+                "entity_id": "sensor.mqtt_mqtt_sensor",
                 "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config_sensor,
@@ -1231,7 +1238,9 @@ async def test_mqtt_ws_get_device_debug_info_binary(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device_entry is not None
 
     small_png = (
@@ -1251,7 +1260,7 @@ async def test_mqtt_ws_get_device_debug_info_binary(
     expected_result = {
         "entities": [
             {
-                "entity_id": "camera.mqtt_camera",
+                "entity_id": "camera.mqtt_mqtt_camera",
                 "subscriptions": [
                     {
                         "topic": "foobar/image",
@@ -1340,7 +1349,9 @@ async def test_debug_info_multiple_devices(
     for dev in devices:
         domain = dev["domain"]
         device_id = dev["config"]["device"]["identifiers"][0]
-        device = device_registry.async_get_device(identifiers={("mqtt", device_id)})
+        device = device_registry.async_get_device_by_identifier(
+            ("mqtt", device_id), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+        )
         assert device is not None
 
         debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1423,7 +1434,9 @@ async def test_debug_info_multiple_entities_triggers(
         await hass.async_block_till_done()
 
     device_id = config[0]["config"]["device"]["identifiers"][0]
-    device = device_registry.async_get_device(identifiers={("mqtt", device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", device_id), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device is not None
     debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 2
@@ -1504,7 +1517,9 @@ async def test_debug_info_wildcard(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "helloworld"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device is not None
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1553,7 +1568,9 @@ async def test_debug_info_same_topic(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "helloworld"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device is not None
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1605,7 +1622,9 @@ async def test_debug_info_qos_retain(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "helloworld"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device is not None
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -2420,8 +2439,9 @@ async def test_multi_platform_discovery(
             assert state is not None
     for platform in non_entity_configs:
         assert (
-            device_registry.async_get_device(
-                identifiers={("mqtt", f"{platform}_0AFFD2")}
+            device_registry.async_get_device_by_identifier(
+                ("mqtt", f"{platform}_0AFFD2"),
+                hass.config_entries.async_entries(DOMAIN)[0].entry_id,
             )
             is not None
         )
@@ -2580,6 +2600,7 @@ async def test_mqtt_protocol_successful_migration_to_v5(
 )
 async def test_mqtt_protocol_failed_migration_to_v5(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     current_protocol: str,
@@ -2593,7 +2614,6 @@ async def test_mqtt_protocol_failed_migration_to_v5(
     assert len(events) == 1
     assert events[0].data["issue_id"] == "protocol_5_migration"
 
-    issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(DOMAIN, "protocol_5_migration")
     assert issue is not None

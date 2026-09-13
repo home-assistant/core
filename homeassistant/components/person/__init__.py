@@ -4,16 +4,16 @@ from collections.abc import Callable
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.components import persistent_notification, websocket_api
 from homeassistant.components.device_tracker import (
-    ATTR_IN_ZONES,
-    ATTR_SOURCE_TYPE,
-    ATTR_TRACKING_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
+    DeviceTrackerEntityCapabilityAttribute,
+    DeviceTrackerEntityStateAttribute,
     SourceType,
+    TrackerEntityStateAttribute,
     TrackingType,
 )
 from homeassistant.components.zone import ENTITY_ID_HOME
@@ -31,6 +31,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_HOME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -70,25 +71,25 @@ STORAGE_VERSION = 2
 # Device tracker states to ignore
 IGNORE_STATES = (STATE_UNKNOWN, STATE_UNAVAILABLE)
 
-PERSON_SCHEMA = vol.Schema(
+PERSON_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ID): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_USER_ID): cv.string,
-        vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
+        probatio.Required(CONF_ID): cv.string,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Optional(CONF_USER_ID): cv.string,
+        probatio.Optional(CONF_DEVICE_TRACKERS, default=[]): probatio.All(
             cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
         ),
-        vol.Optional(CONF_PICTURE): cv.string,
+        probatio.Optional(CONF_PICTURE): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN, default=[]): vol.All(
+        probatio.Optional(DOMAIN, default=[]): probatio.All(
             cv.ensure_list, cv.remove_falsy, [PERSON_SCHEMA]
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -164,22 +165,22 @@ def entities_in_person(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 
 CREATE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_USER_ID): vol.Any(str, None),
-    vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional(CONF_USER_ID): probatio.Any(str, None),
+    probatio.Optional(CONF_DEVICE_TRACKERS, default=list): probatio.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
-    vol.Optional(CONF_PICTURE): vol.Any(str, None),
+    probatio.Optional(CONF_PICTURE): probatio.Any(str, None),
 }
 
 
 UPDATE_FIELDS: VolDictType = {
-    vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_USER_ID): vol.Any(str, None),
-    vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
+    probatio.Optional(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional(CONF_USER_ID): probatio.Any(str, None),
+    probatio.Optional(CONF_DEVICE_TRACKERS, default=list): probatio.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
-    vol.Optional(CONF_PICTURE): vol.Any(str, None),
+    probatio.Optional(CONF_PICTURE): probatio.Any(str, None),
 }
 
 
@@ -200,8 +201,8 @@ class PersonStore(Store):
 class PersonStorageCollection(collection.DictStorageCollection):
     """Person collection stored in storage."""
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = probatio.Schema(UPDATE_FIELDS)
 
     def __init__(
         self,
@@ -474,7 +475,15 @@ class Person(
         """Register device trackers."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
-            self._parse_source_state(state)
+            self._parse_source_state(
+                state,
+                latitude=state.attributes.get(EntityStateAttribute.LATITUDE),
+                longitude=state.attributes.get(EntityStateAttribute.LONGITUDE),
+                gps_accuracy=state.attributes.get(
+                    PersonEntityStateAttribute.GPS_ACCURACY
+                ),
+                in_zones=state.attributes.get(PersonEntityStateAttribute.IN_ZONES),
+            )
 
         if self.hass.is_running:
             # Update person now if hass is already running.
@@ -533,10 +542,15 @@ class Person(
                 continue
 
             if state.attributes.get(
-                ATTR_TRACKING_TYPE
-            ) == TrackingType.CONNECTION and state.attributes.get(ATTR_IN_ZONES):
+                DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE
+            ) == TrackingType.CONNECTION and state.attributes.get(
+                DeviceTrackerEntityStateAttribute.IN_ZONES
+            ):
                 latest_connected = _get_latest(latest_connected, state)
-            elif state.attributes.get(ATTR_SOURCE_TYPE) == SourceType.GPS:
+            elif (
+                state.attributes.get(DeviceTrackerEntityStateAttribute.SOURCE_TYPE)
+                == SourceType.GPS
+            ):
                 latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
                 # Legacy scanner without tracking type
@@ -550,7 +564,17 @@ class Person(
         latest = latest_connected or latest_legacy_home or latest_gps or latest_not_home
 
         if latest:
-            self._parse_source_state(latest)
+            self._parse_source_state(
+                latest,
+                latitude=latest.attributes.get(EntityStateAttribute.LATITUDE),
+                longitude=latest.attributes.get(EntityStateAttribute.LONGITUDE),
+                gps_accuracy=latest.attributes.get(
+                    TrackerEntityStateAttribute.GPS_ACCURACY
+                ),
+                in_zones=latest.attributes.get(
+                    DeviceTrackerEntityStateAttribute.IN_ZONES
+                ),
+            )
         else:
             self._attr_state = None
             self._source = None
@@ -563,32 +587,46 @@ class Person(
         self.async_write_ha_state()
 
     @callback
-    def _parse_source_state(self, state: State) -> None:
-        """Parse source state and set person attributes.
+    def _parse_source_state(
+        self,
+        state: State,
+        *,
+        latitude: float | None,
+        longitude: float | None,
+        gps_accuracy: int | None,
+        in_zones: list[str] | None,
+    ) -> None:
+        """Set person attributes from a source state.
 
-        This is a device tracker state or the restored person state.
+        The coordinates are read by the caller using the enum matching the
+        source, which is either a device tracker or the restored person state.
+        An absent ``in_zones`` (``None``) means the source does not report zone
+        membership.
         """
         self._attr_state = state.state
         self._source = state.entity_id
-        self._latitude = state.attributes.get(ATTR_LATITUDE)
-        self._longitude = state.attributes.get(ATTR_LONGITUDE)
-        self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
-        self._in_zones = state.attributes.get(ATTR_IN_ZONES, [])
+        self._latitude = latitude
+        self._longitude = longitude
+        self._gps_accuracy = gps_accuracy
+        self._in_zones = in_zones or []
 
         # A legacy scanner (one that doesn't report in_zones) reports "home"
-        # without coordinates. Use the home zone's coordinates for backwards
-        # compatibility with legacy zone conditions and triggers. Modern
-        # trackers report in_zones and keep their own (possibly absent)
-        # coordinates.
+        # without zone membership or coordinates. Synthesize home-zone
+        # membership and borrow the home zone's coordinates so zone counting,
+        # conditions and triggers keep working as they did before the in_zones
+        # model was introduced. Modern trackers report in_zones and keep their
+        # own (possibly absent) coordinates.
         if (
-            ATTR_IN_ZONES not in state.attributes
+            in_zones is None
             and state.state == STATE_HOME
-            and self._latitude is None
-            and self._longitude is None
             and (home_zone := self.hass.states.get(ENTITY_ID_HOME)) is not None
         ):
-            self._latitude = home_zone.attributes.get(ATTR_LATITUDE)
-            self._longitude = home_zone.attributes.get(ATTR_LONGITUDE)
+            self._in_zones = [ENTITY_ID_HOME]
+            if self._latitude is None and self._longitude is None:
+                self._latitude = home_zone.attributes.get(EntityStateAttribute.LATITUDE)
+                self._longitude = home_zone.attributes.get(
+                    EntityStateAttribute.LONGITUDE
+                )
 
     @callback
     def _update_extra_state_attributes(self) -> None:
@@ -601,9 +639,9 @@ class Person(
         }
 
         if self._latitude is not None:
-            data[PersonEntityStateAttribute.LATITUDE] = self._latitude
+            data[EntityStateAttribute.LATITUDE] = self._latitude
         if self._longitude is not None:
-            data[PersonEntityStateAttribute.LONGITUDE] = self._longitude
+            data[EntityStateAttribute.LONGITUDE] = self._longitude
         if self._gps_accuracy is not None:
             data[PersonEntityStateAttribute.GPS_ACCURACY] = self._gps_accuracy
         if self._source is not None:

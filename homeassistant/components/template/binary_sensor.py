@@ -7,7 +7,7 @@ from functools import partial
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
@@ -34,7 +34,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator
+from . import TriggerUpdateCoordinator, validators as tcv
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -43,7 +43,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -55,21 +55,27 @@ CONF_DELAY_OFF = "delay_off"
 CONF_AUTO_OFF = "auto_off"
 
 
-BINARY_SENSOR_COMMON_SCHEMA = vol.Schema(
+BINARY_SENSOR_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_AUTO_OFF): vol.Any(cv.positive_time_period, cv.template),
-        vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
-        vol.Optional(CONF_DELAY_ON): vol.Any(cv.positive_time_period, cv.template),
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Required(CONF_STATE): cv.template,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_AUTO_OFF): probatio.Any(
+            cv.positive_time_period, cv.template
+        ),
+        probatio.Optional(CONF_DELAY_OFF): probatio.Any(
+            cv.positive_time_period, cv.template
+        ),
+        probatio.Optional(CONF_DELAY_ON): probatio.Any(
+            cv.positive_time_period, cv.template
+        ),
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Required(CONF_STATE): cv.template,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(device_class=True)
+
 BINARY_SENSOR_YAML_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_attributes_schema(
-        BINARY_SENSOR_DOMAIN, DEFAULT_NAME
-    ).schema
+    make_template_entity_common_schema(BINARY_SENSOR_DOMAIN, DEFAULT_NAME).schema
 )
 
 BINARY_SENSOR_CONFIG_ENTRY_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
@@ -128,6 +134,7 @@ class AbstractTemplateBinarySensor(
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_STATE
     _restore_state_properties = ("_attr_is_on",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -150,13 +157,13 @@ class AbstractTemplateBinarySensor(
         self._delay_on = None
         try:
             self._delay_on = cv.positive_time_period(config.get(CONF_DELAY_ON))
-        except vol.Invalid:
+        except probatio.Invalid:
             self.setup_template(CONF_DELAY_ON, "_delay_on", cv.positive_time_period)
 
         self._delay_off = None
         try:
             self._delay_off = cv.positive_time_period(config.get(CONF_DELAY_OFF))
-        except vol.Invalid:
+        except probatio.Invalid:
             self.setup_template(CONF_DELAY_OFF, "_delay_off", cv.positive_time_period)
 
     @override
@@ -347,7 +354,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         if not isinstance(delay, timedelta):
             try:
                 delay = cv.positive_time_period(delay)
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 key = CONF_DELAY_ON if state else CONF_DELAY_OFF
                 logging.getLogger(__name__).warning(
                     "Error rendering %s template: %s", key, err
@@ -381,7 +388,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         if not isinstance(auto_off_delay, timedelta):
             try:
                 auto_off_delay = cv.positive_time_period(auto_off_delay)
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 logging.getLogger(__name__).warning(
                     "Error rendering %s template: %s", CONF_AUTO_OFF, err
                 )
