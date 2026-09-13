@@ -85,6 +85,12 @@ def get_mock_remote(
     mock_remote.send_key = Mock()
 
     mock_remote.get_volume = Mock(return_value=100)
+    mock_remote.list_inputs = Mock(return_value=["TV", "HDMI1", "HDMI2"])
+    mock_remote.get_input = Mock(return_value="HDMI1")
+    mock_remote.set_input = Mock(return_value="HDMI2")
+    mock_remote.list_picture_modes = Mock(return_value=["Normal", "Cinema", "Game"])
+    mock_remote.get_picture_mode = Mock(return_value="Normal")
+    mock_remote.set_picture_mode = Mock(return_value="Cinema")
 
     return mock_remote
 

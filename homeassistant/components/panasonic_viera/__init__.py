@@ -51,7 +51,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE, Platform.SELECT]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -153,6 +153,10 @@ class Remote:
         self.volume: float = 0
         self.muted: bool = False
         self.playing: bool = True
+        self.source: str | None = None
+        self.sources: list[str] | None = None
+        self.picture_mode: str | None = None
+        self.picture_modes: list[str] | None = None
 
     async def async_create_remote_control(self, during_setup: bool = False) -> None:
         """Create remote control."""
@@ -192,6 +196,17 @@ class Remote:
         assert self._control is not None
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
+        try:
+            self.sources = self._control.list_inputs()
+            self.source = self._control.get_input()
+            self.picture_modes = self._control.list_picture_modes()
+            self.picture_mode = self._control.get_picture_mode()
+        except (SOAPError, HTTPError, URLError, OSError) as err:
+            _LOGGER.debug("PAC controls are unavailable: %s", err)
+            self.sources = None
+            self.source = None
+            self.picture_modes = None
+            self.picture_mode = None
 
     async def async_send_key(self, key: Keys | str) -> None:
         """Send a key to the TV and handle exceptions."""
@@ -229,6 +244,22 @@ class Remote:
         assert self._control is not None
         volume = int(volume * 100)
         await self._handle_errors(self._control.set_volume, volume)
+
+    async def async_set_input(self, source: str) -> str | None:
+        """Select an input through Panasonic PAC."""
+        assert self._control is not None
+        result = await self._handle_errors(self._control.set_input, source)
+        if result is not None:
+            self.source = result
+        return result
+
+    async def async_set_picture_mode(self, picture_mode: str) -> str | None:
+        """Select a picture mode through Panasonic PAC."""
+        assert self._control is not None
+        result = await self._handle_errors(self._control.set_picture_mode, picture_mode)
+        if result is not None:
+            self.picture_mode = result
+        return result
 
     async def async_play_media(self, media_type: MediaType, media_id: str) -> None:
         """Play media."""
