@@ -143,6 +143,8 @@ async def test_config_flow_error(
     assert result.get("title") == expected_title
     assert result.get("data") == data
 
+    await hass.async_block_till_done()
+
     state = hass.states.get(f"image.{slugify(expected_title)}")
     assert state and state.state == TEST_TIME
 
