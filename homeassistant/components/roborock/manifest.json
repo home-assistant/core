@@ -20,7 +20,7 @@
   "loggers": ["roborock"],
   "quality_scale": "silver",
   "requirements": [
-    "python-roborock==7.2.3",
+    "python-roborock==7.4.2",
     "vacuum-map-parser-roborock==0.1.5"
   ]
 }

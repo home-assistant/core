@@ -85,8 +85,11 @@ PLATFORMS = [
 # rest enumerate from the private bootstrap, which is absent in this mode.
 PUBLIC_ONLY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
     Platform.CAMERA,
+    Platform.EVENT,
     Platform.LIGHT,
+    Platform.SENSOR,
 ]
 
 # Stored local-user credentials do not imply the mode: they are kept on a

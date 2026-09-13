@@ -1,7 +1,7 @@
 """Config flow for LiteLLM integration."""
 
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
 import voluptuous as vol
@@ -65,7 +65,8 @@ async def _get_models(hass: HomeAssistant, url: str, api_key: str | None) -> lis
     client = AsyncOpenAI(
         base_url=url,
         api_key=api_key or PLACEHOLDER_API_KEY,
-        http_client=get_async_client(hass),
+        # Legacy HTTPX clients are supported at runtime only.
+        http_client=cast(Any, get_async_client(hass)),
     )
     try:
         return [

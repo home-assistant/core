@@ -1,11 +1,11 @@
 """Tests for the services provided by the EnergyZero integration."""
 
-from datetime import date
+from datetime import UTC, date, datetime
 import re
 from unittest.mock import AsyncMock
 from zoneinfo import ZoneInfo
 
-from energyzero import EnergyZeroNoDataError, PriceType
+from energyzero import EnergyPrices, EnergyZeroNoDataError, PriceType, TimeRange
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -139,15 +139,32 @@ async def test_service_dates_normalized_to_hass_timezone(
                 {
                     "price": 0.45193447944,
                     "timestamp": "2026-04-10 04:00:00+00:00",
+                    "start": "2026-04-10 04:00:00+00:00",
+                    "end": "2026-04-11 04:00:00+00:00",
                 }
             ],
         ),
         (
             ENERGY_SERVICE_NAME,
             [
-                {"price": 0.12572, "timestamp": "2026-04-10 21:00:00+00:00"},
-                {"price": 0.125925, "timestamp": "2026-04-10 22:00:00+00:00"},
-                {"price": 0.1120525, "timestamp": "2026-04-10 23:00:00+00:00"},
+                {
+                    "price": 0.12572,
+                    "timestamp": "2026-04-10 21:00:00+00:00",
+                    "start": "2026-04-10 21:00:00+00:00",
+                    "end": "2026-04-10 22:00:00+00:00",
+                },
+                {
+                    "price": 0.125925,
+                    "timestamp": "2026-04-10 22:00:00+00:00",
+                    "start": "2026-04-10 22:00:00+00:00",
+                    "end": "2026-04-10 23:00:00+00:00",
+                },
+                {
+                    "price": 0.1120525,
+                    "timestamp": "2026-04-10 23:00:00+00:00",
+                    "start": "2026-04-10 23:00:00+00:00",
+                    "end": "2026-04-11 00:00:00+00:00",
+                },
             ],
         ),
     ],
@@ -177,6 +194,8 @@ async def test_service_filters_datetime_range(
     )
 
     assert response == {"prices": expected_prices}
+    assert response["prices"]
+    assert all(item["timestamp"] == item["start"] for item in response["prices"])
 
     method = (
         mock_energyzero.get_gas_prices
@@ -190,6 +209,178 @@ async def test_service_filters_datetime_range(
     assert all(
         item.kwargs["end_date"] == item.kwargs["start_date"]
         for item in method.await_args_list
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "equal_time", ["00:00:00", "14:30:00"], ids=["midnight", "non-midnight"]
+)
+@pytest.mark.parametrize(
+    ("service", "expected_count", "expected_first", "expected_last"),
+    [
+        (
+            GAS_SERVICE_NAME,
+            1,
+            {
+                "price": 0.430304930424,
+                "timestamp": "2026-04-11 04:00:00+00:00",
+                "start": "2026-04-11 04:00:00+00:00",
+                "end": "2026-04-12 04:00:00+00:00",
+            },
+            {
+                "price": 0.430304930424,
+                "timestamp": "2026-04-11 04:00:00+00:00",
+                "start": "2026-04-11 04:00:00+00:00",
+                "end": "2026-04-12 04:00:00+00:00",
+            },
+        ),
+        (
+            ENERGY_SERVICE_NAME,
+            24,
+            {
+                "price": 0.125925,
+                "timestamp": "2026-04-10 22:00:00+00:00",
+                "start": "2026-04-10 22:00:00+00:00",
+                "end": "2026-04-10 23:00:00+00:00",
+            },
+            {
+                "price": 0.082385,
+                "timestamp": "2026-04-11 21:00:00+00:00",
+                "start": "2026-04-11 21:00:00+00:00",
+                "end": "2026-04-11 22:00:00+00:00",
+            },
+        ),
+    ],
+)
+async def test_service_equal_start_end_selects_full_local_day(
+    hass: HomeAssistant,
+    mock_energyzero: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    equal_time: str,
+    expected_count: int,
+    expected_first: dict[str, str | float],
+    expected_last: dict[str, str | float],
+) -> None:
+    """Equal start/end datetimes select the full local calendar day."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    mock_energyzero.reset_mock()
+    equal_datetime = f"2026-04-11 {equal_time}"
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        service,
+        {
+            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            "incl_vat": False,
+            "start": equal_datetime,
+            "end": equal_datetime,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert len(response["prices"]) == expected_count
+    assert response["prices"][0] == expected_first
+    assert response["prices"][-1] == expected_last
+    assert all(item["timestamp"] == item["start"] for item in response["prices"])
+
+    method = (
+        mock_energyzero.get_gas_prices
+        if service == GAS_SERVICE_NAME
+        else mock_energyzero.get_electricity_prices
+    )
+    assert len(method.await_args_list) == 1
+    assert method.await_args.kwargs["start_date"] == date(2026, 4, 11)
+    assert method.await_args.kwargs["end_date"] == date(2026, 4, 11)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_service_equal_start_end_full_day_respects_dst(
+    hass: HomeAssistant,
+    mock_energyzero: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Equal start/end selects a local calendar day, not a fixed 24h window."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+
+    in_range = TimeRange(
+        datetime(2026, 3, 28, 23, 0, tzinfo=UTC),
+        datetime(2026, 3, 29, 22, 0, tzinfo=UTC),
+    )
+    out_of_range = TimeRange(
+        datetime(2026, 3, 29, 22, 0, tzinfo=UTC),
+        datetime(2026, 3, 29, 23, 0, tzinfo=UTC),
+    )
+    mock_energyzero.get_electricity_prices.side_effect = None
+    mock_energyzero.get_electricity_prices.return_value = EnergyPrices(
+        prices={in_range: 0.1, out_of_range: 0.2}, average_price=None
+    )
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        ENERGY_SERVICE_NAME,
+        {
+            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            "incl_vat": False,
+            "start": "2026-03-29 00:00:00",
+            "end": "2026-03-29 00:00:00",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        "prices": [
+            {
+                "price": 0.1,
+                "timestamp": "2026-03-28 23:00:00+00:00",
+                "start": "2026-03-28 23:00:00+00:00",
+                "end": "2026-03-29 22:00:00+00:00",
+            }
+        ]
+    }
+    assert mock_energyzero.get_electricity_prices.await_args.kwargs[
+        "start_date"
+    ] == date(2026, 3, 29)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_service_date_and_equal_datetime_selects_full_local_day(
+    hass: HomeAssistant,
+    mock_energyzero: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A date-only start and a same-day midnight datetime end are equal."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    mock_energyzero.reset_mock()
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        GAS_SERVICE_NAME,
+        {
+            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            "incl_vat": False,
+            "start": "2026-04-11",
+            "end": "2026-04-11 00:00:00",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        "prices": [
+            {
+                "price": 0.430304930424,
+                "timestamp": "2026-04-11 04:00:00+00:00",
+                "start": "2026-04-11 04:00:00+00:00",
+                "end": "2026-04-12 04:00:00+00:00",
+            }
+        ]
+    }
+    assert mock_energyzero.get_gas_prices.await_args.kwargs["start_date"] == date(
+        2026, 4, 11
     )
 
 
@@ -261,6 +452,17 @@ def config_entry_data(
             },
             ServiceValidationError,
             "Invalid date range provided. End 2023-01-01 must be after start 2023-01-02",
+        ),
+        (
+            {"config_entry": True},
+            {
+                "incl_vat": True,
+                "start": "2026-04-11 12:00:00",
+                "end": "2026-04-11 08:00:00",
+            },
+            ServiceValidationError,
+            "Invalid date range provided. End 2026-04-11 08:00:00 must be "
+            "after start 2026-04-11 12:00:00",
         ),
     ],
     indirect=["config_entry_data"],

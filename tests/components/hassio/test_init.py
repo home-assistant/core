@@ -1723,7 +1723,7 @@ async def test_mount_reload_unknown_device_id(
         await hass.services.async_call(
             DOMAIN, "mount_reload", {"device_id": "1234"}, blocking=True
         )
-    assert str(exc.value) == "Device ID not found"
+    assert str(exc.value) == "Device with ID 1234 was not found"
 
 
 async def test_mount_reload_no_name(
@@ -1775,7 +1775,7 @@ async def test_mount_reload_not_supervisor_device(
         await hass.services.async_call(
             DOMAIN, "mount_reload", {"device_id": device2.id}, blocking=True
         )
-    assert str(exc.value) == "Device is not a supervisor mount point"
+    assert str(exc.value) == "Device NAS does not belong to integration hassio"
 
 
 async def test_mount_reload_selector_matches_device_name(

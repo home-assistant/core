@@ -44,12 +44,12 @@ from .const import (
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     DOMAIN,
+    NODE_STATUSES,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
 from .device_automation_helpers import (
     CONF_SUBTYPE,
-    NODE_STATUSES,
     async_bypass_dynamic_config_validation,
     generate_config_parameter_subtype,
 )
@@ -258,7 +258,7 @@ async def async_get_triggers(
     }
 
     dev_reg = dr.async_get(hass)
-    node = async_get_node_from_device_id(hass, device_id, dev_reg)
+    node = async_get_node_from_device_id(hass, device_id)
 
     if node.client.driver and node.client.driver.controller.own_node == node:
         return triggers
