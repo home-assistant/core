@@ -19,6 +19,8 @@ from homeassistant.components.geosphere_austria_warnings.warnings import (
 
 from tests.common import load_json_object_fixture
 
+from datetime import datetime, timezone
+
 
 @pytest.fixture
 def warnings() -> list[WeatherWarning]:
@@ -152,8 +154,8 @@ def test_ranking_tie_between_equal_levels_prefers_soonest_end() -> None:
         course_id=1,
         warning_type=WarningType.HEAT,
         level=WarningLevel.ORANGE,
-        start="2023-03-27T00:00:00+00:00",
-        end="2023-03-27T23:59:00+00:00",
+        start=datetime(2023, 3, 27, 0, 0, tzinfo=timezone.utc),
+        end=datetime(2023, 3, 27, 23, 59, tzinfo=timezone.utc),
         text="",
         impacts="",
         recommendations="",
@@ -166,8 +168,8 @@ def test_ranking_tie_between_equal_levels_prefers_soonest_end() -> None:
         course_id=1,
         warning_type=WarningType.THUNDERSTORM,
         level=WarningLevel.YELLOW,
-        start="2023-03-27T13:00:00+00:00",
-        end="2023-03-27T15:00:00+00:00",
+        start=datetime(2023, 3, 27, 13, 0, tzinfo=timezone.utc),
+        end=datetime(2023, 3, 27, 15, 0, tzinfo=timezone.utc),
         text="",
         impacts="",
         recommendations="",
@@ -198,4 +200,53 @@ def test_warning_sensor_attributes_are_flat_and_minimal(
 
     attributes = warning_sensor_attributes([selected])
     assert set(attributes) == {"type", "start", "end", "warning_id"}
+    assert warning_sensor_attributes([]) == {}
+
+def test_warning_sensor_attributes_include_diverting_warning_level() -> None:
+    """Test that sensor attributes expose only the selected warning details."""
+    all_day_heat = WeatherWarning(
+        warning_id=100,
+        change_id=1,
+        course_id=1,
+        warning_type=WarningType.HEAT,
+        level=WarningLevel.ORANGE,
+        start=datetime(2023, 3, 27, 0, 0, tzinfo=timezone.utc),
+        end=datetime(2023, 3, 27, 23, 59, tzinfo=timezone.utc),
+        text="",
+        impacts="",
+        recommendations="",
+        meteo_text="",
+        update_reason="",
+    )
+    afternoon_thunderstorm = WeatherWarning(
+        warning_id=200,
+        change_id=1,
+        course_id=1,
+        warning_type=WarningType.THUNDERSTORM,
+        level=WarningLevel.YELLOW,
+        start=datetime(2023, 3, 27, 13, 0, tzinfo=timezone.utc),
+        end=datetime(2023, 3, 27, 15, 0, tzinfo=timezone.utc),
+        text="",
+        impacts="",
+        recommendations="",
+        meteo_text="",
+        update_reason="",
+    )
+
+    all_warnings = [all_day_heat, afternoon_thunderstorm]
+
+    selected = select_highest_warning(all_warnings)
+    assert selected is not None
+    assert selected.warning_id == 200  # thunderstorm wins the tie
+
+    assert warning_sensor_attributes(all_warnings) == {
+        "type": "thunderstorm",
+        "start": "2023-03-27T13:00:00+00:00",
+        "end": "2023-03-27T15:00:00+00:00",
+        "warning_id": 200,
+        "level": "yellow",
+    }
+
+    attributes = warning_sensor_attributes(all_warnings)
+    assert set(attributes) == {"type", "start", "end", "warning_id", "level"}
     assert warning_sensor_attributes([]) == {}
