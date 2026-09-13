@@ -78,7 +78,7 @@ OVERKIZ_THERMAL_CONFIGURATION_TO_HVAC_MODE: dict[
 
 # Those device depends on a main probe that choose the
 # operating mode (heating, cooling, ...).
-class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingAndCoolingZone):
+class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     """Representation of Atlantic Pass APC Heating And Cooling Zone Control."""
 
     _attr_target_temperature_step = PRECISION_HALVES
