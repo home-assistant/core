@@ -234,7 +234,7 @@ async def _setup_with_options(
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(mock_config_entry, options=options)
 
-    weather_mock, aqhi_mock, radar_mock, precip_mock = build_mocks(ec_data)
+    weather_mock, aqhi_mock, radar_mock = build_mocks(ec_data)
     ecmap = MagicMock(return_value=radar_mock)
 
     with (
@@ -247,10 +247,6 @@ async def _setup_with_options(
             return_value=aqhi_mock,
         ),
         patch("homeassistant.components.environment_canada.ECMap", ecmap),
-        patch(
-            "homeassistant.components.environment_canada.ECPrecipForecast",
-            return_value=precip_mock,
-        ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

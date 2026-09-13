@@ -5,7 +5,12 @@ from typing import Any
 from env_canada import ECPrecipForecast, ECWeather
 import probatio
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    CONF_LANGUAGE,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
@@ -70,11 +75,18 @@ async def _async_get_precipitation_forecast(call: ServiceCall) -> dict[str, Any]
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
 
-    precip: ECPrecipForecast = entry.runtime_data.precip_forecast
+    # A fresh object per call, rather than one shared across calls: its
+    # options would otherwise leak between calls that omit them, and
+    # concurrent calls could race on the same instance's attributes.
+    kwargs: dict[str, Any] = {
+        "coordinates": (entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE]),
+        "language": entry.data.get(CONF_LANGUAGE, "English").lower(),
+    }
     for option in PRECIP_FORECAST_OPTIONS:
         if option in call.data:
-            setattr(precip, option, call.data[option])
+            kwargs[option] = call.data[option]
 
+    precip = ECPrecipForecast(**kwargs)
     await precip.update()
 
     return {

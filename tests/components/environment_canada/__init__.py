@@ -18,8 +18,8 @@ FIXTURE_USER_INPUT = {
 }
 
 
-def build_mocks(ec_data) -> tuple[MagicMock, MagicMock, MagicMock, MagicMock]:
-    """Build the weather, AQHI, radar and precipitation forecast library mocks."""
+def build_mocks(ec_data) -> tuple[MagicMock, MagicMock, MagicMock]:
+    """Build the weather, AQHI and radar library mocks used during setup."""
 
     def mock_ec() -> MagicMock:
         ec_mock = MagicMock()
@@ -45,34 +45,7 @@ def build_mocks(ec_data) -> tuple[MagicMock, MagicMock, MagicMock, MagicMock]:
     radar_mock.metadata = {"attribution": "Data provided by Environment Canada"}
     radar_mock.clear_cache = MagicMock()
 
-    precip_mock = mock_ec()
-    precip_mock.nowcast = [
-        {
-            "timestamp": datetime(2022, 10, 4, 12, 0, tzinfo=UTC),
-            "rate": 1.2391,
-            "unit": "mm/h",
-            "label": "1.0 - 2.0 (mm/h)",
-            "precip_type": "rain",
-            "forecast": False,
-        }
-    ]
-    precip_mock.hourly = [
-        {
-            "timestamp": datetime(2022, 10, 4, 13, 0, tzinfo=UTC),
-            "amount": 1.726,
-            "probability": 57,
-            "conditional_amount": 0.909,
-            "expected_amount": 0.518,
-            "precip_type": "Rain",
-            "label": "0.5 - 1 mm",
-        }
-    ]
-    precip_mock.metadata = {
-        "attribution": "Data provided by Environment Canada",
-        "timestamp": "2022-10-04T12:00:00+00:00",
-    }
-
-    return weather_mock, mock_ec(), radar_mock, precip_mock
+    return weather_mock, mock_ec(), radar_mock
 
 
 async def init_integration(
@@ -86,7 +59,7 @@ async def init_integration(
     )
     config_entry.add_to_hass(hass)
 
-    weather_mock, aqhi_mock, radar_mock, precip_mock = build_mocks(ec_data)
+    weather_mock, aqhi_mock, radar_mock = build_mocks(ec_data)
 
     with (
         patch(
@@ -100,10 +73,6 @@ async def init_integration(
         patch(
             "homeassistant.components.environment_canada.ECMap",
             return_value=radar_mock,
-        ),
-        patch(
-            "homeassistant.components.environment_canada.ECPrecipForecast",
-            return_value=precip_mock,
         ),
         patch(
             "homeassistant.components.environment_canada.config_flow.ECWeather",

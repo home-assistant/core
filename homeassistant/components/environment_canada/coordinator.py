@@ -6,14 +6,7 @@ import logging
 from typing import override
 import xml.etree.ElementTree as ET
 
-from env_canada import (
-    ECAirQuality,
-    ECMap,
-    ECPrecipForecast,
-    ECWeather,
-    ECWeatherUpdateFailed,
-    ec_exc,
-)
+from env_canada import ECAirQuality, ECMap, ECWeather, ECWeatherUpdateFailed, ec_exc
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,7 +26,6 @@ class ECRuntimeData:
     """Class to hold EC runtime data."""
 
     aqhi_coordinator: ECDataUpdateCoordinator[ECAirQuality]
-    precip_forecast: ECPrecipForecast
     radar_coordinator: ECDataUpdateCoordinator[ECMap]
     weather_coordinator: ECDataUpdateCoordinator[ECWeather]
 

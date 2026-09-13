@@ -221,7 +221,7 @@
           "name": "Past minutes"
         },
         "precip_type": {
-          "description": "Which precipitation type to report. Auto detects it from radar.",
+          "description": "Which precipitation type to report. Automatically detects it from radar.",
           "name": "Precipitation type"
         }
       },
