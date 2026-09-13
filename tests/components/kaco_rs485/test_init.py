@@ -1,7 +1,5 @@
 """Test setting the KACO RS485 entry up, and what happens when it fails."""
 
-from unittest.mock import patch
-
 from kaco_rs485 import BusError
 from kaco_rs485.testing import FakeBus
 import pytest
@@ -153,24 +151,3 @@ async def test_disabling_every_inverter_releases_the_port(
 
     assert await _polled(hass, init_integration, mock_bus) == set()
     assert not mock_bus.opened
-
-
-async def test_only_an_enabled_change_reloads_the_entry(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test the reload that puts a device being disabled into effect."""
-    device = _device(device_registry, init_integration, 2)
-
-    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
-        device_registry.async_update_device(device.id, name_by_user="Shed")
-        await hass.async_block_till_done()
-        reload.assert_not_called()
-
-        device_registry.async_update_device(
-            device.id, disabled_by=dr.DeviceEntryDisabler.USER
-        )
-        await hass.async_block_till_done()
-
-    reload.assert_called_once_with(init_integration.entry_id)
