@@ -915,6 +915,23 @@ async def test_service_post_media_source_not_supported(
             },
             "media_audio_not_allowed_with_other_media",
         ),
+        (
+            {
+                ATTR_MEDIA: [
+                    {
+                        ATTR_MEDIA_SOURCE: {
+                            "media_content_id": "media-source://media_source/local/test.mp3",
+                            "media_content_type": "audio/mp3",
+                        },
+                        ATTR_THUMBNAIL: {
+                            "media_content_id": "media-source://media_source/local/test.mp3",
+                            "media_content_type": "audio/mp3",
+                        },
+                    }
+                ]
+            },
+            "media_thumbnail_not_an_image",
+        ),
     ],
 )
 async def test_service_post_media_source_errors(

@@ -113,6 +113,9 @@
     "media_thumbnail_not_allowed": {
       "message": "Thumbnail is only allowed with audio media."
     },
+    "media_thumbnail_not_an_image": {
+      "message": "Thumbnail has mime type {mime_type}. Only image allowed."
+    },
     "mute_duration_too_long": {
       "message": "Mute duration is too long."
     },

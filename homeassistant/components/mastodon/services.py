@@ -393,6 +393,12 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             if not media_item.get(ATTR_THUMBNAIL)
             else await _resolve_media(call.hass, media_item[ATTR_THUMBNAIL])
         )
+        if thumbnail_mime_type and not thumbnail_mime_type.startswith("image/"):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_thumbnail_not_an_image",
+                translation_placeholders={"mime_type": thumbnail_mime_type},
+            )
         resolved.append(
             {
                 "media_file": content,
