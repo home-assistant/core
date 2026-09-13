@@ -148,7 +148,6 @@ class ShellyCameraEntity(ShellyRpcAttributeEntity, Camera):
         try:
             return await self.coordinator.device.camera_get_image(self._id)
         except DeviceConnectionError as err:
-            self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_communication_error",
