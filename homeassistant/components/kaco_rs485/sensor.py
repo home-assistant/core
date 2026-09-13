@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower
+from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -66,7 +66,6 @@ SENSORS: tuple[KacoSensorDescription, ...] = (
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
         options=list(STATUS_OPTIONS),
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda s: status_slug(s.measured.status) if s.measured else None,
     ),
 )

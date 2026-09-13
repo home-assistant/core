@@ -42,6 +42,7 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
             update_interval=SCAN_INTERVAL,
         )
         self._bus = AsyncBus(port)
+        self._addresses = addresses
         self._client = KacoRs485Client(self._bus, addresses)
         self._opened = False
         self._reported_dark: dict[int, bool] = {}
@@ -59,6 +60,12 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
 
     @override
     async def _async_update_data(self) -> dict[int, InverterState]:
+        # Every inverter disabled: holding the port would keep another master
+        # off a bus nobody is reading.
+        if not self._addresses:
+            await self.async_close()
+            return {}
+
         # A proxy can vanish and take the port with it; reopen instead.
         if not self._opened:
             try:

@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "Could not open that port. Check the adapter is connected and, for an ESPHome serial proxy, that the device is online, then try again.",
+      "cannot_connect": "The connection to that port failed. Check the adapter is connected and, for an ESPHome serial proxy, that the device is online, then try again.",
       "no_inverters": "No KACO inverters answered on that port. These inverters stop responding entirely when the sun is down, so try again in daylight before suspecting the wiring.",
       "only_unsupported": "Only devices this integration cannot read answered on that port. Address(es) {unsupported} use the CRC16 Generic Protocol — those are blueplanet or TL/TR units, which are read over Modbus TCP instead."
     },
