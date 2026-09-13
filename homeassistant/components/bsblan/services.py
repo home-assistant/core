@@ -127,7 +127,7 @@ def _build_weekly_schedule_days(
 
 def _resolve_config_entry(
     service_call: ServiceCall,
-) -> tuple[BSBLanConfigEntry, dr.DeviceEntry]:
+) -> tuple[BSBLanConfigEntry, dr.AnyDeviceEntry]:
     """Resolve device_id from a service call into a loaded BSBLAN config entry."""
     config_entry: BSBLanConfigEntry
     device, config_entry = service.async_get_device_and_config_entry(
@@ -136,12 +136,12 @@ def _resolve_config_entry(
     return config_entry, device
 
 
-def _device_name(device_entry: dr.DeviceEntry) -> str:
+def _device_name(device_entry: dr.AnyDeviceEntry) -> str:
     """Return the best available display name for a device."""
     return device_entry.name_by_user or device_entry.name or device_entry.id
 
 
-def _ensure_water_heater_device(device_entry: dr.DeviceEntry) -> None:
+def _ensure_water_heater_device(device_entry: dr.AnyDeviceEntry) -> None:
     """Validate the service targets the water heater sub-device."""
     for domain, identifier in device_entry.identifiers:
         if domain == DOMAIN and identifier.endswith("-water-heater"):

@@ -452,8 +452,9 @@ def async_register_network_storage_services(
 
     async def async_mount_reload(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
+        # A mount is always a main device, and the check below reads its model
         device, _ = async_get_device_and_config_entry(
-            hass, DOMAIN, service.data[ATTR_DEVICE_ID]
+            hass, DOMAIN, service.data[ATTR_DEVICE_ID], include_child_devices=False
         )
 
         if device.name is None or device.model != SupervisorEntityModel.MOUNT:

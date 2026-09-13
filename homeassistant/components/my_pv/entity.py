@@ -8,8 +8,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .coordinator import MyPVCoordinator
 
 
-class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
-    """The my-PV data entity."""
+class MyPVBaseEntity(CoordinatorEntity[MyPVCoordinator]):
+    """The my-PV base entity."""
 
     _attr_has_entity_name = True
 
@@ -35,6 +35,18 @@ class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
             super().available
             and self.coordinator.device.connected
             and self.coordinator.device.is_on is not None
+        )
+
+
+class MyPVDataEntity(MyPVBaseEntity):
+    """The my-PV data entity."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            super().available
             and self.coordinator.device.get_data_value(self.entity_description.key)
             is not None
         )

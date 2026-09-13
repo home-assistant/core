@@ -233,6 +233,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/besen/ @moryoav
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
+/homeassistant/components/bitvis/ @MandusBorjesson @real-tintin @simontegelid
+/tests/components/bitvis/ @MandusBorjesson @real-tintin @simontegelid
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
 /homeassistant/components/blebox/ @bbx-a @swistakm @bkobus-bbx
 /tests/components/blebox/ @bbx-a @swistakm @bkobus-bbx
@@ -1554,6 +1556,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/refoss/ @ashionky
 /homeassistant/components/rehlko/ @bdraco @peterager
 /tests/components/rehlko/ @bdraco @peterager
+/homeassistant/components/rejseplanen/ @Jawar19
+/tests/components/rejseplanen/ @Jawar19
 /homeassistant/components/remember_the_milk/ @MartinHjelmare
 /tests/components/remember_the_milk/ @MartinHjelmare
 /homeassistant/components/remote/ @home-assistant/core

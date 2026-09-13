@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohue.v2.models.button import ButtonEvent
+import attr
 import pytest
 from pytest_unordered import unordered
 
@@ -137,6 +138,79 @@ async def test_get_triggers(
                 "platform": "device",
                 "domain": hue.DOMAIN,
                 "device_id": hue_wall_switch_device.id,
+                "unique_id": resource_id,
+                "type": event_type.value,
+                "subtype": control_id,
+                "metadata": {},
+            }
+            for event_type in (
+                ButtonEvent.INITIAL_PRESS,
+                ButtonEvent.LONG_RELEASE,
+                ButtonEvent.REPEAT,
+                ButtonEvent.LONG_PRESS,
+                ButtonEvent.SHORT_RELEASE,
+            )
+            for control_id, resource_id in (
+                (1, "c658d3d8-a013-4b81-8ac6-78b248537e70"),
+                (2, "be1eb834-bdf5-4d26-8fba-7b1feaa83a9d"),
+            )
+        ),
+    ]
+
+    assert triggers == unordered(expected_triggers)
+
+
+async def test_get_triggers_for_composite_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test we get the expected triggers for a pre-migration composite device id."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(
+        hass, mock_bridge_v2, [Platform.BINARY_SENSOR, Platform.SENSOR]
+    )
+    hue_wall_switch_device = device_registry.async_get_device_by_identifier(
+        (hue.DOMAIN, WALL_SWITCH_DEVICE_ID), mock_bridge_v2.config_entry.entry_id
+    )
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, identifiers={("other", "1")}
+    )
+    composite_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry._devices[hue_wall_switch_device.id] = attr.evolve(
+        hue_wall_switch_device, composite_device_id=composite_id
+    )
+    device_registry._devices[other_device.id] = attr.evolve(
+        other_device, composite_device_id=composite_id
+    )
+
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, composite_id
+    )
+
+    hue_bat_sensor = entity_registry.async_get(
+        "sensor.wall_switch_with_2_controls_battery"
+    )
+    trigger_batt = {
+        "platform": "device",
+        "domain": "sensor",
+        "device_id": composite_id,
+        "type": "battery_level",
+        "entity_id": hue_bat_sensor.id,
+        "metadata": {"secondary": True},
+    }
+    expected_triggers = [
+        trigger_batt,
+        *(
+            {
+                "platform": "device",
+                "domain": hue.DOMAIN,
+                "device_id": composite_id,
                 "unique_id": resource_id,
                 "type": event_type.value,
                 "subtype": control_id,
