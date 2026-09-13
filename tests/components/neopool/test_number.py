@@ -1086,6 +1086,62 @@ async def test_inflight_write_skips_coordinator_on_remove(
     mock_update.assert_not_called()
 
 
+async def test_client_close_waits_for_inflight_flush(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The client close waits for an in-flight flush, so no write outlives it.
+
+    Removal cancels the flush task and awaits it before ``async_unload_entry``
+    closes the client, so the device call has unwound by the time the client
+    goes away. A close reaching a live connection while the write is still in
+    the library call would race the teardown.
+    """
+    in_write = asyncio.Event()
+    write_active = False
+    close_saw_write_active: bool | None = None
+
+    async def _blocking_setpoint(kind: SetpointKind, value: int) -> dict[str, Any]:
+        nonlocal write_active
+        write_active = True
+        in_write.set()
+        try:
+            # Never released: removal must cancel this to let the unload finish.
+            await asyncio.Event().wait()
+            return {"MBF_PAR_PH1": value}
+        finally:
+            write_active = False
+
+    async def _record_close() -> None:
+        nonlocal close_saw_write_active
+        close_saw_write_active = write_active
+
+    mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=_blocking_setpoint)
+    mock_neopool_client.close = AsyncMock(side_effect=_record_close)
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+    task = _set_value_nowait(hass, ph1_entity_id, 7.5)
+    await _let_park(hass)
+
+    # Let the timer fire and the write enter the library call, then block there.
+    freezer.tick(FLUSH)
+    async_fire_time_changed(hass)
+    await in_write.wait()
+
+    # Unload while the write is in flight. Removal cancels and awaits the flush
+    # task, unwinding the setpoint call, so the unload completes without a hang.
+    assert await hass.config_entries.async_unload(mock_config_entry_number.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    await task
+    mock_neopool_client.close.assert_awaited_once()
+    # The in-flight device call had unwound before the client was closed.
+    assert close_saw_write_active is False
+
+
 async def test_queued_flush_aborts_after_lock_when_removed(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,

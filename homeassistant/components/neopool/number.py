@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, override
@@ -300,6 +301,7 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         self._pending_token = 0
         self._write_future: asyncio.Future[None] | None = None
         self._flush_lock = asyncio.Lock()
+        self._flush_task: asyncio.Task[None] | None = None
         self._removing = False
 
     def _decode_raw(self) -> float | None:
@@ -312,12 +314,19 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
 
     @override
     async def async_will_remove_from_hass(self) -> None:
-        """Cancel a pending write when removed."""
+        """Cancel a pending write when removed, and stop any in-flight one."""
         self._removing = True
         self._cancel_pending_write()
         if self._write_future is not None and not self._write_future.done():
             # Awaiting callers treat cancellation as a clean exit.
             self._write_future.cancel()
+        # A flush that already fired runs as its own task; cancel and await it
+        # so its device call cannot outlive removal and race the client close
+        # in async_unload_entry.
+        if self._flush_task is not None:
+            self._flush_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._flush_task
         await super().async_will_remove_from_hass()
 
     @callback
@@ -344,7 +353,9 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         if self._write_future is None or self._write_future.done():
             self._write_future = self.hass.loop.create_future()
         future = self._write_future
-        self._write_unsub = async_call_later(self.hass, WRITE_DELAY, self._async_flush)
+        self._write_unsub = async_call_later(
+            self.hass, WRITE_DELAY, self._schedule_flush
+        )
         try:
             # Shield so cancelling one caller's task does not cancel the batch.
             await asyncio.shield(future)
@@ -353,7 +364,15 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                 return
             raise
 
-    async def _async_flush(self, _now: datetime) -> None:
+    @callback
+    def _schedule_flush(self, _now: datetime) -> None:
+        """Run the debounced write as a tracked task so removal can await it."""
+        self._write_unsub = None
+        self._flush_task = self.coordinator.config_entry.async_create_background_task(
+            self.hass, self._async_flush(), name=f"{self._attr_unique_id}_flush"
+        )
+
+    async def _async_flush(self) -> None:
         """Write the settled value, resolving the awaited coalesce future."""
         self._write_unsub = None
         # Detach this batch: a set_value during the write below starts a fresh
@@ -435,6 +454,7 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         finally:
             if not resolved and future is not None and not future.done():
                 future.cancel()  # pragma: no cover - task cancel is non-deterministic
+            self._flush_task = None
 
     @callback
     def _abort_if_removing(self, future: asyncio.Future[None] | None) -> bool:
