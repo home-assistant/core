@@ -12,7 +12,11 @@ from pyscorpiontrack import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -55,6 +59,12 @@ class ScorpionTrackConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Update the link for the configured share."""
+        return await self.async_step_user(user_input)
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -78,6 +88,12 @@ class ScorpionTrackConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(str(share.id))
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch(reason="wrong_share")
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data_updates={CONF_SHARE_TOKEN: share.token},
+                    )
                 self._abort_if_unique_id_configured()
                 user_input[CONF_SHARE_TOKEN] = share.token
                 return self.async_create_entry(
@@ -86,7 +102,7 @@ class ScorpionTrackConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user",
+            step_id="reconfigure" if self.source == SOURCE_RECONFIGURE else "user",
             data_schema=vol.Schema({vol.Required(CONF_SHARE_TOKEN): str}),
             errors=errors,
         )
