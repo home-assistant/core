@@ -318,8 +318,9 @@ async def test_dimmer_refreshes_and_shows_new_state_immediately(
         blocking=True,
     )
 
-    # The refresh call happened...
-    client.async_update.assert_awaited_once()
+    # The refresh call happened (our own explicit one, plus HA's own
+    # built-in post-service-call poll for should_poll=True entities)...
+    assert client.async_update.await_count == 2
     # ...and the new value is visible right away, with no time-based
     # polling trick needed to observe it.
     assert hass.states.get(entity_id).state == "Dark"
@@ -347,7 +348,9 @@ async def test_eco_mode_and_auto_standby_also_refresh_immediately(
         {ATTR_ENTITY_ID: standby_entity_id, ATTR_OPTION: "15M"},
         blocking=True,
     )
-    assert client.async_update.await_count == 2
+    # Two calls per action (our own explicit refresh plus HA's built-in
+    # post-service-call poll for should_poll=True entities).
+    assert client.async_update.await_count == 4
 
 
 async def test_reference_level_offset_always_refreshes_after_change(
@@ -373,7 +376,9 @@ async def test_reference_level_offset_always_refreshes_after_change(
         {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "+5dB"},
         blocking=True,
     )
-    assert client.async_update_audyssey.await_count == baseline_calls + 1
+    # Two calls: our own explicit refresh, plus HA's built-in
+    # post-service-call poll for should_poll=True entities.
+    assert client.async_update_audyssey.await_count == baseline_calls + 2
 
 
 async def test_rapid_consecutive_selections_do_not_race(

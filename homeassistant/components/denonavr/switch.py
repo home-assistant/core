@@ -1,6 +1,7 @@
 """Support for Denon AVR Audyssey switch entities."""
 
 from datetime import timedelta
+from typing import Any, cast, override
 
 from denonavr import DenonAVR
 from denonavr.const import MAIN_ZONE
@@ -32,7 +33,10 @@ async def async_setup_entry(
     # receiver rather than per zone.
     main_receiver = receiver.zones[MAIN_ZONE]
 
-    if config_entry.data.get(CONF_SERIAL_NUMBER) is not None:
+    if (
+        config_entry.data.get(CONF_SERIAL_NUMBER) is not None
+        and config_entry.unique_id is not None
+    ):
         unique_id_base = config_entry.unique_id
     else:
         unique_id_base = config_entry.entry_id
@@ -50,8 +54,6 @@ class DenonAvrDynamicEqSwitch(DenonAvrPendingValueEntity[bool], SwitchEntity):
     """Representation of the Denon AVR Dynamic EQ switch."""
 
     _attr_translation_key = "dynamic_eq"
-    _attr_name = "Dynamic EQ"
-    _attr_icon = "mdi:auto-fix"
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
@@ -68,25 +70,32 @@ class DenonAvrDynamicEqSwitch(DenonAvrPendingValueEntity[bool], SwitchEntity):
             refresh_fn=receiver.async_update_audyssey,
         )
 
+    @override
     def _read_value(self) -> bool | None:
         """Return the receiver's own confirmed Dynamic EQ state."""
-        return self._receiver.dynamic_eq
+        # denonavr ships no py.typed marker, so its attributes are
+        # untyped (Any) to mypy - cast to what this actually returns.
+        return cast("bool | None", self._receiver.dynamic_eq)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the receiver reports a Dynamic EQ state."""
         return self._current_value is not None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if Dynamic EQ is on."""
         return self._current_value
 
-    async def async_turn_on(self, **kwargs) -> None:
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn Dynamic EQ on."""
         await self._async_set_dynamic_eq(True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn Dynamic EQ off."""
         await self._async_set_dynamic_eq(False)
 

@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from denonavr import DenonAVR
 from denonavr.const import MAIN_ZONE
@@ -57,7 +57,6 @@ SELECT_TYPES: tuple[DenonAvrSelectEntityDescription, ...] = (
         key="reference_level_offset",
         translation_key="reference_level_offset",
         name="Reference level offset",
-        icon="mdi:tune-vertical",
         entity_category=EntityCategory.CONFIG,
         current_option_fn=lambda receiver: receiver.reference_level_offset,
         options_fn=lambda receiver: receiver.reference_level_offset_setting_list,
@@ -71,7 +70,6 @@ SELECT_TYPES: tuple[DenonAvrSelectEntityDescription, ...] = (
         key="dynamic_volume",
         translation_key="dynamic_volume",
         name="Dynamic volume",
-        icon="mdi:volume-vibrate",
         entity_category=EntityCategory.CONFIG,
         current_option_fn=lambda receiver: receiver.dynamic_volume,
         options_fn=lambda receiver: receiver.dynamic_volume_setting_list,
@@ -82,7 +80,6 @@ SELECT_TYPES: tuple[DenonAvrSelectEntityDescription, ...] = (
         key="multi_eq",
         translation_key="multi_eq",
         name="Multi-EQ",
-        icon="mdi:equalizer",
         entity_category=EntityCategory.CONFIG,
         current_option_fn=lambda receiver: receiver.multi_eq,
         options_fn=lambda receiver: receiver.multi_eq_setting_list,
@@ -93,7 +90,6 @@ SELECT_TYPES: tuple[DenonAvrSelectEntityDescription, ...] = (
         key="eco_mode",
         translation_key="eco_mode",
         name="Eco mode",
-        icon="mdi:leaf",
         entity_category=EntityCategory.CONFIG,
         current_option_fn=lambda receiver: receiver.eco_mode,
         options_fn=lambda receiver: list(ECO_MODE_OPTIONS),
@@ -106,7 +102,6 @@ SELECT_TYPES: tuple[DenonAvrSelectEntityDescription, ...] = (
         key="dimmer",
         translation_key="dimmer",
         name="Dimmer",
-        icon="mdi:brightness-6",
         entity_category=EntityCategory.CONFIG,
         current_option_fn=lambda receiver: receiver.dimmer,
         options_fn=lambda receiver: list(DIMMER_OPTIONS),
@@ -117,7 +112,6 @@ SELECT_TYPES: tuple[DenonAvrSelectEntityDescription, ...] = (
         key="auto_standby",
         translation_key="auto_standby",
         name="Auto standby",
-        icon="mdi:timer-outline",
         entity_category=EntityCategory.CONFIG,
         current_option_fn=lambda receiver: receiver.auto_standby,
         options_fn=lambda receiver: list(AUTO_STANDBY_OPTIONS),
@@ -139,7 +133,10 @@ async def async_setup_entry(
     # zone, so these entities are only created once, tied to Main Zone.
     main_receiver = receiver.zones[MAIN_ZONE]
 
-    if config_entry.data.get(CONF_SERIAL_NUMBER) is not None:
+    if (
+        config_entry.data.get(CONF_SERIAL_NUMBER) is not None
+        and config_entry.unique_id is not None
+    ):
         unique_id_base = config_entry.unique_id
     else:
         unique_id_base = config_entry.entry_id
@@ -176,11 +173,13 @@ class DenonAvrSelect(DenonAvrPendingValueEntity[str], SelectEntity):
         )
         self.entity_description = description
 
+    @override
     def _read_value(self) -> str | None:
         """Return the receiver's own confirmed value."""
         return self.entity_description.current_option_fn(self._receiver)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the receiver reports a value and it can be changed."""
         if self._current_value is None:
@@ -188,15 +187,18 @@ class DenonAvrSelect(DenonAvrPendingValueEntity[str], SelectEntity):
         return self.entity_description.available_fn(self._receiver)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         return self._current_value
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the list of available options."""
         return self.entity_description.options_fn(self._receiver)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._async_apply_change(

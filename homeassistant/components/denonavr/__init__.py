@@ -62,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     except (AvrNetworkError, AvrTimoutError) as ex:
         raise ConfigEntryNotReady from ex
     receiver = connect_denonavr.receiver
+    assert receiver is not None
 
     entry.runtime_data = receiver
 

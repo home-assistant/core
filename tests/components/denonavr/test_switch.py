@@ -273,7 +273,9 @@ async def test_turn_on_always_refreshes_audyssey_after_change(
         blocking=True,
     )
 
-    assert client.async_update_audyssey.await_count == baseline_calls + 1
+    # Two calls: our own explicit refresh, plus HA's built-in
+    # post-service-call poll for should_poll=True entities.
+    assert client.async_update_audyssey.await_count == baseline_calls + 2
 
 
 async def test_rapid_toggles_do_not_race(

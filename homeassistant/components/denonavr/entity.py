@@ -1,27 +1,26 @@
 """Shared base entity for Denon AVR select/switch entities.
 
-These all follow the same shape: send a command, show the value
-optimistically since the receiver can briefly still report the old one
-on an immediate refresh, then reconcile once it actually catches up
-(bounded by a timeout so a command that never applied doesn't get
-masked forever). Pulled out here since three near-identical copies of
-this logic drifted once already (one of them missed a fix the others
-got).
+Shows a value optimistically right after a command, since the
+receiver can briefly still report the old one on an immediate
+refresh, then reconciles once it actually catches up (bounded by a
+timeout so a command that never applied doesn't mask reality forever).
 """
 
 import asyncio
 from collections.abc import Callable, Coroutine
 import logging
 import time
-from typing import Any
+from typing import Any, override
 import weakref
 
 from denonavr import DenonAVR
 from denonavr.exceptions import DenonAvrError
 
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later
 
 from .const import PENDING_VALUE_TIMEOUT
 
@@ -65,33 +64,58 @@ class DenonAvrPendingValueEntity[_T](Entity):
         self._refresh_fn = refresh_fn
         self._pending_value: _T | None = None
         self._pending_value_set_at: float | None = None
-        # HA forces an immediate poll right after adding a new polling
-        # entity - redundant here since __init__.py already did a
-        # setup-time fetch for the whole group sharing this receiver.
-        # Skipped once; every poll after that is a genuine refresh.
-        self._skip_next_poll_refresh = True
+        self._pending_value_expiry_unsub: Callable[[], None] | None = None
 
     def _read_value(self) -> _T | None:
         """Return the receiver's own confirmed value."""
         raise NotImplementedError
 
-    def _clear_expired_pending_value(self) -> None:
-        """Drop the optimistic override once it's been held too long."""
-        if (
-            self._pending_value is not None
-            and self._pending_value_set_at is not None
-            and time.monotonic() - self._pending_value_set_at > PENDING_VALUE_TIMEOUT
-        ):
-            self._pending_value = None
-            self._pending_value_set_at = None
+    def _set_pending_value(self, value: _T) -> None:
+        """Show a value optimistically and schedule its expiry."""
+        self._pending_value = value
+        self._pending_value_set_at = time.monotonic()
+        if self._pending_value_expiry_unsub is not None:
+            self._pending_value_expiry_unsub()
+        self._pending_value_expiry_unsub = async_call_later(
+            self.hass, PENDING_VALUE_TIMEOUT, self._async_handle_pending_expiry
+        )
+
+    def _clear_pending_value(self) -> None:
+        """Clear the pending override and cancel its scheduled expiry."""
+        self._pending_value = None
+        self._pending_value_set_at = None
+        if self._pending_value_expiry_unsub is not None:
+            self._pending_value_expiry_unsub()
+            self._pending_value_expiry_unsub = None
+
+    @callback
+    def _async_handle_pending_expiry(self, _now: Any) -> None:
+        """Write state once a pending override's timeout elapses.
+
+        Without this, HA's own stored state (what automations and the
+        frontend see) would keep showing the optimistic value until
+        something else happens to re-evaluate it - the next poll, or
+        whenever a user opens the entity - rather than within the
+        documented timeout.
+        """
+        self._pending_value_expiry_unsub = None
+        self._pending_value = None
+        self._pending_value_set_at = None
+        self.async_write_ha_state()
 
     @property
     def _current_value(self) -> _T | None:
         """Return the pending value if set, else the receiver's own value."""
-        self._clear_expired_pending_value()
         if self._pending_value is not None:
             return self._pending_value
         return self._read_value()
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel any scheduled pending-value expiry."""
+        if self._pending_value_expiry_unsub is not None:
+            self._pending_value_expiry_unsub()
+            self._pending_value_expiry_unsub = None
 
     async def _async_apply_change(
         self,
@@ -117,16 +141,14 @@ class DenonAvrPendingValueEntity[_T](Entity):
                     f" {self._receiver.name}: {err}"
                 ) from err
 
-            self._pending_value = value
-            self._pending_value_set_at = time.monotonic()
+            self._set_pending_value(value)
             self.async_write_ha_state()
 
             if self._refresh_fn is not None:
                 await self._refresh_fn()
 
             if self._read_value() == value:
-                self._pending_value = None
-                self._pending_value_set_at = None
+                self._clear_pending_value()
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
@@ -135,22 +157,17 @@ class DenonAvrPendingValueEntity[_T](Entity):
         Actively refreshes (rather than only checking already-cached
         data) so external changes - made outside HA, or while the
         media player entity that would otherwise drive this refresh is
-        individually disabled - still surface here. Skips the very
-        first call, since that happens immediately upon being added
-        and would just repeat __init__.py's setup-time fetch.
+        individually disabled - still surface here.
         """
-        if self._skip_next_poll_refresh:
-            self._skip_next_poll_refresh = False
-        elif self._refresh_fn is not None:
+        if self._refresh_fn is not None:
             async with self._action_lock:
                 try:
                     await self._refresh_fn()
                 except DenonAvrError as err:
                     _LOGGER.debug("Could not refresh %s: %s", self.entity_id, err)
 
-        self._clear_expired_pending_value()
-        if self._pending_value is not None and (
-            self._read_value() == self._pending_value
+        if (
+            self._pending_value is not None
+            and self._read_value() == self._pending_value
         ):
-            self._pending_value = None
-            self._pending_value_set_at = None
+            self._clear_pending_value()

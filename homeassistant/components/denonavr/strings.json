@@ -32,6 +32,33 @@
       }
     }
   },
+  "entity": {
+    "select": {
+      "auto_standby": {
+        "name": "Auto standby"
+      },
+      "dimmer": {
+        "name": "Dimmer"
+      },
+      "dynamic_volume": {
+        "name": "Dynamic volume"
+      },
+      "eco_mode": {
+        "name": "Eco mode"
+      },
+      "multi_eq": {
+        "name": "Multi-EQ"
+      },
+      "reference_level_offset": {
+        "name": "Reference level offset"
+      }
+    },
+    "switch": {
+      "dynamic_eq": {
+        "name": "Dynamic EQ"
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -43,33 +70,6 @@
           "zone3": "Set up Zone 3"
         },
         "description": "Specify optional settings"
-      }
-    }
-  },
-  "entity": {
-    "select": {
-      "reference_level_offset": {
-        "name": "Reference level offset"
-      },
-      "dynamic_volume": {
-        "name": "Dynamic volume"
-      },
-      "multi_eq": {
-        "name": "Multi-EQ"
-      },
-      "eco_mode": {
-        "name": "Eco mode"
-      },
-      "dimmer": {
-        "name": "Dimmer"
-      },
-      "auto_standby": {
-        "name": "Auto standby"
-      }
-    },
-    "switch": {
-      "dynamic_eq": {
-        "name": "Dynamic EQ"
       }
     }
   },
