@@ -486,12 +486,15 @@ def stringify_invalid(
             options = " or ".join(f"'{candidate}'" for candidate in candidates)
             message += f" (did you mean {options}?)"
         return f"{message}, check: {path}{message_suffix}"
-    if exc.code == "required":
+    if exc.error_message == "required key not provided":
         return (
             f"{message_prefix}: required key '{exc.path[-1]}' not provided"
             f"{message_suffix}"
         )
-    output = exc.error_message
+    # This function is an alternative to the stringification done by
+    # probatio.Invalid.__str__, so we need to call Exception.__str__ here
+    # instead of str(exc)
+    output = Exception.__str__(exc)
     if error_type := exc.error_type:
         output += " for " + error_type
     offending_item_summary = repr(_get_by_path(config, exc.path))

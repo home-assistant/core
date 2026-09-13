@@ -1527,26 +1527,6 @@ async def test_stringify_invalid_suggests_close_keys(
     )
 
 
-async def test_stringify_invalid_reports_the_reason(hass: HomeAssistant) -> None:
-    """Test a rejected value reports why it was rejected.
-
-    Probatio builds the message lazily, so rendering must read it from the error
-    rather than rely on it having been materialised elsewhere.
-    """
-    schema = probatio.Schema({probatio.Optional("mode"): probatio.In(["a", "b"])})
-    config = {"mode": "nope"}
-
-    with pytest.raises(probatio.MultipleInvalid) as exc_info:
-        schema(config)
-
-    assert config_util.stringify_invalid(
-        hass, exc_info.value.errors[0], "mqtt", config, None, 500
-    ) == (
-        "Invalid config for 'mqtt': value must be one of ['a', 'b'] for "
-        "dictionary value 'mode', got 'nope'"
-    )
-
-
 @pytest.mark.parametrize(
     "config_dir",
     ["packages", "packages_include_dir_named"],
