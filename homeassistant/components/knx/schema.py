@@ -48,7 +48,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.util import slugify
 
 from .const import (
@@ -78,6 +77,7 @@ from .dpt import get_supported_dpts
 from .validation import (
     backwards_compatible_xknx_climate_enum_member,
     dpt_base_type_validator,
+    entity_category_validator,
     ga_list_validator,
     ga_validator,
     numeric_type_validator,
@@ -258,7 +258,7 @@ def _entity_base_schema(platform: Platform) -> vol.Schema:
             vol.Optional(CONF_DEFAULT_ENTITY_ID): vol.All(
                 cv.entity_id, cv.entity_domain(platform)
             ),
-            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            vol.Optional(CONF_ENTITY_CATEGORY): entity_category_validator(platform),
             vol.Optional(CONF_UNIQUE_ID): vol.All(cv.string, vol.Length(min=1)),
         }
     )

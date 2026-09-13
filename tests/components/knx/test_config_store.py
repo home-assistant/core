@@ -120,6 +120,73 @@ async def test_create_entity_error(
     assert res["result"]["error_base"].startswith("value must be one of")
 
 
+@pytest.mark.parametrize(
+    ("platform", "knx_data", "read_response"),
+    [
+        pytest.param(
+            Platform.SENSOR,
+            {"ga_sensor": {"state": "1/2/3", "dpt": "5.001"}},
+            (0,),
+            id="sensor",
+        ),
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            {"ga_sensor": {"state": "1/2/3", "dpt": "1"}},
+            0,
+            id="binary_sensor",
+        ),
+    ],
+)
+async def test_create_entity_unsupported_entity_category(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    create_ui_entity: KnxEntityGenerator,
+    platform: Platform,
+    knx_data: dict[str, Any],
+    read_response: int | tuple[int, ...],
+) -> None:
+    """Test read-only platforms reject `EntityCategory.CONFIG`."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/create_entity",
+            "platform": platform,
+            "data": {
+                "entity": {
+                    "name": "Test config category",
+                    "entity_category": EntityCategory.CONFIG,
+                },
+                "knx": knx_data,
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert not res["result"]["success"]
+    assert res["result"]["errors"][0]["path"] == ["data", "entity", "entity_category"]
+    assert "is not supported by the" in res["result"]["error_base"]
+    assert KNX_CONFIG_STORAGE_KEY not in hass_storage
+
+    entity_entry = await create_ui_entity(
+        platform=platform,
+        entity_data={
+            "name": "Test diagnostic category",
+            "entity_category": EntityCategory.DIAGNOSTIC,
+        },
+        knx_data=knx_data,
+    )
+    await knx.assert_read("1/2/3", response=read_response)
+    assert (
+        entity_registry.async_get(entity_entry.entity_id).entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
+
+
 async def test_update_entity(
     hass: HomeAssistant,
     knx: KNXTestKit,
