@@ -3,9 +3,20 @@
 from neopool_modbus import NeoPoolModbusClient
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the NeoPool services."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NeoPoolConfigEntry) -> bool:

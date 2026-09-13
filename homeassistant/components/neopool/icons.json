@@ -124,5 +124,22 @@
         }
       }
     }
+  },
+  "services": {
+    "get_device_time": {
+      "service": "mdi:clock-check-outline"
+    },
+    "read_register": {
+      "service": "mdi:text-box-search"
+    },
+    "set_device_time": {
+      "service": "mdi:clock-edit-outline"
+    },
+    "set_timer": {
+      "service": "mdi:timer-cog"
+    },
+    "write_register": {
+      "service": "mdi:pencil-box"
+    }
   }
 }

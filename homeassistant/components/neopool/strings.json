@@ -285,6 +285,15 @@
     }
   },
   "exceptions": {
+    "device_not_found": {
+      "message": "No loaded NeoPool device found for device_id {device_id}"
+    },
+    "device_time_read_failed": {
+      "message": "Failed to read the device time: {error}"
+    },
+    "device_time_write_failed": {
+      "message": "Failed to write the device time: {error}"
+    },
     "filtration_boost_active": {
       "message": "Filtration cannot be switched on or off while boost mode is active. Turn off boost mode first."
     },
@@ -297,11 +306,50 @@
     "filtvalve_interval_not_set": {
       "message": "No backwash duration is configured. Set the backwash duration first, then start the backwash."
     },
+    "invalid_register_float": {
+      "message": "Invalid {name} {value}: use an integer, not a float"
+    },
+    "invalid_register_type": {
+      "message": "Invalid {name} {value}: use a decimal number or hex (0x…)"
+    },
+    "invalid_timer": {
+      "message": "Invalid timer name {timer_name}. Valid timers: {valid_timers}"
+    },
+    "invalid_timer_time": {
+      "message": "Invalid timer time format (start: {start}, stop: {stop}). Use HH:MM (e.g. 08:30)."
+    },
     "modbus_communication_error": {
       "message": "An error occurred while communicating with the NeoPool controller: {error}"
     },
+    "multiple_entries_no_device": {
+      "message": "Multiple NeoPool devices are configured. Specify the device to target."
+    },
+    "no_coordinator": {
+      "message": "No NeoPool coordinator found for entry_id {entry_id}"
+    },
+    "no_loaded_entry": {
+      "message": "No loaded NeoPool config entry available"
+    },
+    "register_out_of_range": {
+      "message": "{name} {value} out of range (0-65535)"
+    },
+    "register_read_failed": {
+      "message": "Register read failed at {address}: {error}"
+    },
+    "register_write_failed": {
+      "message": "Register write failed at {address}: {error}"
+    },
     "relay_in_auto_mode": {
       "message": "This relay is currently in automatic mode. Change the mode to manual first to control it directly."
+    },
+    "timer_failed": {
+      "message": "Timer setting failed: {error}"
+    },
+    "write_failed": {
+      "message": "Write to register {address} failed"
+    },
+    "write_verification_failed": {
+      "message": "Write verification failed at {address}: wrote {value}, read back {confirmed}"
     }
   },
   "issues": {
@@ -332,6 +380,98 @@
         "description": "Changes take effect immediately and reload the integration.",
         "title": "NeoPool settings"
       }
+    }
+  },
+  "services": {
+    "get_device_time": {
+      "description": "Read the current wall-clock time from the device RTC and report its drift from Home Assistant.",
+      "fields": {
+        "device_id": {
+          "description": "The NeoPool device to target. Optional when only one is configured.",
+          "name": "Device"
+        }
+      },
+      "name": "Get device time"
+    },
+    "read_register": {
+      "description": "Read one or more Modbus registers and return the raw u16 values. Picks Read Input Registers (FC04) for MEASURE-page addresses (0x0100-0x01FF) and Read Holding Registers (FC03) elsewhere.",
+      "fields": {
+        "address": {
+          "description": "Modbus register address (decimal or hex, e.g. 258 or 0x0102).",
+          "name": "Register address"
+        },
+        "count": {
+          "description": "Number of consecutive registers to read (1-31; the firmware refuses larger requests).",
+          "name": "Count"
+        },
+        "device_id": {
+          "description": "The NeoPool device to target. Optional when only one is configured.",
+          "name": "Device"
+        }
+      },
+      "name": "Read register"
+    },
+    "set_device_time": {
+      "description": "Write the current Home Assistant time to the device RTC.",
+      "fields": {
+        "device_id": {
+          "description": "The NeoPool device to target. Optional when only one is configured.",
+          "name": "Device"
+        }
+      },
+      "name": "Set device time"
+    },
+    "set_timer": {
+      "description": "Set or update a timer on the pool controller.",
+      "fields": {
+        "device_id": {
+          "description": "The NeoPool device to target. Optional when only one is configured.",
+          "name": "Device"
+        },
+        "enable": {
+          "description": "Relay-mode integer (0=disabled, 1=auto, 2=auto_linked, 3=on, 4=off). Used by the relay_mode select platform.",
+          "name": "Enable mode"
+        },
+        "period": {
+          "description": "Repeat interval in seconds for AUX/Light timers (e.g., 86400 = every day). Not used for filtration timers.",
+          "name": "Repeat interval"
+        },
+        "start": {
+          "description": "Start time in HH:MM format (e.g., 08:00).",
+          "name": "Start time"
+        },
+        "stop": {
+          "description": "Stop time in HH:MM format (e.g., 16:00).",
+          "name": "Stop time"
+        },
+        "timer": {
+          "description": "The timer identifier (e.g., filtration1, filtration2, etc.).",
+          "name": "Timer name"
+        }
+      },
+      "name": "Set timer"
+    },
+    "write_register": {
+      "description": "Write a value to a Modbus holding register using FC16 with read-back verification.",
+      "fields": {
+        "address": {
+          "description": "Modbus register address (decimal or hex, e.g. 1539 or 0x0603).",
+          "name": "Register address"
+        },
+        "apply": {
+          "description": "Save to EEPROM and execute after write (default: true).",
+          "name": "Apply"
+        },
+        "device_id": {
+          "description": "The NeoPool device to target. Optional when only one is configured.",
+          "name": "Device"
+        },
+        "value": {
+          "description": "Value to write (0-65535, decimal or hex).",
+          "name": "Value"
+        }
+      },
+      "name": "Write register"
     }
   }
 }
