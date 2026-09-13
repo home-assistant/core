@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.media_player import BrowseError, MediaClass
@@ -14,9 +14,9 @@ from .const import CONF_MEDIA, DOMAIN
 
 IMAGE_MEDIA_URI = f"{URI_SCHEME}{IMAGE_DOMAIN}"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_MEDIA): MediaSelector(
+        probatio.Required(CONF_MEDIA): MediaSelector(
             {"accept": ["directory"], "multiple": True}
         ),
     }

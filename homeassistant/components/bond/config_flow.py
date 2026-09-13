@@ -7,7 +7,7 @@ from typing import Any, override
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from bond_async import Bond, RequestorUUID
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
@@ -23,11 +23,11 @@ from .utils import BondHub
 _LOGGER = logging.getLogger(__name__)
 
 
-USER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): str, vol.Required(CONF_ACCESS_TOKEN): str}
+USER_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_HOST): str, probatio.Required(CONF_ACCESS_TOKEN): str}
 )
-DISCOVERY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
-TOKEN_SCHEMA = vol.Schema({})
+DISCOVERY_SCHEMA = probatio.Schema({probatio.Required(CONF_ACCESS_TOKEN): str})
+TOKEN_SCHEMA = probatio.Schema({})
 
 
 async def async_get_token(hass: HomeAssistant, host: str) -> str | None:

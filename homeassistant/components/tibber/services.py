@@ -5,8 +5,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Final
 
 import aiohttp
+import probatio
 import tibber
-import voluptuous as vol
 
 from homeassistant.core import (
     HomeAssistant,
@@ -27,10 +27,10 @@ PRICE_SERVICE_NAME = "get_prices"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
 
-SERVICE_SCHEMA: Final = vol.Schema(
+SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Optional(ATTR_START): str,
-        vol.Optional(ATTR_END): str,
+        probatio.Optional(ATTR_START): str,
+        probatio.Optional(ATTR_END): str,
     }
 )
 
