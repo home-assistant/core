@@ -45,13 +45,17 @@ def _format_tool(
 ) -> types.Tool:
     """Format tool specification."""
     input_schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
+    mcp_schema: dict[str, Any] = {
+        "type": "object",
+        "properties": input_schema["properties"],
+    }
+    # Omitted by to_openapi when the tool has no required parameters.
+    if required := input_schema.get("required"):
+        mcp_schema["required"] = required
     return types.Tool(
         name=tool.name,
         description=tool.description or "",
-        inputSchema={
-            "type": "object",
-            "properties": input_schema["properties"],
-        },
+        inputSchema=mcp_schema,
     )
 
 

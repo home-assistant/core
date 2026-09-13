@@ -15,6 +15,7 @@ import mcp.client.sse
 import mcp.client.streamable_http
 from mcp.shared.exceptions import McpError
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -42,6 +43,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonObjectType
 
 from .conftest import TEST_LLM_API_ID, MockLLMAPI
 
@@ -78,6 +80,25 @@ EXPECTED_PROMPT_ENTITY_DEFINITION = """
   domain: light
   areas: Kitchen
 """
+
+
+class _StubTool(llm.Tool):
+    """Minimal tool with a configurable parameter schema."""
+
+    name = "test_tool"
+
+    def __init__(self, parameters: vol.Schema) -> None:
+        """Initialize the stub tool."""
+        self.parameters = parameters
+
+    async def async_call(
+        self,
+        hass: HomeAssistant,
+        tool_input: llm.ToolInput,
+        llm_context: llm.LLMContext,
+    ) -> JsonObjectType:
+        """Return an empty result."""
+        return {}
 
 
 @pytest.fixture
@@ -610,6 +631,51 @@ async def test_mcp_tools_list(
     assert tool.inputSchema.get("type") == "object"
     properties = tool.inputSchema.get("properties")
     assert properties.get("name") == {"type": "string"}
+
+
+@pytest.mark.parametrize("llm_hass_api", [TEST_LLM_API_ID])
+@pytest.mark.parametrize(
+    ("parameters", "expected_required"),
+    [
+        pytest.param(
+            vol.Schema({vol.Required("name"): str, vol.Optional("area"): str}),
+            ["name"],
+            id="required-and-optional",
+        ),
+        pytest.param(
+            vol.Schema({vol.Optional("area"): str}),
+            None,
+            id="optional-only",
+        ),
+    ],
+)
+async def test_mcp_tools_list_required_parameters(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+    parameters: vol.Schema,
+    expected_required: list[str] | None,
+) -> None:
+    """Test the tools list advertises the required tool parameters."""
+
+    llm.async_register_api(
+        hass,
+        MockLLMAPI(
+            hass=hass,
+            id=TEST_LLM_API_ID,
+            name="Test API",
+            tools=[_StubTool(parameters)],
+        ),
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_tools()
+
+    tool = next(iter(tool for tool in result.tools if tool.name == "test_tool"))
+    assert tool.inputSchema.get("type") == "object"
+    assert tool.inputSchema.get("required") == expected_required
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
