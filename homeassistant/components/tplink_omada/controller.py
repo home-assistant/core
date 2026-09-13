@@ -56,7 +56,7 @@ class OmadaSiteController:
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
         await self._controller_status_coordinator.async_config_entry_first_refresh()
-        await self._controller_update_coordinator.async_config_entry_first_refresh()
+        await self._controller_update_coordinator.async_request_refresh()
         await self._devices_coordinator.async_config_entry_first_refresh()
 
         devices = self._devices_coordinator.data.values()
