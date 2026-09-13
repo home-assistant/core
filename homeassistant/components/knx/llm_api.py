@@ -9,23 +9,13 @@ stay single-sourced in the libraries.
 """
 
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import MISSING, asdict, dataclass, fields, is_dataclass
+from dataclasses import asdict, dataclass, fields, is_dataclass
 from datetime import date, time
 from enum import Enum
-import types
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Union,
-    cast,
-    get_args,
-    get_origin,
-    get_type_hints,
-    override,
-)
+from typing import TYPE_CHECKING, Any, cast, override
 
 from knx_telegram_store import KnxTelegramStoreException, TelegramStore, mcp as kts_mcp
-import voluptuous as vol
+import probatio
 from xknx import mcp as xknx_mcp
 from xknx.exceptions import XKNXException
 from xknxproject import mcp as xknxproject_mcp
@@ -46,121 +36,88 @@ LLM_API_NAME = "KNX"
 API_PROMPT = (
     "Tools to inspect a KNX installation: stored bus telegrams, the loaded ETS "
     "project (group addresses, devices, communication objects, functions, "
-    "topology, locations), KNX data point types, and live bus "
+    "topology), KNX data point types, and live bus "
     'reads and writes. Address formats: group addresses like "1/2/3", individual '
     'device addresses like "1.1.5", DPTs like "9.001".'
 )
 
 
-type _ToolFunc = Callable[["KNXModule", dict[str, Any]], Awaitable[Any]]
-
-
-def _reject_fractional(value: Any) -> Any:
-    """Reject fractional floats so they are not silently truncated.
-
-    ``vol.Coerce(int)`` calls ``int(value)``, which turns a float like ``5.5``
-    into ``5`` instead of raising. That silently discards data, and in an
-    ``int | float`` union (e.g. a KNX group value) it makes the int validator
-    swallow every float before the float validator is ever tried. Only let
-    floats through that are exactly representable as int (``5.0``).
-    """
-    if isinstance(value, float) and not value.is_integer():
-        raise vol.Invalid("value has a fractional part; not a valid int")
-    return value
-
-
-# ``vol.Coerce(int)`` has to be the validator that does the conversion:
-# ``voluptuous_openapi.convert`` cannot type a bare callable and would advertise
-# the parameter to the LLM as a string.
-_INT = vol.All(_reject_fractional, vol.Coerce(int))
-
-
-def _union_member_order(annotation: Any) -> int:
-    """Sort key placing exact-type union members before coercing ones.
-
-    ``vol.Any`` takes the first member that validates. ``str`` and ``bool`` are
-    plain isinstance checks while the int/float members coerce, so in source
-    order a ``bool | int | float | str`` group value turns the string ``"5"``
-    into the int ``5`` - writing a number where a DPT 16.000 text was meant.
-    """
-    return 0 if annotation in (str, bool) else 1
-
-
-def _validator(annotation: Any) -> Any:
-    """Map a dataclass field annotation to a voluptuous validator."""
-    origin = get_origin(annotation)
-    if origin in (Union, types.UnionType):
-        non_none = [arg for arg in get_args(annotation) if arg is not type(None)]
-        allows_none = len(non_none) != len(get_args(annotation))
-        inner = (
-            _validator(non_none[0])
-            if len(non_none) == 1
-            else vol.Any(
-                *(_validator(arg) for arg in sorted(non_none, key=_union_member_order))
-            )
-        )
-        return vol.Maybe(inner) if allows_none else inner
-    if annotation is str:
-        return str
-    if annotation is bool:
-        return bool
-    if annotation is int:
-        return _INT
-    if annotation is float:
-        return vol.Coerce(float)
-    if origin is list:
-        inner = get_args(annotation) or (str,)
-        return [_validator(inner[0])]
-    # Any, or an unrecognized type: pass through.
-    return object
-
+type _ToolFunc = Callable[["KNXModule", Any], Awaitable[Any]]
 
 # The library ``_paginate`` helpers treat a negative limit as "no limit", which
 # would return a whole ETS project or telegram history in a single tool result,
 # and a negative offset slices from the end. The dataclasses don't express
 # bounds, so they are applied here, by the field names the libraries share.
 _MAX_RESULT_ITEMS = 1000
-_FIELD_BOUNDS = {
-    "limit": vol.Range(min=1, max=_MAX_RESULT_ITEMS),
-    "offset": vol.Range(min=0),
-    "delta_before_ms": vol.Range(min=0),
-    "delta_after_ms": vol.Range(min=0),
+_FIELD_BOUNDS: dict[str, Any] = {
+    "limit": probatio.Range(min=1, max=_MAX_RESULT_ITEMS),
+    "offset": probatio.Range(min=0),
+    "delta_before_ms": probatio.Range(min=0),
+    "delta_after_ms": probatio.Range(min=0),
 }
 _PAGINATION_MARKERS: dict[Any, Any] = {
-    vol.Optional(
+    probatio.Optional(
         "limit", description="Maximum number of results to return.", default=100
-    ): vol.All(_INT, _FIELD_BOUNDS["limit"]),
-    vol.Optional(
+    ): probatio.All(int, _FIELD_BOUNDS["limit"]),
+    probatio.Optional(
         "offset", description="Number of results to skip.", default=0
-    ): vol.All(_INT, _FIELD_BOUNDS["offset"]),
+    ): probatio.All(int, _FIELD_BOUNDS["offset"]),
 }
 
 
-def _schema_from_dataclass(input_type: type) -> vol.Schema:
-    """Build a voluptuous schema from a library ``*.mcp`` input dataclass.
+def _field_description(input_type: type, name: str) -> str | None:
+    """The description a library input dataclass documents a field with."""
+    return next(
+        field.metadata.get("description")
+        for field in fields(input_type)
+        if field.name == name
+    )
 
-    Field descriptions come from ``dataclasses.field`` metadata; a field with a
-    default becomes optional (with that default), otherwise it is required.
+
+def _apply_field_descriptions(schema: probatio.Schema, input_type: type) -> None:
+    """Carry the dataclass field descriptions over to the schema's key markers.
+
+    The libraries keep their parameter descriptions in ``dataclasses.field``
+    metadata rather than in probatio's ``Annotated``/``Key``, so
+    ``DataclassSchema`` cannot pick them up. Its markers live in the mapping
+    schema it wraps together with the dataclass constructor, and probatio
+    exposes no accessor for that mapping - hence reaching in here.
     """
-    hints = get_type_hints(input_type)
-    schema: dict[vol.Marker, Any] = {}
-    for field in fields(input_type):
-        description = field.metadata.get("description")
-        if field.default is not MISSING:
-            marker: vol.Marker = vol.Optional(
-                field.name, description=description, default=field.default
-            )
-        elif field.default_factory is not MISSING:
-            marker = vol.Optional(
-                field.name, description=description, default=field.default_factory
-            )
-        else:
-            marker = vol.Required(field.name, description=description)
-        validator = _validator(hints[field.name])
-        if (bounds := _FIELD_BOUNDS.get(field.name)) is not None:
-            validator = vol.All(validator, bounds)
-        schema[marker] = validator
-    return vol.Schema(schema)
+    mapping = schema.schema.validators[0].schema
+    for marker in mapping:
+        if (description := _field_description(input_type, str(marker))) is not None:
+            marker.description = description
+
+
+def _schema_from_dataclass(input_type: type) -> probatio.Schema:
+    """Build a tool parameter schema from a library ``*.mcp`` input dataclass.
+
+    ``DataclassSchema`` maps each annotation to a validator and constructs the
+    input instance, so a validated call arrives at the library already typed.
+    """
+    bounds = {
+        field.name: _FIELD_BOUNDS[field.name]
+        for field in fields(input_type)
+        if field.name in _FIELD_BOUNDS
+    }
+    schema: probatio.Schema = probatio.DataclassSchema(input_type, bounds)
+    _apply_field_descriptions(schema, input_type)
+    return schema
+
+
+def _paginate(items: list[Any], args: Mapping[str, Any], key: str) -> dict[str, Any]:
+    """Window a library result that the library itself returns in full."""
+    offset: int = args["offset"]
+    limit: int = args["limit"]
+    window = items[offset : offset + limit]
+    limit_reached = offset + limit < len(items)
+    return {
+        key: window,
+        "total_count": len(items),
+        "offset": offset,
+        "next_offset": offset + len(window) if limit_reached else None,
+        "limit_reached": limit_reached,
+    }
 
 
 def _json_safe(value: Any) -> Any:
@@ -209,7 +166,7 @@ class KNXTool(llm.Tool):
         knx: KNXModule,
         name: str,
         description: str,
-        parameters: vol.Schema,
+        parameters: probatio.Schema,
         func: _ToolFunc,
     ) -> None:
         """Initialize the tool."""
@@ -263,43 +220,45 @@ async def _require_project(knx: KNXModule) -> KNXProjectModel:
     return project
 
 
-def _store_func(lib_func: Callable, input_type: type | None = None) -> _ToolFunc:
-    async def _call(knx: KNXModule, args: dict[str, Any]) -> Any:
+def _store_func(lib_func: Callable, *, takes_input: bool = True) -> _ToolFunc:
+    async def _call(knx: KNXModule, args: Any) -> Any:
         store = _require_store(knx)
-        if input_type is None:
-            return await lib_func(store)
-        return await lib_func(store, input_type(**args))
+        if takes_input:
+            return await lib_func(store, args)
+        return await lib_func(store)
 
     return _call
 
 
 def _project_func(
     lib_func: Callable,
-    input_type: type | None = None,
+    *,
+    takes_input: bool = True,
     positional: tuple[str, ...] = (),
 ) -> _ToolFunc:
-    async def _call(knx: KNXModule, args: dict[str, Any]) -> Any:
+    async def _call(knx: KNXModule, args: Any) -> Any:
         project = await _require_project(knx)
         if positional:
             return await lib_func(project, *(args[name] for name in positional))
-        if input_type is None:
-            return await lib_func(project)
-        return await lib_func(project, input_type(**args))
+        if takes_input:
+            return await lib_func(project, args)
+        return await lib_func(project)
 
     return _call
 
 
 def _dpt_func(
     lib_func: Callable,
-    input_type: type | None = None,
+    *,
+    takes_input: bool = True,
     positional: tuple[str, ...] = (),
 ) -> _ToolFunc:
-    async def _call(knx: KNXModule, args: dict[str, Any]) -> Any:
+    async def _call(knx: KNXModule, args: Any) -> Any:
         if positional:
             return await lib_func(*(args[name] for name in positional))
-        if input_type is None:
-            return await lib_func()
-        return await lib_func(input_type(**args))
+        if takes_input:
+            return await lib_func(args)
+        return await lib_func()
 
     return _call
 
@@ -307,93 +266,105 @@ def _dpt_func(
 def _last_values_func() -> _ToolFunc:
     """Page through the last values, which knx-telegram-store returns in full.
 
-    ``get_last_values`` yields one entry per group address ever seen on the
-    bus - thousands on a real installation - and takes no limit, so the window
-    is applied here. Drop this once the library paginates it itself.
+    ``get_last_values`` yields one entry per group address ever seen on the bus
+    - thousands on a real installation - and takes no limit. The backend query
+    carries no ``ORDER BY`` either, so the rows are sorted by destination to
+    keep paging stable. Drop this once the library paginates itself.
     """
 
-    async def _call(knx: KNXModule, args: dict[str, Any]) -> Any:
-        limit = args.pop("limit")
-        offset = args.pop("offset")
+    async def _call(knx: KNXModule, args: Mapping[str, Any]) -> Any:
         telegrams = await kts_mcp.get_last_values(
-            _require_store(knx), kts_mcp.LastValuesInput(**args)
+            _require_store(knx),
+            kts_mcp.LastValuesInput(destinations=args["destinations"]),
         )
-        window = telegrams[offset : offset + limit]
-        limit_reached = offset + limit < len(telegrams)
-        return {
-            "telegrams": window,
-            "total_count": len(telegrams),
-            "offset": offset,
-            "next_offset": offset + len(window) if limit_reached else None,
-            "limit_reached": limit_reached,
-        }
+        telegrams.sort(key=lambda telegram: telegram.destination)
+        return _paginate(telegrams, args, "telegrams")
 
     return _call
 
 
-def _xknx_func(lib_func: Callable, input_type: type | None = None) -> _ToolFunc:
-    async def _call(knx: KNXModule, args: dict[str, Any]) -> Any:
-        if input_type is None:
-            return await lib_func(knx.xknx)
-        return await lib_func(knx.xknx, input_type(**args))
+def _topology_func() -> _ToolFunc:
+    """Page through the topology areas, which xknxproject returns in full."""
+
+    async def _call(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+        result = await xknxproject_mcp.get_topology(await _require_project(knx))
+        return _paginate(result.areas, args, "areas")
 
     return _call
 
 
-def _tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
+def _xknx_func(lib_func: Callable, *, takes_input: bool = True) -> _ToolFunc:
+    async def _call(knx: KNXModule, args: Any) -> Any:
+        if takes_input:
+            return await lib_func(knx.xknx, args)
+        return await lib_func(knx.xknx)
+
+    return _call
+
+
+def _tool_specs() -> list[tuple[str, str, probatio.Schema, _ToolFunc]]:
     return [
         (
             "query_telegrams",
             "Search stored KNX telegrams by time range, source/destination address, "
             "type, direction and DPT, with optional context windows around matches.",
             _schema_from_dataclass(kts_mcp.QueryTelegramsInput),
-            _store_func(kts_mcp.query_telegrams, kts_mcp.QueryTelegramsInput),
+            _store_func(kts_mcp.query_telegrams),
         ),
         (
             "get_last_values",
             "Most recent telegram for each group address, optionally filtered to given "
             "destinations.",
-            _schema_from_dataclass(kts_mcp.LastValuesInput).extend(_PAGINATION_MARKERS),
+            probatio.Schema(
+                {
+                    probatio.Optional(
+                        "destinations",
+                        description=_field_description(
+                            kts_mcp.LastValuesInput, "destinations"
+                        ),
+                        default=list,
+                    ): [str],
+                    **_PAGINATION_MARKERS,
+                }
+            ),
             _last_values_func(),
         ),
         (
             "get_store_stats",
             "Telegram count, covered time range, on-disk size, backend and retention.",
-            vol.Schema({}),
-            _store_func(kts_mcp.get_store_stats),
+            probatio.Schema({}),
+            _store_func(kts_mcp.get_store_stats, takes_input=False),
         ),
         (
             "get_store_capabilities",
             "What the telegram-store backend supports (time range, pagination, size, …).",
-            vol.Schema({}),
-            _store_func(kts_mcp.get_store_capabilities),
+            probatio.Schema({}),
+            _store_func(kts_mcp.get_store_capabilities, takes_input=False),
         ),
         (
             "count_telegrams",
             "Total number of stored telegrams.",
-            vol.Schema({}),
-            _store_func(kts_mcp.count_telegrams),
+            probatio.Schema({}),
+            _store_func(kts_mcp.count_telegrams, takes_input=False),
         ),
         (
             "get_project_info",
             "Loaded ETS project metadata and top-level entity counts.",
-            vol.Schema({}),
-            _project_func(xknxproject_mcp.get_project_info),
+            probatio.Schema({}),
+            _project_func(xknxproject_mcp.get_project_info, takes_input=False),
         ),
         (
             "list_group_addresses",
             "List project group addresses. Text matches address/name/description.",
             _schema_from_dataclass(xknxproject_mcp.GroupAddressFilter),
-            _project_func(
-                xknxproject_mcp.list_group_addresses, xknxproject_mcp.GroupAddressFilter
-            ),
+            _project_func(xknxproject_mcp.list_group_addresses),
         ),
         (
             "describe_group_address",
             "Resolve one group address to its communication objects and devices.",
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "address", description='Group address to resolve, e.g. "1/2/3".'
                     ): str
                 }
@@ -406,45 +377,34 @@ def _tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
             "list_devices",
             "List project devices. Text matches individual address/name/manufacturer.",
             _schema_from_dataclass(xknxproject_mcp.DeviceFilter),
-            _project_func(xknxproject_mcp.list_devices, xknxproject_mcp.DeviceFilter),
+            _project_func(xknxproject_mcp.list_devices),
         ),
         (
             "list_communication_objects",
             "List communication objects, optionally scoped to a device and/or a linked "
             "group address.",
             _schema_from_dataclass(xknxproject_mcp.CommunicationObjectFilter),
-            _project_func(
-                xknxproject_mcp.list_communication_objects,
-                xknxproject_mcp.CommunicationObjectFilter,
-            ),
+            _project_func(xknxproject_mcp.list_communication_objects),
         ),
         (
             "get_topology",
             "Bus topology: areas, their lines and device addresses.",
-            vol.Schema({}),
-            _project_func(xknxproject_mcp.get_topology),
-        ),
-        (
-            "list_locations",
-            "Building/location tree (spaces, nested, with devices and functions).",
-            vol.Schema({}),
-            _project_func(xknxproject_mcp.list_locations),
+            probatio.Schema(dict(_PAGINATION_MARKERS)),
+            _topology_func(),
         ),
         (
             "list_functions",
             "List project functions/functional blocks. Text matches identifier/name/type.",
             _schema_from_dataclass(xknxproject_mcp.FunctionFilter),
-            _project_func(
-                xknxproject_mcp.list_functions, xknxproject_mcp.FunctionFilter
-            ),
+            _project_func(xknxproject_mcp.list_functions),
         ),
         (
             "describe_function",
             "Resolve one function/functional block by identifier to its group address "
             "references and roles.",
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "identifier",
                         description="Function/functional-block identifier to resolve.",
                     ): str
@@ -459,15 +419,15 @@ def _tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
             "List known KNX data point types. Main restricts to a DPT main number; text "
             "matches the DPT number/value type/unit.",
             _schema_from_dataclass(xknx_mcp.DptFilter),
-            _dpt_func(xknx_mcp.list_dpts, xknx_mcp.DptFilter),
+            _dpt_func(xknx_mcp.list_dpts),
         ),
         (
             "describe_dpt",
             "Resolve a DPT number or value type name to its definition (value type, "
             "unit, numeric bounds).",
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "dpt",
                         description='DPT number ("9.001") or value type name ("temperature").',
                     ): str
@@ -479,37 +439,37 @@ def _tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
             "encode_value",
             "Encode a native value using a specific DPT into its raw payload bytes.",
             _schema_from_dataclass(xknx_mcp.EncodeDptPayloadInput),
-            _dpt_func(xknx_mcp.encode_dpt_payload, xknx_mcp.EncodeDptPayloadInput),
+            _dpt_func(xknx_mcp.encode_dpt_payload),
         ),
         (
             "decode_payload",
             "Decode raw payload bytes (or an integer) using a specific DPT.",
             _schema_from_dataclass(xknx_mcp.DecodeDptPayloadInput),
-            _dpt_func(xknx_mcp.decode_dpt_payload, xknx_mcp.DecodeDptPayloadInput),
+            _dpt_func(xknx_mcp.decode_dpt_payload),
         ),
         (
             "get_connection_status",
             "KNX bus connection state, connection type and local individual address.",
-            vol.Schema({}),
-            _xknx_func(xknx_mcp.get_connection_status),
+            probatio.Schema({}),
+            _xknx_func(xknx_mcp.get_connection_status, takes_input=False),
         ),
         (
             "read_group_value",
             "Read a group address live from the bus (sends a GroupValueRead and waits).",
             _schema_from_dataclass(xknx_mcp.GroupValueReadInput),
-            _xknx_func(xknx_mcp.read_group_value, xknx_mcp.GroupValueReadInput),
+            _xknx_func(xknx_mcp.read_group_value),
         ),
         (
             "send_group_value_read",
             "Queue a GroupValueRead telegram to trigger a response on the bus.",
             _schema_from_dataclass(xknx_mcp.GroupAddressInput),
-            _xknx_func(xknx_mcp.send_group_value_read, xknx_mcp.GroupAddressInput),
+            _xknx_func(xknx_mcp.send_group_value_read),
         ),
         (
             "send_group_value_write",
             "Write a value to a group address (queues a GroupValueWrite).",
             _schema_from_dataclass(xknx_mcp.GroupValueWriteInput),
-            _xknx_func(xknx_mcp.send_group_value_write, xknx_mcp.GroupValueWriteInput),
+            _xknx_func(xknx_mcp.send_group_value_write),
         ),
     ]
 

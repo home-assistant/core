@@ -5,10 +5,14 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
-from knx_telegram_store.mcp import QueryTelegramsResult, TelegramSummary
+from knx_telegram_store.mcp import (
+    QueryTelegramsInput,
+    QueryTelegramsResult,
+    TelegramSummary,
+)
+import probatio
 from probatio import to_openapi
 import pytest
-import voluptuous as vol
 from xknx.dpt import DPTArray, DPTTime
 
 from homeassistant.components.knx import llm_api
@@ -87,36 +91,43 @@ async def test_llm_api_registered_after_setup(
 
 
 def test_schema_from_dataclass_defaults_and_descriptions() -> None:
-    """Optional fields carry defaults and their library metadata descriptions."""
+    """Optional fields carry defaults and their library metadata descriptions.
+
+    The libraries document parameters in `dataclasses.field` metadata, which
+    probatio's `DataclassSchema` does not read, so `llm_api` carries them over.
+    """
     tool = _tool(llm_api._build_tools(_mock_knx()), "query_telegrams")
 
-    descriptions = {
-        marker.schema: marker.description for marker in tool.parameters.schema
-    }
-    assert descriptions["limit"] == "Maximum number of results to return."
-    assert all(description for description in descriptions.values())
+    properties = to_openapi(tool.parameters)["properties"]
+    assert properties["limit"]["description"] == "Maximum number of results to return."
+    assert all("description" in prop for prop in properties.values())
 
     # Omitted optional fields are filled with their dataclass defaults.
     result = tool.parameters({})
-    assert result["limit"] == 100
-    assert result["order_descending"] is True
-    assert result["sources"] == []
+    assert isinstance(result, QueryTelegramsInput)
+    assert result.limit == 100
+    assert result.order_descending is True
+    assert result.sources == []
 
 
 @pytest.mark.parametrize(
     ("args", "expected"),
     [
-        ({"main": "9"}, 9),  # string coerced to int
-        ({"main": 9}, 9),
-        ({}, None),  # nullable field defaults to None, not rejected
+        pytest.param({"main": 9}, 9, id="given"),
+        pytest.param({}, None, id="nullable_default"),
     ],
 )
-def test_schema_coercion_and_nullable(
-    args: dict[str, Any], expected: int | None
-) -> None:
-    """Integer coercion works and nullable defaults are accepted."""
+def test_schema_nullable_field(args: dict[str, Any], expected: int | None) -> None:
+    """A nullable field defaults to None instead of being rejected."""
     tool = _tool(llm_api._build_tools(_mock_knx()), "list_dpts")
-    assert tool.parameters(args)["main"] == expected
+    assert tool.parameters(args).main == expected
+
+
+def test_schema_validates_types_without_coercing() -> None:
+    """Probatio type-checks, so a stringified number is an error, not an int."""
+    tool = _tool(llm_api._build_tools(_mock_knx()), "list_dpts")
+    with pytest.raises(probatio.Invalid):
+        tool.parameters({"main": "9"})
 
 
 @pytest.mark.parametrize(
@@ -124,10 +135,9 @@ def test_schema_coercion_and_nullable(
     [
         (True, True, bool),
         (5, 5, int),
-        (5.5, 5.5, float),  # not truncated to 5 by the int branch of the union
-        (5.0, 5, int),  # losslessly representable as int
+        (5.5, 5.5, float),
         ("on", "on", str),
-        # A numeric-looking string must not be coerced - DPT 16.000 sends text.
+        # A numeric-looking string stays text - DPT 16.000 sends exactly that.
         ("5", "5", str),
         ("21.5", "21.5", str),
         ([1, 2], [1, 2], list),
@@ -142,8 +152,8 @@ def test_schema_union_preserves_numeric_types(
         "send_group_value_write",
     )
     result = tool.parameters({"group_address": "1/2/3", "value": value})
-    assert result["value"] == expected
-    assert type(result["value"]) is expected_type
+    assert result.value == expected
+    assert type(result.value) is expected_type
 
 
 @pytest.mark.parametrize(
@@ -275,7 +285,7 @@ def test_serialize_normalizes_nested_containers(
 def test_pagination_bounds_are_enforced(tool_name: str, args: dict[str, Any]) -> None:
     """A negative limit disables pagination in the libraries - reject it here."""
     tool = _tool(llm_api._build_tools(_mock_knx()), tool_name)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         tool.parameters(args)
 
 
@@ -291,7 +301,7 @@ def test_pagination_bounds_are_advertised_to_the_llm() -> None:
 def test_schema_required_field_is_enforced() -> None:
     """A field without a default (ad-hoc arg) is required."""
     tool = _tool(llm_api._build_tools(_mock_knx()), "describe_dpt")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         tool.parameters({})
 
 
@@ -323,12 +333,14 @@ async def test_query_telegrams_tool_call(hass: HomeAssistant) -> None:
         tool = _tool(llm_api._build_tools(knx), "query_telegrams")
         result = await tool.async_call(
             hass,
-            llm.ToolInput(tool_name="query_telegrams", tool_args={"limit": "5"}),
+            llm.ToolInput(tool_name="query_telegrams", tool_args={"limit": 5}),
             _llm_context(),
         )
 
     assert query.await_args.args[0] is store
-    assert query.await_args.args[1].limit == 5  # coerced from "5"
+    # The schema constructs the library input, so the tool never builds one.
+    assert isinstance(query.await_args.args[1], QueryTelegramsInput)
+    assert query.await_args.args[1].limit == 5
     assert result["total_count"] == 0
 
 
@@ -450,3 +462,48 @@ async def test_get_last_values_is_paginated(
     assert len(result["telegrams"]) == expected_count
     assert result["total_count"] == 2500
     assert result["next_offset"] == expected_next_offset
+
+
+async def test_get_last_values_is_ordered(hass: HomeAssistant) -> None:
+    """The backend query has no ORDER BY, so paging needs a stable sort."""
+    telegrams = [_telegram_summary(f"1/1/{index}") for index in (3, 1, 2)]
+    knx = _mock_knx(store=Mock())
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(
+            llm_api.kts_mcp, "get_last_values", AsyncMock(return_value=telegrams)
+        )
+        tool = _tool(llm_api._build_tools(knx), "get_last_values")
+        result = await tool.async_call(
+            hass,
+            llm.ToolInput(tool_name="get_last_values", tool_args={}),
+            _llm_context(),
+        )
+
+    assert [telegram["destination"] for telegram in result["telegrams"]] == [
+        "1/1/1",
+        "1/1/2",
+        "1/1/3",
+    ]
+
+
+async def test_get_topology_is_paginated(hass: HomeAssistant) -> None:
+    """Xknxproject returns every area at once, which a large bus makes huge."""
+    project = {
+        "topology": {
+            str(index): {"name": f"Area {index}", "description": "", "lines": {}}
+            for index in range(5)
+        }
+    }
+    tool = _tool(llm_api._build_tools(_mock_knx(project=project)), "get_topology")
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool_name="get_topology", tool_args={"limit": 2}),
+        _llm_context(),
+    )
+
+    assert len(result["areas"]) == 2
+    assert result["total_count"] == 5
+    assert result["next_offset"] == 2
+    assert result["limit_reached"] is True
