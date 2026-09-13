@@ -7,7 +7,7 @@ from urllib.parse import quote, unquote, urlparse, urlunparse
 
 from knx_telegram_store import ConnectionErrorKind
 from knx_telegram_store.backends.postgres import PostgresStore
-import voluptuous as vol
+import probatio
 from xknx import XKNX
 from xknx.exceptions.exception import (
     CommunicationError,
@@ -118,13 +118,13 @@ OPTION_MANUAL_TUNNEL: Final = "Manual"
 
 _IA_SELECTOR = selector.TextSelector()
 _IP_SELECTOR = selector.TextSelector()
-_PORT_SELECTOR = vol.All(
+_PORT_SELECTOR = probatio.All(
     selector.NumberSelector(
         selector.NumberSelectorConfig(
             min=1, max=65535, mode=selector.NumberSelectorMode.BOX
         ),
     ),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
 
 
@@ -314,12 +314,12 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             default_connection_type = CONF_KNX_TUNNELING
 
         fields = {
-            vol.Required(
+            probatio.Required(
                 CONF_KNX_CONNECTION_TYPE, default=default_connection_type
-            ): vol.In(supported_connection_types)
+            ): probatio.In(supported_connection_types)
         }
         return self.async_show_form(
-            step_id="connection_type", data_schema=vol.Schema(fields)
+            step_id="connection_type", data_schema=probatio.Schema(fields)
         )
 
     async def async_step_tunnel(
@@ -393,10 +393,10 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 for tunnel in self._found_tunnels
                 if tunnel.ip_addr == self.initial_data.get(CONF_HOST)
             ),
-            vol.UNDEFINED,
+            probatio.UNDEFINED,
         )
         fields = {
-            vol.Required(
+            probatio.Required(
                 CONF_KNX_GATEWAY, default=default_tunnel
             ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
@@ -405,7 +405,9 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             )
         }
-        return self.async_show_form(step_id="tunnel", data_schema=vol.Schema(fields))
+        return self.async_show_form(
+            step_id="tunnel", data_schema=probatio.Schema(fields)
+        )
 
     async def async_step_tcp_tunnel_endpoint(
         self, user_input: dict | None = None
@@ -458,9 +460,9 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="tcp_tunnel_endpoint",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_KNX_TUNNEL_ENDPOINT_IA, default=default_endpoint
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
@@ -486,7 +488,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 _host = user_input[CONF_HOST]
                 _host_ip = await xknx_validate_ip(_host)
                 ip_v4_validator(_host_ip, multicast=False)
-            except vol.Invalid, XKNXException:
+            except probatio.Invalid, XKNXException:
                 errors[CONF_HOST] = "invalid_ip_address"
 
             _local_ip = None
@@ -494,7 +496,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 try:
                     _local_ip = await xknx_validate_ip(_local)
                     ip_v4_validator(_local_ip, multicast=False)
-                except vol.Invalid, XKNXException:
+                except probatio.Invalid, XKNXException:
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             selected_tunneling_type = user_input[CONF_KNX_TUNNELING_TYPE]
@@ -579,21 +581,21 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         fields: VolDictType = {
-            vol.Required(CONF_KNX_TUNNELING_TYPE, default=default_type): vol.In(
-                CONF_KNX_TUNNELING_TYPE_LABELS
-            ),
-            vol.Required(CONF_HOST, default=ip_address): _IP_SELECTOR,
-            vol.Required(CONF_PORT, default=port): _PORT_SELECTOR,
-            vol.Required(
+            probatio.Required(
+                CONF_KNX_TUNNELING_TYPE, default=default_type
+            ): probatio.In(CONF_KNX_TUNNELING_TYPE_LABELS),
+            probatio.Required(CONF_HOST, default=ip_address): _IP_SELECTOR,
+            probatio.Required(CONF_PORT, default=port): _PORT_SELECTOR,
+            probatio.Required(
                 CONF_KNX_ROUTE_BACK, default=_route_back
             ): selector.BooleanSelector(),
-            vol.Optional(CONF_KNX_LOCAL_IP): _IP_SELECTOR,
+            probatio.Optional(CONF_KNX_LOCAL_IP): _IP_SELECTOR,
         }
 
         if not self._found_tunnels and not errors.get("base"):
             errors["base"] = "no_tunnel_discovered"
         return self.async_show_form(
-            step_id="manual_tunnel", data_schema=vol.Schema(fields), errors=errors
+            step_id="manual_tunnel", data_schema=probatio.Schema(fields), errors=errors
         )
 
     async def async_step_secure_tunnel_manual(
@@ -613,24 +615,24 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.finish_flow()
 
         fields = {
-            vol.Required(
+            probatio.Required(
                 CONF_KNX_SECURE_USER_ID,
                 default=self.initial_data.get(CONF_KNX_SECURE_USER_ID, 2),
-            ): vol.All(
+            ): probatio.All(
                 selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=1, max=127, mode=selector.NumberSelectorMode.BOX
                     ),
                 ),
-                vol.Coerce(int),
+                probatio.Coerce(int),
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_KNX_SECURE_USER_PASSWORD,
                 default=self.initial_data.get(CONF_KNX_SECURE_USER_PASSWORD),
             ): selector.TextSelector(
                 selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
                 default=self.initial_data.get(CONF_KNX_SECURE_DEVICE_AUTHENTICATION),
             ): selector.TextSelector(
@@ -639,7 +641,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="secure_tunnel_manual",
-            data_schema=vol.Schema(fields),
+            data_schema=probatio.Schema(fields),
             errors=errors,
         )
 
@@ -670,17 +672,17 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.finish_flow()
 
         fields = {
-            vol.Required(
+            probatio.Required(
                 CONF_KNX_ROUTING_BACKBONE_KEY,
                 default=self.initial_data.get(CONF_KNX_ROUTING_BACKBONE_KEY),
             ): selector.TextSelector(
                 selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE,
                 default=self.initial_data.get(CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE)
                 or 1000,
-            ): vol.All(
+            ): probatio.All(
                 selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=400,
@@ -689,12 +691,12 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                         mode=selector.NumberSelectorMode.BOX,
                     ),
                 ),
-                vol.Coerce(int),
+                probatio.Coerce(int),
             ),
         }
         return self.async_show_form(
             step_id="secure_routing_manual",
-            data_schema=vol.Schema(fields),
+            data_schema=probatio.Schema(fields),
             errors=errors,
         )
 
@@ -737,17 +739,17 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self.async_step_knxkeys_tunnel_select()
 
         fields = {
-            vol.Required(CONF_KEYRING_FILE): selector.FileSelector(
+            probatio.Required(CONF_KEYRING_FILE): selector.FileSelector(
                 config=selector.FileSelectorConfig(accept=".knxkeys")
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_KNX_KNXKEY_PASSWORD,
                 default=self.initial_data.get(CONF_KNX_KNXKEY_PASSWORD),
             ): selector.TextSelector(),
         }
         return self.async_show_form(
             step_id="secure_knxkeys",
-            data_schema=vol.Schema(fields),
+            data_schema=probatio.Schema(fields),
             errors=errors,
         )
 
@@ -826,9 +828,9 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="knxkeys_tunnel_select",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_KNX_TUNNEL_ENDPOINT_IA, default=default_endpoint
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
@@ -866,17 +868,17 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 ia_validator(_individual_address)
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors[CONF_KNX_INDIVIDUAL_ADDRESS] = "invalid_individual_address"
             try:
                 ip_v4_validator(_multicast_group, multicast=True)
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors[CONF_KNX_MCAST_GRP] = "invalid_ip_address"
             if _local := (user_input.get(CONF_KNX_LOCAL_IP) or None):
                 try:
                     _local_ip = await xknx_validate_ip(_local)
                     ip_v4_validator(_local_ip, multicast=False)
-                except vol.Invalid, XKNXException:
+                except probatio.Invalid, XKNXException:
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             if not errors:
@@ -910,18 +912,22 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         fields: VolDictType = {
-            vol.Required(
+            probatio.Required(
                 CONF_KNX_INDIVIDUAL_ADDRESS, default=_individual_address
             ): _IA_SELECTOR,
-            vol.Required(
+            probatio.Required(
                 CONF_KNX_ROUTING_SECURE, default=default_secure_routing_enable
             ): selector.BooleanSelector(),
-            vol.Required(CONF_KNX_MCAST_GRP, default=_multicast_group): _IP_SELECTOR,
-            vol.Required(CONF_KNX_MCAST_PORT, default=_multicast_port): _PORT_SELECTOR,
-            vol.Optional(CONF_KNX_LOCAL_IP): _IP_SELECTOR,
+            probatio.Required(
+                CONF_KNX_MCAST_GRP, default=_multicast_group
+            ): _IP_SELECTOR,
+            probatio.Required(
+                CONF_KNX_MCAST_PORT, default=_multicast_port
+            ): _PORT_SELECTOR,
+            probatio.Optional(CONF_KNX_LOCAL_IP): _IP_SELECTOR,
         }
         return self.async_show_form(
-            step_id="routing", data_schema=vol.Schema(fields), errors=errors
+            step_id="routing", data_schema=probatio.Schema(fields), errors=errors
         )
 
     async def async_step_secure_key_source_menu_tunnel(
@@ -988,18 +994,18 @@ class KNXOptionsFlow(OptionsFlowWithReload):
             return self.finish_flow()
 
         data_schema = {
-            vol.Required(
+            probatio.Required(
                 CONF_KNX_STATE_UPDATER,
                 default=self.initial_options.get(
                     CONF_KNX_STATE_UPDATER, CONF_KNX_DEFAULT_STATE_UPDATER
                 ),
             ): selector.BooleanSelector(),
-            vol.Required(
+            probatio.Required(
                 CONF_KNX_RATE_LIMIT,
                 default=self.initial_options.get(
                     CONF_KNX_RATE_LIMIT, CONF_KNX_DEFAULT_RATE_LIMIT
                 ),
-            ): vol.All(
+            ): probatio.All(
                 selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=0,
@@ -1007,18 +1013,18 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                         mode=selector.NumberSelectorMode.BOX,
                     ),
                 ),
-                vol.Coerce(int),
+                probatio.Coerce(int),
             ),
-            vol.Required(CONF_KNX_TELEGRAM_STORE_SECTION): data_entry_flow.section(
-                vol.Schema(
+            probatio.Required(CONF_KNX_TELEGRAM_STORE_SECTION): data_entry_flow.section(
+                probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
                             default=self.initial_options.get(
                                 CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
                                 KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
                             ),
-                        ): vol.All(
+                        ): probatio.All(
                             selector.NumberSelector(
                                 selector.NumberSelectorConfig(
                                     min=1,
@@ -1026,15 +1032,15 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                                     unit_of_measurement="h",
                                 ),
                             ),
-                            vol.Coerce(int),
+                            probatio.Coerce(int),
                         ),
-                        vol.Required(
+                        probatio.Required(
                             CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
                             default=self.initial_options.get(
                                 CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
                                 KNX_TELEGRAM_DB_RETENTION_DEFAULT,
                             ),
-                        ): vol.All(
+                        ): probatio.All(
                             selector.NumberSelector(
                                 selector.NumberSelectorConfig(
                                     min=0,
@@ -1042,9 +1048,9 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                                     unit_of_measurement="days",
                                 ),
                             ),
-                            vol.Coerce(int),
+                            probatio.Coerce(int),
                         ),
-                        vol.Required(
+                        probatio.Required(
                             CONF_KNX_TELEGRAM_DB_BACKEND,
                             default=self.initial_options.get(
                                 CONF_KNX_TELEGRAM_DB_BACKEND,
@@ -1066,7 +1072,7 @@ class KNXOptionsFlow(OptionsFlowWithReload):
         }
         return self.async_show_form(
             step_id="communication_settings",
-            data_schema=vol.Schema(data_schema),
+            data_schema=probatio.Schema(data_schema),
             last_step=False,
         )
 
@@ -1095,16 +1101,16 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 )
                 return self.finish_flow()
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_KNX_TELEGRAM_DB_HOST,
                     default=parsed.get(CONF_KNX_TELEGRAM_DB_HOST, "localhost"),
                 ): selector.TextSelector(),
-                vol.Required(
+                probatio.Required(
                     CONF_KNX_TELEGRAM_DB_PORT,
                     default=parsed.get(CONF_KNX_TELEGRAM_DB_PORT, 5432),
-                ): vol.All(
+                ): probatio.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             min=1,
@@ -1112,22 +1118,22 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
-                    vol.Coerce(int),
+                    probatio.Coerce(int),
                 ),
-                vol.Required(
+                probatio.Required(
                     CONF_KNX_TELEGRAM_DB_USER,
                     default=parsed.get(CONF_KNX_TELEGRAM_DB_USER, ""),
                 ): selector.TextSelector(),
-                vol.Required(
+                probatio.Required(
                     CONF_KNX_TELEGRAM_DB_PASSWORD, default=""
                 ): selector.TextSelector(
                     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
                 ),
-                vol.Required(
+                probatio.Required(
                     CONF_KNX_TELEGRAM_DB_DATABASE,
                     default=parsed.get(CONF_KNX_TELEGRAM_DB_DATABASE, "knx_telegrams"),
                 ): selector.TextSelector(),
-                vol.Required(
+                probatio.Required(
                     CONF_KNX_TELEGRAM_DB_TLS,
                     default=parsed.get(CONF_KNX_TELEGRAM_DB_TLS, False),
                 ): selector.BooleanSelector(),

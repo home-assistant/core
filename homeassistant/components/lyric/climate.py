@@ -8,7 +8,7 @@ from typing import Any, override
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -108,7 +108,7 @@ SERVICE_HOLD_TIME = "set_hold_time"
 ATTR_TIME_PERIOD = "time_period"
 
 SCHEMA_HOLD_TIME: VolDictType = {
-    vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
+    probatio.Required(ATTR_TIME_PERIOD, default="01:00:00"): probatio.All(
         cv.time_period,
         cv.positive_timedelta,
         lambda td: strftime("%H:%M:%S", localtime(time() + td.total_seconds())),

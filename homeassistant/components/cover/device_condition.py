@@ -1,6 +1,6 @@
 """Provides device automations for Cover."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_ABOVE,
@@ -28,16 +28,16 @@ from . import DOMAIN, CoverEntityFeature, CoverEntityStateAttribute, CoverState
 POSITION_CONDITION_TYPES = {"is_position", "is_tilt_position"}
 STATE_CONDITION_TYPES = {"is_open", "is_closed", "is_opening", "is_closing"}
 
-POSITION_CONDITION_SCHEMA = vol.All(
+POSITION_CONDITION_SCHEMA = probatio.All(
     DEVICE_CONDITION_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            vol.Required(CONF_TYPE): vol.In(POSITION_CONDITION_TYPES),
-            vol.Optional(CONF_ABOVE): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+            probatio.Required(CONF_TYPE): probatio.In(POSITION_CONDITION_TYPES),
+            probatio.Optional(CONF_ABOVE): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             ),
-            vol.Optional(CONF_BELOW): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Optional(CONF_BELOW): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             ),
         }
     ),
@@ -46,12 +46,12 @@ POSITION_CONDITION_SCHEMA = vol.All(
 
 STATE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(STATE_CONDITION_TYPES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(STATE_CONDITION_TYPES),
     }
 )
 
-CONDITION_SCHEMA = vol.Any(POSITION_CONDITION_SCHEMA, STATE_CONDITION_SCHEMA)
+CONDITION_SCHEMA = probatio.Any(POSITION_CONDITION_SCHEMA, STATE_CONDITION_SCHEMA)
 
 
 async def async_get_conditions(
@@ -93,19 +93,19 @@ async def async_get_conditions(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List condition capabilities."""
     if config[CONF_TYPE] not in ["is_position", "is_tilt_position"]:
         return {}
 
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Optional(CONF_ABOVE, default=0): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=100)
+                probatio.Optional(CONF_ABOVE, default=0): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=0, max=100)
                 ),
-                vol.Optional(CONF_BELOW, default=100): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=100)
+                probatio.Optional(CONF_BELOW, default=100): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=0, max=100)
                 ),
             }
         )

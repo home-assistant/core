@@ -7,7 +7,7 @@ import logging
 import time
 from typing import cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK,
@@ -120,9 +120,9 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             required_slots={
                 ATTR_MEDIA_VOLUME_LEVEL: intent.IntentSlotInfo(
                     description="The volume percentage of the media player",
-                    value_schema=vol.All(
-                        vol.Coerce(int),
-                        vol.Range(min=0, max=100),
+                    value_schema=probatio.All(
+                        probatio.Coerce(int),
+                        probatio.Range(min=0, max=100),
                         lambda val: val / 100,
                     ),
                 ),
@@ -253,7 +253,7 @@ class MediaPlayerMuteUnmuteHandler(intent.ServiceIntentHandler):
             optional_slots={
                 ATTR_MEDIA_VOLUME_MUTED: intent.IntentSlotInfo(
                     description="Whether the media player should be muted or unmuted",
-                    value_schema=vol.Boolean(),
+                    value_schema=probatio.Boolean(),
                 ),
             },
             description=(
@@ -282,14 +282,16 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
 
     intent_type = INTENT_MEDIA_SEARCH_AND_PLAY
     slot_schema = {
-        vol.Required("search_query"): cv.string,
-        vol.Optional("media_class"): vol.In([cls.value for cls in MediaClass]),
+        probatio.Required("search_query"): cv.string,
+        probatio.Optional("media_class"): probatio.In(
+            [cls.value for cls in MediaClass]
+        ),
         # Optional name/area/floor slots handled by intent matcher
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
-        vol.Optional("floor"): cv.string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
+        probatio.Optional("floor"): cv.string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {DOMAIN}
 
@@ -409,21 +411,21 @@ class MediaSetVolumeRelativeHandler(intent.IntentHandler):
 
     intent_type = INTENT_SET_VOLUME_RELATIVE
     slot_schema = {
-        vol.Required("volume_step"): vol.Any(
+        probatio.Required("volume_step"): probatio.Any(
             "up",
             "down",
-            vol.All(
-                vol.Coerce(int),
-                vol.Range(min=-100, max=100),
+            probatio.All(
+                probatio.Coerce(int),
+                probatio.Range(min=-100, max=100),
                 lambda val: val / 100,
             ),
         ),
         # Optional name/area/floor slots handled by intent matcher
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
-        vol.Optional("floor"): cv.string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
+        probatio.Optional("floor"): cv.string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {DOMAIN}
 
