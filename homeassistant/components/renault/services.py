@@ -1,12 +1,15 @@
 """Support for Renault services."""
 
-from datetime import UTC, datetime, time
+from datetime import UTC, datetime, time, timedelta
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any
 
 import probatio
-from renault_api.kamereon.models import KamereonVehicleChargingSettingsData
+from renault_api.kamereon.models import (
+    ChargeSchedule,
+    KamereonVehicleChargingSettingsData,
+)
 
 from homeassistant.core import (
     HomeAssistant,
@@ -198,14 +201,43 @@ async def charge_set_schedules(service_call: ServiceCall) -> None:
     )
 
 
-def _format_charge_schedule_time(start_time: str | None) -> str | None:
+def _format_charge_schedule_time(
+    day: str, start_time: str | None
+) -> tuple[str, str | None]:
     """Format charge schedule start time for the service response."""
     if start_time is None:
-        return None
+        return day, None
 
     utc_time = time.fromisoformat(start_time.removeprefix("T").removesuffix("Z"))
-    utc_datetime = datetime.combine(dt_util.utcnow().date(), utc_time, UTC)
-    return dt_util.as_local(utc_datetime).strftime("%H:%M")
+    current_date = dt_util.utcnow().date()
+    monday_date = current_date - timedelta(days=current_date.weekday())
+    utc_datetime = datetime.combine(
+        monday_date + timedelta(days=CHARGE_SCHEDULE_DAYS.index(day)),
+        utc_time,
+        UTC,
+    )
+    local_datetime = dt_util.as_local(utc_datetime)
+    return CHARGE_SCHEDULE_DAYS[local_datetime.weekday()], local_datetime.strftime(
+        "%H:%M"
+    )
+
+
+def _serialize_charge_schedule_days(
+    schedule: ChargeSchedule,
+) -> dict[str, dict[str, Any]]:
+    """Serialize charge schedule days for the service response."""
+    days: dict[str, dict[str, Any]] = {}
+    for day in CHARGE_SCHEDULE_DAYS:
+        if (day_schedule := getattr(schedule, day)) is None:
+            continue
+        local_day, start_time = _format_charge_schedule_time(
+            day, day_schedule.startTime
+        )
+        days[local_day] = {
+            "start_time": start_time,
+            "duration": day_schedule.duration,
+        }
+    return days
 
 
 def _serialize_charge_schedules(
@@ -222,16 +254,7 @@ def _serialize_charge_schedules(
             {
                 "id": schedule.id,
                 "activated": schedule.activated,
-                **{
-                    day: {
-                        "start_time": _format_charge_schedule_time(
-                            day_schedule.startTime
-                        ),
-                        "duration": day_schedule.duration,
-                    }
-                    for day in CHARGE_SCHEDULE_DAYS
-                    if (day_schedule := getattr(schedule, day)) is not None
-                },
+                **_serialize_charge_schedule_days(schedule),
             }
             for schedule in schedules
         ],
