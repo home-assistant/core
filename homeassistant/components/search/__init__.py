@@ -6,7 +6,7 @@ from enum import StrEnum
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import automation, group, person, script, websocket_api
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
@@ -60,9 +60,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "search/related",
-        vol.Required("item_type"): vol.Coerce(ItemType),
-        vol.Required("item_id"): str,
+        probatio.Required("type"): "search/related",
+        probatio.Required("item_type"): probatio.Coerce(ItemType),
+        probatio.Required("item_id"): str,
     }
 )
 @callback

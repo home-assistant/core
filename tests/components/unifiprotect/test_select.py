@@ -649,8 +649,10 @@ async def test_select_set_option_camera_doorbell_custom(
             blocking=True,
         )
 
+        # reset_at=None keeps the message up; omitting it lets the NVR
+        # clear it after its own timeout
         mock_method.assert_called_once_with(
-            DoorbellMessageType.CUSTOM_MESSAGE, text="Test"
+            DoorbellMessageType.CUSTOM_MESSAGE, text="Test", reset_at=None
         )
 
 
@@ -666,14 +668,9 @@ async def test_select_set_option_camera_doorbell_unifi(
         hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    with (
-        patch_ufp_method(
-            doorbell, "set_lcd_message_public", new_callable=AsyncMock
-        ) as mock_public,
-        patch_ufp_method(
-            doorbell, "set_lcd_text", new_callable=AsyncMock
-        ) as mock_legacy,
-    ):
+    with patch_ufp_method(
+        doorbell, "set_lcd_message_public", new_callable=AsyncMock
+    ) as mock_method:
         await hass.services.async_call(
             "select",
             "select_option",
@@ -684,19 +681,9 @@ async def test_select_set_option_camera_doorbell_unifi(
             blocking=True,
         )
 
-        mock_public.assert_called_once_with(DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR)
-
-        await hass.services.async_call(
-            "select",
-            "select_option",
-            {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: "Default Message (Welcome)",
-            },
-            blocking=True,
+        mock_method.assert_called_once_with(
+            DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR, reset_at=None
         )
-
-        mock_legacy.assert_called_once_with(None)
 
 
 async def test_select_set_option_camera_doorbell_default(
@@ -712,7 +699,7 @@ async def test_select_set_option_camera_doorbell_default(
     )
 
     with patch_ufp_method(
-        doorbell, "set_lcd_text", new_callable=AsyncMock
+        doorbell, "set_lcd_message_public", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "select",

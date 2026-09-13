@@ -12,8 +12,8 @@ from hass_nabucasa.llm import (
     LLMServiceError,
 )
 from PIL import Image
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.components.cloud import DOMAIN
@@ -191,7 +191,7 @@ async def test_generate_data_returns_json(
     task = ai_task.GenDataTask(
         name="Task",
         instructions="Return JSON",
-        structure=vol.Schema({vol.Required("names"): [str]}),
+        structure=probatio.Schema({probatio.Required("names"): [str]}),
     )
 
     async def fake_handle(chat_type, log, task_name, structure):
@@ -219,7 +219,7 @@ async def test_generate_data_invalid_json(
     task = ai_task.GenDataTask(
         name="Task",
         instructions="Return JSON",
-        structure=vol.Schema({vol.Required("names"): [str]}),
+        structure=probatio.Schema({probatio.Required("names"): [str]}),
     )
 
     async def fake_handle(chat_type, log, task_name, structure):
