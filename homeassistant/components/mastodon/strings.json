@@ -166,23 +166,23 @@
     "media": {
       "fields": {
         "focus_x": {
-          "description": "Set the horizontal focal point for image previews and cropping. Range: -1.0 (left) to 1.0 (right).",
+          "description": "Sets the horizontal focal point used when previewing or cropping an image. Use -1.0 for the far left, 0.0 for the center, and 1.0 for the far right.",
           "name": "Horizontal focus"
         },
         "focus_y": {
-          "description": "Set the vertical focal point for image previews and cropping. Range: -1.0 (top) to 1.0 (bottom).",
+          "description": "Sets the vertical focal point used when previewing or cropping an image. Use -1.0 for the top, 0.0 for the center, and 1.0 for the bottom.",
           "name": "Vertical focus"
         },
         "media_description": {
-          "description": "Add alt text describing the media for people who are blind or visually impaired. Alt text is required by many Mastodon instances.",
+          "description": "Alternative text describing the media for people who are blind or visually impaired. Providing alt text improves accessibility and may be required by some Mastodon instances.",
           "name": "Alt text"
         },
         "media_source": {
-          "description": "Attach an image, video, or audio to the post.",
+          "description": "Image, video, or audio to attach to the post. If a camera source is selected, a snapshot of its current view is captured when the post is sent.",
           "name": "Media source"
         },
         "thumbnail": {
-          "description": "Upload a custom thumbnail image for an audio attachment.",
+          "description": "Custom thumbnail for an audio attachment. If a camera source is selected, a snapshot of its current view is captured when the post is sent.",
           "name": "Thumbnail"
         }
       }
