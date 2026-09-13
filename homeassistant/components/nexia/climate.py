@@ -16,7 +16,7 @@ from nexia.const import (
 from nexia.thermostat import NexiaThermostat
 from nexia.util import find_humidity_setpoint
 from nexia.zone import NexiaThermostatZone
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     ATTR_HUMIDITY,
@@ -53,23 +53,29 @@ SERVICE_SET_DEHUMIDIFY_SETPOINT = "set_dehumidify_setpoint"
 SERVICE_SET_HVAC_RUN_MODE = "set_hvac_run_mode"
 
 SET_AIRCLEANER_SCHEMA: VolDictType = {
-    vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
+    probatio.Required(ATTR_AIRCLEANER_MODE): cv.string,
 }
 
 SET_HUMIDIFY_SCHEMA: VolDictType = {
-    vol.Required(ATTR_HUMIDITY): vol.All(vol.Coerce(int), vol.Range(min=10, max=45)),
+    probatio.Required(ATTR_HUMIDITY): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=10, max=45)
+    ),
 }
 
 SET_DEHUMIDIFY_SCHEMA: VolDictType = {
-    vol.Required(ATTR_HUMIDITY): vol.All(vol.Coerce(int), vol.Range(min=35, max=65)),
+    probatio.Required(ATTR_HUMIDITY): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=35, max=65)
+    ),
 }
 
-SET_HVAC_RUN_MODE_SCHEMA = vol.All(
+SET_HVAC_RUN_MODE_SCHEMA = probatio.All(
     cv.has_at_least_one_key(ATTR_RUN_MODE, ATTR_HVAC_MODE),
     cv.make_entity_service_schema(
         {
-            vol.Optional(ATTR_RUN_MODE): vol.In([HOLD_PERMANENT, HOLD_RESUME_SCHEDULE]),
-            vol.Optional(ATTR_HVAC_MODE): vol.In(
+            probatio.Optional(ATTR_RUN_MODE): probatio.In(
+                [HOLD_PERMANENT, HOLD_RESUME_SCHEDULE]
+            ),
+            probatio.Optional(ATTR_HVAC_MODE): probatio.In(
                 [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO]
             ),
         }

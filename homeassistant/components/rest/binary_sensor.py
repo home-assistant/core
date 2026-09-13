@@ -4,7 +4,7 @@ import logging
 from typing import override
 from xml.parsers.expat import ExpatError
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -38,7 +38,7 @@ from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     BINARY_SENSOR_PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **BINARY_SENSOR_SCHEMA}),
     cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE),
 )

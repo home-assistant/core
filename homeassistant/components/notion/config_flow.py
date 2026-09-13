@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any, override
 
 from aionotion.errors import InvalidCredentialsError, NotionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -14,15 +14,15 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN, LOGGER
 from .util import async_get_client_with_credentials
 
-AUTH_SCHEMA = vol.Schema(
+AUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
