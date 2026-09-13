@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallClient, PowerwallError
 from bleak.exc import BleakError
+import probatio
 from tesla_fleet_api.const import (
     AuthorizedClientKeyType,
     AuthorizedClientState,
@@ -28,7 +29,6 @@ from tesla_fleet_api.exceptions import (
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import Teslemetry
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, TeslemetryEnergySite
-import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -270,9 +270,9 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_VIN): SelectSelector(
+                    probatio.Required(CONF_VIN): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(value=vin, label=name)
@@ -412,6 +412,10 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             LOGGER.error("Bluetooth pairing was rejected: %s", err)
             self._pair_error = {"base": "pair_failed"}
             return self.async_show_progress_done(next_step_id="instructions")
+        except Exception:
+            # async_remove() only runs if the flow is still tracked when this step raises.
+            await self._async_disconnect()
+            raise
         return self.async_show_progress_done(next_step_id="pair")
 
     async def _async_disconnect(self) -> None:
@@ -490,9 +494,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SITE_ID): vol.In(
+                    probatio.Required(CONF_SITE_ID): probatio.In(
                         {
                             site_id: energy_data.device.get("name") or site_id
                             for site_id, energy_data in available.items()
@@ -669,13 +673,13 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="credentials",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST,
-                        default=self._discovered_host or vol.UNDEFINED,
+                        default=self._discovered_host or probatio.UNDEFINED,
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

@@ -3,7 +3,7 @@
 import json
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import valid_publish_topic
@@ -24,17 +24,17 @@ CONF_PUBLISH_TIMESTAMPS = "publish_timestamps"
 
 DOMAIN = "mqtt_statestream"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             {
-                vol.Required(CONF_BASE_TOPIC): valid_publish_topic,
-                vol.Optional(CONF_PUBLISH_ATTRIBUTES, default=False): cv.boolean,
-                vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False): cv.boolean,
+                probatio.Required(CONF_BASE_TOPIC): valid_publish_topic,
+                probatio.Optional(CONF_PUBLISH_ATTRIBUTES, default=False): cv.boolean,
+                probatio.Optional(CONF_PUBLISH_TIMESTAMPS, default=False): cv.boolean,
             }
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 _LOGGER = logging.getLogger(__name__)
