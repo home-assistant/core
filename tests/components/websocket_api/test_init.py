@@ -3,7 +3,7 @@
 from unittest.mock import Mock, patch
 
 from aiohttp import WSMsgType
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.websocket_api import (
     async_register_command,
@@ -71,13 +71,13 @@ async def test_handler_failing(hass: HomeAssistant, websocket_client) -> None:
 
 
 async def test_invalid_vol(hass: HomeAssistant, websocket_client) -> None:
-    """Test a command that raises invalid vol error."""
+    """Test a command that raises invalid probatio error."""
     async_register_command(
         hass,
         "bla",
         Mock(side_effect=TypeError),
         messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-            {"type": "bla", vol.Required("test_config"): str}
+            {"type": "bla", probatio.Required("test_config"): str}
         ),
     )
 

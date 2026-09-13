@@ -7,10 +7,10 @@ import os
 import tempfile
 from unittest.mock import patch
 
+import probatio
 from pysignalclirestapi.api import SignalCliRestApiError
 import pytest
 from requests_mock.mocker import Mocker
-import voluptuous as vol
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -139,7 +139,7 @@ def test_send_message_with_bad_data_throws_vol_error(
         caplog.at_level(
             logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
         ),
-        pytest.raises(vol.Invalid) as exc,
+        pytest.raises(probatio.Invalid) as exc,
     ):
         signal_notification_service.send_message(MESSAGE, data={"test": "test"})
 
@@ -157,7 +157,7 @@ def test_send_message_styled_with_bad_data_throws_vol_error(
         caplog.at_level(
             logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
         ),
-        pytest.raises(vol.Invalid) as exc,
+        pytest.raises(probatio.Invalid) as exc,
     ):
         signal_notification_service.send_message(MESSAGE, data={"text_mode": "test"})
 
