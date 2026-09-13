@@ -8,31 +8,38 @@
         'activated': True,
         'friday': dict({
           'duration': 450,
+          'local_day': 'thursday',
           'start_time': '17:00',
         }),
         'id': 1,
         'monday': dict({
           'duration': 450,
+          'local_day': 'sunday',
           'start_time': '17:00',
         }),
         'saturday': dict({
           'duration': 450,
+          'local_day': 'friday',
           'start_time': '17:00',
         }),
         'sunday': dict({
           'duration': 450,
+          'local_day': 'saturday',
           'start_time': '17:00',
         }),
         'thursday': dict({
           'duration': 450,
+          'local_day': 'wednesday',
           'start_time': '17:00',
         }),
         'tuesday': dict({
           'duration': 450,
+          'local_day': 'monday',
           'start_time': '17:00',
         }),
         'wednesday': dict({
           'duration': 450,
+          'local_day': 'tuesday',
           'start_time': '17:00',
         }),
       }),
@@ -40,31 +47,38 @@
         'activated': True,
         'friday': dict({
           'duration': 15,
+          'local_day': 'friday',
           'start_time': '16:30',
         }),
         'id': 2,
         'monday': dict({
           'duration': 15,
+          'local_day': 'monday',
           'start_time': '16:30',
         }),
         'saturday': dict({
           'duration': 15,
+          'local_day': 'saturday',
           'start_time': '16:30',
         }),
         'sunday': dict({
           'duration': 15,
+          'local_day': 'sunday',
           'start_time': '16:30',
         }),
         'thursday': dict({
           'duration': 15,
+          'local_day': 'thursday',
           'start_time': '16:30',
         }),
         'tuesday': dict({
           'duration': 15,
+          'local_day': 'tuesday',
           'start_time': '16:30',
         }),
         'wednesday': dict({
           'duration': 15,
+          'local_day': 'wednesday',
           'start_time': '16:30',
         }),
       }),

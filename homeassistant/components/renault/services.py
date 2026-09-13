@@ -233,7 +233,8 @@ def _serialize_charge_schedule_days(
         local_day, start_time = _format_charge_schedule_time(
             day, day_schedule.startTime
         )
-        days[local_day] = {
+        days[day] = {
+            "local_day": local_day,
             "start_time": start_time,
             "duration": day_schedule.duration,
         }
