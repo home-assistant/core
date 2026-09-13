@@ -2,7 +2,12 @@
 
 from typing import TYPE_CHECKING, Any
 
-from music_assistant_models.enums import ImageType, MediaType
+from music_assistant_models.enums import (
+    ImageType,
+    MediaType,
+    ProviderStatus,
+    ProviderType,
+)
 from music_assistant_models.media_items import ItemMapping
 import voluptuous as vol
 
@@ -38,6 +43,13 @@ from .const import (
     ATTR_PLAYLISTS,
     ATTR_PODCASTS,
     ATTR_PROVIDER,
+    ATTR_PROVIDER_DOMAIN,
+    ATTR_PROVIDER_ENABLED,
+    ATTR_PROVIDER_INSTANCE_ID,
+    ATTR_PROVIDER_LAST_ERROR,
+    ATTR_PROVIDER_STATUS,
+    ATTR_PROVIDER_TYPE,
+    ATTR_PROVIDERS,
     ATTR_QUEUE_ID,
     ATTR_QUEUE_ITEM_ID,
     ATTR_RADIO,
@@ -53,6 +65,7 @@ from .const import (
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
+    from music_assistant_models.config_entries import ProviderConfig
     from music_assistant_models.media_items import MediaItemType
     from music_assistant_models.queue_item import QueueItem
 
@@ -150,6 +163,42 @@ LIBRARY_RESULTS_SCHEMA = vol.Schema(
         vol.Required(ATTR_MEDIA_TYPE): vol.Coerce(MediaType),
     }
 )
+
+PROVIDER_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_PROVIDER_TYPE): vol.Coerce(ProviderType),
+        vol.Required(ATTR_PROVIDER_DOMAIN): cv.string,
+        vol.Required(ATTR_PROVIDER_INSTANCE_ID): cv.string,
+        vol.Required(ATTR_NAME): cv.string,
+        vol.Required(ATTR_PROVIDER_ENABLED): bool,
+        vol.Required(ATTR_PROVIDER_STATUS, default=None): vol.Any(
+            None, vol.Coerce(ProviderStatus)
+        ),
+        vol.Required(ATTR_PROVIDER_LAST_ERROR, default=None): vol.Any(None, cv.string),
+    }
+)
+
+PROVIDERS_RESULT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_PROVIDERS): vol.All(
+            cv.ensure_list, [vol.Schema(PROVIDER_CONFIG_SCHEMA)]
+        ),
+    }
+)
+
+
+def provider_config_dict_from_mass_item(item: ProviderConfig) -> dict[str, Any]:
+    """Parse a Music Assistant ProviderConfig."""
+    return {
+        ATTR_PROVIDER_TYPE: item.type,
+        ATTR_PROVIDER_DOMAIN: item.domain,
+        ATTR_PROVIDER_INSTANCE_ID: item.instance_id,
+        ATTR_NAME: item.name or item.default_name or item.domain,
+        ATTR_PROVIDER_ENABLED: item.enabled,
+        ATTR_PROVIDER_STATUS: item.status,
+        ATTR_PROVIDER_LAST_ERROR: item.last_error.message if item.last_error else None,
+    }
+
 
 AUDIO_FORMAT_SCHEMA = vol.Schema(
     {
