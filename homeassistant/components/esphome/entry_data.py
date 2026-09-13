@@ -44,6 +44,7 @@ from aioesphomeapi import (
     UpdateInfo,
     UserService,
     ValveInfo,
+    VoiceAssistantFeature,
     WaterHeaterInfo,
     build_device_unique_id,
 )
@@ -355,9 +356,16 @@ class RuntimeEntryData:
                 # and we don't want to load the update platform since it needs
                 # a complete device_info.
                 needed_platforms.add(Platform.UPDATE)
-            if self.device_info.voice_assistant_feature_flags_compat(self.api_version):
+            feature_flags = self.device_info.voice_assistant_feature_flags_compat(
+                self.api_version
+            )
+            if feature_flags:
                 needed_platforms.add(Platform.BINARY_SENSOR)
                 needed_platforms.add(Platform.SELECT)
+            if feature_flags & VoiceAssistantFeature.TIMERS:
+                # Matches what timer_list.async_setup_entry creates, so the
+                # platform is not marked loaded before it can make an entity.
+                needed_platforms.add(Platform.TIMER_LIST)
 
         # Make a dict of the EntityInfo by type and send
         # them to the listeners for each specific EntityInfo type

@@ -6,7 +6,8 @@ from functools import partial
 from typing import Any, override
 
 from homeassistant.auth import EVENT_USER_REMOVED
-from homeassistant.components import cloud, intent, notify as hass_notify
+from homeassistant.components import cloud, notify as hass_notify
+from homeassistant.components.timer_list import async_get_timer_list_entity
 from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
@@ -69,6 +70,7 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.NOTIFY,
     Platform.SENSOR,
+    Platform.TIMER_LIST,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -221,10 +223,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if supports_push(hass, webhook_id):
+    if (
+        supports_push(hass, webhook_id)
+        and (timer_entity := async_get_timer_list_entity(hass, device.id)) is not None
+    ):
         entry.async_on_unload(
-            intent.async_register_timer_handler(
-                hass, device.id, partial(async_handle_timer_event, hass, entry)
+            timer_entity.async_subscribe_updates(
+                partial(async_handle_timer_event, hass, entry, device.id)
             )
         )
 
