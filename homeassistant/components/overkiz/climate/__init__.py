@@ -20,6 +20,9 @@ from .atlantic_heat_recovery_ventilation import AtlanticHeatRecoveryVentilation
 from .atlantic_pass_apc_heat_pump_main_component import (
     AtlanticPassAPCHeatPumpMainComponent,
 )
+from .atlantic_pass_apc_heating_and_cooling_zone import (
+    AtlanticPassAPCHeatingAndCoolingZone,
+)
 from .atlantic_pass_apc_heating_zone import AtlanticPassAPCHeatingZone
 from .atlantic_pass_apc_zone_control import AtlanticPassAPCZoneControl
 from .atlantic_pass_apc_zone_control_zone import AtlanticPassAPCZoneControlZone
@@ -70,7 +73,7 @@ WIDGET_TO_CLIMATE_ENTITY = {
 WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY = {
     UIWidget.ATLANTIC_PASS_APC_HEATING_AND_COOLING_ZONE: {
         Controllable.IO_ATLANTIC_PASS_APC_HEATING_AND_COOLING_ZONE: (
-            AtlanticPassAPCHeatingZone
+            AtlanticPassAPCHeatingAndCoolingZone
         ),
         Controllable.IO_ATLANTIC_PASS_APC_ZONE_CONTROL_ZONE: (
             AtlanticPassAPCZoneControlZone
