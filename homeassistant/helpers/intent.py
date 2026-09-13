@@ -1123,22 +1123,34 @@ class DynamicServiceIntentHandler(IntentHandler):
             )
 
         # Handle service calls in parallel, noting failures as they occur.
+        # asyncio.as_completed cannot be used here: it yields results in
+        # completion order, which would misattribute them when zipped with
+        # the submission-ordered states list.
         failed_results: list[IntentResponseTarget] = []
-        for state, service_coro in zip(
-            states, asyncio.as_completed(service_coros), strict=False
-        ):
+        service_results = await asyncio.gather(*service_coros, return_exceptions=True)
+        for state, service_result in zip(states, service_results, strict=True):
+            if isinstance(service_result, BaseException) and not isinstance(
+                service_result, Exception
+            ):
+                # Cancellation and other non-Exception base exceptions
+                # propagate, matching the previous behavior.
+                raise service_result
+
             target = IntentResponseTarget(
                 type=IntentResponseTargetType.ENTITY,
                 name=state.name,
                 id=state.entity_id,
             )
 
-            try:
-                await service_coro
-                success_results.append(target)
-            except Exception:
+            if isinstance(service_result, Exception):
                 failed_results.append(target)
-                _LOGGER.exception("Service call failed for %s", state.entity_id)
+                _LOGGER.error(
+                    "Service call failed for %s",
+                    state.entity_id,
+                    exc_info=service_result,
+                )
+            else:
+                success_results.append(target)
 
         if not success_results:
             # If no entities succeeded, raise an error.
