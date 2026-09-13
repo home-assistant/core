@@ -6,7 +6,7 @@ from homeassistant.const import Platform, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN
+from .const import DOMAIN, THROUGHPUT_UNIQUE_ID_FRAGMENT
 from .coordinator import (
     LibreHardwareMonitorConfigEntry,
     LibreHardwareMonitorCoordinator,
@@ -67,7 +67,6 @@ async def async_migrate_entry(
         )
 
         _LOGGER.debug("Migration to version 2.1 successful")
-        return True
 
     if config_entry.version == 2 and config_entry.minor_version == 1:
         # Migrate Throughput unit from KB/s to kB/s
@@ -77,7 +76,9 @@ async def async_migrate_entry(
         )
 
         throughput_entities = [
-            entry for entry in registry_entries if "throughput" in entry.unique_id
+            entry
+            for entry in registry_entries
+            if THROUGHPUT_UNIQUE_ID_FRAGMENT in entry.unique_id
         ]
         for reg_entry in throughput_entities:
             _LOGGER.debug(
@@ -95,7 +96,8 @@ async def async_migrate_entry(
             config_entry, data=config_entry.data, version=2, minor_version=2
         )
 
-    _LOGGER.debug("Migration to version 2.2 successful")
+        _LOGGER.debug("Migration to version 2.2 successful")
+
     return True
 
 
