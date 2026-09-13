@@ -18,3 +18,15 @@ DEFAULT_ZONE2 = False
 DEFAULT_ZONE3 = False
 DEFAULT_UPDATE_AUDYSSEY = False
 DEFAULT_USE_TELNET = False
+
+# How long an optimistic pending select/switch value is trusted over
+# the receiver's own reported value, in seconds. Comfortably above the
+# documented worst case (~10s) for the slowest refresh (GetAudyssey).
+PENDING_VALUE_TIMEOUT = 15
+
+# denonavr.const has no "list of valid options" helper for these three
+# (unlike reference_level_offset/dynamic_volume/multi_eq); their option
+# lists are fixed Literal types, reproduced here in the same order.
+ECO_MODE_OPTIONS = ("On", "Auto", "Off")
+DIMMER_OPTIONS = ("Off", "Dark", "Dim", "Bright")
+AUTO_STANDBY_OPTIONS = ("OFF", "15M", "30M", "60M", "2H", "4H", "8H")

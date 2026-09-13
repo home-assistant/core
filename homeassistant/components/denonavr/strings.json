@@ -46,6 +46,33 @@
       }
     }
   },
+  "entity": {
+    "select": {
+      "reference_level_offset": {
+        "name": "Reference level offset"
+      },
+      "dynamic_volume": {
+        "name": "Dynamic volume"
+      },
+      "multi_eq": {
+        "name": "Multi-EQ"
+      },
+      "eco_mode": {
+        "name": "Eco mode"
+      },
+      "dimmer": {
+        "name": "Dimmer"
+      },
+      "auto_standby": {
+        "name": "Auto standby"
+      }
+    },
+    "switch": {
+      "dynamic_eq": {
+        "name": "Dynamic EQ"
+      }
+    }
+  },
   "services": {
     "get_command": {
       "description": "Sends a generic HTTP get command.",
