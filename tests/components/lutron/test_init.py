@@ -79,12 +79,7 @@ async def test_setup_entry_not_ready(
     method: str,
     error: Exception,
 ) -> None:
-    """Test that a transient network failure retries setup instead of failing it.
-
-    load_xml_db() fetches the XML database with urllib and connect() re-raises what
-    the reader thread caught, so an unreachable or still-booting repeater raises
-    OSError rather than LutronException. Both must land in SETUP_RETRY.
-    """
+    """Test that transient connection failures retry setup."""
     mock_config_entry.add_to_hass(hass)
 
     getattr(mock_lutron, method).side_effect = error
