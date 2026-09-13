@@ -1,6 +1,6 @@
 """Sensor platform for the RainbowMiner integration."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import override
@@ -75,38 +75,6 @@ def _sum_btc(balances: list[Balance], field: str) -> float | None:
         total += float(value)
         found = True
     return total if found else None
-
-
-def _format_uptime(seconds: int) -> str:
-    """Format uptime seconds into a human-readable string.
-
-    Uses 365 days/year and 30 days/month approximations.
-    Omits leading zero-value components (e.g. "1 day, 2 hours" not "0 years, 0 months, 1 day, 2 hours").
-    """
-    if seconds <= 0:
-        return "0 sec"
-
-    years, rem = divmod(seconds, 365 * 86400)
-    months, rem = divmod(rem, 30 * 86400)
-    days, rem = divmod(rem, 86400)
-    hours, rem = divmod(rem, 3600)
-    minutes, secs = divmod(rem, 60)
-
-    parts: list[str] = []
-    if years:
-        parts.append(f"{years} year{'s' if years != 1 else ''}")
-    if months:
-        parts.append(f"{months} month{'s' if months != 1 else ''}")
-    if days:
-        parts.append(f"{days} day{'s' if days != 1 else ''}")
-    if hours:
-        parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
-    if minutes:
-        parts.append(f"{minutes} min")
-    if secs:
-        parts.append(f"{secs} sec")
-
-    return ", ".join(parts) if parts else "0 sec"
 
 
 def _active_pool_names(miners: list[ActiveMiner]) -> str | None:
@@ -308,14 +276,10 @@ async def async_setup_entry(
     descriptions: list[RainbowMinerSensorEntityDescription] = list(ALWAYS_SENSORS)
     if currency is not None:
         descriptions.extend(currency_sensors(currency))
-    entities: list[RainbowMinerSensor | RainbowMinerUptimeSensor] = []
-    for description in descriptions:
-        if description.key == "uptime":
-            entities.append(
-                RainbowMinerUptimeSensor(coordinator, description, currency)
-            )
-        else:
-            entities.append(RainbowMinerSensor(coordinator, description, currency))
+    entities = [
+        RainbowMinerSensor(coordinator, description, currency)
+        for description in descriptions
+    ]
     async_add_entities(entities)
 
 
@@ -339,16 +303,3 @@ class RainbowMinerSensor(RainbowMinerEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the sensor's native value."""
         return self.entity_description.value_fn(self.coordinator, self._currency)
-
-
-class RainbowMinerUptimeSensor(RainbowMinerSensor):
-    """RainbowMiner uptime sensor with a formatted duration attribute."""
-
-    @property
-    @override
-    def extra_state_attributes(self) -> Mapping[str, str] | None:
-        """Return the formatted uptime string."""
-        seconds = self.coordinator.data.uptime.Seconds
-        if seconds is None:
-            return None
-        return {"formatted": _format_uptime(seconds)}

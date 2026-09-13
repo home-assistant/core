@@ -95,7 +95,6 @@ async def test_always_sensors(
     state = hass.states.get("sensor.rainbowminer_uptime")
     assert state is not None
     assert state.state == str(VALID_UPTIME["Seconds"])
-    assert state.attributes["formatted"] == "1 day"
 
     state = hass.states.get("sensor.rainbowminer_version")
     assert state is not None
