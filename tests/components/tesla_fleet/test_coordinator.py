@@ -27,10 +27,6 @@ from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     TeslaFleetEnergySiteHistoryCoordinator,
 )
-from homeassistant.components.tesla_fleet.storage import (
-    EnergyHistoryCheckpoint,
-    EnergyHistoryStore,
-)
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -401,7 +397,7 @@ async def test_repeated_import_with_delayed_recorder(
     history_responses: dict[str | None, dict[str, Any]],
     first_values: dict[str, float],
 ) -> None:
-    """Reject persisted progress when its recorder writes are still missing."""
+    """Keep sums correct when a repeat import reads uncommitted baselines."""
     history_responses[None] = _history((BEFORE, {GRID: 100}))
     await _refresh(hass, coordinator)
     history_responses[None] = _history((AFTER, first_values))
@@ -509,7 +505,7 @@ async def test_independent_baselines_and_new_fields(
     hass: HomeAssistant,
     history_responses: dict[str | None, dict[str, Any]],
 ) -> None:
-    """Respect each field's checkpoint and initialize new fields from today."""
+    """Respect each field's own baseline and initialize new fields from today."""
     before = [
         ("2023-06-01T08:00:00-07:00", {GRID: 10, SOLAR: 100}),
         ("2023-06-01T09:00:00-07:00", {SOLAR: 200}),
@@ -611,7 +607,7 @@ async def test_resume_valid_prefix_after_failure(
     mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
 ) -> None:
-    """Resume recorder's committed prefix when no source checkpoint is available."""
+    """Resume from recorder's committed prefix after a failed historical day."""
     day_one = _history(("2023-06-01T23:55:00Z", {GRID: 10}), time_zone="UTC")
     current = _history(("2023-06-04T00:05:00Z", {GRID: 40}), time_zone="UTC")
     mock_energy_site.energy_history.side_effect = [
@@ -627,7 +623,6 @@ async def test_resume_valid_prefix_after_failure(
         ("2023-06-01T23:00:00+00:00", 10, 10)
     ]
 
-    await EnergyHistoryStore(hass, mock_config_entry.entry_id, SITE_ID).async_remove()
     coordinator = TeslaFleetEnergySiteHistoryCoordinator(
         hass, mock_config_entry, mock_energy_site, SITE_NAME
     )
@@ -723,41 +718,3 @@ async def test_one_import_job_and_unload(
     await wait_for(cancelled.wait(), 5)
     await async_wait_recording_done(hass)
     assert await _get_hourly_stats(hass, {GRID_STATISTIC_ID}) == previous
-
-
-async def test_removal_waits_for_checkpoint_write(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    normal_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    hass_storage: dict[str, Any],
-) -> None:
-    """A checkpoint write must finish before entry removal deletes its file."""
-    started, release, finished = Event(), Event(), Event()
-    original_save = EnergyHistoryStore.async_save
-
-    async def slow_save(
-        store: EnergyHistoryStore, data: EnergyHistoryCheckpoint
-    ) -> None:
-        started.set()
-        await release.wait()
-        await original_save(store, data)
-        finished.set()
-
-    def release_during_unload() -> None:
-        hass.loop.call_soon(release.set)
-
-    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
-    with patch.object(
-        EnergyHistoryStore, "async_save", autospec=True, side_effect=slow_save
-    ):
-        freezer.tick(ENERGY_HISTORY_INTERVAL)
-        async_fire_time_changed(hass)
-        await wait_for(started.wait(), 5)
-        # Allow the write to finish only after unload requests task cancellation.
-        normal_config_entry.async_on_unload(release_during_unload)
-        await hass.config_entries.async_remove(normal_config_entry.entry_id)
-
-    assert finished.is_set()
-    store = EnergyHistoryStore(hass, normal_config_entry.entry_id, SITE_ID)
-    assert store.key not in hass_storage

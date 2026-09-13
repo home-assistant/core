@@ -43,7 +43,6 @@ from .coordinator import (
     _stale_site_info_error,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
-from .storage import EnergyHistoryStore
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -277,6 +276,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) 
 
 async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> None:
     """Handle removal of a config entry."""
+    if RECORDER_DOMAIN not in hass.config.components:
+        LOGGER.debug("Skipping statistics cleanup because recorder is not loaded")
+        return
+
     device_registry = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
@@ -289,11 +292,6 @@ async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) 
         for domain, site_id in device.identifiers
         if domain == DOMAIN and site_id.isdigit()
     }
-    for site_id in site_ids:
-        await EnergyHistoryStore(hass, entry.entry_id, site_id).async_remove()
-    if RECORDER_DOMAIN not in hass.config.components:
-        LOGGER.debug("Skipping statistics cleanup because recorder is not loaded")
-        return
     statistic_ids = [
         build_statistic_id(site_id, key)
         for site_id in site_ids
