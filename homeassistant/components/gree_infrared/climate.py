@@ -1,5 +1,6 @@
 """Climate platform for Gree IR integration — Gree AC."""
 
+from dataclasses import dataclass
 from typing import Any, override
 
 from infrared_protocols.commands.gree_ac import (
@@ -35,7 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
@@ -65,6 +66,31 @@ _HA_MODE_TO_LIB: dict[HVACMode, GreeAcMode] = {
     HVACMode.FAN_ONLY: GreeAcMode.FAN_ONLY,
 }
 _LIB_MODE_TO_HA: dict[GreeAcMode, HVACMode] = {v: k for k, v in _HA_MODE_TO_LIB.items()}
+
+
+@dataclass
+class _GreeAcExtraStoredData(ExtraStoredData):
+    """Extra data restored alongside the entity's visible state.
+
+    Holds the mode the unit was last actively in. The visible state only records
+    OFF once the unit is off, but off frames still carry a mode field, so this
+    cannot be recovered from last_state.state alone.
+    """
+
+    last_active_hvac_mode: str
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation for storage."""
+        return {"last_active_hvac_mode": self.last_active_hvac_mode}
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> _GreeAcExtraStoredData | None:
+        """Build from a stored dict, or None if it doesn't look valid."""
+        last_active_hvac_mode = restored.get("last_active_hvac_mode")
+        if not isinstance(last_active_hvac_mode, str):
+            return None
+        return cls(last_active_hvac_mode=last_active_hvac_mode)
 
 
 async def async_setup_entry(
@@ -131,8 +157,6 @@ class GreeAcClimateEntity(
 
         if last_state.state in self._attr_hvac_modes:
             self._attr_hvac_mode = HVACMode(last_state.state)
-            if self._attr_hvac_mode is not HVACMode.OFF:
-                self._last_active_hvac_mode = self._attr_hvac_mode
         if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
             self._attr_fan_mode = fan_mode
         if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
@@ -145,6 +169,24 @@ class GreeAcClimateEntity(
                     )
                 )
             )
+
+        current_mode = self._attr_hvac_mode
+        if current_mode is not None and current_mode is not HVACMode.OFF:
+            self._last_active_hvac_mode = current_mode
+        elif (last_extra_data := await self.async_get_last_extra_data()) is not None:
+            restored = _GreeAcExtraStoredData.from_dict(last_extra_data.as_dict())
+            if restored is not None and restored.last_active_hvac_mode in (
+                mode.value for mode in self._attr_hvac_modes if mode is not HVACMode.OFF
+            ):
+                self._last_active_hvac_mode = HVACMode(restored.last_active_hvac_mode)
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> ExtraStoredData:
+        """Return extra data to be restored alongside the entity's state."""
+        return _GreeAcExtraStoredData(
+            last_active_hvac_mode=self._last_active_hvac_mode.value
+        )
 
     async def _async_send_state(
         self, hvac_mode: HVACMode, temp: int, fan_mode: str
@@ -236,13 +278,14 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
         if command is None:
             return
 
-        if command.power:
-            hvac_mode = _LIB_MODE_TO_HA[command.mode]
-            if hvac_mode not in self._attr_hvac_modes:
-                return
-            self._last_active_hvac_mode = hvac_mode
-        else:
-            hvac_mode = HVACMode.OFF
+        # Off frames carry a mode field too, so the mode is recorded either way.
+        embedded_hvac_mode = _LIB_MODE_TO_HA[command.mode]
+        if embedded_hvac_mode in self._attr_hvac_modes:
+            self._last_active_hvac_mode = embedded_hvac_mode
+        elif command.power:
+            return
+
+        hvac_mode = embedded_hvac_mode if command.power else HVACMode.OFF
 
         self._attr_hvac_mode = hvac_mode
         self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]

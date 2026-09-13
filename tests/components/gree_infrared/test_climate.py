@@ -36,7 +36,12 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared import EMITTER_ENTITY_ID
 from tests.components.infrared.common import (
@@ -573,6 +578,93 @@ async def test_set_hvac_mode_off_keeps_the_mode_seen_by_the_receiver(
             mode=GreeAcMode.DRY,
             temperature=24,
             fan=GreeAcFanSpeed.MEDIUM,
+        ).get_raw_timings()
+    )
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_off_signal_records_the_mode_it_carries(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test an off frame seen before any on frame still records the mode it carries."""
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                power=False,
+                mode=GreeAcMode.DRY,
+                temperature=24,
+                fan=GreeAcFanSpeed.MEDIUM,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            power=False,
+            mode=GreeAcMode.DRY,
+            temperature=24,
+            fan=GreeAcFanSpeed.MEDIUM,
+        ).get_raw_timings()
+    )
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_last_active_mode_restored_on_restart_while_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    platforms: list[Platform],
+) -> None:
+    """Test an off frame after a restart carries the mode the unit was last in.
+
+    The visible state only records off, so without the extra restore data the off
+    frame would fall back to the first configured mode instead of the real one.
+    """
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(_CLIMATE_ENTITY_ID, HVACMode.OFF, {ATTR_TEMPERATURE: 24.0}),
+                {"last_active_hvac_mode": HVACMode.DRY.value},
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.gree_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            power=False,
+            mode=GreeAcMode.DRY,
+            temperature=24,
+            fan=GreeAcFanSpeed.AUTO,
         ).get_raw_timings()
     )
 
