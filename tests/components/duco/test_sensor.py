@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 from duco_connectivity import (
     DucoConnectionError,
     DucoError,
+    InfoOverview,
     Node,
     NodeGeneralInfo,
     NodeSensorInfo,
@@ -260,9 +261,9 @@ async def test_info_overview_failures_keep_node_entities_available(
 
 
 @pytest.mark.parametrize(
-    "initial_time_filter_remain",
+    "initial_info_overview_result",
     [
-        pytest.param(None, id="missing"),
+        pytest.param(InfoOverview(time_filter_remain=None), id="missing"),
         pytest.param(DucoError("heat recovery info error"), id="transient_failure"),
     ],
 )
@@ -272,15 +273,13 @@ async def test_time_filter_remaining_is_retried(
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
-    initial_time_filter_remain: DucoError | None,
+    initial_info_overview_result: InfoOverview | DucoError,
 ) -> None:
     """Test unavailable filter timer data is retried and can create the sensor."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
     info_overview = mock_duco_client.async_get_info_overview.return_value
     mock_duco_client.async_get_info_overview.side_effect = [
-        initial_time_filter_remain
-        if initial_time_filter_remain is not None
-        else replace(info_overview, time_filter_remain=None),
+        initial_info_overview_result,
         info_overview,
     ]
 

@@ -14,6 +14,7 @@ from duco_connectivity import (
     DucoConnectionError,
     DucoError,
     DucoResponseError,
+    InfoOverview,
     LanInfo,
     Node,
     NodeListActionItemList,
@@ -453,6 +454,9 @@ async def test_setup_entry_creates_http_client(
         mock_client_class.return_value.async_get_node_actions.return_value = (
             mock_node_actions
         )
+        mock_client_class.return_value.async_get_info_overview.return_value = (
+            InfoOverview()
+        )
         (
             mock_client_class.return_value.async_get_ventilation_temperature_info.return_value
         ) = VentilationTemperatureInfo()
@@ -480,6 +484,7 @@ async def test_setup_entry_creates_http_client(
         session=ANY,
         host=TEST_HOST,
     )
+    mock_client_class.return_value.async_get_info_overview.assert_awaited_once_with()
 
 
 async def test_setup_entry_uses_configured_node_name(
