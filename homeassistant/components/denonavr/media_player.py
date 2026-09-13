@@ -48,6 +48,7 @@ from .const import (
     CONF_UPDATE_AUDYSSEY,
     DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
+    TELNET_EVENTS,
 )
 from .coordinator import DenonAvrDataUpdateCoordinator, mark_unavailable
 
@@ -75,23 +76,6 @@ SUPPORT_MEDIA_MODES = (
 )
 
 PARALLEL_UPDATES = 1
-
-# HA Telnet events
-TELNET_EVENTS = {
-    "HD",
-    "MS",
-    "MU",
-    "MV",
-    "NS",
-    "NSE",
-    "PS",
-    "SI",
-    "SS",
-    "TF",
-    "ZM",
-    "Z2",
-    "Z3",
-}
 
 DENON_STATE_MAPPING = {
     STATE_ON: MediaPlayerState.ON,
@@ -271,15 +255,6 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
         if event == "HD" and not parameter.startswith("ALBUM"):
             return
         self.async_write_ha_state()
-        # Telnet already pushed the fresh value straight into the
-        # receiver object here - the Audyssey-backed select/switch
-        # entities just need telling to re-read it, not a fetch, so
-        # this only notifies listeners rather than calling
-        # async_request_refresh(). Broader than strictly necessary
-        # (not every one of these events is Audyssey-related), but
-        # over-notifying is harmless and there's no reliable way here
-        # to tell which of these specifically touched Audyssey data.
-        self._audyssey_coordinator.async_update_listeners()
 
     @override
     async def async_added_to_hass(self) -> None:

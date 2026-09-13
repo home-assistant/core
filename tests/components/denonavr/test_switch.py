@@ -229,10 +229,9 @@ async def test_reference_level_offset_agrees_with_switch_at_setup(
     """Select and switch agree on Dynamic EQ state at setup time.
 
     Both read the same receiver.dynamic_eq property, so they can't
-    disagree about the value they were set up with. This does not
-    cover a live toggle afterward - see
-    test_toggling_switch_does_not_instantly_update_dependent_select
-    for that known limitation.
+    disagree about the value they were set up with. See
+    test_toggling_switch_updates_dependent_select for what happens on
+    a live toggle afterward.
     """
     client.reference_level_offset = "0dB"
     client.reference_level_offset_setting_list = ["0dB", "+5dB", "+10dB", "+15dB"]

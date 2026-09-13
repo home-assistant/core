@@ -39,3 +39,22 @@ ACTION_REFRESH_DEBOUNCE_COOLDOWN = 0.5
 ECO_MODE_OPTIONS = ("On", "Auto", "Off")
 DIMMER_OPTIONS = ("Off", "Dark", "Dim", "Bright")
 AUTO_STANDBY_OPTIONS = ("OFF", "15M", "30M", "60M", "2H", "4H", "8H")
+
+# Telnet events relevant to this integration - shared by media_player.py
+# (its own state) and __init__.py (notifying the Audyssey coordinator
+# independently of whether the media_player entity is enabled).
+TELNET_EVENTS = {
+    "HD",
+    "MS",
+    "MU",
+    "MV",
+    "NS",
+    "NSE",
+    "PS",
+    "SI",
+    "SS",
+    "TF",
+    "ZM",
+    "Z2",
+    "Z3",
+}

@@ -459,8 +459,9 @@ async def test_reference_level_offset_always_refreshes_after_change(
     await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
     entity_id = _entity_id(hass, "reference_level_offset")
 
-    # Setup itself does one initial Audyssey fetch per platform (select
-    # + switch), so both entities start with a real value instead of
+    # Setup itself does one initial Audyssey fetch per config entry
+    # (the coordinator refreshes once, before select/switch are even
+    # forwarded), so both entities start with a real value instead of
     # "unavailable".
     baseline_calls = client.async_update_audyssey.await_count
 
@@ -599,6 +600,36 @@ async def test_rapid_consecutive_selections_do_not_race(
     # And the entity shows whichever option's set call actually finished
     # last - not a stale value from an overtaken earlier request.
     assert hass.states.get(entity_id).state == client.dimmer
+
+
+async def test_telnet_notifies_audyssey_independently_of_media_player(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A Telnet callback notifying Audyssey listeners isn't tied to the entity.
+
+    If it were only registered via the media_player entity's own
+    async_added_to_hass, disabling that entity would stop it from
+    firing - leaving these selects stale after Telnet updates even
+    though the receiver itself keeps updating regardless.
+    """
+    await setup_denonavr(hass)
+    entity_id = _entity_id(hass, "reference_level_offset")
+
+    # Registered as a plain function, not a bound method of the
+    # media_player entity - proving it doesn't depend on that entity
+    # existing or being enabled.
+    telnet_callbacks = [
+        call.args[1]
+        for call in client.register_callback.call_args_list
+        if not hasattr(call.args[1], "__self__")
+    ]
+    assert telnet_callbacks
+
+    client.dynamic_eq = False
+    for callback in telnet_callbacks:
+        callback("Main", "PS", "DYNEQ OFF")
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_audyssey_entities_not_unavailable_on_fresh_setup(
