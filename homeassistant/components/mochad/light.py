@@ -3,9 +3,9 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pymochad import controller, device
 from pymochad.exceptions import MochadException
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -27,14 +27,14 @@ CONF_BRIGHTNESS_LEVELS = "brightness_levels"
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): DOMAIN,
+        probatio.Required(CONF_PLATFORM): DOMAIN,
         CONF_DEVICES: [
             {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Required(CONF_ADDRESS): cv.x10_address,
-                vol.Optional(CONF_COMM_TYPE): cv.string,
-                vol.Optional(CONF_BRIGHTNESS_LEVELS, default=32): vol.All(
-                    vol.Coerce(int), vol.In([32, 64, 256])
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Required(CONF_ADDRESS): cv.x10_address,
+                probatio.Optional(CONF_COMM_TYPE): cv.string,
+                probatio.Optional(CONF_BRIGHTNESS_LEVELS, default=32): probatio.All(
+                    probatio.Coerce(int), probatio.In([32, 64, 256])
                 ),
             }
         ],

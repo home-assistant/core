@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -78,9 +78,9 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_LOCATION, default=home_location
                     ): LocationSelector(),
                 }
@@ -99,7 +99,7 @@ class IslamicPrayerOptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_CALC_METHOD,
                 default=self.config_entry.options.get(
                     CONF_CALC_METHOD, DEFAULT_CALC_METHOD
@@ -111,7 +111,7 @@ class IslamicPrayerOptionsFlowHandler(OptionsFlow):
                     translation_key=CONF_CALC_METHOD,
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_LAT_ADJ_METHOD,
                 default=self.config_entry.options.get(
                     CONF_LAT_ADJ_METHOD, DEFAULT_LAT_ADJ_METHOD
@@ -123,7 +123,7 @@ class IslamicPrayerOptionsFlowHandler(OptionsFlow):
                     translation_key=CONF_LAT_ADJ_METHOD,
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_MIDNIGHT_MODE,
                 default=self.config_entry.options.get(
                     CONF_MIDNIGHT_MODE, DEFAULT_MIDNIGHT_MODE
@@ -135,7 +135,7 @@ class IslamicPrayerOptionsFlowHandler(OptionsFlow):
                     translation_key=CONF_MIDNIGHT_MODE,
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_SCHOOL,
                 default=self.config_entry.options.get(CONF_SCHOOL, DEFAULT_SCHOOL),
             ): SelectSelector(
@@ -147,4 +147,6 @@ class IslamicPrayerOptionsFlowHandler(OptionsFlow):
             ),
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=probatio.Schema(options)
+        )

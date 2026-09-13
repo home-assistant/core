@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_ICON,
@@ -36,24 +36,24 @@ CONF_RESOURCE_TYPE_WS = "res_type"
 RESOURCE_TYPES = ["js", "css", "module", "html"]
 
 RESOURCE_FIELDS = {
-    CONF_TYPE: vol.In(RESOURCE_TYPES),
+    CONF_TYPE: probatio.In(RESOURCE_TYPES),
     CONF_URL: cv.string,
 }
 
-RESOURCE_SCHEMA = vol.Schema(RESOURCE_FIELDS)
+RESOURCE_SCHEMA = probatio.Schema(RESOURCE_FIELDS)
 
 RESOURCE_CREATE_FIELDS: VolDictType = {
-    vol.Required(CONF_RESOURCE_TYPE_WS): vol.In(RESOURCE_TYPES),
-    vol.Required(CONF_URL): cv.string,
+    probatio.Required(CONF_RESOURCE_TYPE_WS): probatio.In(RESOURCE_TYPES),
+    probatio.Required(CONF_URL): cv.string,
 }
 
 RESOURCE_UPDATE_FIELDS: VolDictType = {
-    vol.Optional(CONF_RESOURCE_TYPE_WS): vol.In(RESOURCE_TYPES),
-    vol.Optional(CONF_URL): cv.string,
+    probatio.Optional(CONF_RESOURCE_TYPE_WS): probatio.In(RESOURCE_TYPES),
+    probatio.Optional(CONF_URL): cv.string,
 }
 
 SERVICE_RELOAD_RESOURCES = "reload_resources"
-RESOURCE_RELOAD_SERVICE_SCHEMA = vol.Schema({})
+RESOURCE_RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 
 CONF_RESOURCE_MODE = "resource_mode"
 CONF_TITLE = "title"
@@ -61,29 +61,29 @@ CONF_REQUIRE_ADMIN = "require_admin"
 CONF_SHOW_IN_SIDEBAR = "show_in_sidebar"
 
 DASHBOARD_BASE_CREATE_FIELDS: VolDictType = {
-    vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Required(CONF_TITLE): cv.string,
-    vol.Optional(CONF_SHOW_IN_SIDEBAR, default=True): cv.boolean,
+    probatio.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
+    probatio.Optional(CONF_ICON): cv.icon,
+    probatio.Required(CONF_TITLE): cv.string,
+    probatio.Optional(CONF_SHOW_IN_SIDEBAR, default=True): cv.boolean,
 }
 
 
 DASHBOARD_BASE_UPDATE_FIELDS: VolDictType = {
-    vol.Optional(CONF_REQUIRE_ADMIN): cv.boolean,
-    vol.Optional(CONF_ICON): vol.Any(cv.icon, None),
-    vol.Optional(CONF_TITLE): cv.string,
-    vol.Optional(CONF_SHOW_IN_SIDEBAR): cv.boolean,
+    probatio.Optional(CONF_REQUIRE_ADMIN): cv.boolean,
+    probatio.Optional(CONF_ICON): probatio.Any(cv.icon, None),
+    probatio.Optional(CONF_TITLE): cv.string,
+    probatio.Optional(CONF_SHOW_IN_SIDEBAR): cv.boolean,
 }
 
 
 STORAGE_DASHBOARD_CREATE_FIELDS: VolDictType = {
     **DASHBOARD_BASE_CREATE_FIELDS,
-    vol.Required(CONF_URL_PATH): cv.string,
+    probatio.Required(CONF_URL_PATH): cv.string,
     # For now we write "storage" as all modes.
     # In future we can adjust this to be other modes.
-    vol.Optional(CONF_MODE, default=MODE_STORAGE): MODE_STORAGE,
+    probatio.Optional(CONF_MODE, default=MODE_STORAGE): MODE_STORAGE,
     # Set to allow adding dashboard without hyphen
-    vol.Optional(CONF_ALLOW_SINGLE_WORD): bool,
+    probatio.Optional(CONF_ALLOW_SINGLE_WORD): bool,
 }
 
 STORAGE_DASHBOARD_UPDATE_FIELDS = DASHBOARD_BASE_UPDATE_FIELDS
