@@ -86,6 +86,80 @@ async def test_art_frame_button_press(
         mocked_instance.assert_awaited_once()
 
 
+async def test_art_frame_random_button_press(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the random image button avoids the currently displayed image."""
+    inject_bluetooth_service_info(hass, ART_FRAME_INFO)
+
+    entry = mock_entry_encrypted_factory("art_frame")
+    entry.add_to_hass(hass)
+
+    # current_image_index=0, total=4, all_images_index=[0, 1, 2, 3]
+    mock_basic_info = AsyncMock(
+        return_value=b"\x016\x07\x01\x00\x00\x04\x00\x01\x02\x03\x00\x00\x00\x00\x00"
+    )
+    mock_set_image = AsyncMock(return_value=True)
+    with (
+        patch.multiple(
+            "homeassistant.components.switchbot.button.switchbot.SwitchbotArtFrame",
+            _get_basic_info=mock_basic_info,
+            set_image=mock_set_image,
+        ),
+        patch(
+            "homeassistant.components.switchbot.button.random.choice",
+            return_value=2,
+        ) as mock_choice,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.test_name_random_image"},
+            blocking=True,
+        )
+
+        # Chosen from every position except the current one (0).
+        mock_choice.assert_called_once_with([1, 2, 3])
+        mock_set_image.assert_awaited_once_with(2)
+
+
+async def test_art_frame_random_button_press_single_image(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the random image button does nothing with fewer than two images."""
+    inject_bluetooth_service_info(hass, ART_FRAME_INFO)
+
+    entry = mock_entry_encrypted_factory("art_frame")
+    entry.add_to_hass(hass)
+
+    # total=1, all_images_index=[0]
+    mock_basic_info = AsyncMock(
+        return_value=b"\x016\x07\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    )
+    mock_set_image = AsyncMock(return_value=True)
+    with patch.multiple(
+        "homeassistant.components.switchbot.button.switchbot.SwitchbotArtFrame",
+        _get_basic_info=mock_basic_info,
+        set_image=mock_set_image,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.test_name_random_image"},
+            blocking=True,
+        )
+
+        mock_set_image.assert_not_awaited()
+
+
 async def test_meter_pro_co2_sync_datetime_button(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
