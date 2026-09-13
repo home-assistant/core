@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, cast
 
-import voluptuous as vol
+import probatio
 from zha.application.const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
@@ -130,7 +130,7 @@ SERVICE_WARNING_DEVICE_WARN = "warning_device_warn"
 SERVICE_ZIGBEE_BIND = "service_zigbee_bind"
 IEEE_SERVICE = "ieee_based_service"
 
-IEEE_SCHEMA = vol.All(cv.string, EUI64.convert)
+IEEE_SCHEMA = probatio.All(cv.string, EUI64.convert)
 
 
 def _ensure_list_if_present[_T](value: _T | None) -> list[_T] | list[Any] | None:
@@ -141,107 +141,111 @@ def _ensure_list_if_present[_T](value: _T | None) -> list[_T] | list[Any] | None
 
 
 SERVICE_PERMIT_PARAMS: VolDictType = {
-    vol.Optional(ATTR_IEEE): IEEE_SCHEMA,
-    vol.Optional(ATTR_DURATION, default=60): vol.All(
-        vol.Coerce(int), vol.Range(0, 254)
+    probatio.Optional(ATTR_IEEE): IEEE_SCHEMA,
+    probatio.Optional(ATTR_DURATION, default=60): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, 254)
     ),
-    vol.Inclusive(ATTR_SOURCE_IEEE, "install_code"): IEEE_SCHEMA,
-    vol.Inclusive(ATTR_INSTALL_CODE, "install_code"): vol.All(
+    probatio.Inclusive(ATTR_SOURCE_IEEE, "install_code"): IEEE_SCHEMA,
+    probatio.Inclusive(ATTR_INSTALL_CODE, "install_code"): probatio.All(
         cv.string, convert_install_code
     ),
-    vol.Exclusive(ATTR_QR_CODE, "install_code"): vol.All(cv.string, qr_to_install_code),
+    probatio.Exclusive(ATTR_QR_CODE, "install_code"): probatio.All(
+        cv.string, qr_to_install_code
+    ),
 }
 
 SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
-    SERVICE_PERMIT: vol.Schema(
-        vol.All(
+    SERVICE_PERMIT: probatio.Schema(
+        probatio.All(
             cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
             SERVICE_PERMIT_PARAMS,
         )
     ),
-    IEEE_SERVICE: vol.Schema(
-        vol.All(
+    IEEE_SERVICE: probatio.Schema(
+        probatio.All(
             cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
-            {vol.Required(ATTR_IEEE): IEEE_SCHEMA},
+            {probatio.Required(ATTR_IEEE): IEEE_SCHEMA},
         )
     ),
-    SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: vol.Schema(
+    SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: probatio.Schema(
         {
-            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-            vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
-            vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
-            vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
-            vol.Required(ATTR_ATTRIBUTE): vol.Any(cv.positive_int, str),
-            vol.Required(ATTR_VALUE): vol.Any(int, cv.boolean, cv.string),
-            vol.Optional(ATTR_MANUFACTURER): vol.All(
-                vol.Coerce(int), vol.Range(min=-1)
+            probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+            probatio.Required(ATTR_ENDPOINT_ID): cv.positive_int,
+            probatio.Required(ATTR_CLUSTER_ID): cv.positive_int,
+            probatio.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
+            probatio.Required(ATTR_ATTRIBUTE): probatio.Any(cv.positive_int, str),
+            probatio.Required(ATTR_VALUE): probatio.Any(int, cv.boolean, cv.string),
+            probatio.Optional(ATTR_MANUFACTURER): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=-1)
             ),
         }
     ),
-    SERVICE_WARNING_DEVICE_SQUAWK: vol.Schema(
+    SERVICE_WARNING_DEVICE_SQUAWK: probatio.Schema(
         {
-            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-            vol.Optional(
+            probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+            probatio.Optional(
                 ATTR_WARNING_DEVICE_MODE, default=SquawkMode.Armed
             ): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(
                 ATTR_WARNING_DEVICE_STROBE, default=Strobe.Strobe
             ): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(
                 ATTR_LEVEL, default=SirenLevel.High_level_sound
             ): cv.positive_int,
         }
     ),
-    SERVICE_WARNING_DEVICE_WARN: vol.Schema(
+    SERVICE_WARNING_DEVICE_WARN: probatio.Schema(
         {
-            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-            vol.Optional(
+            probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+            probatio.Optional(
                 ATTR_WARNING_DEVICE_MODE, default=WarningMode.Emergency
             ): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(
                 ATTR_WARNING_DEVICE_STROBE, default=Strobe.Strobe
             ): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(
                 ATTR_LEVEL, default=SirenLevel.High_level_sound
             ): cv.positive_int,
-            vol.Optional(ATTR_WARNING_DEVICE_DURATION, default=5): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(ATTR_WARNING_DEVICE_DURATION, default=5): cv.positive_int,
+            probatio.Optional(
                 ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE, default=0x00
             ): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(
                 ATTR_WARNING_DEVICE_STROBE_INTENSITY,
                 default=StrobeLevel.High_level_strobe,
             ): cv.positive_int,
         }
     ),
-    SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: vol.All(
-        vol.Schema(
+    SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: probatio.All(
+        probatio.Schema(
             {
-                vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-                vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
-                vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
-                vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
-                vol.Required(ATTR_COMMAND): cv.positive_int,
-                vol.Required(ATTR_COMMAND_TYPE): cv.string,
-                vol.Exclusive(ATTR_ARGS, "attrs_params"): _ensure_list_if_present,
-                vol.Exclusive(ATTR_PARAMS, "attrs_params"): dict,
-                vol.Optional(ATTR_MANUFACTURER): vol.All(
-                    vol.Coerce(int), vol.Range(min=-1)
+                probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+                probatio.Required(ATTR_ENDPOINT_ID): cv.positive_int,
+                probatio.Required(ATTR_CLUSTER_ID): cv.positive_int,
+                probatio.Optional(
+                    ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN
+                ): cv.string,
+                probatio.Required(ATTR_COMMAND): cv.positive_int,
+                probatio.Required(ATTR_COMMAND_TYPE): cv.string,
+                probatio.Exclusive(ATTR_ARGS, "attrs_params"): _ensure_list_if_present,
+                probatio.Exclusive(ATTR_PARAMS, "attrs_params"): dict,
+                probatio.Optional(ATTR_MANUFACTURER): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=-1)
                 ),
             }
         ),
         cv.deprecated(ATTR_ARGS),
         cv.has_at_least_one_key(ATTR_ARGS, ATTR_PARAMS),
     ),
-    SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND: vol.Schema(
+    SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND: probatio.Schema(
         {
-            vol.Required(ATTR_GROUP): cv.positive_int,
-            vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
-            vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
-            vol.Required(ATTR_COMMAND): cv.positive_int,
-            vol.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
-            vol.Optional(ATTR_MANUFACTURER): vol.All(
-                vol.Coerce(int), vol.Range(min=-1)
+            probatio.Required(ATTR_GROUP): cv.positive_int,
+            probatio.Required(ATTR_CLUSTER_ID): cv.positive_int,
+            probatio.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
+            probatio.Required(ATTR_COMMAND): cv.positive_int,
+            probatio.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
+            probatio.Optional(ATTR_MANUFACTURER): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=-1)
             ),
         }
     ),
@@ -287,27 +291,27 @@ def _cv_zigpy_network_backup(value: dict[str, Any]) -> zigpy.backups.NetworkBack
     try:
         return zigpy.backups.NetworkBackup.from_dict(value)
     except ValueError as err:
-        raise vol.Invalid(str(err)) from err
+        raise probatio.Invalid(str(err)) from err
 
 
-GROUP_MEMBER_SCHEMA = vol.All(
-    vol.Schema(
+GROUP_MEMBER_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-            vol.Required(ATTR_ENDPOINT_ID): vol.Coerce(int),
+            probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+            probatio.Required(ATTR_ENDPOINT_ID): probatio.Coerce(int),
         }
     ),
     _cv_group_member,
 )
 
 
-CLUSTER_BINDING_SCHEMA = vol.All(
-    vol.Schema(
+CLUSTER_BINDING_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(ATTR_NAME): cv.string,
-            vol.Required(ATTR_TYPE): cv.string,
-            vol.Required(ATTR_ID): vol.Coerce(int),
-            vol.Required(ATTR_ENDPOINT_ID): vol.Coerce(int),
+            probatio.Required(ATTR_NAME): cv.string,
+            probatio.Required(ATTR_TYPE): cv.string,
+            probatio.Required(ATTR_ID): probatio.Coerce(int),
+            probatio.Required(ATTR_ENDPOINT_ID): probatio.Coerce(int),
         }
     ),
     _cv_cluster_binding,
@@ -317,7 +321,7 @@ CLUSTER_BINDING_SCHEMA = vol.All(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "zha/devices/permit",
+        probatio.Required("type"): "zha/devices/permit",
         **SERVICE_PERMIT_PARAMS,
     }
 )
@@ -369,7 +373,7 @@ async def websocket_permit_devices(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required(TYPE): "zha/devices"})
+@websocket_api.websocket_command({probatio.Required(TYPE): "zha/devices"})
 @websocket_api.async_response
 async def websocket_get_devices(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
@@ -399,7 +403,7 @@ def _get_entity_original_name(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required(TYPE): "zha/devices/groupable"})
+@websocket_api.websocket_command({probatio.Required(TYPE): "zha/devices/groupable"})
 @websocket_api.async_response
 async def websocket_get_groupable_devices(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
@@ -438,7 +442,7 @@ async def websocket_get_groupable_devices(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required(TYPE): "zha/groups"})
+@websocket_api.websocket_command({probatio.Required(TYPE): "zha/groups"})
 @websocket_api.async_response
 async def websocket_get_groups(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
@@ -452,8 +456,8 @@ async def websocket_get_groups(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/device",
-        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
+        probatio.Required(TYPE): "zha/device",
+        probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -479,8 +483,8 @@ async def websocket_get_device(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/group",
-        vol.Required(GROUP_ID): cv.positive_int,
+        probatio.Required(TYPE): "zha/group",
+        probatio.Required(GROUP_ID): cv.positive_int,
     }
 )
 @websocket_api.async_response
@@ -506,10 +510,12 @@ async def websocket_get_group(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/group/add",
-        vol.Required(GROUP_NAME): cv.string,
-        vol.Optional(GROUP_ID): cv.positive_int,
-        vol.Optional(ATTR_MEMBERS): vol.All(cv.ensure_list, [GROUP_MEMBER_SCHEMA]),
+        probatio.Required(TYPE): "zha/group/add",
+        probatio.Required(GROUP_NAME): cv.string,
+        probatio.Optional(GROUP_ID): cv.positive_int,
+        probatio.Optional(ATTR_MEMBERS): probatio.All(
+            cv.ensure_list, [GROUP_MEMBER_SCHEMA]
+        ),
     }
 )
 @websocket_api.async_response
@@ -533,8 +539,8 @@ async def websocket_add_group(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/group/remove",
-        vol.Required(GROUP_IDS): vol.All(cv.ensure_list, [cv.positive_int]),
+        probatio.Required(TYPE): "zha/group/remove",
+        probatio.Required(GROUP_IDS): probatio.All(cv.ensure_list, [cv.positive_int]),
     }
 )
 @websocket_api.async_response
@@ -560,9 +566,11 @@ async def websocket_remove_groups(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/group/members/add",
-        vol.Required(GROUP_ID): cv.positive_int,
-        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [GROUP_MEMBER_SCHEMA]),
+        probatio.Required(TYPE): "zha/group/members/add",
+        probatio.Required(GROUP_ID): cv.positive_int,
+        probatio.Required(ATTR_MEMBERS): probatio.All(
+            cv.ensure_list, [GROUP_MEMBER_SCHEMA]
+        ),
     }
 )
 @websocket_api.async_response
@@ -592,9 +600,11 @@ async def websocket_add_group_members(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/group/members/remove",
-        vol.Required(GROUP_ID): cv.positive_int,
-        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [GROUP_MEMBER_SCHEMA]),
+        probatio.Required(TYPE): "zha/group/members/remove",
+        probatio.Required(GROUP_ID): cv.positive_int,
+        probatio.Required(ATTR_MEMBERS): probatio.All(
+            cv.ensure_list, [GROUP_MEMBER_SCHEMA]
+        ),
     }
 )
 @websocket_api.async_response
@@ -624,8 +634,8 @@ async def websocket_remove_group_members(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/devices/reconfigure",
-        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
+        probatio.Required(TYPE): "zha/devices/reconfigure",
+        probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -666,7 +676,7 @@ async def websocket_reconfigure_node(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/topology/update",
+        probatio.Required(TYPE): "zha/topology/update",
     }
 )
 @websocket_api.async_response
@@ -681,8 +691,8 @@ async def websocket_update_topology(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/devices/clusters",
-        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
+        probatio.Required(TYPE): "zha/devices/clusters",
+        probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -722,11 +732,11 @@ async def websocket_device_clusters(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/devices/clusters/attributes",
-        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-        vol.Required(ATTR_ENDPOINT_ID): int,
-        vol.Required(ATTR_CLUSTER_ID): int,
-        vol.Required(ATTR_CLUSTER_TYPE): str,
+        probatio.Required(TYPE): "zha/devices/clusters/attributes",
+        probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+        probatio.Required(ATTR_ENDPOINT_ID): int,
+        probatio.Required(ATTR_CLUSTER_ID): int,
+        probatio.Required(ATTR_CLUSTER_TYPE): str,
     }
 )
 @websocket_api.async_response
@@ -767,11 +777,11 @@ async def websocket_device_cluster_attributes(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/devices/clusters/commands",
-        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-        vol.Required(ATTR_ENDPOINT_ID): int,
-        vol.Required(ATTR_CLUSTER_ID): int,
-        vol.Required(ATTR_CLUSTER_TYPE): str,
+        probatio.Required(TYPE): "zha/devices/clusters/commands",
+        probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+        probatio.Required(ATTR_ENDPOINT_ID): int,
+        probatio.Required(ATTR_CLUSTER_ID): int,
+        probatio.Required(ATTR_CLUSTER_TYPE): str,
     }
 )
 @websocket_api.async_response
@@ -837,13 +847,13 @@ async def websocket_device_cluster_commands(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/devices/clusters/attributes/value",
-        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-        vol.Required(ATTR_ENDPOINT_ID): int,
-        vol.Required(ATTR_CLUSTER_ID): int,
-        vol.Required(ATTR_CLUSTER_TYPE): str,
-        vol.Required(ATTR_ATTRIBUTE): int,
-        vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+        probatio.Required(TYPE): "zha/devices/clusters/attributes/value",
+        probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+        probatio.Required(ATTR_ENDPOINT_ID): int,
+        probatio.Required(ATTR_CLUSTER_ID): int,
+        probatio.Required(ATTR_CLUSTER_TYPE): str,
+        probatio.Required(ATTR_ATTRIBUTE): int,
+        probatio.Optional(ATTR_MANUFACTURER): cv.positive_int,
     }
 )
 @websocket_api.async_response
@@ -894,8 +904,8 @@ async def websocket_read_zigbee_cluster_attributes(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/devices/bindable",
-        vol.Required(ATTR_IEEE): IEEE_SCHEMA,
+        probatio.Required(TYPE): "zha/devices/bindable",
+        probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -928,9 +938,9 @@ async def websocket_get_bindable_devices(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/devices/bind",
-        vol.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
-        vol.Required(ATTR_TARGET_IEEE): IEEE_SCHEMA,
+        probatio.Required(TYPE): "zha/devices/bind",
+        probatio.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
+        probatio.Required(ATTR_TARGET_IEEE): IEEE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -957,9 +967,9 @@ async def websocket_bind_devices(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/devices/unbind",
-        vol.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
-        vol.Required(ATTR_TARGET_IEEE): IEEE_SCHEMA,
+        probatio.Required(TYPE): "zha/devices/unbind",
+        probatio.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
+        probatio.Required(ATTR_TARGET_IEEE): IEEE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -986,10 +996,12 @@ async def websocket_unbind_devices(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/groups/bind",
-        vol.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
-        vol.Required(GROUP_ID): cv.positive_int,
-        vol.Required(BINDINGS): vol.All(cv.ensure_list, [CLUSTER_BINDING_SCHEMA]),
+        probatio.Required(TYPE): "zha/groups/bind",
+        probatio.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
+        probatio.Required(GROUP_ID): cv.positive_int,
+        probatio.Required(BINDINGS): probatio.All(
+            cv.ensure_list, [CLUSTER_BINDING_SCHEMA]
+        ),
     }
 )
 @websocket_api.async_response
@@ -1010,10 +1022,12 @@ async def websocket_bind_group(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/groups/unbind",
-        vol.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
-        vol.Required(GROUP_ID): cv.positive_int,
-        vol.Required(BINDINGS): vol.All(cv.ensure_list, [CLUSTER_BINDING_SCHEMA]),
+        probatio.Required(TYPE): "zha/groups/unbind",
+        probatio.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
+        probatio.Required(GROUP_ID): cv.positive_int,
+        probatio.Required(BINDINGS): probatio.All(
+            cv.ensure_list, [CLUSTER_BINDING_SCHEMA]
+        ),
     }
 )
 @websocket_api.async_response
@@ -1080,7 +1094,7 @@ async def async_binding_operation(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required(TYPE): "zha/configuration"})
+@websocket_api.websocket_command({probatio.Required(TYPE): "zha/configuration"})
 @websocket_api.async_response
 async def websocket_get_configuration(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
@@ -1093,7 +1107,7 @@ async def websocket_get_configuration(
         """Serialize additional types for the field-list serializer."""
         if schema is cv_boolean:
             return {"type": "bool"}
-        if schema is vol.Schema:
+        if schema is probatio.Schema:
             return to_field_list(schema, custom_serializer=custom_serializer)
 
         return cv.custom_serializer(schema)
@@ -1122,8 +1136,8 @@ async def websocket_get_configuration(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/configuration/update",
-        vol.Required("data"): ZHA_CONFIG_SCHEMAS,
+        probatio.Required(TYPE): "zha/configuration/update",
+        probatio.Required("data"): ZHA_CONFIG_SCHEMAS,
     }
 )
 @websocket_api.async_response
@@ -1169,7 +1183,7 @@ async def websocket_update_zha_configuration(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/settings"})
+@websocket_api.websocket_command({probatio.Required(TYPE): "zha/network/settings"})
 @websocket_api.async_response
 async def websocket_get_network_settings(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
@@ -1189,7 +1203,7 @@ async def websocket_get_network_settings(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/backups/list"})
+@websocket_api.websocket_command({probatio.Required(TYPE): "zha/network/backups/list"})
 @websocket_api.async_response
 async def websocket_list_network_backups(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
@@ -1205,7 +1219,9 @@ async def websocket_list_network_backups(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/backups/create"})
+@websocket_api.websocket_command(
+    {probatio.Required(TYPE): "zha/network/backups/create"}
+)
 @websocket_api.async_response
 async def websocket_create_network_backup(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
@@ -1228,9 +1244,9 @@ async def websocket_create_network_backup(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/network/backups/restore",
-        vol.Required("backup"): _cv_zigpy_network_backup,
-        vol.Optional("ezsp_force_write_eui64", default=False): cv.boolean,
+        probatio.Required(TYPE): "zha/network/backups/restore",
+        probatio.Required("backup"): _cv_zigpy_network_backup,
+        probatio.Optional("ezsp_force_write_eui64", default=False): cv.boolean,
     }
 )
 @websocket_api.async_response
@@ -1259,8 +1275,10 @@ async def websocket_restore_network_backup(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/network/change_channel",
-        vol.Required(ATTR_NEW_CHANNEL): vol.Any("auto", vol.Range(11, 26)),
+        probatio.Required(TYPE): "zha/network/change_channel",
+        probatio.Required(ATTR_NEW_CHANNEL): probatio.Any(
+            "auto", probatio.Range(11, 26)
+        ),
     }
 )
 @websocket_api.async_response

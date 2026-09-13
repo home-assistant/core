@@ -4,7 +4,7 @@ import asyncio
 from io import BytesIO
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.models import User
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,7 @@ from . import (
 
 REQUIREMENTS = ["pyotp==2.9.0", "PyQRCode==1.2.1"]
 
-CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({}, extra=vol.PREVENT_EXTRA)
+CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({}, extra=probatio.PREVENT_EXTRA)
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_module.totp"
@@ -88,9 +88,9 @@ class TotpAuthModule(MultiFactorAuthModule):
 
     @property
     @override
-    def input_schema(self) -> vol.Schema:
+    def input_schema(self) -> probatio.Schema:
         """Validate login flow input data."""
-        return vol.Schema({vol.Required(INPUT_FIELD_CODE): str})
+        return probatio.Schema({probatio.Required(INPUT_FIELD_CODE): str})
 
     async def _async_load(self) -> None:
         """Load stored data."""
@@ -163,7 +163,7 @@ class TotpAuthModule(MultiFactorAuthModule):
             await self._async_load()
 
         # user_input has been validate in caller
-        # set INPUT_FIELD_CODE as vol.Required is not user friendly
+        # set INPUT_FIELD_CODE as probatio.Required is not user friendly
         return await self.hass.async_add_executor_job(
             self._validate_2fa, user_id, user_input.get(INPUT_FIELD_CODE, "")
         )
@@ -189,7 +189,7 @@ class TotpSetupFlow(SetupFlow[TotpAuthModule]):
     _image: str
 
     def __init__(
-        self, auth_module: TotpAuthModule, setup_schema: vol.Schema, user: User
+        self, auth_module: TotpAuthModule, setup_schema: probatio.Schema, user: User
     ) -> None:
         """Initialize the setup flow."""
         super().__init__(auth_module, setup_schema, user.id)

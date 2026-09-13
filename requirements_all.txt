@@ -324,7 +324,7 @@ aiokef==0.2.16
 aiokem==1.0.1
 
 # homeassistant.components.librenms
-aiolibrenms==0.0.3
+aiolibrenms==0.0.4
 
 # homeassistant.components.lichess
 aiolichess==1.3.0
@@ -896,7 +896,7 @@ dynalite-panel==0.0.4
 eagle100==0.1.1
 
 # homeassistant.components.earn_e_p1
-earn-e-p1==0.2.0
+earn-e-p1==0.3.0
 
 # homeassistant.components.easyenergy
 easyenergy==3.0.1
@@ -962,7 +962,7 @@ enocean-async==0.4.2
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.19.2
+env-canada==0.20.0
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1698,7 +1698,7 @@ nad-receiver==0.4.0
 ndms2-client==0.1.2
 
 # homeassistant.components.neopool
-neopool-modbus==4.6.2
+neopool-modbus==4.7.0
 
 # homeassistant.components.ness_alarm
 nessclient==1.3.1
@@ -1728,7 +1728,7 @@ nextcloudmonitor==1.5.1
 nextcord==3.1.0
 
 # homeassistant.components.nextdns
-nextdns==5.0.1
+nextdns==5.1.0
 
 # homeassistant.components.niko_home_control
 nhc==0.8.1
@@ -2403,7 +2403,7 @@ pylitterbot==2025.6.5
 pylutron-caseta==0.29.0
 
 # homeassistant.components.lutron
-pylutron==0.4.2
+pylutron==0.4.4
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -2714,7 +2714,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.16.0
+python-duco-connectivity==0.17.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
@@ -2811,7 +2811,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==7.4.2
+python-roborock==7.7.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2838,13 +2838,13 @@ python-technove==2.1.3
 python-telegram-bot[socks]==22.7
 
 # homeassistant.components.xbox
-python-xbox==0.2.1
+python-xbox==0.2.2
 
 # homeassistant.components.egardia
 pythonegardia==1.0.52
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.5.2
+pythonkuma==0.5.3
 
 # homeassistant.components.tile
 pytile==2024.12.0
@@ -3394,7 +3394,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.7.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.9.2
+victron-mqtt==2026.9.4
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.12

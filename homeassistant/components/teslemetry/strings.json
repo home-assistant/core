@@ -90,7 +90,7 @@
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
         "entry_not_loaded": "The Teslemetry configuration entry is not loaded. Please ensure it is set up correctly before adding a vehicle.",
-        "no_vehicles": "Every vehicle in your Teslemetry account has already been added over Bluetooth."
+        "no_vehicles": "Every eligible vehicle in your Teslemetry account has already been added over Bluetooth."
       },
       "entry_type": "Bluetooth vehicle",
       "error": {
@@ -100,7 +100,7 @@
         "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen."
       },
       "initiate_flow": {
-        "user": "Add Bluetooth vehicle"
+        "user": "Add local vehicle"
       },
       "progress": {
         "pair": "Approve Home Assistant's virtual key on the vehicle's touchscreen. Waiting for the vehicle to accept the key."
@@ -111,7 +111,7 @@
           "title": "Approve the virtual key"
         },
         "scan": {
-          "description": "Home Assistant will look for vehicle {vin} over Bluetooth to enable local command control. Make sure the vehicle is awake and within Bluetooth range of a Home Assistant Bluetooth adapter, then continue.",
+          "description": "Home Assistant will look for vehicle {vin} over Bluetooth. Make sure the vehicle is within Bluetooth range of a Home Assistant Bluetooth adapter and has fewer than three phone keys in range, then continue.",
           "title": "Set up Bluetooth control"
         },
         "user": {
@@ -121,8 +121,8 @@
           "data_description": {
             "vin": "The account vehicle to enable local Bluetooth control for."
           },
-          "description": "Select which of your Teslemetry account vehicles to add over Bluetooth for local command control.",
-          "title": "Add Bluetooth vehicle"
+          "description": "Select which of your eligible vehicles to configure the local Bluetooth connection.",
+          "title": "Add local vehicle"
         }
       }
     }
