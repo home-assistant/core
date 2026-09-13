@@ -122,11 +122,7 @@ def _aggregate_energy_history_by_hour(
 
     for period in time_series:
         timestamp = period.get("timestamp")
-        if not timestamp:
-            continue
-
-        parsed_time = dt_util.parse_datetime(timestamp)
-        if parsed_time is None:
+        if (parsed_time := dt_util.parse_datetime(timestamp or "")) is None:
             continue
 
         start = dt_util.as_utc(parsed_time).replace(minute=0, second=0, microsecond=0)
