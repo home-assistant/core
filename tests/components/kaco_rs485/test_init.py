@@ -1,5 +1,7 @@
 """Test setting the KACO RS485 entry up, and what happens when it fails."""
 
+from unittest.mock import patch
+
 from kaco_rs485 import BusError
 from kaco_rs485.testing import FakeBus
 import pytest
@@ -94,20 +96,15 @@ async def test_devices_are_named_from_the_setup_scan(
     assert other.name == "KACO Powador 8000xi (4)"
 
 
-async def _set_disabled(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entry_id: str,
-    address: int,
-    disabler: dr.DeviceEntryDisabler | None,
-) -> None:
-    """Disable or enable one inverter's device as the UI would."""
+def _device(
+    device_registry: dr.DeviceRegistry, entry: MockConfigEntry, address: int
+) -> dr.DeviceEntry:
+    """Return one inverter's device."""
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{entry_id}_{address}"), entry_id
+        (DOMAIN, f"{entry.entry_id}_{address}"), entry.entry_id
     )
     assert device is not None
-    device_registry.async_update_device(device.id, disabled_by=disabler)
-    await hass.async_block_till_done()
+    return device
 
 
 async def _polled(
@@ -127,25 +124,34 @@ async def test_a_disabled_inverter_is_dropped_from_the_poll_cycle(
     mock_bus: FakeBus,
 ) -> None:
     """Test disabling an inverter stops it costing bus time, not just hiding it."""
-    await _set_disabled(
-        hass, device_registry, init_integration.entry_id, 2, dr.DeviceEntryDisabler.USER
+    assert await _polled(hass, init_integration, mock_bus) == {1, 2, 4}
+
+    device_registry.async_update_device(
+        _device(device_registry, init_integration, 2).id,
+        disabled_by=dr.DeviceEntryDisabler.USER,
     )
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
 
     assert await _polled(hass, init_integration, mock_bus) == {1, 4}
 
 
-async def test_re_enabling_an_inverter_puts_it_back_in_the_cycle(
+async def test_only_an_enabled_change_reloads_the_entry(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    mock_bus: FakeBus,
 ) -> None:
-    """Test the entry reloads so a re-enabled inverter is polled again."""
-    entry_id = init_integration.entry_id
-    await _set_disabled(hass, device_registry, entry_id, 2, dr.DeviceEntryDisabler.USER)
-    # Without this the assertion below would hold trivially.
-    assert await _polled(hass, init_integration, mock_bus) == {1, 4}
+    """Test the reload that puts a device being disabled into effect."""
+    device = _device(device_registry, init_integration, 2)
 
-    await _set_disabled(hass, device_registry, entry_id, 2, None)
+    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        device_registry.async_update_device(device.id, name_by_user="Shed")
+        await hass.async_block_till_done()
+        reload.assert_not_called()
 
-    assert await _polled(hass, init_integration, mock_bus) == {1, 2, 4}
+        device_registry.async_update_device(
+            device.id, disabled_by=dr.DeviceEntryDisabler.USER
+        )
+        await hass.async_block_till_done()
+
+    reload.assert_called_once_with(init_integration.entry_id)
