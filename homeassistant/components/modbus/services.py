@@ -121,9 +121,12 @@ async def _async_reload_config(call: ServiceCall) -> None:
     reload_config = await async_integration_yaml_config(hass, DOMAIN)
     if not reload_config:
         LOGGER.debug("Modbus not present anymore")
+        hubs.clear()
         return
     LOGGER.debug("Modbus reloading")
-    await async_modbus_setup(hass, reload_config)
+    # Setup replaces the hubs only once it has new ones to replace them with
+    if not await async_modbus_setup(hass, reload_config):
+        hubs.clear()
 
 
 @callback
