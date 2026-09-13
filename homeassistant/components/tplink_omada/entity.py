@@ -2,13 +2,14 @@
 
 from typing import Any
 
+from tplink_omada_client import OmadaControllerStatus
 from tplink_omada_client.devices import OmadaDevice, OmadaSwitchPortDetails
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import OmadaCoordinator
+from .coordinator import OmadaControllerStatusCoordinator, OmadaCoordinator
 
 
 class OmadaDeviceEntity[_T: OmadaCoordinator[Any]](CoordinatorEntity[_T]):
@@ -34,3 +35,30 @@ def get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
     if port.name == f"Port{port.port}":
         return str(port.port)
     return f"{port.port} ({port.name})"
+
+
+class OmadaControllerEntity(CoordinatorEntity[OmadaControllerStatusCoordinator]):
+    """Common base class for entities associated with the Omada Controller."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: OmadaControllerStatusCoordinator) -> None:
+        """Initialize the controller entity."""
+        super().__init__(coordinator)
+
+        controller: OmadaControllerStatus = coordinator.data
+
+        device_name = (
+            f"{controller.model} - {controller.name}"
+            if controller.name
+            else controller.model
+        )
+
+        self._attr_device_info = dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, controller.mac)},
+            identifiers={(DOMAIN, controller.mac)},
+            manufacturer="TP-Link",
+            model=controller.model,
+            name=device_name,
+            sw_version=controller.current_version,
+        )

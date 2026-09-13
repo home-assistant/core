@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
-from tplink_omada_client import OmadaSiteClient
+from tplink_omada_client import OmadaClient, OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
 from homeassistant.core import HomeAssistant, callback
@@ -13,6 +13,8 @@ if TYPE_CHECKING:
 
 from .coordinator import (
     OmadaClientsCoordinator,
+    OmadaControllerStatusCoordinator,
+    OmadaControllerUpdateCoordinator,
     OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
@@ -28,13 +30,21 @@ class OmadaSiteController:
         self,
         hass: HomeAssistant,
         config_entry: OmadaConfigEntry,
+        controller_client: OmadaClient,
         omada_client: OmadaSiteClient,
     ) -> None:
         """Create the controller."""
         self._hass = hass
         self._config_entry = config_entry
+        self._controller_client = controller_client
         self._omada_client = omada_client
 
+        self._controller_status_coordinator = OmadaControllerStatusCoordinator(
+            hass, config_entry, controller_client
+        )
+        self._controller_update_coordinator = OmadaControllerUpdateCoordinator(
+            hass, config_entry, controller_client
+        )
         self._switch_port_coordinators: dict[str, OmadaSwitchPortCoordinator] = {}
         self._devices_coordinator = OmadaDevicesCoordinator(
             hass, config_entry, omada_client
@@ -45,6 +55,8 @@ class OmadaSiteController:
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
+        await self._controller_status_coordinator.async_config_entry_first_refresh()
+        await self._controller_update_coordinator.async_config_entry_first_refresh()
         await self._devices_coordinator.async_config_entry_first_refresh()
 
         devices = self._devices_coordinator.data.values()
@@ -69,8 +81,7 @@ class OmadaSiteController:
 
         Args:
             device_filter: Function that returns True if a device should be processed.
-            entity_callback: Given a discovered Omada device,
-                creates entities for that device.
+            entity_callback: Given a discovered Omada device, creates entities for that device.
         """
         # Track which devices have been processed already
         processed_devices: set[str] = set()
@@ -102,6 +113,11 @@ class OmadaSiteController:
         await _async_register_entities()
 
     @property
+    def controller_client(self) -> OmadaClient:
+        """Get the connected client API for the Omada Controller."""
+        return self._controller_client
+
+    @property
     def omada_client(self) -> OmadaSiteClient:
         """Get the connected client API for the site to manage."""
         return self._omada_client
@@ -116,6 +132,16 @@ class OmadaSiteController:
             )
 
         return self._switch_port_coordinators[switch.mac]
+
+    @property
+    def controller_status_coordinator(self) -> OmadaControllerStatusCoordinator:
+        """Get the coordinator for the Omada Controller status."""
+        return self._controller_status_coordinator
+
+    @property
+    def controller_update_coordinator(self) -> OmadaControllerUpdateCoordinator:
+        """Get the coordinator for Omada Controller firmware updates."""
+        return self._controller_update_coordinator
 
     @property
     def gateway_coordinator(self) -> OmadaGatewayCoordinator | None:
