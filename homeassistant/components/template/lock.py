@@ -3,7 +3,7 @@
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -57,13 +57,13 @@ SCRIPT_FIELDS = (
 )
 
 
-LOCK_COMMON_SCHEMA = vol.Schema(
+LOCK_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_CODE_FORMAT): cv.template,
-        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_CODE_FORMAT): cv.template,
+        probatio.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_STATE): cv.template,
+        probatio.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
     }
 )
 

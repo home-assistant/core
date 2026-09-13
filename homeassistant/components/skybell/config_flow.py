@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from aioskybell import Skybell, exceptions
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -44,7 +44,7 @@ class SkybellFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = error
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
             description_placeholders={CONF_EMAIL: self.reauth_email},
             errors=errors,
         )
@@ -74,10 +74,12 @@ class SkybellFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_EMAIL, default=user_input.get(CONF_EMAIL)): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(
+                        CONF_EMAIL, default=user_input.get(CONF_EMAIL)
+                    ): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
