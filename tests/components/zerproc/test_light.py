@@ -129,7 +129,7 @@ async def test_init(hass: HomeAssistant, mock_entry) -> None:
     assert mock_light_1.disconnect.called
     assert mock_light_2.disconnect.called
 
-    assert hass.data[DOMAIN]["addresses"] == {"AA:BB:CC:DD:EE:FF", "11:22:33:44:55:66"}
+    assert hass.data[DATA_ADDRESSES] == {"AA:BB:CC:DD:EE:FF", "11:22:33:44:55:66"}
 
 
 async def test_discovery_exception(hass: HomeAssistant, mock_entry) -> None:
@@ -145,19 +145,19 @@ async def test_discovery_exception(hass: HomeAssistant, mock_entry) -> None:
         await hass.async_block_till_done()
 
     # The exception should be captured and no entities should be added
-    assert len(hass.data[DOMAIN]["addresses"]) == 0
+    assert len(hass.data[DATA_ADDRESSES]) == 0
 
 
 async def test_remove_entry(hass: HomeAssistant, mock_light, mock_entry) -> None:
     """Test platform setup."""
-    assert hass.data[DOMAIN][DATA_ADDRESSES] == {"AA:BB:CC:DD:EE:FF"}
-    assert DATA_DISCOVERY_SUBSCRIPTION in hass.data[DOMAIN]
+    assert hass.data[DATA_ADDRESSES] == {"AA:BB:CC:DD:EE:FF"}
+    assert DATA_DISCOVERY_SUBSCRIPTION in hass.data
 
     with patch.object(mock_light, "disconnect") as mock_disconnect:
         await hass.config_entries.async_remove(mock_entry.entry_id)
 
     assert mock_disconnect.called
-    assert DOMAIN not in hass.data
+    assert DATA_ADDRESSES not in hass.data
 
 
 async def test_remove_entry_exceptions_caught(
