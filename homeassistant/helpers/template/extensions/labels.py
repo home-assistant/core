@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.helpers import (
     area_registry as ar,
@@ -95,7 +95,7 @@ class LabelExtension(BaseTemplateExtension):
 
         try:
             cv.entity_id(lookup_value)
-        except vol.Invalid:
+        except probatio.Invalid:
             pass
         else:
             if entity := ent_reg.async_get(lookup_value):

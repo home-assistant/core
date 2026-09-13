@@ -226,7 +226,7 @@ EVENT_SENSORS = (
         options=EVENT_OPTIONS,
         default_value="off",
         translation_key="alarm_clock_elapsed",
-        appliance_types=("Oven", "Cooktop"),
+        appliance_types=("Oven", "Cooktop", "Hob"),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_EVENT_FAVORITE_001_EXTERNAL_TRIGGER,
@@ -234,7 +234,7 @@ EVENT_SENSORS = (
         options=EVENT_OPTIONS,
         default_value="off",
         translation_key="favorite_short_press",
-        appliance_types=("Hood", "Cooktop"),
+        appliance_types=("Hood", "Cooktop", "Hob"),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_EVENT_FAVORITE_002_EXTERNAL_TRIGGER,
@@ -242,7 +242,7 @@ EVENT_SENSORS = (
         options=EVENT_OPTIONS,
         default_value="off",
         translation_key="favorite_long_press",
-        appliance_types=("Hood", "Cooktop"),
+        appliance_types=("Hood", "Cooktop", "Hob"),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.COOKING_OVEN_EVENT_PREHEAT_FINISHED,
@@ -250,7 +250,7 @@ EVENT_SENSORS = (
         options=EVENT_OPTIONS,
         default_value="off",
         translation_key="preheat_finished",
-        appliance_types=("Oven", "Cooktop"),
+        appliance_types=("Oven", "Cooktop", "Hob"),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.COOKING_OVEN_EVENT_REGULAR_PREHEAT_FINISHED,

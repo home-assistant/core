@@ -4,9 +4,9 @@
 import ipaddress
 import logging
 
+import probatio
 from pyaehw4a1.aehw4a1 import AehW4a1
 import pyaehw4a1.exceptions
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -26,27 +26,27 @@ PLATFORMS = [Platform.CLIMATE]
 def coerce_ip(value):
     """Validate that provided value is a valid IP address."""
     if not value:
-        raise vol.Invalid("Must define an IP address")
+        raise probatio.Invalid("Must define an IP address")
     try:
         ipaddress.IPv4Network(value)
     except ValueError as err:
-        raise vol.Invalid("Not a valid IP address") from err
+        raise probatio.Invalid("Not a valid IP address") from err
     return value
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: {
-            CLIMATE_DOMAIN: vol.Schema(
+            CLIMATE_DOMAIN: probatio.Schema(
                 {
-                    vol.Optional(CONF_IP_ADDRESS, default=[]): vol.All(
-                        cv.ensure_list, [vol.All(cv.string, coerce_ip)]
+                    probatio.Optional(CONF_IP_ADDRESS, default=[]): probatio.All(
+                        cv.ensure_list, [probatio.All(cv.string, coerce_ip)]
                     )
                 }
             )
         }
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
