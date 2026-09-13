@@ -18,15 +18,15 @@ from homeassistant.components.neopool.services import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
 
 
 def _device_id(hass: HomeAssistant, entry: MockConfigEntry) -> str:
@@ -301,6 +301,25 @@ async def test_set_timer_invalid_time_format_raises(
     mock_neopool_client.write_timer.assert_not_awaited()
 
 
+async def test_set_timer_empty_time_string_raises(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """An explicitly empty start/stop is rejected, not silently dropped."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TIMER,
+            {"timer": "filtration1", "start": "", "stop": "10:00"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "invalid_timer_time"
+    mock_neopool_client.write_timer.assert_not_awaited()
+
+
 async def test_set_timer_client_failure_translates_to_validation_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -511,6 +530,30 @@ async def test_write_register_client_failure_raises(
     assert exc_info.value.translation_key == "register_write_failed"
 
 
+async def test_write_register_denied_for_non_admin(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    hass_read_only_user: MockUser,
+) -> None:
+    """A state-changing service is admin-only and rejects non-admin callers."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_WRITE_REGISTER,
+            {
+                "device_id": _device_id(hass, mock_config_entry),
+                "address": "1539",
+                "value": "5",
+            },
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    mock_neopool_client.async_write_register.assert_not_awaited()
+
+
 # ---------------------------------------------------------------------------
 # read_register
 # ---------------------------------------------------------------------------
@@ -658,6 +701,26 @@ async def test_read_register_value_error_translates(
     assert exc_info.value.translation_key == "register_read_failed"
 
 
+async def test_read_register_short_read_translates(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """A read returning fewer words than requested raises, not IndexError."""
+    await setup_integration(hass, mock_config_entry)
+    mock_neopool_client.async_read_register = AsyncMock(return_value=[])
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "read_register",
+            {"device_id": _device_id(hass, mock_config_entry), "address": "0x0102"},
+            blocking=True,
+            return_response=True,
+        )
+    assert exc_info.value.translation_key == "register_read_failed"
+
+
 # ---------------------------------------------------------------------------
 # get_device_time
 # ---------------------------------------------------------------------------
@@ -744,7 +807,7 @@ async def test_get_device_time_undecodable_translates(
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """An unparseable clock value surfaces as ServiceValidationError, not a crash."""
+    """An unparsable clock value surfaces as ServiceValidationError, not a crash."""
     await setup_integration(hass, mock_config_entry)
     mock_neopool_client.async_read_register = AsyncMock(return_value=[0, 0])
 

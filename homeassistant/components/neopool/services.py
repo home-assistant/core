@@ -27,7 +27,10 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_extract_config_entry_ids
+from homeassistant.helpers.service import (
+    async_extract_config_entry_ids,
+    async_register_admin_service,
+)
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
@@ -154,8 +157,8 @@ async def _async_set_timer(call: ServiceCall) -> None:
     enable = call.data.get(ATTR_ENABLE)
 
     try:
-        start_sec = hhmm_to_seconds(start) if start else None
-        stop_sec = hhmm_to_seconds(stop) if stop else None
+        start_sec = hhmm_to_seconds(start) if start is not None else None
+        stop_sec = hhmm_to_seconds(stop) if stop is not None else None
         interval: int | None = None
         if start_sec is not None and stop_sec is not None:
             interval = get_timer_interval(start_sec, stop_sec)
@@ -274,6 +277,16 @@ async def _async_read_register(call: ServiceCall) -> ServiceResponse:
             },
         ) from err
 
+    if len(registers) != count:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="register_read_failed",
+            translation_placeholders={
+                "address": f"0x{address:04X}",
+                "error": f"short read ({len(registers)}/{count} words)",
+            },
+        )
+
     _LOGGER.debug(
         "Service read_register: 0x%04X (count=%d) -> %s",
         address,
@@ -363,13 +376,15 @@ async def _async_set_device_time(call: ServiceCall) -> None:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the NeoPool services."""
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SET_TIMER,
         _async_set_timer,
         schema=SERVICE_SET_TIMER_SCHEMA,
     )
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_WRITE_REGISTER,
         _async_write_register,
@@ -389,7 +404,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=SERVICE_DEVICE_TIME_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SET_DEVICE_TIME,
         _async_set_device_time,
