@@ -33,7 +33,6 @@ from homeassistant.components.tesla_fleet.storage import (
 )
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from . import setup_platform
@@ -157,26 +156,6 @@ def history_responses(
 
     mock_energy_site.energy_history.side_effect = get_history
     return responses
-
-
-@pytest.mark.parametrize(
-    "response",
-    [
-        pytest.param({}, id="missing-response"),
-        pytest.param(_history(), id="empty-series"),
-        pytest.param(_history((None, {GRID: 100})), id="missing-timestamp"),
-    ],
-)
-async def test_invalid_current_data(
-    coordinator: TeslaFleetEnergySiteHistoryCoordinator,
-    hass: HomeAssistant,
-    mock_energy_site: AsyncMock,
-    response: dict[str, Any],
-) -> None:
-    """Invalid current-day data still fails the sensor refresh."""
-    mock_energy_site.energy_history.return_value = response
-    with pytest.raises(UpdateFailed):
-        await _refresh(hass, coordinator)
 
 
 async def test_hourly_aggregation_and_repeated_refresh(

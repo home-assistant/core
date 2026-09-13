@@ -88,31 +88,13 @@ async def test_load_unload(
     assert not hasattr(normal_config_entry, "runtime_data")
 
 
-async def test_remove_entry_clears_statistics(
-    hass: HomeAssistant,
-    normal_config_entry: MockConfigEntry,
-) -> None:
-    """Test remove entry clears external statistics for energy sites only."""
-    await setup_platform(hass, normal_config_entry)
-    assert normal_config_entry.state is ConfigEntryState.LOADED
-
-    with patch(
-        "homeassistant.components.tesla_fleet.get_recorder_instance"
-    ) as mock_get_recorder:
-        await hass.config_entries.async_remove(normal_config_entry.entry_id)
-
-    mock_get_recorder.return_value.async_clear_statistics.assert_called_once_with(
-        [f"{DOMAIN}:{ENERGY_SITE_ID}_{key}" for key in ENERGY_HISTORY_FIELDS]
-    )
-
-
-async def test_remove_entry_preserves_statistics_for_shared_site(
+async def test_remove_entry_clears_statistics_after_last_owner(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test removing one entry preserves statistics owned by another entry."""
+    """Clear shared statistics only after removing the last site owner."""
     await setup_platform(hass, normal_config_entry)
 
     site_device = device_registry.async_get_device_by_identifier(
@@ -140,16 +122,17 @@ async def test_remove_entry_preserves_statistics_for_shared_site(
     with patch(
         "homeassistant.components.tesla_fleet.get_recorder_instance"
     ) as mock_get_recorder:
-        await hass.config_entries.async_remove(normal_config_entry.entry_id)
-        mock_get_recorder.assert_not_called()
-        assert store.key not in hass_storage
-        assert shared_store.key in hass_storage
-
         await hass.config_entries.async_remove(shared_config_entry.entry_id)
+        mock_get_recorder.assert_not_called()
+        assert shared_store.key not in hass_storage
+        assert store.key in hass_storage
+
+        assert normal_config_entry.state is ConfigEntryState.LOADED
+        await hass.config_entries.async_remove(normal_config_entry.entry_id)
         mock_get_recorder.return_value.async_clear_statistics.assert_called_once_with(
             [f"{DOMAIN}:{ENERGY_SITE_ID}_{key}" for key in ENERGY_HISTORY_FIELDS]
         )
-        assert shared_store.key not in hass_storage
+        assert store.key not in hass_storage
 
 
 @pytest.mark.parametrize(("side_effect", "state"), SETUP_ERRORS)

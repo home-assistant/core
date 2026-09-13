@@ -1,6 +1,7 @@
 """Test the Tesla Fleet sensor platform."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -207,13 +208,34 @@ async def test_energy_history_last_reset(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_energy_history_invalid_first_period(
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param({}, id="missing-response"),
+        pytest.param({"response": {"time_series": []}}, id="empty-series"),
+        pytest.param(
+            {"response": {"time_series": [{"timestamp": None}]}},
+            id="null-timestamp",
+        ),
+        pytest.param(
+            {
+                "response": {
+                    "time_series": [{}, *ENERGY_HISTORY["response"]["time_series"]]
+                }
+            },
+            id="missing-first-timestamp",
+        ),
+    ],
+)
+async def test_energy_history_invalid_data(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     mock_energy_history: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    response: dict[str, Any],
 ) -> None:
-    """Test that malformed first-period history data makes sensors unavailable."""
+    """Malformed history makes sensors unavailable without an unexpected error."""
 
     freezer.move_to("2024-01-01 00:00:00+00:00")
 
@@ -224,9 +246,7 @@ async def test_energy_history_invalid_first_period(
     assert state is not None
     assert state.state == "unknown"
 
-    invalid_history = deepcopy(ENERGY_HISTORY)
-    invalid_history["response"]["time_series"][0].pop("timestamp")
-    mock_energy_history.return_value = invalid_history
+    mock_energy_history.return_value = response
 
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
@@ -235,3 +255,5 @@ async def test_energy_history_invalid_first_period(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+    assert "Error fetching Tesla Fleet Energy History 123456 data" in caplog.text
+    assert "Unexpected error fetching" not in caplog.text
