@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import override
+from typing import Final, override
 
 from zhong_hong_hvac.hub import ZhongHongGateway
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
@@ -13,7 +13,14 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER, READBACK_DELAY, SCAN_INTERVAL
+from .const import LOGGER, SCAN_INTERVAL
+
+# A unit acts on a command and then reports the new state unprompted. This is
+# how long to wait before asking for it anyway, to cover the reports that never
+# arrive. Ten runs against a Haier unit took between one and 3.4 seconds to
+# act, so this sits past the slowest of them: asking before the unit has moved
+# would read back the state the command was meant to change.
+READBACK_DELAY: Final = 5
 
 type DeviceAddress = tuple[int, int]
 
@@ -115,13 +122,7 @@ class ZhongHongCoordinator(DataUpdateCoordinator[None]):
             # coordinator's debouncer, whose cooldown is twice this delay, so
             # a command given shortly after a re-read would have its own one
             # held back past the point the unit has acted. The timer above is
-            # the rate limit this needs, and it is the same route the base
-            # coordinator takes for its own poll.
-            #
-            # The task belongs to the entry rather than to Home Assistant at
-            # large, which is where work an entry started should sit. It does
-            # not stop the query: one already in the executor runs to the end
-            # whoever holds the coroutine waiting on it.
+            # the rate limit this needs.
             self.config_entry.async_create_background_task(
                 self.hass,
                 self.async_refresh(),

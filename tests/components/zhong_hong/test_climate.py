@@ -1,6 +1,7 @@
 """Test the zhong_hong climate platform."""
 
 from datetime import timedelta
+import threading
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -537,16 +538,28 @@ async def test_a_command_landing_after_the_unload_schedules_nothing(
 ) -> None:
     """Test a command still in flight at unload does not leave a re-read behind.
 
-    A command sits in the executor while it is sent, so one that was still
-    there at the unload asks for its re-read afterwards, once the unload has
-    already been through and found nothing to cancel. That is what the call
-    below stands in for.
+    A command sits in the executor while it is sent, so one held up there is
+    still on its way out when the entry is taken down, and asks for its
+    re-read once the unload has already been through and found nothing to
+    cancel. Asking then would put back the timer the unload has just taken
+    away, and it would outlive the entry.
     """
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data.coordinator
+
+    mock_gateway.send_gate = threading.Event()
+    command = hass.async_create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_HIGH},
+            blocking=True,
+        )
+    )
+
+    assert await hass.async_add_executor_job(mock_gateway.send_entered.wait, 10)
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
-    coordinator.async_schedule_readback()
+    mock_gateway.send_gate.set()
+    await command
     await hass.async_block_till_done()

@@ -37,13 +37,6 @@ FAN_MODE_MAP: Final = {
 }
 FAN_MODE_REVERSE_MAP: Final = {v: k for k, v in FAN_MODE_MAP.items()}
 
-# A unit acts on a command and then reports the new state unprompted. This is
-# how long to wait before asking for it anyway, to cover the reports that never
-# arrive. Ten runs against a Haier unit took between one and 3.4 seconds to
-# act, so this sits past the slowest of them: asking before the unit has moved
-# would read back the state the command was meant to change.
-READBACK_DELAY: Final = 5
-
 DEFAULT_PORT: Final = 9999
 DEFAULT_GATEWAY_ADDRESS: Final = 1
 
