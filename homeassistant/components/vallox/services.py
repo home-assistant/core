@@ -3,8 +3,8 @@
 from enum import StrEnum, auto
 import logging
 
+import probatio
 from vallox_websocket_api import Profile, ValloxApiException
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -28,19 +28,19 @@ class ValloxService(StrEnum):
     SET_PROFILE = auto()
 
 
-SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
+SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = probatio.Schema(
     {
-        vol.Required(ATTR_PROFILE_FAN_SPEED): vol.All(
-            vol.Coerce(int), vol.Clamp(min=0, max=100)
+        probatio.Required(ATTR_PROFILE_FAN_SPEED): probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
         )
     }
 )
 
-SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
+SERVICE_SCHEMA_SET_PROFILE = probatio.Schema(
     {
-        vol.Required(ATTR_PROFILE): vol.In(I18N_KEY_TO_VALLOX_PROFILE),
-        vol.Optional(ATTR_DURATION): vol.All(
-            vol.Coerce(int), vol.Clamp(min=1, max=PROFILE_DURATION_INDEFINITE)
+        probatio.Required(ATTR_PROFILE): probatio.In(I18N_KEY_TO_VALLOX_PROFILE),
+        probatio.Optional(ATTR_DURATION): probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=1, max=PROFILE_DURATION_INDEFINITE)
         ),
     }
 )

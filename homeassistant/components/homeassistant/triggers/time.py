@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from functools import partial
 from typing import Any, NamedTuple
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import sensor
 from homeassistant.components.input_datetime import DOMAIN as INPUT_DATETIME_DOMAIN
@@ -41,13 +41,15 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-_TIME_TRIGGER_ENTITY = vol.All(str, cv.entity_domain(["input_datetime", "sensor"]))
-_TIME_AT_SCHEMA = vol.Any(cv.time, _TIME_TRIGGER_ENTITY)
+_TIME_TRIGGER_ENTITY = probatio.All(str, cv.entity_domain(["input_datetime", "sensor"]))
+_TIME_AT_SCHEMA = probatio.Any(cv.time, _TIME_TRIGGER_ENTITY)
 
-_TIME_TRIGGER_ENTITY_WITH_OFFSET = vol.Schema(
+_TIME_TRIGGER_ENTITY_WITH_OFFSET = probatio.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(["input_datetime", "sensor"]),
-        vol.Optional(CONF_OFFSET): cv.time_period,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_domain(
+            ["input_datetime", "sensor"]
+        ),
+        probatio.Optional(CONF_OFFSET): cv.time_period,
     }
 )
 
@@ -62,7 +64,7 @@ def valid_at_template(value: Any) -> template.Template:
     return tpl
 
 
-_TIME_TRIGGER_SCHEMA = vol.Any(
+_TIME_TRIGGER_SCHEMA = probatio.Any(
     cv.time,
     _TIME_TRIGGER_ENTITY,
     _TIME_TRIGGER_ENTITY_WITH_OFFSET,
@@ -77,11 +79,13 @@ _TIME_TRIGGER_SCHEMA = vol.Any(
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "time",
-        vol.Required(CONF_AT): vol.All(cv.ensure_list, [_TIME_TRIGGER_SCHEMA]),
-        vol.Optional(CONF_WEEKDAY): vol.Any(
-            vol.In(WEEKDAYS),
-            vol.All(cv.ensure_list, [vol.In(WEEKDAYS)]),
+        probatio.Required(CONF_PLATFORM): "time",
+        probatio.Required(CONF_AT): probatio.All(
+            cv.ensure_list, [_TIME_TRIGGER_SCHEMA]
+        ),
+        probatio.Optional(CONF_WEEKDAY): probatio.Any(
+            probatio.In(WEEKDAYS),
+            probatio.All(cv.ensure_list, [probatio.In(WEEKDAYS)]),
         ),
     }
 )
@@ -257,7 +261,7 @@ async def async_attach_trigger(  # noqa: C901
             render = template.render_complex(at_time, variables, limited=True)
             try:
                 at_time = _TIME_AT_SCHEMA(render)
-            except vol.Invalid as exc:
+            except probatio.Invalid as exc:
                 raise HomeAssistantError(
                     f"Limited Template for 'at' rendered a"
                     f" unexpected value '{render}', expected"
