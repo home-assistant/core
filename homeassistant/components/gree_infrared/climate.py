@@ -1,13 +1,13 @@
-"""Climate platform for Onida IR integration — Onida AC."""
+"""Climate platform for Gree IR integration — Gree AC."""
 
 from typing import Any, override
 
-from infrared_protocols.commands.onida_ac import (
+from infrared_protocols.commands.gree_ac import (
     MAX_TEMP,
     MIN_TEMP,
-    OnidaAcCommand,
-    OnidaAcFanSpeed,
-    OnidaAcMode,
+    GreeAcCommand,
+    GreeAcFanSpeed,
+    GreeAcMode,
 )
 
 from homeassistant.components.climate import (
@@ -43,30 +43,28 @@ from .const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
 )
-from .entity import OnidaIrEntity
+from .entity import GreeIrEntity
 
 PARALLEL_UPDATES = 1
 
-_HA_FAN_TO_LIB: dict[str, OnidaAcFanSpeed] = {
-    FAN_AUTO: OnidaAcFanSpeed.AUTO,
-    FAN_LOW: OnidaAcFanSpeed.LOW,
-    FAN_MEDIUM: OnidaAcFanSpeed.MEDIUM,
-    FAN_HIGH: OnidaAcFanSpeed.HIGH,
+_HA_FAN_TO_LIB: dict[str, GreeAcFanSpeed] = {
+    FAN_AUTO: GreeAcFanSpeed.AUTO,
+    FAN_LOW: GreeAcFanSpeed.LOW,
+    FAN_MEDIUM: GreeAcFanSpeed.MEDIUM,
+    FAN_HIGH: GreeAcFanSpeed.HIGH,
 }
-_LIB_FAN_TO_HA: dict[OnidaAcFanSpeed, str] = {v: k for k, v in _HA_FAN_TO_LIB.items()}
+_LIB_FAN_TO_HA: dict[GreeAcFanSpeed, str] = {v: k for k, v in _HA_FAN_TO_LIB.items()}
 
 # Every mode other than OFF; the protocol has no OFF mode of its own, power is a
 # separate field, so this dict intentionally has no HVACMode.OFF entry.
-_HA_MODE_TO_LIB: dict[HVACMode, OnidaAcMode] = {
-    HVACMode.AUTO: OnidaAcMode.AUTO,
-    HVACMode.COOL: OnidaAcMode.COOL,
-    HVACMode.HEAT: OnidaAcMode.HEAT,
-    HVACMode.DRY: OnidaAcMode.DRY,
-    HVACMode.FAN_ONLY: OnidaAcMode.FAN_ONLY,
+_HA_MODE_TO_LIB: dict[HVACMode, GreeAcMode] = {
+    HVACMode.AUTO: GreeAcMode.AUTO,
+    HVACMode.COOL: GreeAcMode.COOL,
+    HVACMode.HEAT: GreeAcMode.HEAT,
+    HVACMode.DRY: GreeAcMode.DRY,
+    HVACMode.FAN_ONLY: GreeAcMode.FAN_ONLY,
 }
-_LIB_MODE_TO_HA: dict[OnidaAcMode, HVACMode] = {
-    v: k for k, v in _HA_MODE_TO_LIB.items()
-}
+_LIB_MODE_TO_HA: dict[GreeAcMode, HVACMode] = {v: k for k, v in _HA_MODE_TO_LIB.items()}
 
 
 async def async_setup_entry(
@@ -74,20 +72,20 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Onida AC climate entity from config entry."""
+    """Set up Gree AC climate entity from config entry."""
     emitter_entity_id = entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
     if receiver_entity_id := entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID):
         async_add_entities(
-            [OnidaAcClimateWithReceiver(entry, emitter_entity_id, receiver_entity_id)]
+            [GreeAcClimateWithReceiver(entry, emitter_entity_id, receiver_entity_id)]
         )
     else:
-        async_add_entities([OnidaAcClimateEntity(entry, emitter_entity_id)])
+        async_add_entities([GreeAcClimateEntity(entry, emitter_entity_id)])
 
 
-class OnidaAcClimateEntity(
-    OnidaIrEntity, InfraredEmitterConsumerEntity, ClimateEntity, RestoreEntity
+class GreeAcClimateEntity(
+    GreeIrEntity, InfraredEmitterConsumerEntity, ClimateEntity, RestoreEntity
 ):
-    """Onida AC climate entity controlled via infrared emitter."""
+    """Gree AC climate entity controlled via infrared emitter."""
 
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -104,7 +102,7 @@ class OnidaAcClimateEntity(
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
     def __init__(self, entry: ConfigEntry, emitter_entity_id: str) -> None:
-        """Initialize Onida AC climate entity."""
+        """Initialize Gree AC climate entity."""
         super().__init__(entry)
         self._infrared_emitter_entity_id = emitter_entity_id
 
@@ -204,9 +202,9 @@ class OnidaAcClimateEntity(
 
     def _build_command(
         self, hvac_mode: HVACMode, power: bool, temp: int, fan_mode: str
-    ) -> OnidaAcCommand:
+    ) -> GreeAcCommand:
         """Build a command from a mode, power state, a temperature and a fan mode."""
-        return OnidaAcCommand(
+        return GreeAcCommand(
             power=power,
             mode=_HA_MODE_TO_LIB[hvac_mode],
             temperature=temp,
@@ -219,13 +217,13 @@ class OnidaAcClimateEntity(
         )
 
 
-class OnidaAcClimateWithReceiver(OnidaAcClimateEntity, InfraredReceiverConsumerEntity):
-    """Onida AC climate entity that also tracks a configured infrared receiver."""
+class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEntity):
+    """Gree AC climate entity that also tracks a configured infrared receiver."""
 
     def __init__(
         self, entry: ConfigEntry, emitter_entity_id: str, receiver_entity_id: str
     ) -> None:
-        """Initialize Onida AC climate entity with a receiver."""
+        """Initialize Gree AC climate entity with a receiver."""
         super().__init__(entry, emitter_entity_id)
         self._infrared_receiver_entity_id = receiver_entity_id
 
@@ -233,7 +231,7 @@ class OnidaAcClimateWithReceiver(OnidaAcClimateEntity, InfraredReceiverConsumerE
     @callback
     def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
         """Update state from a physical remote signal."""
-        command = OnidaAcCommand.from_raw_timings(signal.timings)
+        command = GreeAcCommand.from_raw_timings(signal.timings)
         if command is None:
             return
 

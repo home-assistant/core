@@ -1,4 +1,4 @@
-"""Common fixtures for the Onida Infrared tests."""
+"""Common fixtures for the Gree Infrared tests."""
 
 from typing import Any
 from unittest.mock import patch
@@ -6,8 +6,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.onida_infrared import PLATFORMS
-from homeassistant.components.onida_infrared.const import (
+from homeassistant.components.gree_infrared import PLATFORMS
+from homeassistant.components.gree_infrared.const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
@@ -52,7 +52,7 @@ def mock_config_entry(
     extra_entry_data: dict[str, Any],
     has_receiver: bool,
 ) -> MockConfigEntry:
-    """Return a mock config entry for the Onida AC."""
+    """Return a mock config entry for the Gree AC."""
     data: dict[str, Any] = {
         CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
         **extra_entry_data,
@@ -63,7 +63,7 @@ def mock_config_entry(
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id=ENTRY_ID,
-        title="Onida AC via Test IR emitter",
+        title="Gree AC via Test IR emitter",
         data=data,
     )
 
@@ -82,10 +82,10 @@ async def init_integration(
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
     platforms: list[Platform],
 ) -> MockConfigEntry:
-    """Set up the Onida Infrared integration for testing."""
+    """Set up the Gree Infrared integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.onida_infrared.PLATFORMS", platforms):
+    with patch("homeassistant.components.gree_infrared.PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

@@ -2774,6 +2774,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "gree_infrared": {
+      "name": "Gree Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "green_planet_energy": {
       "name": "Green Planet Energy",
       "integration_type": "service",
@@ -5183,12 +5189,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "onida_infrared": {
-      "name": "Onida Infrared",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "assumed_state"
     },
     "onkyo": {
       "name": "Onkyo",

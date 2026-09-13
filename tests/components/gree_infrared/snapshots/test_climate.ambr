@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[climate.onida_ac-entry]
+# name: test_entities[climate.gree_ac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -28,7 +28,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.onida_ac',
+    'entity_id': 'climate.gree_ac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -42,7 +42,7 @@
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
-    'platform': 'onida_infrared',
+    'platform': 'gree_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 9>,
@@ -51,7 +51,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.onida_ac-state]
+# name: test_entities[climate.gree_ac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
@@ -63,7 +63,7 @@
         'medium',
         'high',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Onida AC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gree AC',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
@@ -76,7 +76,7 @@
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.onida_ac',
+    'entity_id': 'climate.gree_ac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

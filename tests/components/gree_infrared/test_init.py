@@ -1,4 +1,4 @@
-"""Tests for the Onida Infrared integration setup."""
+"""Tests for the Gree Infrared integration setup."""
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

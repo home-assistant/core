@@ -1,4 +1,4 @@
-"""Config flow for Onida IR integration."""
+"""Config flow for Gree IR integration."""
 
 from typing import Any, override
 
@@ -70,8 +70,8 @@ def _user_schema(hass: HomeAssistant) -> vol.Schema:
     )
 
 
-class OnidaIrConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle config flow for Onida IR."""
+class GreeIrConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle config flow for Gree IR."""
 
     VERSION = 1
 
@@ -99,7 +99,7 @@ class OnidaIrConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             return self.async_create_entry(
-                title=f"Onida AC via {self._entity_name(emitter_id)}",
+                title=f"Gree AC via {self._entity_name(emitter_id)}",
                 data=user_input,
             )
 

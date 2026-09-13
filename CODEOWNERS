@@ -713,6 +713,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/gpsd/ @fabaff @jrieger
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
+/homeassistant/components/gree_infrared/ @Dr-Blank
+/tests/components/gree_infrared/ @Dr-Blank
 /homeassistant/components/green_planet_energy/ @petschni
 /tests/components/green_planet_energy/ @petschni
 /homeassistant/components/greencell/ @BrzezowskiGC
@@ -1341,8 +1343,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/onedrive_for_business/ @zweckj
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
-/homeassistant/components/onida_infrared/ @Dr-Blank
-/tests/components/onida_infrared/ @Dr-Blank
 /homeassistant/components/onkyo/ @arturpragacz @eclair4151
 /tests/components/onkyo/ @arturpragacz @eclair4151
 /homeassistant/components/onvif/ @jterrace

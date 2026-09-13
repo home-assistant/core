@@ -1,4 +1,4 @@
-"""Common entity for Onida IR integration."""
+"""Common entity for Gree IR integration."""
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -7,8 +7,8 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 
-class OnidaIrEntity(Entity):
-    """Onida IR base entity providing common device info."""
+class GreeIrEntity(Entity):
+    """Gree IR base entity providing common device info."""
 
     _attr_has_entity_name = True
 
@@ -16,9 +16,9 @@ class OnidaIrEntity(Entity):
         self,
         entry: ConfigEntry,
         unique_id_suffix: str | None = None,
-        device_name: str = "Onida AC",
+        device_name: str = "Gree AC",
     ) -> None:
-        """Initialize Onida IR entity."""
+        """Initialize Gree IR entity."""
         self._attr_unique_id = (
             entry.entry_id
             if unique_id_suffix is None
@@ -27,5 +27,5 @@ class OnidaIrEntity(Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=device_name,
-            manufacturer="Onida",
+            manufacturer="Gree",
         )

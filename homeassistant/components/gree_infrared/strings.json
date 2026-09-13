@@ -19,8 +19,8 @@
           "infrared_emitter_entity_id": "The infrared emitter entity to use for sending commands.",
           "infrared_receiver_entity_id": "Optional — allows the integration to update state when the physical remote is used."
         },
-        "description": "Select an infrared emitter and the modes your Onida AC supports.",
-        "title": "Set up Onida AC"
+        "description": "Select an infrared emitter and the modes your Gree AC supports.",
+        "title": "Set up Gree AC"
       }
     }
   },

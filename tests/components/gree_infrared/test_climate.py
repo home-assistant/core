@@ -1,13 +1,13 @@
-"""Tests for the Onida Infrared climate platform."""
+"""Tests for the Gree Infrared climate platform."""
 
 from typing import Any
 from unittest.mock import patch
 
-from infrared_protocols.commands.onida_ac import (
+from infrared_protocols.commands.gree_ac import (
     MIN_TEMP,
-    OnidaAcCommand,
-    OnidaAcFanSpeed,
-    OnidaAcMode,
+    GreeAcCommand,
+    GreeAcFanSpeed,
+    GreeAcMode,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -44,7 +44,7 @@ from tests.components.infrared.common import (
     MockInfraredReceiverEntity,
 )
 
-_CLIMATE_ENTITY_ID = "climate.onida_ac"
+_CLIMATE_ENTITY_ID = "climate.gree_ac"
 
 
 @pytest.fixture
@@ -101,11 +101,11 @@ async def test_set_hvac_mode_off(
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
     assert (
         timings
-        == OnidaAcCommand(
+        == GreeAcCommand(
             power=False,
-            mode=OnidaAcMode.COOL,
+            mode=GreeAcMode.COOL,
             temperature=MIN_TEMP,
-            fan=OnidaAcFanSpeed.AUTO,
+            fan=GreeAcFanSpeed.AUTO,
         ).get_raw_timings()
     )
 
@@ -140,11 +140,11 @@ async def test_set_hvac_mode_off_keeps_the_last_active_mode(
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
     assert (
         timings
-        == OnidaAcCommand(
+        == GreeAcCommand(
             power=False,
-            mode=OnidaAcMode.DRY,
+            mode=GreeAcMode.DRY,
             temperature=MIN_TEMP,
-            fan=OnidaAcFanSpeed.AUTO,
+            fan=GreeAcFanSpeed.AUTO,
         ).get_raw_timings()
     )
 
@@ -157,8 +157,8 @@ async def test_set_hvac_mode_off_keeps_the_last_active_mode(
             HVACMode.COOL,
             24,
             FAN_AUTO,
-            OnidaAcCommand(
-                mode=OnidaAcMode.COOL, temperature=24, fan=OnidaAcFanSpeed.AUTO
+            GreeAcCommand(
+                mode=GreeAcMode.COOL, temperature=24, fan=GreeAcFanSpeed.AUTO
             ),
             id="cool_24_auto",
         ),
@@ -166,17 +166,15 @@ async def test_set_hvac_mode_off_keeps_the_last_active_mode(
             HVACMode.COOL,
             18,
             FAN_LOW,
-            OnidaAcCommand(
-                mode=OnidaAcMode.COOL, temperature=18, fan=OnidaAcFanSpeed.LOW
-            ),
+            GreeAcCommand(mode=GreeAcMode.COOL, temperature=18, fan=GreeAcFanSpeed.LOW),
             id="cool_18_low",
         ),
         pytest.param(
             HVACMode.COOL,
             30,
             FAN_HIGH,
-            OnidaAcCommand(
-                mode=OnidaAcMode.COOL, temperature=30, fan=OnidaAcFanSpeed.HIGH
+            GreeAcCommand(
+                mode=GreeAcMode.COOL, temperature=30, fan=GreeAcFanSpeed.HIGH
             ),
             id="cool_30_high",
         ),
@@ -184,8 +182,8 @@ async def test_set_hvac_mode_off_keeps_the_last_active_mode(
             HVACMode.DRY,
             24,
             FAN_MEDIUM,
-            OnidaAcCommand(
-                mode=OnidaAcMode.DRY, temperature=24, fan=OnidaAcFanSpeed.MEDIUM
+            GreeAcCommand(
+                mode=GreeAcMode.DRY, temperature=24, fan=GreeAcFanSpeed.MEDIUM
             ),
             id="dry_24_medium",
         ),
@@ -197,7 +195,7 @@ async def test_set_hvac_mode_encodes_correctly(
     hvac_mode: HVACMode,
     temp: int,
     fan: str,
-    expected_cmd: OnidaAcCommand,
+    expected_cmd: GreeAcCommand,
 ) -> None:
     """Test that set_hvac_mode sends correctly encoded timings."""
     await hass.services.async_call(
@@ -236,24 +234,24 @@ async def test_set_hvac_mode_encodes_correctly(
     [
         pytest.param(
             HVACMode.HEAT,
-            OnidaAcCommand(
-                mode=OnidaAcMode.HEAT, temperature=MIN_TEMP, fan=OnidaAcFanSpeed.AUTO
+            GreeAcCommand(
+                mode=GreeAcMode.HEAT, temperature=MIN_TEMP, fan=GreeAcFanSpeed.AUTO
             ),
             id="heat",
         ),
         pytest.param(
             HVACMode.FAN_ONLY,
-            OnidaAcCommand(
-                mode=OnidaAcMode.FAN_ONLY,
+            GreeAcCommand(
+                mode=GreeAcMode.FAN_ONLY,
                 temperature=MIN_TEMP,
-                fan=OnidaAcFanSpeed.AUTO,
+                fan=GreeAcFanSpeed.AUTO,
             ),
             id="fan_only",
         ),
         pytest.param(
             HVACMode.AUTO,
-            OnidaAcCommand(
-                mode=OnidaAcMode.AUTO, temperature=MIN_TEMP, fan=OnidaAcFanSpeed.AUTO
+            GreeAcCommand(
+                mode=GreeAcMode.AUTO, temperature=MIN_TEMP, fan=GreeAcFanSpeed.AUTO
             ),
             id="auto",
         ),
@@ -263,7 +261,7 @@ async def test_set_hvac_mode_from_off_uses_defaults(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     hvac_mode: HVACMode,
-    expected_cmd: OnidaAcCommand,
+    expected_cmd: GreeAcCommand,
 ) -> None:
     """Test modes not reachable via the cool/dry default encode from entity defaults."""
     await hass.services.async_call(
@@ -303,8 +301,8 @@ async def test_set_temperature_sends_command_when_active(
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
     assert (
         timings
-        == OnidaAcCommand(
-            mode=OnidaAcMode.COOL, temperature=26, fan=OnidaAcFanSpeed.AUTO
+        == GreeAcCommand(
+            mode=GreeAcMode.COOL, temperature=26, fan=GreeAcFanSpeed.AUTO
         ).get_raw_timings()
     )
 
@@ -343,8 +341,8 @@ async def test_set_temperature_sends_command_in_dry_mode(
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
     assert (
         timings
-        == OnidaAcCommand(
-            mode=OnidaAcMode.DRY, temperature=25, fan=OnidaAcFanSpeed.AUTO
+        == GreeAcCommand(
+            mode=GreeAcMode.DRY, temperature=25, fan=GreeAcFanSpeed.AUTO
         ).get_raw_timings()
     )
 
@@ -394,8 +392,8 @@ async def test_set_fan_mode_sends_command_when_active(
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
     assert (
         timings
-        == OnidaAcCommand(
-            mode=OnidaAcMode.COOL, temperature=MIN_TEMP, fan=OnidaAcFanSpeed.HIGH
+        == GreeAcCommand(
+            mode=GreeAcMode.COOL, temperature=MIN_TEMP, fan=GreeAcFanSpeed.HIGH
         ).get_raw_timings()
     )
 
@@ -425,21 +423,21 @@ async def test_set_fan_mode_no_command_when_off(
 @pytest.mark.parametrize(
     ("lib_fan", "expected_fan_mode"),
     [
-        pytest.param(OnidaAcFanSpeed.AUTO, FAN_AUTO, id="auto"),
-        pytest.param(OnidaAcFanSpeed.LOW, FAN_LOW, id="low"),
-        pytest.param(OnidaAcFanSpeed.MEDIUM, FAN_MEDIUM, id="medium"),
-        pytest.param(OnidaAcFanSpeed.HIGH, FAN_HIGH, id="high"),
+        pytest.param(GreeAcFanSpeed.AUTO, FAN_AUTO, id="auto"),
+        pytest.param(GreeAcFanSpeed.LOW, FAN_LOW, id="low"),
+        pytest.param(GreeAcFanSpeed.MEDIUM, FAN_MEDIUM, id="medium"),
+        pytest.param(GreeAcFanSpeed.HIGH, FAN_HIGH, id="high"),
     ],
 )
 async def test_receiver_updates_state_on_cool_signal(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
-    lib_fan: OnidaAcFanSpeed,
+    lib_fan: GreeAcFanSpeed,
     expected_fan_mode: str,
 ) -> None:
     """Test that a received cool signal updates mode, temperature and every fan speed."""
-    timings = OnidaAcCommand(
-        mode=OnidaAcMode.COOL, temperature=24, fan=lib_fan
+    timings = GreeAcCommand(
+        mode=GreeAcMode.COOL, temperature=24, fan=lib_fan
     ).get_raw_timings()
 
     signal = InfraredReceivedSignal(timings=timings)
@@ -462,8 +460,8 @@ async def test_receiver_updates_state_on_off_signal(
     """Test a received off signal sets mode to off, preserving temperature and fan."""
     mock_infrared_receiver_entity._handle_received_signal(
         InfraredReceivedSignal(
-            timings=OnidaAcCommand(
-                mode=OnidaAcMode.COOL, temperature=24, fan=OnidaAcFanSpeed.MEDIUM
+            timings=GreeAcCommand(
+                mode=GreeAcMode.COOL, temperature=24, fan=GreeAcFanSpeed.MEDIUM
             ).get_raw_timings()
         )
     )
@@ -471,11 +469,11 @@ async def test_receiver_updates_state_on_off_signal(
 
     mock_infrared_receiver_entity._handle_received_signal(
         InfraredReceivedSignal(
-            timings=OnidaAcCommand(
+            timings=GreeAcCommand(
                 power=False,
-                mode=OnidaAcMode.COOL,
+                mode=GreeAcMode.COOL,
                 temperature=24,
-                fan=OnidaAcFanSpeed.MEDIUM,
+                fan=GreeAcFanSpeed.MEDIUM,
             ).get_raw_timings()
         )
     )
@@ -498,8 +496,8 @@ async def test_set_hvac_mode_off_keeps_the_mode_seen_by_the_receiver(
     """Test a power-off frame carries the last mode the physical remote selected."""
     mock_infrared_receiver_entity._handle_received_signal(
         InfraredReceivedSignal(
-            timings=OnidaAcCommand(
-                mode=OnidaAcMode.DRY, temperature=24, fan=OnidaAcFanSpeed.MEDIUM
+            timings=GreeAcCommand(
+                mode=GreeAcMode.DRY, temperature=24, fan=GreeAcFanSpeed.MEDIUM
             ).get_raw_timings()
         )
     )
@@ -516,11 +514,11 @@ async def test_set_hvac_mode_off_keeps_the_mode_seen_by_the_receiver(
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
     assert (
         timings
-        == OnidaAcCommand(
+        == GreeAcCommand(
             power=False,
-            mode=OnidaAcMode.DRY,
+            mode=GreeAcMode.DRY,
             temperature=24,
-            fan=OnidaAcFanSpeed.MEDIUM,
+            fan=GreeAcFanSpeed.MEDIUM,
         ).get_raw_timings()
     )
 
@@ -534,8 +532,8 @@ async def test_receiver_ignores_unconfigured_hvac_mode(
     """Test a signal for a mode the user did not configure does not change state."""
     mock_infrared_receiver_entity._handle_received_signal(
         InfraredReceivedSignal(
-            timings=OnidaAcCommand(
-                mode=OnidaAcMode.HEAT, temperature=24, fan=OnidaAcFanSpeed.HIGH
+            timings=GreeAcCommand(
+                mode=GreeAcMode.HEAT, temperature=24, fan=GreeAcFanSpeed.HIGH
             ).get_raw_timings()
         )
     )
@@ -549,7 +547,7 @@ async def test_receiver_ignores_unconfigured_hvac_mode(
 
 @pytest.mark.parametrize("has_receiver", [True])
 @pytest.mark.usefixtures("init_integration")
-async def test_receiver_ignores_non_onida_ac_signal(
+async def test_receiver_ignores_non_gree_ac_signal(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
 ) -> None:
@@ -614,7 +612,7 @@ async def test_state_restored_on_restart(
     )
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.onida_infrared.PLATFORMS", platforms):
+    with patch("homeassistant.components.gree_infrared.PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -632,18 +630,18 @@ async def test_state_restored_on_restart(
     [
         pytest.param(
             HVACMode.COOL,
-            OnidaAcCommand(
-                mode=OnidaAcMode.COOL, temperature=24, fan=OnidaAcFanSpeed.AUTO
+            GreeAcCommand(
+                mode=GreeAcMode.COOL, temperature=24, fan=GreeAcFanSpeed.AUTO
             ),
             id="cool",
         ),
         pytest.param(
             HVACMode.OFF,
-            OnidaAcCommand(
+            GreeAcCommand(
                 power=False,
-                mode=OnidaAcMode.COOL,
+                mode=GreeAcMode.COOL,
                 temperature=24,
-                fan=OnidaAcFanSpeed.AUTO,
+                fan=GreeAcFanSpeed.AUTO,
             ),
             id="off",
         ),
@@ -653,7 +651,7 @@ async def test_set_temperature_with_hvac_mode(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     hvac_mode: HVACMode,
-    expected_cmd: OnidaAcCommand,
+    expected_cmd: GreeAcCommand,
 ) -> None:
     """Test set_temperature applies a given mode, off included, while off."""
     await hass.services.async_call(
@@ -697,7 +695,7 @@ async def test_fahrenheit_temperatures_round_trip(
     )
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.onida_infrared.PLATFORMS", platforms):
+    with patch("homeassistant.components.gree_infrared.PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -717,8 +715,8 @@ async def test_fahrenheit_temperatures_round_trip(
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
     assert (
         timings
-        == OnidaAcCommand(
-            mode=OnidaAcMode.COOL, temperature=24, fan=OnidaAcFanSpeed.AUTO
+        == GreeAcCommand(
+            mode=GreeAcMode.COOL, temperature=24, fan=GreeAcFanSpeed.AUTO
         ).get_raw_timings()
     )
 
@@ -752,11 +750,11 @@ async def test_set_temperature_with_hvac_mode_off_while_active(
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
     assert (
         timings
-        == OnidaAcCommand(
+        == GreeAcCommand(
             power=False,
-            mode=OnidaAcMode.COOL,
+            mode=GreeAcMode.COOL,
             temperature=26,
-            fan=OnidaAcFanSpeed.AUTO,
+            fan=GreeAcFanSpeed.AUTO,
         ).get_raw_timings()
     )
 

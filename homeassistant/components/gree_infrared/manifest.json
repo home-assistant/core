@@ -1,10 +1,10 @@
 {
-  "domain": "onida_infrared",
-  "name": "Onida Infrared",
+  "domain": "gree_infrared",
+  "name": "Gree Infrared",
   "codeowners": ["@Dr-Blank"],
   "config_flow": true,
   "dependencies": ["infrared"],
-  "documentation": "https://www.home-assistant.io/integrations/onida_infrared",
+  "documentation": "https://www.home-assistant.io/integrations/gree_infrared",
   "integration_type": "device",
   "iot_class": "assumed_state",
   "quality_scale": "silver"

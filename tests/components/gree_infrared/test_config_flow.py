@@ -1,9 +1,9 @@
-"""Tests for the Onida Infrared config flow."""
+"""Tests for the Gree Infrared config flow."""
 
 import pytest
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.onida_infrared.const import (
+from homeassistant.components.gree_infrared.const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
@@ -40,7 +40,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Onida AC via Test IR emitter"
+    assert result["title"] == "Gree AC via Test IR emitter"
     assert result["data"] == {
         CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
         CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
@@ -143,8 +143,8 @@ async def test_user_flow_no_emitters_receiver_only(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("entity_name", "expected_title"),
     [
-        pytest.param(None, "Onida AC via Test IR emitter", id="original_name"),
-        pytest.param("AC IR emitter", "Onida AC via AC IR emitter", id="custom_name"),
+        pytest.param(None, "Gree AC via Test IR emitter", id="original_name"),
+        pytest.param("AC IR emitter", "Gree AC via AC IR emitter", id="custom_name"),
     ],
 )
 async def test_user_flow_title_from_entity_name(
