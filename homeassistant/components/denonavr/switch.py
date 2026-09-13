@@ -13,7 +13,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DenonavrConfigEntry
-from .const import CONF_SERIAL_NUMBER, DOMAIN, ENTITY_SCAN_INTERVAL
+from .const import (
+    CONF_SERIAL_NUMBER,
+    CONF_UPDATE_AUDYSSEY,
+    DEFAULT_UPDATE_AUDYSSEY,
+    DOMAIN,
+    ENTITY_SCAN_INTERVAL,
+)
 from .entity import DenonAvrPendingValueEntity
 
 # See the matching constants in select.py.
@@ -45,8 +51,16 @@ async def async_setup_entry(
         identifiers={(DOMAIN, config_entry.unique_id or config_entry.entry_id)},
     )
 
+    update_audyssey = config_entry.options.get(
+        CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
+    )
+
     async_add_entities(
-        [DenonAvrDynamicEqSwitch(main_receiver, unique_id_base, device_info)]
+        [
+            DenonAvrDynamicEqSwitch(
+                main_receiver, unique_id_base, device_info, update_audyssey
+            )
+        ]
     )
 
 
@@ -61,6 +75,7 @@ class DenonAvrDynamicEqSwitch(DenonAvrPendingValueEntity[bool], SwitchEntity):
         receiver: DenonAVR,
         unique_id_base: str,
         device_info: DeviceInfo,
+        update_audyssey: bool,
     ) -> None:
         """Initialize the switch."""
         super().__init__(
@@ -68,6 +83,7 @@ class DenonAvrDynamicEqSwitch(DenonAvrPendingValueEntity[bool], SwitchEntity):
             f"{unique_id_base}-dynamic_eq",
             device_info,
             refresh_fn=receiver.async_update_audyssey,
+            poll_refresh_enabled=lambda: update_audyssey,
         )
 
     @override

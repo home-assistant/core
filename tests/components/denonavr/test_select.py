@@ -5,8 +5,6 @@ from unittest.mock import MagicMock, patch
 
 from denonavr.exceptions import AvrCommandError
 import pytest
-from tests.common import MockConfigEntry
-
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
@@ -27,6 +25,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+
+from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_NAME = "Test_Receiver"
@@ -290,14 +290,7 @@ async def test_auto_standby(hass: HomeAssistant, client: MagicMock) -> None:
 async def test_dimmer_refreshes_and_shows_new_state_immediately(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Test that changing Dimmer reflects immediately.
-
-    This is the bug where the receiver applied the change instantly
-    but the UI didn't reliably show it, without waiting on either
-    entity's independent poll cycle. A real receiver would confirm
-    "Dark" on its own on the next async_update(); the mock's
-    side_effect stands in for that.
-    """
+    """Test that a stale immediate refresh doesn't revert a just-set value."""
 
     async def _apply_dimmer_change(*args, **kwargs):
         client.dimmer = "Dark"
@@ -367,7 +360,9 @@ async def test_reference_level_offset_always_refreshes_after_change(
     await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
     entity_id = _entity_id(hass, "reference_level_offset")
 
-    # Setup performs one initial Audyssey fetch before the platforms load.
+    # Setup itself does one initial Audyssey fetch per platform (select
+    # + switch), so both entities start with a real value instead of
+    # "unavailable".
     baseline_calls = client.async_update_audyssey.await_count
 
     await hass.services.async_call(
@@ -376,9 +371,68 @@ async def test_reference_level_offset_always_refreshes_after_change(
         {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "+5dB"},
         blocking=True,
     )
-    # Two calls: our own explicit refresh, plus HA's built-in
-    # post-service-call poll for should_poll=True entities.
-    assert client.async_update_audyssey.await_count == baseline_calls + 2
+    # Just one call: our own explicit refresh (unconditional). HA's
+    # built-in post-service-call poll would add a second, but that one
+    # now correctly respects "Update Audyssey settings" (off here), so
+    # it's skipped rather than firing regardless like the explicit one.
+    assert client.async_update_audyssey.await_count == baseline_calls + 1
+
+
+async def test_reference_level_offset_poll_refresh_respects_audyssey_option(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """The recurring poll honors the "Update Audyssey settings" option.
+
+    Matches the existing precedent for media_player.py's own recurring
+    poll - unlike the post-change refresh, which stays unconditional
+    regardless.
+    """
+    await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
+    entity_id = _entity_id(hass, "reference_level_offset")
+
+    baseline_calls = client.async_update_audyssey.await_count
+    await async_update_entity(hass, entity_id)
+    assert client.async_update_audyssey.await_count == baseline_calls + 1
+
+
+async def test_reference_level_offset_poll_refresh_skipped_when_option_off(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """The recurring poll is skipped, not just left unconfirmed, when off.
+
+    Confirms it doesn't silently query the receiver anyway.
+    """
+    await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
+    entity_id = _entity_id(hass, "reference_level_offset")
+
+    baseline_calls = client.async_update_audyssey.await_count
+    await async_update_entity(hass, entity_id)
+    assert client.async_update_audyssey.await_count == baseline_calls
+
+
+async def test_refresh_failure_does_not_fail_an_already_successful_action(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A refresh failure must not fail an already-successful command.
+
+    The user's requested change already applied; only the confirmation
+    query failed, which should just leave the optimistic value in
+    place rather than surface as an error.
+    """
+    await setup_denonavr(hass)
+    entity_id = _entity_id(hass, "dimmer")
+
+    client.async_update.side_effect = AvrCommandError("Timed out", "GetDimmer")
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Dark"},
+        blocking=True,
+    )
+
+    client.async_dimmer.assert_awaited_once_with("Dark")
+    assert hass.states.get(entity_id).state == "Dark"
 
 
 async def test_rapid_consecutive_selections_do_not_race(

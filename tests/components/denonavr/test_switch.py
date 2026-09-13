@@ -5,8 +5,6 @@ from unittest.mock import MagicMock, patch
 
 from denonavr.exceptions import AvrCommandError
 import pytest
-from tests.common import MockConfigEntry
-
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
@@ -28,6 +26,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+
+from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_NAME = "Test_Receiver"
@@ -165,14 +165,16 @@ async def test_turn_on_raises_on_avr_error(
         )
 
 
-async def test_reference_level_offset_follows_dynamic_eq_switch(
+async def test_reference_level_offset_agrees_with_switch_at_setup(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Cross-check that select and switch agree on shared state.
+    """Select and switch agree on Dynamic EQ state at setup time.
 
-    The select and switch entities read from the exact same
-    receiver.dynamic_eq property, so Reference Level Offset's
-    availability can never disagree with the Dynamic EQ switch's state.
+    Both read the same receiver.dynamic_eq property, so they can't
+    disagree about the value they were set up with. This does not
+    cover a live toggle afterward - see
+    test_toggling_switch_does_not_instantly_update_dependent_select
+    for that known limitation.
     """
     client.reference_level_offset = "0dB"
     client.reference_level_offset_setting_list = ["0dB", "+5dB", "+10dB", "+15dB"]
@@ -225,6 +227,58 @@ async def test_reference_level_offset_unavailable_at_setup_when_dynamic_eq_off(
     assert hass.states.get(reflevoffset_entity_id).state == STATE_UNAVAILABLE
 
 
+async def test_toggling_switch_does_not_instantly_update_dependent_select(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """Document a known limitation with the dependent select entity.
+
+    Turning Dynamic EQ off immediately updates the switch (it's the
+    one that acted), but Reference Level Offset's availability - which
+    depends on the same dynamic_eq value - only catches up once its
+    own poll runs, not instantly. Fixing this properly needs a way to
+    notify dependent entities directly (or a shared coordinator);
+    until then, this documents the gap rather than relying on a test
+    that never actually exercised a toggle.
+    """
+    client.reference_level_offset = "0dB"
+    client.reference_level_offset_setting_list = ["0dB", "+5dB", "+10dB", "+15dB"]
+    client.dynamic_volume = "Off"
+    client.dynamic_volume_setting_list = ["Off", "Light", "Medium", "Heavy"]
+    client.multi_eq = "Reference"
+    client.multi_eq_setting_list = ["Off", "Flat", "L/R Bypass", "Reference", "Manual"]
+    client.eco_mode = "Auto"
+    client.dimmer = "Bright"
+    client.auto_standby = "OFF"
+    client.dynamic_eq = True
+
+    await setup_denonavr(hass)
+
+    reflevoffset_entity_id = _entity_id(hass, SELECT_DOMAIN, "reference_level_offset")
+    switch_entity_id = _entity_id(hass, SWITCH_DOMAIN, "dynamic_eq")
+    assert hass.states.get(reflevoffset_entity_id).state != STATE_UNAVAILABLE
+
+    async def _turn_off(*args, **kwargs):
+        client.dynamic_eq = False
+
+    client.async_dynamic_eq_off.side_effect = _turn_off
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: switch_entity_id},
+        blocking=True,
+    )
+
+    # The switch itself updates immediately...
+    assert hass.states.get(switch_entity_id).state == "off"
+    # ...but the select does not, until something explicitly refreshes
+    # it - this is the documented gap, not the desired end state.
+    assert hass.states.get(reflevoffset_entity_id).state != STATE_UNAVAILABLE
+
+    await async_update_entity(hass, reflevoffset_entity_id)
+    assert hass.states.get(reflevoffset_entity_id).state == STATE_UNAVAILABLE
+
+
 async def test_turn_on_shows_state_immediately_without_polling(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
@@ -273,9 +327,11 @@ async def test_turn_on_always_refreshes_audyssey_after_change(
         blocking=True,
     )
 
-    # Two calls: our own explicit refresh, plus HA's built-in
-    # post-service-call poll for should_poll=True entities.
-    assert client.async_update_audyssey.await_count == baseline_calls + 2
+    # Just one call: our own explicit refresh (unconditional). HA's
+    # built-in post-service-call poll would add a second, but that one
+    # now correctly respects "Update Audyssey settings" (off here), so
+    # it's skipped rather than firing regardless like the explicit one.
+    assert client.async_update_audyssey.await_count == baseline_calls + 1
 
 
 async def test_rapid_toggles_do_not_race(

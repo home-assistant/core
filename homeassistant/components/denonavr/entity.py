@@ -55,13 +55,25 @@ class DenonAvrPendingValueEntity[_T](Entity):
         unique_id: str,
         device_info: DeviceInfo,
         refresh_fn: Callable[[], Coroutine[Any, Any, None]] | None = None,
+        poll_refresh_enabled: Callable[[], bool] | None = None,
     ) -> None:
-        """Initialize the entity."""
+        """Initialize the entity.
+
+        `poll_refresh_enabled`, if given, is checked before the
+        *recurring* poll (async_update) refreshes - not the one-time
+        setup fetch in __init__.py, and not the refresh right after
+        this entity's own action, both of which stay unconditional
+        regardless (see the module docstrings for why). Used to let
+        Audyssey-backed entities' periodic polling honor the existing
+        "Update Audyssey settings" option, matching the precedent
+        already established for media_player.py's own recurring poll.
+        """
         self._receiver = receiver
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
         self._action_lock = _get_receiver_lock(receiver)
         self._refresh_fn = refresh_fn
+        self._poll_refresh_enabled = poll_refresh_enabled
         self._pending_value: _T | None = None
         self._pending_value_set_at: float | None = None
         self._pending_value_expiry_unsub: Callable[[], None] | None = None
@@ -145,10 +157,22 @@ class DenonAvrPendingValueEntity[_T](Entity):
             self.async_write_ha_state()
 
             if self._refresh_fn is not None:
-                await self._refresh_fn()
-
-            if self._read_value() == value:
-                self._clear_pending_value()
+                try:
+                    await self._refresh_fn()
+                except DenonAvrError as err:
+                    # The command above already succeeded - a refresh
+                    # failure shouldn't fail the whole action, just
+                    # leave the pending value showing until the next
+                    # poll or its own timeout.
+                    _LOGGER.debug(
+                        "Could not refresh %s after setting %s: %s",
+                        self.entity_id,
+                        error_label,
+                        err,
+                    )
+                else:
+                    if self._read_value() == value:
+                        self._clear_pending_value()
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
@@ -157,9 +181,12 @@ class DenonAvrPendingValueEntity[_T](Entity):
         Actively refreshes (rather than only checking already-cached
         data) so external changes - made outside HA, or while the
         media player entity that would otherwise drive this refresh is
-        individually disabled - still surface here.
+        individually disabled - still surface here. Skipped when
+        poll_refresh_enabled says not to (see __init__).
         """
-        if self._refresh_fn is not None:
+        if self._refresh_fn is not None and (
+            self._poll_refresh_enabled is None or self._poll_refresh_enabled()
+        ):
             async with self._action_lock:
                 try:
                     await self._refresh_fn()

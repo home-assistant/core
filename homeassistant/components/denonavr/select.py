@@ -18,6 +18,8 @@ from . import DenonavrConfigEntry
 from .const import (
     AUTO_STANDBY_OPTIONS,
     CONF_SERIAL_NUMBER,
+    CONF_UPDATE_AUDYSSEY,
+    DEFAULT_UPDATE_AUDYSSEY,
     DIMMER_OPTIONS,
     DOMAIN,
     ECO_MODE_OPTIONS,
@@ -50,6 +52,11 @@ class DenonAvrSelectEntityDescription(SelectEntityDescription):
     # "Update Audyssey settings" option meant those entities never
     # visibly reflected a change made through them.
     refresh_fn: Callable[[DenonAVR], Coroutine[Any, Any, None]] | None = None
+    # Whether the *recurring* poll (not the one above, and not the
+    # one-time setup fetch) should be skipped when "Update Audyssey
+    # settings" is off, matching the existing precedent for
+    # media_player.py's own recurring poll.
+    poll_requires_audyssey_option: bool = False
 
 
 SELECT_TYPES: tuple[DenonAvrSelectEntityDescription, ...] = (
@@ -65,6 +72,7 @@ SELECT_TYPES: tuple[DenonAvrSelectEntityDescription, ...] = (
         ),
         available_fn=lambda receiver: bool(receiver.dynamic_eq),
         refresh_fn=lambda receiver: receiver.async_update_audyssey(),
+        poll_requires_audyssey_option=True,
     ),
     DenonAvrSelectEntityDescription(
         key="dynamic_volume",
@@ -75,6 +83,7 @@ SELECT_TYPES: tuple[DenonAvrSelectEntityDescription, ...] = (
         options_fn=lambda receiver: receiver.dynamic_volume_setting_list,
         select_option_fn=lambda receiver, option: receiver.async_set_dynamicvol(option),
         refresh_fn=lambda receiver: receiver.async_update_audyssey(),
+        poll_requires_audyssey_option=True,
     ),
     DenonAvrSelectEntityDescription(
         key="multi_eq",
@@ -85,6 +94,7 @@ SELECT_TYPES: tuple[DenonAvrSelectEntityDescription, ...] = (
         options_fn=lambda receiver: receiver.multi_eq_setting_list,
         select_option_fn=lambda receiver, option: receiver.async_set_multieq(option),
         refresh_fn=lambda receiver: receiver.async_update_audyssey(),
+        poll_requires_audyssey_option=True,
     ),
     DenonAvrSelectEntityDescription(
         key="eco_mode",
@@ -145,8 +155,14 @@ async def async_setup_entry(
         identifiers={(DOMAIN, config_entry.unique_id or config_entry.entry_id)},
     )
 
+    update_audyssey = config_entry.options.get(
+        CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
+    )
+
     async_add_entities(
-        DenonAvrSelect(main_receiver, description, unique_id_base, device_info)
+        DenonAvrSelect(
+            main_receiver, description, unique_id_base, device_info, update_audyssey
+        )
         for description in SELECT_TYPES
     )
 
@@ -162,14 +178,19 @@ class DenonAvrSelect(DenonAvrPendingValueEntity[str], SelectEntity):
         description: DenonAvrSelectEntityDescription,
         unique_id_base: str,
         device_info: DeviceInfo,
+        update_audyssey: bool,
     ) -> None:
         """Initialize the select entity."""
         refresh_fn = description.refresh_fn
+        poll_requires_audyssey_option = description.poll_requires_audyssey_option
         super().__init__(
             receiver,
             f"{unique_id_base}-{description.key}",
             device_info,
             refresh_fn=(lambda: refresh_fn(receiver)) if refresh_fn else None,
+            poll_refresh_enabled=(
+                (lambda: update_audyssey) if poll_requires_audyssey_option else None
+            ),
         )
         self.entity_description = description
 
