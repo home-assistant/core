@@ -10,13 +10,13 @@ import pytest
 from homeassistant.components.libre_hardware_monitor.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    LEGACY_THROUGHPUT_UNIT,
 )
 from homeassistant.components.libre_hardware_monitor.recorder import (
     async_custom_equivalent_units,
 )
-from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import UnitOfDataRate
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -107,46 +107,66 @@ async def test_migration_to_unique_ids(
         legacy_config_entry_v1.entry_id
     )
     assert updated_config_entry.version == 2
+    assert updated_config_entry.minor_version == 2
 
 
+@pytest.mark.parametrize(
+    ("version", "minor_version", "unique_id_prefix"),
+    [
+        pytest.param(1, 1, "lhm-", id="from_v1"),
+        pytest.param(2, 1, "test_entry_id_", id="from_v2_minor_1"),
+    ],
+)
 @pytest.mark.usefixtures("mock_lhm_client", "recorder_mock")
 async def test_migration_to_sensor_device_classes(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    recorder_mock: Recorder,
+    version: int,
+    minor_version: int,
+    unique_id_prefix: str,
 ) -> None:
-    """Test that throughput sensor units are updated."""
-    legacy_config_entry_v2_1 = MockConfigEntry(
+    """Test that throughput sensor units are updated from every legacy version."""
+    legacy_config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="192.168.0.20:8085",
         data=VALID_CONFIG,
         entry_id="test_entry_id",
-        version=2,
-        minor_version=1,
+        version=version,
+        minor_version=minor_version,
     )
-    legacy_config_entry_v2_1.add_to_hass(hass)
+    legacy_config_entry.add_to_hass(hass)
 
     # Set up throughput sensor with old unit
     object_id = "nvidia_geforce_rtx_4080_gpu_pcie_tx_throughput"
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
-        f"{legacy_config_entry_v2_1.entry_id}_gpu-nvidia-0-throughput-1",
+        f"{unique_id_prefix}gpu-nvidia-0-throughput-1",
         suggested_object_id=object_id,
-        config_entry=legacy_config_entry_v2_1,
-        unit_of_measurement="KB/s",
+        config_entry=legacy_config_entry,
+        unit_of_measurement=LEGACY_THROUGHPUT_UNIT,
     )
 
-    await init_integration(hass, legacy_config_entry_v2_1)
+    await init_integration(hass, legacy_config_entry)
 
     entity_entry = entity_registry.async_get(f"sensor.{object_id}")
     assert entity_entry.unit_of_measurement == UnitOfDataRate.KILOBYTES_PER_SECOND
 
+    # the entity keeps reporting the migrated unit once it is set up
+    state = hass.states.get(f"sensor.{object_id}")
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == (
+        UnitOfDataRate.KILOBYTES_PER_SECOND
+    )
+
     custom_equivalent_units = async_custom_equivalent_units(hass)
-    assert {f"sensor.{object_id}": {"KB/s": "kB/s"}} == custom_equivalent_units
+    assert custom_equivalent_units == {
+        f"sensor.{object_id}": {
+            LEGACY_THROUGHPUT_UNIT: UnitOfDataRate.KILOBYTES_PER_SECOND
+        }
+    }
 
     updated_config_entry = hass.config_entries.async_get_entry(
-        legacy_config_entry_v2_1.entry_id
+        legacy_config_entry.entry_id
     )
     assert updated_config_entry.version == 2
     assert updated_config_entry.minor_version == 2
