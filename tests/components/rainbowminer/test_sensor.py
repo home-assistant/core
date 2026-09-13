@@ -84,10 +84,6 @@ async def test_always_sensors(
         sum(1 for m in VALID_ACTIVE_MINERS if m.get("Status") == 0)
     )
 
-    state = hass.states.get("sensor.rainbowminer_active_pools")
-    assert state is not None
-    assert state.state == "MiningPoolHub, Ethermine"
-
     state = hass.states.get("sensor.rainbowminer_power")
     assert state is not None
     assert state.state == str(VALID_CURRENT_PROFIT["Power"])
@@ -208,51 +204,6 @@ async def test_currency_sensors_unavailable_when_rate_missing(
     state = hass.states.get("sensor.rainbowminer_estimated_daily_profit")
     assert state is not None
     assert state.state == "unknown"
-
-
-async def test_active_pools_empty(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test active_pools sensor returns unknown when no miners are running."""
-    miners = [
-        {"Name": "miner1", "Status": 1, "Pool": ["Zpool"]},
-    ]
-    await _setup(hass, aioclient_mock, active_miners=miners)
-
-    state = hass.states.get("sensor.rainbowminer_active_pools")
-    assert state is not None
-    assert state.state == "unknown"
-
-
-async def test_active_pools_deduplicated(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test active_pools sensor deduplicates pool names from running miners."""
-    miners = [
-        {"Name": "miner1", "Status": 0, "Pool": ["Zpool"]},
-        {"Name": "miner2", "Status": 0, "Pool": ["Zpool"]},
-        {"Name": "miner3", "Status": 0, "Pool": ["Ethermine"]},
-    ]
-    await _setup(hass, aioclient_mock, active_miners=miners)
-
-    state = hass.states.get("sensor.rainbowminer_active_pools")
-    assert state is not None
-    assert state.state == "Zpool, Ethermine"
-
-
-async def test_active_pools_truncated(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test active_pools sensor truncates to 255 characters."""
-    miners = [
-        {"Name": f"miner{i}", "Status": 0, "Pool": [f"Pool{i:03d}"]} for i in range(100)
-    ]
-    await _setup(hass, aioclient_mock, active_miners=miners)
-
-    state = hass.states.get("sensor.rainbowminer_active_pools")
-    assert state is not None
-    assert len(state.state) <= 255
-    assert state.state.endswith("...")
 
 
 async def test_mbtc_sensors_unavailable_without_balances(

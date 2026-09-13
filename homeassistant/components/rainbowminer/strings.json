@@ -30,9 +30,6 @@
       "active_miners": {
         "name": "Active miners"
       },
-      "active_pools": {
-        "name": "Active pools"
-      },
       "daily_earnings": {
         "name": "Daily earnings"
       },

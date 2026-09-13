@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
-from rainbowminer_api_client import ActiveMiner, Balance, CurrentProfit
+from rainbowminer_api_client import Balance, CurrentProfit
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -77,35 +77,6 @@ def _sum_btc(balances: list[Balance], field: str) -> float | None:
     return total if found else None
 
 
-def _active_pool_names(miners: list[ActiveMiner]) -> str | None:
-    """Return a deduplicated, comma-joined list of pool names from running miners.
-
-    Only miners with Status 0 (running) are considered. The Pool field can be
-    a string or a list of strings.
-    Truncates to 255 characters to satisfy Home Assistant's state length limit.
-    """
-    seen: set[str] = set()
-    names: list[str] = []
-    for miner in miners:
-        if getattr(miner, "Status", None) != 0:
-            continue
-        pools = getattr(miner, "Pool", None)
-        if pools is None:
-            continue
-        if isinstance(pools, str):
-            pools = [pools]
-        for pool in pools:
-            if pool and pool not in seen:
-                seen.add(pool)
-                names.append(pool)
-    if not names:
-        return None
-    result = ", ".join(names)
-    if len(result) <= 255:
-        return result
-    return result[:252] + "..."
-
-
 @dataclass(frozen=True, kw_only=True)
 class RainbowMinerSensorEntityDescription(SensorEntityDescription):
     """Description of a RainbowMiner sensor."""
@@ -121,11 +92,6 @@ ALWAYS_SENSORS: tuple[RainbowMinerSensorEntityDescription, ...] = (
         value_fn=lambda coord, _cur: sum(
             1 for m in coord.data.active_miners if getattr(m, "Status", None) == 0
         ),
-    ),
-    RainbowMinerSensorEntityDescription(
-        key="active_pools",
-        translation_key="active_pools",
-        value_fn=lambda coord, _cur: _active_pool_names(coord.data.active_miners),
     ),
     RainbowMinerSensorEntityDescription(
         key="total_earnings_mbtc",
