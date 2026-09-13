@@ -13,8 +13,7 @@ from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
 from mcp.types import InitializeResult
-from probatio import from_openapi
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -127,7 +126,7 @@ class ModelContextProtocolTool(llm.Tool):
         self,
         name: str,
         description: str | None,
-        parameters: vol.Schema,
+        parameters: probatio.Schema,
         server_url: str,
         config_entry: ConfigEntry,
         token_manager: TokenManager | None = None,
@@ -250,7 +249,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         tools: list[llm.Tool] = []
         for tool in result.tools:
             try:
-                parameters = from_openapi(tool.inputSchema)
+                parameters = probatio.from_openapi(tool.inputSchema)
             except Exception as err:
                 raise UpdateFailed(
                     f"Error converting schema {err}: {tool.inputSchema}"

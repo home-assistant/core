@@ -16,9 +16,8 @@ from typing import Any, cast
 from mcp import types
 from mcp.server import Server
 from mcp.server.lowlevel.helper_types import ReadResourceContents
-from probatio import to_openapi
+import probatio
 from pydantic import AnyUrl
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -44,7 +43,9 @@ def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> types.Tool:
     """Format tool specification."""
-    input_schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
+    input_schema = probatio.to_openapi(
+        tool.parameters, custom_serializer=custom_serializer
+    )
     return types.Tool(
         name=tool.name,
         description=tool.description or "",
@@ -167,7 +168,7 @@ async def create_server(
 
         try:
             tool_response = await llm_api.async_call_tool(tool_input)
-        except (HomeAssistantError, vol.Invalid) as e:
+        except (HomeAssistantError, probatio.Invalid) as e:
             raise HomeAssistantError(f"Error calling tool: {e}") from e
         return [
             types.TextContent(
