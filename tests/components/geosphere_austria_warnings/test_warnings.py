@@ -1,5 +1,7 @@
 """Tests for shared GeoSphere Austria warning helpers."""
 
+from datetime import UTC, datetime
+
 from pygeosphere_warnings import (
     LocationWarnings,
     WarningLevel,
@@ -18,8 +20,6 @@ from homeassistant.components.geosphere_austria_warnings.warnings import (
 )
 
 from tests.common import load_json_object_fixture
-
-from datetime import datetime, timezone
 
 
 @pytest.fixture
@@ -154,8 +154,8 @@ def test_ranking_tie_between_equal_levels_prefers_soonest_end() -> None:
         course_id=1,
         warning_type=WarningType.HEAT,
         level=WarningLevel.ORANGE,
-        start=datetime(2023, 3, 27, 0, 0, tzinfo=timezone.utc),
-        end=datetime(2023, 3, 27, 23, 59, tzinfo=timezone.utc),
+        start=datetime(2023, 3, 27, 0, 0, tzinfo=UTC),
+        end=datetime(2023, 3, 27, 23, 59, tzinfo=UTC),
         text="",
         impacts="",
         recommendations="",
@@ -168,8 +168,8 @@ def test_ranking_tie_between_equal_levels_prefers_soonest_end() -> None:
         course_id=1,
         warning_type=WarningType.THUNDERSTORM,
         level=WarningLevel.YELLOW,
-        start=datetime(2023, 3, 27, 13, 0, tzinfo=timezone.utc),
-        end=datetime(2023, 3, 27, 15, 0, tzinfo=timezone.utc),
+        start=datetime(2023, 3, 27, 13, 0, tzinfo=UTC),
+        end=datetime(2023, 3, 27, 15, 0, tzinfo=UTC),
         text="",
         impacts="",
         recommendations="",
@@ -202,6 +202,7 @@ def test_warning_sensor_attributes_are_flat_and_minimal(
     assert set(attributes) == {"type", "start", "end", "warning_id"}
     assert warning_sensor_attributes([]) == {}
 
+
 def test_warning_sensor_attributes_include_diverting_warning_level() -> None:
     """Test that sensor attributes expose only the selected warning details."""
     all_day_heat = WeatherWarning(
@@ -210,8 +211,8 @@ def test_warning_sensor_attributes_include_diverting_warning_level() -> None:
         course_id=1,
         warning_type=WarningType.HEAT,
         level=WarningLevel.ORANGE,
-        start=datetime(2023, 3, 27, 0, 0, tzinfo=timezone.utc),
-        end=datetime(2023, 3, 27, 23, 59, tzinfo=timezone.utc),
+        start=datetime(2023, 3, 27, 0, 0, tzinfo=UTC),
+        end=datetime(2023, 3, 27, 23, 59, tzinfo=UTC),
         text="",
         impacts="",
         recommendations="",
@@ -224,8 +225,8 @@ def test_warning_sensor_attributes_include_diverting_warning_level() -> None:
         course_id=1,
         warning_type=WarningType.THUNDERSTORM,
         level=WarningLevel.YELLOW,
-        start=datetime(2023, 3, 27, 13, 0, tzinfo=timezone.utc),
-        end=datetime(2023, 3, 27, 15, 0, tzinfo=timezone.utc),
+        start=datetime(2023, 3, 27, 13, 0, tzinfo=UTC),
+        end=datetime(2023, 3, 27, 15, 0, tzinfo=UTC),
         text="",
         impacts="",
         recommendations="",

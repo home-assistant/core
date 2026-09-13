@@ -111,6 +111,7 @@ def warning_sensor_attributes(
     level across all warnings (see ``highest_warning_level``), since in the
     common case the selected warning already carries that level.
     """
+    warnings = list(warnings)
     warning = select_highest_warning(warnings)
     if warning is None:
         return {}
@@ -122,7 +123,7 @@ def warning_sensor_attributes(
         "warning_id": warning.warning_id,
     }
 
-    level_slug = warning_level_slug(warning.level.value)
+    level_slug = warning_level_slug(warning.level)
     if level_slug != highest_warning_level(warnings):
         attributes["level"] = level_slug
 
