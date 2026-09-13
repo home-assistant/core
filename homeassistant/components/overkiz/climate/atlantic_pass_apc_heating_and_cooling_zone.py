@@ -94,7 +94,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
         self.main_device = cast(Device, self.executor.linked_device(1))
 
-
         self.main_executor = OverkizExecutor(self.main_device.device_url, coordinator)
         self.client = coordinator.client
 
