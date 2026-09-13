@@ -13,7 +13,6 @@ from homeassistant.components.climate import (
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
-    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -182,19 +181,13 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         commands.append(Command(name=OverkizCommand.SET_ABSENCE_END_DATE_TIME, parameters=[zero_date]))
         commands.append(Command(name=OverkizCommand.CANCEL_ABSENCE))
 
-        #if self.current_operating_mode == HVACMode.COOL:
-        commands.append(Command(name=OverkizCommand.REFRESH_ZONES_PASS_APC_COOLING_PROFILE))                
-        #elif self.current_operating_mode == HVACMode.HEAT:
-        commands.append(Command(name=OverkizCommand.REFRESH_ZONES_PASS_APC_HEATING_PROFILE))
 
+        commands.append(Command(name=OverkizCommand.REFRESH_ZONES_PASS_APC_COOLING_PROFILE))                
+        commands.append(Command(name=OverkizCommand.REFRESH_ZONES_PASS_APC_HEATING_PROFILE))
         commands.append(Command(name=OverkizCommand.REFRESH_ZONES_TARGET_TEMPERATURE))
 
         
-        await self.main_executor.async_execute_commands(commands)
-
-        #action = Action(device_url=self.main_device.device_url, commands=commands)
-        #await self.client.execute_action_group(actions=[action])
-        #await self.coordinator.async_refresh()            
+        await self.main_executor.async_execute_commands(commands)           
        
     
     async def async_set_absence_mode(self) -> None:
@@ -219,7 +212,7 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         }
         
         commands = []
-        actions = []
+
 
         commands.append(Command(name=OverkizCommand.SET_ABSENCE_START_DATE_TIME, parameters=[start_date]))
         commands.append(Command(name=OverkizCommand.SET_ABSENCE_END_DATE_TIME, parameters=[end_date]))
@@ -233,8 +226,7 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         commands.append(Command(name=OverkizCommand.REFRESH_ZONES_TARGET_TEMPERATURE))
         await self.main_executor.async_execute_commands(commands)
 
-        #actions.append(Action(device_url=self.main_device.device_url, commands=commands))
-        #await self.client.execute_action_group(actions=actions)
+
 
 
     def is_absence_mode(self) -> bool:
@@ -283,10 +275,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
         await self.executor.async_execute_commands(commands)
 
-        #action = Action(device_url=self.device.device_url, commands=commands)
-        #await self.client.execute_action_group(actions=[action])
-        #await self.coordinator.async_refresh()          
-
 
     async def async_set_cooling_mode(self, mode: str) -> None:
         """Set new cooling mode and refresh states."""
@@ -310,9 +298,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
         await self.executor.async_execute_commands(commands)
 
-        #action = Action(device_url=self.device.device_url, commands=commands)
-        #await self.client.execute_action_group(actions=[action])
-        #await self.coordinator.async_refresh() 
 
 
     @override
@@ -373,7 +358,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
         commands = []
         commands_main = []
-        actions = []
 
      
         temperature = kwargs[ATTR_TEMPERATURE]
@@ -436,11 +420,7 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         
         if commands:
             await self.executor.async_execute_commands(commands)
-            #actions.append(Action(device_url=self.device.device_url, commands=commands))
         elif commands_main:
             await self.main_executor.async_execute_commands(commands_main)
-            #actions.append(Action(device_url=self.main_device.device_url, commands=commands_main))
-        #if actions:
-            #await self.client.execute_action_group(actions=actions)
-            #await self.coordinator.async_refresh() 
+
 
