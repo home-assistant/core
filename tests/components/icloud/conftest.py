@@ -7,6 +7,10 @@ from pyicloud.services.photos import AlbumContainer, PhotoAlbumFolder, PhotoAsse
 import pytest
 
 from homeassistant.components.icloud.const import DOMAIN
+from homeassistant.util import dt as dt_util
+
+from . import MockAppleDevice, MockDevicesContainer
+from .const import DEVICE, USER_INFO
 
 from tests.common import AsyncMock, MockConfigEntry
 from tests.typing import MagicMock
@@ -139,3 +143,25 @@ def mock_config_entry() -> MockConfigEntry:
             "gps_accuracy_threshold": 0,
         },
     )
+
+
+@pytest.fixture(name="locating_service")
+def mock_locating_service() -> Generator[tuple[MagicMock, dict]]:
+    """Mock an account with one device that reports a location."""
+    status = {
+        **DEVICE,
+        "location": {
+            "latitude": 1.0,
+            "longitude": 2.0,
+            "horizontalAccuracy": 10,
+            "isOld": False,
+            "timeStamp": dt_util.utcnow().timestamp() * 1000,
+        },
+    }
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service = service_mock.return_value
+        service.requires_2fa = False
+        service.devices = MockDevicesContainer(USER_INFO, [MockAppleDevice(status)])
+        yield service, status
