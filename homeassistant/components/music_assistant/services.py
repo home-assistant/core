@@ -9,6 +9,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
 )
+from homeassistant.components.tts import DOMAIN as TTS_DOMAIN
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -36,6 +37,7 @@ from .const import (
     ATTR_LIMIT,
     ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
+    ATTR_MESSAGE,
     ATTR_OFFSET,
     ATTR_ORDER_BY,
     ATTR_PLAYLISTS,
@@ -49,6 +51,7 @@ from .const import (
     ATTR_SEARCH_NAME,
     ATTR_SOURCE_PLAYER,
     ATTR_TRACKS,
+    ATTR_TTS_ENTITY_ID,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
     ATTR_USERNAME,
@@ -150,12 +153,22 @@ def register_actions(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_PLAY_ANNOUNCEMENT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={
-            vol.Required(ATTR_URL): cv.string,
-            vol.Optional(ATTR_USE_PRE_ANNOUNCE): vol.Coerce(bool),
-            vol.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
-            vol.Optional(ATTR_ANNOUNCE_VOLUME): vol.Coerce(int),
-        },
+        schema=vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Optional(ATTR_URL): cv.string,
+                    vol.Inclusive(ATTR_MESSAGE, "spoken_announcement"): cv.string,
+                    vol.Inclusive(ATTR_TTS_ENTITY_ID, "spoken_announcement"): vol.All(
+                        cv.entity_id, cv.entity_domain(TTS_DOMAIN)
+                    ),
+                    vol.Optional(ATTR_USE_PRE_ANNOUNCE): vol.Coerce(bool),
+                    vol.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
+                    vol.Optional(ATTR_ANNOUNCE_VOLUME): vol.Coerce(int),
+                }
+            ),
+            cv.has_at_least_one_key(ATTR_URL, ATTR_MESSAGE),
+            cv.has_at_most_one_key(ATTR_URL, ATTR_MESSAGE),
+        ),
         func="_async_handle_play_announcement",
     )
     service.async_register_platform_entity_service(

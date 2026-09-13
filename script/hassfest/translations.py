@@ -37,6 +37,7 @@ ALLOW_NAME_TRANSLATION = {
     "emulated_roku",
     "energenie_power_sockets",
     "faa_delays",
+    "filesize",
     "garages_amsterdam",
     "generic",
     "google_travel_time",

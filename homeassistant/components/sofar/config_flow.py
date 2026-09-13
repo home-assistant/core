@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -41,6 +42,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+async def _async_probe(
+    hass: HomeAssistant, host: str, port: int, unit_id: int
+) -> SofarInverter:
+    """Connect to the inverter and read its identity, or raise."""
+    params = ModbusTcpParams(host=host, port=port)
+    async with async_get_temporary_unit(hass, params, unit_id) as unit:
+        device = SofarInverter(unit)
+        await device.async_update()
+    return device
+
+
 class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Sofar config flow."""
 
@@ -54,15 +66,13 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            params = ModbusTcpParams(
-                host=user_input[CONF_HOST], port=user_input[CONF_PORT]
-            )
             try:
-                async with async_get_temporary_unit(
-                    self.hass, params, user_input[CONF_UNIT_ID]
-                ) as unit:
-                    device = SofarInverter(unit)
-                    await device.async_update()
+                device = await _async_probe(
+                    self.hass,
+                    user_input[CONF_HOST],
+                    user_input[CONF_PORT],
+                    user_input[CONF_UNIT_ID],
+                )
             except (ModbusError, HomeAssistantError) as err:
                 errors["base"] = "cannot_connect"
                 description_placeholders["error"] = str(err)
@@ -81,6 +91,44 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle updating an existing entry's connection details."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                device = await _async_probe(
+                    self.hass,
+                    user_input[CONF_HOST],
+                    user_input[CONF_PORT],
+                    user_input[CONF_UNIT_ID],
+                )
+            except (ModbusError, HomeAssistantError) as err:
+                errors["base"] = "cannot_connect"
+                description_placeholders["error"] = str(err)
+            else:
+                assert device.serial_number is not None
+                if not device.inverter_type:
+                    errors["base"] = "unrecognized_inverter"
+                else:
+                    await self.async_set_unique_id(device.serial_number)
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry, data_updates=user_input
+                    )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or reconfigure_entry.data
+            ),
             errors=errors,
             description_placeholders=description_placeholders,
         )

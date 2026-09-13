@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+import pytest
 import temescal
 
 from homeassistant.components.media_player import (
@@ -12,6 +13,7 @@ from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerState,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -247,3 +249,56 @@ async def test_selecting_a_source_the_device_does_not_offer(
     mock_temescal.return_value.set_func.assert_called_once_with(
         temescal.functions.index("E-ARC")
     )
+
+
+def send_play_info(callback: MagicMock, stream_type: int) -> None:
+    """Report the given stream type via the callback."""
+    callback({"msg": "PLAY_INFO", "data": {"i_stream_type": stream_type}})
+
+
+def send_power_status(callback: MagicMock, powered_on: bool) -> None:
+    """Report the given power status via the callback."""
+    callback({"msg": "SPK_LIST_VIEW_INFO", "data": {"b_powerstatus": powered_on}})
+
+
+async def test_state_stays_on_without_a_reported_power_status(
+    hass: HomeAssistant,
+    mock_temescal: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a soundbar that never reports a power status stays on.
+
+    Being used as a soundbar is the ordinary case for such a model, so the
+    stream type it reports for that must not be read as powered off.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    send_play_info(find_update_callback(mock_temescal), 0)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
+
+
+@pytest.mark.parametrize(
+    ("powered_on", "expected_state"),
+    [
+        pytest.param(True, MediaPlayerState.ON, id="on"),
+        pytest.param(False, MediaPlayerState.OFF, id="off"),
+    ],
+)
+async def test_state_follows_a_reported_power_status(
+    hass: HomeAssistant,
+    mock_temescal: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    powered_on: bool,
+    expected_state: MediaPlayerState,
+) -> None:
+    """Test that a reported power status decides the state of a soundbar."""
+    await setup_integration(hass, mock_config_entry)
+
+    callback = find_update_callback(mock_temescal)
+    send_power_status(callback, powered_on)
+    send_play_info(callback, 0)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == expected_state

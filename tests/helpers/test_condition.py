@@ -67,6 +67,7 @@ from homeassistant.helpers.condition import (
     MAX_HISTORY_PRIMING_LOOKBACK,
     Condition,
     ConditionChecker,
+    ConditionConfig,
     EntityConditionBase,
     EntityNumericalConditionWithUnitBase,
     _async_get_condition_platform,
@@ -1384,15 +1385,25 @@ async def test_state_raises(hass: HomeAssistant) -> None:
         test.async_check()
 
 
-async def test_state_for(hass: HomeAssistant) -> None:
-    """Test state with duration."""
+@pytest.mark.parametrize(
+    "req_state",
+    [
+        pytest.param("100", id="scalar"),
+        pytest.param(["100"], id="single_item_list"),
+    ],
+)
+async def test_state_for(hass: HomeAssistant, req_state: str | list[str]) -> None:
+    """Test state with duration.
+
+    A single-element list `state` is equivalent to the scalar form.
+    """
     config = {
         "condition": "and",
         "conditions": [
             {
                 "condition": "state",
                 "entity_id": ["sensor.temperature"],
-                "state": "100",
+                "state": req_state,
                 "for": {"seconds": 5},
             },
         ],
@@ -1461,6 +1472,56 @@ async def test_state_for_invalid_template(
         assert not test.async_check()
 
 
+@pytest.mark.parametrize(
+    ("extra_config", "error"),
+    [
+        pytest.param(
+            {"attribute": "battery_level"},
+            r"Cannot use 'for' with an attribute",
+            id="attribute",
+        ),
+        pytest.param(
+            {"state": ["100", "200"]},
+            r"Cannot use 'for' with a list of states",
+            id="list_of_states",
+        ),
+        pytest.param(
+            {"state": []},
+            r"Cannot use 'for' with a list of states",
+            id="empty_list",
+        ),
+        pytest.param(
+            {"state": "input_number.threshold"},
+            r"Cannot use 'for' with a state referencing an entity",
+            id="state_from_entity",
+        ),
+        pytest.param(
+            {"state": ["input_number.threshold"]},
+            r"Cannot use 'for' with a state referencing an entity",
+            id="single_item_list_from_entity",
+        ),
+    ],
+)
+def test_state_for_not_allowed(extra_config: dict[str, Any], error: str) -> None:
+    """Test state condition rejects `for` with unsupported `state`/`attribute`.
+
+    `for` is anchored to the entity's last_changed, which reflects a single
+    current state. It therefore cannot be combined with an attribute, a list
+    that is not a single state, or a state resolved from another entity (even as
+    a single-element list). A single-element literal list behaves like the
+    scalar form (see `test_state_for`).
+    """
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.temperature",
+        "state": "100",
+        "for": {"seconds": 5},
+        **extra_config,
+    }
+    with pytest.raises(vol.Invalid, match=error):
+        cv.CONDITION_SCHEMA(config)
+
+
 async def test_state_unknown_attribute(hass: HomeAssistant) -> None:
     """Test that state returns False on unknown attribute."""
     # Unknown attribute
@@ -1491,6 +1552,44 @@ async def test_state_unknown_attribute(hass: HomeAssistant) -> None:
             ],
         }
     )
+
+
+@pytest.mark.parametrize(
+    ("req_state", "attribute_value", "expected"),
+    [
+        # A list `state` is matched as alternatives, so the attribute value must
+        # equal one of the items; the list itself is never compared as a whole.
+        pytest.param(["a", "b"], "a", True, id="item_in_list"),
+        pytest.param(["a", "b"], ["a", "b"], False, id="list_is_not_an_item"),
+        # Nesting the list makes the list value itself one of the items to match.
+        pytest.param([["a", "b"]], ["a", "b"], True, id="list_in_list_of_lists"),
+        pytest.param([["a", "b"]], "a", False, id="scalar_not_in_list_of_lists"),
+    ],
+)
+async def test_state_attribute_list_matching(
+    hass: HomeAssistant,
+    req_state: list[Any],
+    attribute_value: str | list[str],
+    expected: bool,
+) -> None:
+    """Test how a state-attribute condition matches against a list `state`.
+
+    A list `state` is treated as alternatives (match any item), so a list-valued
+    attribute only matches when the list is nested as an item of `state`. This
+    documents the current behavior; the implementation is unchanged.
+    """
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.test",
+        "attribute": "options",
+        "state": req_state,
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.test", "on", {"options": attribute_value})
+    assert test.async_check() is expected
 
 
 async def test_state_multiple_entities(hass: HomeAssistant) -> None:
@@ -6373,3 +6472,113 @@ async def test_state_condition_empty_state_value(hass: HomeAssistant) -> None:
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
     assert not test.async_check()
+
+
+def _make_condition(
+    hass: HomeAssistant, domain_specs: Mapping[str, DomainSpec]
+) -> EntityConditionBase:
+    """Create a minimal EntityConditionBase subclass with the given domain specs."""
+
+    class _SimpleCondition(EntityConditionBase):
+        """Minimal concrete condition for testing entity_filter."""
+
+        _domain_specs = domain_specs
+
+        def is_valid_state(self, entity_state: State) -> bool:
+            """Accept any state."""
+            return True
+
+    config = ConditionConfig(
+        target={CONF_ENTITY_ID: []}, options={ATTR_BEHAVIOR: BEHAVIOR_ANY}
+    )
+    return _SimpleCondition(hass, config)
+
+
+async def test_condition_entity_filter_by_domain_only(hass: HomeAssistant) -> None:
+    """Test entity_filter includes entities matching domain, excludes others."""
+    cond = _make_condition(hass, {"sensor": DomainSpec(), "switch": DomainSpec()})
+
+    entities = {
+        "sensor.temp",
+        "sensor.humidity",
+        "switch.light",
+        "light.bedroom",
+        "cover.garage",
+    }
+    result = cond.entity_filter(entities)
+    assert result == {"sensor.temp", "sensor.humidity", "switch.light"}
+
+
+async def test_condition_entity_filter_by_device_class(hass: HomeAssistant) -> None:
+    """Test entity_filter filters by device_class when specified."""
+    cond = _make_condition(hass, {"sensor": DomainSpec(device_class="humidity")})
+
+    hass.states.async_set("sensor.humidity_1", "50", {ATTR_DEVICE_CLASS: "humidity"})
+    hass.states.async_set(
+        "sensor.temperature_1", "22", {ATTR_DEVICE_CLASS: "temperature"}
+    )
+    hass.states.async_set("sensor.no_class", "10", {})
+
+    entities = {"sensor.humidity_1", "sensor.temperature_1", "sensor.no_class"}
+    result = cond.entity_filter(entities)
+    assert result == {"sensor.humidity_1"}
+
+
+async def test_condition_entity_filter_device_class_unknown_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test entity_filter excludes entities not in state machine or registry."""
+    cond = _make_condition(hass, {"sensor": DomainSpec(device_class="humidity")})
+
+    entities = {"sensor.nonexistent"}
+    result = cond.entity_filter(entities)
+    assert result == set()
+
+
+async def test_condition_entity_filter_multiple_domains_with_device_class(
+    hass: HomeAssistant,
+) -> None:
+    """Test entity_filter with multiple domains, some with device_class filtering."""
+    cond = _make_condition(
+        hass,
+        {
+            "climate": DomainSpec(value_source="current_humidity"),
+            "sensor": DomainSpec(device_class="humidity"),
+            "weather": DomainSpec(value_source="humidity"),
+        },
+    )
+
+    hass.states.async_set("sensor.humidity", "60", {ATTR_DEVICE_CLASS: "humidity"})
+    hass.states.async_set(
+        "sensor.temperature", "20", {ATTR_DEVICE_CLASS: "temperature"}
+    )
+    hass.states.async_set("climate.hvac", "heat", {})
+    hass.states.async_set("weather.home", "sunny", {})
+    hass.states.async_set("light.bedroom", "on", {})
+
+    entities = {
+        "sensor.humidity",
+        "sensor.temperature",
+        "climate.hvac",
+        "weather.home",
+        "light.bedroom",
+    }
+    result = cond.entity_filter(entities)
+    # sensor.temperature excluded (wrong device_class), light.bedroom excluded
+    # (no matching domain).
+    assert result == {"sensor.humidity", "climate.hvac", "weather.home"}
+
+
+async def test_condition_entity_filter_no_device_class_means_match_all_in_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test that DomainSpec without device_class matches all entities in the domain."""
+    cond = _make_condition(hass, {"cover": DomainSpec()})
+
+    hass.states.async_set("cover.door", "open", {ATTR_DEVICE_CLASS: "door"})
+    hass.states.async_set("cover.garage", "closed", {ATTR_DEVICE_CLASS: "garage"})
+    hass.states.async_set("cover.plain", "open", {})
+
+    entities = {"cover.door", "cover.garage", "cover.plain"}
+    result = cond.entity_filter(entities)
+    assert result == entities

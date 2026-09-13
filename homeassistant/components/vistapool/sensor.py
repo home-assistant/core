@@ -89,6 +89,7 @@ SENSOR_DESCRIPTIONS: tuple[VistapoolSensorEntityDescription, ...] = (
     VistapoolSensorEntityDescription(
         key="redox_potential",
         translation_key="redox_potential",
+        device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         state_class=SensorStateClass.MEASUREMENT,
         value_path="modules.rx.current",

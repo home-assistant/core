@@ -34,7 +34,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 UNIT_SELECTOR = vol.All(
-    NumberSelector(NumberSelectorConfig(min=1, max=247, mode=NumberSelectorMode.BOX)),
+    NumberSelector(NumberSelectorConfig(min=1, max=31, mode=NumberSelectorMode.BOX)),
     vol.Coerce(int),
 )
 

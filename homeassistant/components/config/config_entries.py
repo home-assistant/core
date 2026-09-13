@@ -155,22 +155,24 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
 
 
 def _prepare_config_flow_result_json(
-    result: data_entry_flow.FlowResult,
-    prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
+    result: config_entries.ConfigFlowResult,
+    prepare_result_json: Callable[[config_entries.ConfigFlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
     """Convert result to JSON."""
     if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
         return prepare_result_json(result)
 
     data = {key: val for key, val in result.items() if key not in ("data", "context")}
-    entry: config_entries.ConfigEntry = result["result"]  # type: ignore[typeddict-item]
+    entry: config_entries.ConfigEntry = result["result"]
     # We overwrite the ConfigEntry object with its json representation.
     data["result"] = entry.as_json_fragment
     return data
 
 
 class ConfigManagerFlowIndexView(
-    FlowManagerIndexView[config_entries.ConfigEntriesFlowManager]
+    FlowManagerIndexView[
+        config_entries.ConfigEntriesFlowManager, config_entries.ConfigFlowResult
+    ]
 ):
     """View to create config flows."""
 
@@ -221,14 +223,16 @@ class ConfigManagerFlowIndexView(
 
     @override
     def _prepare_result_json(
-        self, result: data_entry_flow.FlowResult
+        self, result: config_entries.ConfigFlowResult
     ) -> dict[str, Any]:
         """Convert result to JSON serializable dict."""
         return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
 
 class ConfigManagerFlowResourceView(
-    FlowManagerResourceView[config_entries.ConfigEntriesFlowManager]
+    FlowManagerResourceView[
+        config_entries.ConfigEntriesFlowManager, config_entries.ConfigFlowResult
+    ]
 ):
     """View to interact with the flow manager."""
 
@@ -249,7 +253,7 @@ class ConfigManagerFlowResourceView(
 
     @override
     def _prepare_result_json(
-        self, result: data_entry_flow.FlowResult
+        self, result: config_entries.ConfigFlowResult
     ) -> dict[str, Any]:
         """Convert result to JSON serializable dict."""
         return _prepare_config_flow_result_json(result, super()._prepare_result_json)
@@ -271,7 +275,9 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
 
 
 class OptionManagerFlowIndexView(
-    FlowManagerIndexView[config_entries.OptionsFlowManager]
+    FlowManagerIndexView[
+        config_entries.OptionsFlowManager, config_entries.ConfigFlowResult
+    ]
 ):
     """View to create option flows."""
 
@@ -289,7 +295,9 @@ class OptionManagerFlowIndexView(
 
 
 class OptionManagerFlowResourceView(
-    FlowManagerResourceView[config_entries.OptionsFlowManager]
+    FlowManagerResourceView[
+        config_entries.OptionsFlowManager, config_entries.ConfigFlowResult
+    ]
 ):
     """View to interact with the option flow manager."""
 
@@ -310,7 +318,9 @@ class OptionManagerFlowResourceView(
 
 
 class SubentryManagerFlowIndexView(
-    FlowManagerIndexView[config_entries.ConfigSubentryFlowManager]
+    FlowManagerIndexView[
+        config_entries.ConfigSubentryFlowManager, config_entries.SubentryFlowResult
+    ]
 ):
     """View to create subentry flows."""
 
@@ -346,7 +356,9 @@ class SubentryManagerFlowIndexView(
 
 
 class SubentryManagerFlowResourceView(
-    FlowManagerResourceView[config_entries.ConfigSubentryFlowManager]
+    FlowManagerResourceView[
+        config_entries.ConfigSubentryFlowManager, config_entries.SubentryFlowResult
+    ]
 ):
     """View to interact with the subentry flow manager."""
 

@@ -31,7 +31,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import SectionConfig, section
+from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -113,15 +113,15 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "service_unavailable"
 
             else:
-                if (
-                    self.source == SOURCE_REAUTH
-                    and (
+                if self.source == SOURCE_REAUTH:
+                    if (
                         (reauth_unique_id := self._get_reauth_entry().unique_id)
                         is not None
-                    )
-                    and reauth_unique_id in self.sites
-                ):
-                    return await self.async_step_site({CONF_SITE_ID: reauth_unique_id})
+                    ) and reauth_unique_id in self.sites:
+                        return await self.async_step_site(
+                            {CONF_SITE_ID: reauth_unique_id}
+                        )
+                    raise AbortFlow("unknown_site_id")
 
                 return await self.async_step_site()
 
@@ -228,12 +228,19 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_VERIFY_SSL: bool(direct_connect_domain),
         }
 
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.data.get(CONF_HOST) in (source_ip, direct_connect_domain):
-                return self.async_abort(reason="already_configured")
-
+        # MAC first: an entry keyed by it gets its host refreshed here, and the
+        # host match below would otherwise abort before that can happen.
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates=self.config, reload_on_update=False)
+
+        # A console answers on every VLAN interface but discovery reports only
+        # one of them, so match every address it announced for itself.
+        known_hosts = {source_ip, *discovery_info.get("announced_ips", ())}
+        if direct_connect_domain:
+            known_hosts.add(direct_connect_domain)
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data.get(CONF_HOST) in known_hosts:
+                return self.async_abort(reason="already_configured")
 
         self.context["title_placeholders"] = {
             CONF_NAME: (

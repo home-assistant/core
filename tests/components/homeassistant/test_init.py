@@ -368,7 +368,9 @@ async def test_not_allowing_recursion(
 
 
 async def test_reload_config_entry_by_entity_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test being able to reload a config entry by entity_id."""
     await async_setup_component(hass, DOMAIN, {})
@@ -398,6 +400,11 @@ async def test_reload_config_entry_by_entity_id(
         entry1.entry_id,
         entry2.entry_id,
     }
+    assert (
+        "Reloading a config entry by target is deprecated and will stop working in "
+        "Home Assistant 2027.4, please specify the config entry to reload in the "
+        "'entry_id' parameter instead"
+    ) in caplog.text
 
     with pytest.raises(ValueError):
         await hass.services.async_call(
@@ -408,7 +415,9 @@ async def test_reload_config_entry_by_entity_id(
         )
 
 
-async def test_reload_config_entry_by_entry_id(hass: HomeAssistant) -> None:
+async def test_reload_config_entry_by_entry_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test being able to reload a config entry by config entry id."""
     await async_setup_component(hass, DOMAIN, {})
 
@@ -425,6 +434,7 @@ async def test_reload_config_entry_by_entry_id(hass: HomeAssistant) -> None:
 
     assert len(mock_reload.mock_calls) == 1
     assert mock_reload.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"
+    assert "Reloading a config entry by target is deprecated" not in caplog.text
 
 
 @pytest.mark.parametrize(
