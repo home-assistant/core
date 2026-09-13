@@ -201,7 +201,6 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
     ),
-    # Demand and extended energy registers
     "1.6.0": SensorEntityDescription(
         key="1.6.0",
         translation_key="maximum_demand",
@@ -398,7 +397,6 @@ class WattwaechterGenericObisSensor(WattwaechterEntity, SensorEntity):
         is_metadata = obis_code.startswith(METADATA_OBIS_PREFIXES)
         if is_metadata:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        # Non-numeric readings are exposed as-is, without a unit or state class.
         if isinstance(obis_value.value, str):
             return
         self._attr_native_unit_of_measurement = obis_value.unit or None
