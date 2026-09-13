@@ -118,22 +118,18 @@ def _aggregate_energy_history_by_hour(
     time_series: list[dict[str, Any]],
 ) -> list[tuple[datetime, dict[str, float]]]:
     """Aggregate energy history samples into recorder-compatible hourly buckets."""
-    samples: dict[datetime, dict[str, Any]] = {}
+    hourly_periods: dict[datetime, dict[str, float]] = {}
 
     for period in time_series:
-        timestamp_str = period.get("timestamp")
-        if not timestamp_str:
+        timestamp = period.get("timestamp")
+        if not timestamp:
             continue
 
-        parsed_time = dt_util.parse_datetime(timestamp_str)
+        parsed_time = dt_util.parse_datetime(timestamp)
         if parsed_time is None:
             continue
 
-        samples.setdefault(dt_util.as_utc(parsed_time), {}).update(period)
-
-    hourly_periods: dict[datetime, dict[str, float]] = {}
-    for timestamp, period in samples.items():
-        start = timestamp.replace(minute=0, second=0, microsecond=0)
+        start = dt_util.as_utc(parsed_time).replace(minute=0, second=0, microsecond=0)
         hour_values = hourly_periods.setdefault(start, {})
 
         for key in ENERGY_HISTORY_FIELDS:

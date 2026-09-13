@@ -159,10 +159,10 @@ async def test_hourly_aggregation_and_repeated_refresh(
     hass: HomeAssistant,
     mock_energy_site: AsyncMock,
 ) -> None:
-    """Merge duplicate instants, skip untimed samples, and replace the latest hour."""
+    """Bucket samples by UTC hour, skip untimed ones, and replace the latest hour."""
     mock_energy_site.energy_history.return_value = _history(
         ("2023-06-01T08:12:34-07:00", {GRID: 100, SOLAR: 200}),
-        ("2023-06-01T15:12:34Z", {GRID: 150}),
+        ("2023-06-01T15:30:00Z", {GRID: 150}),
         ("2023-06-01T08:45:00-07:00", {GRID: 50}),
         ("2023-06-01T09:00:00-07:00", {GRID: 75, SOLAR: 100}),
         (None, {GRID: 1000}),
@@ -172,8 +172,8 @@ async def test_hourly_aggregation_and_repeated_refresh(
     ids = {GRID_STATISTIC_ID, SOLAR_STATISTIC_ID}
     stats = await _get_hourly_stats(hass, ids)
     assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
-        ("2023-06-01T15:00:00+00:00", 200, 200),
-        ("2023-06-01T16:00:00+00:00", 75, 275),
+        ("2023-06-01T15:00:00+00:00", 300, 300),
+        ("2023-06-01T16:00:00+00:00", 75, 375),
     ]
     assert _hourly_rows(stats[SOLAR_STATISTIC_ID]) == [
         ("2023-06-01T15:00:00+00:00", 200, 200),
@@ -189,9 +189,9 @@ async def test_hourly_aggregation_and_repeated_refresh(
     await _refresh(hass, coordinator)
     stats = await _get_hourly_stats(hass, ids)
     assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
-        ("2023-06-01T15:00:00+00:00", 200, 200),
-        ("2023-06-01T16:00:00+00:00", 100, 300),
-        ("2023-06-01T17:00:00+00:00", 75, 375),
+        ("2023-06-01T15:00:00+00:00", 300, 300),
+        ("2023-06-01T16:00:00+00:00", 100, 400),
+        ("2023-06-01T17:00:00+00:00", 75, 475),
     ]
     await _refresh(hass, coordinator)
     assert await _get_hourly_stats(hass, ids) == stats
