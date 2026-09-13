@@ -14,6 +14,7 @@ from duco_connectivity import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.switch import (
@@ -30,10 +31,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from . import async_fire_coordinator_update, setup_platform_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 _IDENTIFY_ENTITY = "switch.living_identify"
 
@@ -68,6 +70,17 @@ async def init_integration(
     """Set up only the switch platform with identify capability."""
     mock_node_actions.nodes[0].actions.append(_identify_action())
     await setup_platform_integration(hass, mock_config_entry, [Platform.SWITCH])
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_identify_switch_entity_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the identify switch entity registry metadata and state."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("init_integration")

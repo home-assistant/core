@@ -219,9 +219,9 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             )
             _LOGGER.warning(
                 "Could not fetch Duco node actions; %s",
-                "keeping previous select discovery data"
+                "keeping previous action discovery data"
                 if previous_data is not None
-                else "starting with empty select discovery data",
+                else "starting with empty action discovery data",
                 exc_info=err,
             )
 
