@@ -44,7 +44,7 @@ PSNAWP==3.0.3
 Pillow==12.3.0
 
 # homeassistant.components.plex
-PlexAPI==4.15.16
+PlexAPI==4.18.2
 
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
