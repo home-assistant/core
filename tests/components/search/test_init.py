@@ -1398,7 +1398,7 @@ async def test_search_include_disabled_entities(
     expected_default: set[str],
     expected_included: set[str],
 ) -> None:
-    """Test disabled entities are only returned when explicitly requested.
+    """Test device-inherited disabled entities are only returned when requested.
 
     A child device is searched both directly and through the area and floor it
     inherits from its parent. Searching the child does not return the parent's
