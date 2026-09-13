@@ -1,0 +1,996 @@
+# serializer version: 1
+# name: test_sensors[sensor.enyaq_coupe_air_conditioning_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.enyaq_coupe_air_conditioning_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air conditioning remaining time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:clock-digital',
+    'original_name': 'Air conditioning remaining time',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remaining_ac_time',
+    'unique_id': 'TMBJM7NP2M1TMP511_remaining_ac_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_air_conditioning_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Air conditioning remaining time',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:clock-digital',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_air_conditioning_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_api_key_expiration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.enyaq_coupe_api_key_expiration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'API key expiration',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:api',
+    'original_name': 'API key expiration',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'api_key_expiration',
+    'unique_id': 'TMBJM7NP2M1TMP511_api_key_expiration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_api_key_expiration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé API key expiration',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:api',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_api_key_expiration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_api_rate_limit_reset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.enyaq_coupe_api_rate_limit_reset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'API rate limit reset',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:timelapse',
+    'original_name': 'API rate limit reset',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rate_limit_reset_seconds',
+    'unique_id': 'TMBJM7NP2M1TMP511_rate_limit_reset_seconds',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_api_rate_limit_reset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé API rate limit reset',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timelapse',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_api_rate_limit_reset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_api_requests_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.enyaq_coupe_api_requests_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'API requests remaining',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:counter',
+    'original_name': 'API requests remaining',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rate_limit_remaining',
+    'unique_id': 'TMBJM7NP2M1TMP511_rate_limit_remaining',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_api_requests_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé API requests remaining',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:counter',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_api_requests_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_auxiliary_heating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.enyaq_coupe_auxiliary_heating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auxiliary heating mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:heating-coil',
+    'original_name': 'Auxiliary heating mode',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auxiliary_heating_mode',
+    'unique_id': 'TMBJM7NP2M1TMP511_auxiliary_heating_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_auxiliary_heating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Auxiliary heating mode',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_auxiliary_heating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_auxiliary_heating_remaining_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.enyaq_coupe_auxiliary_heating_remaining_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auxiliary heating remaining duration',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:fan-clock',
+    'original_name': 'Auxiliary heating remaining duration',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aux_heating_duration',
+    'unique_id': 'TMBJM7NP2M1TMP511_aux_heating_duration',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_auxiliary_heating_remaining_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Auxiliary heating remaining duration',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:fan-clock',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_auxiliary_heating_remaining_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1200',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_battery_state_of_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.enyaq_coupe_battery_state_of_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery state of charge',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': 'mdi:battery',
+    'original_name': 'Battery state of charge',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_percentage',
+    'unique_id': 'TMBJM7NP2M1TMP511_battery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_battery_state_of_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Battery state of charge',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_battery_state_of_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '99',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_charge_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ac',
+        'dc',
+        'off',
+        'not_charging',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.enyaq_coupe_charge_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charge type',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:connection',
+    'original_name': 'Charge type',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_type',
+    'unique_id': 'TMBJM7NP2M1TMP511_charge_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_charge_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Charge type',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:connection',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ac',
+        'dc',
+        'off',
+        'not_charging',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_charge_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ac',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_charging_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.enyaq_coupe_charging_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:lightning-bolt',
+    'original_name': 'Charging power',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_power',
+    'unique_id': 'TMBJM7NP2M1TMP511_charging_power',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_charging_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Charging power',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lightning-bolt',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_charging_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11.0',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_charging_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charging',
+        'connect_cable',
+        'ready_for_charging',
+        'conserving',
+        'discharging',
+        'charging_interrupted',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.enyaq_coupe_charging_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:battery-charging',
+    'original_name': 'Charging state',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_state',
+    'unique_id': 'TMBJM7NP2M1TMP511_charging_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_charging_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Charging state',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-charging',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charging',
+        'connect_cable',
+        'ready_for_charging',
+        'conserving',
+        'discharging',
+        'charging_interrupted',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_charging_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charging',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_electric_range-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.enyaq_coupe_electric_range',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electric range',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': 'mdi:car-traction-control',
+    'original_name': 'Electric range',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electric_range',
+    'unique_id': 'TMBJM7NP2M1TMP511_remaining_electric_range',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_electric_range-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Electric range',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:car-traction-control',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_electric_range',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '513.0',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_last_synchronization-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.enyaq_coupe_last_synchronization',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last synchronization',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:cloud-sync-outline',
+    'original_name': 'Last synchronization',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timestamp_last_sync',
+    'unique_id': 'TMBJM7NP2M1TMP511_timestamp_last_sync',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_last_synchronization-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Last synchronization',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cloud-sync-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_last_synchronization',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_mileage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.enyaq_coupe_mileage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mileage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': 'mdi:car-info',
+    'original_name': 'Mileage',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mileage',
+    'unique_id': 'TMBJM7NP2M1TMP511_mileage',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_mileage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Mileage',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:car-info',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_mileage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9618',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_next_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.enyaq_coupe_next_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Next update',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:timer-sync-outline',
+    'original_name': 'Next update',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_update_interval',
+    'unique_id': 'TMBJM7NP2M1TMP511_next_update_interval',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_next_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Next update',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer-sync-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_next_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-10T12:05:00+00:00',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_registration_plate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.enyaq_coupe_registration_plate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Registration plate',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alpha-r-box-outline',
+    'original_name': 'Registration plate',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'licence_plate',
+    'unique_id': 'TMBJM7NP2M1TMP511_licence_plate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_registration_plate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Registration plate',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:alpha-r-box-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_registration_plate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'EL107FP',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_target_cabin_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.enyaq_coupe_target_cabin_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target cabin temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer',
+    'original_name': 'Target cabin temperature',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_temperature_value',
+    'unique_id': 'TMBJM7NP2M1TMP511_preset_temperature_value',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_target_cabin_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Target cabin temperature',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermometer',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_target_cabin_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21.5',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_time_to_full_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.enyaq_coupe_time_to_full_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Time to full charge',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:battery-charging-medium',
+    'original_name': 'Time to full charge',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remaining_time_to_full_battery',
+    'unique_id': 'TMBJM7NP2M1TMP511_remaining_time_to_full_battery',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_time_to_full_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Time to full charge',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-charging-medium',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_time_to_full_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45',
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_total_range-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.enyaq_coupe_total_range',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total range',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': 'mdi:car-traction-control',
+    'original_name': 'Total range',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_range',
+    'unique_id': 'TMBJM7NP2M1TMP511_remaining_range',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensors[sensor.enyaq_coupe_total_range-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Total range',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:car-traction-control',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enyaq_coupe_total_range',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '513',
+  })
+# ---
