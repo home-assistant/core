@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from env_canada import ECAirQuality, ECMap, ECWeather
+from env_canada import ECAirQuality, ECMap, ECPrecipForecast, ECWeather
 
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
@@ -116,8 +116,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) ->
     if errors >= 2:
         raise ConfigEntryNotReady
 
+    precip_forecast = ECPrecipForecast(coordinates=(lat, lon), language=lang.lower())
+
     config_entry.runtime_data = ECRuntimeData(
         aqhi_coordinator=aqhi_coordinator,
+        precip_forecast=precip_forecast,
         radar_coordinator=radar_coordinator,
         weather_coordinator=weather_coordinator,
     )
