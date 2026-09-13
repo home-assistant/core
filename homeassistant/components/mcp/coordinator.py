@@ -14,6 +14,7 @@ from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
 from mcp.types import InitializeResult
 import probatio
+from probatio import from_openapi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -249,7 +250,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         tools: list[llm.Tool] = []
         for tool in result.tools:
             try:
-                parameters = probatio.from_openapi(tool.inputSchema)
+                parameters = from_openapi(tool.inputSchema)
             except Exception as err:
                 raise UpdateFailed(
                     f"Error converting schema {err}: {tool.inputSchema}"
