@@ -214,6 +214,9 @@
       }
     },
     "number": {
+      "fan_speed": {
+        "name": "Fan speed"
+      },
       "dry_level": {
         "name": "Dry level"
       },

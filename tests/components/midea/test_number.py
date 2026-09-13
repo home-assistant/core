@@ -48,6 +48,21 @@ def _c2_device() -> DummyDevice:
     return device
 
 
+def _ac_device() -> DummyDevice:
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: 60,
+        },
+        capabilities={"fan_custom": True},
+    )
+    return device
+
+
 def _cd_device() -> DummyDevice:
     return DummyDevice(
         DeviceType.CD,
@@ -94,6 +109,7 @@ async def _assert_service_call(
 @pytest.mark.parametrize(
     "device",
     [
+        pytest.param(_ac_device(), id="ac"),
         pytest.param(_c2_device(), id="c2"),
         pytest.param(_cd_device(), id="cd"),
         pytest.param(_ed_device(), id="ed"),
@@ -264,7 +280,7 @@ async def test_number_not_created_for_other_device_type(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
 ) -> None:
-    """Test no number entity is created for a device type without one (e.g. AC's fan_speed)."""
+    """Test AC fan_speed is not created when custom fan speed capability is absent."""
     device = DummyDevice(
         DeviceType.AC,
         attributes={
@@ -280,6 +296,46 @@ async def test_number_not_created_for_other_device_type(
         await setup_integration(hass, config_entry, device)
 
     assert entity_entries(hass, config_entry) == {}
+
+
+async def test_ac_fan_speed_not_created_when_custom_capability_missing(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC fan_speed is not created when custom fan speed capability is missing."""
+    device = _ac_device()
+    device.capabilities = {"fan_custom": False}
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry, device)
+
+    assert entity_entries(hass, config_entry) == {}
+
+
+async def test_ac_fan_speed_number_range_and_service_call(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC fan_speed number is created for fan_custom capability and settable."""
+    device = _ac_device()
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_fan_speed"]
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert float(state.state) == 60
+    assert state.attributes[ATTR_MIN] == 1
+    assert state.attributes[ATTR_MAX] == 100
+    assert state.attributes[ATTR_STEP] == 1
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        42.4,
+        [("set_attribute", "fan_speed", 42)],
+        device,
+    )
 
 
 async def test_number_set_value_raises_on_device_communication_error(

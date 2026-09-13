@@ -28,9 +28,21 @@ class MideaNumberEntityDescription(NumberEntityDescription):
 
     models: list[DeviceType]
     max_value_fn: Callable[[MideaDevice], float | None] | None = None
+    capability: str | None = None
+    requires_power: bool = False
 
 
 NUMBERS: list[MideaNumberEntityDescription] = [
+    MideaNumberEntityDescription(
+        key="fan_speed",
+        translation_key="fan_speed",
+        models=[DeviceType.AC],
+        native_min_value=1,
+        native_max_value=100,
+        native_step=1,
+        capability="fan_custom",
+        requires_power=True,
+    ),
     MideaNumberEntityDescription(
         key="dry_level",
         translation_key="dry_level",
@@ -119,6 +131,12 @@ async def async_setup_entry(
         # None means the model doesn't support this attribute at all,
         # unlike select.py's key-presence check.
         and device.attributes.get(description.key) is not None
+        and (
+            description.capability is None
+            or (getattr(device, "capabilities", None) or {}).get(
+                description.capability, False
+            )
+        )
     )
 
 
@@ -126,6 +144,16 @@ class MideaNumber(MideaEntity, NumberEntity):
     """Represent a Midea number."""
 
     entity_description: MideaNumberEntityDescription
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return entity availability."""
+        if not super().available:
+            return False
+        if self.entity_description.requires_power:
+            return bool(self._device.get_attribute("power"))
+        return True
 
     @property
     @override
