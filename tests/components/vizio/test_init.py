@@ -13,6 +13,7 @@ from vizaio import (
     VizioConnectionError,
     VizioNotFoundError,
 )
+from vizaio.profiles import SOUNDBAR_PROFILE
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -224,6 +225,23 @@ async def test_state_extended_polling(
     mock_vizio.get_power_state.assert_not_called()
     mock_vizio.get_current_input.assert_not_called()
     mock_vizio.get_current_app_config.assert_not_called()
+
+
+@pytest.mark.usefixtures("vizio_connect")
+async def test_soundbar_does_not_poll_state_extended(
+    hass: HomeAssistant,
+    mock_speaker_config_entry: MockConfigEntry,
+    mock_vizio: AsyncMock,
+) -> None:
+    """Test soundbars use the unauthenticated power endpoint."""
+    mock_vizio.profile = SOUNDBAR_PROFILE
+    mock_vizio.get_state_extended.side_effect = VizioAuthError("token required")
+
+    await setup_integration(hass, mock_speaker_config_entry)
+
+    mock_vizio.get_state_extended.assert_not_called()
+    mock_vizio.get_power_state.assert_called_once()
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
 @pytest.mark.usefixtures("vizio_connect")

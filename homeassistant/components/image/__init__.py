@@ -12,8 +12,8 @@ from typing import Final, final, override
 
 from aiohttp import hdrs, web
 import httpx
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
@@ -70,7 +70,7 @@ FRAME_BOUNDARY = "frame-boundary"
 FRAME_SEPARATOR = bytes(f"\r\n--{FRAME_BOUNDARY}\r\n", "utf-8")
 LAST_FRAME_MARKER = bytes(f"\r\n--{FRAME_BOUNDARY}--\r\n", "utf-8")
 
-IMAGE_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.string}
+IMAGE_SERVICE_SNAPSHOT: VolDictType = {probatio.Required(ATTR_FILENAME): cv.string}
 
 MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE = {
     b"\x89PNG": "image/png",

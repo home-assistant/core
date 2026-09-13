@@ -4,8 +4,8 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
+import probatio
 import telnetlib  # pylint: disable=deprecated-module
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     ENTITY_ID_FORMAT,
@@ -34,21 +34,23 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 23
 DEFAULT_TIMEOUT = 0.2
 
-SWITCH_SCHEMA = vol.Schema(
+SWITCH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_COMMAND_OFF): cv.string,
-        vol.Required(CONF_COMMAND_ON): cv.string,
-        vol.Required(CONF_RESOURCE): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_COMMAND_STATE): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(float),
+        probatio.Required(CONF_COMMAND_OFF): cv.string,
+        probatio.Required(CONF_COMMAND_ON): cv.string,
+        probatio.Required(CONF_RESOURCE): cv.string,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_COMMAND_STATE): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): probatio.Coerce(
+            float
+        ),
     }
 )
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA)}
+    {probatio.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA)}
 )
 
 SCAN_INTERVAL = timedelta(seconds=10)

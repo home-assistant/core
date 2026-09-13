@@ -6,7 +6,7 @@ from datetime import date
 from enum import IntEnum
 from typing import cast, override
 
-from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus.modern.enums import FeedinLimitationMode, PassiveModeTimeoutAction
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -31,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import BATTERY_COMPONENTS
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
@@ -45,7 +46,6 @@ async def async_setup_entry(
     """Set up the Sofar Inverter Modbus sensor platform."""
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
-    device = runtime_data.readings.device
 
     async_add_entities(
         _sensor_class(description)(runtime_data, description)
@@ -53,15 +53,14 @@ async def async_setup_entry(
         if description.component in served and not _is_battery_pack(description)
     )
 
-    wired: set[int] = set()
-
     @callback
     def _async_add_wired_packs() -> None:
         """Add a pack's sensors the first time it reports a voltage."""
+        wired = runtime_data.wired_packs
         new = {
             number
-            for number in _BATTERY_COMPONENTS
-            if number not in wired and _pack_is_wired(device, served, number)
+            for number in BATTERY_COMPONENTS
+            if number not in wired and runtime_data.pack_is_wired(number)
         }
         if not new:
             return
@@ -83,15 +82,6 @@ async def async_setup_entry(
 def _is_battery_pack(description: SofarSensorDescription) -> bool:
     """Whether a description belongs to one numbered battery pack."""
     return description.part is not None and description.part[0] == "battery"
-
-
-def _pack_is_wired(device: SofarInverter, served: frozenset[str], number: int) -> bool:
-    """Whether a pack has answered, so it physically exists."""
-    component_name = _BATTERY_COMPONENTS[number]
-    if component_name not in served:
-        return False
-    component = getattr(device, component_name)
-    return bool(getattr(component, f"battery_voltage_{number}", None))
 
 
 def _sensor_class(
@@ -189,9 +179,6 @@ _PV_STRING_COMPONENTS = {
     8: "pv_7_8",
     9: "pv_9_10",
     10: "pv_9_10",
-}
-_BATTERY_COMPONENTS = {
-    n: "battery_1_2" if n <= 2 else "battery_3_8" for n in range(1, 9)
 }
 
 _PV_STRING_MEASUREMENTS = (
@@ -1440,8 +1427,79 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         ],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    SofarSensorDescription(
+        key="feedin_limitation_mode",
+        component="feed_in",
+        translation_key="feedin_limitation_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=[mode.name.lower() for mode in FeedinLimitationMode],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="feedin_max_power",
+        component="feed_in",
+        translation_key="feedin_max_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="active_power_export_limit",
+        component="active_power_control",
+        translation_key="active_power_export_limit",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="passive_mode_timeout",
+        component="passive",
+        translation_key="passive_mode_timeout",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="passive_mode_timeout_action",
+        component="passive",
+        translation_key="passive_mode_timeout_action",
+        device_class=SensorDeviceClass.ENUM,
+        options=[action.name.lower() for action in PassiveModeTimeoutAction],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="passive_mode_grid_power",
+        component="passive",
+        translation_key="passive_mode_grid_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="passive_mode_battery_power_min",
+        component="passive",
+        translation_key="passive_mode_battery_power_min",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SofarSensorDescription(
+        key="passive_mode_battery_power_max",
+        component="passive",
+        translation_key="passive_mode_battery_power_max",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 SENSOR_DESCRIPTIONS += _part_sensors(
     "pv_string", _PV_STRING_COMPONENTS, _PV_STRING_MEASUREMENTS
-) + _part_sensors("battery", _BATTERY_COMPONENTS, _BATTERY_MEASUREMENTS)
+) + _part_sensors("battery", BATTERY_COMPONENTS, _BATTERY_MEASUREMENTS)

@@ -1,11 +1,11 @@
-"""SwitchBot Cloud Custom Service."""
+"""Support for SwitchBot Cloud services."""
 
 from logging import getLogger
 
+import probatio
 from switchbot_api import ArtFrameCommands
-import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 
@@ -14,12 +14,12 @@ from .const import AI_ART_FRAME_UPLOAD_IMAGE_SERVICE, DOMAIN
 _LOGGER = getLogger(__name__)
 
 
-UPLOAD_IMAGE_SCHEMA = vol.Schema(
+UPLOAD_IMAGE_SCHEMA = probatio.Schema(
     {
-        vol.Required("device_id"): vol.All(
-            cv.ensure_list, [cv.string], vol.Length(min=1)
+        probatio.Required("device_id"): probatio.All(
+            cv.ensure_list, [cv.string], probatio.Length(min=1)
         ),
-        vol.Required("image_url"): cv.url,
+        probatio.Required("image_url"): cv.url,
     }
 )
 
@@ -49,8 +49,9 @@ async def handle_upload_image(call: ServiceCall) -> None:
         )
 
 
-def async_register_services(hass: HomeAssistant) -> None:
-    """Async register services."""
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Register the SwitchBot Cloud services."""
     hass.services.async_register(
         DOMAIN,
         AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
