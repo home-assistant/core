@@ -998,6 +998,37 @@ async def test_subentry_authorize_failure(
     vehicle.pair.assert_awaited_once()
 
 
+async def test_subentry_authorize_unexpected_error_disconnects(
+    hass: HomeAssistant,
+) -> None:
+    """An exception outside the handled set still disconnects before propagating."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle(on_whitelist=False)
+    vehicle.pair = AsyncMock(side_effect=ValueError("boom"))
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["step_id"] == "instructions"
+
+        with pytest.raises(ValueError, match="boom"):
+            await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+
+    vehicle.disconnect.assert_awaited_once()
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+
+
 async def test_subentry_authorize_existing_key_finishes(hass: HomeAssistant) -> None:
     """Approving the key after a timeout, then retrying, completes the pairing."""
     entry = await _setup_account_entry(hass)

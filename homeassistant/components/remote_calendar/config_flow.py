@@ -71,12 +71,8 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self.async_step_auth()
             if res.status_code == HTTPStatus.FORBIDDEN:
                 errors["base"] = "forbidden"
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=STEP_USER_DATA_SCHEMA,
-                    errors=errors,
-                )
-            res.raise_for_status()
+            else:
+                res.raise_for_status()
         except TimeoutException as err:
             errors["base"] = "timeout_connect"
             _LOGGER.debug(
@@ -86,18 +82,21 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
             _LOGGER.debug("An error occurred: %s", str(err) or type(err).__name__)
         else:
-            try:
-                await parse_calendar(self.hass, res.text)
-            except InvalidIcsException:
-                errors["base"] = "invalid_ics_file"
-            else:
-                return self.async_create_entry(
-                    title=user_input[CONF_CALENDAR_NAME], data=user_input
-                )
+            if not errors:
+                try:
+                    await parse_calendar(self.hass, res.text)
+                except InvalidIcsException:
+                    errors["base"] = "invalid_ics_file"
+                else:
+                    return self.async_create_entry(
+                        title=user_input[CONF_CALENDAR_NAME], data=user_input
+                    )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
             errors=errors,
         )
 
