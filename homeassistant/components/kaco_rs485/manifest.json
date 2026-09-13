@@ -9,5 +9,5 @@
   "iot_class": "local_polling",
   "loggers": ["kaco_rs485"],
   "quality_scale": "silver",
-  "requirements": ["kaco-serial==1.0.1"]
+  "requirements": ["kaco-serial==1.0.2"]
 }
