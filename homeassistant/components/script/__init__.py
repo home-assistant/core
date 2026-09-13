@@ -782,6 +782,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
 
 
 @websocket_api.websocket_command({"type": "script/config", "entity_id": str})
+@websocket_api.require_admin
 def websocket_config(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
