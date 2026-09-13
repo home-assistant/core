@@ -30,15 +30,7 @@ PENDING_VALUE_TIMEOUT = 15
 # interval, and there's no reason for Audyssey to be checked more often.
 COORDINATOR_UPDATE_INTERVAL = 10
 
-# Debounce for action-triggered refreshes specifically (not the
-# recurring poll above, which is unaffected by this). Matches the
-# established pattern for exactly this situation (see e.g. tplink's own
-# coordinator): immediate=False rather than a plain
-# async_request_refresh(), since the receiver needs a moment to settle
-# after a command anyway, so waiting a short beat before confirming is
-# correct, not just tolerated - and it coalesces near-simultaneous
-# actions (e.g. two Audyssey-scoped settings changed in quick
-# succession) into a single shared refresh instead of one each.
+# Delay action-triggered refreshes so the receiver can settle and coalesce changes.
 ACTION_REFRESH_DEBOUNCE_COOLDOWN = 0.5
 
 # denonavr.const has no "list of valid options" helper for these three

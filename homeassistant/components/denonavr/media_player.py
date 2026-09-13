@@ -122,6 +122,7 @@ async def async_setup_entry(
         entities.append(
             DenonDevice(
                 data.coordinator,
+                data.audyssey_coordinator,
                 receiver_zone,
                 unique_id,
                 config_entry,
@@ -138,13 +139,10 @@ async def async_setup_entry(
 def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
     func: Callable[Concatenate[_DenonDeviceT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
-    """Log errors occurred when calling a Denon AVR receiver.
+    """Log command errors and refresh the coordinator after success.
 
-    Availability isn't tracked here - the coordinator's
-    last_update_success (see coordinator.py) is the single source of
-    truth for that, matching select.py/switch.py. Also shares the
-    coordinator's lock, closing the gap where this platform's commands
-    used to bypass it entirely.
+    The refresh is needed because this entity has should_poll=False,
+    so nothing else refreshes it after a successful command.
     """
 
     @wraps(func)
@@ -153,25 +151,28 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
     ) -> _R | None:
         async with self.coordinator.lock:
             try:
-                return await func(self, *args, **kwargs)
+                result = await func(self, *args, **kwargs)
             except AvrTimoutError as err:
                 _LOGGER.warning(
                     "Timeout connecting to Denon AVR receiver at host %s: %s",
                     self._receiver.host,
                     err,
                 )
+                return None
             except AvrNetworkError as err:
                 _LOGGER.warning(
                     "Network error connecting to Denon AVR receiver at host %s: %s",
                     self._receiver.host,
                     err,
                 )
+                return None
             except AvrProcessingError as err:
                 _LOGGER.warning(
                     "Update of Denon AVR receiver at host %s not complete: %s",
                     self._receiver.host,
                     err,
                 )
+                return None
             except AvrForbiddenError as err:
                 _LOGGER.warning(
                     (
@@ -181,23 +182,28 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
                     self._receiver.host,
                     err,
                 )
+                return None
             except (AvrInvalidResponseError, AvrIncompleteResponseError) as err:
                 _LOGGER.warning(
                     "Denon AVR receiver at host %s returned malformed response: %s",
                     self._receiver.host,
                     err,
                 )
+                return None
             except AvrCommandError as err:
                 _LOGGER.error(
                     "Command %s failed with error: %s",
                     func.__name__,
                     err,
                 )
+                return None
             except DenonAvrError:
                 _LOGGER.exception(
                     "Error occurred in method %s for Denon AVR receiver", func.__name__
                 )
-        return None
+                return None
+        await self.coordinator.async_request_refresh()
+        return result
 
     return wrapper
 
@@ -212,6 +218,7 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
     def __init__(
         self,
         coordinator: DenonAvrDataUpdateCoordinator,
+        audyssey_coordinator: DenonAvrDataUpdateCoordinator,
         receiver: DenonAVR,
         unique_id: str,
         config_entry: DenonavrConfigEntry,
@@ -219,6 +226,7 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
     ) -> None:
         """Initialize the device."""
         super().__init__(coordinator)
+        self._audyssey_coordinator = audyssey_coordinator
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
@@ -256,6 +264,15 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
         if event == "HD" and not parameter.startswith("ALBUM"):
             return
         self.async_write_ha_state()
+        # Telnet already pushed the fresh value straight into the
+        # receiver object here - the Audyssey-backed select/switch
+        # entities just need telling to re-read it, not a fetch, so
+        # this only notifies listeners rather than calling
+        # async_request_refresh(). Broader than strictly necessary
+        # (not every one of these events is Audyssey-related), but
+        # over-notifying is harmless and there's no reliable way here
+        # to tell which of these specifically touched Audyssey data.
+        self._audyssey_coordinator.async_update_listeners()
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -493,6 +510,14 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
     async def async_update_audyssey(self) -> None:
         """Get the latest audyssey information from device."""
         await self._receiver.async_update_audyssey()
+        # The direct call above already refreshed the shared receiver
+        # object - the Audyssey-backed select/switch entities just
+        # need telling to re-read it, not another fetch, so this only
+        # notifies listeners rather than calling
+        # async_request_refresh() (which would also deadlock: it's
+        # still under this method's own decorator-held lock at this
+        # point, and async_update_listeners doesn't touch that lock).
+        self._audyssey_coordinator.async_update_listeners()
 
     @async_log_errors
     async def async_set_dynamic_eq(self, dynamic_eq: bool) -> None:
@@ -504,3 +529,4 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
 
         if self._update_audyssey:
             await self._receiver.async_update_audyssey()
+            self._audyssey_coordinator.async_update_listeners()

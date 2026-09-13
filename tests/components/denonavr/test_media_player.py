@@ -63,6 +63,34 @@ def client_fixture():
         mock_client_class.return_value.zones = {"Main": mock_client_class.return_value}
         mock_client_class.return_value.telnet_connected = False
         mock_client_class.return_value.telnet_healthy = False
+        # Not used by these tests directly, but select/switch are set
+        # up alongside media_player in every test here too (the same
+        # config entry forwards all platforms) - leaving these as
+        # auto-generated MagicMocks makes the entity registry's stored
+        # "capabilities.options" for those selects an unserializable
+        # mock, which crashes the whole test's teardown when it tries
+        # to write the registry, not just something scoped to
+        # media_player. See the matching comment in test_switch.py.
+        mock_client_class.return_value.dynamic_eq = True
+        mock_client_class.return_value.reference_level_offset_setting_list = [
+            "0dB",
+            "+5dB",
+            "+10dB",
+            "+15dB",
+        ]
+        mock_client_class.return_value.dynamic_volume_setting_list = [
+            "Off",
+            "Light",
+            "Medium",
+            "Heavy",
+        ]
+        mock_client_class.return_value.multi_eq_setting_list = [
+            "Off",
+            "Flat",
+            "L/R Bypass",
+            "Reference",
+            "Manual",
+        ]
         yield mock_client_class.return_value
 
 

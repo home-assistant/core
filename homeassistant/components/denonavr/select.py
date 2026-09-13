@@ -23,10 +23,8 @@ from .const import (
 from .coordinator import DenonAvrDataUpdateCoordinator
 from .entity import DenonAvrPendingValueEntity
 
-# Denon's HTTP/Telnet interface doesn't handle concurrent requests well
-# (media_player.py sets this too). Only covers calls targeting multiple
-# entities at once - see entity.py's shared receiver lock for repeats
-# on one entity, or calls split across this file and switch.py.
+# Denon receivers do not handle concurrent requests reliably. Only
+# covers multi-entity calls - entity.py's shared lock covers the rest.
 PARALLEL_UPDATES = 1
 
 
@@ -175,11 +173,10 @@ class DenonAvrSelect(DenonAvrPendingValueEntity[str], SelectEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return True if the receiver reports a value and it can be changed.
+        """Return whether the receiver reports an available value.
 
-        Also False whenever this entity's coordinator's last refresh
-        failed - otherwise a receiver that stops responding would keep
-        showing its last cached value as if still current, indefinitely.
+        Also False if the coordinator's last refresh failed, so an
+        unresponsive receiver doesn't keep showing stale data as current.
         """
         if not super().available or self._current_value is None:
             return False
@@ -205,5 +202,7 @@ class DenonAvrSelect(DenonAvrPendingValueEntity[str], SelectEntity):
                 self._receiver, option
             ),
             value=option,
-            error_label=self.entity_description.key,
+            error_label=self.entity_description.name
+            if isinstance(self.entity_description.name, str)
+            else self.entity_description.key,
         )

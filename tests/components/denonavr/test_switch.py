@@ -77,6 +77,32 @@ def client_fixture():
         mock_client_class.return_value.telnet_connected = False
         mock_client_class.return_value.telnet_healthy = False
         mock_client_class.return_value.dynamic_eq = True
+        # Not used by these tests directly, but the select platform is
+        # set up alongside switch in every test here too (the same
+        # config entry forwards all platforms) - leaving these as
+        # auto-generated MagicMocks makes the entity registry's stored
+        # "capabilities.options" for those selects an unserializable
+        # mock, which crashes the whole test's teardown when it tries
+        # to write the registry, not just something scoped to switch.
+        mock_client_class.return_value.reference_level_offset_setting_list = [
+            "0dB",
+            "+5dB",
+            "+10dB",
+            "+15dB",
+        ]
+        mock_client_class.return_value.dynamic_volume_setting_list = [
+            "Off",
+            "Light",
+            "Medium",
+            "Heavy",
+        ]
+        mock_client_class.return_value.multi_eq_setting_list = [
+            "Off",
+            "Flat",
+            "L/R Bypass",
+            "Reference",
+            "Manual",
+        ]
         yield mock_client_class.return_value
 
 
@@ -121,18 +147,7 @@ def _entity_id(hass: HomeAssistant, domain: str, key: str) -> str:
 
 
 async def test_has_a_fallback_name_if_translation_lookup_fails() -> None:
-    """The switch has an entity_description providing a fallback name.
-
-    Regression test for a real bug: an earlier version set _attr_name
-    directly, which Entity._name_internal checks *before*
-    translation_key - permanently blocking the translation rather than
-    just backing it up if it failed to load (e.g. a custom_components
-    install missing translations/en.json, which happened in practice).
-    Removing that fallback entirely then left the entity with no name
-    at all when translation loading failed. entity_description.name is
-    the correct fallback tier - checked only *after* translation_key,
-    matching how every select entity already behaves.
-    """
+    """Its description has a name and a translation_key for fallback."""
     assert DYNAMIC_EQ_DESCRIPTION.name == "Dynamic EQ"
     assert DYNAMIC_EQ_DESCRIPTION.translation_key == "dynamic_eq"
 
@@ -277,9 +292,7 @@ async def test_toggling_switch_updates_dependent_select(
 
     Both entities share the same Audyssey coordinator, so refreshing
     after the switch's own action notifies every entity subscribed to
-    it - not just the switch itself. This used to be a documented gap
-    (the select only caught up on its own next poll); confirmed fixed
-    by the move to a shared coordinator.
+    it, not just the switch itself.
     """
     client.reference_level_offset = "0dB"
     client.reference_level_offset_setting_list = ["0dB", "+5dB", "+10dB", "+15dB"]
@@ -423,7 +436,7 @@ async def test_rapid_toggles_do_not_race(
 async def test_state_shown_immediately_even_if_refresh_reads_back_stale_value(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Same fix as select.py's equivalent test, for the switch."""
+    """A stale immediate refresh must not revert a just-set state."""
     # Simulate the receiver's Audyssey refresh responding with the old
     # value, as if the command hadn't internally settled yet.
     client.async_update_audyssey.side_effect = lambda *a, **k: None  # stays True
@@ -445,7 +458,7 @@ async def test_state_shown_immediately_even_if_refresh_reads_back_stale_value(
 async def test_pending_state_expires_instead_of_masking_forever(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Same fix as select.py's equivalent test, for the switch."""
+    """A pending state must expire rather than mask reality forever."""
     client.async_update_audyssey.side_effect = lambda *a, **k: None  # stays True
 
     with patch("homeassistant.components.denonavr.entity.PENDING_VALUE_TIMEOUT", 0.01):

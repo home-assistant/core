@@ -72,12 +72,10 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
 
     @callback
     def _async_handle_pending_expiry(self, _now: Any) -> None:
-        """Write state once a pending override's timeout elapses.
+        """Write state when an optimistic value expires.
 
-        Without this, HA's own stored state (what automations and the
-        frontend see) would keep showing the optimistic value until
-        something else happens to re-evaluate it, rather than within
-        the documented timeout.
+        Otherwise HA's stored state would keep showing it past the
+        timeout, since nothing else would re-evaluate it.
         """
         self._pending_value_expiry_unsub = None
         self._pending_value = None
@@ -94,13 +92,11 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        """Reconcile a still-pending value once the coordinator refreshes.
+        """Clear an optimistic value once confirmed by the receiver.
 
-        Runs whenever the coordinator's data actually changes, whether
-        from this entity's own action, another entity sharing the same
-        coordinator, or the recurring poll - not right after requesting
-        a refresh, since the coordinator's debounced refresh (see
-        coordinator.py) doesn't complete synchronously with that call.
+        Not right after requesting a refresh: that request is
+        debounced (see coordinator.py) and doesn't complete
+        synchronously with the call.
         """
         if (
             self._pending_value is not None
@@ -123,15 +119,10 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
         value: _T,
         error_label: str,
     ) -> None:
-        """Send a command, show it immediately, then request confirmation.
+        """Send a command, update optimistically, then request confirmation.
 
-        `send` is a zero-arg callable returning a fresh coroutine each
-        time (e.g. a lambda), not an already-awaited one. Reconciling
-        the pending value once the receiver actually confirms it
-        happens in _handle_coordinator_update, not here - the
-        coordinator's refresh is debounced (immediate=False, see
-        coordinator.py) and doesn't complete synchronously with the
-        request below.
+        `send` must be a zero-arg callable returning a fresh coroutine
+        (e.g. a lambda), not an already-awaited one.
         """
         async with self._action_lock:
             try:

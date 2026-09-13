@@ -16,14 +16,7 @@ from .entity import DenonAvrPendingValueEntity
 # See the matching constant in select.py.
 PARALLEL_UPDATES = 1
 
-# Gives this a fallback name (via entity_description.name, checked
-# after translation_key in Entity._name_internal) if translation
-# lookup ever fails to load - e.g. a custom_components install missing
-# translations/en.json, which silently leaves the entity nameless
-# otherwise. Not _attr_name: that's checked *before* translation_key,
-# so it would permanently block translations rather than just back
-# them up (this is exactly the bug that class attribute caused here
-# previously).
+# Provide a fallback name if translations are unavailable.
 DYNAMIC_EQ_DESCRIPTION = SwitchEntityDescription(
     key="dynamic_eq",
     translation_key="dynamic_eq",
@@ -86,10 +79,10 @@ class DenonAvrDynamicEqSwitch(DenonAvrPendingValueEntity[bool], SwitchEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return True if the receiver reports a Dynamic EQ state.
+        """Return whether the receiver reports a Dynamic EQ state.
 
-        Also False whenever this entity's coordinator's last refresh
-        failed - see the matching comment on DenonAvrSelect.
+        Also False if the coordinator's last refresh failed - see
+        DenonAvrSelect.available.
         """
         return super().available and self._current_value is not None
 

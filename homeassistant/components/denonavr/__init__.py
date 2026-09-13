@@ -10,7 +10,7 @@ from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.httpx_client import get_async_client
@@ -82,10 +82,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     update_audyssey = entry.options.get(CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY)
     update_interval = timedelta(seconds=COORDINATOR_UPDATE_INTERVAL)
 
-    # Shared by both coordinators below, every select/switch entity, and
-    # media_player.py's own commands - the receiver's HTTP/Telnet
-    # interface can't safely handle concurrent requests. Created once
-    # here (not looked up from the receiver object) since denonavr's
+    # Shared by both coordinators and all commands to serialize receiver
+    # access. Created once here, not derived from the receiver: denonavr's
     # attrs classes are unhashable, so they can't be dict/weak-ref keys.
     lock = asyncio.Lock()
 
@@ -126,6 +124,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     # the way the main coordinator's failure does - just leave those
     # entities unavailable, as expected.
     await audyssey_coordinator.async_refresh()
+
+    @callback
+    def _propagate_connectivity_to_audyssey() -> None:
+        """Reflect the status coordinator's own connectivity into this one.
+
+        The Audyssey coordinator often isn't polling on its own
+        schedule (update_interval=None unless "Update Audyssey
+        settings" is on), so it would otherwise never learn the
+        receiver went offline and just keep reporting its last cached
+        values as available indefinitely.
+        """
+        if audyssey_coordinator.last_update_success != coordinator.last_update_success:
+            audyssey_coordinator.last_update_success = coordinator.last_update_success
+            audyssey_coordinator.async_update_listeners()
+
+    entry.async_on_unload(
+        coordinator.async_add_listener(_propagate_connectivity_to_audyssey)
+    )
 
     entry.runtime_data = DenonAvrData(
         receiver=receiver,

@@ -1,12 +1,8 @@
 """DataUpdateCoordinators for Denon AVR.
 
-Two separate coordinators, not one, because the existing "Update
-Audyssey settings" option needs to keep meaning what it already means
-in media_player.py: whether Audyssey data (which can reportedly take
-up to ~10s to fetch on some receivers) is refreshed on a recurring
-schedule at all. A single coordinator can't have one interval that's
-both "always on" (for general status) and "off unless opted in" (for
-Audyssey) at the same time.
+Separate coordinators handle general status and Audyssey data: a
+single coordinator can't have one interval that's both always-on and
+opt-in, which "Update Audyssey settings" requires.
 """
 
 import asyncio
@@ -55,11 +51,25 @@ async def async_refresh_status(receiver: DenonAVR) -> None:
     everything current - that connection state is shared across zones
     (it lives on the underlying device, not per zone), so it only
     needs checking once regardless of how many zones are enabled.
+
+    A non-connectivity error in one zone doesn't stop the others from
+    refreshing - only genuine connectivity errors do (re-raised so the
+    caller can still fail the whole update for those, same as before).
     """
     if receiver.telnet_connected and receiver.telnet_healthy:
         return
     for zone_receiver in receiver.zones.values():
-        await zone_receiver.async_update()
+        try:
+            await zone_receiver.async_update()
+        except UNAVAILABLE_ON:
+            raise
+        except DenonAvrError as err:
+            _LOGGER.debug(
+                "Error refreshing zone %s for %s: %s",
+                zone_receiver.zone,
+                receiver.name,
+                err,
+            )
 
 
 class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -82,17 +92,11 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         update_interval: timedelta | None,
         refresh_fn: Callable[[DenonAVR], Coroutine[Any, Any, None]],
     ) -> None:
-        """Initialize the coordinator.
+        """Initialize the coordinator with a shared receiver lock.
 
-        `lock` is created once per config entry and shared with the
-        other coordinator, every select/switch entity, and
-        media_player.py's own commands - the receiver's HTTP/Telnet
-        interface can't safely handle concurrent requests, and nothing
-        else ties all of those together on its own. It can't be looked
-        up from the receiver object instead (e.g. via a
-        WeakKeyDictionary keyed by it): denonavr's attrs classes define
-        a field-based __eq__ without a matching __hash__, so instances
-        are unhashable and can't be dict/weak-ref keys at all.
+        The lock is passed in rather than derived from the receiver:
+        denonavr's attrs classes are unhashable, so they can't be
+        dict/weak-ref keys.
         """
         super().__init__(
             hass,

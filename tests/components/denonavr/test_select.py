@@ -388,7 +388,7 @@ async def test_dimmer_refreshes_and_shows_new_state_immediately(
 async def test_eco_mode_and_auto_standby_also_refresh_immediately(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Same fix, the other two plain-appcommand settings."""
+    """Eco mode and auto standby also show the new value immediately."""
     await setup_denonavr(hass)
     baseline_calls = client.async_update.await_count
 
@@ -452,14 +452,13 @@ async def test_coordinators_share_one_lock_not_a_receiver_keyed_one(
 ) -> None:
     """The action/refresh lock is a single shared object, not looked up.
 
-    Regression test for a real production bug: an earlier version kept
-    a WeakKeyDictionary keyed by the receiver object to hand out a lock
-    per receiver. denonavr's attrs classes define a field-based
-    __eq__ without a matching __hash__, so real receiver instances are
-    unhashable and that lookup crashed outright - something this
-    suite's mocks (hashable by default, unlike the real class) could
-    never have caught. The fix creates the lock once and passes it
-    through directly instead of deriving it from the receiver at all.
+    denonavr's attrs classes define a field-based __eq__ without a
+    matching __hash__, so real receiver instances are unhashable and
+    can't be dict/weak-ref keys - a receiver-keyed lookup would crash
+    in production while passing here, since this suite's mocks (unlike
+    the real class) are hashable by default. The lock must be created
+    once and passed through directly instead of derived from the
+    receiver.
     """
     entry = await setup_denonavr(hass)
     assert (
