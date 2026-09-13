@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
 from google.cloud import texttospeech
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.tts import CONF_LANG
@@ -45,9 +45,9 @@ _LOGGER = logging.getLogger(__name__)
 
 UPLOADED_KEY_FILE = "uploaded_key_file"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(UPLOADED_KEY_FILE): FileSelector(
+        probatio.Required(UPLOADED_KEY_FILE): FileSelector(
             FileSelectorConfig(accept=".json,application/json")
         )
     }
@@ -158,9 +158,9 @@ class GoogleCloudOptionsFlowHandler(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_LANG,
                             default=DEFAULT_LANG,
                         ): SelectSelector(
@@ -171,7 +171,7 @@ class GoogleCloudOptionsFlowHandler(OptionsFlowWithReload):
                         **tts_options_schema(
                             self.config_entry.options, voices, from_config_flow=True
                         ).schema,
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_STT_MODEL,
                             default=DEFAULT_STT_MODEL,
                         ): SelectSelector(

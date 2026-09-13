@@ -17,6 +17,7 @@ from aiopowerwall import (
 from bleak.exc import BleakError
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+import probatio
 import pytest
 from tesla_fleet_api.const import AuthorizedClientState
 from tesla_fleet_api.exceptions import (
@@ -33,7 +34,6 @@ from tesla_fleet_api.exceptions import (
 from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, AuthorizedClients
-import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -998,6 +998,37 @@ async def test_subentry_authorize_failure(
     vehicle.pair.assert_awaited_once()
 
 
+async def test_subentry_authorize_unexpected_error_disconnects(
+    hass: HomeAssistant,
+) -> None:
+    """An exception outside the handled set still disconnects before propagating."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle(on_whitelist=False)
+    vehicle.pair = AsyncMock(side_effect=ValueError("boom"))
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["step_id"] == "instructions"
+
+        with pytest.raises(ValueError, match="boom"):
+            await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+
+    vehicle.disconnect.assert_awaited_once()
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+
+
 async def test_subentry_authorize_existing_key_finishes(hass: HomeAssistant) -> None:
     """Approving the key after a timeout, then retrying, completes the pairing."""
     entry = await _setup_account_entry(hass)
@@ -1567,7 +1598,7 @@ def _credentials_host_is_blank(result: SubentryFlowResult) -> bool:
     """Return whether the CONF_HOST field carries no schema default (left blank)."""
     for key in result["data_schema"].schema:
         if key == CONF_HOST:
-            return key.default is vol.UNDEFINED
+            return key.default is probatio.UNDEFINED
     raise AssertionError("CONF_HOST field not found in credentials schema")
 
 

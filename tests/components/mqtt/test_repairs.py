@@ -89,7 +89,7 @@ async def test_subentry_reconfigure_export_settings(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, subentry_id), config_entry.entry_id
     )
-    assert device.config_entries_subentries[config_entry.entry_id] == {subentry_id}
+    assert device.config_subentry_id == subentry_id
     assert device is not None
 
     # assert we entity for all subentry components
@@ -137,7 +137,7 @@ async def test_subentry_reconfigure_export_settings(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, subentry_id), config_entry.entry_id
     )
-    assert device.config_entries_subentries[config_entry.entry_id] == {subentry_id}
+    assert device.config_subentry_id == subentry_id
     assert device is not None
 
     # Assert a repair flow was created
@@ -178,5 +178,5 @@ async def test_subentry_reconfigure_export_settings(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, subentry_id), config_entry.entry_id
     )
-    assert device.config_entries_subentries[config_entry.entry_id] == {None}
+    assert device.config_subentry_id is None
     assert device is not None

@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -25,15 +25,15 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ADX_CLUSTER_INGEST_URI): str,
-        vol.Required(CONF_ADX_DATABASE_NAME): str,
-        vol.Required(CONF_ADX_TABLE_NAME): str,
-        vol.Required(CONF_APP_REG_ID): str,
-        vol.Required(CONF_APP_REG_SECRET): str,
-        vol.Required(CONF_AUTHORITY_ID): str,
-        vol.Required(CONF_USE_QUEUED_CLIENT, default=False): BooleanSelector(),
+        probatio.Required(CONF_ADX_CLUSTER_INGEST_URI): str,
+        probatio.Required(CONF_ADX_DATABASE_NAME): str,
+        probatio.Required(CONF_ADX_TABLE_NAME): str,
+        probatio.Required(CONF_APP_REG_ID): str,
+        probatio.Required(CONF_APP_REG_SECRET): str,
+        probatio.Required(CONF_AUTHORITY_ID): str,
+        probatio.Required(CONF_USE_QUEUED_CLIENT, default=False): BooleanSelector(),
     }
 )
 
