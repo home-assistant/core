@@ -17,7 +17,7 @@ import json
 import logging
 import secrets
 import time
-from typing import Any, cast, override
+from typing import Any, NoReturn, cast, override
 
 from aiohttp import ClientError, ClientResponseError, client, hdrs, web
 from habluetooth import BluetoothServiceInfoBleak
@@ -30,6 +30,7 @@ from homeassistant import config_entries
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import (
     ImplementationUnavailableError,
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
@@ -105,6 +106,28 @@ _SHARED_ABORT_REASONS = frozenset(
 )
 
 
+def _raise_mapped_token_error(err: ClientError, domain: str) -> NoReturn:
+    """Re-raise a failed token request as the matching OAuth2 token error."""
+    if not isinstance(err, ClientResponseError):
+        # Nothing was received, so there is no status to tell the causes apart.
+        _LOGGER.debug("Token request for %s got no response: %s", domain, err)
+        raise OAuth2TokenRequestConnectionError(domain=domain) from err
+
+    kwargs: dict[str, Any] = {
+        "request_info": err.request_info,
+        "history": err.history,
+        "status": err.status,
+        "message": err.message,
+        "headers": err.headers,
+        "domain": domain,
+    }
+    if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
+        raise OAuth2TokenRequestTransientError(**kwargs) from err
+    if 400 <= err.status <= 499:
+        raise OAuth2TokenRequestReauthError(**kwargs) from err
+    raise OAuth2TokenRequestError(**kwargs) from err
+
+
 @callback
 def async_get_redirect_uri(hass: HomeAssistant) -> str:
     """Return the redirect uri."""
@@ -163,11 +186,30 @@ class AbstractOAuth2Implementation(ABC):
         config entry data.
         """
 
+    @property
+    def service_domain(self) -> str:
+        """Domain of the service the tokens are for.
+
+        Defaults to the implementation itself, but an implementation that obtains
+        tokens on behalf of other integrations has to name the one it serves.
+        """
+        return self.domain
+
     async def async_refresh_token(self, token: dict) -> dict:
         """Refresh a token and update expires info."""
-        new_token = await self._async_refresh_token(token)
+        try:
+            new_token = await self._async_refresh_token(token)
+        except OAuth2TokenRequestError, OAuth2TokenRequestConnectionError:
+            raise
+        except ClientError as err:
+            # Implementations that issue their own token request may not map their
+            # failures, so callers would see a raw aiohttp error instead.
+            _raise_mapped_token_error(err, self.service_domain)
         # Force int for non-compliant oauth2 providers
-        new_token["expires_in"] = int(new_token["expires_in"])
+        try:
+            new_token["expires_in"] = int(new_token["expires_in"])
+        except (KeyError, TypeError, ValueError) as err:
+            raise OAuth2TokenRequestConnectionError(domain=self.service_domain) from err
         new_token["expires_at"] = time.time() + new_token["expires_in"]
         return new_token
 
@@ -268,6 +310,11 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             }
         )
 
+        # Merging a response without one would keep the stale access token while
+        # extending its expiry, so the session would never recover.
+        if not new_token.get("access_token"):
+            raise OAuth2TokenRequestConnectionError(domain=self.service_domain)
+
         return {**token, **new_token}
 
     async def _token_request(self, data: dict) -> dict:
@@ -306,38 +353,13 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                     detail,
                 )
             resp.raise_for_status()
+            return cast(dict, await resp.json())
         except ClientResponseError as err:
-            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
-                # Recoverable error
-                raise OAuth2TokenRequestTransientError(
-                    request_info=err.request_info,
-                    history=err.history,
-                    status=err.status,
-                    message=err.message,
-                    headers=err.headers,
-                    domain=self._domain,
-                ) from err
-            if 400 <= err.status <= 499:
-                # Non-recoverable error
-                raise OAuth2TokenRequestReauthError(
-                    request_info=err.request_info,
-                    history=err.history,
-                    status=err.status,
-                    message=err.message,
-                    headers=err.headers,
-                    domain=self._domain,
-                ) from err
-
-            raise OAuth2TokenRequestError(
-                request_info=err.request_info,
-                history=err.history,
-                status=err.status,
-                message=err.message,
-                headers=err.headers,
-                domain=self._domain,
-            ) from err
-
-        return cast(dict, await resp.json())
+            _raise_mapped_token_error(err, self.service_domain)
+        except ClientError as err:
+            # Bare TimeoutError is left alone so an enclosing asyncio.timeout still
+            # aborts with oauth_timeout; aiohttp's own timeouts are ClientErrors.
+            _raise_mapped_token_error(err, self.service_domain)
 
 
 class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
@@ -843,6 +865,15 @@ class OAuth2Session:
                 # error onto a recoverable one, which would retry indefinitely.
                 self.config_entry.async_start_reauth_if_available(self.hass)
                 raise
+
+            # Checked before storing, so reads can trust what is on the entry.
+            if any(
+                new_token.get(field) in (None, "")
+                for field in ("access_token", "expires_at")
+            ):
+                raise OAuth2TokenRequestConnectionError(
+                    domain=self.implementation.service_domain
+                )
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data={**self.config_entry.data, "token": new_token}

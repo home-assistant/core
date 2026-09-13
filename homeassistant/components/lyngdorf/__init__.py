@@ -8,6 +8,7 @@ from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -42,7 +43,9 @@ async def async_setup_entry(
 
     try:
         receiver: LyngdorfReceiver = await create_receiver(
-            config_entry.data[CONF_HOST], lyngdorf_model
+            config_entry.data[CONF_HOST],
+            lyngdorf_model,
+            session=async_get_clientsession(hass),
         )
         await receiver.connect()
     except TimeoutError as err:

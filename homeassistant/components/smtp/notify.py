@@ -7,17 +7,11 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import email.utils
 import logging
-from smtplib import (
-    SMTP,
-    SMTP_SSL,
-    SMTPAuthenticationError,
-    SMTPException,
-    SMTPServerDisconnected,
-)
-from socket import gaierror
+from smtplib import SMTPException, SMTPServerDisconnected
 from ssl import SSLContext
 from typing import TYPE_CHECKING, Any, override
 
+import aiosmtplib
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -32,6 +26,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigSubentry
 from homeassistant.const import (
+    APPLICATION_NAME,
     CONF_DEBUG,
     CONF_PASSWORD,
     CONF_PORT,
@@ -41,6 +36,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     Platform,
+    __version__,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -64,8 +60,11 @@ from .const import (
     ATTR_HTML,
     ATTR_IMAGES,
     ATTR_MEDIA_SOURCE,
+    ATTR_PRIORITY,
     CONF_ENCRYPTION,
     CONF_ENTRY,
+    CONF_REPLY_TO,
+    CONF_REPLY_TO_NAME,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DEFAULT_DEBUG,
@@ -91,6 +90,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
+RETRIES = 2
+
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
@@ -108,6 +109,14 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
+
+MAP_X_PRIORITY = {
+    "highest": "1 (Highest)",
+    "high": "2 (High)",
+    "normal": "3 (Normal)",
+    "low": "4 (Low)",
+    "lowest": "5 (Lowest)",
+}
 
 
 async def async_get_service(
@@ -189,7 +198,7 @@ class MailNotifyEntity(NotifyEntity):
         self,
         entry: SmtpConfigEntry,
         subentry: ConfigSubentry,
-        client: SmtpClient,
+        client: aiosmtplib.SMTP,
     ) -> None:
         """Initialize the notify entity."""
 
@@ -205,14 +214,14 @@ class MailNotifyEntity(NotifyEntity):
         self._attr_name = subentry.title
 
     @override
-    def send_message(self, message: str, title: str | None = None) -> None:
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send an email message via notify.send_message action."""
 
         msg = EmailMessage()
         msg.set_content(message)
         msg["Subject"] = title or ATTR_TITLE_DEFAULT
 
-        self._send_email(msg=msg)
+        await self._send_email(msg=msg)
 
     async def smtp_send_message(
         self,
@@ -224,6 +233,9 @@ class MailNotifyEntity(NotifyEntity):
         msg = EmailMessage()
         msg.set_content(message)
         msg.add_header("Subject", title or ATTR_TITLE_DEFAULT)
+
+        if ATTR_PRIORITY in kwargs:
+            msg.add_header("X-Priority", MAP_X_PRIORITY[kwargs[ATTR_PRIORITY]])
 
         if ATTR_HTML in kwargs:
             msg.add_alternative(kwargs[ATTR_HTML], subtype="html")
@@ -273,10 +285,10 @@ class MailNotifyEntity(NotifyEntity):
                     filename=target_filename,
                 )
 
-        await self.hass.async_add_executor_job(self._send_email, msg)
+        await self._send_email(msg)
         self._async_record_notification()
 
-    def _send_email(self, msg: EmailMessage) -> None:
+    async def _send_email(self, msg: EmailMessage) -> None:
         """Send the message."""
         if TYPE_CHECKING:
             assert self._subentry.unique_id
@@ -291,45 +303,39 @@ class MailNotifyEntity(NotifyEntity):
             "To",
             email.utils.formataddr((self._subentry.title, self._subentry.unique_id)),
         )
+
+        if reply_to := self._entry.options.get(CONF_REPLY_TO):
+            msg.add_header(
+                "Reply-To",
+                email.utils.formataddr(
+                    (self._entry.options.get(CONF_REPLY_TO_NAME), reply_to)
+                ),
+            )
+
         msg.add_header("X-Mailer", "Home Assistant")
+        msg.add_header("User-Agent", f"{APPLICATION_NAME}/{__version__}")
         msg.add_header("Date", email.utils.format_datetime(dt_util.now()))
         msg.add_header("Message-Id", email.utils.make_msgid())
 
-        client: SMTP_SSL | SMTP | None = None
-        for attempt in range(self._client.tries):
+        for attempt in range(RETRIES):
             try:
-                client = self._client.connect()
-            except SMTPAuthenticationError as e:
+                async with self._client as client:
+                    await client.send_message(msg)
+                break
+            except aiosmtplib.SMTPAuthenticationError as e:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="authentication_error",
                 ) from e
-            except (gaierror, ConnectionRefusedError, SMTPException) as e:
-                _LOGGER.debug("Full exception:", exc_info=True)
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="send_mail_connection_error",
-                ) from e
-
-            try:
-                client.sendmail(
-                    self._entry.data[CONF_SENDER],
-                    self._subentry.unique_id,
-                    msg.as_string(),
-                )
-                break
-            except SMTPException as e:
+            except aiosmtplib.SMTPException as e:
                 _LOGGER.debug(
                     "Error sending mail at attempt %s:", attempt + 1, exc_info=True
                 )
-                if attempt == self._client.tries - 1:
+                if attempt == RETRIES - 1:
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="send_mail_connection_error",
                     ) from e
-            finally:
-                with suppress(SMTPException):
-                    client.quit()
 
 
 class MailNotificationService(SmtpClient, BaseNotificationService):

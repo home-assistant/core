@@ -1,5 +1,6 @@
 """Test UniFi Network config flow."""
 
+from collections.abc import Callable
 import socket
 from typing import Any
 from unittest.mock import PropertyMock, patch
@@ -384,6 +385,43 @@ async def test_reauth_flow_update_configuration_on_not_loaded_entry(
     assert config_entry.data[CONF_HOST] == "1.2.3.4"
     assert config_entry.data[CONF_USERNAME] == "new_name"
     assert config_entry.data[CONF_PASSWORD] == "new_pass"
+
+
+@pytest.mark.parametrize(
+    "site_payload",
+    [
+        [
+            {"name": "site2", "role": "admin", "desc": "site2 name", "_id": "2"},
+        ]
+    ],
+)
+async def test_abort_reauth_flow_on_site_id_mismatch(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_requests: Callable[[str, str], None],
+) -> None:
+    """Verify reauth flow aborts when original site can no longer be found."""
+    mock_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "new_name",
+            CONF_PASSWORD: "new_pass",
+            CONF_PORT: 1234,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown_site_id"
+    assert config_entry.data[CONF_SITE_ID] == "site_id"
 
 
 @pytest.mark.parametrize("client_payload", [CLIENTS])

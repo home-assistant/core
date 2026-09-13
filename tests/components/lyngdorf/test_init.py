@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from tests.common import MockConfigEntry
 
@@ -67,6 +68,17 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert init_integration.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_uses_the_home_assistant_websession(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_create_receiver: MagicMock,
+) -> None:
+    """Test the receiver is given Home Assistant's shared aiohttp session."""
+    assert mock_create_receiver.call_args.kwargs["session"] is async_get_clientsession(
+        hass
+    )
 
 
 async def test_unload_releases_receiver_subscriptions(

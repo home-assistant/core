@@ -625,6 +625,7 @@ async def test_segments_changed_issue(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     fake_vacuum: FakeDevice,
 ) -> None:
     """Test repair issue created when segments change after mapping."""
@@ -647,7 +648,7 @@ async def test_segments_changed_issue(
     await hass.async_block_till_done()
 
     issue_id = f"segments_changed_{entity_entry.id}"
-    issue = ir.async_get(hass).async_get_issue(VACUUM_DOMAIN, issue_id)  # pylint: disable=home-assistant-tests-registry-fixtures
+    issue = issue_registry.async_get_issue(VACUUM_DOMAIN, issue_id)
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
@@ -657,6 +658,7 @@ async def test_segments_changed_issue_no_map_info(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     fake_vacuum: FakeDevice,
 ) -> None:
     """Test no repair issue is created when map info is not loaded/empty."""
@@ -680,7 +682,7 @@ async def test_segments_changed_issue_no_map_info(
     await hass.async_block_till_done()
 
     issue_id = f"segments_changed_{entity_entry.id}"
-    issue = ir.async_get(hass).async_get_issue(VACUUM_DOMAIN, issue_id)  # pylint: disable=home-assistant-tests-registry-fixtures
+    issue = issue_registry.async_get_issue(VACUUM_DOMAIN, issue_id)
     assert issue is None
 
 

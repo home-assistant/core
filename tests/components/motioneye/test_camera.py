@@ -338,7 +338,7 @@ async def test_device_info(
         device_identifier, entry.entry_id
     )
     assert device
-    assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
+    assert device.config_entry_id == TEST_CONFIG_ENTRY_ID
     assert device.identifiers == {device_identifier}
     assert device.manufacturer == MOTIONEYE_MANUFACTURER
     assert device.model == MOTIONEYE_MANUFACTURER

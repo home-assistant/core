@@ -1,0 +1,169 @@
+# serializer version: 1
+# name: test_all_entities[binary_sensor.front_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.front_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'abode',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '2834013428b6035fba7d4054aa7b25a3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.front_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by goabode.com',
+      'battery_low': False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      'device_id': 'RF:01430030',
+      'device_type': 'Door Contact',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door',
+      'no_response': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.front_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.hallway_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.hallway_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'abode',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ba2c7e8d4430da8d34c31425a2823fe0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.hallway_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by goabode.com',
+      'battery_low': False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      'device_id': 'RF:01c34a30',
+      'device_type': 'Occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Motion',
+      'no_response': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.hallway_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.living_room_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.living_room_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'abode',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '2f1bc34ceadac032af4fc9189ef821a8',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.living_room_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by goabode.com',
+      'battery_low': False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      'device_id': 'SR:PIR',
+      'device_type': 'Motion Sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Motion',
+      'no_response': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.living_room_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

@@ -420,13 +420,19 @@ async def test_unload_entry_resets_platform(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids()) == 0
 
 
-async def test_unload_entry_fails_if_never_loaded(hass: HomeAssistant) -> None:
-    """."""
+async def test_unload_entry_tolerates_never_loaded(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test unloading an entry that was never loaded succeeds with a warning."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entry = MockConfigEntry(domain="entry_domain")
 
-    with pytest.raises(ValueError):
-        await component.async_unload_entry(entry)
+    assert await component.async_unload_entry(entry)
+    assert (
+        f"Ignored unload request for config entry Mock Title ({entry.entry_id}) "
+        f"in entry_domain.{DOMAIN}; no platform is loaded, it was never set up "
+        "or has already been unloaded"
+    ) in caplog.text
 
 
 async def test_update_entity(hass: HomeAssistant) -> None:

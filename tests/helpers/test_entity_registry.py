@@ -1176,6 +1176,67 @@ def test_generate_entity_id_parts_entity_area(
     assert new_entity_id == "sensor.second_floor_garage_lamp_temperature"
 
 
+def test_generate_entity_id_parent_device_part(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the parent device part for entities on child devices."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent_device.id,
+        name="Outlet 1",
+    )
+
+    # The default parts include the parent device name
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        config_entry=config_entry,
+        device_id=child_device.id,
+        has_entity_name=True,
+        object_id_base="Power",
+        original_name="Power",
+    )
+    assert entry.entity_id == "sensor.power_strip_outlet_1_power"
+
+    # A parent device name set by the user is used
+    device_registry.async_update_device(parent_device.id, name_by_user="Kitchen strip")
+    assert (
+        entity_registry.async_regenerate_entity_id(entry)
+        == "sensor.kitchen_strip_outlet_1_power"
+    )
+
+    # An entity on a main device is not affected by the parent device part
+    main_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "5678",
+        config_entry=config_entry,
+        device_id=parent_device.id,
+        has_entity_name=True,
+        object_id_base="Power",
+        original_name="Power",
+    )
+    assert main_entry.entity_id == "sensor.kitchen_strip_power"
+
+    # Parts without the parent device part exclude the parent device name
+    entity_registry.async_update_settings(
+        entity_id_parts=[er.EntityNamePart.DEVICE, er.EntityNamePart.ENTITY]
+    )
+    assert entity_registry.async_regenerate_entity_id(entry) == "sensor.outlet_1_power"
+
+
 def test_regenerate_entity_id_after_settings_change(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,

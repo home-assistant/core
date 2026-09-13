@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_STATE, PARAM_STATUS
-from pyimouapi.exceptions import ImouException
+from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 
@@ -42,32 +42,46 @@ async def test_setup_and_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (
+            InvalidAppIdOrSecretException("bad credentials"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (ImouException("cloud failure"), ConfigEntryState.SETUP_RETRY),
+        (TimeoutError("timeout"), ConfigEntryState.SETUP_RETRY),
+        (RuntimeError("unexpected"), ConfigEntryState.SETUP_RETRY),
+    ],
+)
 @pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
-async def test_setup_entry_failed_on_refresh(
+async def test_setup_entry_exceptions(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: AsyncMock,
+    exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Device fetch failure during coordinator setup surfaces as setup retry."""
-    mock_imou_ha_device_manager.async_get_devices.side_effect = RuntimeError(
-        "Setup failed"
-    )
+    """Test the coordinator errors while listing devices during setup."""
+    mock_imou_ha_device_manager.async_get_devices.side_effect = exception
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_device_registry_identifiers(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Device registry uses channel-aware identifiers from the default mock devices."""
-    registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    devices = dr.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
     assert len(devices) == 1
     assert (DOMAIN, "d1") in devices[0].identifiers
 
