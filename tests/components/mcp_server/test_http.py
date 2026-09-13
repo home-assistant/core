@@ -14,8 +14,8 @@ import mcp.client.session
 import mcp.client.sse
 import mcp.client.streamable_http
 from mcp.shared.exceptions import McpError
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -87,7 +87,7 @@ class _StubTool(llm.Tool):
 
     name = "test_tool"
 
-    def __init__(self, parameters: vol.Schema) -> None:
+    def __init__(self, parameters: probatio.Schema) -> None:
         """Initialize the stub tool."""
         self.parameters = parameters
 
@@ -638,12 +638,14 @@ async def test_mcp_tools_list(
     ("parameters", "expected_required"),
     [
         pytest.param(
-            vol.Schema({vol.Required("name"): str, vol.Optional("area"): str}),
+            probatio.Schema(
+                {probatio.Required("name"): str, probatio.Optional("area"): str}
+            ),
             ["name"],
             id="required-and-optional",
         ),
         pytest.param(
-            vol.Schema({vol.Optional("area"): str}),
+            probatio.Schema({probatio.Optional("area"): str}),
             None,
             id="optional-only",
         ),
@@ -655,7 +657,7 @@ async def test_mcp_tools_list_required_parameters(
     mcp_url: str,
     mcp_client: MCPClientFactory,
     hass_supervisor_access_token: str,
-    parameters: vol.Schema,
+    parameters: probatio.Schema,
     expected_required: list[str] | None,
 ) -> None:
     """Test the tools list advertises the required tool parameters."""
