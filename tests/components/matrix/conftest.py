@@ -1,9 +1,11 @@
 """Define fixtures available for all tests."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from pathlib import Path
 import re
 import tempfile
+from typing import Any
 from unittest.mock import patch
 
 from nio import (
@@ -13,6 +15,7 @@ from nio import (
     JoinResponse,
     LocalProtocolError,
     LoginError,
+    LoginInfoResponse,
     LoginResponse,
     Response,
     RoomResolveAliasError,
@@ -41,6 +44,7 @@ from homeassistant.components.matrix.const import DOMAIN
 from homeassistant.components.matrix.notify import CONF_DEFAULT_ROOM
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PLATFORM,
@@ -70,6 +74,9 @@ TEST_MXID = "@user:example.com"
 TEST_DEVICE_ID = "FAKEID"
 TEST_PASSWORD = "password"
 TEST_TOKEN = "access_token"
+TEST_OTHER_MXID = "@other_user:example.com"
+TEST_OTHER_TOKEN = "other_access_token"
+TEST_TOKEN_OWNERS = {TEST_TOKEN: TEST_MXID, TEST_OTHER_TOKEN: TEST_OTHER_MXID}
 
 NIO_IMPORT_PREFIX = "homeassistant.components.matrix.nio."
 
@@ -92,6 +99,11 @@ class _MockAsyncClient(AsyncClient):
             return JoinResponse(room_id=room_id)
         return JoinError(message="Not allowed to join this room.")
 
+    login_flows: list[str] = ["m.login.password"]
+
+    async def login_info(self, *args, **kwargs):
+        return LoginInfoResponse(self.login_flows)
+
     async def login(self, *args, **kwargs):
         if kwargs.get("password") == TEST_PASSWORD or kwargs.get("token") == TEST_TOKEN:
             self.access_token = TEST_TOKEN
@@ -107,11 +119,11 @@ class _MockAsyncClient(AsyncClient):
         self.access_token = ""
 
     async def whoami(self):
-        if self.access_token == TEST_TOKEN:
-            self.user_id = TEST_MXID
+        if (user_id := TEST_TOKEN_OWNERS.get(self.access_token)) is not None:
+            self.user_id = user_id
             self.device_id = TEST_DEVICE_ID
             return WhoamiResponse(
-                user_id=TEST_MXID, device_id=TEST_DEVICE_ID, is_guest=False
+                user_id=user_id, device_id=TEST_DEVICE_ID, is_guest=False
             )
         self.access_token = ""
         return WhoamiError(
@@ -173,6 +185,17 @@ MOCK_CONFIG_DATA = {
         CONF_DEFAULT_ROOM: TEST_DEFAULT_ROOM,
     },
 }
+
+
+def config_with_credentials(credentials: dict[str, str]) -> dict[str, Any]:
+    """Return MOCK_CONFIG_DATA with the password replaced by the given credentials."""
+    config = deepcopy(MOCK_CONFIG_DATA)
+    del config[DOMAIN][CONF_PASSWORD]
+    config[DOMAIN] |= credentials
+    return config
+
+
+MOCK_CONFIG_DATA_ACCESS_TOKEN = config_with_credentials({CONF_ACCESS_TOKEN: TEST_TOKEN})
 
 MOCK_WORD_COMMANDS = {
     TEST_ROOM_A_ID: {
