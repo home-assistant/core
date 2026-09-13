@@ -479,10 +479,13 @@ def stringify_invalid(
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
     path = "->".join(str(m) for m in exc.path)
     if exc.code == "extra_keys_not_allowed":
-        return (
-            f"{message_prefix}: '{exc.path[-1]}' is an invalid option for '{domain}', "
-            f"check: {path}{message_suffix}"
+        message = (
+            f"{message_prefix}: '{exc.path[-1]}' is an invalid option for '{domain}'"
         )
+        if candidates := exc.context.get("candidates"):
+            options = " or ".join(f"'{candidate}'" for candidate in candidates)
+            message += f" (did you mean {options}?)"
+        return f"{message}, check: {path}{message_suffix}"
     if exc.error_message == "required key not provided":
         return (
             f"{message_prefix}: required key '{exc.path[-1]}' not provided"
