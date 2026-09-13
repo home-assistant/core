@@ -364,9 +364,7 @@ async def test_reference_level_offset_always_refreshes_after_change(
     await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
     entity_id = _entity_id(hass, "reference_level_offset")
 
-    # Setup itself does one initial Audyssey fetch per platform (select
-    # + switch), so both entities start with a real value instead of
-    # "unavailable".
+    # Setup performs one initial Audyssey fetch before the platforms load.
     baseline_calls = client.async_update_audyssey.await_count
 
     await hass.services.async_call(
