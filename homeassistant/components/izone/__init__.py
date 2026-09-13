@@ -1,7 +1,7 @@
 """The iZone integration."""
 
 import pizone
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EXCLUDE, CONF_HOST, Platform
@@ -22,17 +22,17 @@ from .discovery import (
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_EXCLUDE, default=[]): vol.All(
+                probatio.Optional(CONF_EXCLUDE, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 )
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
