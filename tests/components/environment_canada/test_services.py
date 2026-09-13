@@ -155,12 +155,7 @@ async def test_get_precipitation_forecast_options(
 async def test_get_precipitation_forecast_options_do_not_leak(
     hass: HomeAssistant, ec_data: dict[str, Any]
 ) -> None:
-    """Test that options from one call are not carried over to the next.
-
-    A single shared ECPrecipForecast instance previously had its options set
-    with setattr, so an option provided in one call stuck around as the
-    default for a later call that omitted it.
-    """
+    """Test that options from one call are not carried over to the next."""
     config_entry = await init_integration(hass, ec_data)
     constructor = _precip_mock()
 
