@@ -160,11 +160,6 @@ ALWAYS_SENSORS: tuple[RainbowMinerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda coord, _cur: _uptime_to_timestamp(coord.data.uptime.Seconds),
     ),
-    RainbowMinerSensorEntityDescription(
-        key="version",
-        translation_key="version",
-        value_fn=lambda coord, _cur: coord.data.version.version_string(),
-    ),
 )
 
 

@@ -30,5 +30,6 @@ class RainbowMinerEntity(CoordinatorEntity[RainbowMinerCoordinator]):
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="RainbowMiner",
             name="RainbowMiner",
+            sw_version=coordinator.data.version.version_string(),
             configuration_url=f"http://{host}:{port}",
         )

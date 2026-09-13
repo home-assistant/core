@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from homeassistant.components.rainbowminer.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
@@ -58,7 +59,7 @@ async def _setup(
     current_profit: dict[str, Any] | None = None,
     active_miners: list[dict[str, Any]] | None = None,
     balances: list[dict[str, Any]] | None = None,
-) -> None:
+) -> MockConfigEntry:
     """Set up the integration with the given HA currency."""
     _register_all(
         aioclient_mock,
@@ -74,6 +75,7 @@ async def _setup(
     with patch.object(hass.config, "currency", currency):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+    return entry
 
 
 async def test_always_sensors(
@@ -102,9 +104,7 @@ async def test_always_sensors(
     assert start == dt_util.utcnow() - timedelta(seconds=VALID_UPTIME["Seconds"])
     assert start == datetime.fromisoformat("2026-09-12 12:00:00+00:00")
 
-    state = hass.states.get("sensor.rainbowminer_version")
-    assert state is not None
-    assert state.state == "5.0.0"
+    assert hass.states.get("sensor.rainbowminer_version") is None
 
 
 async def test_mbtc_sensors(
@@ -229,3 +229,15 @@ async def test_mbtc_sensors_unavailable_without_balances(
     state = hass.states.get("sensor.rainbowminer_unpaid_balance_mbtc")
     assert state is not None
     assert state.state == "unknown"
+
+
+async def test_device_info(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the device registry entry contains the software version."""
+    entry = await _setup(hass, aioclient_mock)
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    assert device is not None
+    assert device.sw_version == "5.0.0"
