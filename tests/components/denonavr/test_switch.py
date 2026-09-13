@@ -1,7 +1,7 @@
 """The tests for the denonavr switch platform."""
 
 import asyncio
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from denonavr.exceptions import AvrCommandError
 import pytest
@@ -27,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 
 TEST_HOST = "1.2.3.4"
 TEST_NAME = "Test_Receiver"
@@ -93,7 +94,7 @@ def _entity_id(hass: HomeAssistant, domain: str, key: str) -> str:
     return entity_id
 
 
-async def test_dynamic_eq_state_on(hass: HomeAssistant, client) -> None:
+async def test_dynamic_eq_state_on(hass: HomeAssistant, client: MagicMock) -> None:
     """Test the switch reports on when Dynamic EQ is on."""
     await setup_denonavr(hass)
 
@@ -103,7 +104,9 @@ async def test_dynamic_eq_state_on(hass: HomeAssistant, client) -> None:
     assert state.state == "on"
 
 
-async def test_dynamic_eq_unavailable_when_unknown(hass: HomeAssistant, client) -> None:
+async def test_dynamic_eq_unavailable_when_unknown(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
     """Test the switch is unavailable when the receiver reports no Dynamic EQ state."""
     client.dynamic_eq = None
     await setup_denonavr(hass)
@@ -114,7 +117,7 @@ async def test_dynamic_eq_unavailable_when_unknown(hass: HomeAssistant, client) 
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_turn_on_dynamic_eq(hass: HomeAssistant, client) -> None:
+async def test_turn_on_dynamic_eq(hass: HomeAssistant, client: MagicMock) -> None:
     """Test turning Dynamic EQ on."""
     await setup_denonavr(hass)
     entity_id = _entity_id(hass, SWITCH_DOMAIN, "dynamic_eq")
@@ -128,7 +131,7 @@ async def test_turn_on_dynamic_eq(hass: HomeAssistant, client) -> None:
     client.async_dynamic_eq_on.assert_awaited_once()
 
 
-async def test_turn_off_dynamic_eq(hass: HomeAssistant, client) -> None:
+async def test_turn_off_dynamic_eq(hass: HomeAssistant, client: MagicMock) -> None:
     """Test turning Dynamic EQ off."""
     await setup_denonavr(hass)
     entity_id = _entity_id(hass, SWITCH_DOMAIN, "dynamic_eq")
@@ -142,7 +145,9 @@ async def test_turn_off_dynamic_eq(hass: HomeAssistant, client) -> None:
     client.async_dynamic_eq_off.assert_awaited_once()
 
 
-async def test_turn_on_raises_on_avr_error(hass: HomeAssistant, client) -> None:
+async def test_turn_on_raises_on_avr_error(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
     """Test that a receiver error while toggling is surfaced to the user."""
     await setup_denonavr(hass)
     entity_id = _entity_id(hass, SWITCH_DOMAIN, "dynamic_eq")
@@ -161,7 +166,7 @@ async def test_turn_on_raises_on_avr_error(hass: HomeAssistant, client) -> None:
 
 
 async def test_reference_level_offset_follows_dynamic_eq_switch(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Cross-check that select and switch agree on shared state.
 
@@ -191,7 +196,7 @@ async def test_reference_level_offset_follows_dynamic_eq_switch(
 
 
 async def test_reference_level_offset_unavailable_at_setup_when_dynamic_eq_off(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Same cross-check, the other way around.
 
@@ -221,7 +226,7 @@ async def test_reference_level_offset_unavailable_at_setup_when_dynamic_eq_off(
 
 
 async def test_turn_on_shows_state_immediately_without_polling(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Test the switch reflects the new state right after the call.
 
@@ -252,15 +257,9 @@ async def test_turn_on_shows_state_immediately_without_polling(
 
 
 async def test_turn_on_always_refreshes_audyssey_after_change(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Dynamic EQ always refreshes Audyssey data after a toggle.
-
-    Regardless of the (separate, poll-loop-only) "Update Audyssey
-    settings" option - see the matching note in select.py for why
-    gating this on that (off-by-default) option meant the switch
-    silently never reflected the state you'd just set.
-    """
+    """Dynamic EQ refreshes Audyssey data regardless of the "Update Audyssey settings" option (see select.py for why)."""
     await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
     entity_id = _entity_id(hass, SWITCH_DOMAIN, "dynamic_eq")
 
@@ -277,7 +276,9 @@ async def test_turn_on_always_refreshes_audyssey_after_change(
     assert client.async_update_audyssey.await_count == baseline_calls + 1
 
 
-async def test_rapid_toggles_do_not_race(hass: HomeAssistant, client) -> None:
+async def test_rapid_toggles_do_not_race(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
     """Two turn_on/turn_off calls fired back-to-back must not race.
 
     See the matching select.py test for why PARALLEL_UPDATES alone
@@ -324,7 +325,7 @@ async def test_rapid_toggles_do_not_race(hass: HomeAssistant, client) -> None:
 
 
 async def test_state_shown_immediately_even_if_refresh_reads_back_stale_value(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Same fix as select.py's equivalent test, for the switch."""
     # Simulate the receiver's Audyssey refresh responding with the old
@@ -346,7 +347,7 @@ async def test_state_shown_immediately_even_if_refresh_reads_back_stale_value(
 
 
 async def test_pending_state_expires_instead_of_masking_forever(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Same fix as select.py's equivalent test, for the switch."""
     client.async_update_audyssey.side_effect = lambda *a, **k: None  # stays True
@@ -368,14 +369,6 @@ async def test_pending_state_expires_instead_of_masking_forever(
         # override should no longer be trusted.
         client.dynamic_eq = True
         await asyncio.sleep(0.02)
-
-        entity = next(
-            e
-            for platform in hass.data["entity_platform"][DOMAIN]
-            for e in platform.entities.values()
-            if e.entity_id == entity_id
-        )
-        await entity.async_update()
-        entity.async_write_ha_state()
+        await async_update_entity(hass, entity_id)
 
         assert hass.states.get(entity_id).state == "on"

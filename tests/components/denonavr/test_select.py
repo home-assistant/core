@@ -1,7 +1,7 @@
 """The tests for the denonavr select platform."""
 
 import asyncio
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from denonavr.exceptions import AvrCommandError
 import pytest
@@ -26,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 
 TEST_HOST = "1.2.3.4"
 TEST_NAME = "Test_Receiver"
@@ -122,7 +123,9 @@ def _entity_id(hass: HomeAssistant, key: str, domain: str = SELECT_DOMAIN) -> st
     return entity_id
 
 
-async def test_reference_level_offset_state(hass: HomeAssistant, client) -> None:
+async def test_reference_level_offset_state(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
     """Test the reference level offset select reports the receiver's state."""
     await setup_denonavr(hass)
 
@@ -134,7 +137,7 @@ async def test_reference_level_offset_state(hass: HomeAssistant, client) -> None
 
 
 async def test_reference_level_offset_unavailable_when_dynamic_eq_off(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Test the reference level offset select is unavailable without Dynamic EQ."""
     client.dynamic_eq = False
@@ -146,7 +149,9 @@ async def test_reference_level_offset_unavailable_when_dynamic_eq_off(
     assert state.state == "unavailable"
 
 
-async def test_set_reference_level_offset(hass: HomeAssistant, client) -> None:
+async def test_set_reference_level_offset(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
     """Test selecting a new reference level offset."""
     await setup_denonavr(hass)
 
@@ -162,7 +167,7 @@ async def test_set_reference_level_offset(hass: HomeAssistant, client) -> None:
 
 
 async def test_set_reference_level_offset_raises_on_avr_error(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Test that a receiver error is surfaced to the user."""
     await setup_denonavr(hass)
@@ -181,7 +186,7 @@ async def test_set_reference_level_offset_raises_on_avr_error(
         )
 
 
-async def test_dynamic_volume(hass: HomeAssistant, client) -> None:
+async def test_dynamic_volume(hass: HomeAssistant, client: MagicMock) -> None:
     """Test the dynamic volume select reads and writes correctly."""
     await setup_denonavr(hass)
 
@@ -199,7 +204,7 @@ async def test_dynamic_volume(hass: HomeAssistant, client) -> None:
     client.async_set_dynamicvol.assert_awaited_once_with("Heavy")
 
 
-async def test_multi_eq(hass: HomeAssistant, client) -> None:
+async def test_multi_eq(hass: HomeAssistant, client: MagicMock) -> None:
     """Test the Multi-EQ select reads and writes correctly."""
     await setup_denonavr(hass)
 
@@ -217,7 +222,7 @@ async def test_multi_eq(hass: HomeAssistant, client) -> None:
     client.async_set_multieq.assert_awaited_once_with("Flat")
 
 
-async def test_eco_mode(hass: HomeAssistant, client) -> None:
+async def test_eco_mode(hass: HomeAssistant, client: MagicMock) -> None:
     """Test the Eco Mode select reads and writes correctly."""
     await setup_denonavr(hass)
 
@@ -236,7 +241,7 @@ async def test_eco_mode(hass: HomeAssistant, client) -> None:
     client.async_eco_mode.assert_awaited_once_with("On")
 
 
-async def test_dimmer(hass: HomeAssistant, client) -> None:
+async def test_dimmer(hass: HomeAssistant, client: MagicMock) -> None:
     """Test the Dimmer select reads and writes correctly."""
     await setup_denonavr(hass)
 
@@ -255,7 +260,7 @@ async def test_dimmer(hass: HomeAssistant, client) -> None:
     client.async_dimmer.assert_awaited_once_with("Dark")
 
 
-async def test_auto_standby(hass: HomeAssistant, client) -> None:
+async def test_auto_standby(hass: HomeAssistant, client: MagicMock) -> None:
     """Test the Auto Standby select reads and writes correctly."""
     await setup_denonavr(hass)
 
@@ -283,7 +288,7 @@ async def test_auto_standby(hass: HomeAssistant, client) -> None:
 
 
 async def test_dimmer_refreshes_and_shows_new_state_immediately(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Test that changing Dimmer reflects immediately.
 
@@ -321,7 +326,7 @@ async def test_dimmer_refreshes_and_shows_new_state_immediately(
 
 
 async def test_eco_mode_and_auto_standby_also_refresh_immediately(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Same fix, the other two plain-appcommand settings."""
     await setup_denonavr(hass)
@@ -346,7 +351,7 @@ async def test_eco_mode_and_auto_standby_also_refresh_immediately(
 
 
 async def test_reference_level_offset_always_refreshes_after_change(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Audyssey-group settings always force-refresh after a change.
 
@@ -374,7 +379,7 @@ async def test_reference_level_offset_always_refreshes_after_change(
 
 
 async def test_rapid_consecutive_selections_do_not_race(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Two select_option calls fired back-to-back on the same entity must not race.
 
@@ -426,7 +431,7 @@ async def test_rapid_consecutive_selections_do_not_race(
 
 
 async def test_audyssey_entities_not_unavailable_on_fresh_setup(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Reproduces the reported bug: a fresh integration load starts unavailable.
 
@@ -469,19 +474,9 @@ async def test_audyssey_entities_not_unavailable_on_fresh_setup(
 
 
 async def test_option_shown_immediately_even_if_refresh_reads_back_stale_value(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Reproduces the reported bug: an immediate refresh can read back a stale value.
-
-    The receiver can take a moment to internally settle after a
-    command, so a refresh query fired right after can still read back
-    the *old* value - if that response were trusted at face value, the
-    UI would revert to the old option even though the command
-    genuinely applied (a second, later attempt would then "work" since
-    the receiver had caught up by then). The fix displays the just-set
-    option immediately rather than waiting on that (possibly stale)
-    confirmation.
-    """
+    """A stale immediate refresh must not revert to the previous value."""
     # dimmer starts "Bright"; simulate the receiver's refresh call
     # responding with the *old* value, as if the command hadn't
     # internally settled yet by the time we queried it.
@@ -508,16 +503,12 @@ async def test_option_shown_immediately_even_if_refresh_reads_back_stale_value(
     # unrelated poll that happens to refresh it - simulated directly
     # here), the override reconciles cleanly rather than getting stuck.
     client.dimmer = "Dark"
-    platforms = hass.data["entity_platform"][DOMAIN]
-    for platform in platforms:
-        for entity in platform.entities.values():
-            if entity.entity_id == entity_id:
-                await entity.async_update()
+    await async_update_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == "Dark"
 
 
 async def test_pending_option_expires_instead_of_masking_forever(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """The pending override must expire rather than mask reality forever.
 
@@ -547,14 +538,6 @@ async def test_pending_option_expires_instead_of_masking_forever(
         # should no longer be trusted.
         client.dimmer = "Dim"
         await asyncio.sleep(0.02)
-
-        entity = next(
-            e
-            for platform in hass.data["entity_platform"][DOMAIN]
-            for e in platform.entities.values()
-            if e.entity_id == entity_id
-        )
-        await entity.async_update()
-        entity.async_write_ha_state()
+        await async_update_entity(hass, entity_id)
 
     assert hass.states.get(entity_id).state == "Dim"

@@ -3,7 +3,7 @@
 import logging
 
 from denonavr import DenonAVR
-from denonavr.exceptions import AvrNetworkError, AvrTimoutError
+from denonavr.exceptions import AvrNetworkError, AvrTimoutError, DenonAvrError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
@@ -64,6 +64,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     receiver = connect_denonavr.receiver
 
     entry.runtime_data = receiver
+
+    # Audyssey values (dynamic_eq, reference_level_offset, dynamic_volume,
+    # multi_eq) aren't populated by the receiver's regular status queries -
+    # fetch them once here, centrally, before the select/switch platforms
+    # set up. Doing it here (rather than in each platform's own setup)
+    # avoids both platforms firing an identical request at the receiver
+    # at the same time, since async_forward_entry_setups sets them up
+    # concurrently.
+    try:
+        await receiver.async_update_audyssey()
+    except DenonAvrError as ex:
+        _LOGGER.debug(
+            "Could not fetch initial Audyssey status for %s: %s", receiver.name, ex
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     use_telnet = entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET)

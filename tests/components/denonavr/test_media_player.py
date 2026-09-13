@@ -6,6 +6,7 @@ from unittest.mock import patch
 from denonavr.exceptions import AvrIncompleteResponseError, AvrInvalidResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import media_player
 from homeassistant.components.denonavr.config_flow import (
@@ -24,8 +25,6 @@ from homeassistant.components.denonavr.services import (
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_HOST = "1.2.3.4"
 TEST_NAME = "Test_Receiver"
@@ -146,6 +145,13 @@ async def test_update_audyssey(hass: HomeAssistant, client) -> None:
     """Test that dynamic eq method works."""
     await setup_denonavr(hass)
 
+    # The select/switch platforms also fetch Audyssey status once at
+    # setup (see homeassistant/components/denonavr/__init__.py), so the
+    # mock has already been called by the time the service below runs -
+    # assert the service adds exactly one more call, rather than a
+    # fixed total.
+    calls_before_service = client.async_update_audyssey.call_count
+
     # Verify call
     await hass.services.async_call(
         DOMAIN,
@@ -156,7 +162,7 @@ async def test_update_audyssey(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    client.async_update_audyssey.assert_called_once()
+    assert client.async_update_audyssey.call_count == calls_before_service + 1
 
 
 @pytest.mark.parametrize(

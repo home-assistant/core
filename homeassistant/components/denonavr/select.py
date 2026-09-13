@@ -2,12 +2,11 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import logging
+from datetime import timedelta
 from typing import Any
 
 from denonavr import DenonAVR
 from denonavr.const import MAIN_ZONE
-from denonavr.exceptions import DenonAvrError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -22,16 +21,17 @@ from .const import (
     DIMMER_OPTIONS,
     DOMAIN,
     ECO_MODE_OPTIONS,
+    ENTITY_SCAN_INTERVAL,
 )
 from .entity import DenonAvrPendingValueEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 # Denon's HTTP/Telnet interface doesn't handle concurrent requests well
 # (media_player.py sets this too). Only covers calls targeting multiple
-# entities at once - see DenonAvrSelect._action_lock for single-entity
-# repeats.
+# entities at once - see entity.py's shared receiver lock for repeats
+# on one entity, or calls split across this file and switch.py.
 PARALLEL_UPDATES = 1
+
+SCAN_INTERVAL = timedelta(seconds=ENTITY_SCAN_INTERVAL)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -148,18 +148,6 @@ async def async_setup_entry(
         identifiers={(DOMAIN, config_entry.unique_id or config_entry.entry_id)},
     )
 
-    # Audyssey values are never fetched by the regular poll loop unless
-    # Telnet delivers a push update - fetch once so these entities don't
-    # start out (and stay) unavailable.
-    try:
-        await main_receiver.async_update_audyssey()
-    except DenonAvrError as err:
-        _LOGGER.debug(
-            "Could not fetch initial Audyssey status for %s: %s",
-            main_receiver.name,
-            err,
-        )
-
     async_add_entities(
         DenonAvrSelect(main_receiver, description, unique_id_base, device_info)
         for description in SELECT_TYPES
@@ -179,7 +167,13 @@ class DenonAvrSelect(DenonAvrPendingValueEntity[str], SelectEntity):
         device_info: DeviceInfo,
     ) -> None:
         """Initialize the select entity."""
-        super().__init__(receiver, f"{unique_id_base}-{description.key}", device_info)
+        refresh_fn = description.refresh_fn
+        super().__init__(
+            receiver,
+            f"{unique_id_base}-{description.key}",
+            device_info,
+            refresh_fn=(lambda: refresh_fn(receiver)) if refresh_fn else None,
+        )
         self.entity_description = description
 
     def _read_value(self) -> str | None:
@@ -205,12 +199,10 @@ class DenonAvrSelect(DenonAvrPendingValueEntity[str], SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        refresh_fn = self.entity_description.refresh_fn
         await self._async_apply_change(
             send=lambda: self.entity_description.select_option_fn(
                 self._receiver, option
             ),
-            refresh=(lambda: refresh_fn(self._receiver)) if refresh_fn else None,
             value=option,
             error_label=self.entity_description.key,
         )

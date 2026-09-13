@@ -1,10 +1,9 @@
 """Support for Denon AVR Audyssey switch entities."""
 
-import logging
+from datetime import timedelta
 
 from denonavr import DenonAVR
 from denonavr.const import MAIN_ZONE
-from denonavr.exceptions import DenonAvrError
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EntityCategory
@@ -13,13 +12,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DenonavrConfigEntry
-from .const import CONF_SERIAL_NUMBER, DOMAIN
+from .const import CONF_SERIAL_NUMBER, DOMAIN, ENTITY_SCAN_INTERVAL
 from .entity import DenonAvrPendingValueEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-# See the matching constant in select.py.
+# See the matching constants in select.py.
 PARALLEL_UPDATES = 1
+SCAN_INTERVAL = timedelta(seconds=ENTITY_SCAN_INTERVAL)
 
 
 async def async_setup_entry(
@@ -43,16 +41,6 @@ async def async_setup_entry(
         identifiers={(DOMAIN, config_entry.unique_id or config_entry.entry_id)},
     )
 
-    # See the matching comment in select.py.
-    try:
-        await main_receiver.async_update_audyssey()
-    except DenonAvrError as err:
-        _LOGGER.debug(
-            "Could not fetch initial Audyssey status for %s: %s",
-            main_receiver.name,
-            err,
-        )
-
     async_add_entities(
         [DenonAvrDynamicEqSwitch(main_receiver, unique_id_base, device_info)]
     )
@@ -73,7 +61,12 @@ class DenonAvrDynamicEqSwitch(DenonAvrPendingValueEntity[bool], SwitchEntity):
         device_info: DeviceInfo,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(receiver, f"{unique_id_base}-dynamic_eq", device_info)
+        super().__init__(
+            receiver,
+            f"{unique_id_base}-dynamic_eq",
+            device_info,
+            refresh_fn=receiver.async_update_audyssey,
+        )
 
     def _read_value(self) -> bool | None:
         """Return the receiver's own confirmed Dynamic EQ state."""
@@ -98,7 +91,7 @@ class DenonAvrDynamicEqSwitch(DenonAvrPendingValueEntity[bool], SwitchEntity):
         await self._async_set_dynamic_eq(False)
 
     async def _async_set_dynamic_eq(self, dynamic_eq: bool) -> None:
-        """Set Dynamic EQ and refresh Audyssey values that depend on it.
+        """Set Dynamic EQ.
 
         Reference Level Offset can only be set while Dynamic EQ is on,
         so flipping this switch changes that entity's availability too
@@ -110,7 +103,6 @@ class DenonAvrDynamicEqSwitch(DenonAvrPendingValueEntity[bool], SwitchEntity):
                 if dynamic_eq
                 else self._receiver.async_dynamic_eq_off
             ),
-            refresh=self._receiver.async_update_audyssey,
             value=dynamic_eq,
             error_label="Dynamic EQ",
         )

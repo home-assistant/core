@@ -24,6 +24,15 @@ DEFAULT_USE_TELNET = False
 # documented worst case (~10s) for the slowest refresh (GetAudyssey).
 PENDING_VALUE_TIMEOUT = 15
 
+# Poll interval for the select/switch entities in this integration.
+# Longer than the default (~15s) since several of them share the same
+# underlying refresh call (e.g. three selects all trigger GetAudyssey);
+# a longer interval keeps that redundancy from adding up to frequent
+# receiver traffic while still letting external changes (made outside
+# HA) surface without depending on the media player entity staying
+# enabled.
+ENTITY_SCAN_INTERVAL = 60
+
 # denonavr.const has no "list of valid options" helper for these three
 # (unlike reference_level_offset/dynamic_volume/multi_eq); their option
 # lists are fixed Literal types, reproduced here in the same order.
