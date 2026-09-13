@@ -1119,10 +1119,10 @@ async def test_service_fetch_missing_date(
     config_entry = MockConfigEntry(domain=DOMAIN, data=config)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(True)
     # Make sure we have had one update (when polling)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(True)
 
     # Test fetch service with text response
     mock_imap_protocol.reset_mock()
