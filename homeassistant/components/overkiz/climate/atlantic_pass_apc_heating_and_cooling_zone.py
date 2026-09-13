@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
-from pyoverkiz.models import Command
+from pyoverkiz.models import Command, Device
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -92,8 +92,8 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
             else None
         )
 
-        self.main_device = self.executor.linked_device(1)
-        assert self.main_device is not None
+        self.main_device = cast(Device, self.executor.linked_device(1))
+
 
         self.main_executor = OverkizExecutor(self.main_device.device_url, coordinator)
         self.client = coordinator.client
