@@ -69,7 +69,7 @@ def entity_category_validator(
 
     def validate(value: Any) -> EntityCategory | None:
         """Validate the entity category."""
-        if not value:  # an empty value clears the entity category
+        if value is None or value == "":  # UI sends an empty value to clear it
             return None
         try:
             entity_category = EntityCategory(value)
