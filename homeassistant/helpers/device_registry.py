@@ -381,6 +381,22 @@ def _normalize_connections_validator(
             raise ValueError(f"Invalid mac address format: {value}")
 
 
+def _report_deprecated_config_entries_property(
+    instance: object, name: str, *replacements: str
+) -> None:
+    """Report use of a deprecated multi-config-entry compatibility property."""
+    class_name = type(instance).__name__
+    replacement = " and ".join(f"`{class_name}.{field}`" for field in replacements)
+    report_usage(
+        f"accesses `{class_name}.{name}`, which is deprecated because a device "
+        f"belongs to a single config entry; use {replacement} instead",
+        breaks_in_ha_version="2027.10.0",
+        core_behavior=ReportBehavior.ERROR,
+        core_integration_behavior=ReportBehavior.ERROR,
+        custom_integration_behavior=ReportBehavior.LOG,
+    )
+
+
 @attr.s(frozen=True, slots=True)
 class BaseDeviceEntry:
     """Base class for device registry entries."""
@@ -400,13 +416,27 @@ class BaseDeviceEntry:
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @property
+    def _config_entries(self) -> set[str]:
+        """Return the config entries this device belongs to, without reporting."""
+        return {self.config_entry_id}
+
+    @property
+    def _config_entries_subentries(self) -> dict[str, set[str | None]]:
+        """Return the config subentries this device belongs to, without reporting."""
+        return {self.config_entry_id: {self.config_subentry_id}}
+
+    @property
     def config_entries(self) -> set[str]:
         """Return the config entries this device belongs to.
 
         Deprecated compatibility shim: a device now belongs to a single config
-        entry, available as config_entry_id.
+        entry, available as config_entry_id. It can be removed in HA Core 2027.10.
         """
-        return {self.config_entry_id}
+        if not self.is_composite_device:
+            _report_deprecated_config_entries_property(
+                self, "config_entries", "config_entry_id"
+            )
+        return self._config_entries
 
     @property
     def config_entries_subentries(self) -> dict[str, set[str | None]]:
@@ -414,8 +444,16 @@ class BaseDeviceEntry:
 
         Deprecated compatibility shim: a device now belongs to a single config
         entry and subentry, available as config_entry_id and config_subentry_id.
+        It can be removed in HA Core 2027.10.
         """
-        return {self.config_entry_id: {self.config_subentry_id}}
+        if not self.is_composite_device:
+            _report_deprecated_config_entries_property(
+                self,
+                "config_entries_subentries",
+                "config_entry_id",
+                "config_subentry_id",
+            )
+        return self._config_entries_subentries
 
     @property
     def primary_config_entry(self) -> str:
@@ -423,7 +461,12 @@ class BaseDeviceEntry:
 
         Deprecated compatibility shim: a device now belongs to a single config
         entry, available as config_entry_id, which is its primary config entry.
+        It can be removed in HA Core 2027.10.
         """
+        if not self.is_composite_device:
+            _report_deprecated_config_entries_property(
+                self, "primary_config_entry", "config_entry_id"
+            )
         return self.config_entry_id
 
     @property
@@ -511,24 +554,16 @@ class DeviceEntry(BaseDeviceEntry):
 
     @property
     @override
-    def config_entries(self) -> set[str]:
-        """Return the config entries this device belongs to.
-
-        Deprecated compatibility shim: a device now belongs to a single config
-        entry, available as config_entry_id.
-        """
+    def _config_entries(self) -> set[str]:
+        """Return the config entries this device belongs to, without reporting."""
         if self._composite_subentries is not None:
             return set(self._composite_subentries)
         return {self.config_entry_id}
 
     @property
     @override
-    def config_entries_subentries(self) -> dict[str, set[str | None]]:
-        """Return the config subentries this device belongs to.
-
-        Deprecated compatibility shim: a device now belongs to a single config
-        entry and subentry, available as config_entry_id and config_subentry_id.
-        """
+    def _config_entries_subentries(self) -> dict[str, set[str | None]]:
+        """Return the config subentries this device belongs to, without reporting."""
         if self._composite_subentries is not None:
             return {
                 entry_id: set(subentries)
@@ -559,10 +594,10 @@ class DeviceEntry(BaseDeviceEntry):
             # config_entries and config_entries_subentries are deprecated and kept for
             # backwards compatibility, they can be removed in HA Core 2027.8. They use the
             # compatibility properties so a restored composite reports its merged entries.
-            "config_entries": list(self.config_entries),
+            "config_entries": list(self._config_entries),
             "config_entries_subentries": {
                 entry_id: list(subentries)
-                for entry_id, subentries in self.config_entries_subentries.items()
+                for entry_id, subentries in self._config_entries_subentries.items()
             },
             "config_entry_id": self.config_entry_id,
             "config_subentry_id": self.config_subentry_id,
@@ -581,7 +616,8 @@ class DeviceEntry(BaseDeviceEntry):
             "name_by_user": self.name_by_user,
             "name": self.name,
             "parent_device_id": None,
-            "primary_config_entry": self.primary_config_entry,
+            # primary_config_entry is deprecated, it can be removed in HA Core 2027.10.
+            "primary_config_entry": self.config_entry_id,
             "serial_number": self.serial_number,
             "sw_version": self.sw_version,
             "via_device_id": self.via_device_id,
@@ -614,7 +650,9 @@ class DeviceEntry(BaseDeviceEntry):
                 "name_by_user": self.name_by_user,
                 "name": self.name,
                 "has_composite_identifiers": (self.has_composite_identifiers),
-                "primary_config_entry": self.primary_config_entry,
+                # primary_config_entry is deprecated, it can be removed in HA Core
+                # 2027.10.
+                "primary_config_entry": self.config_entry_id,
                 "serial_number": self.serial_number,
                 "sw_version": self.sw_version,
                 "via_device_id": self.via_device_id,
@@ -776,16 +814,24 @@ class DeletedDeviceEntry:
     def config_entries(self) -> set[str]:
         """Return the config entries this device belonged to.
 
-        Deprecated compatibility shim; empty for orphaned deleted devices.
+        Deprecated compatibility shim; empty for orphaned deleted devices. It can be
+        removed in HA Core 2027.10.
         """
+        _report_deprecated_config_entries_property(
+            self, "config_entries", "config_entry_id"
+        )
         return {self.config_entry_id} if self.config_entry_id is not None else set()
 
     @property
     def config_entries_subentries(self) -> dict[str, set[str | None]]:
         """Return the config subentries this device belonged to.
 
-        Deprecated compatibility shim; empty for orphaned deleted devices.
+        Deprecated compatibility shim; empty for orphaned deleted devices. It can be
+        removed in HA Core 2027.10.
         """
+        _report_deprecated_config_entries_property(
+            self, "config_entries_subentries", "config_entry_id", "config_subentry_id"
+        )
         if self.config_entry_id is None:
             return {}
         return {self.config_entry_id: {self.config_subentry_id}}
