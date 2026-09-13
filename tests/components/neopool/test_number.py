@@ -745,6 +745,8 @@ async def test_same_value_queued_during_flush_still_resolves(
     await _flush(hass, freezer)
     await second
 
+    # Both same-valued batches reached the client as distinct writes.
+    assert seen == [700, 700]
     state = hass.states.get(ph1_entity_id)
     assert state is not None
     assert float(state.state) == 7.0
@@ -1176,3 +1178,28 @@ async def test_setup_when_modules_absent(
         if e.domain == NUMBER_DOMAIN
     ]
     assert number_entries == []
+
+
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_cover_gated_numbers_absent_when_option_off(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The cover-gated numbers are not created while their option is off.
+
+    Both numbers gate on CONF_USE_COVER_SENSOR, so a config entry without it
+    must register neither, even though the hydrolysis module is present.
+    """
+    await setup_integration(hass, mock_config_entry)
+    gated = [
+        e
+        for e in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if e.domain == NUMBER_DOMAIN
+        and e.unique_id.endswith(
+            ("_mbf_par_hidro_cover_reduction", "_mbf_par_hidro_shutdown_temperature")
+        )
+    ]
+    assert gated == []
