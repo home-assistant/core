@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import AsyncGenerator
 from dataclasses import FrozenInstanceError
 from http import HTTPStatus
-from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientPayloadError
@@ -12,19 +11,24 @@ import pytest
 
 from homeassistant.components import assist_pipeline, stt
 from homeassistant.components.assist_pipeline.audio_output import (
+    AudioOutputStream,
     PipelineAudioOutput,
     PipelineAudioOutputError,
     PipelineAudioOutputManager,
+)
+from homeassistant.components.assist_pipeline.default_pipeline import (
+    _PipelineController,
 )
 from homeassistant.components.assist_pipeline.error import PipelineRunValidationError
 from homeassistant.components.assist_pipeline.run import _PipelineProcessorRequest
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import chat_session
+from homeassistant.util import dt as dt_util
 
 from tests.typing import ClientSessionGenerator
 
 
-async def _collect(output: PipelineAudioOutput) -> bytes:
+async def _collect(output: AudioOutputStream) -> bytes:
     """Collect a pipeline audio output."""
     return b"".join([chunk async for chunk in output.async_stream_result()])
 
@@ -84,6 +88,31 @@ async def test_stream_allows_one_consumer(hass: HomeAssistant) -> None:
     assert await _collect(output) == b""
     with pytest.raises(RuntimeError, match="already has a consumer"):
         await _collect(output)
+
+
+async def test_expired_output_cleanup(hass: HomeAssistant) -> None:
+    """Test expired outputs fail while live outputs schedule another cleanup."""
+    with patch(
+        "homeassistant.components.assist_pipeline.audio_output.async_call_later"
+    ) as schedule_cleanup:
+        manager = PipelineAudioOutputManager(hass, expiration_seconds=10)
+        expired_output = manager.async_create("wav", "audio/wav")
+        live_output = manager.async_create("wav", "audio/wav")
+        expired_output.last_used = 9
+        live_output.last_used = 11
+
+        with patch(
+            "homeassistant.components.assist_pipeline.audio_output.monotonic",
+            return_value=20,
+        ):
+            manager._async_cleanup(dt_util.utcnow())
+
+    assert manager.async_get(expired_output.token) is None
+    assert manager.async_get(live_output.token) is live_output
+    assert schedule_cleanup.call_count == 2
+    with pytest.raises(PipelineAudioOutputError) as err:
+        await _collect(expired_output)
+    assert isinstance(err.value.error, TimeoutError)
 
 
 async def test_audio_output_http_view(
@@ -169,7 +198,7 @@ async def test_legacy_tts_stream_fallback(
 class _StreamingTestProcessor:
     """Test-only streaming audio-to-audio processor."""
 
-    def __init__(self, host: Any) -> None:
+    def __init__(self, host: _PipelineController) -> None:
         """Initialize the processor."""
         self.host = host
         self.response_audio = host.async_create_response_audio("wav", "audio/wav")
@@ -325,7 +354,7 @@ class _FailingValidationTestProcessor(_StreamingTestProcessor):
 class _BlockingStreamingTestProcessor(_FailingStreamingTestProcessor):
     """Test processor that waits until cancelled."""
 
-    def __init__(self, host: Any) -> None:
+    def __init__(self, host: _PipelineController) -> None:
         """Initialize the processor."""
         super().__init__(host)
         self.started = asyncio.Event()

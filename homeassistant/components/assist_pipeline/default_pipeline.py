@@ -24,7 +24,7 @@ from homeassistant.helpers import (
 from homeassistant.util.hass_dict import HassKey
 
 from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadSpeexEnhancer
-from .audio_output import AudioOutputStream
+from .audio_output import WritableAudioOutputStream
 from .const import (
     ACKNOWLEDGE_PATH,
     BYTES_PER_CHUNK,
@@ -142,7 +142,7 @@ class _PipelineController(Protocol):
     @callback
     def async_create_response_audio(
         self, extension: str, content_type: str
-    ) -> AudioOutputStream:
+    ) -> WritableAudioOutputStream:
         """Create a controller-owned response audio stream."""
 
 
