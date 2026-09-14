@@ -1484,3 +1484,70 @@ async def test_ssdp_flow_aborts_when_the_hub_is_unreachable(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
     assert not hass.config_entries.async_entries(DOMAIN)
+
+
+async def test_ssdp_matches_a_migrated_entry_by_its_address(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """An entry that has not adopted the hub's MAC yet is still recognised.
+
+    A migrated custom-integration entry keeps its older id -- a serial, or
+    ``habitron_<host>`` -- until its first successful setup adopts the MAC. The
+    unique-id check does not find it in that window, so without an address
+    match the same hub would be offered and configured twice.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=f"habitron_{MOCK_HOST}",
+        data={CONF_HOST: MOCK_HOST},
+    )
+    entry.add_to_hass(hass)
+
+    discovery = SsdpServiceInfo(
+        ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+        ssdp_st="urn:habitron-com:device:SmartHub:1",
+        ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+        upnp={ATTR_UPNP_UDN: MOCK_UDN},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # Only one entry, and its identity is left alone -- setup adopts the MAC.
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.unique_id == f"habitron_{MOCK_HOST}"
+
+
+async def test_user_flow_matches_a_migrated_entry_by_its_address(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """The same hub entered by hand must not become a second entry either."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="HBT-123456",  # a serial, as the custom integration falls back to
+        data={CONF_HOST: MOCK_HOST},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1

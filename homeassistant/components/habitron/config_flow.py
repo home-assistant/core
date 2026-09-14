@@ -256,6 +256,39 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             is not None
         )
 
+    async def _async_abort_if_host_configured(
+        self, host: str
+    ) -> config_entries.ConfigFlowResult | None:
+        """Abort when this address is already configured under another identity.
+
+        The unique-id check only recognises an entry that is already keyed by
+        the hub's MAC. An entry carried over from the custom integration keeps
+        its older id -- a serial, or ``habitron_<host>`` -- until its first
+        successful setup adopts the MAC (see ``_async_adopt_hub_identity``), and
+        in that window the same hub would be offered, and configured, a second
+        time. The address is the one thing both entries agree on, so match on
+        that as well.
+
+        The stored host is refreshed like the unique-id path does it; the
+        identity itself is left to setup, which adopts it anyway and must not
+        race with a flow doing the same.
+
+        ``_async_current_entries`` carries the right ignore semantics for both
+        callers: a discovery sees ignored entries and stays silent for them,
+        while a user flow does not -- adding an ignored hub by hand is how
+        un-ignoring works.
+        """
+        entry = await self._async_matching_entry(
+            list(self._async_current_entries()), host
+        )
+        if entry is None:
+            return None
+        self.hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_HOST: await self._async_stored_host(host)},
+        )
+        return self.async_abort(reason="already_configured")
+
     @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
@@ -296,6 +329,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: await self._async_stored_host(host_str)},
             reload_on_update=False,
         )
+        if (result := await self._async_abort_if_host_configured(host_str)) is not None:
+            return result
 
         self.context["title_placeholders"] = {"name": host_str}
         return await self.async_step_discovery_confirm()
@@ -385,6 +420,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         updates={CONF_HOST: await self._async_stored_host(host_input)},
                         reload_on_update=False,
                     )
+                    if (
+                        result := await self._async_abort_if_host_configured(host_input)
+                    ) is not None:
+                        return result
                     return self.async_create_entry(title=info["title"], data=user_input)
 
             default_host = user_input[CONF_HOST]
