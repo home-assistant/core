@@ -33,12 +33,6 @@ DATA_MODBUS_CONNECTIONS: HassKey[dict[ModbusEndpoint, _SharedConnection]] = Hass
     f"{DOMAIN}_connections"
 )
 
-# The line speed modbus-connection gives a serial framing carried over a socket.
-# It is fast enough to land on tmodbus's 1.75 ms inter-frame gap floor, so a
-# caller that states the speed itself gets the same gap from any value at or
-# above 19200 baud.
-_SOCKET_BAUDRATE = 115200
-
 
 def _canonical(params: ModbusParams) -> ModbusParams:
     """Return the params in the form the link is actually built from.
@@ -54,7 +48,10 @@ def _canonical(params: ModbusParams) -> ModbusParams:
     return ModbusSerialParams(
         device=f"socket://{host}:{params.port}",
         framer=params.framer,
-        baudrate=_SOCKET_BAUDRATE,
+        # The line speed modbus-connection gives a socket-carried serial framing.
+        # It is fast enough to land on tmodbus's 1.75 ms inter-frame gap floor,
+        # which any value at or above 19200 baud also gets.
+        baudrate=115200,
     )
 
 
