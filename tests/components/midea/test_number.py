@@ -49,7 +49,7 @@ def _c2_device() -> DummyDevice:
 
 
 def _ac_device() -> DummyDevice:
-    device = DummyDevice(
+    return DummyDevice(
         DeviceType.AC,
         attributes={
             ACAttributes.power: True,
@@ -60,7 +60,6 @@ def _ac_device() -> DummyDevice:
         },
         capabilities={"fan_custom": True},
     )
-    return device
 
 
 def _cd_device() -> DummyDevice:
