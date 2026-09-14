@@ -34,6 +34,7 @@ from .const import (
 )
 from .coordinator import (
     DenonAvrDataUpdateCoordinator,
+    async_refresh_audyssey,
     async_refresh_status,
     mark_unavailable,
 )
@@ -120,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
         # - the select/switch entities do exactly that right after
         # their own actions, regardless of this option.
         update_interval=update_interval if update_audyssey else None,
-        refresh_fn=lambda r: r.async_update_audyssey(),
+        refresh_fn=async_refresh_audyssey,
     )
     # Audyssey values (dynamic_eq, reference_level_offset, dynamic_volume,
     # multi_eq) aren't populated by the receiver's regular status queries

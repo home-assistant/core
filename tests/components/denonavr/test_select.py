@@ -583,6 +583,28 @@ async def test_audyssey_coordinator_polls_when_option_on(
     assert client.async_update_audyssey.await_count > calls_before
 
 
+async def test_audyssey_coordinator_skips_poll_when_telnet_healthy(
+    hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """A scheduled Audyssey poll is skipped once Telnet already keeps it current.
+
+    Mirrors async_refresh_status's own guard for the general
+    coordinator - Telnet already pushes these settings live (see
+    __init__.py's Telnet listener), so a receiver where this HTTP
+    query takes ~10s shouldn't be hit with it again every interval.
+    """
+    await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
+    client.telnet_connected = True
+    client.telnet_healthy = True
+    calls_before = client.async_update_audyssey.await_count
+
+    freezer.tick(timedelta(seconds=COORDINATOR_UPDATE_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert client.async_update_audyssey.await_count == calls_before
+
+
 async def test_audyssey_coordinator_does_not_poll_when_option_off(
     hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:

@@ -72,6 +72,20 @@ async def async_refresh_status(receiver: DenonAVR) -> None:
             )
 
 
+async def async_refresh_audyssey(receiver: DenonAVR) -> None:
+    """Refresh Audyssey settings, unless Telnet already keeps them current.
+
+    Mirrors async_refresh_status's own guard: once Telnet is healthy,
+    "PS" events already push these settings live (see __init__.py's
+    Telnet listener), so fetching them over HTTP too - up to ~10s on
+    some receivers - would just repeat what Telnet already delivered,
+    whether this call is a scheduled poll or a post-action confirmation.
+    """
+    if receiver.telnet_connected and receiver.telnet_healthy:
+        return
+    await receiver.async_update_audyssey()
+
+
 class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinate one aspect of a Denon AVR receiver's state.
 
