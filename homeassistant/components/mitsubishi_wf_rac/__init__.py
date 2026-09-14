@@ -31,29 +31,13 @@ PLATFORMS = [Platform.CLIMATE]
 async def async_migrate_entry(
     hass: HomeAssistant, entry: MitsubishiWfRacConfigEntry
 ) -> bool:
-    """Bring an entry of the custom component that used to own this domain up to date.
+    """Bring an entry of the custom component that owns this domain up to date.
 
-    Core never wrote versions 1 to 6; they come from that custom component, and
-    an installation switching over brings its entries along. They need one
-    normalisation rather than a replay of that history, so any of them reaches
-    the same shape in a single step:
-
-    - The host belongs in entry.data. It sat in options so it could be edited
-      there, which also meant the discovery helper that refreshes a moved unit
-      (_abort_if_unique_id_configured(updates=...)) merged the new address into
-      data, where setup never looked - so the address silently stayed stale.
-    - The availability toggle goes, along with a retry key nothing ever read.
-      The toggle was never a defensible choice: the module reassociates with
-      the network about once an hour, so some tolerance is always right, and
-      switching it off was arithmetically identical to a limit of 1. The limit
-      itself is a real choice on a weak link and stays, floored at what Device
-      enforces anyway.
-    - Entries added by hand carry no unique id, because the manual step checked
-      for a duplicate airco itself instead of registering one. Without it
-      zeroconf cannot recognise the entry, so a unit that moved was offered as
-      a new discovery. The module announces itself as <mac>.local and the airco
-      id is that same MAC, so this is the identity discovery already matches
-      on.
+    Core never wrote versions 1 to 6; they come from that custom component,
+    and an installation switching over brings its entries along. One
+    normalisation brings any of them to the same shape: the host back into
+    entry.data where setup reads it, the availability toggle and an unread
+    retry key out, and the airco id as the unique id zeroconf matches on.
     """
 
     if entry.version < 7:
@@ -88,22 +72,17 @@ async def async_setup_entry(
     device: str = entry.data[CONF_HOST]
     _device = await create_device_from_entry(entry, hass)
 
-    await _device.update()  # initial update to get fresh values
-    # update() catches its own errors and reflects them via .available instead
-    # of raising (see coordinator.py) - check that instead of try/except so a
-    # device that's unreachable at startup gets HA's automatic retry-with-backoff
-    # rather than a silently "loaded" entry with no working entities.
-    if not _device.available:
+    # update() reports a failure in its return value rather than raising, so
+    # an unreachable device gets HA's retry-with-backoff here.
+    if not await _device.update():
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
             translation_placeholders={"device": device},
         )
 
-    # Persist the discovered connection method (http/https) so we can skip
-    # protocol discovery (and its potential extra round-trip) after the next
-    # restart. Nothing listens for entry updates, so this does not reload the
-    # entry that is still setting up.
+    # Persisted so the next start skips protocol discovery. Nothing listens
+    # for entry updates, so this does not reload the entry setting up.
     method = _device.connection_method
     if method and entry.data.get(CONF_CONNECTION_METHOD) != method:
         hass.config_entries.async_update_entry(
@@ -129,10 +108,8 @@ async def create_device_from_entry(
     operator_id: str = entry.data[CONF_OPERATOR_ID]
     port: int = entry.data[CONF_PORT]
     airco_id: str = entry.data[CONF_AIRCO_ID]
-    # Only entries carried over from the custom component that used to own
-    # this domain can name a limit; nothing offers to set one here. Floored in
-    # Device itself as well as in the migration, so none of them runs with less
-    # tolerance than the module needs.
+    # Only entries carried over from the custom component name a limit;
+    # nothing offers to set one here.
     availability_failure_limit: int = entry.options.get(
         CONF_AVAILABILITY_RETRY_LIMIT, AVAILABILITY_FAILURE_LIMIT_MIN
     )
@@ -158,11 +135,9 @@ async def async_unload_entry(
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # Only tear the coordinator down once the entities are really gone: if
-    # unloading the platforms failed they stay loaded, and stopping their
-    # coordinator would leave a loaded entry that never updates again.
-    # An entry whose setup never got as far as storing its runtime data can
-    # still be unloaded - there is simply no coordinator to shut down then.
+    # Only once the entities are really gone: platforms that failed to unload
+    # stay loaded, and would be left with a coordinator that never updates.
+    # An entry that never stored runtime data has none to shut down.
     if unload_ok and (data := getattr(entry, "runtime_data", None)) is not None:
         await data.device.async_shutdown()
 
@@ -180,8 +155,8 @@ async def async_remove_entry(
     """Handle removal of an entry."""
 
     temp_device = await create_device_from_entry(entry, hass)
-    # delete_account() reports failure by returning None rather than raising
-    # (see coordinator.py), so the result is what decides which line is logged.
+    # delete_account() returns None for everything short of a confirmed
+    # release, which is what decides between the two lines.
     result = await temp_device.delete_account()
     if result is not None:
         _LOGGER.info("Released the controller slot on airco [%s]", temp_device.airco_id)
@@ -192,6 +167,5 @@ async def async_remove_entry(
             temp_device.airco_id,
         )
 
-    # Entry-scoped, so it would otherwise dangle in the repair list forever
-    # pointing at an entry_id that no longer resolves to anything.
+    # Entry-scoped: it would otherwise dangle, pointing at a dead entry_id.
     ir.async_delete_issue(hass, DOMAIN, registration_full_issue_id(entry.entry_id))

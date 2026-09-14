@@ -1,5 +1,6 @@
 """Test the Mitsubishi WF-RAC setup, unload and migrations."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -50,10 +51,9 @@ async def test_setup_retries_when_unreachable(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("hass")
 async def test_device_registry_entry(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry, device_registry: dr.DeviceRegistry
 ) -> None:
     """The airco registers with its MAC, and without a model name.
 
@@ -71,6 +71,44 @@ async def test_device_registry_entry(
     assert device.sw_version == "WF-RAC-HTTPS, mcu: 200, wireless: 025"
 
 
+@pytest.mark.parametrize(
+    "answer",
+    [
+        pytest.param({}, id="no firmware sections at all"),
+        pytest.param({"mcu": "200", "wireless": None}, id="sections of another shape"),
+    ],
+)
+async def test_a_firmware_version_it_cannot_read_does_not_cost_the_poll(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    aircon_stat: dict[str, Any],
+    device_registry: dr.DeviceRegistry,
+    answer: dict[str, Any],
+) -> None:
+    """These three strings only decorate the device registry.
+
+    Firmware revisions differ in which of the sections they send, and one of
+    them shaped differently than expected must not take down a poll that read
+    the state block.
+    """
+    mock_repository.get_aircon_stats.return_value = {
+        "airconStat": aircon_stat["airconStat"],
+        **answer,
+    }
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, AIRCO_ID), mock_config_entry.entry_id
+    )
+
+    assert device is not None
+    assert device.sw_version == "unknown, mcu: unknown, wireless: unknown"
+
+
 async def test_remove_entry_releases_the_account_slot(
     hass: HomeAssistant,
     mock_repository: AsyncMock,
@@ -83,9 +121,8 @@ async def test_remove_entry_releases_the_account_slot(
     mock_repository.del_account_info.assert_awaited_with(AIRCO_ID)
 
 
-async def test_migration_from_version_1(
-    hass: HomeAssistant, mock_repository: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_repository")
+async def test_migration_from_version_1(hass: HomeAssistant) -> None:
     """A v1 entry gains retry tolerance and keeps its host where setup reads it.
 
     Entries this old exist in the wild through the custom-component release of
@@ -118,9 +155,8 @@ async def test_migration_from_version_1(
     assert entry.options["availability_retry_limit"] == 3
 
 
-async def test_migration_brings_the_host_back_into_data(
-    hass: HomeAssistant, mock_repository: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_repository")
+async def test_migration_brings_the_host_back_into_data(hass: HomeAssistant) -> None:
     """An entry that kept its host in options gets it back into data.
 
     That is where versions 2 to 5 stored it, and where the discovery helper
@@ -146,8 +182,9 @@ async def test_migration_brings_the_host_back_into_data(
     assert CONF_HOST not in entry.options
 
 
+@pytest.mark.usefixtures("mock_repository")
 async def test_migration_lifts_a_retry_limit_below_the_floor(
-    hass: HomeAssistant, mock_repository: AsyncMock
+    hass: HomeAssistant,
 ) -> None:
     """A stored limit under the minimum is raised rather than refused."""
     entry = MockConfigEntry(
@@ -167,8 +204,9 @@ async def test_migration_lifts_a_retry_limit_below_the_floor(
     assert entry.options["availability_retry_limit"] == 3
 
 
+@pytest.mark.usefixtures("mock_repository")
 async def test_migration_lifts_a_retry_limit_the_old_toggle_left_behind(
-    hass: HomeAssistant, mock_repository: AsyncMock
+    hass: HomeAssistant,
 ) -> None:
     """A v3 entry that ran with no tolerance at all gets some.
 
@@ -217,18 +255,33 @@ async def test_a_failed_platform_unload_keeps_the_coordinator(
     assert device.last_update_success
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "answer"),
+    [
+        pytest.param(WfRacError("no answer"), None, id="no answer"),
+        pytest.param(None, {"result": 2}, id="refused"),
+        pytest.param(None, {"result": 429}, id="rate limited"),
+        pytest.param(None, {}, id="answered without a result"),
+        pytest.param(None, ["ok"], id="answered with something else entirely"),
+    ],
+)
 async def test_removal_says_so_when_the_slot_is_not_released(
     hass: HomeAssistant,
     mock_repository: AsyncMock,
     init_integration: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    side_effect: Exception | None,
+    answer: Any,
 ) -> None:
     """The module keeps a small account table, and it can refuse to free ours.
 
     Nothing here can fix that - the slot has to be freed from the official
-    app - so the removal goes through and says what was left behind.
+    app - so the removal goes through and says what was left behind. A
+    refusal has to read as one: it is the case where that advice is needed,
+    and the module says so in the same result code add_account() is read by.
     """
-    mock_repository.del_account_info.side_effect = WfRacError("no answer")
+    mock_repository.del_account_info.side_effect = side_effect
+    mock_repository.del_account_info.return_value = answer
 
     await hass.config_entries.async_remove(init_integration.entry_id)
     await hass.async_block_till_done()
@@ -239,8 +292,24 @@ async def test_removal_says_so_when_the_slot_is_not_released(
     assert ENTRY_DATA[CONF_OPERATOR_ID] not in caplog.text
 
 
+async def test_removal_says_the_slot_is_free_when_the_module_confirms_it(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The other half: a confirmed release is not something to warn about."""
+    mock_repository.del_account_info.return_value = {"result": 0}
+
+    await hass.config_entries.async_remove(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert "Released the controller slot" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_repository")
 async def test_migration_gives_a_hand_added_entry_the_identity_discovery_uses(
-    hass: HomeAssistant, mock_repository: AsyncMock
+    hass: HomeAssistant,
 ) -> None:
     """Entries added by hand never registered one.
 

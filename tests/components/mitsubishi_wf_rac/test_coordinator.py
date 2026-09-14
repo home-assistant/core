@@ -5,6 +5,7 @@ from contextlib import suppress
 from datetime import timedelta
 import logging
 import time
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -48,11 +49,9 @@ async def _advance(hass: HomeAssistant, freezer: FrozenDateTimeFactory, polls: i
         await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_a_missed_poll_does_not_go_unavailable(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_repository: AsyncMock
 ) -> None:
     """The module reassociates with the WiFi about once an hour on its own.
 
@@ -68,12 +67,12 @@ async def test_a_missed_poll_does_not_go_unavailable(
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_the_airco_comes_back(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_repository: AsyncMock,
-    aircon_stat: dict,
-    init_integration: MockConfigEntry,
+    aircon_stat: dict[str, Any],
 ) -> None:
     """One good poll is enough to be available again."""
     mock_repository.get_aircon_stats.side_effect = WfRacConnectionError("no route")
@@ -87,11 +86,9 @@ async def test_the_airco_comes_back(
     assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_an_evicted_account_re_registers_itself(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_repository: AsyncMock
 ) -> None:
     """Register again after being evicted from the account table.
 
@@ -107,11 +104,9 @@ async def test_an_evicted_account_re_registers_itself(
     mock_repository.update_account_info.assert_awaited()
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_an_unreachable_airco_does_not_re_register(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_repository: AsyncMock
 ) -> None:
     """Do not re-register over an outage.
 
@@ -126,10 +121,9 @@ async def test_an_unreachable_airco_does_not_re_register(
     mock_repository.update_account_info.assert_not_awaited()
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_a_refused_write_is_retried_once_the_lock_lapses(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """Another client's 60-second write lock is waited out, not fought.
 
@@ -153,12 +147,12 @@ async def test_a_refused_write_is_retried_once_the_lock_lapses(
     assert mock_repository.send_airco_command.await_count == 2
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_the_retry_waits_out_what_is_left_of_the_lock(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    aircon_stat: dict,
+    aircon_stat: dict[str, Any],
     mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
 ) -> None:
     """The wait comes from the unit's own `expires`, not from a fixed interval.
 
@@ -188,10 +182,9 @@ async def test_the_retry_waits_out_what_is_left_of_the_lock(
     assert 21 in [call.args[0] for call in sleep.await_args_list]
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_an_evicted_account_re_registers_before_retrying(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """Losing the account slot mid-command costs a registration, not the command."""
     aircon_stat = mock_repository.get_aircon_stats.return_value
@@ -213,8 +206,8 @@ async def test_an_evicted_account_re_registers_before_retrying(
     assert mock_repository.send_airco_command.await_count == 2
 
 
+@pytest.mark.usefixtures("hass")
 async def test_a_full_account_table_raises_a_repair_issue(
-    hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     mock_repository: AsyncMock,
     init_integration: MockConfigEntry,
@@ -234,8 +227,8 @@ async def test_a_full_account_table_raises_a_repair_issue(
     )
 
 
+@pytest.mark.usefixtures("hass")
 async def test_a_freed_account_table_clears_the_repair_issue(
-    hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     mock_repository: AsyncMock,
     init_integration: MockConfigEntry,
@@ -253,12 +246,78 @@ async def test_a_freed_account_table_clears_the_repair_issue(
     )
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_an_answered_command_counts_as_proof_of_life(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_repository: AsyncMock
+) -> None:
+    """A unit that answers commands is not an absent one.
+
+    Only polls used to count, so a unit whose polls go missing while it takes
+    every command was declared unavailable anyway - and from there the
+    service layer drops climate calls before they reach the integration, so
+    the commands that proved it was alive stop arriving too.
+    """
+    mock_repository.get_aircon_stats.side_effect = WfRacConnectionError("no route")
+    await _advance(hass, freezer, 2)
+
+    # The consolidation window is a plain sleep, and the frozen clock this
+    # test polls with never reaches its end.
+    with patch("homeassistant.components.mitsubishi_wf_rac.coordinator.asyncio.sleep"):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "high"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    # The third failure in a row would be the threshold, had the command in
+    # between not reset the count.
+    await _advance(hass, freezer, 1)
+
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        pytest.param({"result": 429}, id="rate limited"),
+        pytest.param({"result": 10}, id="internal error"),
+        pytest.param({}, id="answered without a result"),
+        pytest.param(["ok"], id="answered with something else entirely"),
+    ],
+)
+@pytest.mark.usefixtures("hass")
+async def test_only_a_registration_that_went_through_clears_the_issue(
+    issue_registry: ir.IssueRegistry,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+    answer: Any,
+) -> None:
+    """A slot stays taken until one is actually registered again.
+
+    Every other answer the module can give says the registration did not
+    happen - clearing the issue on one of them would tell the user the table
+    recovered while it is as full as it was.
+    """
+    device = init_integration.runtime_data.device
+    mock_repository.update_account_info.return_value = {"result": 2}
+    await device.add_account()
+
+    mock_repository.update_account_info.return_value = answer
+    await device.add_account()
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, registration_full_issue_id(init_integration.entry_id)
+    )
+
+
 @pytest.mark.parametrize(
     ("method", "mocked"),
     [("add_account", "update_account_info"), ("delete_account", "del_account_info")],
 )
+@pytest.mark.usefixtures("hass")
 async def test_account_calls_swallow_their_errors(
-    hass: HomeAssistant,
     mock_repository: AsyncMock,
     init_integration: MockConfigEntry,
     method: str,
@@ -271,11 +330,9 @@ async def test_account_calls_swallow_their_errors(
     assert await getattr(device, method)() is None
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_unparseable_data_marks_the_airco_unavailable(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_repository: AsyncMock
 ) -> None:
     """A frame that answers but does not parse is a failed poll like any other."""
     mock_repository.get_aircon_stats.return_value = {"airconStat": "not base64"}
@@ -343,10 +400,10 @@ async def test_a_poll_that_fails_unexpectedly_is_an_update_failure(
         pytest.param({"airconId": "0011223344aa"}, None, id="no_expires_reported"),
     ],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_a_refused_write_falls_back_when_the_deadline_is_unreadable(
     hass: HomeAssistant,
     mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
     stats: dict | None,
     side_effect: Exception | None,
 ) -> None:
@@ -423,11 +480,103 @@ async def test_shutdown_waits_for_a_command_already_on_the_wire(
     assert caller.done()
 
 
-async def test_an_unreadable_frame_survives_the_polls_that_carry_it(
+async def test_one_poll_spends_one_of_the_three_tries(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    init_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A poll that fails twice inside itself is still one failed poll.
+
+    A rejected answer is followed by a re-registration attempt, and the poll's
+    own deadline can expire on that second request. Charging both to the
+    tolerance would take the unit offline after two polls instead of three.
+    """
+    mock_repository.get_aircon_stats.side_effect = WfRacError("result 2")
+
+    async def _never_answers(*args: object, **kwargs: object) -> dict[str, Any]:
+        await asyncio.sleep(3600)
+        raise AssertionError  # the sleep above outlives the test
+
+    mock_repository.update_account_info.side_effect = _never_answers
+    caplog.set_level(logging.DEBUG)
+
+    with patch(
+        "homeassistant.components.mitsubishi_wf_rac.coordinator.POLL_TIMEOUT",
+        timedelta(seconds=0),
+    ):
+        await init_integration.runtime_data.device.async_refresh()
+
+    assert caplog.text.count("Could not reach the airco") == 1
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+
+async def test_a_poll_does_not_queue_behind_a_command(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_repository: AsyncMock,
     init_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A command on the wire is not a missed poll.
+
+    The module takes one connection at a time, and a write the unit refused
+    can hold it for longer than a poll's own budget while the write lock
+    lapses. A poll that queued behind it would be cancelled at its timeout and
+    counted as unanswered - three of those take every entity offline over a
+    unit that was being talked to the whole time.
+    """
+    on_the_wire = asyncio.Event()
+
+    async def _never_answers(*args: object, **kwargs: object) -> str:
+        on_the_wire.set()
+        await asyncio.Event().wait()
+        raise AssertionError  # the wait above never returns
+
+    mock_repository.send_airco_command.side_effect = _never_answers
+    # The consolidation window is a sleep, and this test's clock is frozen, so
+    # the command would never leave the window it waits in.
+    with patch(
+        "homeassistant.components.mitsubishi_wf_rac.coordinator."
+        "UPDATE_CONSOLIDATION_PERIOD",
+        timedelta(0),
+    ):
+        caller = asyncio.create_task(
+            hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_FAN_MODE,
+                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "auto"},
+                blocking=True,
+            )
+        )
+        await on_the_wire.wait()
+    polls_before = mock_repository.get_aircon_stats.await_count
+
+    # Not _advance(): its async_block_till_done would wait for the command
+    # that is deliberately never answered here.
+    with caplog.at_level(logging.DEBUG, logger=DOMAIN_LOGGER):
+        for _ in range(5):
+            freezer.tick(POLL)
+            async_fire_time_changed(hass)
+            for _ in range(5):
+                await asyncio.sleep(0)
+
+    assert mock_repository.get_aircon_stats.await_count == polls_before
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+    # The line a queued poll leaves behind, about a unit that was never asked.
+    assert "did not answer within" not in caplog.text
+
+    # The entry has to come down before the test does: the command is still on
+    # the wire, and the unload is what cancels the flush carrying it.
+    await hass.config_entries.async_unload(init_integration.entry_id)
+    with suppress(asyncio.CancelledError):
+        await caller
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_repository", "init_integration")
+async def test_an_unreadable_frame_survives_the_polls_that_carry_it(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """The poll delivering a bad frame is itself a success.
 
@@ -436,7 +585,6 @@ async def test_an_unreadable_frame_survives_the_polls_that_carry_it(
     counter could never reach the threshold, and would keep reporting stale
     state as current however long the condition lasted.
     """
-    device = init_integration.runtime_data.device
     decode = RacParser.translate_bytes
 
     def _unreadable(self: RacParser, raw: str) -> Aircon:
@@ -450,7 +598,8 @@ async def test_an_unreadable_frame_survives_the_polls_that_carry_it(
     with patch.object(RacParser, "translate_bytes", _unreadable):
         await _advance(hass, freezer, 3)
 
-    assert device.available
+    # Unknown rather than unavailable: three polls that all answered, and a
+    # frame this entity cannot read is not a unit that stopped talking.
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
 
 
@@ -460,12 +609,7 @@ async def test_an_unexpected_poll_failure_takes_the_entities_with_it(
     mock_repository: AsyncMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """A missed poll is ridden out; a fault is not.
-
-    Only the expected failures leave the coordinator successful, so an
-    entity that reads Device.available alone would keep showing stale state
-    as current after an UpdateFailed.
-    """
+    """A missed poll is ridden out; a fault is not."""
     mock_repository.get_aircon_stats.side_effect = RuntimeError("boom")
 
     await _advance(hass, freezer, 1)
@@ -474,10 +618,39 @@ async def test_an_unexpected_poll_failure_takes_the_entities_with_it(
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
-async def test_a_retried_write_does_not_revert_the_client_it_waited_for(
+@pytest.mark.usefixtures("init_integration")
+async def test_a_reported_failure_ends_when_a_poll_answers_and_not_before(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    aircon_stat: dict[str, Any],
+) -> None:
+    """The routine dropouts must not end an outage they know nothing about.
+
+    A poll missed inside the tolerance is ridden out by handing back the last
+    data - which reports the coordinator successful. Once it is already
+    reporting a failure, that would clear it and put the entity back to
+    available while the unit is still gone, hourly, for as long as the fault
+    lasts.
+    """
+    mock_repository.get_aircon_stats.side_effect = RuntimeError("boom")
+    await _advance(hass, freezer, 1)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_repository.get_aircon_stats.side_effect = WfRacConnectionError("no route")
+    await _advance(hass, freezer, 1)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_repository.get_aircon_stats.side_effect = None
+    mock_repository.get_aircon_stats.return_value = aircon_stat
+    await _advance(hass, freezer, 1)
+
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_a_retried_write_does_not_revert_the_client_it_waited_for(
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """The frame is a full state block, not a delta.
 
@@ -513,10 +686,9 @@ async def test_a_retried_write_does_not_revert_the_client_it_waited_for(
     assert retried.PresetTemp == 27.0
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_a_deadline_that_is_not_a_timestamp_falls_back_too(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """The answer is usable, its deadline is not.
 
@@ -570,7 +742,7 @@ async def test_a_command_issued_during_a_poll_waits_for_what_it_brings(
     polling = asyncio.Event()
     let_the_poll_answer = asyncio.Event()
 
-    async def _poll_in_flight(*args: object, **kwargs: object) -> dict:
+    async def _poll_in_flight(*args: object, **kwargs: object) -> dict[str, Any]:
         polling.set()
         await let_the_poll_answer.wait()
         return fresh
@@ -610,11 +782,11 @@ async def test_a_command_issued_during_a_poll_waits_for_what_it_brings(
     assert sent.PresetTemp == 27.0
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_an_evicted_account_is_reported_once_not_every_minute(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Being dropped from the account table is one outage, not one per poll.
@@ -630,8 +802,6 @@ async def test_an_evicted_account_is_reported_once_not_every_minute(
     await _advance(hass, freezer, 6)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-    outage = [r for r in caplog.records if "is unavailable after" in r.message]
-    assert len(outage) == 1
-    assert outage[0].levelno == logging.INFO
     ours = [r for r in caplog.records if r.name.startswith(DOMAIN_LOGGER)]
-    assert not [r for r in ours if r.levelno >= logging.WARNING]
+    outage = [r for r in ours if r.levelno >= logging.INFO]
+    assert len(outage) == 1

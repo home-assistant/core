@@ -1,6 +1,7 @@
 """Fixtures for the Mitsubishi WF-RAC integration."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -24,13 +25,13 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def aircon_stat() -> dict:
+def aircon_stat() -> dict[str, Any]:
     """Return one getAirconStat response, as the module sends it."""
     return load_json_object_fixture("aircon_stat.json", DOMAIN)
 
 
 @pytest.fixture
-def mock_repository(aircon_stat: dict) -> Generator[AsyncMock]:
+def mock_repository(aircon_stat: dict[str, Any]) -> Generator[AsyncMock]:
     """Patch pywfrac's Repository everywhere the integration builds one.
 
     Both modules import the class by name, so patching the library itself

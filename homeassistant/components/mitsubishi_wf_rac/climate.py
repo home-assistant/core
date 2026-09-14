@@ -19,7 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MitsubishiWfRacConfigEntry
 from .const import (
     DOMAIN,
     FAN_MODE_TRANSLATION,
@@ -38,17 +37,12 @@ from .const import (
     SWING_MODE_TRANSLATION,
     SWING_VERTICAL_AUTO,
 )
-from .coordinator import Device
+from .coordinator import Device, MitsubishiWfRacConfigEntry
 from .entity import WfRacEntity
 
 _LOGGER = logging.getLogger(__name__)
-# Zero, not one, although this platform writes: the serialisation the module
-# needs already lives in the coordinator, which holds a send lock around the
-# request and spaces requests by MIN_TIME_BETWEEN_REQUESTS. A platform
-# semaphore on top of that only stops actions issued together - a scene, an
-# automation step that fans out - from reaching the coordinator's
-# consolidation window together, and those are exactly the ones worth
-# merging into a single frame.
+# Zero although this platform writes: the coordinator serialises and spaces
+# the requests itself, and merges the ones issued together.
 PARALLEL_UPDATES = 0
 
 # The modes whose setpoint the unit actually regulates on. Off and fan-only
@@ -66,6 +60,11 @@ async def async_setup_entry(
     async_add_entities([AircoClimate(device)])
 
 
+def _without_3d_auto(modes: list[str]) -> list[str]:
+    """The mode list a unit gets when it cannot hand both vanes to the unit."""
+    return [mode for mode in modes if mode != SWING_3D_AUTO]
+
+
 class AircoClimate(WfRacEntity, ClimateEntity):
     """Representation of a climate entity."""
 
@@ -79,36 +78,46 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     _attr_swing_modes: list[str] | None = SUPPORT_SWING_MODES
     _attr_swing_horizontal_mode: str | None = SWING_HORIZONTAL_AUTO
     _attr_swing_horizontal_modes: list[str] | None = SUPPORT_SWING_HORIZONTAL_MODES
-    # The setpoint byte is int(PresetTemp / 0.5), which truncates. Without
-    # declaring the step, HA offers 0.1 K and the unit drops the remainder -
-    # 21.4 arrives as 21.0.
+    # The setpoint byte is int(PresetTemp / 0.5), which truncates: without the
+    # step, 21.4 arrives as 21.0.
     _attr_target_temperature_step: float = 0.5
-    # Only filled in when the model reports VacantProperty (see __init__);
-    # ClimateEntity has no class-level default for either of these.
+    # Filled in only for a model that reports VacantProperty (see __init__).
     _attr_preset_modes: list[str] | None = None
     _attr_preset_mode: str | None = None
     _attr_translation_key = "mitsubishi_wf_rac"
-    # The airco itself is the device, and this entity is the device - so it
-    # carries the device name alone rather than a suffix behind it.
+    # This entity is the device, so it carries the device name alone.
     _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, device: Device) -> None:
         """Initialize the climate entity."""
         super().__init__(device)
-        # The domain and platform segments are redundant for the registry,
-        # but this id is already stored in ~1900 installations of the custom
-        # component that share this domain; shortening it would orphan every
-        # entity they have named, hidden or wired into an automation.
+        # Redundant segments, but this id is stored in ~1900 installations of
+        # the custom component: shortening it orphans every named entity.
         # pylint: disable-next=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
         self._attr_unique_id = f"{DOMAIN}-{self._device.airco_id}-climate"
-        # Away is the unit's own Home Leave mode, offered here as the preset a
-        # thermostat card and a voice assistant already know how to ask for.
-        if device.airco.Capabilities.vacant_property:
-            self._attr_supported_features = (
-                SUPPORT_FLAGS | ClimateEntityFeature.PRESET_MODE
-            )
+        capabilities = device.airco.Capabilities
+        features = SUPPORT_FLAGS
+        # Away is the unit's own Home Leave mode, under the name a thermostat
+        # card and a voice assistant already ask for.
+        if capabilities.vacant_property:
+            features |= ClimateEntityFeature.PRESET_MODE
             self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY]
+        # The left/right vane and 3D auto belong to the model line: the
+        # manufacturer's table has both off for the ceiling cassettes, which
+        # have no horizontal vane to aim.
+        if capabilities.wind_direction_lr:
+            features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
+        else:
+            self._attr_swing_horizontal_mode = None
+            self._attr_swing_horizontal_modes = None
+        if not capabilities.entrust:
+            self._attr_swing_modes = _without_3d_auto(SUPPORT_SWING_MODES)
+            if self._attr_swing_horizontal_modes is not None:
+                self._attr_swing_horizontal_modes = _without_3d_auto(
+                    SUPPORT_SWING_HORIZONTAL_MODES
+                )
+        self._attr_supported_features = features
         self._apply_state()
 
     @override
@@ -120,17 +129,10 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     def _min_temp_for_mode(self, hvac_mode: HVACMode) -> float:
         """Minimum setpoint depends on hvac_mode.
 
-        Per Mitsubishi Heavy Industries' official operable table ('21
-        SRK-T-324, models SRK60ZSX-W/A and SRK100ZR-W): indoor unit only
-        accepts 18-30C. Cooling reliably goes lower than that in practice
-        regardless of model, so that override applies unconditionally.
-        Models with the app's PresetTempRange2 capability (`ModelNoType`/
-        `TempItemType` in the app, see pywfrac's capabilities module) go further,
-        per the app's own table (Constants.java TempItemType.getMin/getMax):
-        Auto/Cool/Dry down to 16, Heat down to 10. That 10C heating floor is
-        unconfirmed on real hardware - the plain-setpoint reset to 18C after a
-        power cycle that's documented for the default range was only ever
-        observed on hardware without this capability.
+        The manufacturer's operable table ('21 SRK-T-324) gives 18-30C
+        throughout, but cooling goes lower on every model. PresetTempRange2
+        models go further per the app's own table: Auto/Cool/Dry to 16, Heat
+        to 10 - that heating floor is unconfirmed on hardware.
         """
         if self._device.airco.Capabilities.preset_temp_range_2:
             if hvac_mode == HVACMode.HEAT:
@@ -155,22 +157,12 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     def _setpoint_range_for_mode(
         self, hvac_mode: HVACMode | None
     ) -> tuple[float, float]:
-        """The range a setpoint is held to, for display and before sending.
+        """The range a setpoint is held to before it is sent.
 
-        A regulating mode is held to its own range. Off, fan-only and a mode
-        we could not read have none:
-        the value applies to whichever regulating mode is turned on next, often
-        in the very next step of the same automation. Holding it to the default
-        18C floor there rejects a cooling setpoint the unit takes happily once
-        it is cooling.
-
-        The same reasoning is why min_temp/max_temp advertise the union rather
-        than the current mode's range: climate validates a service call against
-        those two before this entity sees hvac_mode, so a mode-dependent
-        advertised range rejects "cool at 16" while the unit is still heating -
-        the one call that states its mode outright. The per-mode range is
-        applied in async_set_temperature instead, where the target mode is
-        known.
+        A regulating mode is held to its own range; off, fan-only and an
+        unreadable mode get the union, since the value applies to whichever
+        mode comes next. The union is where the advertised range starts too,
+        because climate validates against it before this entity sees hvac_mode.
         """
         if hvac_mode in REGULATING_HVAC_MODES:
             return (
@@ -182,36 +174,49 @@ class AircoClimate(WfRacEntity, ClimateEntity):
             max(self._max_temp_for_mode(mode) for mode in REGULATING_HVAC_MODES),
         )
 
+    def _advertised_range(self) -> tuple[float, float]:
+        """The range HA validates against, and the one the slider offers.
+
+        Wider than that union wherever the away preset is offered: Home Leave
+        runs at 31C cooling and 10C heating, which the unit reports back as
+        its target temperature. They stay reachable through the preset alone -
+        a setpoint sent by hand is still held to its mode's range.
+        """
+        min_temp, max_temp = self._setpoint_range_for_mode(None)
+        if self._attr_preset_modes:
+            return (
+                min(min_temp, HOME_LEAVE_TEMP_HEAT),
+                max(max_temp, HOME_LEAVE_TEMP_COOL),
+            )
+        return (min_temp, max_temp)
+
     @override
     @property
     def min_temp(self) -> float:
         """Return the lowest setpoint any of this unit's modes allows."""
-        return self._setpoint_range_for_mode(None)[0]
+        return self._advertised_range()[0]
 
     @override
     @property
     def max_temp(self) -> float:
         """Return the highest setpoint any of this unit's modes allows."""
-        return self._setpoint_range_for_mode(None)[1]
+        return self._advertised_range()[1]
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         set_temp = kwargs[ATTR_TEMPERATURE]
 
-        # If this call also switches hvac_mode, the minimum must reflect the mode
-        # being switched to, not the (still stale until the next poll) current one.
+        # A call that switches hvac_mode is measured against the mode it
+        # switches to, not the one still reported until the next poll.
         target_hvac_mode = kwargs.get("hvac_mode", self._attr_hvac_mode)
         target_hvac_mode = (
             HVACMode.OFF if target_hvac_mode is None else target_hvac_mode
         )
         min_temp, max_temp = self._setpoint_range_for_mode(target_hvac_mode)
 
-        # Naming the mode is the whole message: the range depends on it, and
-        # an automation that sets a setpoint before switching mode gets
-        # measured against the mode it is leaving. Saying so - and that
-        # hvac_mode belongs in the same call - is the difference between a
-        # rejection and a fix.
+        # The message names the mode, which is what tells an automation that
+        # set the setpoint first why its value was refused.
         if set_temp < min_temp:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -320,11 +325,9 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Enter or leave the unit's Home Leave mode.
 
-        The unit has no single "away" command: it enters the mode when it is
-        given the away target of the direction it is running in, which is why
-        the current hvac_mode decides between them. A unit in auto, dry or
-        fan-only has no such target to send, and guessing the direction would
-        be as likely to fight the unit as to help it.
+        The unit has no single "away" command: it enters the mode on the away
+        target of the direction it is running in, so the current hvac_mode
+        decides. Auto, dry and fan-only have no such target.
         """
         if preset_mode == PRESET_NONE:
             await self._device.async_queue_command(
@@ -367,29 +370,34 @@ class AircoClimate(WfRacEntity, ClimateEntity):
         """Private update attributes."""
         airco = self._device.airco
 
-        # OperationMode keeps reporting the underlying cool/heat mode while the
-        # unit is off, which is what the displayed hvac_mode is derived from.
+        # OperationMode keeps reporting cool/heat while the unit is off.
         mode_from_operation = self._hvac_mode_from_operation
 
         self._attr_target_temperature = airco.PresetTemp
         self._attr_current_temperature = airco.IndoorTemp
-        # Named rather than left to index past the end of the list: the
-        # library says so itself when it could not read the unit's fan step,
-        # and a sixth fan mode here would otherwise turn that marker into a
-        # real one and lose the unknown state without a sound.
+        # Named rather than left to index past the end of the list: a sixth
+        # fan mode here would turn the library's "could not read it" marker
+        # into a real step and lose the unknown state without a sound.
         if airco.AirFlow == AIRFLOW_UNKNOWN:
             raise IndexError("the unit reported a fan step pywfrac cannot read")
         self._attr_fan_mode = list(FAN_MODE_TRANSLATION.keys())[airco.AirFlow]
+        # Only where it is offered: a model line whose table has no 3D auto can
+        # still have the bit set in its frame, and a state that is not in
+        # swing_modes is one the user cannot select back.
+        entrusted = airco.Entrust and SWING_3D_AUTO in (self._attr_swing_modes or ())
         self._attr_swing_mode = (
             SWING_3D_AUTO
-            if airco.Entrust
+            if entrusted
             else list(SWING_MODE_TRANSLATION.keys())[airco.WindDirectionUD]
         )
-        self._attr_swing_horizontal_mode = (
-            SWING_3D_AUTO
-            if airco.Entrust
-            else list(SWING_HORIZONTAL_MODE_TRANSLATION.keys())[airco.WindDirectionLR]
-        )
+        if self.supported_features & ClimateEntityFeature.SWING_HORIZONTAL_MODE:
+            self._attr_swing_horizontal_mode = (
+                SWING_3D_AUTO
+                if entrusted
+                else list(SWING_HORIZONTAL_MODE_TRANSLATION.keys())[
+                    airco.WindDirectionLR
+                ]
+            )
         self._attr_hvac_mode = mode_from_operation
 
         if airco.Operation is False:
@@ -406,17 +414,10 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     def _determine_hvac_action(self, airco: Aircon) -> HVACAction:
         """Determine the current HVAC action from operation mode and state.
 
-        CoolHotJudge reflects what the unit's own AUTO logic is doing. Mind
-        the inversion: the parser reads it as (content[8] & 8) == 0, so the
-        raw bit set means COOLING and the resulting flag is then False -
-        a true CoolHotJudge is HEATING. CompressorRunning
-        (content[9] & 2) distinguishes "unit on" from "compressor actually
-        running" (e.g. setpoint satisfied) - used here so COOL/HEAT/AUTO can
-        report IDLE instead of claiming to cool/heat while the compressor is
-        stopped.
-
-        Only called while the unit is on, and only with an OperationMode of
-        0-4: anything else has already raised in _hvac_mode_from_operation.
+        CoolHotJudge reflects the unit's own AUTO logic and is inverted - the
+        parser reads (content[8] & 8) == 0, so a true CoolHotJudge is HEATING.
+        CompressorRunning separates "on" from "running", so a satisfied
+        setpoint reports IDLE.
         """
         _mode = airco.OperationMode
 

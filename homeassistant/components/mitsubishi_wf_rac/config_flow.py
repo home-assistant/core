@@ -31,6 +31,7 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
 )
+from .coordinator import result_code
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,22 +40,19 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 7
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-    _discovery_info: dict[str, Any] = {}
     DOMAIN = DOMAIN
 
     def __init__(self) -> None:
         """Start a flow with no identifiers generated yet."""
+        self._discovery_info: dict[str, Any] = {}
         self._generated_operator_id: str | None = None
         self._generated_device_id: str | None = None
 
     @override
     def is_matching(self, other_flow: WfRacConfigFlow) -> bool:
         """Return True if two flows are attempting to configure the same device."""
-        # Compare based on unique IDs if available, otherwise compare context data
         if self.unique_id and other_flow.unique_id:
             return self.unique_id == other_flow.unique_id
-        # For flows without unique IDs, consider them non-matching
         return False
 
     def _find_entry_matching(
@@ -81,7 +79,6 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise InvalidHost
 
         if not data.get(CONF_FORCE_UPDATE):
-            # Is this hostname or IP address already configured?
             existing_entry = self._find_entry_matching(
                 CONF_HOST, lambda h: h == data[CONF_HOST]
             )
@@ -100,12 +97,9 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             airco_id = await repository.get_airco_id()
         except (WfRacError, KeyError, TypeError) as query_failed:
-            # A discovery announcement has been seen carrying a port the module
-            # does not serve. The port is fixed in the firmware and not
-            # user-settable, so rather than failing on a value the device
-            # cannot have meant, try the one it always listens on. Only the
-            # announced value is second-guessed - a port the user typed is
-            # taken at face value.
+            # Announcements have been seen carrying a port the module does
+            # not serve, and the port is fixed in the firmware - so try that
+            # one. Only an announced value is second-guessed.
             if not allow_port_fallback or data[CONF_PORT] == DEFAULT_PORT:
                 raise CannotConnect(reason=str(query_failed)) from query_failed
             _LOGGER.warning(
@@ -134,6 +128,15 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not airco_id:
             raise CannotConnect(reason="unknown reason")
 
+        # The airco id is what zeroconf keys on (the module announces itself
+        # as <mac>.local), so setting it here lets a discovery recognise a
+        # hand-added entry and catches a unit reached at a second address.
+        #
+        # Before registering, not after: registering takes one of the module's
+        # four account slots, and only the manufacturer's app frees one.
+        await self.async_set_unique_id(airco_id.lower())
+        self._abort_if_unique_id_configured()
+
         _LOGGER.debug("Registering with airco [%s]", data[CONF_AIRCO_ID])
         try:
             result = await repository.update_account_info(
@@ -143,14 +146,12 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise CannotConnect(
                 reason=str(registration_failed)
             ) from registration_failed
-        if not result:
-            raise CannotConnect(reason="no answer to the registration request")
-        # The answer comes from the module, so a missing key is a connection
-        # problem to report, not an unexpected error to crash the flow on.
-        code = result.get("result")
+        # By here the account slot is spent, so an unreadable result code
+        # belongs in the form as a connection problem, not as a crash.
+        code = result_code(result)
         if code is None:
             raise CannotConnect(reason="registration answered without a result code")
-        if int(code) == 2:
+        if code == 2:
             raise TooManyDevicesRegistered
 
         return data
@@ -160,10 +161,8 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         entry = self._find_entry_matching(CONF_OPERATOR_ID, bool)
         if entry:
             return str(entry.data[CONF_OPERATOR_ID])
-        # Generated once per flow, not once per submission: the module keeps
-        # four account slots, and a registration whose answer was lost has
-        # still taken one. Retrying the form with a fresh id would take
-        # another, and enough retries would leave no slot to set up with.
+        # Once per flow, not per submission: a registration whose answer was
+        # lost has still taken one of the four slots.
         if self._generated_operator_id is None:
             self._generated_operator_id = f"hassio-{str(uuid4())[7:]}"
         return self._generated_operator_id
@@ -199,33 +198,19 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, user_input, allow_port_fallback=allow_port_fallback
                 )
 
-                # The airco id is the unit's own identity, and the one
-                # zeroconf keys on: the module announces itself as
-                # <mac>.local and the airco id is that same MAC. Registering
-                # it here is what lets a discovery recognise a manually added
-                # entry later - and it aborts a unit reached at a second
-                # address, which would otherwise become a second entry whose
-                # entities collide with the first one's.
-                await self.async_set_unique_id(info[CONF_AIRCO_ID].lower())
-                self._abort_if_unique_id_configured()
-
                 data_input = user_input.copy()
-                # Form-only: it decides whether a duplicate host is accepted
-                # while adding, and means nothing to a stored entry.
+                # Form-only: it means nothing to a stored entry.
                 data_input.pop(CONF_FORCE_UPDATE, None)
 
-                # The last four characters of the airco id tell two units
-                # apart and match the label on the module, while the whole id
-                # stays out of the device name and the entity id that people
-                # paste into issue reports.
+                # Enough to tell two units apart, and it matches the label on
+                # the module.
                 return self.async_create_entry(
                     title=f"WF-RAC {info[CONF_AIRCO_ID][-4:]}",
                     data=data_input,
                 )
             except KnownError as error:
-                # Expected outcomes of user input, not faults: the user sees
-                # them in the form, and a stack trace in the log would only
-                # be noise.
+                # Expected outcomes of user input: shown in the form, not
+                # logged with a stack trace.
                 _LOGGER.debug("Create failed: %s", error)
                 errors, placeholders = error.get_errors_and_placeholders(
                     data_schema.schema
@@ -234,19 +219,15 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     {k: str(v) for k, v in placeholders.items()}
                 )
             except AbortFlow:
-                # How the helpers end a step. It is the flow working, not a
-                # fault, and the broad clause below would turn it into an
-                # "unexpected_error" form.
+                # How the helpers end a step - the clause below would turn
+                # it into an "unexpected_error" form.
                 raise
             except Exception:  # pylint: disable=broad-except
-                # Intentionally broad: this is the outermost boundary of the config
-                # flow step, so any bug here should show the user a graceful
-                # "unexpected_error" instead of crashing the flow.
+                # The outermost boundary of the step: a bug here shows an
+                # "unexpected_error" form instead of crashing the flow.
                 _LOGGER.exception("Unexpected exception")
                 errors[CONF_BASE] = "unexpected_error"
 
-        # If there is no user input or there were errors, show the form again, including any errors
-        # that were found with the input.
         return self.async_show_form(
             step_id=step_id,
             data_schema=data_schema,
@@ -268,9 +249,8 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description = {"suggested_value": value}
         if default is None:
             return which(name, description=description)
-        # A suggestion only pre-fills the form: a cleared field leaves the key
-        # out of user_input altogether, and the port is read with []. The schema
-        # default is what keeps it present.
+        # A suggestion only pre-fills: a cleared field leaves the key out of
+        # user_input altogether, and the schema default keeps it present.
         return which(name, description=description, default=default)
 
     async def async_step_discovery_confirm(
@@ -342,15 +322,11 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.port,
         )
 
-        # Lower case on both sides: this id comes from the announced hostname
-        # while every other path takes it from the airconId the unit reports,
-        # and a difference in case would leave discovery unable to recognise
-        # an entry it had matched on before.
+        # Lower case on both sides: this id comes from the hostname and every
+        # other path from the airconId the unit reports.
         await self.async_set_unique_id(node_name.lower())
-        # The address only. A module that moved gets followed; its port is
-        # what setup was configured with, and modules have been seen
-        # announcing 5353 - the mDNS port itself - in the SRV record where the
-        # API port belongs, which would take a working entry offline.
+        # The address only, so a module that moved gets followed: modules have
+        # been seen announcing 5353 where the API port belongs.
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         info = {CONF_HOST: host, CONF_PORT: port}
@@ -369,16 +345,9 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class KnownError(Exception):
     """Base class for errors known to this config flow.
 
-    Deliberately not a HomeAssistantError: none of these ever leaves the flow.
-    Every one is caught here and turned into an entry in the [errors] dict
-    that async_show_form renders from strings.json, so they carry an
-    error_name rather than a translation key.
-
-    [error_name] is the value passed to [errors] in async_show_form, which should match a key
-    under "error" in strings.json
-
-    [applies_to_field] is the name of the field name that contains the error (for
-    async_show_form); if the field doesn't exist in the form CONF_BASE will be used instead.
+    Deliberately not a HomeAssistantError: none of these leaves the flow, so
+    error_name is a key under "error" in strings.json rather than a
+    translation key, and applies_to_field falls back to CONF_BASE.
     """
 
     error_name = "unknown_error"
@@ -394,9 +363,7 @@ class KnownError(Exception):
     ) -> tuple[dict[str, str], dict[str, str]]:
         """Return dicts of errors and description_placeholders, for adding to async_show_form."""
         key = self.applies_to_field
-        # Errors will only be displayed to the user if the key is actually in the form (or
-        # CONF_BASE for a general error), so we'll check the schema (seems weird there
-        # isn't a more efficient way to do this...)
+        # Only a key that is in the form reaches the user, so check it.
         if key not in {k.schema for k in schema}:
             key = CONF_BASE
         return ({key: self.error_name}, self._extra_info or {})

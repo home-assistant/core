@@ -18,6 +18,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.setup import async_setup_component
 
 from . import AIRCO_ID, HOST, PORT
 
@@ -40,9 +41,8 @@ def _discovery_info(
     )
 
 
-async def test_user_flow(
-    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow(hass: HomeAssistant, mock_repository: AsyncMock) -> None:
     """A manually added airco is queried, registered and stored."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -75,12 +75,9 @@ async def test_user_flow(
         (KeyError("airconId"), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_connection_errors(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    side_effect: Exception,
-    error: str,
+    hass: HomeAssistant, mock_repository: AsyncMock, side_effect: Exception, error: str
 ) -> None:
     """An unreachable airco shows the form again, then recovers."""
     mock_repository.get_airco_id.side_effect = side_effect
@@ -102,8 +99,9 @@ async def test_user_flow_connection_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_empty_airco_id(
-    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """A module that answers without an airconId is not usable."""
     mock_repository.get_airco_id.return_value = ""
@@ -119,8 +117,9 @@ async def test_user_flow_empty_airco_id(
     assert result["errors"]["base"] == "cannot_connect"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_account_table_full(
-    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """result:2 from updateAccountInfo means no slot is free."""
     mock_repository.update_account_info.return_value = {"result": 2}
@@ -136,8 +135,9 @@ async def test_user_flow_account_table_full(
     assert result["errors"]["base"] == "too_many_devices_registered"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_registration_answer_without_a_result_code(
-    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """A module that answers registration without a result code is unreachable.
 
@@ -157,8 +157,9 @@ async def test_user_flow_registration_answer_without_a_result_code(
     assert result["errors"]["base"] == "cannot_connect"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_registration_refused(
-    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """An empty registration response is treated as a failed connection."""
     mock_repository.update_account_info.return_value = {}
@@ -174,11 +175,8 @@ async def test_user_flow_registration_refused(
     assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_user_flow_input_validation(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_repository", "mock_setup_entry")
+async def test_user_flow_input_validation(hass: HomeAssistant) -> None:
     """The host is checked before the airco is contacted.
 
     The error lands on its own field rather than on the form as a whole.
@@ -194,11 +192,9 @@ async def test_user_flow_input_validation(
     assert result["errors"][CONF_HOST] == "invalid_host"
 
 
+@pytest.mark.usefixtures("mock_repository", "mock_setup_entry")
 async def test_user_flow_duplicate_host(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """A second entry on the same address is refused unless forced."""
     mock_config_entry.add_to_hass(hass)
@@ -214,10 +210,9 @@ async def test_user_flow_duplicate_host(
     assert result["errors"][CONF_HOST] == "host_already_configured"
 
 
-async def test_zeroconf_flow(
-    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
-    """A discovered airco only needs a name."""
+@pytest.mark.usefixtures("mock_repository", "mock_setup_entry")
+async def test_zeroconf_flow(hass: HomeAssistant) -> None:
+    """A discovered airco only needs its announced port confirmed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info()
     )
@@ -233,8 +228,9 @@ async def test_zeroconf_flow(
     assert result["data"][CONF_AIRCO_ID] == AIRCO_ID
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_flow_port_fallback(
-    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """An announced port the module does not serve falls back to 51443.
 
@@ -255,11 +251,9 @@ async def test_zeroconf_flow_port_fallback(
     assert result["data"][CONF_PORT] == DEFAULT_PORT
 
 
+@pytest.mark.usefixtures("mock_repository", "mock_setup_entry")
 async def test_zeroconf_flow_already_configured(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """A rediscovered airco aborts and refreshes the stored address.
 
@@ -281,11 +275,9 @@ async def test_zeroconf_flow_already_configured(
     assert mock_config_entry.data[CONF_PORT] == PORT
 
 
+@pytest.mark.usefixtures("mock_repository", "mock_setup_entry")
 async def test_a_shouted_hostname_still_matches_the_entry(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """The unique id is one case, whoever supplied it.
 
@@ -306,8 +298,9 @@ async def test_a_shouted_hostname_still_matches_the_entry(
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.9"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_flow_port_fallback_also_fails(
-    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """When 51443 does not answer either, the fallback stops guessing."""
     mock_repository.get_airco_id.side_effect = WfRacConnectionError("no route")
@@ -335,10 +328,10 @@ async def test_zeroconf_flow_port_fallback_also_fails(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_unexpected_error_is_shown_not_raised(
     hass: HomeAssistant,
     mock_repository: AsyncMock,
-    mock_setup_entry: AsyncMock,
     source: str,
     discovery: ZeroconfServiceInfo | None,
     user_input: dict[str, Any],
@@ -357,9 +350,8 @@ async def test_unexpected_error_is_shown_not_raised(
     assert result["errors"]["base"] == "unexpected_error"
 
 
-async def test_two_discovery_flows_for_one_airco_match(
-    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_repository", "mock_setup_entry")
+async def test_two_discovery_flows_for_one_airco_match(hass: HomeAssistant) -> None:
     """A second announcement joins the flow already in progress."""
     first = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info()
@@ -374,11 +366,9 @@ async def test_two_discovery_flows_for_one_airco_match(
     assert second["reason"] == "already_in_progress"
 
 
+@pytest.mark.usefixtures("mock_repository", "mock_setup_entry")
 async def test_zeroconf_flow_host_taken_by_another_airco(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """A new airco announcing an address another entry already uses aborts.
 
@@ -406,7 +396,8 @@ async def test_zeroconf_flow_host_taken_by_another_airco(
     assert result["reason"] == "already_configured"
 
 
-async def test_is_matching_compares_unique_ids(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("hass")
+async def test_is_matching_compares_unique_ids() -> None:
     """Discovery dedup rests on the airco id, and refuses to guess without it."""
     flow = WfRacConfigFlow()
     other = WfRacConfigFlow()
@@ -422,11 +413,9 @@ async def test_is_matching_compares_unique_ids(hass: HomeAssistant) -> None:
     assert flow.is_matching(other) is False
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_refuses_a_unit_that_is_already_configured(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_repository: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """One unit reached at a second address is not a second airco.
 
@@ -445,10 +434,46 @@ async def test_user_flow_refuses_a_unit_that_is_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    # Before the registration, not after it: the module keeps four account
+    # slots and frees none by itself, so one spent by a flow that ends here
+    # would be spent for good.
+    mock_repository.update_account_info.assert_not_awaited()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_a_second_flow_for_one_airco_registers_nothing(
+    hass: HomeAssistant, mock_repository: AsyncMock
+) -> None:
+    """Two flows setting up one unit must not each take an account slot.
+
+    The id they are told apart by is the module's own, so it is only known
+    once the module has answered - which puts the abort in the middle of the
+    flow, after the id has been asked for and before anything is registered.
+    """
+    # The abort comes from the helpers, in the homeassistant domain's own
+    # wording, so that integration has to be loaded for it to be rendered.
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    discovery = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info()
+    )
+    assert discovery["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+    mock_repository.update_account_info.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_repository", "mock_setup_entry")
 async def test_the_port_can_be_cleared_and_falls_back_to_the_fixed_one(
-    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
 ) -> None:
     """A pre-filled value is a suggestion, and a form field can be emptied.
 
@@ -467,8 +492,9 @@ async def test_the_port_can_be_cleared_and_falls_back_to_the_fixed_one(
     assert result["data"][CONF_PORT] == DEFAULT_PORT
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_a_retried_submission_keeps_the_identifiers_it_generated(
-    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """The module has four account slots and never frees one by itself.
 
@@ -499,8 +525,9 @@ async def test_a_retried_submission_keeps_the_identifiers_it_generated(
     assert generate.call_count == 2
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_a_registration_that_cannot_be_reached_says_so(
-    hass: HomeAssistant, mock_repository: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """Registration is a second request, and the unit can go away between them.
 

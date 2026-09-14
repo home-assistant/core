@@ -14,8 +14,11 @@ from homeassistant.components.climate import (
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     ATTR_SWING_HORIZONTAL_MODE,
+    ATTR_SWING_HORIZONTAL_MODES,
     ATTR_SWING_MODE,
+    ATTR_SWING_MODES,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
     PRESET_NONE,
@@ -25,6 +28,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
@@ -35,6 +39,7 @@ from homeassistant.components.mitsubishi_wf_rac.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -71,9 +76,8 @@ async def test_entity(
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
-async def test_state_from_the_module(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_state_from_the_module(hass: HomeAssistant) -> None:
     """The captured frame has the unit off, in cool, set to 22 degrees."""
     state = hass.states.get(ENTITY_ID)
 
@@ -92,12 +96,9 @@ async def test_state_from_the_module(
         (SERVICE_SET_SWING_MODE, {ATTR_SWING_MODE: "highest"}),
     ],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_commands_reach_the_module(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
-    service: str,
-    data: dict,
+    hass: HomeAssistant, mock_repository: AsyncMock, service: str, data: dict
 ) -> None:
     """Every setter ends up as one frame sent to the airco."""
     mock_repository.send_airco_command.reset_mock()
@@ -113,8 +114,9 @@ async def test_commands_reach_the_module(
     mock_repository.send_airco_command.assert_awaited()
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_temperature_outside_the_units_range_is_refused(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
 ) -> None:
     """Refuse a setpoint the unit itself does not offer.
 
@@ -130,9 +132,8 @@ async def test_temperature_outside_the_units_range_is_refused(
         )
 
 
-async def test_set_temperature_without_a_single_setpoint(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_without_a_single_setpoint(hass: HomeAssistant) -> None:
     """A range call has no single setpoint to send.
 
     The unit takes one target temperature, so the high/low pair the climate
@@ -197,9 +198,93 @@ async def test_preset_away_switches_the_unit_to_home_leave(
     assert _sent_command(mock_repository).PresetTemp == away_temp
 
 
-async def test_preset_away_needs_a_direction(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+@pytest.mark.usefixtures("init_integration")
+async def test_the_advertised_range_covers_the_away_setpoints(
+    hass: HomeAssistant,
 ) -> None:
+    """Home Leave runs at setpoints its mode's own table does not cover.
+
+    The unit reports them back as the target temperature like any other, so a
+    range stopping at the table would leave the entity reporting a target
+    outside its own bounds for as long as Home Leave is on.
+    """
+    attributes = hass.states.get(ENTITY_ID).attributes
+
+    # As a pair of bounds rather than two numbers: the snapshot already pins
+    # what this model advertises, and what matters here is that the away
+    # setpoints fall inside it however the range moves.
+    assert attributes[ATTR_MIN_TEMP] <= HOME_LEAVE_TEMP_HEAT
+    assert attributes[ATTR_MAX_TEMP] >= HOME_LEAVE_TEMP_COOL
+
+
+@pytest.mark.usefixtures("mock_repository")
+async def test_a_unit_without_home_leave_advertises_its_modes_alone(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, aircon_stat: dict
+) -> None:
+    """The widening belongs to the preset: no Home Leave, no away setpoints."""
+    airco = RacParser().translate_bytes(aircon_stat["airconStat"])
+    airco.Capabilities = replace(airco.Capabilities, vacant_property=False)
+    with patch.object(RacParser, "translate_bytes", return_value=airco):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    attributes = hass.states.get(ENTITY_ID).attributes
+
+    assert ATTR_PRESET_MODES not in attributes
+    assert attributes[ATTR_MIN_TEMP] == 16.0
+    assert attributes[ATTR_MAX_TEMP] == 30.0
+
+
+@pytest.mark.usefixtures("mock_repository")
+async def test_a_unit_without_a_horizontal_vane_offers_neither_it_nor_3d(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, aircon_stat: dict
+) -> None:
+    """Ceiling cassettes have no left/right vane, and the manufacturer says so.
+
+    3D auto goes with it: it is the unit taking over both vanes, so a model
+    line without the horizontal one cannot be handed them. Offering either
+    would be offering a command the unit cannot carry out.
+    """
+    airco = RacParser().translate_bytes(aircon_stat["airconStat"])
+    airco.Capabilities = replace(
+        airco.Capabilities, wind_direction_lr=False, entrust=False
+    )
+    with patch.object(RacParser, "translate_bytes", return_value=airco):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+
+    assert not state.attributes[ATTR_SUPPORTED_FEATURES] & (
+        ClimateEntityFeature.SWING_HORIZONTAL_MODE
+    )
+    assert ATTR_SWING_HORIZONTAL_MODES not in state.attributes
+    assert SWING_3D_AUTO not in state.attributes[ATTR_SWING_MODES]
+
+
+@pytest.mark.usefixtures("mock_repository")
+async def test_a_unit_that_cannot_be_entrusted_keeps_its_own_vanes(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, aircon_stat: dict
+) -> None:
+    """3D auto is gated on its own capability, not on the horizontal vane."""
+    airco = RacParser().translate_bytes(aircon_stat["airconStat"])
+    airco.Capabilities = replace(airco.Capabilities, entrust=False)
+    with patch.object(RacParser, "translate_bytes", return_value=airco):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    attributes = hass.states.get(ENTITY_ID).attributes
+
+    assert SWING_3D_AUTO not in attributes[ATTR_SWING_MODES]
+    assert SWING_3D_AUTO not in attributes[ATTR_SWING_HORIZONTAL_MODES]
+    assert attributes[ATTR_SWING_HORIZONTAL_MODES]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_preset_away_needs_a_direction(hass: HomeAssistant) -> None:
     """While the unit is off there is no cool-or-heat for Home Leave to mean."""
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
@@ -210,11 +295,8 @@ async def test_preset_away_needs_a_direction(
         )
 
 
-async def test_turn_on_and_off(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_and_off(hass: HomeAssistant, mock_repository: AsyncMock) -> None:
     """Turning off keeps the mode, so turning on again returns to it."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -236,10 +318,9 @@ async def test_turn_on_and_off(
     mock_repository.send_airco_command.assert_awaited()
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_horizontal_swing(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """The left/right louver is its own axis on this hardware."""
     mock_repository.send_airco_command.reset_mock()
@@ -255,10 +336,9 @@ async def test_horizontal_swing(
     mock_repository.send_airco_command.assert_awaited()
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_a_refused_command_reaches_the_caller(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """A blocking action reports a write the unit did not take.
 
@@ -276,10 +356,9 @@ async def test_a_refused_command_reaches_the_caller(
         )
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_commands_issued_together_become_one_frame(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """Two actions issued together still leave as one frame.
 
@@ -348,9 +427,8 @@ async def test_hvac_action_while_running(
     assert hass.states.get(ENTITY_ID).attributes["hvac_action"] is expected
 
 
-async def test_hvac_action_is_off_while_the_unit_is(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_hvac_action_is_off_while_the_unit_is(hass: HomeAssistant) -> None:
     """The captured frame has the unit off."""
     assert hass.states.get(ENTITY_ID).attributes["hvac_action"] is HVACAction.OFF
 
@@ -381,8 +459,9 @@ async def test_every_operation_mode_maps_to_an_hvac_mode(
     assert hass.states.get(ENTITY_ID).state == expected
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_temperature_below_the_units_range_is_refused(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
 ) -> None:
     """The floor depends on the mode, and naming it is the whole message."""
     with pytest.raises(ServiceValidationError):
@@ -398,10 +477,9 @@ async def test_temperature_below_the_units_range_is_refused(
         )
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_setting_temperature_and_mode_together(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """A setpoint measured against the mode the call switches to.
 
@@ -425,10 +503,9 @@ async def test_setting_temperature_and_mode_together(
     mock_repository.send_airco_command.assert_awaited()
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_preset_none_returns_the_unit_to_a_normal_setpoint(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
     """Leaving Home Leave is a setpoint, not a mode of its own."""
     mock_repository.send_airco_command.reset_mock()
@@ -451,12 +528,9 @@ async def test_preset_none_returns_the_unit_to_a_normal_setpoint(
         (SERVICE_SET_SWING_HORIZONTAL_MODE, ATTR_SWING_HORIZONTAL_MODE),
     ],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_3d_auto_hands_both_louvers_to_the_unit(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    init_integration: MockConfigEntry,
-    service: str,
-    attribute: str,
+    hass: HomeAssistant, mock_repository: AsyncMock, service: str, attribute: str
 ) -> None:
     """3D auto is the unit's own vane logic, entrusted from either axis."""
     mock_repository.send_airco_command.reset_mock()
@@ -652,11 +726,9 @@ async def test_a_setpoint_is_measured_against_the_mode_being_switched_to(
         )
 
 
+@pytest.mark.usefixtures("mock_repository")
 async def test_a_frame_the_entity_cannot_read_still_produces_an_entity(
-    hass: HomeAssistant,
-    mock_repository: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    aircon_stat: dict,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, aircon_stat: dict
 ) -> None:
     """An unreadable first frame makes the state unknown, not the entity absent.
 
@@ -697,8 +769,6 @@ async def test_a_setpoint_sent_in_fan_only_is_held_to_every_modes_range(
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.FAN_ONLY
-    assert state.attributes[ATTR_MIN_TEMP] == 16.0
-    assert state.attributes[ATTR_MAX_TEMP] == 30.0
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -709,3 +779,14 @@ async def test_a_setpoint_sent_in_fan_only_is_held_to_every_modes_range(
     await hass.async_block_till_done()
 
     assert _sent_command(mock_repository).PresetTemp == 16.0
+
+    # The away setpoint is inside the advertised range but belongs to the
+    # preset, not to a mode: the union is still what a value sent here is
+    # held to.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: HOME_LEAVE_TEMP_HEAT},
+            blocking=True,
+        )
