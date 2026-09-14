@@ -111,8 +111,10 @@ class MotionEyeMediaProxyView(HomeAssistantView):
             preview=preview == "1",
         )
 
-        return web.Response(body=data, content_type=MIME_TYPE_MAP[kind])
-
+        return web.Response(
+            body=data,
+            content_type="image/jpeg" if preview == "1" else MIME_TYPE_MAP[kind],
+        )
 
 # Hierarchy:
 #
