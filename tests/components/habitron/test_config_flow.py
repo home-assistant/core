@@ -94,39 +94,8 @@ async def test_user_flow_already_configured(
 ) -> None:
     """An identical config aborts with ``already_configured``.
 
-    The user step falls back to ``habitron_{host}`` for the unique id
-    when no discovery response arrives, so we register an existing
-    entry with that same id to trigger the abort path.
-    """
-    MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        unique_id=MOCK_UID,
-        data=MOCK_CONFIG_DATA,
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_CONFIG_DATA,
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_user_flow_recognises_an_ssdp_entry(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """Manually adding the host of an SSDP-configured hub aborts.
-
-    An SSDP entry is keyed by its UDN, so the serial/host unique id derived
-    by the manual step does not match it and ``_abort_if_unique_id_configured``
-    does not fire. The host-based duplicate guard must still abort instead of
-    creating a second entry (and connection) for the same hub.
+    Both the existing entry and the flow key on the hub's MAC, so the plain
+    unique-id check is what fires here.
     """
     MockConfigEntry(
         domain=DOMAIN,
@@ -194,8 +163,8 @@ async def test_user_step_updates_the_stored_host_of_a_known_hub(
 ) -> None:
     """Re-adding a known hub at a new address moves the entry to it.
 
-    The serial identifies the same hub, so aborting without the update would
-    leave the entry pointing at the address it no longer answers on.
+    The MAC identifies the same hub, so aborting without the update would leave
+    the entry pointing at the address it no longer answers on.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1239,14 +1208,6 @@ async def _start_ssdp_flow(
     return result
 
 
-@pytest.mark.parametrize(
-    ("hub_mac", "probed", "expect_id"),
-    [
-        (_HUB_MAC, None, _HUB_MAC),
-        (_HUB_MAC, MOCK_SERIAL, _HUB_MAC),
-    ],
-    ids=["MAC readable", "MAC readable, serial probed"],
-)
 async def test_user_flow_identity_when_nothing_configured(
     hass: HomeAssistant,
     setup_homeassistant: None,
@@ -1254,17 +1215,14 @@ async def test_user_flow_identity_when_nothing_configured(
     mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
-    hub_mac: str | None,
-    probed: str | None,
-    expect_id: str,
 ) -> None:
-    """The manual flow keys on the MAC, falling back only when it cannot read one."""
-    mock_hub_mac.return_value = hub_mac
+    """The manual flow keys on the hub's MAC."""
+    mock_hub_mac.return_value = _HUB_MAC
 
-    result = await _run_user_flow(hass, probed)
+    result = await _run_user_flow(hass, None)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == expect_id
+    assert result["result"].unique_id == _HUB_MAC
 
 
 @pytest.mark.parametrize(
@@ -1318,14 +1276,6 @@ async def test_user_flow_adds_a_second_hub(
     assert result["result"].unique_id == _HUB_MAC
 
 
-@pytest.mark.parametrize(
-    ("hub_mac", "upnp", "expect_id"),
-    [
-        (_HUB_MAC, {ATTR_UPNP_UDN: MOCK_UDN}, _HUB_MAC),
-        (_HUB_MAC, {ATTR_UPNP_SERIAL: MOCK_SERIAL}, _HUB_MAC),
-    ],
-    ids=["MAC readable", "MAC readable, serial advertised"],
-)
 async def test_ssdp_flow_identity_when_nothing_configured(
     hass: HomeAssistant,
     setup_homeassistant: None,
@@ -1333,20 +1283,21 @@ async def test_ssdp_flow_identity_when_nothing_configured(
     mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
-    hub_mac: str | None,
-    upnp: dict[str, str],
-    expect_id: str,
 ) -> None:
-    """Discovery derives the same identity as the manual flow."""
-    mock_hub_mac.return_value = hub_mac
+    """Discovery derives the same identity as the manual flow.
 
-    result = await _start_ssdp_flow(hass, upnp)
+    The advertised UPnP fields play no part in it: ``async_step_ssdp`` takes
+    the address out of the announcement and probes the hub for its MAC.
+    """
+    mock_hub_mac.return_value = _HUB_MAC
+
+    result = await _start_ssdp_flow(hass, {ATTR_UPNP_UDN: MOCK_UDN})
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
     await hass.async_block_till_done()
 
-    assert result["result"].unique_id == expect_id
+    assert result["result"].unique_id == _HUB_MAC
 
 
 @pytest.mark.parametrize(
@@ -1551,3 +1502,66 @@ async def test_user_flow_matches_a_migrated_entry_by_its_address(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.parametrize(
+    ("stored_id", "stored_host", "source"),
+    [
+        # Matched by address, so the entry has to be at the one discovered --
+        # a legacy entry that also moved cannot be recognised at all.
+        (f"habitron_{MOCK_HOST}", MOCK_HOST, config_entries.SOURCE_SSDP),
+        # Matched by MAC, so the address is free to have moved.
+        (MOCK_UID, "192.168.1.99", config_entries.SOURCE_USER),
+    ],
+    ids=["host-matched legacy entry", "MAC-keyed entry re-entered by hand"],
+)
+async def test_a_retrying_entry_is_reloaded_instead_of_waiting_out_its_backoff(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    stored_id: str,
+    stored_host: str,
+    source: str,
+) -> None:
+    """Reaching the hub through a flow must not leave its entry in backoff.
+
+    A data change reaches a loaded entry through the integration's update
+    listener, but that listener is only registered once setup has succeeded.
+    An entry in ``SETUP_RETRY`` has none, and neither of these two paths is
+    covered by the reload ``_abort_if_unique_id_configured`` does for discovery
+    sources -- so without an explicit reload the entry would sit out the rest
+    of its backoff.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=stored_id,
+        data={CONF_HOST: stored_host},
+    )
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, config_entries.ConfigEntryState.SETUP_RETRY)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        if source == config_entries.SOURCE_SSDP:
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": source},
+                data=SsdpServiceInfo(
+                    ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+                    ssdp_st="urn:habitron-com:device:SmartHub:1",
+                    ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+                    upnp={ATTR_UPNP_UDN: MOCK_UDN},
+                ),
+            )
+        else:
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": source}
+            )
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_HOST: MOCK_HOST}
+            )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_reload.assert_called_once_with(entry.entry_id)

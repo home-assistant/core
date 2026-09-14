@@ -256,6 +256,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             is not None
         )
 
+    def _async_schedule_reload_if_retrying(
+        self, entry: config_entries.ConfigEntry
+    ) -> None:
+        """Reload an entry that is sitting out its setup retry backoff.
+
+        A data change reaches a loaded entry through the update listener this
+        integration registers -- but that listener only exists once setup has
+        succeeded. An entry still retrying has none, so it would keep waiting
+        out its backoff on the address it already failed with, even though this
+        flow just reached the hub and corrected it.
+        """
+        if entry.state is config_entries.ConfigEntryState.SETUP_RETRY:
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+
     async def _async_abort_if_host_configured(
         self, host: str
     ) -> config_entries.ConfigFlowResult | None:
@@ -287,6 +301,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             entry,
             data={**entry.data, CONF_HOST: await self._async_stored_host(host)},
         )
+        self._async_schedule_reload_if_retrying(entry)
         return self.async_abort(reason="already_configured")
 
     @override
@@ -410,6 +425,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "no_mac_address"
                 else:
                     await self.async_set_unique_id(unique_id)
+                    # Before the abort below, which raises: a user re-entering a
+                    # hub whose entry is still retrying is asking for it to be
+                    # tried now, and ``_abort_if_unique_id_configured`` only
+                    # bypasses the backoff for discovery sources.
+                    if (
+                        known
+                        := self.hass.config_entries.async_entry_for_domain_unique_id(
+                            DOMAIN, unique_id
+                        )
+                    ) is not None:
+                        self._async_schedule_reload_if_retrying(known)
                     # Re-entering a known hub at a new address updates the
                     # stored host, so a DHCP change does not leave the entry on
                     # the old one. The entry's update listener handles the

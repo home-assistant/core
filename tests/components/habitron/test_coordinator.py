@@ -70,9 +70,6 @@ def mock_refresh():
         yield bus, host
 
 
-# --- the poll ------------------------------------------------------------
-
-
 async def test_update_returns_the_status_crc(hass: HomeAssistant, mock_refresh) -> None:
     """The CRC is the change-detection key the coordinator hands back."""
     bus, host = mock_refresh
@@ -185,9 +182,6 @@ async def test_heartbeat_shape(hass: HomeAssistant) -> None:
     assert coord.always_update is False
 
 
-# --- setup ---------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     ("side_effect", "expected_key"),
     [
@@ -291,9 +285,6 @@ async def test_close_releases_the_client(hass: HomeAssistant) -> None:
     client.close.assert_awaited_once()
 
 
-# --- identity ------------------------------------------------------------
-
-
 async def test_uid_is_the_hubs_own_address(hass: HomeAssistant) -> None:
     """The hub's own LAN address is the identity when it reports one."""
     coord = HbtnCoordinator(hass, MagicMock())
@@ -359,9 +350,6 @@ async def test_base_url_follows_the_deployment(
     coord = _ready(hass)
     coord.hub = _hub(slug=slug)
     assert coord._resolve_base_url() == expected
-
-
-# --- device registration -------------------------------------------------
 
 
 async def test_build_registers_the_device_tree(
@@ -452,9 +440,6 @@ async def test_event_server_is_restored_even_when_the_build_fails(
         await coord._async_connect_and_build()
 
     assert [call.args[0] for call in client.reinit_hub.await_args_list] == [0, 1]
-
-
-# --- host readings -------------------------------------------------------
 
 
 async def test_host_readings_reach_the_hub_members(hass: HomeAssistant) -> None:
