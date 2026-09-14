@@ -6,10 +6,9 @@ opt-in, which "Update Audyssey settings" requires.
 """
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import Any, override
+from typing import Protocol, override
 
 from denonavr import DenonAVR
 from denonavr.exceptions import (
@@ -44,19 +43,21 @@ UNAVAILABLE_ON = (
 )
 
 
-async def async_refresh_status(receiver: DenonAVR) -> None:
+async def async_refresh_status(receiver: DenonAVR, *, force: bool = False) -> None:
     """Refresh general receiver status for every configured zone.
 
     Skips the HTTP poll if Telnet is already healthy and keeping
     everything current - that connection state is shared across zones
     (it lives on the underlying device, not per zone), so it only
     needs checking once regardless of how many zones are enabled.
+    force=True bypasses this, for callers that need a confirmed fresh
+    read regardless (see DenonAvrDataUpdateCoordinator.async_refresh_forced).
 
     A non-connectivity error in one zone doesn't stop the others from
     refreshing - only genuine connectivity errors do (re-raised so the
     caller can still fail the whole update for those, same as before).
     """
-    if receiver.telnet_connected and receiver.telnet_healthy:
+    if not force and receiver.telnet_connected and receiver.telnet_healthy:
         return
     for zone_receiver in receiver.zones.values():
         try:
@@ -105,6 +106,12 @@ async def async_refresh_audyssey(receiver: DenonAVR, *, force: bool = False) -> 
             )
 
 
+class _RefreshFn(Protocol):
+    """Callback signature shared by async_refresh_status/async_refresh_audyssey."""
+
+    async def __call__(self, receiver: DenonAVR, *, force: bool = False) -> None: ...
+
+
 class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinate one aspect of a Denon AVR receiver's state.
 
@@ -123,7 +130,7 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         lock: asyncio.Lock,
         name: str,
         update_interval: timedelta | None,
-        refresh_fn: Callable[[DenonAVR], Coroutine[Any, Any, None]],
+        refresh_fn: _RefreshFn,
     ) -> None:
         """Initialize the coordinator with a shared receiver lock.
 
@@ -150,13 +157,29 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.receiver = receiver
         self.lock = lock
         self._refresh_fn = refresh_fn
+        self._force_next_refresh = False
+
+    async def async_refresh_forced(self) -> None:
+        """Refresh immediately, bypassing the Telnet-healthy skip.
+
+        For explicit on-demand refreshes (e.g. the update_audyssey
+        media player action) where the caller needs a confirmed fresh
+        read even though Telnet already looks healthy - regular
+        polling and post-action confirmations still go through
+        async_refresh()/async_request_refresh(), which keep that skip.
+        """
+        self._force_next_refresh = True
+        try:
+            await self.async_refresh()
+        finally:
+            self._force_next_refresh = False
 
     @override
     async def _async_update_data(self) -> None:
         """Refresh the receiver via this coordinator's refresh_fn."""
         async with self.lock:
             try:
-                await self._refresh_fn(self.receiver)
+                await self._refresh_fn(self.receiver, force=self._force_next_refresh)
             except UNAVAILABLE_ON as err:
                 raise UpdateFailed(
                     f"Error communicating with {self.receiver.name}: {err}"

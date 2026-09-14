@@ -494,10 +494,12 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
         """Get the latest audyssey information from device."""
         # Routed through the coordinator, not the receiver directly, so
         # this correctly updates last_update_success (not just the
-        # receiver's cached values). Undecorated: async_refresh()
+        # receiver's cached values). Undecorated: async_refresh_forced()
         # already acquires the shared lock itself, so decorating this
-        # too would deadlock.
-        await self._audyssey_coordinator.async_refresh()
+        # too would deadlock. Forced: this action needs a confirmed
+        # fresh read even if Telnet already looks healthy, unlike a
+        # regular scheduled poll.
+        await self._audyssey_coordinator.async_refresh_forced()
         if not self._audyssey_coordinator.last_update_success:
             # A connectivity failure here means the receiver itself is
             # unreachable, not just Audyssey-specific - this entity's

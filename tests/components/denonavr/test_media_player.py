@@ -312,6 +312,32 @@ async def test_update_audyssey(hass: HomeAssistant, client: MagicMock) -> None:
     assert client.async_update_audyssey.call_count == calls_before_service + 1
 
 
+async def test_update_audyssey_forces_fetch_with_healthy_telnet(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """The explicit action must still fetch even if Telnet already looks healthy.
+
+    Otherwise this action would silently do nothing whenever Telnet is
+    on and connected - the same Telnet-healthy skip that lets
+    scheduled polls save an HTTP round-trip would swallow this
+    explicit, on-demand one too.
+    """
+    client.telnet_connected = True
+    client.telnet_healthy = True
+    await setup_denonavr(hass, options={"use_telnet": True})
+
+    calls_before_service = client.async_update_audyssey.call_count
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_AUDYSSEY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+    )
+    await hass.async_block_till_done()
+
+    assert client.async_update_audyssey.call_count == calls_before_service + 1
+
+
 async def test_update_audyssey_restores_availability(
     hass: HomeAssistant, client: MagicMock
 ) -> None:

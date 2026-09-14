@@ -311,10 +311,9 @@ async def test_toggling_switch_updates_dependent_select(
     )
     await _wait_for_debounced_refresh(hass)
 
-    # The switch itself updates...
     assert hass.states.get(switch_entity_id).state == "off"
-    # ...and so does the select, from the very same refresh - no
-    # separate poll or explicit cross-notification needed.
+    # The select updates too, from the very same refresh - no separate
+    # poll or explicit cross-notification needed.
     assert hass.states.get(reflevoffset_entity_id).state == STATE_UNAVAILABLE
 
 

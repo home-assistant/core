@@ -287,6 +287,24 @@ async def test_connectivity_error_during_audyssey_action_marks_general_unavailab
     assert entry.runtime_data.coordinator.last_update_success is False
 
 
+async def test_general_failure_marks_audyssey_unavailable_even_while_polling(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A general connectivity failure also marks Audyssey unavailable immediately.
+
+    Even when "Update Audyssey settings" is on and the Audyssey
+    coordinator has its own recurring poll - a receiver-wide failure
+    shouldn't leave Audyssey entities showing available with stale
+    data until that poll happens to notice on its own schedule.
+    """
+    entry = await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
+
+    client.async_update.side_effect = AvrNetworkError("Connection refused", "GET")
+    await entry.runtime_data.coordinator.async_refresh()
+
+    assert entry.runtime_data.audyssey_coordinator.last_update_success is False
+
+
 async def test_dynamic_volume(hass: HomeAssistant, client: MagicMock) -> None:
     """Test the dynamic volume select reads and writes correctly."""
     await setup_denonavr(hass)
@@ -840,11 +858,10 @@ async def test_option_shown_immediately_even_if_refresh_reads_back_stale_value(
     # read, rather than asserting before it's even had a chance to.
     await _wait_for_debounced_refresh(hass)
 
-    # The command was sent...
     client.async_dimmer.assert_awaited_once_with("Dark")
-    # ...and even though the immediate refresh read back the stale
-    # "Bright", the UI shows what was actually picked, not what the
-    # receiver momentarily still reported.
+    # Even though the immediate refresh read back the stale "Bright",
+    # the UI shows what was actually picked, not what the receiver
+    # momentarily still reported.
     assert hass.states.get(entity_id).state == "Dark"
 
     # Once the receiver's value genuinely catches up (e.g. on a later,

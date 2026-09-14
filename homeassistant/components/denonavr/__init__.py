@@ -33,7 +33,6 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import (
-    UNAVAILABLE_ON,
     DenonAvrDataUpdateCoordinator,
     async_refresh_audyssey,
     async_refresh_status,
@@ -132,18 +131,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     if use_telnet and update_audyssey:
         pass
     elif use_telnet:
-        # force=True: Telnet is already connected by now (see above),
-        # but it only pushes Audyssey data on a change, never on
-        # connect, so async_refresh_audyssey's own Telnet-healthy skip
-        # would otherwise leave these entities unavailable indefinitely.
-        async with lock:
-            try:
-                await async_refresh_audyssey(receiver, force=True)
-            except UNAVAILABLE_ON:
-                audyssey_coordinator.last_update_success = False
-            else:
-                audyssey_coordinator.last_update_success = True
-        audyssey_coordinator.async_update_listeners()
+        # Forced: Telnet is already connected by now (see above), but
+        # it only pushes Audyssey data on a change, never on connect,
+        # so the regular Telnet-healthy skip would otherwise leave
+        # these entities unavailable indefinitely.
+        await audyssey_coordinator.async_refresh_forced()
     else:
         await audyssey_coordinator.async_refresh()
 
@@ -151,14 +143,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     def _propagate_connectivity_to_audyssey() -> None:
         """Reflect the status coordinator's connectivity into this one.
 
-        Only when the Audyssey coordinator has no recurring poll of
-        its own (update_interval=None) - otherwise it would never
-        learn the receiver went offline. When it does poll on its own
-        schedule, an unrelated general-status success shouldn't
-        overwrite its own last_update_success - that would mark it
-        recovered without an actual Audyssey refresh confirming it.
+        A failure always propagates - a receiver-wide connectivity
+        error (e.g. from a media_player or general-select command)
+        means Audyssey data can't be trusted either, regardless of its
+        own polling schedule. A recovery only propagates when the
+        Audyssey coordinator has no recurring poll of its own
+        (update_interval=None): when it does poll on its own schedule,
+        an unrelated general-status success shouldn't overwrite its
+        own last_update_success - that would mark it recovered without
+        an actual Audyssey refresh confirming it.
         """
-        if audyssey_coordinator.update_interval is not None:
+        if (
+            coordinator.last_update_success
+            and audyssey_coordinator.update_interval is not None
+        ):
             return
         if audyssey_coordinator.last_update_success != coordinator.last_update_success:
             audyssey_coordinator.last_update_success = coordinator.last_update_success
