@@ -128,6 +128,7 @@ async def test_form(
     assert result["result"].unique_id is None
 
     assert len(mock_setup_entry.mock_calls) == 1
+    mock_mcp_client.return_value.initialize.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -341,7 +342,9 @@ async def perform_oauth_flow(
     assert result["url"] == (
         f"{authorize_url}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={OAUTH_CALLBACK_URL}"
-        f"&state={state}{scope_param}"
+        f"&state={state}"
+        # Asked for so the server hands back a refresh token
+        f"&access_type=offline&prompt=consent{scope_param}"
     )
 
     client = await hass_client_no_auth()

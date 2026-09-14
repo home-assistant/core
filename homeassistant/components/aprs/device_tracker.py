@@ -7,7 +7,7 @@ from typing import Any, override
 import aprslib
 from aprslib import ConnectionError as AprsConnectionError, LoginError
 import geopy.distance
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
@@ -53,11 +53,13 @@ MSG_FORMATS = ["compressed", "uncompressed", "mic-e", "object"]
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_CALLSIGNS): cv.ensure_list,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(float),
+        probatio.Required(CONF_CALLSIGNS): cv.ensure_list,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): probatio.Coerce(
+            float
+        ),
     }
 )
 
