@@ -10,7 +10,7 @@ import pathlib
 from typing import TYPE_CHECKING, Any, Final, override
 from urllib.parse import urlparse
 
-import voluptuous as vol
+import probatio
 from webrtc_models import RTCConfiguration, RTCIceServer
 import yarl
 
@@ -112,7 +112,7 @@ def _no_duplicate_auth_provider(
     for config in configs:
         key = (config[CONF_TYPE], config.get(CONF_ID))
         if key in config_keys:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Duplicate auth provider {config[CONF_TYPE]} found. "
                 "Please add unique IDs "
                 "if you want to have the same auth provider twice"
@@ -135,7 +135,7 @@ def _no_duplicate_auth_mfa_module(
     for config in configs:
         key = config.get(CONF_ID, config[CONF_TYPE])
         if key in config_keys:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Duplicate mfa module {config[CONF_TYPE]} found. "
                 "Please add unique IDs "
                 "if you want to have the same mfa module twice"
@@ -158,29 +158,31 @@ def _filter_bad_internal_external_urls(conf: dict) -> dict:
 
 
 # Schema for all packages element
-_PACKAGES_CONFIG_SCHEMA = vol.Schema({cv.string: vol.Any(dict, list)})
+_PACKAGES_CONFIG_SCHEMA = probatio.Schema({cv.string: probatio.Any(dict, list)})
 
 # Schema for individual package definition
-_PACKAGE_DEFINITION_SCHEMA = vol.Schema({cv.string: vol.Any(dict, list, None)})
-
-_CUSTOMIZE_DICT_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-        vol.Optional(ATTR_HIDDEN): cv.boolean,
-        vol.Optional(ATTR_ASSUMED_STATE): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
+_PACKAGE_DEFINITION_SCHEMA = probatio.Schema(
+    {cv.string: probatio.Any(dict, list, None)}
 )
 
-_CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
+_CUSTOMIZE_DICT_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_CUSTOMIZE, default={}): vol.Schema(
+        probatio.Optional(ATTR_FRIENDLY_NAME): cv.string,
+        probatio.Optional(ATTR_HIDDEN): cv.boolean,
+        probatio.Optional(ATTR_ASSUMED_STATE): cv.boolean,
+    },
+    extra=probatio.ALLOW_EXTRA,
+)
+
+_CUSTOMIZE_CONFIG_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(CONF_CUSTOMIZE, default={}): probatio.Schema(
             {cv.entity_id: _CUSTOMIZE_DICT_SCHEMA}
         ),
-        vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}): vol.Schema(
+        probatio.Optional(CONF_CUSTOMIZE_DOMAIN, default={}): probatio.Schema(
             {cv.string: _CUSTOMIZE_DICT_SCHEMA}
         ),
-        vol.Optional(CONF_CUSTOMIZE_GLOB, default={}): vol.Schema(
+        probatio.Optional(CONF_CUSTOMIZE_GLOB, default={}): probatio.Schema(
             {cv.string: _CUSTOMIZE_DICT_SCHEMA}
         ),
     }
@@ -243,8 +245,8 @@ def _raise_issue_if_no_country(hass: HomeAssistant, country: str | None) -> None
 def _validate_currency(data: Any) -> Any:
     try:
         return cv.currency(data)
-    except vol.InInvalid:
-        with suppress(vol.InInvalid):
+    except probatio.InInvalid:
+        with suppress(probatio.InInvalid):
             return cv.historic_currency(data)
         raise
 
@@ -255,43 +257,43 @@ def validate_stun_or_turn_url(value: Any) -> str:
     url = urlparse(url_in)
 
     if url.scheme not in ("stun", "stuns", "turn", "turns"):
-        raise vol.Invalid("invalid url")
+        raise probatio.Invalid("invalid url")
     return url_in
 
 
-CORE_CONFIG_SCHEMA = vol.All(
+CORE_CONFIG_SCHEMA = probatio.All(
     _CUSTOMIZE_CONFIG_SCHEMA.extend(
         {
-            CONF_NAME: vol.Coerce(str),
+            CONF_NAME: probatio.Coerce(str),
             CONF_LATITUDE: cv.latitude,
             CONF_LONGITUDE: cv.longitude,
-            CONF_ELEVATION: vol.Coerce(int),
+            CONF_ELEVATION: probatio.Coerce(int),
             CONF_RADIUS: cv.positive_int,
-            vol.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-            CONF_UNIT_SYSTEM: vol.Any(
+            probatio.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
+            CONF_UNIT_SYSTEM: probatio.Any(
                 _CONF_UNIT_SYSTEM_METRIC,
                 _CONF_UNIT_SYSTEM_US_CUSTOMARY,
                 _CONF_UNIT_SYSTEM_IMPERIAL,
             ),
             CONF_TIME_ZONE: cv.time_zone,
-            vol.Optional(CONF_INTERNAL_URL): cv.url,
-            vol.Optional(CONF_EXTERNAL_URL): cv.url,
-            vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
-                cv.ensure_list, [vol.IsDir()]
+            probatio.Optional(CONF_INTERNAL_URL): cv.url,
+            probatio.Optional(CONF_EXTERNAL_URL): cv.url,
+            probatio.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): probatio.All(
+                cv.ensure_list, [probatio.IsDir()]
             ),
-            vol.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
-                cv.ensure_list, [vol.IsDir()]
+            probatio.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): probatio.All(
+                cv.ensure_list, [probatio.IsDir()]
             ),
-            vol.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): vol.All(
+            probatio.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): probatio.All(
                 cv.ensure_list, [cv.url]
             ),
-            vol.Optional(CONF_PACKAGES, default={}): _PACKAGES_CONFIG_SCHEMA,
-            vol.Optional(CONF_AUTH_PROVIDERS): vol.All(
+            probatio.Optional(CONF_PACKAGES, default={}): _PACKAGES_CONFIG_SCHEMA,
+            probatio.Optional(CONF_AUTH_PROVIDERS): probatio.All(
                 cv.ensure_list,
                 [
                     auth_providers.AUTH_PROVIDER_SCHEMA.extend(
                         {
-                            CONF_TYPE: vol.NotIn(
+                            CONF_TYPE: probatio.NotIn(
                                 ["insecure_example"],
                                 (
                                     "The insecure_example auth provider"
@@ -303,12 +305,12 @@ CORE_CONFIG_SCHEMA = vol.All(
                 ],
                 _no_duplicate_auth_provider,
             ),
-            vol.Optional(CONF_AUTH_MFA_MODULES): vol.All(
+            probatio.Optional(CONF_AUTH_MFA_MODULES): probatio.All(
                 cv.ensure_list,
                 [
                     auth_mfa_modules.MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
                         {
-                            CONF_TYPE: vol.NotIn(
+                            CONF_TYPE: probatio.NotIn(
                                 ["insecure_example"],
                                 "The insecure_example mfa module is for testing only.",
                             )
@@ -317,24 +319,26 @@ CORE_CONFIG_SCHEMA = vol.All(
                 ],
                 _no_duplicate_auth_mfa_module,
             ),
-            vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
-            vol.Remove(CONF_LEGACY_TEMPLATES): cv.boolean,
-            vol.Optional(CONF_CURRENCY): _validate_currency,
-            vol.Optional(CONF_COUNTRY): cv.country,
-            vol.Optional(CONF_LANGUAGE): cv.language,
-            vol.Optional(CONF_DEBUG): cv.boolean,
-            vol.Optional(CONF_WEBRTC): vol.Schema(
+            probatio.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(
+                probatio.IsDir()
+            ),
+            probatio.Remove(CONF_LEGACY_TEMPLATES): cv.boolean,
+            probatio.Optional(CONF_CURRENCY): _validate_currency,
+            probatio.Optional(CONF_COUNTRY): cv.country,
+            probatio.Optional(CONF_LANGUAGE): cv.language,
+            probatio.Optional(CONF_DEBUG): cv.boolean,
+            probatio.Optional(CONF_WEBRTC): probatio.Schema(
                 {
-                    vol.Required(CONF_ICE_SERVERS): vol.All(
+                    probatio.Required(CONF_ICE_SERVERS): probatio.All(
                         cv.ensure_list,
                         [
-                            vol.Schema(
+                            probatio.Schema(
                                 {
-                                    vol.Required(CONF_URL): vol.All(
+                                    probatio.Required(CONF_URL): probatio.All(
                                         cv.ensure_list, [validate_stun_or_turn_url]
                                     ),
-                                    vol.Optional(CONF_USERNAME): cv.string,
-                                    vol.Optional(CONF_CREDENTIAL): cv.string,
+                                    probatio.Optional(CONF_USERNAME): cv.string,
+                                    probatio.Optional(CONF_CREDENTIAL): cv.string,
                                 }
                             )
                         ],
@@ -352,7 +356,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     This method is a coroutine.
     """
-    # CORE_CONFIG_SCHEMA is not async safe since it uses vol.IsDir
+    # CORE_CONFIG_SCHEMA is not async safe since it uses probatio.IsDir
     # so we need to run it in an executor job.
     config = await hass.async_add_executor_job(CORE_CONFIG_SCHEMA, config)
 
@@ -469,7 +473,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
         try:
             pkg_cust = _CUSTOMIZE_CONFIG_SCHEMA(pkg_cust)
-        except vol.Invalid:
+        except probatio.Invalid:
             _LOGGER.warning("Package %s contains invalid customize", name)
             continue
 
@@ -884,7 +888,7 @@ class Config:
                             "language" in owner_store.data
                             and "language" in owner_store.data["language"]
                         ):
-                            with suppress(vol.InInvalid):
+                            with suppress(probatio.InInvalid):
                                 data["language"] = cv.language(
                                     owner_store.data["language"]["language"]
                                 )

@@ -4,7 +4,7 @@ from copy import deepcopy
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.components.rest import create_rest_data_from_config
@@ -82,19 +82,19 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-RESOURCE_SETUP = vol.Schema(
+RESOURCE_SETUP = probatio.Schema(
     {
-        vol.Required(CONF_RESOURCE): TextSelector(
+        probatio.Required(CONF_RESOURCE): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): SelectSelector(
+        probatio.Optional(CONF_METHOD, default=DEFAULT_METHOD): SelectSelector(
             SelectSelectorConfig(options=METHODS, mode=SelectSelectorMode.DROPDOWN)
         ),
-        vol.Optional(CONF_PAYLOAD): ObjectSelector(),
-        vol.Required(CONF_AUTH): data_entry_flow.section(
-            vol.Schema(
+        probatio.Optional(CONF_PAYLOAD): ObjectSelector(),
+        probatio.Required(CONF_AUTH): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_AUTHENTICATION): SelectSelector(
+                    probatio.Optional(CONF_AUTHENTICATION): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 HTTP_BASIC_AUTHENTICATION,
@@ -103,12 +103,12 @@ RESOURCE_SETUP = vol.Schema(
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
-                    vol.Optional(CONF_USERNAME): TextSelector(
+                    probatio.Optional(CONF_USERNAME): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.TEXT, autocomplete="username"
                         )
                     ),
-                    vol.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -118,17 +118,19 @@ RESOURCE_SETUP = vol.Schema(
             ),
             data_entry_flow.SectionConfig(collapsed=True),
         ),
-        vol.Required(CONF_ADDITIONAL): data_entry_flow.section(
-            vol.Schema(
+        probatio.Required(CONF_ADDITIONAL): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_HEADERS): ObjectSelector(),
-                    vol.Optional(
+                    probatio.Optional(CONF_HEADERS): ObjectSelector(),
+                    probatio.Optional(
                         CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
                     ): BooleanSelector(),
-                    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): NumberSelector(
+                    probatio.Optional(
+                        CONF_TIMEOUT, default=DEFAULT_TIMEOUT
+                    ): NumberSelector(
                         NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ENCODING, default=DEFAULT_ENCODING
                     ): TextSelector(),
                 }
@@ -138,26 +140,26 @@ RESOURCE_SETUP = vol.Schema(
     }
 )
 
-SENSOR_SETTINGS = vol.Schema(
+SENSOR_SETTINGS = probatio.Schema(
     {
-        vol.Required(CONF_SELECT): TextSelector(),
-        vol.Optional(CONF_INDEX, default=0): vol.All(
+        probatio.Required(CONF_SELECT): TextSelector(),
+        probatio.Optional(CONF_INDEX, default=0): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Required(CONF_ADDITIONAL): data_entry_flow.section(
-            vol.Schema(
+        probatio.Required(CONF_ADDITIONAL): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_ATTRIBUTE): TextSelector(),
-                    vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
-                    vol.Optional(CONF_AVAILABILITY): TemplateSelector(),
-                    vol.Optional(CONF_DEVICE_CLASS): DeviceClassSelector(
+                    probatio.Optional(CONF_ATTRIBUTE): TextSelector(),
+                    probatio.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
+                    probatio.Optional(CONF_AVAILABILITY): TemplateSelector(),
+                    probatio.Optional(CONF_DEVICE_CLASS): DeviceClassSelector(
                         DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
-                    vol.Optional(CONF_STATE_CLASS): StateClassSelector(),
-                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
+                    probatio.Optional(CONF_STATE_CLASS): StateClassSelector(),
+                    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
                         SelectSelectorConfig(
                             options=[cls.value for cls in UnitOfTemperature],
                             custom_value=True,
@@ -172,10 +174,10 @@ SENSOR_SETTINGS = vol.Schema(
         ),
     }
 )
-SENSOR_SETUP = vol.Schema(
+SENSOR_SETUP = probatio.Schema(
     # Name field is no longer allowed in config flow schemas
     # pylint: disable-next=home-assistant-config-flow-name-field
-    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector()}
+    {probatio.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector()}
 ).extend(SENSOR_SETTINGS.schema)
 
 

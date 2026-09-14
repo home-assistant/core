@@ -265,16 +265,41 @@ async def test_setup_entry_retries_on_bypass_temperature_failure(
     assert mock_config_entry.error_reason_translation_placeholders is None
 
 
-async def test_empty_bypass_temperature_targets_are_retried(
+@pytest.mark.parametrize(
+    ("initial_zone_ids", "initial_missing_entity_ids"),
+    [
+        pytest.param(
+            frozenset(),
+            (
+                "number.living_bypass_target_1",
+                "number.living_bypass_target_2",
+            ),
+            id="empty",
+        ),
+        pytest.param(
+            frozenset({2}),
+            ("number.living_bypass_target_1",),
+            id="zone_1_missing",
+        ),
+    ],
+)
+async def test_bypass_temperature_targets_are_retried(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
+    initial_zone_ids: frozenset[int],
+    initial_missing_entity_ids: tuple[str, ...],
 ) -> None:
-    """Test empty bypass targets are retried and can later create entities."""
+    """Test missing bypass targets are retried and create number entities."""
+    initial_targets = {
+        zone_id: target
+        for zone_id, target in mock_bypass_supply_temperature_targets.items()
+        if zone_id in initial_zone_ids
+    }
     mock_duco_client.async_get_bypass_supply_temperature_targets.side_effect = [
-        {},
+        initial_targets,
         mock_bypass_supply_temperature_targets.copy(),
     ]
     mock_config_entry.add_to_hass(hass)
@@ -283,45 +308,17 @@ async def test_empty_bypass_temperature_targets_are_retried(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.get("number.living_bypass_target_1") is None
-    assert hass.states.get("number.living_bypass_target_2") is None
+    for entity_id in initial_missing_entity_ids:
+        assert hass.states.get(entity_id) is None
     mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
 
     await async_fire_coordinator_update(hass, freezer)
 
     assert mock_duco_client.async_get_bypass_supply_temperature_targets.await_count == 2
-    assert hass.states.get("number.living_bypass_target_1") is not None
-    assert hass.states.get("number.living_bypass_target_2") is not None
-
-
-async def test_missing_bypass_temperature_targets_are_retried(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
-    mock_config_entry: MockConfigEntry,
-    mock_duco_client: AsyncMock,
-) -> None:
-    """Test missing bypass targets are retried and can later create entities."""
-    targets_without_zone_1 = {
-        k: v for k, v in mock_bypass_supply_temperature_targets.items() if k != 1
-    }
-    mock_duco_client.async_get_bypass_supply_temperature_targets.side_effect = [
-        targets_without_zone_1,
-        mock_bypass_supply_temperature_targets.copy(),
-    ]
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.get("number.living_bypass_target_1") is None
-
-    await async_fire_coordinator_update(hass, freezer)
-
     state = hass.states.get("number.living_bypass_target_1")
     assert state is not None
     assert state.state == "20.0"
+    assert hass.states.get("number.living_bypass_target_2") is not None
 
 
 async def test_setup_entry_ignores_node_name_config_failures(

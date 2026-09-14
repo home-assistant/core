@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -162,3 +163,50 @@ async def test_service_after_failed_reload_raises(
         await hass.services.async_call(DOMAIN, service, data, blocking=True)
 
     assert err.value.translation_key == "not_loaded"
+
+
+TEST_HUB_A = "hub_a"
+TEST_HUB_B = "hub_b"
+
+
+def _two_hub_config() -> dict:
+    """Return a config with two hubs, each exposing one sensor."""
+    return {
+        DOMAIN: [
+            {
+                CONF_NAME: name,
+                CONF_TYPE: "tcp",
+                CONF_HOST: "modbusHost",
+                CONF_PORT: port,
+                CONF_SENSORS: [{CONF_NAME: f"sensor_{name}", CONF_ADDRESS: 1}],
+            }
+            for name, port in ((TEST_HUB_A, 5501), (TEST_HUB_B, 5502))
+        ]
+    }
+
+
+@pytest.mark.usefixtures("mock_pymodbus")
+async def test_stop_only_disables_the_selected_hub(hass: HomeAssistant) -> None:
+    """Test stopping one hub leaves the other hub's entities alone."""
+    assert await async_setup_component(hass, DOMAIN, _two_hub_config())
+    await hass.async_block_till_done()
+
+    # async_disable only flips availability, it does not write the state, so the
+    # entity objects rather than the state machine show the effect.
+    entities = {
+        entity.entity_id: entity
+        for platform in async_get_platforms(hass, DOMAIN)
+        for entity in platform.entities.values()
+    }
+    entity_a = entities[f"sensor.sensor_{TEST_HUB_A}"]
+    entity_b = entities[f"sensor.sensor_{TEST_HUB_B}"]
+    assert entity_a.available
+    assert entity_b.available
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_STOP, {ATTR_HUB: TEST_HUB_A}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert not entity_a.available
+    assert entity_b.available
