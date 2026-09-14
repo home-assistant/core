@@ -99,7 +99,8 @@ class UnmappedEnumValueFlow(RepairsFlow):
     ) -> RepairsFlowResult:
         """Handle the ignore step of a fix flow."""
         issue_reg = ir.async_get(self.hass)
-        issue_reg.async_ignore(DOMAIN, self._issue_id, True)
+        if issue_reg.async_get_issue(DOMAIN, self._issue_id):
+            issue_reg.async_ignore(DOMAIN, self._issue_id, True)
         return self.async_abort(
             reason="issue_ignored",
             description_placeholders=self.description_placeholders,

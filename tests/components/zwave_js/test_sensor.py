@@ -1388,7 +1388,7 @@ async def test_energy_production_sensors(
 
 
 @pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
-async def test_unmapped_enum_value_raises_repair(
+async def test_unmapped_enum_value_creates_repair(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,

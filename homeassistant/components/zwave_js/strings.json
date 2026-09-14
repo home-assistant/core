@@ -526,7 +526,7 @@
         },
         "step": {
           "init": {
-            "description": "{device_name} reported a sensor value ({raw_value}) on {entity_id} that is not in the list of known states from its Z-Wave interview. This can happen when the device interview was incomplete or had a corrupted exchange, or when the device firmware reports values that were not declared during setup.\n\nRe-interviewing the device will refresh its metadata and should resolve the issue. The re-interview takes place in the background.\n\nNote: Battery-powered sleeping devices need to be woken up during re-interview for it to work. How to wake up the device is device-specific and is normally explained in the device manual.",
+            "description": "{device_name} reported a sensor value ({raw_value}) on {entity_id} that is not in the list of known states from its Z-Wave interview. The sensor will show as unknown until the metadata is refreshed.\n\nThis can happen when the device interview was incomplete or had a corrupted exchange, or when the device firmware reports values that were not declared during setup.\n\nRe-interviewing the device will refresh its metadata and should resolve the issue. The re-interview takes place in the background.\n\nNote: Battery-powered sleeping devices need to be woken up during re-interview for it to work. How to wake up the device is device-specific and is normally explained in the device manual.",
             "menu_options": {
               "confirm": "Re-interview device",
               "ignore": "Ignore"
