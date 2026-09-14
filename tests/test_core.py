@@ -14,9 +14,9 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
 from pytest_unordered import unordered
-import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.const import (
@@ -2205,7 +2205,7 @@ async def test_service_call_event_contains_original_data(hass: HomeAssistant) ->
     events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
     calls = async_mock_service(
-        hass, "test", "service", vol.Schema({"number": vol.Coerce(int)})
+        hass, "test", "service", probatio.Schema({"number": probatio.Coerce(int)})
     )
 
     context = ha.Context()

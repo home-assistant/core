@@ -124,11 +124,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "airthings": {"airthings-cloud": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
     "aseko_pool_live": {"gql": {"backoff"}},
-    "blackbird": {
-        # https://github.com/koolsb/pyblackbird/issues/12
-        # pyblackbird > pyserial-asyncio
-        "pyblackbird": {"pyserial-asyncio"}
-    },
     "coinbase": {"coinbase-advanced-py": {"backoff"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
@@ -169,7 +164,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "homewizard": {"python-homewizard-energy": {"async-timeout", "backoff"}},
     "hydrawise": {"gql": {"backoff"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
-    "ipp": {"pyipp": {"backoff"}},
     "iqvia": {"pyiqvia": {"backoff"}},
     "ista_ecotrend": {"pyecotrend-ista": {"dataclasses-json"}},
     "kef": {"aiokef": {"async-timeout"}},

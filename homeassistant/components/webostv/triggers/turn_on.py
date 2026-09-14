@@ -3,7 +3,7 @@
 from functools import partial
 from typing import TYPE_CHECKING, Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -43,23 +43,23 @@ from ..helpers import (
 # Stored in device automations as the trigger type; must stay stable
 PLATFORM_TYPE = f"{DOMAIN}.turn_on"
 
-_TRIGGER_SCHEMA = vol.Schema(
+_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Required(CONF_TARGET): cv.TARGET_FIELDS,
         # The trigger has no options, but the editor sends an empty options dict
-        vol.Required(CONF_OPTIONS, default={}): {},
+        probatio.Required(CONF_OPTIONS, default={}): {},
     }
 )
 
 # Legacy trigger used top-level entity_id/device_id options
-_LEGACY_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
-    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+_LEGACY_OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
+    probatio.Optional(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+    probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 }
 
-_LEGACY_TRIGGER_SCHEMA = vol.Schema(
+_LEGACY_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS): vol.All(
+        probatio.Required(CONF_OPTIONS): probatio.All(
             _LEGACY_OPTIONS_SCHEMA_DICT,
             cv.has_at_least_one_key(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
         )

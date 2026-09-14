@@ -7,7 +7,7 @@ from homematicip.async_home import AsyncHome
 from homematicip.base.helpers import handle_config
 from homematicip.device import SwitchMeasuring
 from homematicip.group import HeatingGroup
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -57,63 +57,79 @@ HMIPC_SERVICES = [
     SERVICE_SET_HOME_COOLING_MODE,
 ]
 
-SCHEMA_ACTIVATE_ECO_MODE_WITH_DURATION = vol.Schema(
+SCHEMA_ACTIVATE_ECO_MODE_WITH_DURATION = probatio.Schema(
     {
-        vol.Required(ATTR_DURATION): cv.positive_int,
-        vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24)),
-    }
-)
-
-SCHEMA_ACTIVATE_ECO_MODE_WITH_PERIOD = vol.Schema(
-    {
-        vol.Required(ATTR_ENDTIME): cv.datetime,
-        vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24)),
-    }
-)
-
-SCHEMA_ACTIVATE_VACATION = vol.Schema(
-    {
-        vol.Required(ATTR_ENDTIME): cv.datetime,
-        vol.Required(ATTR_TEMPERATURE, default=18.0): vol.All(
-            vol.Coerce(float), vol.Range(min=0, max=55)
+        probatio.Required(ATTR_DURATION): cv.positive_int,
+        probatio.Optional(ATTR_ACCESSPOINT_ID): probatio.All(
+            str, probatio.Length(min=24, max=24)
         ),
-        vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24)),
     }
 )
 
-SCHEMA_DEACTIVATE_ECO_MODE = vol.Schema(
-    {vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24))}
-)
-
-SCHEMA_DEACTIVATE_VACATION = vol.Schema(
-    {vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24))}
-)
-
-SCHEMA_SET_ACTIVE_CLIMATE_PROFILE = vol.Schema(
+SCHEMA_ACTIVATE_ECO_MODE_WITH_PERIOD = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): comp_entity_ids,
-        vol.Required(ATTR_CLIMATE_PROFILE_INDEX): cv.positive_int,
+        probatio.Required(ATTR_ENDTIME): cv.datetime,
+        probatio.Optional(ATTR_ACCESSPOINT_ID): probatio.All(
+            str, probatio.Length(min=24, max=24)
+        ),
     }
 )
 
-SCHEMA_DUMP_HAP_CONFIG = vol.Schema(
+SCHEMA_ACTIVATE_VACATION = probatio.Schema(
     {
-        vol.Optional(ATTR_CONFIG_OUTPUT_PATH): cv.string,
-        vol.Optional(
+        probatio.Required(ATTR_ENDTIME): cv.datetime,
+        probatio.Required(ATTR_TEMPERATURE, default=18.0): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0, max=55)
+        ),
+        probatio.Optional(ATTR_ACCESSPOINT_ID): probatio.All(
+            str, probatio.Length(min=24, max=24)
+        ),
+    }
+)
+
+SCHEMA_DEACTIVATE_ECO_MODE = probatio.Schema(
+    {
+        probatio.Optional(ATTR_ACCESSPOINT_ID): probatio.All(
+            str, probatio.Length(min=24, max=24)
+        )
+    }
+)
+
+SCHEMA_DEACTIVATE_VACATION = probatio.Schema(
+    {
+        probatio.Optional(ATTR_ACCESSPOINT_ID): probatio.All(
+            str, probatio.Length(min=24, max=24)
+        )
+    }
+)
+
+SCHEMA_SET_ACTIVE_CLIMATE_PROFILE = probatio.Schema(
+    {
+        probatio.Required(ATTR_ENTITY_ID): comp_entity_ids,
+        probatio.Required(ATTR_CLIMATE_PROFILE_INDEX): cv.positive_int,
+    }
+)
+
+SCHEMA_DUMP_HAP_CONFIG = probatio.Schema(
+    {
+        probatio.Optional(ATTR_CONFIG_OUTPUT_PATH): cv.string,
+        probatio.Optional(
             ATTR_CONFIG_OUTPUT_FILE_PREFIX, default=DEFAULT_CONFIG_FILE_PREFIX
         ): cv.string,
-        vol.Optional(ATTR_ANONYMIZE, default=True): cv.boolean,
+        probatio.Optional(ATTR_ANONYMIZE, default=True): cv.boolean,
     }
 )
 
-SCHEMA_RESET_ENERGY_COUNTER = vol.Schema(
-    {vol.Required(ATTR_ENTITY_ID): comp_entity_ids}
+SCHEMA_RESET_ENERGY_COUNTER = probatio.Schema(
+    {probatio.Required(ATTR_ENTITY_ID): comp_entity_ids}
 )
 
-SCHEMA_SET_HOME_COOLING_MODE = vol.Schema(
+SCHEMA_SET_HOME_COOLING_MODE = probatio.Schema(
     {
-        vol.Optional(ATTR_COOLING, default=True): cv.boolean,
-        vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24)),
+        probatio.Optional(ATTR_COOLING, default=True): cv.boolean,
+        probatio.Optional(ATTR_ACCESSPOINT_ID): probatio.All(
+            str, probatio.Length(min=24, max=24)
+        ),
     }
 )
 

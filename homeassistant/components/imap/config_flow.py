@@ -5,7 +5,7 @@ import ssl
 from typing import Any, override
 
 from aioimaplib import AioImapException
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
@@ -65,38 +65,42 @@ EVENT_MESSAGE_DATA_SELECTOR = SelectSelector(
     )
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_SERVER): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_CHARSET, default="utf-8"): str,
-        vol.Optional(CONF_FOLDER, default="INBOX"): str,
-        vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_SERVER): str,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_CHARSET, default="utf-8"): str,
+        probatio.Optional(CONF_FOLDER, default="INBOX"): str,
+        probatio.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
         # The default for new entries is to not include text and headers
-        vol.Optional(CONF_EVENT_MESSAGE_DATA, default=[]): EVENT_MESSAGE_DATA_SELECTOR,
-        vol.Optional(
+        probatio.Optional(
+            CONF_EVENT_MESSAGE_DATA, default=[]
+        ): EVENT_MESSAGE_DATA_SELECTOR,
+        probatio.Optional(
             CONF_SSL_CIPHER_LIST, default=SSLCipherList.PYTHON_DEFAULT
         ): CIPHER_SELECTOR,
-        vol.Optional(CONF_VERIFY_SSL, default=True): BOOLEAN_SELECTOR,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): BOOLEAN_SELECTOR,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_FOLDER, default="INBOX"): str,
-        vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+        probatio.Optional(CONF_FOLDER, default="INBOX"): str,
+        probatio.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
         # The default for older entries is to include text and headers
-        vol.Optional(
+        probatio.Optional(
             CONF_EVENT_MESSAGE_DATA, default=MESSAGE_DATA_OPTIONS
         ): EVENT_MESSAGE_DATA_SELECTOR,
-        vol.Optional(CONF_CUSTOM_EVENT_DATA_TEMPLATE): TEMPLATE_SELECTOR,
-        vol.Optional(CONF_MAX_MESSAGE_SIZE, default=DEFAULT_MAX_MESSAGE_SIZE): vol.All(
+        probatio.Optional(CONF_CUSTOM_EVENT_DATA_TEMPLATE): TEMPLATE_SELECTOR,
+        probatio.Optional(
+            CONF_MAX_MESSAGE_SIZE, default=DEFAULT_MAX_MESSAGE_SIZE
+        ): probatio.All(
             cv.positive_int,
-            vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
+            probatio.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
         ),
-        vol.Optional(CONF_ENABLE_PUSH, default=True): BOOLEAN_SELECTOR,
+        probatio.Optional(CONF_ENABLE_PUSH, default=True): BOOLEAN_SELECTOR,
     }
 )
 
@@ -191,9 +195,9 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_NAME: reauth_entry.title,
             },
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

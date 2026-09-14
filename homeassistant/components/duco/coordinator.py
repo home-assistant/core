@@ -1,11 +1,12 @@
 """Data update coordinator for the Duco integration."""
 
+import asyncio
 from contextlib import suppress
 from dataclasses import dataclass, replace
 import logging
 from typing import cast, override
 
-from duco_connectivity import DucoClient
+from duco_connectivity import DucoClient, VentilationState
 from duco_connectivity.exceptions import (
     DucoConnectionError,
     DucoError,
@@ -14,6 +15,7 @@ from duco_connectivity.exceptions import (
 from duco_connectivity.models import (
     BoardInfo,
     BypassSupplyTemperatureTarget,
+    DiagStatus,
     Node,
     NodeListActionItemList,
     NodeName,
@@ -40,6 +42,8 @@ class DucoData:
 
     nodes: dict[int, Node]
     node_actions: NodeListActionItemList
+    diagnostics_available: bool
+    diagnostic_subsystems: dict[str, DiagStatus | None]
     rssi_wifi: int | None
     time_filter_remain: int | None
     ventilation_temperatures: VentilationTemperatureInfo | None
@@ -52,6 +56,9 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     config_entry: DucoConfigEntry
     board_info: BoardInfo
     _configured_node_names: dict[int, str]
+    _full_update_failed: bool
+    _node_update_errors: dict[int, DucoError]
+    _request_lock: asyncio.Lock
 
     def __init__(
         self,
@@ -69,6 +76,46 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         )
         self.client = client
         self._configured_node_names = {}
+        self._full_update_failed = False
+        self._node_update_errors = {}
+        self._request_lock = asyncio.Lock()
+
+    async def async_set_ventilation_state(
+        self, node_id: int, state: str | VentilationState
+    ) -> None:
+        """Set and refresh a node's ventilation state."""
+        # Keep an older read from publishing after this write completes.
+        async with self._request_lock:
+            await self.client.async_set_ventilation_state(node_id, state)
+            await self._async_refresh_node(node_id)
+
+    async def _async_refresh_node(self, node_id: int) -> None:
+        """Refresh one node while holding the request lock."""
+        try:
+            node = await self.client.async_get_node_info(node_id)
+        except DucoError as err:
+            self._node_update_errors[node_id] = err
+            self.async_set_update_error(err)
+            return
+
+        if current_node := self.data.nodes.get(node_id):
+            node = replace(
+                node,
+                general=replace(
+                    node.general,
+                    name=current_node.general.name,
+                ),
+            )
+
+        self._node_update_errors.pop(node_id, None)
+        self.data = replace(
+            self.data,
+            nodes={**self.data.nodes, node_id: node},
+        )
+        if not self._full_update_failed and not self._node_update_errors:
+            self.last_update_success = True
+        # A targeted readback must not postpone the periodic full refresh.
+        self.async_update_listeners()
 
     async def _async_load_node_names(self) -> None:
         """Load configured Duco node names during setup."""
@@ -117,6 +164,15 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     @override
     async def _async_update_data(self) -> DucoData:
         """Fetch node data from the Duco box."""
+        async with self._request_lock:
+            self._full_update_failed = True
+            data = await self._async_fetch_data()
+            self._full_update_failed = False
+            self._node_update_errors.clear()
+            return data
+
+    async def _async_fetch_data(self) -> DucoData:
+        """Fetch node data while holding the request lock."""
         try:
             nodes = await self.client.async_get_nodes()
         except DucoConnectionError as err:
@@ -174,6 +230,25 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         else:
             rssi_wifi = lan_info.rssi_wifi
 
+        # Diagnostics only back optional binary sensors. Preserve known components
+        # but mark their data unavailable without failing the shared coordinator.
+        diagnostics_were_available = (
+            self.data is None or self.data.diagnostics_available
+        )
+        diagnostics_available = True
+        diagnostics_error: DucoError | None = None
+        diagnostic_subsystems = self.data.diagnostic_subsystems if self.data else {}
+        try:
+            diagnostic_info = await self.client.async_get_diagnostics_info()
+        except DucoError as err:
+            diagnostics_available = False
+            diagnostics_error = err
+        else:
+            diagnostic_subsystems = {
+                diagnostic.component: diagnostic.status
+                for diagnostic in diagnostic_info.diagnostic_subsystems
+            }
+
         # Heat recovery info only backs the optional filter timer sensor, so
         # failures on this supplemental endpoint should not make the primary
         # node entities unavailable. A None result leaves the sensor absent
@@ -208,9 +283,16 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_key="api_error",
             ) from err
 
+        if diagnostics_available and not diagnostics_were_available:
+            _LOGGER.info("Duco diagnostics are available again")
+        elif not diagnostics_available and diagnostics_were_available:
+            _LOGGER.info("Duco diagnostics are unavailable: %s", diagnostics_error)
+
         return DucoData(
             nodes={node.node_id: node for node in nodes},
             node_actions=node_actions,
+            diagnostics_available=diagnostics_available,
+            diagnostic_subsystems=diagnostic_subsystems,
             rssi_wifi=rssi_wifi,
             time_filter_remain=time_filter_remain,
             ventilation_temperatures=ventilation_temperatures,
