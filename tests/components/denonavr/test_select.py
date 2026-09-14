@@ -1,9 +1,11 @@
 """The tests for the denonavr select platform."""
 
 import asyncio
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from denonavr.exceptions import AvrCommandError, AvrNetworkError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.denonavr.config_flow import (
@@ -12,7 +14,11 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_TYPE,
     DOMAIN,
 )
-from homeassistant.components.denonavr.const import CONF_UPDATE_AUDYSSEY
+from homeassistant.components.denonavr.const import (
+    CONF_UPDATE_AUDYSSEY,
+    CONF_USE_TELNET,
+    COORDINATOR_UPDATE_INTERVAL,
+)
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -28,7 +34,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_HOST = "1.2.3.4"
 TEST_NAME = "Test_Receiver"
@@ -247,6 +253,38 @@ async def test_connectivity_error_during_action_marks_unavailable(
         )
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_connectivity_error_during_audyssey_action_marks_general_unavailable(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """An Audyssey action's connectivity failure also marks the general coordinator.
+
+    Mirrors the equivalent media_player.py service paths (see
+    test_update_audyssey_connectivity_error_marks_media_player_unavailable
+    in test_media_player.py), which already propagate both ways - a
+    receiver-wide connectivity failure detected via an Audyssey-backed
+    select/switch action is exactly as significant as one detected via
+    a media_player command or the general status poll, so media_player
+    and the general-coordinator selects (dimmer, eco_mode, ...)
+    shouldn't keep showing available with stale data either.
+    """
+    entry = await setup_denonavr(hass)
+    entity_id = _entity_id(hass, "reference_level_offset")
+
+    client.async_set_reflevoffset.side_effect = AvrNetworkError(
+        "Connection refused", "SetAudyssey"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "+5dB"},
+            blocking=True,
+        )
+
+    assert entry.runtime_data.coordinator.last_update_success is False
 
 
 async def test_dynamic_volume(hass: HomeAssistant, client: MagicMock) -> None:
@@ -526,31 +564,58 @@ async def test_coordinators_serialize_command_and_refresh(
 
 
 async def test_audyssey_coordinator_polls_when_option_on(
-    hass: HomeAssistant, client: MagicMock
+    hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
-    """The Audyssey coordinator's recurring poll is enabled when the option is on.
+    """The Audyssey coordinator actually polls on a schedule when the option is on.
 
-    Matches the existing precedent for media_player.py's own recurring
-    poll - unlike the post-change refresh, which stays unconditional
-    regardless. Checked directly on the coordinator rather than by
-    exercising a poll, since a poll triggered so soon after setup's own
-    refresh would be unreliably debounced either way.
+    Exercises the real behavior (a call once the interval elapses)
+    rather than just asserting update_interval was set, which would
+    still pass even if the recurring poll's own listener registration
+    were broken.
     """
-    entry = await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
-    assert entry.runtime_data.audyssey_coordinator.update_interval is not None
+    await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
+    calls_before = client.async_update_audyssey.await_count
+
+    freezer.tick(timedelta(seconds=COORDINATOR_UPDATE_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert client.async_update_audyssey.await_count > calls_before
 
 
 async def test_audyssey_coordinator_does_not_poll_when_option_off(
+    hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Confirms it doesn't silently query the receiver on a schedule anyway.
+
+    It can still be asked to refresh on demand (e.g. right after an
+    action), just not automatically.
+    """
+    await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
+    calls_before = client.async_update_audyssey.await_count
+
+    freezer.tick(timedelta(seconds=COORDINATOR_UPDATE_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert client.async_update_audyssey.await_count == calls_before
+
+
+async def test_setup_skips_redundant_audyssey_refresh_with_telnet(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """The Audyssey coordinator has no recurring poll (on-demand only) when off.
+    """Setup doesn't double-fetch Audyssey when Telnet already did.
 
-    Confirms it doesn't silently query the receiver on a schedule
-    anyway - it can still be asked to refresh on demand (e.g. right
-    after an action), just not automatically.
+    receiver.py's connection step already calls async_update_audyssey()
+    for every zone when both Telnet and "Update Audyssey settings" are
+    on - the coordinator's own initial refresh must not repeat that
+    ~10s request on every setup or reload.
     """
-    entry = await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
-    assert entry.runtime_data.audyssey_coordinator.update_interval is None
+    await setup_denonavr(
+        hass, options={CONF_USE_TELNET: True, CONF_UPDATE_AUDYSSEY: True}
+    )
+
+    assert client.async_update_audyssey.await_count == 1
 
 
 async def test_refresh_failure_does_not_fail_an_already_successful_action(
@@ -718,6 +783,9 @@ async def test_option_shown_immediately_even_if_refresh_reads_back_stale_value(
         {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Dark"},
         blocking=True,
     )
+    # Let the debounced confirmation refresh actually run its stale
+    # read, rather than asserting before it's even had a chance to.
+    await _wait_for_debounced_refresh(hass)
 
     # The command was sent...
     client.async_dimmer.assert_awaited_once_with("Dark")

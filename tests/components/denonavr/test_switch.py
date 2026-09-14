@@ -437,6 +437,9 @@ async def test_state_shown_immediately_even_if_refresh_reads_back_stale_value(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+    # Let the debounced confirmation refresh actually run its stale
+    # read, rather than asserting before it's even had a chance to.
+    await _wait_for_debounced_refresh(hass)
 
     client.async_dynamic_eq_off.assert_awaited_once()
     assert hass.states.get(entity_id).state == "off"

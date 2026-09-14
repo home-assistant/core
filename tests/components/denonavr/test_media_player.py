@@ -348,7 +348,7 @@ async def test_set_dynamic_eq_always_refreshes_audyssey(
 )
 async def test_malformed_response_marks_unavailable(
     hass: HomeAssistant,
-    client,
+    client: MagicMock,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:

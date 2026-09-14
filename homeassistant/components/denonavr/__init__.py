@@ -32,7 +32,11 @@ from .const import (
     DEFAULT_ZONE3,
     DOMAIN,
 )
-from .coordinator import DenonAvrDataUpdateCoordinator, async_refresh_status
+from .coordinator import (
+    DenonAvrDataUpdateCoordinator,
+    async_refresh_status,
+    mark_unavailable,
+)
 from .receiver import ConnectDenonAVR
 from .services import async_setup_services
 
@@ -81,6 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     assert receiver is not None
 
     update_audyssey = entry.options.get(CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY)
+    use_telnet = entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET)
     update_interval = timedelta(seconds=COORDINATOR_UPDATE_INTERVAL)
 
     # Shared by both coordinators and all commands to serialize receiver
@@ -124,7 +129,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     # supports Audyssey though, so a failure here shouldn't block setup
     # the way the main coordinator's failure does - just leave those
     # entities unavailable, as expected.
-    await audyssey_coordinator.async_refresh()
+    #
+    # Skipped when Telnet and "Update Audyssey settings" are both on:
+    # receiver.py's connection step already fetched this once for every
+    # zone in that case, so refreshing again here would just repeat a
+    # request that can take ~10s, on every setup or reload.
+    if not (use_telnet and update_audyssey):
+        await audyssey_coordinator.async_refresh()
 
     @callback
     def _propagate_connectivity_to_audyssey() -> None:
@@ -145,6 +156,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
 
     entry.async_on_unload(
         coordinator.async_add_listener(_propagate_connectivity_to_audyssey)
+    )
+
+    @callback
+    def _propagate_audyssey_failure_to_general() -> None:
+        """Reflect a confirmed Audyssey connectivity failure into the status one.
+
+        Unlike the reverse direction, this always applies regardless of
+        Audyssey's own polling schedule: an Audyssey-backed select/switch
+        action failing with a connectivity error means the receiver
+        itself is unreachable, exactly like a media_player command
+        failing the same way. Only mirrors failure, never recovery - the
+        status coordinator's own poll is what should confirm it's back.
+        """
+        if not audyssey_coordinator.last_update_success:
+            mark_unavailable(coordinator)
+
+    entry.async_on_unload(
+        audyssey_coordinator.async_add_listener(_propagate_audyssey_failure_to_general)
     )
 
     @callback
@@ -172,7 +201,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    use_telnet = entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET)
 
     async def _async_disconnect(event: Event) -> None:
         """Disconnect from Telnet."""
