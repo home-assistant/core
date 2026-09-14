@@ -2297,7 +2297,7 @@ async def _tick_local_live(
 async def test_paired_site_manual_refresh_merges_and_keeps_cloud_read(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_live_status: MagicMock,
+    mock_live_status: AsyncMock,
     mock_powerwall_live_status: AsyncMock,
 ) -> None:
     """A manual refresh on a paired site publishes merged data and keeps its cloud read."""
@@ -2316,9 +2316,7 @@ async def test_paired_site_manual_refresh_merges_and_keeps_cloud_read(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await _tick_local_live(hass, freezer, 1)
         assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
 
         refreshed = deepcopy(LIVE_STATUS)
@@ -2339,9 +2337,7 @@ async def test_paired_site_manual_refresh_merges_and_keeps_cloud_read(
 
         # The next local poll re-merges against the refreshed cloud read, not
         # the snapshot from before the refresh.
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await _tick_local_live(hass, freezer, 1)
 
     assert hass.states.get("sensor.energy_site_grid_services_power").state == "7.0"
 

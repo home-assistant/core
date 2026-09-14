@@ -266,7 +266,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         Publishes with ``async_update_listeners`` rather than through the update
         path, so a poll never touches the stream-owned success/error state. A
         failed poll degrades the owned keys to their cloud values, and repeated
-        failures double the gap between reads up to
+        failures roughly double the gap between reads up to
         :data:`ENERGY_LIVE_LOCAL_MAX_BACKOFF` until a read succeeds.
         """
         # live_status performs sequential network reads that can exceed the
@@ -274,8 +274,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         # cannot replace a newer snapshot with stale data.
         if self._local is None or self._local_poll_in_progress:
             return
-        # Backing off by skipping ticks keeps the fixed timer, so jitter in its
-        # fire time can never delay a due read by a further tick.
+        # Skip ticks rather than reschedule so the unload-cancelled timer is kept.
         if self._local_ticks_to_skip:
             self._local_ticks_to_skip -= 1
             return
