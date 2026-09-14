@@ -59,6 +59,7 @@ from .const import (
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
 
+DEFAULT_HOST = "unifi"
 DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
@@ -94,32 +95,28 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.config = _config_from_input(user_input)
+            data_schema = self._build_form_schema(
+                self.config[CONF_HOST],
+                self.config[CONF_USERNAME],
+                self.config[CONF_PORT],
+                self.config[CONF_VERIFY_SSL],
+            )
 
             with _catch_unifi_api_flow_errors(errors):
                 self.sites = await self._async_update_sites(self.config)
                 return await self.async_step_site()
-
-        if not (host := self.config.get(CONF_HOST, "")) and await _async_discover_unifi(
-            self.hass
-        ):
-            host = "unifi"
-
-        data = {
-            probatio.Required(CONF_HOST, default=host): str,
-            probatio.Required(CONF_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
-            probatio.Optional(
-                CONF_PORT, default=self.config.get(CONF_PORT, DEFAULT_PORT)
-            ): int,
-            probatio.Optional(
-                CONF_VERIFY_SSL,
-                default=self.config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-            ): bool,
-        }
+        else:
+            host = self.config.get(CONF_HOST, await _async_discover_unifi(self.hass))
+            if not host:
+                host = DEFAULT_HOST
+            data_schema = self._build_form_schema(
+                host=host,
+                verify_ssl=self.config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(data),
+            data_schema=data_schema,
             errors=errors,
         )
 
@@ -169,6 +166,12 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             config_data = _config_from_input(user_input)
+            data_schema = self._build_form_schema(
+                config_data[CONF_HOST],
+                config_data[CONF_USERNAME],
+                config_data[CONF_PORT],
+                config_data[CONF_VERIFY_SSL],
+            )
 
             with _catch_unifi_api_flow_errors(errors):
                 sites = await self._async_update_sites(config_data)
@@ -181,21 +184,17 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                         config_entry, data_updates=config_data
                     )
                 raise AbortFlow("unknown_site_id")
+        else:
+            data_schema = self._build_form_schema(
+                config_entry.data[CONF_HOST],
+                config_entry.data[CONF_USERNAME],
+                config_entry.data[CONF_PORT],
+                config_entry.data[CONF_VERIFY_SSL],
+            )
 
-        schema = {
-            probatio.Required(CONF_HOST, default=config_entry.data[CONF_HOST]): str,
-            probatio.Required(
-                CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
-            ): str,
-            probatio.Required(CONF_PASSWORD): str,
-            probatio.Required(CONF_PORT, default=config_entry.data[CONF_PORT]): int,
-            probatio.Required(
-                CONF_VERIFY_SSL, default=config_entry.data[CONF_VERIFY_SSL]
-            ): bool,
-        }
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=probatio.Schema(schema),
+            data_schema=data_schema,
             errors=errors,
         )
 
@@ -242,6 +241,26 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context["configuration_url"] = f"https://{host}"
 
         return await self.async_step_user()
+
+    def _build_form_schema(
+        self,
+        host: str = DEFAULT_HOST,
+        username: str = "",
+        port: int = DEFAULT_PORT,
+        verify_ssl: bool = DEFAULT_VERIFY_SSL,
+    ) -> probatio.Schema:
+        return probatio.Schema(
+            {
+                probatio.Required(CONF_HOST, default=host): str,
+                probatio.Required(CONF_USERNAME, default=username): str,
+                probatio.Required(CONF_PASSWORD): str,
+                probatio.Optional(CONF_PORT, default=port): int,
+                probatio.Optional(
+                    CONF_VERIFY_SSL,
+                    default=verify_ssl,
+                ): bool,
+            }
+        )
 
     async def _async_update_sites(self, data: Mapping[str, Any]) -> Sites:
         """Get updated sites through UniFi API."""
