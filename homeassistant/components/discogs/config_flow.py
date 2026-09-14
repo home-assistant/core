@@ -3,8 +3,8 @@
 from typing import Any, override
 
 import discogs_client
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
@@ -12,9 +12,9 @@ from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 
 from .const import DOMAIN, LOGGER
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TOKEN): str,
+        probatio.Required(CONF_TOKEN): str,
     }
 )
 

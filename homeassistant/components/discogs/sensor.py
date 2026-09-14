@@ -64,7 +64,9 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_TOKEN): cv.string,
         probatio.Optional("name"): cv.string,
-        probatio.Optional("monitored_conditions"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional("monitored_conditions"): probatio.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 
@@ -147,6 +149,7 @@ class DiscogsSensor(SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Discogs sensor."""
+        assert entry.unique_id is not None
         self.entity_description = description
         self._client = client
         self._discogs_data: dict[str, Any] = {}
