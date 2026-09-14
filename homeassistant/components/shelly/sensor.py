@@ -1742,7 +1742,7 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=0,
         entity_category=EntityCategory.DIAGNOSTIC,
-        removal_condition=lambda config, _, key: not config.get(key),
+        removal_condition=lambda _, status, key: not status[key]["present"],
     ),
 }
 
