@@ -4,7 +4,7 @@ from typing import Any, override
 
 from bluetti_modbus_lib.devices.getter import get_device
 from modbus_connection import ModbusError, ModbusTcpParams
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -25,24 +25,24 @@ from .const import (
     DOMAIN,
 )
 
-STEP_USER = vol.Schema(
+STEP_USER = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(
                     min=1, max=65535, step=1, mode=NumberSelectorMode.BOX
                 )
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): vol.All(
+        probatio.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(
                     min=1, max=247, step=1, mode=NumberSelectorMode.BOX
                 )
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
     }
 )
