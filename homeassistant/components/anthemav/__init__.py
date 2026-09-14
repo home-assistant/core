@@ -64,7 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
                 f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
             ) from err
         avr.close()
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            f"Timed out waiting for device info from Anthem AVR at "
+            f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        ) from err
     except (OSError, DeviceError) as err:
         if avr is not None:
             avr.close()

@@ -1,5 +1,6 @@
 """Config flow for Anthem A/V Receivers integration."""
 
+import asyncio
 import logging
 from typing import Any, override
 
@@ -13,7 +14,13 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DEVICE_TIMEOUT_SECONDS, DOMAIN
+from .const import (
+    CONNECT_TIMEOUT_SECONDS,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEVICE_TIMEOUT_SECONDS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,10 +34,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def connect_device(user_input: dict[str, Any]) -> Connection:
     """Connect to the AVR device."""
-    avr = await anthemav.Connection.create(
-        host=user_input[CONF_HOST], port=user_input[CONF_PORT], auto_reconnect=False
-    )
-    await avr.reconnect()
+    # auto_reconnect=False means Connection.create() itself won't retry, but
+    # the explicit reconnect() below can still hang: a receiver that's
+    # unreachable without an immediate refusal (e.g. powered off, no RST/ICMP)
+    # leaves the underlying TCP connect with no timeout of its own.
+    async with asyncio.timeout(CONNECT_TIMEOUT_SECONDS):
+        avr = await anthemav.Connection.create(
+            host=user_input[CONF_HOST],
+            port=user_input[CONF_PORT],
+            auto_reconnect=False,
+        )
+        await avr.reconnect()
     await avr.protocol.wait_for_device_initialised(DEVICE_TIMEOUT_SECONDS)
     return avr
 

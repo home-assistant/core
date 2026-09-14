@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
 from anthemav.device_error import DeviceError
@@ -78,7 +79,7 @@ async def test_config_entry_not_ready_when_connect_hangs(
 ) -> None:
     """Test setup fails fast (instead of hanging) when the AVR never connects."""
 
-    async def _hang(*args, **kwargs) -> None:
+    async def _hang(*args: Any, **kwargs: Any) -> None:
         await asyncio.sleep(3600)
 
     with (
