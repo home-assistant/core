@@ -20,7 +20,7 @@ from homeassistant.components.number import (
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_platform, entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
@@ -1317,57 +1317,55 @@ async def test_client_close_waits_for_all_overlapping_flushes(
     assert close_saw_write_active is False
 
 
-async def test_queued_flush_aborts_after_lock_when_removed(
+def _get_number_entity(hass: HomeAssistant, entity_id: str) -> Any:
+    """Return the live NeoPoolNumber object for entity_id."""
+    for platform in entity_platform.async_get_platforms(hass, "neopool"):
+        if entity_id in platform.entities:
+            return platform.entities[entity_id]
+    raise AssertionError(f"no number entity {entity_id}")
+
+
+async def test_flush_aborts_when_removed_while_holding_lock(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A second batch waiting on the flush lock skips its write once removed.
+    """A flush that finds the entity removed after winning the lock aborts.
 
-    The second batch has detached its own future, so unload cannot cancel it;
-    once it acquires the lock it must see the removal flag and skip the client
-    call instead of writing on a closing connection.
+    Removal cancels every tracked flush task, so a queued flush waiting on the
+    lock is normally canceled before it can write; the in-lock removal guard
+    only fires if a flush wins the lock in the same tick removal flips the flag.
+    Drive that directly: hold the flush lock from the test, flip removing, then
+    release the lock so the parked flush hits the guard before it touches the
+    device.
     """
-    in_write = asyncio.Event()
-    release = asyncio.Event()
-
-    async def _blocking_setpoint(kind: SetpointKind, value: int) -> dict[str, Any]:
-        in_write.set()
-        await release.wait()
-        return {"MBF_PAR_PH1": value}
-
-    mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=_blocking_setpoint)
+    mock_neopool_client.async_set_setpoint = AsyncMock(
+        return_value={"MBF_PAR_PH1": 750}
+    )
     await setup_integration(hass, mock_config_entry_number)
 
     ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
-    mock_neopool_client.async_set_setpoint.reset_mock()
+    entity = _get_number_entity(hass, ph1_entity_id)
 
-    # First write enters the library call and blocks there, holding the lock.
-    first = _set_value_nowait(hass, ph1_entity_id, 7.0)
-    freezer.tick(FLUSH)
-    async_fire_time_changed(hass)
-    await in_write.wait()
-
-    # A second value arrives and its flush fires; it blocks on the flush lock.
-    second = _set_value_nowait(hass, ph1_entity_id, 8.0)
+    await entity._flush_lock.acquire()
+    task = _set_value_nowait(hass, ph1_entity_id, 7.5)
     await _let_park(hass)
+    # Fire the debounce timer without async_block_till_done: the flush task
+    # parks on the lock we hold, so waiting on it here would deadlock.
     freezer.tick(FLUSH)
     async_fire_time_changed(hass)
     await _let_park(hass)
 
-    # Unload, then release the first write so the second batch takes the lock.
-    await hass.config_entries.async_unload(mock_config_entry_number.entry_id)
-    release.set()
-    await hass.async_block_till_done(wait_background_tasks=True)
+    # The flush is parked on the lock the test holds. Flip removing, then hand
+    # the lock over so the flush enters and aborts at the in-lock guard.
+    entity._removing = True
+    entity._flush_lock.release()
+    await task
 
-    await first
-    await second
-
-    # Only the first write ran; the second aborted after acquiring the lock.
-    mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
-        SetpointKind.PH_MAX, 700
-    )
+    # The guard aborted before any device write.
+    mock_neopool_client.async_set_setpoint.assert_not_awaited()
+    entity._removing = False
 
 
 @pytest.mark.usefixtures("mock_neopool_client")
