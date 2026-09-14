@@ -74,7 +74,9 @@ class HassEnforceConfigEntryStepIdMatchMethodChecker(BaseChecker):
                     if not values or values[0] is Uninferable:
                         break
                     if len(values) > 1:
-                        step_id_node = "__INCORRECT__"
+                        step_id_node = ", ".join(
+                            str(inferred.value) for inferred in values
+                        ).replace("Uninferable", "unknown")
                         break
                     inferred = values[0]
                     if not isinstance(inferred, nodes.Const) or not isinstance(
