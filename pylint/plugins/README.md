@@ -1223,4 +1223,4 @@ currently in.
 Check the `step_id` parameter for all calls to `async_show_form`,
 `async_external_step`, `async_show_progress` and `async_show_menu`.
 The `step_id` parameter should be same as the method it is in.
-For example: `step_id="user` should be used in `async_step_user`
+For example: `step_id="user"` should be used in `async_step_user`
