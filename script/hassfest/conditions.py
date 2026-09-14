@@ -6,8 +6,8 @@ import pathlib
 import re
 from typing import Any
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.const import CONF_SELECTOR
 from homeassistant.exceptions import HomeAssistantError
@@ -20,7 +20,7 @@ from .model import Config, Integration
 def exists(value: Any) -> Any:
     """Check if value exists."""
     if value is None:
-        raise vol.Invalid("Value cannot be None")
+        raise probatio.Invalid("Value cannot be None")
     return value
 
 
@@ -31,13 +31,15 @@ def validate_field_schema(condition_schema: dict[str, Any]) -> dict[str, Any]:
         # Validate context if present
         if "context" in field_schema:
             if CONF_SELECTOR not in field_schema:
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     f"Context defined without a selector in '{field_name}'"
                 )
 
             context = field_schema["context"]
             if not isinstance(context, dict):
-                raise vol.Invalid(f"Context must be a dictionary in '{field_name}'")
+                raise probatio.Invalid(
+                    f"Context must be a dictionary in '{field_name}'"
+                )
 
             # Determine which selector type is being used
             selector_config = field_schema[CONF_SELECTOR]
@@ -50,7 +52,7 @@ def validate_field_schema(condition_schema: dict[str, Any]) -> dict[str, Any]:
                     allowed = (
                         ", ".join(sorted(allowed_keys)) if allowed_keys else "none"
                     )
-                    raise vol.Invalid(
+                    raise probatio.Invalid(
                         f"Invalid context key '{context_key}'"
                         f" for selector type"
                         f" '{selector_class.selector_type}'."
@@ -59,7 +61,7 @@ def validate_field_schema(condition_schema: dict[str, Any]) -> dict[str, Any]:
 
                 # Check if the referenced field exists in condition schema or target
                 if not isinstance(field_ref, str):
-                    raise vol.Invalid(
+                    raise probatio.Invalid(
                         f"Context value for '{context_key}'"
                         " must be a string field reference"
                     )
@@ -76,7 +78,7 @@ def validate_field_schema(condition_schema: dict[str, Any]) -> dict[str, Any]:
                     ):
                         allowed_types = ", ".join(allowed_keys.get(context_key, set()))
                         sel_type = field_selector_class.selector_type
-                        raise vol.Invalid(
+                        raise probatio.Invalid(
                             f"The context '{context_key}' for"
                             f" '{field_name}' references"
                             f" '{field_ref}', but"
@@ -91,7 +93,7 @@ def validate_field_schema(condition_schema: dict[str, Any]) -> dict[str, Any]:
                         context_key, set()
                     ):
                         allowed_types = ", ".join(allowed_keys.get(context_key, set()))
-                        raise vol.Invalid(
+                        raise probatio.Invalid(
                             f"The context '{context_key}' for"
                             f" '{field_name}' references"
                             f" 'target', but '{context_key}'"
@@ -100,7 +102,7 @@ def validate_field_schema(condition_schema: dict[str, Any]) -> dict[str, Any]:
                         )
 
                 if not field_exists:
-                    raise vol.Invalid(
+                    raise probatio.Invalid(
                         f"Context reference '{field_ref}'"
                         f" for key '{context_key}' does"
                         " not exist in condition schema"
@@ -110,24 +112,24 @@ def validate_field_schema(condition_schema: dict[str, Any]) -> dict[str, Any]:
     return condition_schema
 
 
-FIELD_SCHEMA = vol.Schema(
+FIELD_SCHEMA = probatio.Schema(
     {
-        vol.Optional("example"): exists,
-        vol.Optional("default"): exists,
-        vol.Optional("required"): bool,
-        vol.Optional(CONF_SELECTOR): selector.validate_selector,
+        probatio.Optional("example"): exists,
+        probatio.Optional("default"): exists,
+        probatio.Optional("required"): bool,
+        probatio.Optional(CONF_SELECTOR): selector.validate_selector,
         # key is context key, value is field name in schema
         # Validated in validate_field_schema
-        vol.Optional("context"): {str: str},
+        probatio.Optional("context"): {str: str},
     }
 )
 
-CONDITION_SCHEMA = vol.Any(
-    vol.All(
-        vol.Schema(
+CONDITION_SCHEMA = probatio.Any(
+    probatio.All(
+        probatio.Schema(
             {
-                vol.Optional("target"): selector.TargetSelector.CONFIG_SCHEMA,
-                vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
+                probatio.Optional("target"): selector.TargetSelector.CONFIG_SCHEMA,
+                probatio.Optional("fields"): probatio.Schema({str: FIELD_SCHEMA}),
             }
         ),
         validate_field_schema,
@@ -135,9 +137,9 @@ CONDITION_SCHEMA = vol.Any(
     None,
 )
 
-CONDITIONS_SCHEMA = vol.Schema(
+CONDITIONS_SCHEMA = probatio.Schema(
     {
-        vol.Remove(vol.All(str, condition.starts_with_dot)): object,
+        probatio.Remove(probatio.All(str, condition.starts_with_dot)): object,
         cv.underscore_slug: CONDITION_SCHEMA,
     }
 )
@@ -186,7 +188,7 @@ def validate_conditions(config: Config, integration: Integration) -> None:  # no
 
     try:
         conditions = CONDITIONS_SCHEMA(data)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         integration.add_error(
             "conditions", f"Invalid conditions.yaml: {humanize_error(data, err)}"
         )

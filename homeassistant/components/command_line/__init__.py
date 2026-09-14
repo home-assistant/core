@@ -5,7 +5,7 @@ from collections.abc import Coroutine
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -84,108 +84,118 @@ PLATFORM_MAPPING = {
 
 _LOGGER = logging.getLogger(__name__)
 
-BINARY_SENSOR_SCHEMA = vol.Schema(
+BINARY_SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_COMMAND): cv.string,
-        vol.Optional(CONF_NAME, default=BINARY_SENSOR_DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_ICON): cv.template,
-        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+        probatio.Required(CONF_COMMAND): cv.string,
+        probatio.Optional(CONF_NAME, default=BINARY_SENSOR_DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_ICON): cv.template,
+        probatio.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+        probatio.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_VALUE_TEMPLATE): probatio.All(
             cv.template, ValueTemplate.from_template
         ),
-        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(
+        probatio.Optional(
+            CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT
+        ): cv.positive_int,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(
             CONF_SCAN_INTERVAL, default=BINARY_SENSOR_DEFAULT_SCAN_INTERVAL
-        ): vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_AVAILABILITY): cv.template,
+        ): probatio.All(cv.time_period, cv.positive_timedelta),
+        probatio.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
-COVER_SCHEMA = vol.Schema(
+COVER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_COMMAND_CLOSE, default="true"): cv.string,
-        vol.Optional(CONF_COMMAND_OPEN, default="true"): cv.string,
-        vol.Optional(CONF_COMMAND_STATE): cv.string,
-        vol.Optional(CONF_COMMAND_STOP, default="true"): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_ICON): cv.template,
-        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+        probatio.Optional(CONF_COMMAND_CLOSE, default="true"): cv.string,
+        probatio.Optional(CONF_COMMAND_OPEN, default="true"): cv.string,
+        probatio.Optional(CONF_COMMAND_STATE): cv.string,
+        probatio.Optional(CONF_COMMAND_STOP, default="true"): cv.string,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Optional(CONF_ICON): cv.template,
+        probatio.Optional(CONF_VALUE_TEMPLATE): probatio.All(
             cv.template, ValueTemplate.from_template
         ),
-        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=COVER_DEFAULT_SCAN_INTERVAL): vol.All(
-            cv.time_period, cv.positive_timedelta
-        ),
-        vol.Optional(CONF_AVAILABILITY): cv.template,
+        probatio.Optional(
+            CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT
+        ): cv.positive_int,
+        probatio.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(
+            CONF_SCAN_INTERVAL, default=COVER_DEFAULT_SCAN_INTERVAL
+        ): probatio.All(cv.time_period, cv.positive_timedelta),
+        probatio.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
-NOTIFY_SCHEMA = vol.Schema(
+NOTIFY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_COMMAND): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        probatio.Required(CONF_COMMAND): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(
+            CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT
+        ): cv.positive_int,
     }
 )
-SENSOR_SCHEMA = vol.Schema(
+SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_COMMAND): cv.string,
-        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
-        vol.Optional(CONF_JSON_ATTRIBUTES_PATH): cv.string,
-        vol.Optional(CONF_NAME, default=SENSOR_DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_ICON): cv.template,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+        probatio.Required(CONF_COMMAND): cv.string,
+        probatio.Optional(
+            CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT
+        ): cv.positive_int,
+        probatio.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
+        probatio.Optional(CONF_JSON_ATTRIBUTES_PATH): cv.string,
+        probatio.Optional(CONF_NAME, default=SENSOR_DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_ICON): cv.template,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_VALUE_TEMPLATE): probatio.All(
             cv.template, ValueTemplate.from_template
         ),
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SENSOR_DEFAULT_SCAN_INTERVAL): vol.All(
-            cv.time_period, cv.positive_timedelta
-        ),
-        vol.Optional(CONF_AVAILABILITY): cv.template,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
+        probatio.Optional(
+            CONF_SCAN_INTERVAL, default=SENSOR_DEFAULT_SCAN_INTERVAL
+        ): probatio.All(cv.time_period, cv.positive_timedelta),
+        probatio.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
-SWITCH_SCHEMA = vol.Schema(
+SWITCH_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_COMMAND_OFF, default="true"): cv.string,
-        vol.Optional(CONF_COMMAND_ON, default="true"): cv.string,
-        vol.Optional(CONF_COMMAND_STATE): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+        probatio.Optional(CONF_COMMAND_OFF, default="true"): cv.string,
+        probatio.Optional(CONF_COMMAND_ON, default="true"): cv.string,
+        probatio.Optional(CONF_COMMAND_STATE): cv.string,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Optional(CONF_VALUE_TEMPLATE): probatio.All(
             cv.template, ValueTemplate.from_template
         ),
-        vol.Optional(CONF_ICON): cv.template,
-        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SWITCH_DEFAULT_SCAN_INTERVAL): vol.All(
-            cv.time_period, cv.positive_timedelta
-        ),
-        vol.Optional(CONF_AVAILABILITY): cv.template,
+        probatio.Optional(CONF_ICON): cv.template,
+        probatio.Optional(
+            CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT
+        ): cv.positive_int,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(
+            CONF_SCAN_INTERVAL, default=SWITCH_DEFAULT_SCAN_INTERVAL
+        ): probatio.All(cv.time_period, cv.positive_timedelta),
+        probatio.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
-COMBINED_SCHEMA = vol.Schema(
+COMBINED_SCHEMA = probatio.Schema(
     {
-        vol.Optional(BINARY_SENSOR_DOMAIN): BINARY_SENSOR_SCHEMA,
-        vol.Optional(COVER_DOMAIN): COVER_SCHEMA,
-        vol.Optional(NOTIFY_DOMAIN): NOTIFY_SCHEMA,
-        vol.Optional(SENSOR_DOMAIN): SENSOR_SCHEMA,
-        vol.Optional(SWITCH_DOMAIN): SWITCH_SCHEMA,
+        probatio.Optional(BINARY_SENSOR_DOMAIN): BINARY_SENSOR_SCHEMA,
+        probatio.Optional(COVER_DOMAIN): COVER_SCHEMA,
+        probatio.Optional(NOTIFY_DOMAIN): NOTIFY_SCHEMA,
+        probatio.Optional(SENSOR_DOMAIN): SENSOR_SCHEMA,
+        probatio.Optional(SWITCH_DOMAIN): SWITCH_SCHEMA,
     }
 )
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN): vol.All(
+        probatio.Optional(DOMAIN): probatio.All(
             cv.ensure_list,
             [COMBINED_SCHEMA],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from hyponcloud import KNOWN_OEMS, AdminInfo, AuthenticationError, HyponCloud
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -26,21 +26,21 @@ OEM_OPTIONS = [
     for oem in KNOWN_OEMS
 ]
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
 
-def _data_schema(default_oem: int = DEFAULT_OEM) -> vol.Schema:
+def _data_schema(default_oem: int = DEFAULT_OEM) -> probatio.Schema:
     """Return the config flow data schema."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_OEM, default=str(default_oem)): SelectSelector(
+            probatio.Required(CONF_USERNAME): str,
+            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(CONF_OEM, default=str(default_oem)): SelectSelector(
                 SelectSelectorConfig(
                     options=OEM_OPTIONS,
                     mode=SelectSelectorMode.DROPDOWN,

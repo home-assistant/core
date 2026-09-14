@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import frontend
 from homeassistant.core import HomeAssistant
@@ -35,33 +35,37 @@ LEGACY_URL = "/api/panel_custom/{}"
 PANEL_DIR = "panels"
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_COMPONENT_NAME): cv.string,
-                        vol.Optional(CONF_SIDEBAR_TITLE): cv.string,
-                        vol.Optional(CONF_SIDEBAR_ICON, default=DEFAULT_ICON): cv.icon,
-                        vol.Optional(CONF_URL_PATH): cv.string,
-                        vol.Optional(CONF_CONFIG): dict,
-                        vol.Optional(
+                        probatio.Required(CONF_COMPONENT_NAME): cv.string,
+                        probatio.Optional(CONF_SIDEBAR_TITLE): cv.string,
+                        probatio.Optional(
+                            CONF_SIDEBAR_ICON, default=DEFAULT_ICON
+                        ): cv.icon,
+                        probatio.Optional(CONF_URL_PATH): cv.string,
+                        probatio.Optional(CONF_CONFIG): dict,
+                        probatio.Optional(
                             CONF_JS_URL,
                         ): cv.string,
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_MODULE_URL,
                         ): cv.string,
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_EMBED_IFRAME, default=DEFAULT_EMBED_IFRAME
                         ): cv.boolean,
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_TRUST_EXTERNAL_SCRIPT,
                             default=DEFAULT_TRUST_EXTERNAL,
                         ): cv.boolean,
-                        vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
-                        vol.Optional(
+                        probatio.Optional(
+                            CONF_REQUIRE_ADMIN, default=False
+                        ): cv.boolean,
+                        probatio.Optional(
                             CONF_HANDLE_SAFE_AREA, default=DEFAULT_HANDLE_SAFE_AREA
                         ): cv.boolean,
                     }
@@ -69,7 +73,7 @@ CONFIG_SCHEMA = vol.Schema(
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

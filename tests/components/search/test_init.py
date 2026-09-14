@@ -1123,9 +1123,11 @@ async def test_search_pre_migration_composite_device(
     device records the id of the pre-migration composite. Automations and scripts
     created before the split still reference the composite id, so:
     - searching a split device must return them, but not automations or scripts
-      referencing only a sibling split, and
+      referencing only a sibling split,
     - searching such an automation or script must return the live split devices, not
-      the virtual composite id.
+      the virtual composite id, and
+    - searching the composite id itself must return the union of the splits' config
+      entries and integrations, since the restored composite spans them all.
     """
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -1219,6 +1221,16 @@ async def test_search_pre_migration_composite_device(
     }
     assert search(ItemType.AUTOMATION, "automation.composite") == expected_reverse
     assert search(ItemType.SCRIPT, "script.composite") == expected_reverse
+
+    # Searching the composite id itself resolves it to the read-only composite device,
+    # which belongs to every split's config entry, not just the base split's. Only
+    # references to the composite id match; the splits' own references do not.
+    assert search(ItemType.DEVICE, composite_device_id) == {
+        ItemType.AUTOMATION: {"automation.composite"},
+        ItemType.SCRIPT: {"script.composite"},
+        ItemType.CONFIG_ENTRY: {entry_1.entry_id, entry_2.entry_id},
+        ItemType.INTEGRATION: {"test1", "test2"},
+    }
 
 
 async def test_search_label_on_child_device(

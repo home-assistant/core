@@ -1,8 +1,8 @@
 """The Smappee integration."""
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
+import probatio
 from pysmappee import Smappee, helper, mqtt
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -28,16 +28,16 @@ from .const import (
 
 type SmappeeConfigEntry = ConfigEntry[SmappeeBase]
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
+                probatio.Required(CONF_CLIENT_ID): cv.string,
+                probatio.Required(CONF_CLIENT_SECRET): cv.string,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
