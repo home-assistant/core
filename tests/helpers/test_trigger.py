@@ -82,7 +82,6 @@ from homeassistant.helpers.trigger import (
     TriggerConfig,
     TriggerNotTriggeredReporter,
     _async_get_trigger_platform,
-    _report_not_triggered_noop,
     async_initialize_triggers,
     async_validate_trigger_config,
     make_entity_numerical_state_changed_trigger,
@@ -92,6 +91,7 @@ from homeassistant.helpers.trigger import (
     make_entity_target_state_trigger,
     make_entity_transition_trigger,
 )
+from homeassistant.helpers.trigger.entity_trigger import _report_not_triggered_noop
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
