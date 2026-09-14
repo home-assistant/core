@@ -1,5 +1,6 @@
 """LG webOS TV device turn on trigger."""
 
+from dataclasses import dataclass, field
 from functools import partial
 from typing import TYPE_CHECKING, Any, cast, override
 
@@ -33,6 +34,7 @@ from homeassistant.helpers.trigger import (
     TriggerNotTriggeredReporter,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from ..const import DOMAIN
 from ..helpers import (
@@ -65,6 +67,41 @@ _LEGACY_TRIGGER_SCHEMA = probatio.Schema(
         )
     }
 )
+
+
+_RUN_STATE: HassKey[_TurnOnRunState] = HassKey(f"{DOMAIN}_turn_on_run_state")
+
+
+@dataclass
+class _TurnOnRunState:
+    """Class to hold the turn on run state."""
+
+    depth: int = 0
+    pending: set[_TurnOnTargetTracker] = field(default_factory=set)
+
+
+@callback
+def _async_get_run_state(hass: HomeAssistant) -> _TurnOnRunState:
+    """Return the turn on run state, creating it on first use."""
+    if (state := hass.data.get(_RUN_STATE)) is None:
+        state = hass.data[_RUN_STATE] = _TurnOnRunState()
+    return state
+
+
+async def async_run_turn_on(
+    hass: HomeAssistant, turn_on: PluggableAction, context: Context | None
+) -> None:
+    """Run the turn on actions for a TV."""
+    state = _async_get_run_state(hass)
+    state.depth += 1
+    try:
+        await turn_on.async_run(hass, context)
+    finally:
+        state.depth -= 1
+        if not state.depth and state.pending:
+            for tracker in list(state.pending):
+                tracker.async_apply_pending_update()
+            state.pending.clear()
 
 
 def async_get_turn_on_trigger(device_id: str) -> dict[str, str]:
@@ -138,6 +175,7 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
         self._run_action = run_action
         self._device_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
+        self._pending_device_ids: set[str] | None = None
 
     @callback
     @override
@@ -165,6 +203,28 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
         if device_ids == self._device_ids:
             return
 
+        state = _async_get_run_state(self._hass)
+        if state.depth:
+            self._pending_device_ids = device_ids
+            state.pending.add(self)
+            return
+
+        self._async_attach_for_devices(device_ids)
+
+    @callback
+    def async_apply_pending_update(self) -> None:
+        """Apply a target update deferred during a turn on run."""
+        if self._pending_device_ids is None:
+            return
+
+        device_ids = self._pending_device_ids
+        self._pending_device_ids = None
+        if device_ids != self._device_ids:
+            self._async_attach_for_devices(device_ids)
+
+    @callback
+    def _async_attach_for_devices(self, device_ids: set[str]) -> None:
+        """Re-attach the turn on actions to the given devices."""
         self._detach_actions()
         self._device_ids = device_ids
         self._unsubs = _async_attach_turn_on_actions(
@@ -182,6 +242,8 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
     def _unsubscribe(self) -> None:
         """Unsubscribe from all events."""
         super()._unsubscribe()
+        _async_get_run_state(self._hass).pending.discard(self)
+        self._pending_device_ids = None
         self._detach_actions()
         self._device_ids = set()
 
