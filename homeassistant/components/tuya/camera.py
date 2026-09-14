@@ -24,7 +24,6 @@ from .entity import TuyaEntity
 
 CAMERAS: dict[DeviceCategory, CameraEntityDescription] = {
     DeviceCategory.DGHSXJ: CameraEntityDescription(key=""),
-    DeviceCategory.KSDJML: CameraEntityDescription(key=""),
     DeviceCategory.SP: CameraEntityDescription(key=""),
 }
 

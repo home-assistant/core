@@ -509,11 +509,6 @@ class DeviceCategory(StrEnum):
 
     See https://github.com/orgs/home-assistant/discussions/329
     """
-    KSDJML = "ksdjml"
-    """Video peephole camera / video intercom doorbell (undocumented)
-
-    see https://github.com/home-assistant/core/issues/182051
-    """
     MBD = "mbd"
     """Unknown light product
 

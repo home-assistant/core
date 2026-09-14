@@ -78,9 +78,6 @@ BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
     ),
 }
 
-# Video peephole camera / video intercom doorbell (duplicate of `sp`)
-BUTTONS[DeviceCategory.KSDJML] = BUTTONS[DeviceCategory.SP]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,

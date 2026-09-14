@@ -112,9 +112,6 @@ EVENTS: dict[DeviceCategory, tuple[TuyaEventEntityDescription, ...]] = {
     ),
 }
 
-# Video peephole camera / video intercom doorbell (duplicate of `sp`)
-EVENTS[DeviceCategory.KSDJML] = EVENTS[DeviceCategory.SP]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
