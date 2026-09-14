@@ -6,7 +6,7 @@ name after removing the 'async_step_' prefix. For example,
 if the method is named async_step_user, the step_id should be 'user'.
 """
 
-from astroid import nodes
+from astroid import InferenceError, Uninferable, nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
@@ -67,7 +67,12 @@ class HassEnforceConfigEntryStepIdMatchMethodChecker(BaseChecker):
         if node.keywords:
             for keyword in node.keywords:
                 if keyword.arg == "step_id":
-                    values = list(keyword.value.infer())
+                    try:
+                        values = list(keyword.value.infer())
+                    except InferenceError:
+                        values = []
+                    if values[0] is Uninferable:
+                        values = []
                     if len(values) > 1:
                         step_id_node = "__INCORRECT__"
                         break
