@@ -154,9 +154,22 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         client.smartglass.get_installed_apps.return_value = InstalledPackagesList(
             **load_json_object_fixture("smartglass_installed_applications.json", DOMAIN)
         )
-        client.smartglass.wake_up.return_value = CommandResponse(
+        command_response = CommandResponse(
             **load_json_object_fixture("smartglass_command_response.json", DOMAIN)
         )
+        client.smartglass.wake_up.return_value = command_response
+        client.smartglass.turn_off.return_value = command_response
+        client.smartglass.reboot.return_value = command_response
+        client.smartglass.mute.return_value = command_response
+        client.smartglass.unmute.return_value = command_response
+        client.smartglass.play.return_value = command_response
+        client.smartglass.pause.return_value = command_response
+        client.smartglass.previous.return_value = command_response
+        client.smartglass.next.return_value = command_response
+        client.smartglass.go_home.return_value = command_response
+        client.smartglass.go_back.return_value = command_response
+        client.smartglass.show_guide_tab.return_value = command_response
+        client.smartglass.show_tv_guide.return_value = command_response
 
         client.catalog = AsyncMock()
         client.catalog.get_product_from_alternate_id.return_value = CatalogResponse(
