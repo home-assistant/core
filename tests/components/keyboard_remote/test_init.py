@@ -28,6 +28,7 @@ from homeassistant.components.keyboard_remote.const import (
     EVENT_KEYBOARD_REMOTE_DISCONNECTED,
     KEY_CODE,
     KEY_VALUE,
+    MATCH_DEVICE_PATH,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -319,6 +320,50 @@ async def test_matches_device_no_match(
         patch("os.path.exists", return_value=False),
     ):
         assert handler.matches_device("/dev/input/event99", dev) is False
+
+
+async def test_scan_prefers_device_path_over_name_match(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a handler binds its configured device_path, not a same-named sibling.
+
+    A composite keyboard exposes several nodes reporting one name, and only the
+    node the user selected carries the by-id symlink. list_devices() returns
+    them in arbitrary order, so the weaker name match must not win by arriving
+    first.
+    """
+    sibling_path = "/dev/input/event9"
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+
+    devices = {}
+    for path in (sibling_path, FAKE_DEVICE_REAL_PATH):
+        dev = MagicMock()
+        dev.name = FAKE_DEVICE_NAME
+        dev.path = path
+        dev.fileno.return_value = int(path.removeprefix("/dev/input/event"))
+        dev.async_read_loop = MagicMock(return_value=MockAsyncIterator())
+        devices[path] = dev
+
+    def _realpath(path: str) -> str:
+        return FAKE_DEVICE_REAL_PATH if path == FAKE_DEVICE_PATH else path
+
+    with (
+        # The by-id node is listed last, so a first-match scan picks the sibling
+        patch("evdev.list_devices", return_value=[sibling_path, FAKE_DEVICE_REAL_PATH]),
+        patch("evdev.InputDevice", side_effect=lambda path: devices[path]),
+        patch("os.path.realpath", side_effect=_realpath),
+        patch("os.path.exists", return_value=True),
+    ):
+        await manager._async_scan_initial_devices()
+        await hass.async_block_till_done()
+
+    assert list(manager._active_handlers_by_descriptor) == [FAKE_DEVICE_REAL_PATH]
+    devices[sibling_path].close.assert_called_once()
+    devices[FAKE_DEVICE_REAL_PATH].close.assert_not_called()
 
 
 # --- DeviceHandler start/stop monitoring tests ---
@@ -661,7 +706,7 @@ async def test_get_handler_for_device_match(
 
     with (
         patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(handler, "matches_device", return_value=True),
+        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
     ):
         dev, matched = manager._get_handler_for_device(FAKE_DEVICE_REAL_PATH, [handler])
 
@@ -683,7 +728,7 @@ async def test_get_handler_for_device_no_match(
 
     with (
         patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(handler, "matches_device", return_value=False),
+        patch.object(handler, "match_rank", return_value=None),
     ):
         result = manager._get_handler_for_device("/dev/input/event99", [handler])
 
@@ -708,7 +753,7 @@ async def test_scan_initial_devices_finds_matching_device(
     with (
         patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
         patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(handler, "matches_device", return_value=True),
+        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
     ):
         await manager._async_scan_initial_devices()
         await hass.async_block_till_done()
@@ -734,7 +779,7 @@ async def test_scan_initial_devices_skips_non_matching(
         patch("evdev.list_devices", return_value=["/dev/input/event99"]),
         patch("evdev.InputDevice", return_value=mock_input_device),
         patch.object(
-            list(manager._handlers.values())[0], "matches_device", return_value=False
+            list(manager._handlers.values())[0], "match_rank", return_value=None
         ),
     ):
         await manager._async_scan_initial_devices()
@@ -770,7 +815,7 @@ async def test_monitor_devices_create_event(
 
     with (
         patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(handler, "matches_device", return_value=True),
+        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
     ):
         # Run the monitor loop directly
         await manager._async_monitor_devices()
@@ -940,7 +985,7 @@ async def test_check_handler_finds_device_after_start(
     with (
         patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
         patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(handler, "matches_device", return_value=True),
+        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
     ):
         await manager._async_check_handler(handler)
         await hass.async_block_till_done()

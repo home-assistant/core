@@ -40,6 +40,9 @@ from .const import (
     KEY_CODE,
     KEY_VALUE,
     KEY_VALUE_NAME,
+    MATCH_DEVICE_NAME,
+    MATCH_DEVICE_PATH,
+    MATCH_YAML_DESCRIPTOR,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -270,7 +273,7 @@ class KeyboardRemoteManager:
     def _get_handler_for_device(
         self, descriptor: str, handlers: list[DeviceHandler]
     ) -> tuple[InputDevice | None, DeviceHandler | None]:
-        """Find the matching handler for a device descriptor (path).
+        """Find the best matching handler for a device descriptor (path).
 
         The handlers list must be a snapshot taken on the event loop thread
         to avoid race conditions with register/unregister.
@@ -283,24 +286,63 @@ class KeyboardRemoteManager:
         except OSError:
             return (None, None)
 
+        best_handler: DeviceHandler | None = None
+        best_rank: int | None = None
         for handler in handlers:
-            if handler.matches_device(descriptor, dev):
-                return (dev, handler)
+            rank = handler.match_rank(descriptor, dev)
+            if rank is None:
+                continue
+            if best_rank is None or rank < best_rank:
+                best_handler, best_rank = handler, rank
 
-        dev.close()
-        return (None, None)
+        if best_handler is None:
+            dev.close()
+            return (None, None)
+
+        return (dev, best_handler)
 
     def _scan_and_match_devices(
         self, handlers: list[DeviceHandler]
     ) -> list[tuple[str, InputDevice, DeviceHandler]]:
-        """List all devices and return matches (runs in executor)."""
-        from evdev import list_devices  # noqa: PLC0415
+        """List all devices and give each handler its strongest match.
+
+        Every candidate is ranked before anything is assigned. Matching device
+        by device instead would let a name match on one node of a composite
+        keyboard claim the handler before its exact device_path match is
+        reached, and list_devices() returns nodes in arbitrary order.
+        """
+        from evdev import InputDevice, list_devices  # noqa: PLC0415
+
+        opened: dict[str, InputDevice] = {}
+        candidates: list[tuple[int, str, DeviceHandler]] = []
+        for descriptor in list_devices(DEVINPUT):
+            try:
+                dev = InputDevice(descriptor)
+            except OSError:
+                continue
+            opened[descriptor] = dev
+            candidates.extend(
+                (rank, descriptor, handler)
+                for handler in handlers
+                if (rank := handler.match_rank(descriptor, dev)) is not None
+            )
 
         matches: list[tuple[str, InputDevice, DeviceHandler]] = []
-        for descriptor in list_devices(DEVINPUT):
-            dev, handler = self._get_handler_for_device(descriptor, handlers)
-            if dev is not None and handler is not None:
-                matches.append((descriptor, dev, handler))
+        claimed_handlers: set[DeviceHandler] = set()
+        claimed_descriptors: set[str] = set()
+        # Sort on descriptor as well so equally ranked candidates resolve the
+        # same way on every scan.
+        for _rank, descriptor, handler in sorted(candidates, key=lambda c: c[:2]):
+            if handler in claimed_handlers or descriptor in claimed_descriptors:
+                continue
+            claimed_handlers.add(handler)
+            claimed_descriptors.add(descriptor)
+            matches.append((descriptor, opened[descriptor], handler))
+
+        for descriptor, dev in opened.items():
+            if descriptor not in claimed_descriptors:
+                dev.close()
+
         return matches
 
     async def _async_scan_initial_devices(self) -> None:
@@ -326,16 +368,27 @@ class KeyboardRemoteManager:
         handlers: list[DeviceHandler],
         skip_descriptors: set[str],
     ) -> tuple[str, InputDevice] | None:
-        """Find the first connected device matching a handler (runs in executor)."""
+        """Find the best connected device matching a handler (runs in executor)."""
         from evdev import list_devices  # noqa: PLC0415
 
-        for descriptor in list_devices(DEVINPUT):
+        best: tuple[int, str, InputDevice] | None = None
+        for descriptor in sorted(list_devices(DEVINPUT)):
             if descriptor in skip_descriptors:
                 continue
             dev, matched = self._get_handler_for_device(descriptor, handlers)
-            if matched is handler and dev is not None:
-                return (descriptor, dev)
-        return None
+            if dev is None:
+                continue
+            rank = handler.match_rank(descriptor, dev) if matched is handler else None
+            if rank is None or (best is not None and rank >= best[0]):
+                dev.close()
+                continue
+            if best is not None:
+                best[2].close()
+            best = (rank, descriptor, dev)
+
+        if best is None:
+            return None
+        return (best[1], best[2])
 
     async def _async_check_handler(self, handler: DeviceHandler) -> None:
         """Check if a newly registered handler's device is currently connected."""
@@ -440,13 +493,13 @@ class DeviceHandler:
             CONF_EMULATE_KEY_HOLD_REPEAT, DEFAULT_EMULATE_KEY_HOLD_REPEAT
         )
 
-    def matches_device(self, descriptor: str, dev: InputDevice) -> bool:
-        """Check if this handler matches the given device.
+    def match_rank(self, descriptor: str, dev: InputDevice) -> int | None:
+        """Return how strongly this handler matches a device, or None.
 
-        Matching order:
-        1. By-id device_path realpath comparison
-        2. Original YAML descriptor realpath comparison
-        3. Device name match
+        Lower ranks are stronger, and callers must prefer the strongest match
+        rather than the first one they find. A composite keyboard reports the
+        same name on every node it exposes, so a name match alone cannot tell
+        the node the user selected from its siblings.
         """
         real_path = os.path.realpath(descriptor)
 
@@ -457,18 +510,22 @@ class DeviceHandler:
             and os.path.exists(device_path)
             and os.path.realpath(device_path) == real_path
         ):
-            return True
+            return MATCH_DEVICE_PATH
 
         # Check original YAML descriptor
         yaml_descriptor = self._device_descriptor
         if yaml_descriptor and os.path.realpath(yaml_descriptor) == real_path:
-            return True
+            return MATCH_YAML_DESCRIPTOR
 
         # Check by device name
         if self._device_name_config and dev.name == self._device_name_config:
-            return True
+            return MATCH_DEVICE_NAME
 
-        return False
+        return None
+
+    def matches_device(self, descriptor: str, dev: InputDevice) -> bool:
+        """Check if this handler matches the given device."""
+        return self.match_rank(descriptor, dev) is not None
 
     async def async_device_start_monitoring(self, dev: InputDevice) -> None:
         """Start event monitoring task and fire connected event."""

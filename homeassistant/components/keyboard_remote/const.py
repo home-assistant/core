@@ -33,6 +33,13 @@ EVENT_KEYBOARD_REMOTE_DISCONNECTED: Final = "keyboard_remote_disconnected"
 # Event data keys
 KEY_CODE: Final = "key_code"
 
+# Device match strength, lowest wins. A composite keyboard exposes several
+# nodes reporting the same name, and only the one the user picked carries the
+# configured by-id path, so a name match must never outrank a path match.
+MATCH_DEVICE_PATH: Final = 0
+MATCH_YAML_DESCRIPTOR: Final = 1
+MATCH_DEVICE_NAME: Final = 2
+
 # System paths
 DEVINPUT: Final = "/dev/input"
 DEVINPUT_BY_ID: Final = "/dev/input/by-id"
