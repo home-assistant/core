@@ -1601,6 +1601,102 @@ async def test_load_bad_data(
     )
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_load_entity_with_missing_optional_fields(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test loading an entity with missing hidden_by/disabled_by does not crash."""
+    hass_storage[er.STORAGE_KEY] = {
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": er.STORAGE_VERSION_MINOR,
+        "data": {
+            "entities": [
+                {
+                    "aliases": [],
+                    "aliases_v2": [],
+                    "area_id": None,
+                    "capabilities": None,
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "2024-02-14T12:00:00.900075+00:00",
+                    "device_class": None,
+                    "device_id": None,
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.missing_hidden_by",
+                    "has_entity_name": False,
+                    # hidden_by is intentionally omitted to simulate corruption
+                    "icon": None,
+                    "id": "00001",
+                    "labels": [],
+                    "modified_at": "2024-02-14T12:00:00.900075+00:00",
+                    "name": None,
+                    "object_id_base": None,
+                    "options": {},
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": None,
+                    "platform": "super_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "unique_missing_hidden",
+                    "unit_of_measurement": None,
+                },
+                {
+                    "aliases": [],
+                    "aliases_v2": [],
+                    "area_id": None,
+                    "capabilities": None,
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "2024-02-14T12:00:00.900075+00:00",
+                    "device_class": None,
+                    "device_id": None,
+                    # disabled_by is intentionally omitted to simulate corruption
+                    "entity_category": None,
+                    "entity_id": "test.missing_disabled_by",
+                    "has_entity_name": False,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "00002",
+                    "labels": [],
+                    "modified_at": "2024-02-14T12:00:00.900075+00:00",
+                    "name": None,
+                    "object_id_base": None,
+                    "options": {},
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": None,
+                    "platform": "super_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "unique_missing_disabled",
+                    "unit_of_measurement": None,
+                },
+            ],
+            "deleted_entities": [],
+            "settings": {"entity_id_parts": None},
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    assert len(registry.entities) == 2
+    assert registry.entities["test.missing_hidden_by"].hidden_by is None
+    assert registry.entities["test.missing_disabled_by"].disabled_by is None
+
+
 def test_async_get_entity_id(entity_registry: er.EntityRegistry) -> None:
     """Test that entity_id is returned."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")

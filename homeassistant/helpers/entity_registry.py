@@ -2288,14 +2288,14 @@ class EntityRegistry(BaseRegistry):
                     device_class=entity["device_class"],
                     device_id=device_id,
                     disabled_by=RegistryEntryDisabler(entity["disabled_by"])
-                    if entity["disabled_by"]
+                    if entity.get("disabled_by")
                     else None,
                     entity_category=EntityCategory(entity["entity_category"])
                     if entity["entity_category"]
                     else None,
                     entity_id=entity["entity_id"],
                     hidden_by=RegistryEntryHider(entity["hidden_by"])
-                    if entity["hidden_by"]
+                    if entity.get("hidden_by")
                     else None,
                     icon=entity["icon"],
                     id=entity["id"],
