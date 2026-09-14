@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
+import probatio
 
 DOMAIN = "analytics"
 INTERVAL = timedelta(days=1)
@@ -53,12 +53,12 @@ ATTR_UUID = "uuid"
 ATTR_VERSION = "version"
 
 
-PREFERENCE_SCHEMA = vol.Schema(
+PREFERENCE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_BASE): bool,
-        vol.Optional(ATTR_SNAPSHOTS): bool,
-        vol.Optional(ATTR_DIAGNOSTICS): bool,
-        vol.Optional(ATTR_STATISTICS): bool,
-        vol.Optional(ATTR_USAGE): bool,
+        probatio.Optional(ATTR_BASE): bool,
+        probatio.Optional(ATTR_SNAPSHOTS): bool,
+        probatio.Optional(ATTR_DIAGNOSTICS): bool,
+        probatio.Optional(ATTR_STATISTICS): bool,
+        probatio.Optional(ATTR_USAGE): bool,
     }
 )
