@@ -4,6 +4,7 @@ import asyncio
 from ipaddress import IPv4Address
 import logging
 from typing import override
+from urllib.parse import quote
 
 from habitron_client import (
     HabitronClient,
@@ -273,18 +274,39 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
     def _resolve_base_url(self) -> str:
         """Return the base of the hub's own web UI.
 
-        An add-on hub is reached through Home Assistant's ingress, a standalone
-        one on its own port.
+        An add-on hub is reached through Home Assistant, a standalone one on
+        its own port.
         """
         if self.hub.is_addon:
-            return f"http://{self.host}:8123/{self.hub.slug}/ingress?index="
+            return f"homeassistant://{self.hub.slug}/ingress"
         return f"http://{self.host}:{_WEB_PORT}"
+
+    def _conf_url(self, path: str) -> str | None:
+        """Return the link to ``path`` in the hub's own web UI.
+
+        An add-on hub is reached through Home Assistant, so the link is stored
+        with the ``homeassistant://`` scheme: the frontend rewrites that to a
+        plain ``/`` against whatever address the viewer is currently using. One
+        stored value then works on the local network and through a remote URL
+        alike -- and ``configuration_url`` is stored once, so a resolved
+        address could only ever match one of the two. The page inside the app
+        travels as the ``index`` query.
+
+        A standalone hub serves its own UI, so that one keeps an absolute URL.
+        """
+        if not self.host:
+            return None
+        if self.hub.is_addon:
+            # ``safe=""``: the default leaves "/" alone, and the page is a
+            # query *value* -- the app's own links carry it encoded.
+            return f"{self.base_url}?index={quote(path, safe='')}"
+        return f"{self.base_url}{path}"
 
     def _register_hub_device(self) -> None:
         """Register the SmartHub itself as a device."""
         dr.async_get(self.hass).async_get_or_create(
             config_entry_id=self.entry.entry_id,
-            configuration_url=f"{self.base_url}/hub" if self.host else None,
+            configuration_url=self._conf_url("/hub"),
             # Every interface, not just the identifying one: the hub answers
             # over whichever is up, so a discovery that saw the other one must
             # still match this device. The library already dropped anything that
@@ -315,7 +337,7 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
         )
         rt_dev = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
-            configuration_url=f"{self.base_url}/router" if self.host else None,
+            configuration_url=self._conf_url("/router"),
             identifiers={(DOMAIN, router.uid)},
             manufacturer=MANUFACTURER,
             name=router.name,
@@ -334,9 +356,7 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
             # intentionally not done.
             dev = dev_reg.async_get_or_create(
                 config_entry_id=self.entry.entry_id,
-                configuration_url=(
-                    f"{self.base_url}/module-{raddr}" if self.host else None
-                ),
+                configuration_url=self._conf_url(f"/module-{raddr}"),
                 identifiers={(DOMAIN, module.uid)},
                 manufacturer=MANUFACTURER,
                 suggested_area=_area_name(router, module.area),

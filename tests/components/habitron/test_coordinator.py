@@ -335,21 +335,33 @@ async def test_duplicate_hub_is_refused_before_the_registry_is_touched(
 @pytest.mark.parametrize(
     ("slug", "expected"),
     [
-        (
-            "habitron_smarthub",
-            f"http://{MOCK_HOST}:8123/habitron_smarthub/ingress?index=",
-        ),
-        ("", f"http://{MOCK_HOST}:7780"),
+        # Stored relative: the frontend resolves ``homeassistant://`` against
+        # whatever address the viewer is on, and ``configuration_url`` is
+        # stored once -- a resolved address could only ever match either the
+        # local network or a remote URL, never both.
+        ("habitron_smarthub", "homeassistant://habitron_smarthub/ingress?index=%2Fhub"),
+        # A standalone hub serves its own UI, and that address we do know.
+        ("", f"http://{MOCK_HOST}:7780/hub"),
     ],
     ids=["add-on", "standalone"],
 )
-async def test_base_url_follows_the_deployment(
+async def test_device_links_follow_the_deployment(
     hass: HomeAssistant, slug: str, expected: str
 ) -> None:
-    """An add-on hub is reached through ingress, a standalone one on its port."""
+    """An add-on hub is reached through Home Assistant, a standalone one direct."""
     coord = _ready(hass)
     coord.hub = _hub(slug=slug)
-    assert coord._resolve_base_url() == expected
+    coord.base_url = coord._resolve_base_url()
+    assert coord._conf_url("/hub") == expected
+
+
+async def test_device_links_are_dropped_without_an_address(
+    hass: HomeAssistant,
+) -> None:
+    """Nothing was resolved yet, so there is no page to point at."""
+    coord = _ready(hass)
+    coord.host = ""
+    assert coord._conf_url("/hub") is None
 
 
 async def test_build_registers_the_device_tree(
