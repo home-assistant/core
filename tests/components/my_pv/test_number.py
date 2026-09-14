@@ -88,19 +88,24 @@ async def test_number_set_value(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
+    state = hass.states.get("number.my_pv_ac_elwa_2_boost_target_temperature")
+    assert state.state == "55.0"
+
+    mock_my_pv_client.get_setup_value = Mock(return_value=70.0)
+
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
-            ATTR_VALUE: 70,
+            ATTR_VALUE: 70.0,
         },
         blocking=True,
     )
-    mock_my_pv_client.set_setup_value.assert_awaited_once_with("bsttemp", 70)
+    mock_my_pv_client.set_setup_value.assert_awaited_once_with("bsttemp", 70.0)
 
     state = hass.states.get("number.my_pv_ac_elwa_2_boost_target_temperature")
-    assert state.state == "55.0"
+    assert state.state == "70.0"
 
 
 async def test_number_set_value_returns_false(
