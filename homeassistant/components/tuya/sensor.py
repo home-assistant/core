@@ -1799,9 +1799,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
 
-# Video peephole camera / video intercom doorbell (duplicate of `sp`)
-SENSORS[DeviceCategory.KSDJML] = SENSORS[DeviceCategory.SP]
-
 # Power Socket (duplicate of `kg`)
 SENSORS[DeviceCategory.PC] = SENSORS[DeviceCategory.KG]
 

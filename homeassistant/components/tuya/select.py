@@ -378,9 +378,6 @@ SELECTS[DeviceCategory.CZ] = SELECTS[DeviceCategory.KG]
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 SELECTS[DeviceCategory.DGHSXJ] = SELECTS[DeviceCategory.SP]
 
-# Video peephole camera / video intercom doorbell (duplicate of `sp`)
-SELECTS[DeviceCategory.KSDJML] = SELECTS[DeviceCategory.SP]
-
 # Power Socket (duplicate of `kg`)
 SELECTS[DeviceCategory.PC] = SELECTS[DeviceCategory.KG]
 
