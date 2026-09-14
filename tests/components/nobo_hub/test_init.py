@@ -225,7 +225,7 @@ async def test_setup_registers_hub_device(
         (DOMAIN, SERIAL), mock_config_entry.entry_id
     )
     assert device is not None
-    assert device.config_entries == {mock_config_entry.entry_id}
+    assert device.config_entry_id == mock_config_entry.entry_id
     assert device.name == "My Eco Hub"
     assert device.manufacturer == "Glen Dimplex Nordic AS"
     assert device.model == "Nobø Ecohub"
@@ -443,7 +443,7 @@ async def test_disconnected_hub_does_not_remove_devices(
 
 @pytest.mark.parametrize(
     "platforms",
-    [[Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]],
+    [[Platform.CLIMATE, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]],
     indirect=True,
 )
 @pytest.mark.usefixtures("init_integration")

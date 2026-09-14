@@ -9,6 +9,6 @@
   "requirements": [
     "gazetteer-matcher==1.1.0",
     "hassil==3.12.0",
-    "home-assistant-intents==2026.8.25"
+    "home-assistant-intents==2026.8.28"
   ]
 }

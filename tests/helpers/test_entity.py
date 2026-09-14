@@ -10,11 +10,11 @@ from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 from propcache.api import cached_property
 import pytest
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import (
@@ -614,6 +614,25 @@ async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
     assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
 
+async def test_async_remove_reports_the_original_error(hass: HomeAssistant) -> None:
+    """Test a failing removal surfaces its own exception."""
+
+    class MockEntityFailingRemoval(entity.Entity):
+        """Entity that cannot be removed cleanly."""
+
+        async def async_will_remove_from_hass(self) -> None:
+            """Fail while being removed."""
+            raise ValueError("Boom")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntityFailingRemoval()
+    ent.entity_id = "test.test"
+    await platform.async_add_entities([ent])
+
+    with pytest.raises(ValueError, match="Boom"):
+        await ent.async_remove()
+
+
 async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> None:
     """Test in flight polling is ignored after removing."""
     result = []
@@ -960,7 +979,7 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
 )
 def test_entity_category_schema(value, expected) -> None:
     """Test entity category schema."""
-    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    schema = probatio.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     result = schema(value)
     assert result == expected
     assert isinstance(result, EntityCategory)
@@ -969,9 +988,9 @@ def test_entity_category_schema(value, expected) -> None:
 @pytest.mark.parametrize("value", [None, "non_existing"])
 def test_entity_category_schema_error(value) -> None:
     """Test entity category schema."""
-    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    schema = probatio.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     with pytest.raises(
-        vol.Invalid,
+        probatio.Invalid,
         match=r"expected EntityCategory or one of 'config', 'diagnostic'",
     ):
         schema(value)

@@ -16,7 +16,7 @@ from hass_nabucasa import (
     NabuCasaBaseError,
     RemoteNotConnected,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import alexa, google_assistant
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
@@ -110,68 +110,70 @@ _SIGNAL_CLOUDHOOKS_UPDATED: SignalType[dict[str, Any]] = SignalType(
 
 STARTUP_REPAIR_DELAY = 1  # 1 hour
 
-ALEXA_ENTITY_SCHEMA = vol.Schema(
+ALEXA_ENTITY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DESCRIPTION): cv.string,
-        vol.Optional(alexa.CONF_DISPLAY_CATEGORIES): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_DESCRIPTION): cv.string,
+        probatio.Optional(alexa.CONF_DISPLAY_CATEGORIES): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
-GOOGLE_ENTITY_SCHEMA = vol.Schema(
+GOOGLE_ENTITY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(google_assistant.CONF_ROOM_HINT): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_ALIASES): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(google_assistant.CONF_ROOM_HINT): cv.string,
     }
 )
 
-ASSISTANT_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_FILTER, default=dict): entityfilter.FILTER_SCHEMA}
+ASSISTANT_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_FILTER, default=dict): entityfilter.FILTER_SCHEMA}
 )
 
 ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend(
-    {vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA}}
+    {probatio.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA}}
 )
 
 GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend(
-    {vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}}
+    {probatio.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}}
 )
 
-_BASE_CONFIG_SCHEMA = vol.Schema(
+_BASE_CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_COGNITO_CLIENT_ID): str,
-        vol.Optional(CONF_USER_POOL_ID): str,
-        vol.Optional(CONF_REGION): str,
-        vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
-        vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
-        vol.Optional(CONF_ACCOUNT_LINK_SERVER): str,
-        vol.Optional(CONF_ACME_SERVER): str,
-        vol.Optional(CONF_API_SERVER): str,
-        vol.Optional(CONF_RELAYER_SERVER): str,
-        vol.Optional(CONF_REMOTESTATE_SERVER): str,
-        vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
+        probatio.Optional(CONF_COGNITO_CLIENT_ID): str,
+        probatio.Optional(CONF_USER_POOL_ID): str,
+        probatio.Optional(CONF_REGION): str,
+        probatio.Optional(CONF_ALEXA): ALEXA_SCHEMA,
+        probatio.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
+        probatio.Optional(CONF_ACCOUNT_LINK_SERVER): str,
+        probatio.Optional(CONF_ACME_SERVER): str,
+        probatio.Optional(CONF_API_SERVER): str,
+        probatio.Optional(CONF_RELAYER_SERVER): str,
+        probatio.Optional(CONF_REMOTESTATE_SERVER): str,
+        probatio.Optional(CONF_SERVICEHANDLERS_SERVER): str,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Any(
+        DOMAIN: probatio.Any(
             _BASE_CONFIG_SCHEMA.extend(
                 {
-                    vol.Required(CONF_MODE): vol.In([MODE_DEV]),
-                    vol.Required(CONF_API_SERVER): str,
-                    vol.Optional(CONF_DISCOVERY_SERVICE_ACTIONS): {str: cv.url},
+                    probatio.Required(CONF_MODE): probatio.In([MODE_DEV]),
+                    probatio.Required(CONF_API_SERVER): str,
+                    probatio.Optional(CONF_DISCOVERY_SERVICE_ACTIONS): {str: cv.url},
                 }
             ),
             _BASE_CONFIG_SCHEMA.extend(
                 {
-                    vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In([MODE_PROD]),
+                    probatio.Optional(CONF_MODE, default=DEFAULT_MODE): probatio.In(
+                        [MODE_PROD]
+                    ),
                 }
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -386,16 +388,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await async_create_cloud_pipeline(hass)
         async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
 
-    async def _on_cloud_login_failed(event: CloudEvent) -> None:
+    def _on_cloud_login_failed(event: CloudEvent) -> None:
         """Handle hass_nabucasa giving up on a pending auto-login."""
         # The event bus types every handler against the CloudEvent base class.
         if not isinstance(event, LoginFailedEvent) or not event.auto:
             return
-
-        # Keep the registration around, so a client that was not connected when
-        # this fired can still find out why it stopped.
-        if pending := hass.data[DATA_PENDING_AUTO_LOGIN]:
-            pending.mark_failed(event.reason)
 
         async_dispatcher_send(
             hass,

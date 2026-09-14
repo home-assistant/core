@@ -7,9 +7,9 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.conversation import (
     AssistantContent,
@@ -142,8 +142,8 @@ async def test_multiple_llm_apis(
 
         name = "test_tool"
         description = "Test function"
-        parameters = vol.Schema(
-            {vol.Optional("param1", description="Test parameters"): str}
+        parameters = probatio.Schema(
+            {probatio.Optional("param1", description="Test parameters"): str}
         )
 
     class MyAPI(llm.API):
@@ -437,8 +437,8 @@ async def test_tool_call(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+    mock_tool.parameters = probatio.Schema(
+        {probatio.Optional("param1", description="Test parameters"): str}
     )
     mock_tool.async_call.return_value = "Test response"
 
@@ -515,8 +515,8 @@ async def test_tool_call_exception(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+    mock_tool.parameters = probatio.Schema(
+        {probatio.Optional("param1", description="Test parameters"): str}
     )
     mock_tool.async_call.side_effect = HomeAssistantError("Test error")
 
@@ -696,8 +696,8 @@ async def test_add_delta_content_stream(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+    mock_tool.parameters = probatio.Schema(
+        {probatio.Optional("param1", description="Test parameters"): str}
     )
 
     async def tool_call(

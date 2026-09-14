@@ -3,7 +3,7 @@
 import re
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import (
@@ -34,8 +34,8 @@ VALUE_KEY = re.compile(SENSOR_VALUE_KEY)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_EMAIL): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_EMAIL): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

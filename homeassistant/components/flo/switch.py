@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from aioflo.location import SLEEP_MINUTE_OPTIONS, SYSTEM_MODE_HOME, SYSTEM_REVERT_MODES
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
@@ -47,13 +47,13 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_SLEEP_MODE,
         {
-            vol.Required(ATTR_SLEEP_MINUTES, default=120): vol.All(
-                vol.Coerce(int),
-                vol.In(SLEEP_MINUTE_OPTIONS),
+            probatio.Required(ATTR_SLEEP_MINUTES, default=120): probatio.All(
+                probatio.Coerce(int),
+                probatio.In(SLEEP_MINUTE_OPTIONS),
             ),
-            vol.Required(ATTR_REVERT_TO_MODE, default=SYSTEM_MODE_HOME): vol.In(
-                SYSTEM_REVERT_MODES
-            ),
+            probatio.Required(
+                ATTR_REVERT_TO_MODE, default=SYSTEM_MODE_HOME
+            ): probatio.In(SYSTEM_REVERT_MODES),
         },
         "async_set_mode_sleep",
     )

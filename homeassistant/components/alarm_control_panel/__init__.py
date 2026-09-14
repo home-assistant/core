@@ -4,8 +4,8 @@ from datetime import timedelta
 import logging
 from typing import Any, Final, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -49,7 +49,7 @@ SCAN_INTERVAL: Final = timedelta(seconds=30)
 CONF_DEFAULT_CODE = "default_code"
 
 ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
-    {vol.Optional(ATTR_CODE): cv.string}
+    {probatio.Optional(ATTR_CODE): cv.string}
 )
 
 

@@ -5,8 +5,8 @@ from enum import StrEnum
 import logging
 from typing import final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
@@ -40,7 +40,7 @@ class ButtonDeviceClass(StrEnum):
     UPDATE = "update"
 
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(ButtonDeviceClass))
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(ButtonDeviceClass))
 
 # mypy: disallow-any-generics
 
