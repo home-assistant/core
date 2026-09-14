@@ -123,6 +123,8 @@ components: &components
   - homeassistant/components/template/**
   - homeassistant/components/timer/**
   - homeassistant/components/trace/**
+  # twilio is used by twilio_call and twilio_sms
+  - homeassistant/components/twilio/**
   - homeassistant/components/usb/**
   - homeassistant/components/webhook/**
   - homeassistant/components/websocket_api/**

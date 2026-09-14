@@ -11,12 +11,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_TWILIO, DOMAIN
 
 CONF_ACCOUNT_SID = "account_sid"
 CONF_AUTH_TOKEN = "auth_token"
-
-DATA_TWILIO = DOMAIN
 
 RECEIVED_DATA = f"{DOMAIN}_data_received"
 
