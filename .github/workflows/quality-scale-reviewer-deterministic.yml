@@ -1,0 +1,159 @@
+name: Quality scale reviewer (deterministic)
+
+# Stage 1 of the Quality scale reviewer pipeline.
+#
+# Collects the pull request metadata and diff, the touched integration domains
+# that have a quality_scale.yaml, and the Integration Quality Scale rules index
+# and documentation, then uploads them as an artifact. Stage 2 (the agentic
+# workflow defined in `quality-scale-reviewer.md`) consumes the artifact on
+# completion.
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+    branches-ignore:
+      - master
+    paths:
+      - "homeassistant/components/**"
+      - "tests/components/**"
+  workflow_dispatch:
+    inputs:
+      pull_request_number:
+        description: "Pull request number to (re-)review"
+        required: true
+        type: number
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.pull_request_number || github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deterministic:
+    name: Collect pull request data and quality scale rules
+    # Draft pull requests are reviewed once they are marked ready for review.
+    if: github.event_name == 'workflow_dispatch' || !github.event.pull_request.draft
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read # To fetch the PR diff via gh CLI
+    timeout-minutes: 10
+    env:
+      PR_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
+      PR_MAX_CHANGED_LINES: "4000"
+      PR_MAX_CHANGED_FILES: "300"
+      OUT: deterministic
+    steps:
+      - name: Check out the pull request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/pull/${{ inputs.pull_request_number || github.event.pull_request.number }}/head
+          persist-credentials: false
+      - name: Collect pull request data
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${OUT}"
+
+          gh pr view "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" \
+            --json number,title,body,headRefOid,baseRefName,additions,deletions,changedFiles \
+            > "${OUT}/pr-meta.json"
+
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --paginate --jq '.[].filename' \
+            | sed -nE 's#^(homeassistant|tests)/components/([a-z0-9_]+)/.*#\2#p' \
+            | sort -u \
+            | while read -r domain; do
+                if [ -f "homeassistant/components/${domain}/quality_scale.yaml" ]; then
+                  echo "${domain}"
+                fi
+              done > "${OUT}/domains.txt"
+
+          CHANGED_LINES=$(jq '.additions + .deletions' "${OUT}/pr-meta.json")
+          CHANGED_FILES=$(jq '.changedFiles' "${OUT}/pr-meta.json")
+          SKIP=false
+          TOO_LONG=false
+          SKIP_REASON=""
+          if [ "${CHANGED_LINES}" -gt "${PR_MAX_CHANGED_LINES}" ] || [ "${CHANGED_FILES}" -gt "${PR_MAX_CHANGED_FILES}" ]; then
+            SKIP=true
+            TOO_LONG=true
+            SKIP_REASON="changes ${CHANGED_LINES} lines in ${CHANGED_FILES} files, above the limit of ${PR_MAX_CHANGED_LINES} lines and ${PR_MAX_CHANGED_FILES} files"
+          elif [ ! -s "${OUT}/domains.txt" ]; then
+            SKIP=true
+            SKIP_REASON="touches no integration with a quality_scale.yaml"
+          fi
+
+          jq -n \
+            --slurpfile meta "${OUT}/pr-meta.json" \
+            --rawfile domains "${OUT}/domains.txt" \
+            --argjson skip "${SKIP}" \
+            --argjson too_long "${TOO_LONG}" \
+            --arg skip_reason "${SKIP_REASON}" \
+            '$meta[0] | {
+              pr_number: .number,
+              head_sha: .headRefOid,
+              skip: $skip,
+              too_long: $too_long,
+              skip_reason: $skip_reason,
+              changed_lines: (.additions + .deletions),
+              changed_files: .changedFiles,
+              domains: ($domains | split("\n") | map(select(. != "")))
+            }' > "${OUT}/results.json"
+          echo "skip=${SKIP}" >> "${GITHUB_OUTPUT}"
+
+          if [ "${SKIP}" = false ]; then
+            gh pr diff "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" > "${OUT}/pr-diff.patch"
+          fi
+          echo "PR #${PR_NUMBER}: skip=${SKIP} ${SKIP_REASON}; domains: $(paste -sd, "${OUT}/domains.txt")"
+      - name: Collect the quality scale rules index and documentation
+        if: steps.pr.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${OUT}/rules"
+
+          # Fetch the rules index and every rule document from the
+          # documentation repository in one request.
+          gh api graphql -f query='
+            query {
+              repository(owner: "home-assistant", name: "developers.home-assistant") {
+                tiers: object(expression: "master:docs/core/integration-quality-scale/_includes/tiers.json") {
+                  ... on Blob { text }
+                }
+                rules: object(expression: "master:docs/core/integration-quality-scale/rules") {
+                  ... on Tree { entries { name object { ... on Blob { text } } } }
+                }
+              }
+            }' > "${RUNNER_TEMP}/quality-scale-docs.json"
+          jq -r '
+            (.data.repository.tiers.text | fromjson) as $tiers
+            | ([.data.repository.rules.entries[]
+                | select(.name | endswith(".md"))
+                | {(.name[:-3]): ((.object.text | capture("(?m)^title:\\s*\"?(?<t>[^\"\\n]*)\"?").t) // "")}
+              ] | add) as $titles
+            | "# Integration Quality Scale rules: tier | rule | title",
+              (["bronze", "silver", "gold", "platinum"][] as $tier
+                | $tiers[$tier][]
+                | (if type == "object" then .id else . end) as $rule
+                | "\($tier) | \($rule) | \($titles[$rule] // "")")
+          ' "${RUNNER_TEMP}/quality-scale-docs.json" > "${OUT}/rules-index.txt"
+          jq -r '.data.repository.rules.entries[] | select(.name | endswith(".md")) | "\(.name)\t\(.object.text | @base64)"' \
+            "${RUNNER_TEMP}/quality-scale-docs.json" \
+            | while IFS=$'\t' read -r name encoded; do
+                printf '%s' "${encoded}" | base64 -d > "${OUT}/rules/${name}"
+              done
+
+          echo "$(wc -l < "${OUT}/pr-diff.patch") diff lines," \
+            "$(grep -c '^[a-z]* | ' "${OUT}/rules-index.txt") rules in index," \
+            "$(find "${OUT}/rules" -name '*.md' | wc -l) rule docs"
+      - name: Upload deterministic artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: quality-scale-reviewer-deterministic
+          path: deterministic
+          if-no-files-found: error
+          retention-days: 7
