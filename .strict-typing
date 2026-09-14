@@ -375,6 +375,7 @@ homeassistant.components.lovelace.*
 homeassistant.components.luftdaten.*
 homeassistant.components.lunatone.*
 homeassistant.components.lutron.*
+homeassistant.components.lyngdorf.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
 homeassistant.components.marantz_infrared.*

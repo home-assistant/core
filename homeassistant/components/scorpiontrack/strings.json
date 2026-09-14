@@ -29,6 +29,9 @@
       }
     },
     "sensor": {
+      "heading": {
+        "name": "Heading"
+      },
       "last_reported": {
         "name": "Last reported"
       }
