@@ -1,12 +1,17 @@
 """iCloud account."""
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 import operator
 from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
+from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
+    PyiCloud2FARequiredException,
+    PyiCloudAPIResponseException,
+    PyiCloudAuthRequiredException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
@@ -15,7 +20,7 @@ from pyicloud.exceptions import (
 from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_USERNAME, EntityStateAttribute
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -60,6 +65,42 @@ if TYPE_CHECKING:
     from .media_source import PhotoCache
 
 _LOGGER = logging.getLogger(__name__)
+
+# pyicloud only raises PyiCloud2FARequiredException for a 409 whose body is JSON
+# with authType == "hsa2". Every other authentication rejection falls through to
+# Session._raise_error(), which raises a plain PyiCloudAPIResponseException
+# carrying the HTTP status in .code, so the status is what has to be inspected.
+#
+# GENERAL_AUTH_ERROR (500) is excluded on purpose: pyicloud groups it with the
+# authentication statuses, but a 500 is just as likely to be a transient iCloud
+# failure, and those have to keep being retried rather than parked for the user.
+_AUTH_REQUIRED_STATUSES = frozenset(
+    {
+        AppleAuthError.TWO_FACTOR_REQUIRED,
+        AppleAuthError.LOGIN_TOKEN_EXPIRED,
+        AppleAuthError.FIND_MY_REAUTH_REQUIRED,
+    }
+)
+
+
+def _is_auth_error(err: PyiCloudAPIResponseException) -> bool:
+    """Return True if the account has to authenticate again to recover."""
+    return isinstance(err.code, int) and err.code in _AUTH_REQUIRED_STATUSES
+
+
+def _is_auth_failure(err: BaseException) -> bool:
+    """Return True if iCloud rejected the session rather than the request."""
+    if isinstance(
+        err,
+        (
+            PyiCloud2FARequiredException,
+            PyiCloudFailedLoginException,
+            PyiCloudAuthRequiredException,
+        ),
+    ):
+        return True
+    return isinstance(err, PyiCloudAPIResponseException) and _is_auth_error(err)
+
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
@@ -106,7 +147,33 @@ class IcloudAccount:
         self.photo_cache: PhotoCache | None = None
 
     def setup(self) -> None:
-        """Set up an iCloud account."""
+        """Set up an iCloud account, leaving it with a fetch scheduled.
+
+        Every path out of _setup() has to end with a timer, including the ones
+        that return before update_devices() arms it.
+        """
+        try:
+            self._setup()
+        except PyiCloudAPIResponseException as err:
+            if not _is_auth_error(err):
+                raise
+            self._ask_to_authenticate(err)
+        except (
+            PyiCloud2FARequiredException,
+            PyiCloudFailedLoginException,
+            PyiCloudAuthRequiredException,
+        ) as err:
+            # Refreshing the devices can reject a session that logging in
+            # accepted. The entry still loads: the user is asked to act on it,
+            # and the timer below keeps polling so it recovers once they have.
+            self._ask_to_authenticate(err)
+
+        if self._unsub_fetch is None:
+            self._fetch_interval = self._max_interval
+            self._schedule_next_fetch()
+
+    def _setup(self) -> None:
+        """Log in and read the account's devices."""
         try:
             self.api = PyiCloudService(
                 self._username,
@@ -148,19 +215,24 @@ class IcloudAccount:
         if user_info is None:
             raise ConfigEntryNotReady("No user info found in iCloud devices response")
 
+        self._read_account_names(user_info)
+
+        self._devices = {}
+        self.update_devices()
+
+    def _read_account_names(self, user_info: Mapping[str, Any]) -> None:
+        """Store the account owner and family member names."""
         self._owner_fullname = (
             f"{user_info.get('firstName')} {user_info.get('lastName')}"
         )
 
         self._family_members_fullname = {}
-        if user_info.get("membersInfo") is not None:
-            for prs_id, member in user_info.get("membersInfo").items():
+        members_info = user_info.get("membersInfo")
+        if members_info is not None:
+            for prs_id, member in members_info.items():
                 self._family_members_fullname[prs_id] = (
                     f"{member['firstName']} {member['lastName']}"
                 )
-
-        self._devices = {}
-        self.update_devices()
 
     def update_devices(self) -> None:
         """Update iCloud devices."""
@@ -170,24 +242,51 @@ class IcloudAccount:
 
         if self.api.requires_2fa:
             self._require_reauth()
+            # Keep the timer running so polling resumes by itself once the
+            # user has entered their verification code.
+            self._fetch_interval = self._max_interval
+            self._schedule_next_fetch()
             return
 
-        api_devices = {}
         try:
             api_devices = self.api.devices
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
+            if _is_auth_failure(err):
+                # Refreshing the devices is where a stored session is usually
+                # turned down. Retrying that here every couple of minutes gets
+                # nowhere, so hand it to the caller, which asks the user.
+                raise
             _LOGGER.error("Unknown iCloud error: %s", err)
             self._fetch_interval = 2
             dispatcher_send(self.hass, self.signal_device_update)
             self._schedule_next_fetch()
             return
 
+        if self._owner_fullname is None and api_devices.user_info is not None:
+            # setup() returns before reading these when iCloud asks for a
+            # verification code, and keep_alive() only runs a full setup again
+            # when there is no session at all, so the first poll after the
+            # challenge is what fills them in. A family device cannot be built
+            # without them.
+            self._read_account_names(api_devices.user_info)
+
         # Gets devices infos
+        devices = list(api_devices)
         new_device = False
-        for device in api_devices:
+        for device in devices:
             status = device.status(DEVICE_STATUS_SET)
             device_id = status[DEVICE_ID]
             device_name = status[DEVICE_NAME]
+
+            if device_id is None or device_name is None:
+                # status() reports every requested field, using None for the
+                # ones iCloud left out, so an unusable device arrives looking
+                # like any other rather than raising. It has to be rejected
+                # here to keep a None identity out of the entity and device
+                # registries; a later poll picks the device up if iCloud
+                # starts reporting it properly.
+                _LOGGER.warning("Skipping iCloud device with no id or name")
+                continue
 
             if (
                 status[DEVICE_BATTERY_STATUS] == "Unknown"
@@ -211,7 +310,8 @@ class IcloudAccount:
                 new_device = True
 
         if (
-            DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending"
+            devices
+            and DEVICE_STATUS_CODES.get(devices[0][DEVICE_STATUS]) == "pending"
             and not self._retried_fetch
         ):
             _LOGGER.debug("Pending devices, trying again in 15s")
@@ -226,6 +326,41 @@ class IcloudAccount:
             dispatcher_send(self.hass, self.signal_device_new)
 
         self._schedule_next_fetch()
+
+    def _ask_to_authenticate(self, err: Exception) -> None:
+        """Ask the user to log in again after iCloud rejected the session.
+
+        The session is only kept when there is a code to send through it. An
+        authentication status on an API response is not that case: it says the
+        session itself has to be established again, and one that has just been
+        rejected cannot carry a code.
+        """
+        if not isinstance(err, PyiCloudAPIResponseException) and (
+            isinstance(err, PyiCloud2FARequiredException)
+            or (self.api is not None and self.api.requires_2fa)
+        ):
+            # Keep the session: the reauth flow reuses it to validate the code,
+            # and async_step_reauth sends a None api back to the password form
+            # instead of straight to code entry.
+            _LOGGER.warning(
+                (
+                    "2FA authentication required for '%s'; Go to the Integrations "
+                    "menu and click on Configure on the discovered Apple iCloud "
+                    "card to enter your verification code"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+        else:
+            self.api = None
+            _LOGGER.error(
+                (
+                    "Your iCloud account for '%s' is no longer working; Go to the "
+                    "Integrations menu and click on Configure on the discovered "
+                    "Apple iCloud card to login again"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+        self._require_reauth()
 
     def _require_reauth(self):
         """Require the user to log in again."""
@@ -319,16 +454,82 @@ class IcloudAccount:
                 utcnow() + timedelta(minutes=self._fetch_interval),
             )
 
+    def _reauth_pending(self) -> bool:
+        """Return whether the user is already being asked to log in again.
+
+        This runs in the executor, so the flow list has to be read on the
+        event loop like the rest of the shared state here.
+        """
+        return run_callback_threadsafe(
+            self.hass.loop,
+            lambda: bool(
+                any(
+                    self._config_entry.async_get_active_flows(
+                        self.hass, {SOURCE_REAUTH}
+                    )
+                )
+            ),
+        ).result()
+
     def keep_alive(self, now=None) -> None:
-        """Keep the API alive."""
-        if self.api is None:
-            self.setup()
+        """Keep the API alive.
+
+        This runs from a timer callback and is what schedules the next one, so
+        every path out of here has to schedule that fetch: anything raised
+        escapes into the event loop and stops the account polling entirely.
+        """
+        if self.api is None and not self._reauth_pending():
+            # Not while the user is already being asked: retrying underneath
+            # them adds failed attempts against the account, or succeeds and
+            # strands the repair they were shown. Completing that flow reloads
+            # the entry, which is what recovers the account.
+            try:
+                self.setup()
+            except Exception:
+                # setup() reports its own failures; it must not stop the loop.
+                # Drop whatever session it did establish: it may have failed
+                # after logging in but before reading the account's owner and
+                # family names, and those are only filled in by a full setup.
+                _LOGGER.exception("Error setting up iCloud account, will retry")
+                self.api = None
 
         if self.api is None:
+            # Still no session. Try again at the longest interval rather than
+            # giving up, so the account recovers on its own once iCloud is
+            # reachable again or the user has finished logging in.
+            self._fetch_interval = self._max_interval
+            self._schedule_next_fetch()
             return
 
-        self.api.authenticate()
-        self.update_devices()
+        try:
+            try:
+                self.api.authenticate()
+                self.update_devices()
+            except PyiCloudAPIResponseException as err:
+                if not _is_auth_error(err):
+                    # Not an authentication failure. Hand it to the transient
+                    # handling below so it keeps being retried, rather than
+                    # parking the account for credentials that are not at fault.
+                    raise
+                self._ask_to_authenticate(err)
+                self._fetch_interval = self._max_interval
+                self._schedule_next_fetch()
+            except (
+                PyiCloud2FARequiredException,
+                PyiCloudFailedLoginException,
+                PyiCloudAuthRequiredException,
+            ) as err:
+                # None of these comes back on its own, so ask the user instead
+                # of retrying every couple of minutes forever.
+                self._ask_to_authenticate(err)
+                self._fetch_interval = self._max_interval
+                self._schedule_next_fetch()
+        except Exception:
+            # update_devices() reschedules itself on the errors it handles;
+            # this covers the rest, such as a device missing fields.
+            _LOGGER.exception("Error updating iCloud devices, will retry")
+            self._fetch_interval = 2
+            self._schedule_next_fetch()
 
     def get_devices_with_name(self, name: str) -> list[Any]:
         """Get devices by name."""
