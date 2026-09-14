@@ -275,26 +275,32 @@ async def test_number_not_created_when_attribute_missing(
     assert entity_entries(hass, config_entry) == {}
 
 
-@pytest.mark.parametrize(
-    "capabilities",
-    [
-        pytest.param({}, id="capability-absent"),
-        pytest.param({"fan_custom": False}, id="capability-false"),
-    ],
-)
 async def test_ac_fan_speed_not_created_without_custom_capability(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
-    capabilities: dict[str, bool],
 ) -> None:
-    """Test AC fan_speed is not created when custom fan speed capability is absent or false."""
+    """Test AC fan_speed is not created when custom fan speed capability is false."""
     device = _ac_device()
-    device.capabilities = capabilities
+    device.capabilities = {"fan_custom": False}
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, config_entry, device)
 
     assert entity_entries(hass, config_entry) == {}
+
+
+async def test_ac_fan_speed_created_when_custom_capability_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC fan_speed is created when capability map is not yet populated."""
+    device = _ac_device()
+    device.capabilities = {}
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry, device)
+
+    assert f"{TEST_DEVICE_ID}_fan_speed" in entity_entries(hass, config_entry)
 
 
 async def test_ac_fan_speed_number_range_and_service_call(

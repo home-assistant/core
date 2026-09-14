@@ -123,6 +123,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up numbers for device."""
     device = config_entry.runtime_data
+    capabilities = getattr(device, "capabilities", None) or {}
 
     async_add_entities(
         MideaNumber(device, description)
@@ -133,9 +134,7 @@ async def async_setup_entry(
         and device.attributes.get(description.key) is not None
         and (
             description.capability is None
-            or (getattr(device, "capabilities", None) or {}).get(
-                description.capability, False
-            )
+            or bool(capabilities.get(description.capability, True))
         )
     )
 
