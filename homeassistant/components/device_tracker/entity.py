@@ -656,13 +656,13 @@ class ScannerEntity(
         )
 
     @override
-    async def async_before_added_to_hass(self) -> None:
+    async def async_will_add_to_hass(self) -> None:
         """Run before the entity is added to hass.
 
         Registers the MAC address before the entity is added so a tracker that is
         created disabled can still be enabled later when its device becomes known.
         """
-        await super().async_before_added_to_hass()
+        await super().async_will_add_to_hass()
         if self.mac_address and self.unique_id:
             _async_register_mac(
                 self.hass,

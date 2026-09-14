@@ -1503,7 +1503,7 @@ class Entity(
         else:
             self.hass.states.async_remove(self.entity_id, context=self._context)
 
-    async def async_before_added_to_hass(self) -> None:
+    async def async_will_add_to_hass(self) -> None:
         """Run before the entity is added to hass.
 
         Called before the entity is registered in the entity registry and before
