@@ -9,7 +9,7 @@ from victron_mqtt import (
     AuthenticationError,
     CannotConnectError,
     Device as VictronVenusDevice,
-    FirmwareUpdateState,
+    FirmwareUpdateInfo,
     Hub as VictronVenusHub,
     Metric as VictronVenusMetric,
     MetricKind,
@@ -43,17 +43,6 @@ type VictronGxConfigEntry = ConfigEntry[Hub]
 type NewMetricCallback = Callable[
     [VictronVenusDevice, VictronVenusMetric, dr.DeviceInfo, str], None
 ]
-
-_FIRMWARE_AVAILABLE_VERSION_METRIC = (
-    "system_0_platform_venus_firmware_available_version"
-)
-_FIRMWARE_INSTALL_SERVICE = "platform_service_venus_firmware_install"
-_FIRMWARE_INSTALLED_VERSION_METRIC = (
-    "system_0_platform_venus_firmware_installed_version"
-)
-_FIRMWARE_PROGRESS_METRIC = "system_0_platform_venus_firmware_progress"
-_FIRMWARE_STATE_METRIC = "system_0_platform_venus_firmware_state"
-
 
 class Hub:
     """Victron MQTT Hub for managing communication and sensors."""
@@ -98,6 +87,7 @@ class Hub:
         _LOGGER.info("Starting hub")
         try:
             await self._hub.connect()
+            self._hub.check_firmware_update()
         except AuthenticationError as auth_error:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -124,51 +114,15 @@ class Hub:
             )
 
     @property
-    def firmware_versions(self) -> tuple[str | None, str | None]:
-        """Return the installed and available Venus OS versions."""
-        installed_metric = self._hub.get_metric(_FIRMWARE_INSTALLED_VERSION_METRIC)
-        available_metric = self._hub.get_metric(_FIRMWARE_AVAILABLE_VERSION_METRIC)
+    def firmware_update_info(self) -> FirmwareUpdateInfo:
+        """Return the library's current firmware update snapshot."""
+        return self._hub.firmware_update_info
 
-        installed = (
-            installed_metric.value
-            if installed_metric is not None
-            and installed_metric.available
-            and isinstance(installed_metric.value, str)
-            else None
-        )
-        available = (
-            available_metric.value
-            if available_metric is not None
-            and available_metric.available
-            and isinstance(available_metric.value, str)
-            else None
-        )
-        return installed, available
-
-    @property
-    def firmware_update_status(self) -> tuple[FirmwareUpdateState | None, int | None]:
-        """Return the firmware update state and progress percentage."""
-        state_metric = self._hub.get_metric(_FIRMWARE_STATE_METRIC)
-        progress_metric = self._hub.get_metric(_FIRMWARE_PROGRESS_METRIC)
-        state = (
-            state_metric.value
-            if state_metric is not None
-            and state_metric.available
-            and isinstance(state_metric.value, FirmwareUpdateState)
-            else None
-        )
-        progress = (
-            progress_metric.value
-            if progress_metric is not None
-            and progress_metric.available
-            and isinstance(progress_metric.value, int)
-            else None
-        )
-        return state, progress
-
-    def install_firmware_update(self) -> None:
-        """Ask the GX device to install the available firmware update."""
-        self._hub.publish(_FIRMWARE_INSTALL_SERVICE, "0", 1)
+    async def install_firmware_update(
+        self, progress_callback: Callable[[int], None] | None = None
+    ) -> None:
+        """Install available firmware using the library lifecycle handler."""
+        await self._hub.install_firmware_update(progress_callback)
 
     def _on_new_metric(
         self,
