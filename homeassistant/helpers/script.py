@@ -2087,7 +2087,6 @@ class Script:
         self._sequence_scripts.clear()
 
     async def _async_get_condition(self, config: ConfigType) -> ConditionChecker:
-        # The sequence retains these configs for the lifetime of the cache.
         config_cache_key = id(config)
         if not (cond := self._condition_cache.get(config_cache_key)):
             cond = await condition.async_from_config(self._hass, config)
