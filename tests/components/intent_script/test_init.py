@@ -101,6 +101,20 @@ async def test_intent_script_forwards_device_id(hass: HomeAssistant) -> None:
     await intent.async_handle(hass, "test", "DeviceIdIntent", device_id="abc123")
     assert len(calls) == 1
     assert calls[0].data["device_id"] == "abc123"
+    calls.clear()
+
+    # A caller-supplied device_id slot (e.g. via a custom sentence or the
+    # /api/intent/handle REST endpoint's `data` field) is not overwritten by
+    # the real device_id of the triggering device.
+    await intent.async_handle(
+        hass,
+        "test",
+        "DeviceIdIntent",
+        {"device_id": {"value": "spoofed"}},
+        device_id="abc123",
+    )
+    assert len(calls) == 1
+    assert calls[0].data["device_id"] == "spoofed"
 
 
 async def test_intent_script_wait_response(hass: HomeAssistant) -> None:
