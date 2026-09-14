@@ -2,6 +2,7 @@
 
 import logging
 
+import probatio
 from pyjoin import (
     get_devices,
     ring_device,
@@ -11,7 +12,6 @@ from pyjoin import (
     send_url,
     set_wallpaper,
 )
-import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -25,22 +25,22 @@ DOMAIN = "joaoapps_join"
 CONF_DEVICE_IDS = "device_ids"
 CONF_DEVICE_NAMES = "device_names"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             [
                 {
-                    vol.Required(CONF_API_KEY): cv.string,
-                    vol.Optional(CONF_DEVICE_ID): cv.string,
-                    vol.Optional(CONF_DEVICE_IDS): cv.string,
-                    vol.Optional(CONF_DEVICE_NAMES): cv.string,
-                    vol.Optional(CONF_NAME): cv.string,
+                    probatio.Required(CONF_API_KEY): cv.string,
+                    probatio.Optional(CONF_DEVICE_ID): cv.string,
+                    probatio.Optional(CONF_DEVICE_IDS): cv.string,
+                    probatio.Optional(CONF_DEVICE_NAMES): cv.string,
+                    probatio.Optional(CONF_NAME): cv.string,
                 }
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

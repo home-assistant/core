@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
@@ -35,11 +35,11 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
@@ -103,11 +103,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for OpenWrt (luci) component."""
     coordinator = entry.runtime_data
+    tracked: set[str] = set()
 
-    async_add_entities(
-        LuciScannerEntity(coordinator, mac, device)
-        for mac, device in coordinator.data.items()
-    )
+    @callback
+    def _async_add_new_devices() -> None:
+        """Add entities for devices seen for the first time."""
+        if new_macs := coordinator.data.keys() - tracked:
+            tracked.update(new_macs)
+            async_add_entities(
+                LuciScannerEntity(coordinator, mac, coordinator.data[mac])
+                for mac in new_macs
+            )
+
+    _async_add_new_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
 
 
 class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):

@@ -6,6 +6,7 @@ from typing import Any, override
 
 from homematicip.base.enums import (
     BinaryBehaviorType,
+    FunctionalChannelType,
     LockState,
     SmokeDetectorAlarmType,
     WindowState,
@@ -48,7 +49,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import smoke_detector_channel_data_exists
+from .helpers import get_channel_index_by_type, smoke_detector_channel_data_exists
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -427,7 +428,14 @@ class HomematicipTiltVibrationSensor(HomematicipBaseActionSensor):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the tilt vibration sensor."""
-        super().__init__(hap, device, feature_id="tilt_vibration")
+        super().__init__(
+            hap,
+            device,
+            feature_id="tilt_vibration",
+            channel_real_index=get_channel_index_by_type(
+                device, FunctionalChannelType.TILT_VIBRATION_SENSOR_CHANNEL
+            ),
+        )
 
 
 class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEntity):

@@ -1,9 +1,10 @@
 """Device functions for Home Assistant templates."""
 
 from collections.abc import Iterable
+from itertools import chain
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
@@ -84,9 +85,8 @@ class DeviceExtension(BaseTemplateExtension):
         dev_reg = dr.async_get(self.hass)
         return next(
             (
-                device_id
-                for container in (dev_reg.devices, dev_reg.child_devices)
-                for device_id, device in container.items()
+                device.id
+                for device in chain(dev_reg.devices, dev_reg.child_devices)
                 if (name := device.name_by_user or device.name)
                 and (str(entity_id_or_device_name) == name)
             ),
@@ -103,7 +103,7 @@ class DeviceExtension(BaseTemplateExtension):
 
         try:
             cv.entity_id(lookup_value)
-        except vol.Invalid:
+        except probatio.Invalid:
             pass
         else:
             if entity := ent_reg.async_get(lookup_value):

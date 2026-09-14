@@ -157,7 +157,7 @@ async def async_firewall_policy_control_fn(
 def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if firewall policy can be controlled."""
     policy = hub.api.firewall_policies[obj_id]
-    return not policy.predefined
+    return not policy.predefined and policy.name != ""
 
 
 async def async_object_oriented_network_config_control_fn(
@@ -186,8 +186,7 @@ def async_object_oriented_network_config_supported_fn(
 @callback
 def async_outlet_switching_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if an outlet supports switching."""
-    outlet = hub.api.outlets[obj_id]
-    return outlet.has_relay or outlet.caps in (1, 3)
+    return hub.api.outlets[obj_id].has_relay is True
 
 
 @callback

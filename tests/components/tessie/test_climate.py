@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     HVACMode,
 )
 from homeassistant.components.tessie.const import TessieClimateKeeper
@@ -26,11 +27,24 @@ from .common import (
     ERROR_CONNECTION,
     ERROR_UNKNOWN,
     TEST_RESPONSE,
+    TEST_RESPONSE_ERROR,
     assert_entities,
     setup_platform,
 )
 
 
+def cop_entity_id(entity_registry: er.EntityRegistry) -> str:
+    """Return the cabin overheat protection climate entity ID."""
+    entity_id = entity_registry.async_get_entity_id(
+        CLIMATE_DOMAIN,
+        "tessie",
+        "VINVINVIN-climate_state_cabin_overheat_protection",
+    )
+    assert entity_id
+    return entity_id
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate(
     hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
 ) -> None:
@@ -114,6 +128,81 @@ async def test_climate(
     assert state.state == HVACMode.OFF
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_climate_cop(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test cabin overheat protection climate mode controls."""
+
+    await setup_platform(hass, [Platform.CLIMATE])
+    entity_id = cop_entity_id(entity_registry)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.COOL
+
+    with patch(
+        "homeassistant.components.tessie.climate.stop_cabin_overheat_protection",
+        return_value=TEST_RESPONSE,
+    ) as mock_set:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
+            blocking=True,
+        )
+        mock_set.assert_called_once()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.OFF
+
+    with patch(
+        "homeassistant.components.tessie.climate.start_cabin_overheat_protection",
+        return_value=TEST_RESPONSE,
+    ) as mock_set:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.COOL},
+            blocking=True,
+        )
+        mock_set.assert_called_once()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.COOL
+
+    with patch(
+        "homeassistant.components.tessie.climate.start_cabin_overheat_protection",
+        return_value=TEST_RESPONSE,
+    ) as mock_set:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        mock_set.assert_called_once()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.COOL
+
+    with patch(
+        "homeassistant.components.tessie.climate.stop_cabin_overheat_protection",
+        return_value=TEST_RESPONSE,
+    ) as mock_set:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        mock_set.assert_called_once()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.OFF
+
+
 async def test_errors(hass: HomeAssistant) -> None:
     """Tests errors are handled."""
 
@@ -175,3 +264,47 @@ async def test_errors(hass: HomeAssistant) -> None:
     mock_set.assert_called_once()
     assert error.value.translation_domain == "tessie"
     assert error.value.translation_key == "cpd_enabled"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_climate_cop_errors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test cabin overheat protection command errors are handled."""
+
+    await setup_platform(hass, [Platform.CLIMATE])
+    entity_id = cop_entity_id(entity_registry)
+
+    with (
+        patch(
+            "homeassistant.components.tessie.climate.stop_cabin_overheat_protection",
+            side_effect=ERROR_UNKNOWN,
+        ) as mock_set,
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
+            blocking=True,
+        )
+    mock_set.assert_called_once()
+    assert error.value.__cause__ == ERROR_UNKNOWN
+
+    with (
+        patch(
+            "homeassistant.components.tessie.climate.start_cabin_overheat_protection",
+            return_value=TEST_RESPONSE_ERROR,
+        ) as mock_set,
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.COOL},
+            blocking=True,
+        )
+    mock_set.assert_called_once()
+    assert error.value.translation_domain == "tessie"
+    assert error.value.translation_key == "command_failed"

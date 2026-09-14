@@ -113,9 +113,9 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.mqtt_sensor",
-            DEFAULT_SENSOR_NAME,
-            None,
+            "sensor.mock_title_mqtt_sensor",
+            f"Mock Title {DEFAULT_SENSOR_NAME}",
+            "Mock Title",
             True,
         ),
         (  # default_entity_name_with_device_name
@@ -160,9 +160,9 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.humidity",
-            "Humidity",
-            None,
+            "sensor.mock_title_humidity",
+            "Mock Title Humidity",
+            "Mock Title",
             True,
         ),
         (  # name_overrides_device_class
@@ -194,9 +194,9 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.mysensor",
-            "MySensor",
-            None,
+            "sensor.mock_title_mysensor",
+            "Mock Title MySensor",
+            "Mock Title",
             True,
         ),
         (  # none_entity_name_with_device_name
@@ -228,9 +228,9 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.mqtt_veryunique",
-            "mqtt veryunique",
-            None,
+            "sensor.mock_title",
+            "Mock Title",
+            "Mock Title",
             True,
         ),
         (  # entity_name_and_device_name_the_same

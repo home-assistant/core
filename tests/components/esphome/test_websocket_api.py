@@ -1,5 +1,7 @@
 """Tests for ESPHome websocket API."""
 
+from aioesphomeapi import APIClient
+
 from homeassistant.components.esphome.const import CONF_NOISE_PSK
 from homeassistant.components.esphome.websocket_api import ENTRY_ID, TYPE
 
@@ -8,6 +10,7 @@ from tests.typing import WebSocketGenerator
 
 
 async def test_get_encryption_key(
+    mock_client: APIClient,
     init_integration: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:

@@ -1,0 +1,189 @@
+# serializer version: 1
+# name: test_numbers[number.frenck_power_on_brightness-50-expected0-key-light]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frenck Power-on brightness',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.frenck_power_on_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_numbers[number.frenck_power_on_brightness-50-expected0-key-light].1
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.frenck_power_on_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on brightness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on brightness',
+    'platform': 'elgato',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_on_brightness',
+    'unique_id': 'CN11A1A00001_power_on_brightness',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_numbers[number.frenck_power_on_brightness-50-expected0-key-light].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '53',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'CN11A1A00001',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light',
+    'model_id': None,
+    'name': 'Frenck',
+    'name_by_user': None,
+    'serial_number': 'CN11A1A00001',
+    'sw_version': '1.0.3 (192)',
+    'via_device_id': None,
+  })
+# ---
+# name: test_numbers[number.frenck_power_on_color_temperature-5000-expected1-key-light]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frenck Power-on color temperature',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6993,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 2900,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 50,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.KELVIN: 'K'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.frenck_power_on_color_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4694',
+  })
+# ---
+# name: test_numbers[number.frenck_power_on_color_temperature-5000-expected1-key-light].1
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6993,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 2900,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 50,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.frenck_power_on_color_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on color temperature',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on color temperature',
+    'platform': 'elgato',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_on_temperature',
+    'unique_id': 'CN11A1A00001_power_on_temperature',
+    'unit_of_measurement': <UnitOfTemperature.KELVIN: 'K'>,
+  })
+# ---
+# name: test_numbers[number.frenck_power_on_color_temperature-5000-expected1-key-light].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '53',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'CN11A1A00001',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light',
+    'model_id': None,
+    'name': 'Frenck',
+    'name_by_user': None,
+    'serial_number': 'CN11A1A00001',
+    'sw_version': '1.0.3 (192)',
+    'via_device_id': None,
+  })
+# ---
