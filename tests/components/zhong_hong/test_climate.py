@@ -439,10 +439,12 @@ async def test_commands_in_a_row_are_read_back_once(
 ) -> None:
     """Test a burst of commands does not queue up a re-read for each one.
 
-    The commands are spread out rather than sent all at once, so that a
-    re-read left over from an earlier one would come due on its own. Sent in
-    the same tick they would all come due together, and the coordinator would
-    fold them into one query whether the earlier ones had been dropped or not.
+    Each command cancels the re-read the one before it scheduled, so only the
+    last should survive to query the gateway. The commands are spread out
+    rather than sent at once to put each re-read at its own moment: one left
+    over from an earlier command then comes due on its own, where the
+    assertion below catches it, instead of landing on the same tick as the
+    survivor and passing for it.
     """
     await setup_integration(hass, mock_config_entry)
 
