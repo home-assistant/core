@@ -25,7 +25,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
 
 
 @pytest.fixture(autouse=True)
@@ -130,6 +130,60 @@ async def test_multiple_apis(hass: HomeAssistant, llm_context: llm.LLMContext) -
         assert await llm.async_get_api(hass, "test-1", llm_context)
 
     assert await llm.async_get_api(hass, "test-2", llm_context)
+
+
+async def test_get_api_requires_admin(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test async_get_api enforces requires_admin."""
+    admin_api = MyAPI(hass=hass, id="admin-api", name="Admin API", requires_admin=True)
+    user_api = MyAPI(hass=hass, id="user-api", name="User API", requires_admin=False)
+    llm.async_register_api(hass, admin_api)
+    llm.async_register_api(hass, user_api)
+
+    admin_context = llm.LLMContext(
+        platform="test",
+        context=Context(user_id=hass_admin_user.id),
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    read_only_context = llm.LLMContext(
+        platform="test",
+        context=Context(user_id=hass_read_only_user.id),
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    no_user_context = llm.LLMContext(
+        platform="test",
+        context=None,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+
+    # Allowed for user API regardless of user
+    assert await llm.async_get_api(hass, "user-api", read_only_context)
+    assert await llm.async_get_api(hass, "user-api", no_user_context)
+
+    # Allowed for admin API with admin user
+    assert await llm.async_get_api(hass, "admin-api", admin_context)
+
+    # Denied for admin API without admin user
+    with pytest.raises(llm.Unauthorized):
+        await llm.async_get_api(hass, "admin-api", read_only_context)
+
+    with pytest.raises(llm.Unauthorized):
+        await llm.async_get_api(hass, "admin-api", no_user_context)
+
+    # Merged API requiring admin also enforces check
+    assert await llm.async_get_api(hass, ["user-api", "admin-api"], admin_context)
+
+    with pytest.raises(llm.Unauthorized):
+        await llm.async_get_api(hass, ["user-api", "admin-api"], read_only_context)
 
 
 async def test_call_tool_no_existing(
@@ -1304,6 +1358,7 @@ async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> N
 
     instance = await llm.async_get_api(hass, ["api-1", "api-2"], llm_context)
     assert instance.api.id == "api-1|api-2"
+    assert instance.api.requires_admin is False
 
     assert (
         instance.api_prompt
