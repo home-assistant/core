@@ -73,7 +73,7 @@ async def test_intent_script(hass: HomeAssistant) -> None:
 
 
 async def test_intent_script_forwards_device_id(hass: HomeAssistant) -> None:
-    """Test that intent_script exposes the calling device/satellite id."""
+    """Test that intent_script exposes the calling device_id and satellite_id."""
     calls = async_mock_service(hass, "test", "service")
 
     await async_setup_component(
@@ -85,7 +85,10 @@ async def test_intent_script_forwards_device_id(hass: HomeAssistant) -> None:
                     "action": {
                         "service": "test.service",
                         "data_template": {
-                            "device_id": "{{ device_id if device_id is defined }}"
+                            "device_id": "{{ device_id if device_id is defined }}",
+                            "satellite_id": (
+                                "{{ satellite_id if satellite_id is defined }}"
+                            ),
                         },
                     }
                 }
@@ -93,32 +96,22 @@ async def test_intent_script_forwards_device_id(hass: HomeAssistant) -> None:
         },
     )
 
+    # Neither identifier is known (e.g. a direct text conversation).
     await intent.async_handle(hass, "test", "DeviceIdIntent")
     assert len(calls) == 1
     assert calls[0].data["device_id"] == ""
+    assert calls[0].data["satellite_id"] == ""
     calls.clear()
 
+    # LLM tool calls (e.g. Ollama) only ever supply device_id.
     await intent.async_handle(hass, "test", "DeviceIdIntent", device_id="abc123")
     assert len(calls) == 1
     assert calls[0].data["device_id"] == "abc123"
+    assert calls[0].data["satellite_id"] == ""
     calls.clear()
 
-    # The real device_id of the triggering device always takes precedence
-    # over a caller-supplied device_id slot (e.g. via a custom sentence or
-    # the /api/intent/handle REST endpoint's `data` field).
-    await intent.async_handle(
-        hass,
-        "test",
-        "DeviceIdIntent",
-        {"device_id": {"value": "spoofed"}},
-        device_id="abc123",
-    )
-    assert len(calls) == 1
-    assert calls[0].data["device_id"] == "abc123"
-    calls.clear()
-
-    # satellite_id, when present, is preferred over device_id, as it is the
-    # more modern identifier for the triggering device.
+    # Voice satellites supply both, independently - satellite_id is never
+    # substituted for device_id or vice versa.
     await intent.async_handle(
         hass,
         "test",
@@ -127,7 +120,27 @@ async def test_intent_script_forwards_device_id(hass: HomeAssistant) -> None:
         satellite_id="assist_satellite.kitchen",
     )
     assert len(calls) == 1
-    assert calls[0].data["device_id"] == "assist_satellite.kitchen"
+    assert calls[0].data["device_id"] == "abc123"
+    assert calls[0].data["satellite_id"] == "assist_satellite.kitchen"
+    calls.clear()
+
+    # The real identifiers of the triggering device always take precedence
+    # over caller-supplied device_id/satellite_id slots (e.g. via a custom
+    # sentence or the /api/intent/handle REST endpoint's `data` field).
+    await intent.async_handle(
+        hass,
+        "test",
+        "DeviceIdIntent",
+        {
+            "device_id": {"value": "spoofed_device"},
+            "satellite_id": {"value": "spoofed_satellite"},
+        },
+        device_id="abc123",
+        satellite_id="assist_satellite.kitchen",
+    )
+    assert len(calls) == 1
+    assert calls[0].data["device_id"] == "abc123"
+    assert calls[0].data["satellite_id"] == "assist_satellite.kitchen"
 
 
 async def test_intent_script_wait_response(hass: HomeAssistant) -> None:
