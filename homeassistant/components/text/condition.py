@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.input_text import DOMAIN as INPUT_TEXT_DOMAIN
 from homeassistant.const import CONF_OPTIONS
@@ -22,8 +22,8 @@ CONF_VALUE = "value"
 
 _TEXT_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_VALUE): cv.string,
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(CONF_VALUE): cv.string,
         },
     }
 )

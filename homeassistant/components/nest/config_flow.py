@@ -20,7 +20,7 @@ from google_nest_sdm.admin_client import (
 )
 from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.structure import Structure
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -215,9 +215,9 @@ class NestFlowHandler(
             return await self.async_step_device_project()
         return self.async_show_form(
             step_id="cloud_project",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CLOUD_PROJECT_ID): str,
+                    probatio.Required(CONF_CLOUD_PROJECT_ID): str,
                 }
             ),
             description_placeholders={
@@ -247,9 +247,9 @@ class NestFlowHandler(
 
         return self.async_show_form(
             step_id="device_project",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROJECT_ID): str,
+                    probatio.Required(CONF_PROJECT_ID): str,
                 }
             ),
             description_placeholders={
@@ -303,9 +303,9 @@ class NestFlowHandler(
         ]
         return self.async_show_form(
             step_id="pubsub_topic",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_TOPIC_NAME, default=next(iter(topics))
                     ): SelectSelector(
                         SelectSelectorConfig(
@@ -410,9 +410,9 @@ class NestFlowHandler(
         subscriptions.append(CREATE_NEW_SUBSCRIPTION_KEY)
         return self.async_show_form(
             step_id="pubsub_subscription",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SUBSCRIPTION_NAME,
                         default=next(iter(subscriptions)),
                     ): SelectSelector(

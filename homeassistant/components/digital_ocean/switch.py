@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Droplet"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string])}
+    {probatio.Required(CONF_DROPLETS): probatio.All(cv.ensure_list, [cv.string])}
 )
 
 
