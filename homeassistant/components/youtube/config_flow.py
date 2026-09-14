@@ -2,9 +2,9 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from youtubeaio.types import AuthScope, ForbiddenError
 from youtubeaio.youtube import YouTube
 
@@ -43,6 +43,7 @@ class OAuth2FlowHandler(
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: YouTubeConfigEntry,
     ) -> YouTubeOptionsFlowHandler:
@@ -50,11 +51,13 @@ class OAuth2FlowHandler(
         return YouTubeOptionsFlowHandler()
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {
@@ -85,6 +88,7 @@ class OAuth2FlowHandler(
             await self._youtube.set_user_authentication(token, [AuthScope.READ_ONLY])
         return self._youtube
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
         try:
@@ -172,9 +176,9 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="no_subscriptions")
         return self.async_show_form(
             step_id="channels",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CHANNELS): SelectSelector(
+                    probatio.Required(CONF_CHANNELS): SelectSelector(
                         SelectSelectorConfig(options=selectable_channels, multiple=True)
                     ),
                 }
@@ -234,9 +238,9 @@ class YouTubeOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_CHANNELS): SelectSelector(
+                        probatio.Required(CONF_CHANNELS): SelectSelector(
                             SelectSelectorConfig(
                                 options=selectable_channels, multiple=True
                             )

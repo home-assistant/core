@@ -35,34 +35,42 @@
             'continuous_dose': None,
             'continuous_dose_supported': False,
             'doses': dict({
+              'brew_ratio_type': list([
+              ]),
+              'manual_type': list([
+              ]),
+              'mass_type': list([
+              ]),
+              'profile_type': list([
+              ]),
               'pulses_type': list([
                 dict({
                   'dose': 126.0,
                   'dose_index': 'DoseA',
                   'dose_max': 9999.0,
                   'dose_min': 0.0,
-                  'dose_step': 1,
+                  'dose_step': 1.0,
                 }),
                 dict({
                   'dose': 126.0,
                   'dose_index': 'DoseB',
                   'dose_max': 9999.0,
                   'dose_min': 0.0,
-                  'dose_step': 1,
+                  'dose_step': 1.0,
                 }),
                 dict({
                   'dose': 160.0,
                   'dose_index': 'DoseC',
                   'dose_max': 9999.0,
                   'dose_min': 0.0,
-                  'dose_step': 1,
+                  'dose_step': 1.0,
                 }),
                 dict({
                   'dose': 77.0,
                   'dose_index': 'DoseD',
                   'dose_max': 9999.0,
                   'dose_min': 0.0,
-                  'dose_step': 1,
+                  'dose_step': 1.0,
                 }),
               ]),
             }),
@@ -79,7 +87,7 @@
                 'dose_index': 'DoseA',
                 'dose_max': 90.0,
                 'dose_min': 0.0,
-                'dose_step': 1,
+                'dose_step': 1.0,
               }),
             ]),
             'enabled': True,
@@ -347,34 +355,42 @@
               'continuous_dose': None,
               'continuous_dose_supported': False,
               'doses': dict({
+                'brew_ratio_type': list([
+                ]),
+                'manual_type': list([
+                ]),
+                'mass_type': list([
+                ]),
+                'profile_type': list([
+                ]),
                 'pulses_type': list([
                   dict({
                     'dose': 126.0,
                     'dose_index': 'DoseA',
                     'dose_max': 9999.0,
                     'dose_min': 0.0,
-                    'dose_step': 1,
+                    'dose_step': 1.0,
                   }),
                   dict({
                     'dose': 126.0,
                     'dose_index': 'DoseB',
                     'dose_max': 9999.0,
                     'dose_min': 0.0,
-                    'dose_step': 1,
+                    'dose_step': 1.0,
                   }),
                   dict({
                     'dose': 160.0,
                     'dose_index': 'DoseC',
                     'dose_max': 9999.0,
                     'dose_min': 0.0,
-                    'dose_step': 1,
+                    'dose_step': 1.0,
                   }),
                   dict({
                     'dose': 77.0,
                     'dose_index': 'DoseD',
                     'dose_max': 9999.0,
                     'dose_min': 0.0,
-                    'dose_step': 1,
+                    'dose_step': 1.0,
                   }),
                 ]),
               }),
@@ -566,7 +582,7 @@
                   'dose_index': 'DoseA',
                   'dose_max': 90.0,
                   'dose_min': 0.0,
-                  'dose_step': 1,
+                  'dose_step': 1.0,
                 }),
               ]),
               'enabled': True,
@@ -593,6 +609,8 @@
         'coffee_station': None,
         'connected': True,
         'connection_date': '2025-03-21T03:00:19.892000+00:00',
+        'eco_mode': None,
+        'eco_mode_supported': False,
         'image_url': 'https://lion.lamarzocco.io/img/thing-model/detail/lineamicra/lineamicra-1-c-bianco.png',
         'location': None,
         'model_code': 'LINEAMICRA',
@@ -704,7 +722,7 @@
           dict({
             'available_update': None,
             'build_version': 'v1.17',
-            'change_log': 'None',
+            'change_log': None,
             'status': 'Updated',
             'thing_model_code': 'LineaMicra',
             'type': 'Machine',
@@ -752,7 +770,7 @@
           'Machine': dict({
             'available_update': None,
             'build_version': 'v1.17',
-            'change_log': 'None',
+            'change_log': None,
             'status': 'Updated',
             'thing_model_code': 'LineaMicra',
             'type': 'Machine',

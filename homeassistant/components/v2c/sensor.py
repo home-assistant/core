@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pytrydan import TrydanData
 from pytrydan.models.trydan import SlaveCommunicationState
@@ -184,6 +185,7 @@ class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.data)

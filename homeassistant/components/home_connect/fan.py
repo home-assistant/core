@@ -1,7 +1,7 @@
 """Provides fan entities for Home Connect."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from aiohomeconnect.model import EventKey, OptionKey
 
@@ -110,6 +110,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
             "Updated %s (fan mode), new state: %s", self.entity_id, self.preset_mode
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -120,6 +121,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
             )
         )
 
+    @override
     def update_native_value(self) -> None:
         """Set the speed percentage and speed mode values."""
         option_value = None
@@ -130,6 +132,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         )
 
     @property
+    @override
     def supported_features(self) -> FanEntityFeature:
         """Return the supported features for this fan entity."""
         features = FanEntityFeature(0)
@@ -179,6 +182,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
                 if value in self._original_speed_modes_keys
             ]
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         await super().async_set_option_with_key(
@@ -191,6 +195,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
             percentage,
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target fan mode."""
         await super().async_set_option_with_key(
@@ -202,6 +207,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and any(

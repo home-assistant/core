@@ -1,9 +1,10 @@
 """Base class for pilight."""
 
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
+from homeassistant.components.light import LightEntityStateAttribute
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
@@ -31,29 +32,33 @@ from .const import (
     CONF_UNITCODE,
 )
 
-COMMAND_SCHEMA = vol.Schema(
+COMMAND_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_PROTOCOL): cv.string,
-        vol.Optional(CONF_ON): cv.positive_int,
-        vol.Optional(CONF_OFF): cv.positive_int,
-        vol.Optional(CONF_UNIT): cv.positive_int,
-        vol.Optional(CONF_UNITCODE): cv.positive_int,
-        vol.Optional(CONF_ID): vol.Any(cv.positive_int, cv.string),
-        vol.Optional(CONF_STATE): vol.Any(STATE_ON, STATE_OFF),
-        vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
+        probatio.Optional(CONF_PROTOCOL): cv.string,
+        probatio.Optional(CONF_ON): cv.positive_int,
+        probatio.Optional(CONF_OFF): cv.positive_int,
+        probatio.Optional(CONF_UNIT): cv.positive_int,
+        probatio.Optional(CONF_UNITCODE): cv.positive_int,
+        probatio.Optional(CONF_ID): probatio.Any(cv.positive_int, cv.string),
+        probatio.Optional(CONF_STATE): probatio.Any(STATE_ON, STATE_OFF),
+        probatio.Optional(CONF_SYSTEMCODE): cv.positive_int,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-RECEIVE_SCHEMA = COMMAND_SCHEMA.extend({vol.Optional(CONF_ECHO): cv.boolean})
+RECEIVE_SCHEMA = COMMAND_SCHEMA.extend({probatio.Optional(CONF_ECHO): cv.boolean})
 
-SWITCHES_SCHEMA = vol.Schema(
+SWITCHES_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,
-        vol.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_OFF_CODE_RECEIVE): vol.All(cv.ensure_list, [COMMAND_SCHEMA]),
-        vol.Optional(CONF_ON_CODE_RECEIVE): vol.All(cv.ensure_list, [COMMAND_SCHEMA]),
+        probatio.Required(CONF_ON_CODE): COMMAND_SCHEMA,
+        probatio.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_OFF_CODE_RECEIVE): probatio.All(
+            cv.ensure_list, [COMMAND_SCHEMA]
+        ),
+        probatio.Optional(CONF_ON_CODE_RECEIVE): probatio.All(
+            cv.ensure_list, [COMMAND_SCHEMA]
+        ),
     }
 )
 
@@ -91,12 +96,15 @@ class PilightBaseDevice(RestoreEntity):
 
         self._brightness: int | None = 255
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
             self._attr_is_on = state.state == STATE_ON
-            self._brightness = state.attributes.get("brightness")
+            self._brightness = state.attributes.get(
+                LightEntityStateAttribute.BRIGHTNESS
+            )
 
     def _handle_code(self, call):
         """Check if received code by the pilight-daemon.

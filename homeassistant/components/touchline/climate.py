@@ -1,9 +1,9 @@
 """Platform for Roth Touchline floor heating controller."""
 
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 
+import probatio
 from pytouchline_extended import PyTouchline
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
@@ -52,7 +52,9 @@ TOUCHLINE_HA_PRESETS = {
     for preset, settings in PRESET_MODES.items()
 }
 
-PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
+    {probatio.Required(CONF_HOST): cv.string}
+)
 
 
 async def async_setup_entry(
@@ -172,16 +174,19 @@ class Touchline(ClimateEntity):
             (self.unit.get_operation_mode(), self.unit.get_week_program())
         )
 
+    @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         preset = PRESET_MODES[preset_mode]
         self.unit.set_operation_mode(preset.mode)
         self.unit.set_week_program(preset.program)
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         self._current_operation_mode = HVACMode.HEAT
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:

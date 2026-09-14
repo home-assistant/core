@@ -45,7 +45,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_VERIFY_SSL: False,
             CONF_SITE: "Default",
         },
-        unique_id="12345",
+        unique_id="12345_Default",
+        version=2,
     )
 
 
@@ -107,7 +108,9 @@ async def mock_omada_site_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMoc
 
     site_client.get_known_clients.return_value = async_empty()
     site_client.get_connected_clients.return_value = async_empty()
+    site_client.get_client = AsyncMock()
     site_client.reconnect_client = AsyncMock()
+    site_client.update_client = AsyncMock()
     return site_client
 
 

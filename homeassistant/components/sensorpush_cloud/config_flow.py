@@ -1,9 +1,9 @@
 """Config flow for the SensorPush Cloud integration."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from sensorpush_ha import SensorPushCloudApi, SensorPushCloudAuthError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -20,6 +20,7 @@ from .const import DOMAIN, LOGGER
 class SensorPushCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SensorPush Cloud."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -43,14 +44,14 @@ class SensorPushCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_EMAIL): TextSelector(
+                    probatio.Required(CONF_EMAIL): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.EMAIL, autocomplete="username"
                         )
                     ),
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",

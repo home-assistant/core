@@ -1,6 +1,6 @@
 """Support for Yale Smart Alarm button."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -49,6 +49,7 @@ class YalePanicButton(YaleAlarmEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         if TYPE_CHECKING:

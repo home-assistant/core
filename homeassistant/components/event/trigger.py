@@ -1,6 +1,8 @@
 """Provides triggers for events."""
 
-import voluptuous as vol
+from typing import override
+
+import probatio
 
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, State
@@ -8,20 +10,21 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
+    NotTriggeredReasonReporter,
     StatelessEntityTriggerBase,
     Trigger,
     TriggerConfig,
 )
 
-from .const import ATTR_EVENT_TYPE, DOMAIN
+from .const import DOMAIN, EventEntityStateAttribute
 
 CONF_EVENT_TYPE = "event_type"
 
 EVENT_RECEIVED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_EVENT_TYPE): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(CONF_EVENT_TYPE): probatio.All(
+                cv.ensure_list, probatio.Length(min=1), [cv.string]
             ),
         },
     }
@@ -39,9 +42,17 @@ class EventReceivedTrigger(StatelessEntityTriggerBase):
         super().__init__(hass, config)
         self._event_types = set(self._options[CONF_EVENT_TYPE])
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the event type matches one of the configured types."""
-        return state.attributes.get(ATTR_EVENT_TYPE) in self._event_types
+        return (
+            state.attributes.get(EventEntityStateAttribute.EVENT_TYPE)
+            in self._event_types
+        )
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

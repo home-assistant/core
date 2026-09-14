@@ -3,11 +3,11 @@
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.scene import Scene
 from homeassistant.const import CONF_PLATFORM, CONF_TIMEOUT, CONF_TOKEN
@@ -21,11 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
 
-PLATFORM_SCHEMA = vol.Schema(
+PLATFORM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PLATFORM): "lifx_cloud",
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        probatio.Required(CONF_PLATFORM): "lifx_cloud",
+        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
 
@@ -78,10 +78,12 @@ class LifxCloudScene(Scene):
         self._uuid = scene_data["uuid"]
 
     @property
+    @override
     def name(self):
         """Return the name of the scene."""
         return self._name
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         url = f"https://api.lifx.com/v1/scenes/scene_id:{self._uuid}/activate"

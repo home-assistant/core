@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate, cast
+from typing import TYPE_CHECKING, Any, Concatenate, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterAttributeDescriptor, ClusterCommand, NullValue
@@ -19,6 +19,7 @@ from propcache.api import cached_property
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UndefinedType
@@ -94,6 +95,11 @@ class MatterEntity(Entity):
     _attr_should_poll = False
     _name_postfix: str | None = None
     _platform_translation_key: str | None = None
+    # Cooldown in seconds to debounce state writes on updates from the device.
+    # Platforms which derive their state from multiple attributes can set this
+    # to coalesce attribute updates which arrive as separate events.
+    _write_state_debounce_cooldown: float | None = None
+    _write_state_debouncer: Debouncer[None] | None = None
 
     def __init__(
         self,
@@ -184,9 +190,19 @@ class MatterEntity(Entity):
             return found_labels[0]
         return None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
+
+        if self._write_state_debounce_cooldown is not None:
+            self._write_state_debouncer = Debouncer(
+                self.hass,
+                LOGGER,
+                cooldown=self._write_state_debounce_cooldown,
+                immediate=False,
+                function=self.async_write_ha_state,
+            )
 
         # Subscribe to attribute updates.
         sub_paths: list[str] = []
@@ -266,6 +282,7 @@ class MatterEntity(Entity):
         )
 
     @cached_property
+    @override
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
@@ -303,6 +320,14 @@ class MatterEntity(Entity):
             return True
         return bool(reachable)
 
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle being removed from Home Assistant."""
+        await super().async_will_remove_from_hass()
+        if self._write_state_debouncer is not None:
+            self._write_state_debouncer.async_shutdown()
+            self._write_state_debouncer = None
+
     @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
         """Call on update from the device."""
@@ -310,22 +335,20 @@ class MatterEntity(Entity):
             self._endpoint.node.available and self._get_bridged_reachable()
         )
         self._update_from_device()
-        self.async_write_ha_state()
+        if self._write_state_debouncer is not None:
+            self._write_state_debouncer.async_schedule_call()
+        else:
+            self.async_write_ha_state()
 
     @callback
-    def _on_featuremap_update(
-        self, event: EventType, data: tuple[int, str, int] | None
-    ) -> None:
+    def _on_featuremap_update(self, event: EventType, data: int | None) -> None:
         """Handle FeatureMap attribute updates."""
         if data is None:
             return
-        new_value = data[2]
         # handle edge case where a Feature is removed from a cluster
         if (
             self._entity_info.discovery_schema.featuremap_contains is not None
-            and not bool(
-                new_value & self._entity_info.discovery_schema.featuremap_contains
-            )
+            and not bool(data & self._entity_info.discovery_schema.featuremap_contains)
         ):
             # this entity is no longer supported by the device
             ent_reg = er.async_get(self.hass)

@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from meater.MeaterApi import (
     AuthenticationError,
@@ -46,6 +47,7 @@ class MeaterCoordinator(DataUpdateCoordinator[dict[str, MeaterProbe]]):
         self.client = MeaterApi(session)
         self.found_probes: set[str] = set()
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the Meater Coordinator."""
         try:
@@ -61,6 +63,7 @@ class MeaterCoordinator(DataUpdateCoordinator[dict[str, MeaterProbe]]):
                 f"Unable to authenticate with the Meater API: {err}"
             ) from err
 
+    @override
     async def _async_update_data(self) -> dict[str, MeaterProbe]:
         """Fetch data from API endpoint."""
         try:

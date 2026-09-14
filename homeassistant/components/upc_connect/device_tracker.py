@@ -1,10 +1,11 @@
 """Support for UPC ConnectBox router."""
 
 import logging
+from typing import override
 
 from connect_box import ConnectBox
 from connect_box.exceptions import ConnectBoxError, ConnectBoxLoginError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -23,8 +24,8 @@ DEFAULT_IP = "192.168.0.1"
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
     }
 )
 
@@ -62,6 +63,7 @@ class UPCDeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         self.connect_box: ConnectBox = connect_box
 
+    @override
     async def async_scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
         try:
@@ -71,6 +73,7 @@ class UPCDeviceScanner(DeviceScanner):
 
         return [device.mac for device in self.connect_box.devices]
 
+    @override
     async def async_get_device_name(self, device: str) -> str | None:
         """Get the device name (the name of the wireless device not used)."""
         for connected_device in self.connect_box.devices:

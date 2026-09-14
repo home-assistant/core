@@ -4765,3 +4765,46 @@ async def test_import_statistics_with_last_reset(
             },
         ]
     }
+
+
+async def test_entity_options_ws(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test recorder entity options WS commands."""
+    client = await hass_ws_client()
+
+    await async_setup_recorder_instance(hass, {"exclude": {"domains": "test2"}})
+
+    # Test getting a single entity's settings
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/entity_options/get",
+            "entity_id": "test.recorder",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"recording_disabled_by": None}
+
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/entity_options/get",
+            "entity_id": "test2.recorder",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"recording_disabled_by": "user"}
+
+    # Test getting settings for an unknown entity
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/entity_options/get",
+            "entity_id": "unknown.entity",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"recording_disabled_by": None}

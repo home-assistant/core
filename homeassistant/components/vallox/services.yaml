@@ -41,6 +41,7 @@ set_profile:
             - "boost"
             - "fireplace"
             - "extra"
+            - "auto"
     duration:
       required: false
       selector:

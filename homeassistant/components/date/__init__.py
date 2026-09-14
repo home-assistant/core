@@ -2,10 +2,10 @@
 
 from datetime import date, timedelta
 import logging
-from typing import final
+from typing import final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DATE
@@ -43,7 +43,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_SET_VALUE, {vol.Required(ATTR_DATE): cv.date}, _async_set_value
+        SERVICE_SET_VALUE, {probatio.Required(ATTR_DATE): cv.date}, _async_set_value
     )
 
     return True
@@ -76,18 +76,21 @@ class DateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @cached_property
     @final
+    @override
     def device_class(self) -> None:
         """Return the device class for the entity."""
         return None
 
     @cached_property
     @final
+    @override
     def state_attributes(self) -> None:
         """Return the state attributes."""
         return None
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         if self.native_value is None:

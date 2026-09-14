@@ -1,5 +1,7 @@
 """Select sensor entities for LIFX integration."""
 
+from typing import override
+
 from aiolifx_themes.themes import ThemeLibrary
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -68,6 +70,7 @@ class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
         self._attr_current_option = coordinator.current_infrared_brightness
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -78,6 +81,7 @@ class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
         """Handle coordinator updates."""
         self._attr_current_option = self.coordinator.current_infrared_brightness
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Update the infrared brightness value."""
         await self.coordinator.async_set_infrared_brightness(option)
@@ -99,6 +103,7 @@ class LIFXThemeSelectEntity(LIFXEntity, SelectEntity):
         self._attr_current_option = None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -109,6 +114,7 @@ class LIFXThemeSelectEntity(LIFXEntity, SelectEntity):
         """Update attrs from coordinator data."""
         self._attr_current_option = self.coordinator.last_used_theme
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Paint the selected theme onto the device."""
         await self.coordinator.async_apply_theme(option.lower())

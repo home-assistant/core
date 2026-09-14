@@ -1,10 +1,10 @@
 """Config flow for the Altruist integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from altruistclient import AltruistClient, AltruistDeviceModel, AltruistError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -21,6 +21,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
 
     device: AltruistDeviceModel
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -49,7 +50,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         data_schema = self.add_suggested_values_to_schema(
-            vol.Schema({vol.Required(CONF_HOST): str}),
+            probatio.Schema({probatio.Required(CONF_HOST): str}),
             {CONF_HOST: ip_address},
         )
 
@@ -62,6 +63,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

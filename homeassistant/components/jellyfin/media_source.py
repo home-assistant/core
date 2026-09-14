@@ -3,7 +3,7 @@
 import logging
 import mimetypes
 import os
-from typing import Any
+from typing import Any, override
 
 from jellyfin_apiclient_python.api import jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
@@ -79,6 +79,7 @@ class JellyfinSource(MediaSource):
         self.api = self.client.jellyfin
         self.url = jellyfin_url(self.client, "")
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Return a streamable URL and associated mime type."""
         self._ensure_loaded()
@@ -95,6 +96,7 @@ class JellyfinSource(MediaSource):
 
         return PlayMedia(stream_url, mime_type)
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return a browsable Jellyfin media source."""
         self._ensure_loaded()

@@ -1,6 +1,7 @@
 """Demo platform that offers a fake time entity."""
 
 from datetime import time
+from typing import override
 
 from homeassistant.components.time import TimeEntity
 from homeassistant.config_entries import ConfigEntry
@@ -43,6 +44,7 @@ class DemoTime(TimeEntity):
             identifiers={(DOMAIN, unique_id)}, name=device_name
         )
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Update the time."""
         self._attr_native_value = value

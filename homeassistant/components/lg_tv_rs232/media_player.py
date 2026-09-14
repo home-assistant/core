@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
-from typing import Any
+from typing import Any, override
 
 from lg_rs232_tv import MAX_VOLUME, CommandRejected, InputSource, PowerState, TVState
 
@@ -104,6 +104,7 @@ class LGTVRS232MediaPlayer(MediaPlayerEntity):
         )
         self._async_update_from_state(self._tv.state)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to TV state updates."""
         self.async_on_remove(self._tv.subscribe(self._async_on_state_update))
@@ -158,21 +159,25 @@ class LGTVRS232MediaPlayer(MediaPlayerEntity):
         self._attr_supported_features = features
 
     @catch_command_errors
+    @override
     async def async_turn_on(self) -> None:
         """Turn the TV on."""
         await self._tv.power_on()
 
     @catch_command_errors
+    @override
     async def async_turn_off(self) -> None:
         """Turn the TV off."""
         await self._tv.power_off()
 
     @catch_command_errors
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._tv.set_volume(round(volume * MAX_VOLUME))
 
     @catch_command_errors
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the TV."""
         if mute:
@@ -181,6 +186,7 @@ class LGTVRS232MediaPlayer(MediaPlayerEntity):
             await self._tv.mute_off()
 
     @catch_command_errors
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""
         await self._tv.select_input_source(INPUT_SOURCE_HA_TO_LG[source])

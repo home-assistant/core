@@ -1,8 +1,9 @@
 """Config flow to configure the IPP integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyipp import (
     IPP,
     IPPConnectionError,
@@ -12,7 +13,6 @@ from pyipp import (
     IPPResponseError,
     IPPVersionNotSupportedError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN
+from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +45,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
         tls=data[CONF_SSL],
         verify_ssl=data[CONF_VERIFY_SSL],
         session=session,
+        request_timeout=REQUEST_TIMEOUT,
     )
 
     printer = await ipp.printer()
@@ -61,6 +62,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up the instance."""
         self.discovery_info: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -100,6 +102,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -206,13 +209,13 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=631): int,
-                    vol.Required(CONF_BASE_PATH, default="/ipp/print"): str,
-                    vol.Required(CONF_SSL, default=False): bool,
-                    vol.Required(CONF_VERIFY_SSL, default=False): bool,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_PORT, default=631): int,
+                    probatio.Required(CONF_BASE_PATH, default="/ipp/print"): str,
+                    probatio.Required(CONF_SSL, default=False): bool,
+                    probatio.Required(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
             errors=errors or {},

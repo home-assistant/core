@@ -2,10 +2,11 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homematicip.base.enums import (
     BinaryBehaviorType,
+    FunctionalChannelType,
     LockState,
     SmokeDetectorAlarmType,
     WindowState,
@@ -48,7 +49,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import smoke_detector_channel_data_exists
+from .helpers import get_channel_index_by_type, smoke_detector_channel_data_exists
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -337,6 +338,7 @@ class HomematicipSimpleBinarySensor[_DeviceT: Device](
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the binary sensor is on."""
         return self.entity_description.value_fn(self._device)
@@ -352,6 +354,7 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
         super().__init__(hap, hap.home, feature_id="cloud_connection")
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         # Merges into the existing HAP device registered in __init__.py.
@@ -366,6 +369,7 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
         )
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon of the access point entity."""
         return (
@@ -375,11 +379,13 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if hap is connected to cloud."""
         return self._home.connected
 
     @property
+    @override
     def available(self) -> bool:
         """Sensor is always available."""
         return True
@@ -391,11 +397,13 @@ class HomematicipBaseActionSensor(HomematicipGenericEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.MOVING
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if acceleration is detected."""
         return self._device.accelerationSensorTriggered
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the acceleration sensor."""
         state_attr = super().extra_state_attributes
@@ -420,7 +428,14 @@ class HomematicipTiltVibrationSensor(HomematicipBaseActionSensor):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the tilt vibration sensor."""
-        super().__init__(hap, device, feature_id="tilt_vibration")
+        super().__init__(
+            hap,
+            device,
+            feature_id="tilt_vibration",
+            channel_real_index=get_channel_index_by_type(
+                device, FunctionalChannelType.TILT_VIBRATION_SENSOR_CHANNEL
+            ),
+        )
 
 
 class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEntity):
@@ -448,6 +463,7 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the contact interface is on/open."""
         channel = self.get_channel_or_raise()
@@ -479,6 +495,7 @@ class HomematicipShutterContact(HomematicipMultiContactInterface, BinarySensorEn
         self.has_additional_state = has_additional_state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the Shutter Contact."""
         state_attr = super().extra_state_attributes
@@ -503,6 +520,7 @@ class HomematicipFullFlushLockControllerLocked(
         super().__init__(hap, device, post="Locked", feature_id="lock_locked")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the controlled lock is unlocked.
 
@@ -551,6 +569,7 @@ class HomematicipFullFlushLockControllerGlassBreak(
         super().__init__(hap, device, post="Glass break", feature_id="glass_break")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if glass break has been detected."""
         channel = _get_channel_by_role(
@@ -571,11 +590,13 @@ class HomematicipStormSensor(HomematicipGenericEntity, BinarySensorEntity):
         super().__init__(hap, device, "Storm", feature_id="storm")
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon."""
         return "mdi:weather-windy" if self.is_on else "mdi:pinwheel-outline"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true, if storm is detected."""
         return self._device.storm
@@ -591,11 +612,13 @@ class HomematicipSunshineSensor(HomematicipGenericEntity, BinarySensorEntity):
         super().__init__(hap, device, post="Sunshine", feature_id="sunshine")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if sun is shining."""
         return self._device.sunshine
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the illuminance sensor."""
         state_attr = super().extra_state_attributes
@@ -625,6 +648,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorE
         super().__init__(hap, device, post=post, feature_id=feature_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Security-Group available."""
         # A security-group must be available, and should not be affected by
@@ -632,6 +656,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorE
         return True
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the security zone group."""
         state_attr = super().extra_state_attributes
@@ -647,6 +672,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorE
         return state_attr
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if security issue detected."""
         if (
@@ -675,6 +701,7 @@ class HomematicipSecuritySensorGroup(
         super().__init__(hap, device, post="Sensors", feature_id="security")
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the security group."""
         state_attr = super().extra_state_attributes
@@ -688,6 +715,7 @@ class HomematicipSecuritySensorGroup(
         return state_attr
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if safety issue detected."""
         if super().is_on:

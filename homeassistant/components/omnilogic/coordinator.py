@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from omnilogic import OmniLogic, OmniLogicException
 
@@ -42,6 +42,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any
             update_interval=timedelta(seconds=polling_interval),
         )
 
+    @override
     async def _async_update_data(self):
         """Fetch data from OmniLogic."""
         try:

@@ -1,5 +1,7 @@
 """Support for Tuya select."""
 
+from typing import override
+
 from tuya_device_handlers.definition.select import (
     SelectDefinition,
     get_default_definition,
@@ -188,6 +190,12 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
     ),
+    DeviceCategory.QCCDZ: (
+        SelectEntityDescription(
+            key=DPCode.WORK_MODE,
+            translation_key="charger_work_mode",
+        ),
+    ),
     DeviceCategory.QN: (
         SelectEntityDescription(
             key=DPCode.LEVEL,
@@ -350,6 +358,18 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.ZNJDQ: (
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            translation_key="relay_status",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            translation_key="light_mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
@@ -408,10 +428,12 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         self._attr_options = definition.select_wrapper.options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],
@@ -426,6 +448,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
             self.device, updated_status_properties, dp_timestamps
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, option)

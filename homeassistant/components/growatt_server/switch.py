@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from growattServer import GrowattV1ApiError
 
@@ -115,6 +115,7 @@ class GrowattSwitch(CoordinatorEntity[GrowattCoordinator], SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         value = self.coordinator.data.get(self.entity_description.api_key)
@@ -124,10 +125,12 @@ class GrowattSwitch(CoordinatorEntity[GrowattCoordinator], SwitchEntity):
         # API returns integer 1 for enabled, 0 for disabled
         return bool(value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_set_state(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_set_state(False)

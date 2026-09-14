@@ -70,6 +70,10 @@
     },
     {
       "connectable": false,
+      "service_uuid": "00005550-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": false,
       "manufacturer_id": 63391,
       "service_uuid": "00008351-0000-1000-8000-00805f9b34fb"
     },
@@ -144,5 +148,5 @@
   "documentation": "https://www.home-assistant.io/integrations/govee_ble",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["govee-ble==1.2.0"]
+  "requirements": ["govee-ble==1.4.0"]
 }

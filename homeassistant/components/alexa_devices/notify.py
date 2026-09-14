@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioamazondevices.api import AmazonEchoApi
 from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
@@ -23,6 +23,7 @@ class AmazonNotifyEntityDescription(NotifyEntityDescription):
     """Alexa Devices notify entity description."""
 
     is_supported: Callable[[AmazonDevice], bool] = lambda _device: True
+    is_available_fn: Callable[[AmazonDevice], bool] = lambda _device: True
     method: Callable[[AmazonEchoApi, AmazonDevice, str], Awaitable[None]]
     subkey: str
 
@@ -39,6 +40,9 @@ NOTIFY: Final = (
         key="announce",
         translation_key="announce",
         subkey="AUDIO_PLAYER",
+        is_available_fn=lambda device: (
+            device.communication_settings.get("communications") != "OFF"
+        ),
         method=lambda api, device, message: api.call_alexa_announcement(
             device, message
         ),
@@ -79,6 +83,15 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
 
     entity_description: AmazonNotifyEntityDescription
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.entity_description.is_available_fn(self.device) and super().available
+        )
+
+    @override
     async def async_send_message(
         self, message: str, title: str | None = None, **kwargs: Any
     ) -> None:

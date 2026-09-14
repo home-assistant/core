@@ -1,6 +1,6 @@
 """BSBLAN platform to control a compatible Water Heater Device."""
 
-from typing import Any
+from typing import Any, override
 
 from bsblan import BSBLANError, HotWaterState, SetHotWaterParam
 
@@ -80,32 +80,49 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
         # Initialize available attribute to resolve multiple inheritance conflict
         self._attr_available = True
 
-        # Set temperature limits based on device capabilities from slow coordinator
+    @property
+    @override
+    def min_temp(self) -> float:
+        """Return the minimum temperature.
+
+        Derived from the slow-coordinator DHW config, which may still be
+        pending when the platform is set up. Falls back to the default until
+        the config becomes available.
+        """
         dhw_config = (
-            data.slow_coordinator.data.dhw_config
-            if data.slow_coordinator.data
+            self.slow_coordinator.data.dhw_config
+            if self.slow_coordinator.data
             else None
         )
-
-        # For min_temp: Use reduced_setpoint from config data (slow polling)
         if (
             dhw_config is not None
             and dhw_config.reduced_setpoint is not None
             and dhw_config.reduced_setpoint.value is not None
         ):
-            self._attr_min_temp = dhw_config.reduced_setpoint.value
-        else:
-            self._attr_min_temp = 10.0  # Default minimum
+            return dhw_config.reduced_setpoint.value
+        return 10.0  # Default minimum
 
-        # For max_temp: Use nominal_setpoint_max from config data (slow polling)
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the maximum temperature.
+
+        Derived from the slow-coordinator DHW config, which may still be
+        pending when the platform is set up. Falls back to the default until
+        the config becomes available.
+        """
+        dhw_config = (
+            self.slow_coordinator.data.dhw_config
+            if self.slow_coordinator.data
+            else None
+        )
         if (
             dhw_config is not None
             and dhw_config.nominal_setpoint_max is not None
             and dhw_config.nominal_setpoint_max.value is not None
         ):
-            self._attr_max_temp = dhw_config.nominal_setpoint_max.value
-        else:
-            self._attr_max_temp = 65.0  # Default maximum
+            return dhw_config.nominal_setpoint_max.value
+        return 65.0  # Default maximum
 
     @property
     def _dhw(self) -> HotWaterState:
@@ -118,6 +135,7 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
         return dhw
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return current operation."""
         if (
@@ -127,6 +145,7 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
         return BSBLAN_TO_HA_OPERATION_MODE.get(operating_mode.value)
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (current_temp := self._dhw.dhw_actual_value_top_temperature) is None:
@@ -134,12 +153,14 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
         return current_temp.value
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (target_temp := self._dhw.nominal_setpoint) is None:
             return None
         return target_temp.value
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -155,6 +176,7 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         # Base class validates operation_mode is in operation_list before calling
@@ -172,10 +194,12 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
         await self.async_set_operation_mode(STATE_PERFORMANCE)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
         await self.async_set_operation_mode(STATE_OFF)

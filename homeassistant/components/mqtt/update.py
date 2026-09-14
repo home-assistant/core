@@ -1,9 +1,9 @@
 """Configure update platform in a device through MQTT topic."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import update
 from homeassistant.components.update import (
@@ -45,34 +45,38 @@ CONF_TITLE = "title"
 
 PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_DISPLAY_PRECISION, default=0): cv.positive_int,
-        vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
-        vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_INSTALL): cv.string,
-        vol.Optional(CONF_RELEASE_SUMMARY): cv.string,
-        vol.Optional(CONF_RELEASE_URL): cv.string,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_TITLE): cv.string,
+        probatio.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_DEVICE_CLASS): probatio.Any(DEVICE_CLASSES_SCHEMA, None),
+        probatio.Optional(CONF_DISPLAY_PRECISION, default=0): cv.positive_int,
+        probatio.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
+        probatio.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_PAYLOAD_INSTALL): cv.string,
+        probatio.Optional(CONF_RELEASE_SUMMARY): cv.string,
+        probatio.Optional(CONF_RELEASE_URL): cv.string,
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_TITLE): cv.string,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
-DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
+DISCOVERY_SCHEMA = probatio.All(
+    PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
+)
 
 
-MQTT_JSON_UPDATE_SCHEMA = vol.Schema(
+MQTT_JSON_UPDATE_SCHEMA = probatio.Schema(
     {
-        vol.Optional("installed_version"): cv.string,
-        vol.Optional("latest_version"): cv.string,
-        vol.Optional("title"): cv.string,
-        vol.Optional("release_summary"): cv.string,
-        vol.Optional("release_url"): cv.url,
-        vol.Optional("entity_picture"): cv.url,
-        vol.Optional("in_progress"): cv.boolean,
-        vol.Optional("update_percentage"): vol.Any(vol.Range(min=0, max=100), None),
+        probatio.Optional("installed_version"): cv.string,
+        probatio.Optional("latest_version"): cv.string,
+        probatio.Optional("title"): cv.string,
+        probatio.Optional("release_summary"): cv.string,
+        probatio.Optional("release_url"): cv.url,
+        probatio.Optional("entity_picture"): cv.url,
+        probatio.Optional("in_progress"): cv.boolean,
+        probatio.Optional("update_percentage"): probatio.Any(
+            probatio.Range(min=0, max=100), None
+        ),
     }
 )
 
@@ -101,15 +105,18 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     _entity_id_format = update.ENTITY_ID_FORMAT
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
         return self._attr_entity_picture
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
@@ -172,7 +179,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                     msg.topic,
                 )
                 json_payload = {"installed_version": str(payload)}
-        except vol.MultipleInvalid as exc:
+        except probatio.MultipleInvalid as exc:
             _LOGGER.warning(
                 (
                     "Schema violation after processing payload '%s'"
@@ -230,6 +237,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             self._attr_latest_version = latest_version
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -252,10 +260,12 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             {"_attr_latest_version"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -264,6 +274,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
 
     @property
+    @override
     def supported_features(self) -> UpdateEntityFeature:
         """Return the list of supported features."""
         support = UpdateEntityFeature(UpdateEntityFeature.PROGRESS)

@@ -2,12 +2,12 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiopyarr import ArrAuthenticationException, ArrException
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.sonarr_client import SonarrClient
-import voluptuous as vol
+import probatio
 import yarl
 
 from homeassistant.config_entries import (
@@ -61,6 +61,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> SonarrOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SonarrOptionsFlowHandler()
@@ -86,6 +87,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -98,12 +100,14 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
             )
 
-            # aiopyarr defaults to the service port if one isn't given
-            # this is counter to standard practice where http = 80
-            # and https = 443.
+            # Ensure an explicit port is present in the URL so that
+            # aiopyarr does not fall back to its own service-port default
+            # (which differs from the standard HTTP/HTTPS ports).
             if CONF_URL in user_input:
                 url = yarl.URL(user_input[CONF_URL])
-                user_input[CONF_URL] = f"{url.scheme}://{url.host}:{url.port}{url.path}"
+                if url.explicit_port is None:
+                    url = url.with_port(url.port)
+                user_input[CONF_URL] = url.human_repr()
 
             if self.source == SOURCE_REAUTH:
                 user_input = {**self._get_reauth_entry().data, **user_input}
@@ -135,19 +139,19 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _get_user_data_schema(self) -> vol.Schema:
+    def _get_user_data_schema(self) -> probatio.Schema:
         """Get the data schema to display user form."""
         if self.source == SOURCE_REAUTH:
-            return vol.Schema({vol.Required(CONF_API_KEY): str})
+            return probatio.Schema({probatio.Required(CONF_API_KEY): str})
 
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_URL): str,
-                vol.Required(CONF_API_KEY): str,
-                vol.Required(CONF_MORE_OPTIONS): section(
-                    vol.Schema(
+                probatio.Required(CONF_URL): str,
+                probatio.Required(CONF_API_KEY): str,
+                probatio.Required(CONF_MORE_OPTIONS): section(
+                    probatio.Schema(
                         {
-                            vol.Optional(
+                            probatio.Optional(
                                 CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
                             ): bool,
                         }
@@ -169,13 +173,13 @@ class SonarrOptionsFlowHandler(OptionsFlowWithReload):
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_UPCOMING_DAYS,
                 default=self.config_entry.options.get(
                     CONF_UPCOMING_DAYS, DEFAULT_UPCOMING_DAYS
                 ),
             ): int,
-            vol.Optional(
+            probatio.Optional(
                 CONF_WANTED_MAX_ITEMS,
                 default=self.config_entry.options.get(
                     CONF_WANTED_MAX_ITEMS, DEFAULT_WANTED_MAX_ITEMS
@@ -183,4 +187,6 @@ class SonarrOptionsFlowHandler(OptionsFlowWithReload):
             ): int,
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=probatio.Schema(options)
+        )

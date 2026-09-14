@@ -1,15 +1,15 @@
 """Config flow for Yardian integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyyardian import (
     AsyncYardianClient,
     DeviceInfo,
     NetworkException,
     NotAuthorizedException,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
@@ -19,10 +19,10 @@ from .const import DOMAIN, PRODUCT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_ACCESS_TOKEN): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_ACCESS_TOKEN): str,
     }
 )
 
@@ -41,6 +41,7 @@ class YardianConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await yarcli.fetch_device_info()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

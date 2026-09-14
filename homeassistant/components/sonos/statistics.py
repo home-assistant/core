@@ -1,6 +1,7 @@
 """Class to track subscription event statistics."""
 
 import logging
+from typing import override
 
 from soco.data_structures_entry import from_didl_string
 from soco.events_base import Event as SonosEvent, parse_event_xml
@@ -67,6 +68,7 @@ class EventStatistics(SonosStatistics):
         """Mark a fully processed event by subscription type."""
         self._stats[event.service.service_type]["processed"] += 1
 
+    @override
     def report(self) -> dict:
         """Generate a report for use in diagnostics."""
         payload = self._stats.copy()

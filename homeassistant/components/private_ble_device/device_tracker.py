@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 import logging
+from typing import override
 
 from homeassistant.components import bluetooth
 from homeassistant.components.device_tracker import BaseScannerEntity, SourceType
@@ -33,6 +34,7 @@ class BasePrivateDeviceTracker(BasePrivateDeviceEntity, BaseScannerEntity):
     _attr_name = None
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, str]:
         """Return extra state attributes for this device."""
         if last_info := self._last_info:
@@ -43,6 +45,7 @@ class BasePrivateDeviceTracker(BasePrivateDeviceEntity, BaseScannerEntity):
         return {}
 
     @callback
+    @override
     def _async_track_unavailable(
         self, service_info: bluetooth.BluetoothServiceInfoBleak
     ) -> None:
@@ -50,6 +53,7 @@ class BasePrivateDeviceTracker(BasePrivateDeviceEntity, BaseScannerEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _async_track_service_info(
         self,
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -59,6 +63,7 @@ class BasePrivateDeviceTracker(BasePrivateDeviceEntity, BaseScannerEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected."""
         return bool(self._last_info)

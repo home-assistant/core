@@ -1,6 +1,6 @@
 """Support for covers."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import COVER, STATE_COVER, STATE_OFF, STATE_ON
@@ -73,6 +73,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         return cast("int", self.coordinator.data[COVER][self._device.index].status)
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
 
@@ -82,11 +83,13 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         return None
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
         return bool(self._current_action("closing"))
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
         return self._current_action("opening")
@@ -98,14 +101,17 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         self.coordinator.data[COVER][self._device.index].status = state
         self.async_write_ha_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self._cover_set_state(STATE_OFF, 2)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         await self._cover_set_state(STATE_ON, 1)
 
+    @override
     async def async_stop_cover(self, **_kwargs: Any) -> None:
         """Stop the cover."""
         if not self.is_closing and not self.is_opening:
@@ -114,6 +120,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         action = STATE_ON if self.is_closing else STATE_OFF
         await self._cover_set_state(action, 0)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
 

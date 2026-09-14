@@ -1,7 +1,7 @@
 """Matter Fan platform support."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from chip.clusters import Objects as clusters
 
@@ -39,6 +39,12 @@ FAN_MODE_MAP_REVERSE = {v: k for k, v in FAN_MODE_MAP.items()}
 PRESET_NATURAL_WIND = "natural_wind"
 PRESET_SLEEP_WIND = "sleep_wind"
 
+# Some devices report 255 for PercentCurrent instead of their actual speed
+# while FanMode is Auto. This is not part of the Matter spec (which says the
+# device should keep reporting its real current speed, see spec 4.4.6.1.2 and
+# 4.4.6.4), but we need to work around it regardless.
+PERCENT_CURRENT_AUTO_QUIRK = 255
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -64,6 +70,7 @@ class MatterFan(MatterEntity, FanEntity):
     _feature_map: int | None = None
     _platform_translation_key = "fan"
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -94,6 +101,7 @@ class MatterFan(MatterEntity, FanEntity):
             assert preset_mode is not None
         await self.async_set_preset_mode(preset_mode)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn fan off."""
         # clear the wind setting if its currently set
@@ -104,6 +112,7 @@ class MatterFan(MatterEntity, FanEntity):
             matter_attribute=clusters.FanControl.Attributes.FanMode,
         )
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         await self.write_attribute(
@@ -111,6 +120,7 @@ class MatterFan(MatterEntity, FanEntity):
             matter_attribute=clusters.FanControl.Attributes.PercentSetting,
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         # handle wind as preset
@@ -127,6 +137,7 @@ class MatterFan(MatterEntity, FanEntity):
             matter_attribute=clusters.FanControl.Attributes.FanMode,
         )
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self.write_attribute(
@@ -140,6 +151,7 @@ class MatterFan(MatterEntity, FanEntity):
             matter_attribute=clusters.FanControl.Attributes.RockSetting,
         )
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self.write_attribute(
@@ -165,6 +177,7 @@ class MatterFan(MatterEntity, FanEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
@@ -200,9 +213,9 @@ class MatterFan(MatterEntity, FanEntity):
         current_percent = self.get_matter_attribute_value(
             clusters.FanControl.Attributes.PercentCurrent
         )
-        # NOTE that a device may give back 255 as a special value to indicate that
-        # the speed is under automatic control and not set to a specific value.
-        self._attr_percentage = None if current_percent == 255 else current_percent
+        self._attr_percentage = (
+            None if current_percent == PERCENT_CURRENT_AUTO_QUIRK else current_percent
+        )
 
         # get preset mode from fan mode (and wind feature if available)
         wind_setting = self.get_matter_attribute_value(
@@ -235,7 +248,7 @@ class MatterFan(MatterEntity, FanEntity):
         # keep track of the last known mode for turn_on commands without preset
         if self._attr_preset_mode is not None:
             self._last_known_preset_mode = self._attr_preset_mode
-        if current_percent:
+        if current_percent and current_percent != PERCENT_CURRENT_AUTO_QUIRK:
             self._last_known_percentage = current_percent
 
     @callback

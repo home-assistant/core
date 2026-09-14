@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 import surepy
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
@@ -16,10 +16,10 @@ from .const import DOMAIN, SURE_API_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_DATA_SCHEMA = vol.Schema(
+USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -29,6 +29,7 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -105,6 +106,6 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
             errors=errors,
         )

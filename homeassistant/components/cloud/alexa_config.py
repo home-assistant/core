@@ -5,7 +5,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 from hass_nabucasa import AlexaApiError, Cloud
@@ -24,14 +24,17 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     state_report as alexa_state_report,
 )
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
     async_get_assistant_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, start
@@ -119,12 +122,12 @@ def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
         # The entity no longer exists
         return False
     if (
-        domain == "binary_sensor"
+        domain == BINARY_SENSOR_DOMAIN
         and device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES
     ):
         return True
 
-    if domain == "sensor" and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
+    if domain == SENSOR_DOMAIN and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
         return True
 
     return False
@@ -163,11 +166,13 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         )
 
     @property
+    @override
     def supports_auth(self) -> bool:
         """Return if config supports auth."""
         return True
 
     @property
+    @override
     def should_report_state(self) -> bool:
         """Return if states should be proactively reported."""
         return (
@@ -177,6 +182,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         )
 
     @property
+    @override
     def endpoint(self) -> str | URL | None:
         """Endpoint for report state."""
         if self._endpoint is None:
@@ -185,17 +191,20 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         return self._endpoint
 
     @property
+    @override
     def locale(self) -> str:
         """Return config locale."""
         # Not clear how to determine locale atm.
         return "en-US"
 
     @property
+    @override
     def entity_config(self) -> dict[str, Any]:
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}
 
     @callback
+    @override
     def user_identifier(self) -> str:
         """Return an identifier for the user that represents this config."""
         return self._cloud_user
@@ -217,6 +226,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 self._should_expose_legacy(entity_id),
             )
 
+    @override
     async def async_initialize(self) -> None:
         """Initialize the Alexa config."""
         await super().async_initialize()
@@ -300,6 +310,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         )
 
     @callback
+    @override
     def should_expose(self, entity_id: str) -> bool:
         """If an entity should be exposed."""
         entity_filter: EntityFilter = self._config[CONF_FILTER]
@@ -309,10 +320,12 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         return async_should_expose(self.hass, CLOUD_ALEXA, entity_id)
 
     @callback
+    @override
     def async_invalidate_access_token(self) -> None:
         """Invalidate access token."""
         self._token_valid = None
 
+    @override
     async def async_get_access_token(self) -> str | None:
         """Get an access token."""
         details: AlexaAccessTokenDetails | None
@@ -373,7 +386,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
             # State reporting is reported as a property on entities.
             # So when we change it, we need to sync all entities.
-            await self.async_sync_entities()
+            await self._async_sync_entities_unless_relink_needed()
             return
 
         # Nothing to do if no Alexa related things have changed
@@ -386,7 +399,14 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         ):
             return
 
-        await self.async_sync_entities()
+        await self._async_sync_entities_unless_relink_needed()
+
+    async def _async_sync_entities_unless_relink_needed(self) -> None:
+        """Sync entities, tolerating an account with no linked Alexa skill."""
+        try:
+            await self.async_sync_entities()
+        except alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink:
+            await self.set_authorized(False)
 
     @callback
     def _async_exposed_entities_updated(self) -> None:

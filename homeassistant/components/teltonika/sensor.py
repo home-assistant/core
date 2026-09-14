@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from teltasync.modems import ModemStatusFull
 
@@ -175,11 +176,13 @@ class TeltonikaSensorEntity(
         self._attr_translation_placeholders = {"modem_name": modem_name}
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._modem_id in self.coordinator.data
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Handle updated data from the coordinator."""
         return self.entity_description.value_fn(self.coordinator.data[self._modem_id])

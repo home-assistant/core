@@ -20,6 +20,9 @@ rules:
       to `async_setup`.
   appropriate-polling: done
   test-before-configure: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: Integration does not subscribe to events.
@@ -32,6 +35,9 @@ rules:
     comment: |
       The integration does not test the connection in `async_setup_entry` but
       instead does this in the calendar platform only, which can be improved.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   config-flow-test-coverage:
     status: todo

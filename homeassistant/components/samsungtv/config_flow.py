@@ -3,12 +3,12 @@
 from collections.abc import Mapping
 from functools import partial
 import socket
-from typing import Any, Self
+from typing import Any, Self, override
 from urllib.parse import urlparse
 
 import getmac
+import probatio
 from samsungtvws.encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthenticator
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -60,7 +60,7 @@ from .const import (
     UPNP_SVC_RENDERING_CONTROL,
 )
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 def _strip_uuid(udn: str) -> str:
@@ -265,6 +265,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self._title = self._host
         return True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -332,7 +333,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="pairing",
             errors=errors,
             description_placeholders={"device": self._title},
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
         )
 
     async def async_step_encrypted_pairing(
@@ -364,7 +365,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="encrypted_pairing",
             errors=errors,
             description_placeholders={"device": self._title},
-            data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PIN): str}),
         )
 
     @callback
@@ -464,6 +465,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             raise AbortFlow("already_in_progress")
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return getattr(other_flow, "_host", None) == self._host
@@ -475,6 +477,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             raise AbortFlow(RESULT_NOT_SUPPORTED)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -520,6 +523,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -532,6 +536,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -646,5 +651,5 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm_encrypted",
             errors=errors,
             description_placeholders={"device": reauth_entry.title},
-            data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PIN): str}),
         )

@@ -1,6 +1,6 @@
 """Repairs for the Home Assistant SkyConnect integration."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.homeassistant_hardware.repair_helpers import (
     ISSUE_MULTI_PAN_MIGRATION,
@@ -27,6 +27,7 @@ class SkyConnectMultiPanMigrationRepairFlow(
         HomeAssistantSkyConnectMultiPanOptionsFlowHandler.__init__(self, config_entry)
         self._repair_config_entry = config_entry
 
+    @override
     async def async_step_init(  # type: ignore[override]
         self, user_input: dict[str, Any] | None = None
     ) -> RepairsFlowResult:

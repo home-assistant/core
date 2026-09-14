@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
+from typing import override
 
 from wled import Segment
 
@@ -96,6 +97,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         self._segment = segment
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -103,6 +105,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current WLED segment number value."""
         return self.entity_description.value_fn(
@@ -110,6 +113,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         )
 
     @wled_exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the WLED segment value."""
         key = self.entity_description.key

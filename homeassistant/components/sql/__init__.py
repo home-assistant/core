@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
 from homeassistant.components.sensor import (
@@ -31,7 +31,7 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_ADVANCED_OPTIONS,
+    CONF_ADDITIONAL_OPTIONS,
     CONF_COLUMN_NAME,
     CONF_QUERY,
     DOMAIN,
@@ -43,30 +43,30 @@ from .util import redact_credentials, validate_sql_select
 _LOGGER = logging.getLogger(__name__)
 
 
-QUERY_SCHEMA = vol.Schema(
+QUERY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_COLUMN_NAME): cv.string,
-        vol.Required(CONF_NAME): cv.template,
-        vol.Required(CONF_QUERY): vol.All(
+        probatio.Required(CONF_COLUMN_NAME): cv.string,
+        probatio.Required(CONF_NAME): cv.template,
+        probatio.Required(CONF_QUERY): probatio.All(
             cv.template, ValueTemplate.from_template, validate_sql_select
         ),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_VALUE_TEMPLATE): probatio.All(
             cv.template, ValueTemplate.from_template
         ),
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_DB_URL): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-        vol.Optional(CONF_ICON): cv.template,
-        vol.Optional(CONF_PICTURE): cv.template,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_DB_URL): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_AVAILABILITY): cv.template,
+        probatio.Optional(CONF_ICON): cv.template,
+        probatio.Optional(CONF_PICTURE): cv.template,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): vol.All(cv.ensure_list, [QUERY_SCHEMA])},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {probatio.Optional(DOMAIN): probatio.All(cv.ensure_list, [QUERY_SCHEMA])},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -120,7 +120,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         new_options[CONF_COLUMN_NAME] = old_options.get(CONF_COLUMN_NAME)
         new_options[CONF_QUERY] = old_options.get(CONF_QUERY)
-        new_options[CONF_ADVANCED_OPTIONS] = {}
+        new_options[CONF_ADDITIONAL_OPTIONS] = {}
 
         for key in (
             CONF_VALUE_TEMPLATE,
@@ -129,11 +129,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_STATE_CLASS,
         ):
             if (value := old_options.get(key)) is not None:
-                new_options[CONF_ADVANCED_OPTIONS][key] = value
+                new_options[CONF_ADDITIONAL_OPTIONS][key] = value
 
         hass.config_entries.async_update_entry(
             entry, data=new_data, options=new_options, version=2
         )
+
+    if entry.version == 2:
+        new_options = {**entry.options}
+        # The "advanced_options" section was renamed to "additional_options"
+        if (additional := new_options.pop("advanced_options", None)) is not None:
+            new_options[CONF_ADDITIONAL_OPTIONS] = additional
+        hass.config_entries.async_update_entry(entry, options=new_options, version=3)
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",

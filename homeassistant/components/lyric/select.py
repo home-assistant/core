@@ -1,6 +1,7 @@
 """Support for Honeywell Lyric select platform."""
 
 import logging
+from typing import override
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
@@ -40,7 +41,6 @@ async def async_setup_entry(
         for location in coordinator.data.locations
         for device in location.devices
         if device.device_class == "Thermostat"
-        and device.device_id.startswith("LCC")
         and coordinator.data.rooms_dict.get(device.mac_id)
     )
 
@@ -71,6 +71,7 @@ class LyricRoomPrioritySelect(LyricDeviceEntity, SelectEntity):
         return self.coordinator.data.rooms_dict.get(self._mac_id, {})
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the list of available room priority options."""
         room_options = sorted(
@@ -79,6 +80,7 @@ class LyricRoomPrioritySelect(LyricDeviceEntity, SelectEntity):
         return [OPTION_FOLLOW_ME, *room_options]
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the currently selected room priority."""
         priority = self.coordinator.data.priorities_dict.get(self._mac_id)
@@ -98,6 +100,7 @@ class LyricRoomPrioritySelect(LyricDeviceEntity, SelectEntity):
 
         return None
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the room priority."""
         if option == OPTION_FOLLOW_ME:

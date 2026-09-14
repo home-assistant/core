@@ -475,7 +475,6 @@ EVENT_ATTRS = [{"event_types": []}, {"event_type": None}]
 FAN_ATTRS = [{"supported_features": 0}, {}]
 LIGHT_ATTRS = [
     {
-        "icon": "mdi:lightbulb-group",
         "supported_color_modes": ["onoff"],
         "supported_features": 0,
     },

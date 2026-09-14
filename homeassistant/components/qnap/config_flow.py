@@ -1,11 +1,11 @@
 """Config flow to configure qnap component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from qnapstats import QNAPStats
 from requests.exceptions import ConnectTimeout
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -26,14 +26,14 @@ from .const import (
     DOMAIN,
 )
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
@@ -73,6 +73,7 @@ class QnapConfigFlow(ConfigFlow, domain=DOMAIN):
             return errors, stats
         return errors, None
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,

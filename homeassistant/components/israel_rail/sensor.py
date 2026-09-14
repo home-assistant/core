@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -139,6 +139,7 @@ class IsraelRailEntitySensor(
         self._attr_unique_id = f"{unique_id}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self.entity_description.index >= len(self.coordinator.data):

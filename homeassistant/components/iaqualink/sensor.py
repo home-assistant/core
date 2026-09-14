@@ -1,5 +1,7 @@
 """Support for Aqualink temperature sensors."""
 
+from typing import override
+
 from iaqualink.device import AqualinkSensor
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -45,6 +47,7 @@ class HassAqualinkSensor(AqualinkEntity[AqualinkSensor], SensorEntity):
         self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
         if self.dev.state == "":

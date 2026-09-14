@@ -132,3 +132,51 @@ async def test_diagnostics_without_optional_api_metadata(
             mock_duco_client.async_get_api_info.return_value.api_version
         )
     }
+
+
+async def test_diagnostics_redacts_raw_payload_keys(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test that raw payload API key variants are redacted."""
+    mock_duco_client.async_get_board_info.return_value = replace(
+        mock_duco_client.async_get_board_info.return_value,
+        raw_payload={
+            "SerialBoardBox": {"Val": "ABC123"},
+            "SerialBoardComm": {"Val": "DEF456"},
+            "SerialDucoBox": {"Val": "GHI789"},
+            "SerialDucoComm": {"Val": "JKL012"},
+        },
+    )
+    mock_duco_client.async_get_lan_info.return_value = replace(
+        mock_duco_client.async_get_lan_info.return_value,
+        raw_payload={
+            "Mac": {"Val": "aa:bb:cc:dd:ee:ff"},
+            "HostName": {"Val": "duco-box"},
+            "WifiApKey": {"Val": "12345678"},
+            "WifiApSsid": {"Val": "DUCO"},
+        },
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    assert diagnostics["board_info"]["raw_payload"] == {
+        "SerialBoardBox": "**REDACTED**",
+        "SerialBoardComm": "**REDACTED**",
+        "SerialDucoBox": "**REDACTED**",
+        "SerialDucoComm": "**REDACTED**",
+    }
+    assert diagnostics["lan_info"]["raw_payload"] == {
+        "Mac": "**REDACTED**",
+        "HostName": "**REDACTED**",
+        "WifiApKey": "**REDACTED**",
+        "WifiApSsid": "**REDACTED**",
+    }

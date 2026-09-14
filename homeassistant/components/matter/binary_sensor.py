@@ -1,7 +1,7 @@
 """Matter binary sensors."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import uint
@@ -45,6 +45,7 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
     entity_description: MatterBinarySensorEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value: bool | uint | int | Nullable | None

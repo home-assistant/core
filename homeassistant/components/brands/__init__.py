@@ -9,7 +9,7 @@ import time
 from typing import Any, Final
 
 from aiohttp import ClientError, hdrs, web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -61,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-@websocket_api.websocket_command({vol.Required("type"): "brands/access_token"})
+@websocket_api.websocket_command({probatio.Required("type"): "brands/access_token"})
 def ws_access_token(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -123,7 +123,14 @@ class _BrandsBaseView(HomeAssistantView):
         )
         if not authenticated:
             if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
                 raise web.HTTPUnauthorized
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
             raise web.HTTPForbidden
 
     async def _serve_from_custom_integration(

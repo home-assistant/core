@@ -2,12 +2,12 @@
 
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import Any, cast
+from typing import Any, cast, override
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
+import probatio
 from requests.exceptions import ConnectionError as RequestsConnectionError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -32,12 +32,12 @@ from .const import (
     SERIAL_NUMBER,
 )
 
-DATA_SCHEMA_USER = vol.Schema(
+DATA_SCHEMA_USER = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Coerce(int),
+        probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -128,12 +128,14 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> FritzBoxCallMonitorOptionsFlowHandler:
         """Get the options flow for this handler."""
         return FritzBoxCallMonitorOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -183,8 +185,12 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="phonebook",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_PHONEBOOK): vol.In(self._phonebook_names)}
+                data_schema=probatio.Schema(
+                    {
+                        probatio.Required(CONF_PHONEBOOK): probatio.In(
+                            self._phonebook_names
+                        )
+                    }
                 ),
                 errors={},
             )
@@ -217,10 +223,10 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         default_username = user_input.get(CONF_USERNAME)
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=default_username): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME, default=default_username): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             description_placeholders={"host": self._host},
@@ -276,11 +282,11 @@ class FritzBoxCallMonitorOptionsFlowHandler(OptionsFlowWithReload):
             return None
         return [prefix.strip() for prefix in prefixes.split(",")]
 
-    def _get_option_schema_prefixes(self) -> vol.Schema:
+    def _get_option_schema_prefixes(self) -> probatio.Schema:
         """Get option schema for entering prefixes."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_PREFIXES,
                     description={
                         "suggested_value": self.config_entry.options.get(CONF_PREFIXES)

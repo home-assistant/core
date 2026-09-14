@@ -2,9 +2,10 @@
 
 from datetime import datetime, timedelta
 from random import randint
+from typing import override
 
 from enturclient import EnturPublicTransportData
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -50,14 +51,14 @@ from .const import (
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STOP_IDS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-        vol.Optional(CONF_WHITELIST_LINES, default=[]): cv.ensure_list,
-        vol.Optional(CONF_OMIT_NON_BOARDING, default=True): cv.boolean,
-        vol.Optional(CONF_NUMBER_OF_DEPARTURES, default=2): vol.All(
-            cv.positive_int, vol.Range(min=2, max=10)
+        probatio.Required(CONF_STOP_IDS): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
+        probatio.Optional(CONF_WHITELIST_LINES, default=[]): cv.ensure_list,
+        probatio.Optional(CONF_OMIT_NON_BOARDING, default=True): cv.boolean,
+        probatio.Optional(CONF_NUMBER_OF_DEPARTURES, default=2): probatio.All(
+            cv.positive_int, probatio.Range(min=2, max=10)
         ),
     }
 )
@@ -158,27 +159,32 @@ class EnturPublicTransportSensor(SensorEntity):
         self._attributes: dict[str, str] = {}
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         self._attributes[ATTR_STOP_ID] = self._stop
         return self._attributes
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return UnitOfTime.MINUTES
 
     @property
+    @override
     def icon(self) -> str:
         """Icon to use in the frontend."""
         return self._icon

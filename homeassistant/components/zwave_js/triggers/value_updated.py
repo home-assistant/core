@@ -2,9 +2,9 @@
 
 from collections.abc import Callable
 import functools
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value, get_value_id_str
@@ -14,7 +14,12 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
+from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionRunner,
+    TriggerConfig,
+    TriggerNotTriggeredReporter,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from ..config_validation import VALUE_SCHEMA
@@ -34,8 +39,12 @@ from ..const import (
     DOMAIN,
     EVENT_VALUE_UPDATED,
 )
-from ..helpers import async_get_nodes_from_targets, get_device_id
-from .trigger_helpers import async_bypass_dynamic_config_validation
+from ..helpers import (
+    async_bypass_dynamic_config_validation,
+    async_get_config_entry_from_node,
+    async_get_nodes_from_targets,
+    get_device_id,
+)
 
 # Relative platform type should be <SUBMODULE_NAME>
 RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
@@ -47,21 +56,25 @@ ATTR_FROM = "from"
 ATTR_TO = "to"
 
 _OPTIONS_SCHEMA_DICT = {
-    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_COMMAND_CLASS): vol.All(
-        vol.Coerce(int), vol.In({cc.value: cc.name for cc in CommandClass})
+    probatio.Optional(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+    probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    probatio.Required(ATTR_COMMAND_CLASS): probatio.All(
+        probatio.Coerce(int), probatio.In({cc.value: cc.name for cc in CommandClass})
     ),
-    vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
-    vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
-    vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
-    vol.Optional(ATTR_FROM, default=MATCH_ALL): vol.Any(VALUE_SCHEMA, [VALUE_SCHEMA]),
-    vol.Optional(ATTR_TO, default=MATCH_ALL): vol.Any(VALUE_SCHEMA, [VALUE_SCHEMA]),
+    probatio.Required(ATTR_PROPERTY): probatio.Any(probatio.Coerce(int), cv.string),
+    probatio.Optional(ATTR_ENDPOINT): probatio.Coerce(int),
+    probatio.Optional(ATTR_PROPERTY_KEY): probatio.Any(probatio.Coerce(int), cv.string),
+    probatio.Optional(ATTR_FROM, default=MATCH_ALL): probatio.Any(
+        VALUE_SCHEMA, [VALUE_SCHEMA]
+    ),
+    probatio.Optional(ATTR_TO, default=MATCH_ALL): probatio.Any(
+        VALUE_SCHEMA, [VALUE_SCHEMA]
+    ),
 }
 
-_CONFIG_SCHEMA = vol.Schema(
+_CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS): vol.All(
+        probatio.Required(CONF_OPTIONS): probatio.All(
             _OPTIONS_SCHEMA_DICT,
             cv.has_at_least_one_key(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
         ),
@@ -80,7 +93,7 @@ async def async_validate_trigger_config(
         return config
 
     if not async_get_nodes_from_targets(hass, options):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
         )
     return config
@@ -106,19 +119,23 @@ async def async_attach_trigger(
 
     @callback
     def async_on_value_updated(
-        value: Value, device: dr.DeviceEntry, event: dict
+        value_id: str, device: dr.DeviceEntry, event: dict
     ) -> None:
         """Handle value update."""
         event_value: Value = event["value"]
-        if event_value != value:
+        if event_value.value_id != value_id:
             return
 
         # Get previous value and its state value if it exists
         prev_value_raw = event["args"]["prevValue"]
-        prev_value = value.metadata.states.get(str(prev_value_raw), prev_value_raw)
+        prev_value = event_value.metadata.states.get(
+            str(prev_value_raw), prev_value_raw
+        )
         # Get current value and its state value if it exists
         curr_value_raw = event["args"]["newValue"]
-        curr_value = value.metadata.states.get(str(curr_value_raw), curr_value_raw)
+        curr_value = event_value.metadata.states.get(
+            str(curr_value_raw), curr_value_raw
+        )
         # Check from and to values against previous and current values respectively
         for value_to_eval, raw_value_to_eval, match in (
             (prev_value, prev_value_raw, from_value),
@@ -131,17 +148,17 @@ async def async_attach_trigger(
                 return
 
         device_name = device.name_by_user or device.name
-        description = f"Z-Wave value {value.value_id} updated on {device_name}"
+        description = f"Z-Wave value {event_value.value_id} updated on {device_name}"
         payload = {
             ATTR_DEVICE_ID: device.id,
-            ATTR_NODE_ID: value.node.node_id,
-            ATTR_COMMAND_CLASS: value.command_class,
-            ATTR_COMMAND_CLASS_NAME: value.command_class_name,
-            ATTR_PROPERTY: value.property_,
-            ATTR_PROPERTY_NAME: value.property_name,
+            ATTR_NODE_ID: event_value.node.node_id,
+            ATTR_COMMAND_CLASS: event_value.command_class,
+            ATTR_COMMAND_CLASS_NAME: event_value.command_class_name,
+            ATTR_PROPERTY: event_value.property_,
+            ATTR_PROPERTY_NAME: event_value.property_name,
             ATTR_ENDPOINT: endpoint,
-            ATTR_PROPERTY_KEY: value.property_key,
-            ATTR_PROPERTY_KEY_NAME: value.property_key_name,
+            ATTR_PROPERTY_KEY: event_value.property_key,
+            ATTR_PROPERTY_KEY_NAME: event_value.property_key_name,
             ATTR_PREVIOUS_VALUE: prev_value,
             ATTR_PREVIOUS_VALUE_RAW: prev_value_raw,
             ATTR_CURRENT_VALUE: curr_value,
@@ -157,6 +174,7 @@ async def async_attach_trigger(
             unsub()
         unsubs.clear()
 
+    @callback
     def _create_zwave_listeners() -> None:
         """Create Z-Wave JS listeners."""
         async_remove()
@@ -167,18 +185,19 @@ async def async_attach_trigger(
             driver = node.client.driver
             assert driver is not None  # The node comes from the driver.
             drivers.add(driver)
+            entry = async_get_config_entry_from_node(hass, node)
             device_identifier = get_device_id(driver, node)
-            device = dev_reg.async_get_device(identifiers={device_identifier})
+            device = dev_reg.async_get_device_by_identifier(
+                device_identifier, entry.entry_id
+            )
             assert device
             value_id = get_value_id_str(
                 node, command_class, property_, endpoint, property_key
             )
-            value = node.values[value_id]
-            # We need to store the current value and device for the callback
             unsubs.append(
                 node.on(
                     EVENT_VALUE_UPDATED,
-                    functools.partial(async_on_value_updated, value, device),
+                    functools.partial(async_on_value_updated, value_id, device),
                 )
             )
 
@@ -202,6 +221,7 @@ class ValueUpdatedTrigger(Trigger):
     _options: dict[str, Any]
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -212,6 +232,7 @@ class ValueUpdatedTrigger(Trigger):
         return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -224,8 +245,11 @@ class ValueUpdatedTrigger(Trigger):
         assert config.options is not None
         self._options = config.options
 
+    @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
         return await async_attach_trigger(self._hass, self._options, run_action)

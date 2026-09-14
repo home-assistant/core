@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.const import DoseMode, ModelName, PreExtractionMode, WidgetType
@@ -121,7 +121,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_step=PRECISION_TENTHS,
         native_min_value=0,
-        native_max_value=10,
+        native_max_value=30,
         entity_category=EntityCategory.CONFIG,
         set_value_fn=(
             lambda machine, value: machine.set_pre_extraction_times(
@@ -163,7 +163,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_step=PRECISION_TENTHS,
         native_min_value=0,
-        native_max_value=10,
+        native_max_value=30,
         entity_category=EntityCategory.CONFIG,
         set_value_fn=(
             lambda machine, value: machine.set_pre_extraction_times(
@@ -207,7 +207,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_step=PRECISION_TENTHS,
         native_min_value=0,
-        native_max_value=10,
+        native_max_value=30,
         entity_category=EntityCategory.CONFIG,
         set_value_fn=(
             lambda machine, value: machine.set_pre_extraction_times(
@@ -350,10 +350,12 @@ class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
     entity_description: LaMarzoccoNumberEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | int:
         """Return the current value."""
         return self.entity_description.native_value_fn(self.coordinator.device)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         if value != self.native_value:

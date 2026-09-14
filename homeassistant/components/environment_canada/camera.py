@@ -1,7 +1,9 @@
 """Support for the Environment Canada radar imagery."""
 
+from typing import override
+
 from env_canada import ECMap
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant
@@ -18,7 +20,9 @@ from .coordinator import ECConfigEntry, ECDataUpdateCoordinator
 
 SERVICE_SET_RADAR_TYPE = "set_radar_type"
 SET_RADAR_TYPE_SCHEMA: VolDictType = {
-    vol.Required("radar_type"): vol.In(["Auto", "Rain", "Snow", "Precipitation type"]),
+    probatio.Required("radar_type"): probatio.In(
+        ["Auto", "Rain", "Snow", "Precipitation type"]
+    ),
 }
 
 _RADAR_TYPE_TO_LAYER: dict[str, str] = {
@@ -64,6 +68,7 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECMap]], Camera):
 
         self.content_type = "image/gif"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -72,6 +77,7 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECMap]], Camera):
         if not self.coordinator.last_update_success:
             await self.coordinator.async_request_refresh()
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:

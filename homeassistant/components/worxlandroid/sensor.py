@@ -2,9 +2,10 @@
 
 import asyncio
 import logging
+from typing import override
 
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -25,10 +26,10 @@ DEFAULT_TIMEOUT = 5
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PIN): cv.string,
-        vol.Optional(CONF_ALLOW_UNREACHABLE, default=True): cv.boolean,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PIN): cv.string,
+        probatio.Optional(CONF_ALLOW_UNREACHABLE, default=True): cv.boolean,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
 
@@ -74,16 +75,19 @@ class WorxLandroidSensor(SensorEntity):
         self.url = f"http://{self.host}/jsondata.cgi"
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return f"worxlandroid-{self.sensor}"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
         if self.sensor == "battery":

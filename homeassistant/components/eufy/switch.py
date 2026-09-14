@@ -1,6 +1,6 @@
 """Support for EufyHome switches."""
 
-from typing import Any
+from typing import Any, override
 
 import lakeside
 
@@ -40,6 +40,7 @@ class EufyHomeSwitch(SwitchEntity):
         self._switch.update()
         self._attr_is_on = self._switch.power
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the specified switch on."""
         try:
@@ -48,6 +49,7 @@ class EufyHomeSwitch(SwitchEntity):
             self._switch.connect()
             self._switch.set_state(power=True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the specified switch off."""
         try:

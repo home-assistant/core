@@ -1,5 +1,7 @@
 """Base entity for the Pterodactyl integration."""
 
+from typing import override
+
 from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
@@ -41,6 +43,7 @@ class PterodactylEntity(CoordinatorEntity[PterodactylCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return binary sensor availability."""
         return super().available and self.identifier in self.coordinator.data

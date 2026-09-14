@@ -1,10 +1,10 @@
 """Config flow to configure the PVOutput integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pvo import PVOutput, PVOutputAuthenticationError, PVOutputError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -30,6 +30,7 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -66,12 +67,12 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "account_url": "https://pvoutput.org/account.jsp"
             },
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_SYSTEM_ID, default=user_input.get(CONF_SYSTEM_ID, "")
                     ): int,
                 }
@@ -110,9 +111,9 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "account_url": "https://pvoutput.org/account.jsp"
             },
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    probatio.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -152,6 +153,6 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "account_url": "https://pvoutput.org/account.jsp"
             },
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )

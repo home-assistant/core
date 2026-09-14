@@ -2,6 +2,7 @@
 
 import dataclasses
 import logging
+from typing import override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
@@ -50,6 +51,7 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
         )
         self.supervisor = is_hassio(self.hass)
 
+    @override
     async def _async_update_data(self) -> dict[str, IntegrationAlert]:
         response = await async_get_clientsession(self.hass).get(
             "https://alerts.home-assistant.io/alerts.json",

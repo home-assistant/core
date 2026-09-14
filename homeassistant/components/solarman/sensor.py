@@ -1,6 +1,6 @@
 """Sensor platform for Solarman."""
 
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -276,6 +276,7 @@ class SolarmanSensorEntity(SolarmanEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.coordinator.data[self.entity_description.key]

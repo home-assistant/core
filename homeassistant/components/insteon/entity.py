@@ -2,11 +2,12 @@
 
 import functools
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyinsteon import devices
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -38,6 +39,7 @@ class InsteonEntity(Entity):
         self._insteon_device_group = device.groups[group]
         self._insteon_device = device
 
+    @override
     def __hash__(self):
         """Return the hash of the Insteon Entity."""
         return hash(self._insteon_device)
@@ -53,6 +55,7 @@ class InsteonEntity(Entity):
         return self._insteon_device_group.group
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         if self._insteon_device_group.group == 0x01:
@@ -62,6 +65,7 @@ class InsteonEntity(Entity):
         return uid
 
     @property
+    @override
     def name(self):
         """Return the name of the node (used for Entity_ID)."""
         # Set a base description
@@ -73,6 +77,7 @@ class InsteonEntity(Entity):
         return f"{description} {self._insteon_device.address}{extension}"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Provide attributes for display on device card."""
         return {
@@ -81,8 +86,11 @@ class InsteonEntity(Entity):
         }
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information."""
+        config_entry = self.platform.config_entry
+        assert config_entry
         return DeviceInfo(
             identifiers={(DOMAIN, str(self._insteon_device.address))},
             manufacturer="SmartLabs, Inc",
@@ -95,7 +103,11 @@ class InsteonEntity(Entity):
                 f"{self._insteon_device.firmware:02x} Engine Version:"
                 f" {self._insteon_device.engine_version}"
             ),
-            via_device=(DOMAIN, str(devices.modem.address)),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, str(devices.modem.address)),
+                config_entry_id=config_entry.entry_id,
+            ),
             configuration_url=f"homeassistant://insteon/device/config/{self._insteon_device.id}",
         )
 
@@ -110,6 +122,7 @@ class InsteonEntity(Entity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register INSTEON update events."""
         _LOGGER.debug(
@@ -138,6 +151,7 @@ class InsteonEntity(Entity):
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe to INSTEON update events."""
         _LOGGER.debug(

@@ -56,7 +56,7 @@ async def test_form_single_site(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OC200 (Display Name)"
     assert result["data"] == MOCK_ENTRY_DATA
-    assert result["result"].unique_id == "12345"
+    assert result["result"].unique_id == "12345_SiteId"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -102,6 +102,7 @@ async def test_form_multiple_sites(
         "username": "test-username",
         "password": "test-password",
     }
+    assert result["result"].unique_id == "12345_second"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -176,6 +177,108 @@ async def test_form_no_sites(hass: HomeAssistant, mock_omada_client: MagicMock) 
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_form_single_site_already_configured(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test that setting up the same controller and site twice is rejected."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_ENTRY_DATA,
+        unique_id="12345_SiteId",
+        version=2,
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USER_DATA,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_form_multiple_sites_second_site_allowed(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_setup_entry: MagicMock,
+) -> None:
+    """Test that a second site from the same controller can be set up."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_USER_DATA, "site": "first"},
+        unique_id="12345_first",
+        version=2,
+    )
+    existing_entry.add_to_hass(hass)
+
+    mock_omada_client.get_sites.return_value = [
+        OmadaSite("Site 1", "first"),
+        OmadaSite("Site 2", "second"),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USER_DATA,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "site"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"site": "second"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "12345_second"
+
+
+async def test_form_multiple_sites_duplicate_site_aborts(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test that selecting an already-configured site aborts the flow."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_USER_DATA, "site": "first"},
+        unique_id="12345_first",
+        version=2,
+    )
+    existing_entry.add_to_hass(hass)
+
+    mock_omada_client.get_sites.return_value = [
+        OmadaSite("Site 1", "first"),
+        OmadaSite("Site 2", "second"),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USER_DATA,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "site"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"site": "first"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(

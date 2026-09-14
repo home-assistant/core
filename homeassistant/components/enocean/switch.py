@@ -1,10 +1,10 @@
 """Support for EnOcean switches."""
 
-from typing import Any
+from typing import Any, override
 
 from enocean_async import EEP, EEP_SPECIFICATIONS, EEPHandler, EEPMessage, ERP1Telegram
 from enocean_async.esp3.packet import ESP3PacketType
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -24,9 +24,11 @@ DEFAULT_NAME = "EnOcean Switch"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_CHANNEL, default=0): cv.positive_int,
+        probatio.Required(CONF_ID): probatio.All(
+            cv.ensure_list, [probatio.Coerce(int)]
+        ),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_CHANNEL, default=0): cv.positive_int,
     }
 )
 
@@ -89,6 +91,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         self._attr_unique_id = generate_unique_id(dev_id, channel)
         self._attr_name = dev_name
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         if not self.address:
@@ -104,6 +107,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         )
         self._attr_is_on = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         if not self.address:
@@ -118,6 +122,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         )
         self._attr_is_on = False
 
+    @override
     def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the switch."""
         if telegram.rorg == 0xA5:

@@ -2,14 +2,14 @@
 
 import asyncio
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aioopenexchangerates import (
     Client,
     OpenExchangeRatesAuthError,
     OpenExchangeRatesClientError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_BASE
@@ -22,14 +22,14 @@ from .const import CLIENT_TIMEOUT, DEFAULT_BASE, DOMAIN, LOGGER
 
 def get_data_schema(
     currencies: dict[str, str], existing_data: Mapping[str, str]
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return a form schema."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_API_KEY): str,
-            vol.Optional(
+            probatio.Required(CONF_API_KEY): str,
+            probatio.Optional(
                 CONF_BASE, default=existing_data.get(CONF_BASE) or DEFAULT_BASE
-            ): vol.In(currencies),
+            ): probatio.In(currencies),
         }
     )
 
@@ -53,6 +53,7 @@ class OpenExchangeRatesConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.currencies: dict[str, str] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

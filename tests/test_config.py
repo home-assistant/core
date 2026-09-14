@@ -10,9 +10,9 @@ from pathlib import Path
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 import yaml
 
 from homeassistant import config as config_util, loader
@@ -76,14 +76,16 @@ def teardown():
         os.remove(SAFE_MODE_PATH)
 
 
-IOT_DOMAIN_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({vol.Remove("old"): str})
+IOT_DOMAIN_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({probatio.Remove("old"): str})
 
 
 @pytest.fixture
 async def mock_iot_domain_integration(hass: HomeAssistant) -> Integration:
     """Mock an integration which provides an IoT domain."""
-    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({vol.Remove("old"): str})
-    comp_platform_schema_base = comp_platform_schema.extend({}, extra=vol.ALLOW_EXTRA)
+    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({probatio.Remove("old"): str})
+    comp_platform_schema_base = comp_platform_schema.extend(
+        {}, extra=probatio.ALLOW_EXTRA
+    )
 
     return mock_integration(
         hass,
@@ -98,8 +100,10 @@ async def mock_iot_domain_integration(hass: HomeAssistant) -> Integration:
 @pytest.fixture
 async def mock_iot_domain_integration_with_docs(hass: HomeAssistant) -> Integration:
     """Mock an integration which provides an IoT domain."""
-    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({vol.Remove("old"): str})
-    comp_platform_schema_base = comp_platform_schema.extend({}, extra=vol.ALLOW_EXTRA)
+    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({probatio.Remove("old"): str})
+    comp_platform_schema_base = comp_platform_schema.extend(
+        {}, extra=probatio.ALLOW_EXTRA
+    )
 
     return mock_integration(
         hass,
@@ -123,7 +127,7 @@ async def mock_non_adr_0007_integration(hass: HomeAssistant) -> None:
     """
 
     test_platform_schema = IOT_DOMAIN_PLATFORM_SCHEMA.extend(
-        {vol.Required("option1"): str, vol.Optional("option2"): str}
+        {probatio.Required("option1"): str, probatio.Optional("option2"): str}
     )
     mock_platform(
         hass,
@@ -150,7 +154,7 @@ async def mock_non_adr_0007_integration_with_docs(hass: HomeAssistant) -> None:
         ),
     )
     test_platform_schema = IOT_DOMAIN_PLATFORM_SCHEMA.extend(
-        {vol.Required("option1"): str, vol.Optional("option2"): str}
+        {probatio.Required("option1"): str, probatio.Optional("option2"): str}
     )
     mock_platform(
         hass,
@@ -170,16 +174,16 @@ async def mock_adr_0007_integrations(hass: HomeAssistant) -> list[Integration]:
         "adr_0007_4",
         "adr_0007_5",
     ):
-        adr_0007_config_schema = vol.Schema(
+        adr_0007_config_schema = probatio.Schema(
             {
-                domain: vol.Schema(
+                domain: probatio.Schema(
                     {
-                        vol.Required("host"): str,
-                        vol.Optional("port", default=8080): int,
+                        probatio.Required("host"): str,
+                        probatio.Optional("port", default=8080): int,
                     }
                 )
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
         integrations.append(
             mock_integration(
@@ -203,16 +207,16 @@ async def mock_adr_0007_integrations_with_docs(
         "adr_0007_4",
         "adr_0007_5",
     ):
-        adr_0007_config_schema = vol.Schema(
+        adr_0007_config_schema = probatio.Schema(
             {
-                domain: vol.Schema(
+                domain: probatio.Schema(
                     {
-                        vol.Required("host"): str,
-                        vol.Optional("port", default=8080): int,
+                        probatio.Required("host"): str,
+                        probatio.Optional("port", default=8080): int,
                     }
                 )
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
         integrations.append(
             mock_integration(
@@ -237,16 +241,16 @@ async def mock_custom_validator_integrations(hass: HomeAssistant) -> list[Integr
     for domain in ("custom_validator_ok_1", "custom_validator_ok_2"):
 
         def gen_async_validate_config(domain):
-            schema = vol.Schema(
+            schema = probatio.Schema(
                 {
-                    domain: vol.Schema(
+                    domain: probatio.Schema(
                         {
-                            vol.Required("host"): str,
-                            vol.Optional("port", default=8080): int,
+                            probatio.Required("host"): str,
+                            probatio.Optional("port", default=8080): int,
                         }
                     )
                 },
-                extra=vol.ALLOW_EXTRA,
+                extra=probatio.ALLOW_EXTRA,
             )
 
             async def async_validate_config(
@@ -286,16 +290,16 @@ async def mock_custom_validator_integrations_with_docs(
     for domain in ("custom_validator_ok_1", "custom_validator_ok_2"):
 
         def gen_async_validate_config(domain):
-            schema = vol.Schema(
+            schema = probatio.Schema(
                 {
-                    domain: vol.Schema(
+                    domain: probatio.Schema(
                         {
-                            vol.Required("host"): str,
-                            vol.Optional("port", default=8080): int,
+                            probatio.Required("host"): str,
+                            probatio.Optional("port", default=8080): int,
                         }
                     )
                 },
-                extra=vol.ALLOW_EXTRA,
+                extra=probatio.ALLOW_EXTRA,
             )
 
             async def async_validate_config(
@@ -1219,14 +1223,14 @@ async def test_component_config_exceptions(
         (
             [
                 config_util.ConfigExceptionInfo(
-                    vol.Invalid("bla", ["path"]),
+                    probatio.Invalid("bla", ["path"]),
                     "config_validation_err",
                     "test_domain",
                     ConfigTestClass({"test_domain": []}),
                     "https://example.com",
                 )
             ],
-            "bla @ data['path']",
+            "bla at 'path'",
             [
                 "Invalid config for 'test_domain' at "
                 "../../configuration.yaml, line 140: bla 'path', "
@@ -1239,14 +1243,14 @@ async def test_component_config_exceptions(
         (
             [
                 config_util.ConfigExceptionInfo(
-                    vol.Invalid("bla", ["path"]),
+                    probatio.Invalid("bla", ["path"]),
                     "platform_config_validation_err",
                     "test_domain",
                     ConfigTestClass({"test_domain": []}),
                     "https://alt.example.com",
                 )
             ],
-            "bla @ data['path']",
+            "bla at 'path'",
             [
                 "Invalid config for 'test_domain' at "
                 "../../configuration.yaml, line 140: bla 'path', "
@@ -1327,30 +1331,44 @@ async def test_component_config_error_processing(
 @pytest.mark.parametrize(
     ("domain", "schema", "expected"),
     [
-        ("zone", vol.Schema({vol.Optional("zone", default=list): [int]}), "list"),
-        ("zone", vol.Schema({vol.Optional("zone", default=[]): [int]}), "list"),
         (
             "zone",
-            vol.Schema({vol.Optional("zone", default={}): {vol.Optional("hello"): 1}}),
-            "dict",
+            probatio.Schema({probatio.Optional("zone", default=list): [int]}),
+            "list",
         ),
         (
             "zone",
-            vol.Schema(
-                {vol.Optional("zone", default=dict): {vol.Optional("hello"): 1}}
+            probatio.Schema({probatio.Optional("zone", default=[]): [int]}),
+            "list",
+        ),
+        (
+            "zone",
+            probatio.Schema(
+                {probatio.Optional("zone", default={}): {probatio.Optional("hello"): 1}}
             ),
             "dict",
         ),
-        ("zone", vol.Schema({vol.Optional("zone"): int}), None),
-        ("zone", vol.Schema({"zone": int}), None),
+        (
+            "zone",
+            probatio.Schema(
+                {
+                    probatio.Optional("zone", default=dict): {
+                        probatio.Optional("hello"): 1
+                    }
+                }
+            ),
+            "dict",
+        ),
+        ("zone", probatio.Schema({probatio.Optional("zone"): int}), None),
+        ("zone", probatio.Schema({"zone": int}), None),
         (
             "not_existing",
-            vol.Schema({vol.Optional("zone", default=dict): dict}),
+            probatio.Schema({probatio.Optional("zone", default=dict): dict}),
             None,
         ),
-        ("non_existing", vol.Schema({"zone": int}), None),
-        ("zone", vol.Schema({}), None),
-        ("plex", vol.Schema(vol.All({"plex": {"host": str}})), "dict"),
+        ("non_existing", probatio.Schema({"zone": int}), None),
+        ("zone", probatio.Schema({}), None),
+        ("plex", probatio.Schema(probatio.All({"plex": {"host": str}})), "dict"),
         ("openuv", cv.deprecated("openuv"), None),
     ],
 )

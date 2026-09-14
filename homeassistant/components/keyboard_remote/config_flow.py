@@ -2,9 +2,9 @@
 
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -157,12 +157,14 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> KeyboardRemoteOptionsFlow:
         """Get the options flow for this handler."""
         return KeyboardRemoteOptionsFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -212,9 +214,9 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE_PATH): selector.SelectSelector(
+                    probatio.Required(CONF_DEVICE_PATH): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=available_devices,
                             mode=selector.SelectSelectorMode.DROPDOWN,
@@ -296,9 +298,9 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
             step_id="init",
             description_placeholders={"device_path": device_path},
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_KEY_TYPES): selector.SelectSelector(
+                        probatio.Required(CONF_KEY_TYPES): selector.SelectSelector(
                             selector.SelectSelectorConfig(
                                 options=["key_up", "key_down", "key_hold"],
                                 multiple=True,
@@ -306,10 +308,10 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                                 mode=selector.SelectSelectorMode.LIST,
                             )
                         ),
-                        vol.Required(
+                        probatio.Required(
                             CONF_EMULATE_KEY_HOLD,
                         ): selector.BooleanSelector(),
-                        vol.Required(
+                        probatio.Required(
                             CONF_EMULATE_KEY_HOLD_DELAY,
                         ): selector.NumberSelector(
                             selector.NumberSelectorConfig(
@@ -320,7 +322,7 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                                 mode=selector.NumberSelectorMode.BOX,
                             )
                         ),
-                        vol.Required(
+                        probatio.Required(
                             CONF_EMULATE_KEY_HOLD_REPEAT,
                         ): selector.NumberSelector(
                             selector.NumberSelectorConfig(

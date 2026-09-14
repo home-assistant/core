@@ -1,5 +1,7 @@
 """Pushbullet platform for sensor component."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_NAME, MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant, callback
@@ -126,6 +128,7 @@ class PushBulletNotificationSensor(SensorEntity):
             pass
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

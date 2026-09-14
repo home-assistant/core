@@ -67,6 +67,7 @@ _LEAP_DEVICE_TYPES = {
         "RightDrawDrape",
         "Shade",
         "SerenaTiltOnlyWoodBlind",
+        "OpenCloseStop",
     ],
     "sensor": [
         "Pico1Button",
@@ -112,6 +113,7 @@ class MockBridge:
         self.battery_statuses = {"802": "Good"}
         self.buttons = self.load_buttons()
         self._subscribers: dict[str, list] = {}
+        self._button_subscribers: dict[str, list] = {}
         self.smart_away_state = smart_away_state
         self._smart_away_subscribers = []
 
@@ -149,6 +151,12 @@ class MockBridge:
 
     def add_button_subscriber(self, button_id: str, callback_):
         """Mock a listener for button presses."""
+        self._button_subscribers.setdefault(button_id, []).append(callback_)
+
+    def call_button_subscribers(self, button_id: str, event_type: str) -> None:
+        """Simulate a LEAP button event for the given button ID."""
+        for callback in self._button_subscribers.get(button_id, []):
+            callback(event_type)
 
     def call_subscribers(self, device_id: str):
         """Notify subscribers of a device state change."""
@@ -496,3 +504,25 @@ async def async_setup_integration(
         await hass.config_entries.async_setup(config_entry_id)
         await hass.async_block_till_done()
     return mock_entry
+
+
+class MockBridgeWithOpenCloseStopCover(MockBridge):
+    """Mock bridge that also exposes an OpenCloseStop cover."""
+
+    def load_devices(self):
+        """Add an OpenCloseStop zone to the mock devices."""
+        devices = super().load_devices()
+        devices["805"] = {
+            "device_id": "805",
+            "current_state": -1,
+            "fan_speed": None,
+            "zone": "805",
+            "name": "Basement Bedroom_Armor Screen",
+            "button_groups": None,
+            "type": "OpenCloseStop",
+            "model": None,
+            "serial": 5442325,
+            "tilt": None,
+            "area": "822",
+        }
+        return devices

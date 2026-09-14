@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyhelty import HeltyData
 
@@ -82,6 +83,7 @@ class HeltySensor(HeltyEntity, SensorEntity):
         self._attr_unique_id = f"{self._device_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current sensor reading."""
         return self.entity_description.value_fn(self.coordinator.data)

@@ -1,6 +1,7 @@
 """Support for EvoHomeController."""
 
 from datetime import timedelta
+from typing import override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -51,6 +52,7 @@ class EvoHomeController(OverkizEntity, ClimateEntity):
             self._attr_device_info["manufacturer"] = "EvoHome"
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if state := self.device.states.get(OverkizState.RAMSES_RAMSES_OPERATING_MODE):
@@ -64,6 +66,7 @@ class EvoHomeController(OverkizEntity, ClimateEntity):
 
         return HVACMode.OFF
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.executor.async_execute_command(
@@ -71,6 +74,7 @@ class EvoHomeController(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
@@ -80,6 +84,7 @@ class EvoHomeController(OverkizEntity, ClimateEntity):
 
         return PRESET_NONE
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode == PRESET_DAY_OFF:

@@ -4,9 +4,9 @@ from datetime import timedelta
 import logging
 import os
 import re
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -31,9 +31,11 @@ SCAN_INTERVAL = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_JAILS): vol.All(cv.ensure_list, vol.Length(min=1)),
-        vol.Optional(CONF_FILE_PATH): cv.isfile,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_JAILS): probatio.All(
+            cv.ensure_list, probatio.Length(min=1)
+        ),
+        probatio.Optional(CONF_FILE_PATH): cv.isfile,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -70,16 +72,19 @@ class BanSensor(SensorEntity):
         _LOGGER.debug("Setting up jail %s", self.jail)
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the fail2ban sensor."""
         return self.ban_dict
 
     @property
+    @override
     def native_value(self):
         """Return the most recently banned IP Address."""
         return self.last_ban

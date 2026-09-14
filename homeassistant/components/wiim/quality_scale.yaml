@@ -14,9 +14,15 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -25,54 +31,58 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      - The calls to the api can be changed to return bool, and services can then raise HomeAssistantError
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
-    comment: Integration has no configuration parameters
-  docs-installation-parameters: todo
+    comment: |
+      The integration has no configuration options after setup.
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
-  reauthentication-flow: todo
-  test-coverage:
-    status: todo
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
     comment: |
-      - Increase test coverage for the media_player platform
-
+      The integration does not use authentication.
+  test-coverage: done
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: done
-  entity-device-class:
-    status: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
     comment: |
-      Set appropriate device classes for all entities where applicable.
+      Each config entry represents a single physical device. Additional devices
+      are configured using separate config entries.
+  entity-category: done
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
-    comment: No known use cases for repair issues or flows, yet
-  stale-devices: todo
+    comment: |
+      The integration has no user-actionable conditions that require a repair
+      issue or repair flow.
+  stale-devices:
+    status: exempt
+    comment: |
+      Each config entry represents a single physical device. Removing the
+      config entry also removes its device.
 
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

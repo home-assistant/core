@@ -3,7 +3,6 @@
     "abort": {
       "all_configured": "All Philips Hue bridges are already configured",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "discover_timeout": "Unable to discover Hue bridges",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
@@ -18,7 +17,8 @@
     "step": {
       "init": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "id": "Hue bridge"
         },
         "data_description": {
           "host": "The hostname or IP address of your Hue bridge."
@@ -75,6 +75,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "entertainment_area": {
+        "name": "Entertainment area {area_name}"
+      }
+    },
     "event": {
       "button": {
         "name": "Button {button_id}",
@@ -139,6 +144,9 @@
     "switch": {
       "light_sensor_enabled": {
         "name": "Light sensor enabled"
+      },
+      "motion_aware": {
+        "name": "MotionAware"
       },
       "motion_sensor_enabled": {
         "name": "Motion sensor enabled"

@@ -1,6 +1,6 @@
 """Provide the device automations for Climate."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     async_get_entity_registry_entry_or_raise,
@@ -30,21 +30,21 @@ CONDITION_TYPES = {"is_hvac_mode", "is_preset_mode"}
 
 HVAC_MODE_CONDITION = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): "is_hvac_mode",
-        vol.Required(const.ATTR_HVAC_MODE): vol.In(const.HVAC_MODES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): "is_hvac_mode",
+        probatio.Required(const.ATTR_HVAC_MODE): probatio.In(const.HVAC_MODES),
     }
 )
 
 PRESET_MODE_CONDITION = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): "is_preset_mode",
-        vol.Required(const.ATTR_PRESET_MODE): str,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): "is_preset_mode",
+        probatio.Required(const.ATTR_PRESET_MODE): str,
     }
 )
 
-CONDITION_SCHEMA = vol.Any(HVAC_MODE_CONDITION, PRESET_MODE_CONDITION)
+CONDITION_SCHEMA = probatio.Any(HVAC_MODE_CONDITION, PRESET_MODE_CONDITION)
 
 
 async def async_get_conditions(
@@ -94,7 +94,7 @@ def async_condition_from_config(
             return bool(state.state == config[const.ATTR_HVAC_MODE])
 
         return bool(
-            state.attributes.get(const.ATTR_PRESET_MODE)
+            state.attributes.get(const.ClimateEntityStateAttribute.PRESET_MODE)
             == config[const.ATTR_PRESET_MODE]
         )
 
@@ -103,7 +103,7 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List condition capabilities."""
     condition_type = config[CONF_TYPE]
 
@@ -115,11 +115,16 @@ async def async_get_condition_capabilities(
                 hass, config[CONF_ENTITY_ID]
             )
             hvac_modes = (
-                get_capability(hass, entry.entity_id, const.ATTR_HVAC_MODES) or []
+                get_capability(
+                    hass,
+                    entry.entity_id,
+                    const.ClimateEntityCapabilityAttribute.HVAC_MODES,
+                )
+                or []
             )
         except HomeAssistantError:
             hvac_modes = []
-        fields[vol.Required(const.ATTR_HVAC_MODE)] = vol.In(hvac_modes)
+        fields[probatio.Required(const.ATTR_HVAC_MODE)] = probatio.In(hvac_modes)
 
     elif condition_type == "is_preset_mode":
         try:
@@ -127,10 +132,15 @@ async def async_get_condition_capabilities(
                 hass, config[CONF_ENTITY_ID]
             )
             preset_modes = (
-                get_capability(hass, entry.entity_id, const.ATTR_PRESET_MODES) or []
+                get_capability(
+                    hass,
+                    entry.entity_id,
+                    const.ClimateEntityCapabilityAttribute.PRESET_MODES,
+                )
+                or []
             )
         except HomeAssistantError:
             preset_modes = []
-        fields[vol.Required(const.ATTR_PRESET_MODE)] = vol.In(preset_modes)
+        fields[probatio.Required(const.ATTR_PRESET_MODE)] = probatio.In(preset_modes)
 
-    return {"extra_fields": vol.Schema(fields)}
+    return {"extra_fields": probatio.Schema(fields)}

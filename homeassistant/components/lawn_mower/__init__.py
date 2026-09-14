@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import final
+from typing import final, override
 
 from propcache.api import cached_property
 
@@ -19,6 +19,7 @@ from .const import (
     SERVICE_DOCK,
     SERVICE_PAUSE,
     SERVICE_START_MOWING,
+    SERVICE_STOP,
     LawnMowerActivity,
     LawnMowerEntityFeature,
 )
@@ -50,6 +51,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_DOCK, None, "async_dock", [LawnMowerEntityFeature.DOCK]
+    )
+    component.async_register_entity_service(
+        SERVICE_STOP, None, "async_stop", [LawnMowerEntityFeature.STOP]
     )
 
     return True
@@ -84,6 +88,7 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state(self) -> str | None:
         """Return the current state."""
         return self.activity
@@ -94,6 +99,7 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_activity
 
     @cached_property
+    @override
     def supported_features(self) -> LawnMowerEntityFeature:
         """Flag lawn mower features that are supported."""
         return self._attr_supported_features
@@ -121,3 +127,11 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_pause(self) -> None:
         """Pause the lawn mower."""
         await self.hass.async_add_executor_job(self.pause)
+
+    def stop(self) -> None:
+        """Stop the lawn mower."""
+        raise NotImplementedError
+
+    async def async_stop(self) -> None:
+        """Stop the lawn mower."""
+        await self.hass.async_add_executor_job(self.stop)

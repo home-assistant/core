@@ -1,5 +1,7 @@
 """Support for AVM FRITZ!SmartHome templates."""
 
+from typing import override
+
 from pyfritzhome.devicetypes import FritzhomeTemplate
 
 from homeassistant.components.button import ButtonEntity
@@ -41,11 +43,13 @@ class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):
     """Interface between FritzhomeTemplate and hass."""
 
     @property
+    @override
     def data(self) -> FritzhomeTemplate:
         """Return the template data entity."""
         return self.coordinator.data.templates[self.ain]
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
@@ -56,6 +60,7 @@ class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):
             model="SmartHome Template",
         )
 
+    @override
     async def async_press(self) -> None:
         """Apply template and refresh."""
         await self.hass.async_add_executor_job(self.apply_template)

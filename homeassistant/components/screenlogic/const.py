@@ -5,11 +5,10 @@ from screenlogicpy.device_const.circuit import FUNCTION
 from screenlogicpy.device_const.system import COLOR_MODE
 
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     UnitOfElectricPotential,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -53,6 +52,6 @@ SL_UNIT_TO_HA_UNIT = {
     UNIT.HOUR: UnitOfTime.HOURS,
     UNIT.SECOND: UnitOfTime.SECONDS,
     UNIT.REVOLUTIONS_PER_MINUTE: REVOLUTIONS_PER_MINUTE,
-    UNIT.PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
-    UNIT.PERCENT: PERCENTAGE,
+    UNIT.PARTS_PER_MILLION: UnitOfRatio.PARTS_PER_MILLION,
+    UNIT.PERCENT: UnitOfRatio.PERCENTAGE,
 }

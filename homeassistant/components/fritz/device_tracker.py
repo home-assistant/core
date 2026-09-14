@@ -1,20 +1,18 @@
 """Support for FRITZ!Box devices."""
 
 import datetime
-import logging
+from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEFAULT_DEVICE_NAME
+from .const import DEFAULT_DEVICE_NAME, LOGGER
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzDeviceBase
 from .helpers import device_filter_out_from_trackers
 from .models import FritzDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -26,7 +24,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for FRITZ!Box component."""
-    _LOGGER.debug("Starting FRITZ!Box device tracker")
+    LOGGER.debug("Starting FRITZ!Box device tracker")
     avm_wrapper = entry.runtime_data
     data_fritz = hass.data[FRITZ_DATA_KEY]
 
@@ -73,21 +71,25 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
         self._last_activity: datetime.datetime | None = device.last_activity
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return device status."""
         return self._avm_wrapper.devices[self._mac].is_connected
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return device unique id."""
         return f"{self._mac}_tracker"
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return mac_address."""
         return self._mac
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         attrs: dict[str, str] = {}

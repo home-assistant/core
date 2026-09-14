@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
+import probatio
 from pyaqvify import AqvifyAPI, AqvifyAuthException
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -20,9 +20,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_API_KEY): str,
     }
 )
 
@@ -32,6 +32,7 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -59,7 +60,9 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._get_reconfigure_entry(), data_updates=user_input
                     )
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title="Aqvify", data=user_input)
+                return self.async_create_entry(
+                    title=account_data.name or "Aqvify", data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",

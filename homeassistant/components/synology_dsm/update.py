@@ -1,7 +1,7 @@
 """Support for Synology DSM update platform."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, override
 
 from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from yarl import URL
@@ -54,11 +54,13 @@ class SynoDSMUpdateEntity(
     _attr_title = "Synology DSM"
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._api.upgrade) and super().available
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         if TYPE_CHECKING:
@@ -66,6 +68,7 @@ class SynoDSMUpdateEntity(
         return self._api.information.version_string
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         if TYPE_CHECKING:
@@ -75,6 +78,7 @@ class SynoDSMUpdateEntity(
         return self._api.upgrade.available_version
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         if TYPE_CHECKING:

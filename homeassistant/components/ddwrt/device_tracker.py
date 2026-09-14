@@ -3,9 +3,10 @@
 from http import HTTPStatus
 import logging
 import re
+from typing import override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -35,12 +36,14 @@ DEFAULT_WIRELESS_ONLY = True
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Optional(CONF_WIRELESS_ONLY, default=DEFAULT_WIRELESS_ONLY): cv.boolean,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Optional(
+            CONF_WIRELESS_ONLY, default=DEFAULT_WIRELESS_ONLY
+        ): cv.boolean,
     }
 )
 
@@ -73,12 +76,14 @@ class DdWrtDeviceScanner(DeviceScanner):
         if not self.get_ddwrt_data(url):
             raise ConnectionError("Cannot connect to DD-Wrt router")
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return self.last_results
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         # If not initialised and not already scanned and not found.

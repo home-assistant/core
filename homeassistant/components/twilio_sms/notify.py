@@ -1,9 +1,9 @@
 """Twilio SMS platform for notify component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -23,9 +23,9 @@ ATTR_MEDIAURL = "media_url"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_FROM_NUMBER): vol.All(
+        probatio.Required(CONF_FROM_NUMBER): probatio.All(
             cv.string,
-            vol.Match(
+            probatio.Match(
                 r"^\+?[1-9]\d{1,14}$|"
                 r"^(?=.{1,11}$)[a-zA-Z0-9\s]*"
                 r"[a-zA-Z][a-zA-Z0-9\s]*$"
@@ -55,6 +55,7 @@ class TwilioSMSNotificationService(BaseNotificationService):
         self.client = twilio_client
         self.from_number = from_number
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send SMS to specified target user cell."""
         targets = kwargs.get(ATTR_TARGET)

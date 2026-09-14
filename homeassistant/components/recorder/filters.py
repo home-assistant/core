@@ -1,7 +1,7 @@
 """Provide pre-made queries on top of the recorder component."""
 
 from collections.abc import Callable, Collection, Iterable
-from typing import Any
+from typing import Any, override
 
 from sqlalchemy import Column, Text, cast, not_, or_
 from sqlalchemy.sql.elements import ColumnElement
@@ -11,7 +11,7 @@ from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType
 
-from .db_schema import ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT, States, StatesMeta
+from .db_schema import ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT, StatesMeta
 
 DOMAIN = "history"
 HISTORY_FILTERS = "history_filters"
@@ -99,6 +99,7 @@ class Filters:
         self._included_domains = included_domains or []
         self._included_entity_globs = included_entity_globs or []
 
+    @override
     def __repr__(self) -> str:
         """Return human readable excludes/includes."""
         return (
@@ -203,19 +204,6 @@ class Filters:
         # - Entity listed in entities include: include
         # - Otherwise: exclude
         return i_entities
-
-    def states_entity_filter(self) -> ColumnElement:
-        """Generate the States.entity_id filter query.
-
-        This is no longer used except by the legacy queries.
-        """
-
-        def _encoder(data: Any) -> Any:
-            """Nothing to encode for states since there is no json."""
-            return data
-
-        # The type annotation should be improved so the type ignore can be removed
-        return self._generate_filter_for_columns((States.entity_id,), _encoder)  # type: ignore[arg-type]
 
     def states_metadata_entity_filter(self) -> ColumnElement:
         """Generate the StatesMeta.entity_id filter query."""

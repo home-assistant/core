@@ -4,9 +4,12 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 import logging
+from typing import override
 
 from hdate import HDateInfo, Zmanim
 from hdate.parasha import Parasha
+from hdate.translator import TranslatorMixin, set_language
+from hdate.zmanim import Zman
 
 from homeassistant.components.calendar import (
     CalendarEntity,
@@ -50,6 +53,26 @@ class JewishCalendarCalendarEntityDescription(CalendarEntityDescription):
     ]
 
 
+def _all_day_event(target_date: date, item: TranslatorMixin) -> CalendarEvent:
+    """Create an all-day event from a translatable hdate object."""
+    return CalendarEvent(
+        start=target_date,
+        end=target_date,
+        summary=str(item),
+        description=item.description,
+    )
+
+
+def _timed_event(zman: Zman) -> CalendarEvent:
+    """Create an instantaneous event from a zman."""
+    return CalendarEvent(
+        start=zman.utc,
+        end=zman.utc,
+        summary=str(zman),
+        description=zman.description,
+    )
+
+
 def _create_daily_event(
     event_type: JewishCalendarEventType,
     target_date: date,
@@ -57,28 +80,13 @@ def _create_daily_event(
     zmanim: Zmanim,
 ) -> CalendarEvent | None:
     """Create a daily calendar event."""
-    # Hebrew date
     if event_type == DailyCalendarEventType.DATE:
-        return CalendarEvent(
-            start=target_date,
-            end=target_date,
-            summary=str(info.hdate),
-            description=f"Hebrew date: {info.hdate}",
-        )
+        return _all_day_event(target_date, info.hdate)
 
-    # Time-based daily events using enum properties
     daily_event = DailyCalendarEventType(event_type)
-    time_value = zmanim.zmanim.get(daily_event.value)
-
-    if time_value is not None:
-        return CalendarEvent(
-            start=time_value.utc,
-            end=time_value.utc,
-            summary=daily_event.summary,
-            description=f"{daily_event.description_prefix}: {time_value.local.strftime('%H:%M')}",
-        )
-
-    return None  # Should never happen
+    if (zman := zmanim.zmanim.get(daily_event.value)) is None:
+        return None  # Should never happen
+    return _timed_event(zman)
 
 
 def _create_yearly_event(
@@ -88,56 +96,30 @@ def _create_yearly_event(
     zmanim: Zmanim,
 ) -> list[CalendarEvent] | CalendarEvent | None:
     """Create a yearly calendar event."""
-    if event_type == YearlyCalendarEventType.HOLIDAY and info.holidays:
-        return [
-            CalendarEvent(
-                start=target_date,
-                end=target_date,
-                summary=str(holiday),
-                description=(
-                    f"Jewish Holiday: {holiday}\nHoliday Type: {holiday.type}"
-                ),
-            )
-            for holiday in info.holidays
-        ]
+    if event_type == YearlyCalendarEventType.HOLIDAY:
+        return [_all_day_event(target_date, holiday) for holiday in info.holidays]
 
     if event_type == YearlyCalendarEventType.WEEKLY_PORTION:
         is_shabbat = target_date.weekday() == _SATURDAY
         is_simchat_torah = any(
             holiday.name == _SIMCHAT_TORAH for holiday in info.holidays
         )
-        if (is_shabbat or is_simchat_torah) and info.parasha != str(Parasha.NONE):
-            return CalendarEvent(
-                start=target_date,
-                end=target_date,
-                summary=str(info.parasha),
-                description=f"Parshat Hashavua: {info.parasha}",
-            )
+        parasha = info.parasha_obj
+        if (is_shabbat or is_simchat_torah) and parasha is not Parasha.NONE:
+            return _all_day_event(target_date, parasha)
         return None
 
-    if event_type == YearlyCalendarEventType.OMER_COUNT and info.omer.total_days > 0:
-        return CalendarEvent(
-            start=target_date,
-            end=target_date,
-            summary=str(info.omer),
-            description=f"Sefirat HaOmer: {info.omer.count_str()}",
-        )
+    if event_type == YearlyCalendarEventType.OMER_COUNT:
+        omer = info.omer
+        return _all_day_event(target_date, omer) if omer.total_days > 0 else None
 
-    if event_type == YearlyCalendarEventType.CANDLE_LIGHTING and zmanim.candle_lighting:
-        return CalendarEvent(
-            start=zmanim.candle_lighting.astimezone(UTC),
-            end=zmanim.candle_lighting.astimezone(UTC),
-            summary="Candle Lighting",
-            description=f"Candle lighting time: {zmanim.candle_lighting.strftime('%H:%M')}",
-        )
+    if event_type == YearlyCalendarEventType.CANDLE_LIGHTING:
+        zman = zmanim.candle_lighting_obj
+        return _timed_event(zman) if zman is not None else None
 
-    if event_type == YearlyCalendarEventType.HAVDALAH and zmanim.havdalah:
-        return CalendarEvent(
-            start=zmanim.havdalah.astimezone(UTC),
-            end=zmanim.havdalah.astimezone(UTC),
-            summary="Havdalah",
-            description=f"Havdalah time: {zmanim.havdalah.strftime('%H:%M')}",
-        )
+    if event_type == YearlyCalendarEventType.HAVDALAH:
+        zman = zmanim.havdalah_obj
+        return _timed_event(zman) if zman is not None else None
 
     return None
 
@@ -149,13 +131,8 @@ def _create_learning_event(
     zmanim: Zmanim,
 ) -> CalendarEvent | None:
     """Create a learning schedule event."""
-    if event_type == LearningScheduleEventType.DAF_YOMI and info.daf_yomi:
-        return CalendarEvent(
-            start=target_date,
-            end=target_date,
-            summary=str(info.daf_yomi),
-            description=f"Daf Yomi: {info.daf_yomi}",
-        )
+    if event_type == LearningScheduleEventType.DAF_YOMI:
+        return _all_day_event(target_date, info.daf_yomi_obj)
 
     return None
 
@@ -208,6 +185,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         )
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         # Get today's events first
@@ -222,6 +200,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
                 return _event
         return None
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -274,6 +253,10 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
 
     def _get_events_for_date(self, target_date: date) -> list[CalendarEvent]:
         """Get all configured events for a specific date."""
+        # hdate holds its display language in a ContextVar that the coordinator sets
+        # in its own task, so it has to be re-applied in the task serving this request.
+        set_language(self.coordinator.data.language)
+
         events = []
 
         info = HDateInfo(target_date, self.coordinator.data.diaspora)
@@ -287,6 +270,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
 
         return sorted(events, key=self._event_sort_key)
 
+    @override
     def _update_times(self, zmanim: Zmanim) -> list[datetime | None]:
         """Return a list of times to update the calendar."""
         # Calendar entities do not require periodic updates besides the retrieval of events.

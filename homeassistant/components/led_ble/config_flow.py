@@ -1,11 +1,11 @@
 """Config flow for LEDBLE integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from bluetooth_data_tools import human_readable_name
 from led_ble import BLEAK_EXCEPTIONS, LEDBLE, CharacteristicMissingError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -29,6 +29,7 @@ class LedBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -47,6 +48,7 @@ class LedBleConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -100,9 +102,9 @@ class LedBleConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_ADDRESS): vol.In(
+                probatio.Required(CONF_ADDRESS): probatio.In(
                     {
                         service_info.address: (
                             f"{service_info.name} ({service_info.address})"

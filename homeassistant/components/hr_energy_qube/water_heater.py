@@ -1,8 +1,9 @@
 """Water heater platform for Qube Heat Pump."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.water_heater import (
+    ATTR_TEMPERATURE,
     STATE_HEAT_PUMP,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
@@ -34,7 +35,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Qube water heater."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     async_add_entities([QubeWaterHeater(coordinator, entry)])
 
 
@@ -61,16 +62,19 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
         self._attr_unique_id = entry.entry_id
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current DHW temperature."""
         return self.coordinator.data.state.temp_dhw
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target DHW temperature."""
         return self.coordinator.data.state.setpoint_dhw
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return the current operation mode."""
         boost = self.coordinator.data.switches.get(DHW_BOOST_KEY)
@@ -80,16 +84,15 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
             return STATE_PERFORMANCE
         return STATE_HEAT_PUMP
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target DHW temperature."""
-        temperature = kwargs.get("temperature")
-        if temperature is None:
-            return
+        temperature = kwargs[ATTR_TEMPERATURE]
         try:
             success = await self.coordinator.client.write_setpoint(
                 DHW_SETPOINT_KEY, temperature
             )
-        except (ConnectionError, TimeoutError, OSError) as err:
+        except OSError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_temperature_failed",
@@ -101,12 +104,13 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
             )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set the operation mode."""
         boost = operation_mode == STATE_PERFORMANCE
         try:
             success = await self.coordinator.client.write_switch(DHW_BOOST_KEY, boost)
-        except (ConnectionError, TimeoutError, OSError) as err:
+        except OSError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_command_failed",

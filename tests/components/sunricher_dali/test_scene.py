@@ -37,8 +37,8 @@ async def test_entities(
     """Test the scene entities and their attributes."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={("sunricher_dali", "6A242121110E")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("sunricher_dali", "6A242121110E"), mock_config_entry.entry_id
     )
     assert device_entry
 

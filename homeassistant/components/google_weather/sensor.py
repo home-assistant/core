@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from google_weather_api import CurrentConditionsResponse
 
@@ -197,7 +198,6 @@ async def async_setup_entry(
             (
                 GoogleWeatherSensor(coordinator, subentry, description)
                 for description in SENSOR_TYPES
-                if description.value_fn(coordinator.data) is not None
             ),
             config_subentry_id=subentry.subentry_id,
         )
@@ -226,6 +226,7 @@ class GoogleWeatherSensor(
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator.data)

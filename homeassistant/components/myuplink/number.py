@@ -1,5 +1,7 @@
 """Number entity for myUplink."""
 
+from typing import override
+
 from aiohttp import ClientError
 from myuplink import DevicePoint
 
@@ -118,11 +120,13 @@ class MyUplinkNumber(MyUplinkEntity, NumberEntity):
             self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> float:
         """Number state value."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
         return float(device_point.value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         try:

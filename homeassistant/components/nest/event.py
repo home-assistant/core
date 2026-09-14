@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage, EventType
@@ -124,6 +125,7 @@ class NestTraitEventEntity(EventEntity):
             self.async_write_ha_state()
             return
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to attach an event listener."""
         self.async_on_remove(self._device.add_event_callback(self._async_handle_event))

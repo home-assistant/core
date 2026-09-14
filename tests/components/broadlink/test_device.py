@@ -74,6 +74,9 @@ async def test_device_setup_network_timeout(hass: HomeAssistant) -> None:
         mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_setup.entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_setup.entry.reason == "Failed to connect to the device at 192.168.0.13: "
+    )
     assert mock_setup.api.auth.call_count == 1
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 0
@@ -92,6 +95,9 @@ async def test_device_setup_os_error(hass: HomeAssistant) -> None:
         mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_setup.entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_setup.entry.reason == "Failed to connect to the device at 192.168.0.13: "
+    )
     assert mock_setup.api.auth.call_count == 1
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 0
@@ -255,8 +261,8 @@ async def test_device_setup_registry(
 
     assert len(device_registry.devices) == 1
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     assert device_entry.identifiers == {(DOMAIN, device.mac)}
     assert device_entry.name == device.name
@@ -345,8 +351,8 @@ async def test_device_update_listener(
         hass.config_entries.async_update_entry(mock_setup.entry, title="New Name")
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     assert device_entry.name == "New Name"
     for entry in er.async_entries_for_device(entity_registry, device_entry.id):

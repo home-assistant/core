@@ -2,7 +2,8 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
+from typing import override
 
 from aiohttp import ClientResponseError
 from gql.transport.exceptions import TransportServerError
@@ -18,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
 
@@ -55,6 +57,7 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
         )
         self.client = client
 
+    @override
     async def _async_setup(self) -> None:
         """Obtain subscription ID in setup phase."""
         try:
@@ -65,10 +68,11 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
             raise ConfigEntryError("Authentication failed") from err
         self.subscription_id = sub_details.id
 
+    @override
     async def _async_update_data(self) -> MonarchData:
         """Fetch data for all accounts."""
 
-        now = datetime.now()
+        now = dt_util.now()
 
         account_data, cashflow_summary = await asyncio.gather(
             self.client.get_accounts_as_dict_with_id_key(),

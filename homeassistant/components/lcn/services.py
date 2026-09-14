@@ -1,10 +1,11 @@
 """Service calls related dependencies for LCN component."""
 
 from enum import StrEnum, auto
+from typing import override
 
+import probatio
 import pypck
 from pypck.device import DeviceConnection
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_BRIGHTNESS,
@@ -20,7 +21,8 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_get_device_and_config_entry
 
 from .const import (
     CONF_KEYS,
@@ -55,9 +57,9 @@ from .helpers import LcnConfigEntry, is_states_string
 class LcnServiceCall:
     """Parent class for all LCN service calls."""
 
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required(CONF_DEVICE_ID): cv.string,
+            probatio.Required(CONF_DEVICE_ID): cv.string,
         }
     )
     supports_response = SupportsResponse.NONE
@@ -68,28 +70,13 @@ class LcnServiceCall:
 
     def get_device_connection(self, service: ServiceCall) -> DeviceConnection:
         """Get address connection object."""
-        entries: list[LcnConfigEntry] = self.hass.config_entries.async_loaded_entries(
-            DOMAIN
+        entry: LcnConfigEntry
+        # device_connections is keyed by the ids of the main devices LCN registers
+        # for its modules and groups, so a child device has no connection
+        device, entry = async_get_device_and_config_entry(
+            self.hass, DOMAIN, service.data[CONF_DEVICE_ID], include_child_devices=False
         )
-        device_id = service.data[CONF_DEVICE_ID]
-        device_registry = dr.async_get(self.hass)
-        if not (device := device_registry.async_get(device_id)) or not (
-            entry := next(
-                (
-                    entry
-                    for entry in entries
-                    if entry.entry_id == device.primary_config_entry
-                ),
-                None,
-            )
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_device_id",
-                translation_placeholders={"device_id": device_id},
-            )
-
-        return entry.runtime_data.device_connections[device_id]
+        return entry.runtime_data.device_connections[device.id]
 
     async def async_call_service(self, service: ServiceCall) -> ServiceResponse:
         """Execute service call."""
@@ -101,16 +88,19 @@ class OutputAbs(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend(
         {
-            vol.Required(CONF_OUTPUT): vol.All(vol.Upper, vol.In(OUTPUT_PORTS)),
-            vol.Required(CONF_BRIGHTNESS): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Required(CONF_OUTPUT): probatio.All(
+                probatio.Upper, probatio.In(OUTPUT_PORTS)
             ),
-            vol.Optional(CONF_TRANSITION, default=0): vol.All(
-                vol.Coerce(float), vol.Range(min=0.0, max=486.0)
+            probatio.Required(CONF_BRIGHTNESS): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
+            ),
+            probatio.Optional(CONF_TRANSITION, default=0): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=0.0, max=486.0)
             ),
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         output = pypck.lcn_defs.OutputPort[service.data[CONF_OUTPUT]]
@@ -128,13 +118,16 @@ class OutputRel(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend(
         {
-            vol.Required(CONF_OUTPUT): vol.All(vol.Upper, vol.In(OUTPUT_PORTS)),
-            vol.Required(CONF_BRIGHTNESS): vol.All(
-                vol.Coerce(int), vol.Range(min=-100, max=100)
+            probatio.Required(CONF_OUTPUT): probatio.All(
+                probatio.Upper, probatio.In(OUTPUT_PORTS)
+            ),
+            probatio.Required(CONF_BRIGHTNESS): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=-100, max=100)
             ),
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         output = pypck.lcn_defs.OutputPort[service.data[CONF_OUTPUT]]
@@ -149,13 +142,16 @@ class OutputToggle(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend(
         {
-            vol.Required(CONF_OUTPUT): vol.All(vol.Upper, vol.In(OUTPUT_PORTS)),
-            vol.Optional(CONF_TRANSITION, default=0): vol.All(
-                vol.Coerce(float), vol.Range(min=0.0, max=486.0)
+            probatio.Required(CONF_OUTPUT): probatio.All(
+                probatio.Upper, probatio.In(OUTPUT_PORTS)
+            ),
+            probatio.Optional(CONF_TRANSITION, default=0): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=0.0, max=486.0)
             ),
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         output = pypck.lcn_defs.OutputPort[service.data[CONF_OUTPUT]]
@@ -170,8 +166,11 @@ class OutputToggle(LcnServiceCall):
 class Relays(LcnServiceCall):
     """Set the relays status."""
 
-    schema = LcnServiceCall.schema.extend({vol.Required(CONF_STATE): is_states_string})
+    schema = LcnServiceCall.schema.extend(
+        {probatio.Required(CONF_STATE): is_states_string}
+    )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         states = [
@@ -188,11 +187,16 @@ class Led(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend(
         {
-            vol.Required(CONF_LED): vol.All(vol.Upper, vol.In(LED_PORTS)),
-            vol.Required(CONF_STATE): vol.All(vol.Upper, vol.In(LED_STATUS)),
+            probatio.Required(CONF_LED): probatio.All(
+                probatio.Upper, probatio.In(LED_PORTS)
+            ),
+            probatio.Required(CONF_STATE): probatio.All(
+                probatio.Upper, probatio.In(LED_STATUS)
+            ),
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         led = pypck.lcn_defs.LedPort[service.data[CONF_LED]]
@@ -211,16 +215,17 @@ class VarAbs(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend(
         {
-            vol.Required(CONF_VARIABLE): vol.All(
-                vol.Upper, vol.In(VARIABLES + SETPOINTS)
+            probatio.Required(CONF_VARIABLE): probatio.All(
+                probatio.Upper, probatio.In(VARIABLES + SETPOINTS)
             ),
-            vol.Optional(CONF_VALUE, default=0): vol.Coerce(float),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="native"): vol.All(
-                vol.Upper, vol.In(VAR_UNITS)
+            probatio.Optional(CONF_VALUE, default=0): probatio.Coerce(float),
+            probatio.Optional(CONF_UNIT_OF_MEASUREMENT, default="native"): probatio.All(
+                probatio.Upper, probatio.In(VAR_UNITS)
             ),
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         var = pypck.lcn_defs.Var[service.data[CONF_VARIABLE]]
@@ -235,9 +240,14 @@ class VarReset(LcnServiceCall):
     """Reset value of variable or setpoint."""
 
     schema = LcnServiceCall.schema.extend(
-        {vol.Required(CONF_VARIABLE): vol.All(vol.Upper, vol.In(VARIABLES + SETPOINTS))}
+        {
+            probatio.Required(CONF_VARIABLE): probatio.All(
+                probatio.Upper, probatio.In(VARIABLES + SETPOINTS)
+            )
+        }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         var = pypck.lcn_defs.Var[service.data[CONF_VARIABLE]]
@@ -251,19 +261,20 @@ class VarRel(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend(
         {
-            vol.Required(CONF_VARIABLE): vol.All(
-                vol.Upper, vol.In(VARIABLES + SETPOINTS + THRESHOLDS)
+            probatio.Required(CONF_VARIABLE): probatio.All(
+                probatio.Upper, probatio.In(VARIABLES + SETPOINTS + THRESHOLDS)
             ),
-            vol.Optional(CONF_VALUE, default=0): vol.Coerce(float),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="native"): vol.All(
-                vol.Upper, vol.In(VAR_UNITS)
+            probatio.Optional(CONF_VALUE, default=0): probatio.Coerce(float),
+            probatio.Optional(CONF_UNIT_OF_MEASUREMENT, default="native"): probatio.All(
+                probatio.Upper, probatio.In(VAR_UNITS)
             ),
-            vol.Optional(CONF_RELVARREF, default="current"): vol.All(
-                vol.Upper, vol.In(RELVARREF)
+            probatio.Optional(CONF_RELVARREF, default="current"): probatio.All(
+                probatio.Upper, probatio.In(RELVARREF)
             ),
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         var = pypck.lcn_defs.Var[service.data[CONF_VARIABLE]]
@@ -280,11 +291,14 @@ class LockRegulator(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend(
         {
-            vol.Required(CONF_SETPOINT): vol.All(vol.Upper, vol.In(SETPOINTS)),
-            vol.Optional(CONF_STATE, default=False): bool,
+            probatio.Required(CONF_SETPOINT): probatio.All(
+                probatio.Upper, probatio.In(SETPOINTS)
+            ),
+            probatio.Optional(CONF_STATE, default=False): bool,
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         setpoint = pypck.lcn_defs.Var[service.data[CONF_SETPOINT]]
@@ -300,19 +314,20 @@ class SendKeys(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend(
         {
-            vol.Required(CONF_KEYS): vol.All(
-                vol.Upper, cv.matches_regex(r"^([A-D][1-8])+$")
+            probatio.Required(CONF_KEYS): probatio.All(
+                probatio.Upper, cv.matches_regex(r"^([A-D][1-8])+$")
             ),
-            vol.Optional(CONF_STATE, default="hit"): vol.All(
-                vol.Upper, vol.In(SENDKEYCOMMANDS)
+            probatio.Optional(CONF_STATE, default="hit"): probatio.All(
+                probatio.Upper, probatio.In(SENDKEYCOMMANDS)
             ),
-            vol.Optional(CONF_TIME, default=0): cv.positive_int,
-            vol.Optional(CONF_TIME_UNIT, default="S"): vol.All(
-                vol.Upper, vol.In(TIME_UNITS)
+            probatio.Optional(CONF_TIME, default=0): cv.positive_int,
+            probatio.Optional(CONF_TIME_UNIT, default="S"): probatio.All(
+                probatio.Upper, probatio.In(TIME_UNITS)
             ),
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         device_connection = self.get_device_connection(service)
@@ -347,17 +362,18 @@ class LockKeys(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend(
         {
-            vol.Optional(CONF_TABLE, default="a"): vol.All(
-                vol.Upper, cv.matches_regex(r"^[A-D]$")
+            probatio.Optional(CONF_TABLE, default="a"): probatio.All(
+                probatio.Upper, cv.matches_regex(r"^[A-D]$")
             ),
-            vol.Required(CONF_STATE): is_states_string,
-            vol.Optional(CONF_TIME, default=0): cv.positive_int,
-            vol.Optional(CONF_TIME_UNIT, default="S"): vol.All(
-                vol.Upper, vol.In(TIME_UNITS)
+            probatio.Required(CONF_STATE): is_states_string,
+            probatio.Optional(CONF_TIME, default=0): cv.positive_int,
+            probatio.Optional(CONF_TIME_UNIT, default="S"): probatio.All(
+                probatio.Upper, probatio.In(TIME_UNITS)
             ),
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         device_connection = self.get_device_connection(service)
@@ -387,11 +403,14 @@ class DynText(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend(
         {
-            vol.Required(CONF_ROW): vol.All(int, vol.Range(min=1, max=4)),
-            vol.Required(CONF_TEXT): vol.All(str, vol.Length(max=60)),
+            probatio.Required(CONF_ROW): probatio.All(
+                int, probatio.Range(min=1, max=4)
+            ),
+            probatio.Required(CONF_TEXT): probatio.All(str, probatio.Length(max=60)),
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         row_id = service.data[CONF_ROW] - 1
@@ -404,8 +423,9 @@ class DynText(LcnServiceCall):
 class Pck(LcnServiceCall):
     """Send arbitrary PCK command."""
 
-    schema = LcnServiceCall.schema.extend({vol.Required(CONF_PCK): str})
+    schema = LcnServiceCall.schema.extend({probatio.Required(CONF_PCK): str})
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         pck = service.data[CONF_PCK]

@@ -2,7 +2,7 @@
 
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
@@ -25,8 +25,8 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import ATTR_CODE_ARM_REQUIRED, DOMAIN
-from .const import AlarmControlPanelEntityFeature
+from . import DOMAIN
+from .const import AlarmControlPanelEntityFeature, AlarmControlPanelEntityStateAttribute
 
 ACTION_TYPES: Final[set[str]] = {
     "arm_away",
@@ -39,9 +39,9 @@ ACTION_TYPES: Final[set[str]] = {
 
 _ACTION_SCHEMA: Final = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Optional(CONF_CODE): cv.string,
+        probatio.Required(CONF_TYPE): probatio.In(ACTION_TYPES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Optional(CONF_CODE): cv.string,
     }
 )
 
@@ -120,18 +120,22 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List action capabilities."""
-    # We need to refer to the state directly because ATTR_CODE_ARM_REQUIRED is not a
+    # We need to refer to the state directly because CODE_ARM_REQUIRED is not a
     # capability attribute
     registry = er.async_get(hass)
     entity_id = er.async_resolve_entity_id(registry, config[CONF_ENTITY_ID])
     state = hass.states.get(entity_id) if entity_id else None
-    code_required = state.attributes.get(ATTR_CODE_ARM_REQUIRED) if state else False
+    code_required = (
+        state.attributes.get(AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED)
+        if state
+        else False
+    )
 
     if config[CONF_TYPE] == "trigger" or (
         config[CONF_TYPE] != "disarm" and not code_required
     ):
         return {}
 
-    return {"extra_fields": vol.Schema({vol.Optional(CONF_CODE): str})}
+    return {"extra_fields": probatio.Schema({probatio.Optional(CONF_CODE): str})}

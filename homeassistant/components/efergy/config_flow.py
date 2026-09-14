@@ -1,10 +1,10 @@
 """Config flow for Efergy integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyefergy import Efergy, exceptions
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -18,6 +18,7 @@ class EfergyFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -41,9 +42,9 @@ class EfergyFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    probatio.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,

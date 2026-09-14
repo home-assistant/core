@@ -122,6 +122,7 @@ def _resolve_ci_upload_and_release_pipeline(
 def run_checks(
     pr_number: int,
     diff_text: str,
+    head_sha: str | None = None,
 ) -> CheckRunResult:
     """Run every deterministic check and return the aggregated result."""
     packages = parse_diff(diff_text)
@@ -179,6 +180,6 @@ def run_checks(
                 CheckStatus.FAIL,
                 "No source repository URL on PyPI — source cannot be inspected.",
             )
-    result = CheckRunResult(pr_number=pr_number, packages=packages)
+    result = CheckRunResult(pr_number=pr_number, head_sha=head_sha, packages=packages)
     result.rendered_comment = render_comment(result)
     return result

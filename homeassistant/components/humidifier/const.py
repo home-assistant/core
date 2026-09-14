@@ -1,6 +1,7 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
+from typing import Final
 
 MODE_NORMAL = "normal"
 MODE_ECO = "eco"
@@ -33,10 +34,28 @@ ATTR_TARGET_HUMIDITY_STEP = "target_humidity_step"
 DEFAULT_MIN_HUMIDITY = 0
 DEFAULT_MAX_HUMIDITY = 100
 
-DOMAIN = "humidifier"
+DOMAIN: Final = "humidifier"
 
 SERVICE_SET_MODE = "set_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
+
+
+class HumidifierEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for humidifier entities."""
+
+    MIN_HUMIDITY = "min_humidity"
+    MAX_HUMIDITY = "max_humidity"
+    TARGET_HUMIDITY_STEP = "target_humidity_step"
+    AVAILABLE_MODES = "available_modes"
+
+
+class HumidifierEntityStateAttribute(StrEnum):
+    """State attributes for humidifier entities."""
+
+    ACTION = "action"
+    CURRENT_HUMIDITY = "current_humidity"
+    HUMIDITY = "humidity"
+    MODE = "mode"
 
 
 class HumidifierEntityFeature(IntFlag):

@@ -3,9 +3,10 @@
 from datetime import timedelta
 from enum import StrEnum
 import logging
+from typing import override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -41,7 +42,7 @@ class SwitchDeviceClass(StrEnum):
     SWITCH = "switch"
 
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(SwitchDeviceClass))
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(SwitchDeviceClass))
 DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
 
 
@@ -98,6 +99,7 @@ class SwitchEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     _attr_device_class: SwitchDeviceClass | None
 
     @cached_property
+    @override
     def device_class(self) -> SwitchDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):

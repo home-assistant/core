@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from deebot_client.capabilities import CapabilityEvent
 from deebot_client.events import Event
@@ -79,6 +80,7 @@ class EcovacsBinarySensor[EventT: Event](
 
     entity_description: EcovacsBinarySensorEntityDescription
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -104,6 +106,7 @@ class EcovacsLegacyBatteryChargingSensor(EcovacsLegacyEntity, BinarySensorEntity
         super().__init__(device)
         self._attr_unique_id = f"{device.vacuum['did']}_battery_charging"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         self._event_listeners.append(
@@ -113,6 +116,7 @@ class EcovacsLegacyBatteryChargingSensor(EcovacsLegacyEntity, BinarySensorEntity
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if self.device.charge_status is None:

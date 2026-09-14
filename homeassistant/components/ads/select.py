@@ -1,7 +1,9 @@
 """Support for ADS select entities."""
 
+from typing import override
+
+import probatio
 import pyads
-import voluptuous as vol
 
 from homeassistant.components.select import (
     PLATFORM_SCHEMA as SELECT_PLATFORM_SCHEMA,
@@ -21,9 +23,9 @@ DEFAULT_NAME = "ADS select"
 
 PLATFORM_SCHEMA = SELECT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_ADS_VAR): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_OPTIONS): probatio.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -61,6 +63,7 @@ class AdsSelect(AdsEntity, SelectEntity):
         self._attr_options = options
         self._attr_current_option = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_INT)
@@ -68,6 +71,7 @@ class AdsSelect(AdsEntity, SelectEntity):
             self._ads_var, pyads.PLCTYPE_INT, self._handle_ads_value
         )
 
+    @override
     def select_option(self, option: str) -> None:
         """Change the selected option."""
         if option in self._attr_options:

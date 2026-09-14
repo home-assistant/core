@@ -1,11 +1,11 @@
 """Custom uhoo config flow setup."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from uhooapi import Client
 from uhooapi.errors import ForbiddenError, UhooError, UnauthorizedError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -18,9 +18,9 @@ from homeassistant.helpers.selector import (
 
 from .const import DOMAIN, LOGGER
 
-USER_DATA_SCHEMA = vol.Schema(
+USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(CONF_API_KEY): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -35,6 +35,7 @@ class UhooConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

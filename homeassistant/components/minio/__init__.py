@@ -4,8 +4,9 @@ import logging
 import os
 from queue import Queue
 import threading
+from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_HOST,
@@ -39,28 +40,28 @@ DEFAULT_LISTEN_PREFIX = ""
 DEFAULT_LISTEN_SUFFIX = ".*"
 DEFAULT_LISTEN_EVENTS = "s3:ObjectCreated:*"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PORT): cv.port,
-                vol.Required(CONF_ACCESS_KEY): cv.string,
-                vol.Required(CONF_SECRET_KEY): cv.string,
-                vol.Required(CONF_SECURE): cv.boolean,
-                vol.Optional(CONF_LISTEN, default=[]): vol.All(
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Required(CONF_PORT): cv.port,
+                probatio.Required(CONF_ACCESS_KEY): cv.string,
+                probatio.Required(CONF_SECRET_KEY): cv.string,
+                probatio.Required(CONF_SECURE): cv.boolean,
+                probatio.Optional(CONF_LISTEN, default=[]): probatio.All(
                     cv.ensure_list,
                     [
-                        vol.Schema(
+                        probatio.Schema(
                             {
-                                vol.Required(CONF_LISTEN_BUCKET): cv.string,
-                                vol.Optional(
+                                probatio.Required(CONF_LISTEN_BUCKET): cv.string,
+                                probatio.Optional(
                                     CONF_LISTEN_PREFIX, default=DEFAULT_LISTEN_PREFIX
                                 ): cv.string,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_LISTEN_SUFFIX, default=DEFAULT_LISTEN_SUFFIX
                                 ): cv.string,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_LISTEN_EVENTS, default=DEFAULT_LISTEN_EVENTS
                                 ): cv.string,
                             }
@@ -70,15 +71,15 @@ CONFIG_SCHEMA = vol.Schema(
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-BUCKET_KEY_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_BUCKET): cv.string, vol.Required(ATTR_KEY): cv.string}
+BUCKET_KEY_SCHEMA = probatio.Schema(
+    {probatio.Required(ATTR_BUCKET): cv.string, probatio.Required(ATTR_KEY): cv.string}
 )
 
 BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend(
-    {vol.Required(ATTR_FILE_PATH): cv.string}
+    {probatio.Required(ATTR_FILE_PATH): cv.string}
 )
 
 
@@ -176,6 +177,7 @@ class QueueListener(threading.Thread):
         self._hass = hass
         self._queue = Queue()
 
+    @override
     def run(self):
         """Listen to queue events, and forward them to Home Assistant event bus."""
         _LOGGER.debug("Running QueueListener")

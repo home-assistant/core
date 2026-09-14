@@ -1,6 +1,7 @@
 """Image platform for the UniFi Access integration."""
 
 from datetime import UTC, datetime
+from typing import override
 
 from unifi_access_api import Door, UnifiAccessError
 
@@ -69,12 +70,12 @@ class UnifiAccessDoorImageEntity(UnifiAccessEntity, ImageEntity):
                 thumbnail.door_thumbnail_last_update, tz=UTC
             )
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return the door thumbnail image bytes."""
         if thumbnail := self.coordinator.data.door_thumbnails.get(self._door_id):
             try:
                 return await self.coordinator.client.get_thumbnail(thumbnail.url)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except UnifiAccessError as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
@@ -82,6 +83,7 @@ class UnifiAccessDoorImageEntity(UnifiAccessEntity, ImageEntity):
                 ) from err
         return None
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if thumbnail := self.coordinator.data.door_thumbnails.get(self._door_id):

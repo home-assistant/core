@@ -2,8 +2,9 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyportainer import (
     Portainer,
     PortainerAuthenticationError,
@@ -11,22 +12,30 @@ from pyportainer import (
     PortainerTimeoutError,
 )
 from pyportainer.models.portainer import PortainerSystemStatus
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): str,
-        vol.Required(CONF_API_TOKEN): str,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.URL)
+        ),
+        probatio.Required(CONF_API_TOKEN): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+        probatio.Optional(CONF_VERIFY_SSL, default=True): BooleanSelector(),
     }
 )
 
@@ -59,6 +68,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 5
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -125,7 +135,13 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_API_TOKEN): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    )
+                }
+            ),
             errors=errors,
         )
 
@@ -181,13 +197,13 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(HomeAssistantError):
+class CannotConnect(Exception):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(HomeAssistantError):
+class InvalidAuth(Exception):
     """Error to indicate there is invalid auth."""
 
 
-class PortainerTimeout(HomeAssistantError):
+class PortainerTimeout(Exception):
     """Error to indicate a timeout occurred."""

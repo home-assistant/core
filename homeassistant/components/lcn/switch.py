@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 import pypck
 
@@ -79,6 +79,7 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
 
         self.output = pypck.lcn_defs.OutputPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if not await self.device_connection.dim_output(self.output.value, 100, 0):
@@ -86,6 +87,7 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if not await self.device_connection.dim_output(self.output.value, 0, 0):
@@ -102,6 +104,7 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
             is not None
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
         if (
@@ -125,6 +128,7 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
 
         self.output = pypck.lcn_defs.RelayPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
@@ -134,6 +138,7 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
@@ -150,6 +155,7 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
             is not None
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusRelays):
@@ -173,6 +179,7 @@ class LcnRegulatorLockSwitch(LcnEntity, SwitchEntity):
         ]
         self.reg_id = pypck.lcn_defs.Var.to_set_point_id(self.setpoint_variable)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if not await self.device_connection.lock_regulator(self.reg_id, True):
@@ -180,6 +187,7 @@ class LcnRegulatorLockSwitch(LcnEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if not await self.device_connection.lock_regulator(self.reg_id, False):
@@ -196,6 +204,7 @@ class LcnRegulatorLockSwitch(LcnEntity, SwitchEntity):
             is not None
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
         if (
@@ -221,6 +230,7 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
         self.table_id = ord(self.key.name[0]) - 65
         self.key_id = int(self.key.name[1]) - 1
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         states = [pypck.lcn_defs.KeyLockStateModifier.NOCHANGE] * 8
@@ -232,6 +242,7 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         states = [pypck.lcn_defs.KeyLockStateModifier.NOCHANGE] * 8
@@ -252,6 +263,7 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
             is not None
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
         if (

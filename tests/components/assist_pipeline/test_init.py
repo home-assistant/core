@@ -5,6 +5,7 @@ from collections.abc import Generator
 import itertools as it
 from pathlib import Path
 import tempfile
+import time
 from unittest.mock import Mock, patch
 import wave
 
@@ -675,6 +676,11 @@ async def test_pipeline_saved_audio_empty_queue(
         )
 
         def proc_wrapper(run_recording_dir, queue):
+            # Wait for the WAV file name to be queued. Forcing the timeout before
+            # it arrives makes the thread exit without ever creating the file.
+            while queue.empty():
+                time.sleep(0.01)
+
             _pipeline_debug_recording_thread_proc(
                 run_recording_dir, queue, message_timeout=0
             )

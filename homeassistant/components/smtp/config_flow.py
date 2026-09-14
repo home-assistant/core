@@ -1,16 +1,15 @@
 """Config flow for the SMTP integration."""
 
+from collections.abc import Mapping
 import logging
-from smtplib import SMTP, SMTP_SSL, SMTPAuthenticationError
-import socket
-from ssl import SSLCertVerificationError
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+from aiosmtplib import SMTP, SMTPAuthenticationError, SMTPException, SMTPTimeoutError
+import probatio
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryData,
@@ -31,7 +30,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     UnitOfTime,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -44,10 +43,14 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.util.ssl import create_client_context
+from homeassistant.util.ssl import client_context, client_context_no_verify
 
+from . import SmtpConfigEntry
 from .const import (
     CONF_ENCRYPTION,
+    CONF_OLD_RECIPIENT,
+    CONF_REPLY_TO,
+    CONF_REPLY_TO_NAME,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DEFAULT_ENCRYPTION,
@@ -56,49 +59,15 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
     ENCRYPTION_OPTIONS,
+    SECTION_OPTIONS,
     SUBENTRY_TYPE_RECIPIENT,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-
-STEP_USER_DATA_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SENDER): TextSelector(
-            TextSelectorConfig(
-                type=TextSelectorType.TEXT,
-                autocomplete="email",
-            ),
-        ),
-        vol.Optional(CONF_SENDER_NAME): cv.string,
-        vol.Required(CONF_SERVER, default=DEFAULT_HOST): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): SelectSelector(
-            SelectSelectorConfig(
-                options=ENCRYPTION_OPTIONS,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key="encryption",
-            )
-        ),
-        vol.Optional(CONF_USERNAME): TextSelector(
-            TextSelectorConfig(
-                type=TextSelectorType.TEXT,
-                autocomplete="username",
-            ),
-        ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
-            TextSelectorConfig(
-                type=TextSelectorType.PASSWORD,
-                autocomplete="current-password",
-            ),
-        ),
-        vol.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
-    }
-)
-
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
+        probatio.Optional(CONF_TIMEOUT): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(
                     min=1,
@@ -108,8 +77,65 @@ OPTIONS_SCHEMA = vol.Schema(
                     mode=NumberSelectorMode.BOX,
                 )
             ),
-            vol.Coerce(int),
-        )
+            probatio.Coerce(int),
+        ),
+        probatio.Optional(CONF_REPLY_TO): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.EMAIL,
+                autocomplete="email",
+            ),
+        ),
+        probatio.Optional(CONF_REPLY_TO_NAME): cv.string,
+    }
+)
+
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_SENDER): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.EMAIL,
+                autocomplete="email",
+            ),
+        ),
+        probatio.Optional(CONF_SENDER_NAME): cv.string,
+        probatio.Required(CONF_SERVER, default=DEFAULT_HOST): cv.string,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): SelectSelector(
+            SelectSelectorConfig(
+                options=ENCRYPTION_OPTIONS,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="encryption",
+            )
+        ),
+        probatio.Optional(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="username",
+            ),
+        ),
+        probatio.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
+        probatio.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
+    }
+)
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="username",
+            ),
+        ),
+        probatio.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
     }
 )
 
@@ -119,18 +145,21 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: SmtpConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_RECIPIENT: RecipientSubentryFlowHandler}
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    @override
+    def async_get_options_flow(config_entry: SmtpConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -144,20 +173,32 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: user_input.get(CONF_USERNAME),
                 }
             )
-            errors = await self.hass.async_add_executor_job(validate_input, user_input)
+            entry_data = user_input.copy()
+            options = entry_data.pop(SECTION_OPTIONS)
+            errors = await validate_input(self.hass, entry_data, options)
             if not errors:
                 return self.async_create_entry(
-                    title=user_input.get(CONF_SENDER_NAME, user_input[CONF_SENDER]),
-                    data=user_input,
+                    title=entry_data.get(CONF_SENDER_NAME, entry_data[CONF_SENDER]),
+                    data=entry_data,
+                    options=options,
                 )
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=STEP_USER_DATA_SCHEMA, suggested_values=user_input
+                data_schema=STEP_USER_DATA_SCHEMA.extend(
+                    {
+                        probatio.Required(SECTION_OPTIONS): data_entry_flow.section(
+                            OPTIONS_SCHEMA,
+                            {"collapsed": True},
+                        ),
+                    }
+                ),
+                suggested_values=user_input,
             ),
             errors=errors,
         )
 
+    @override
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
         """Start subentry flow after creating main entry."""
         subentry_result = await self.hass.config_entries.subentries.async_init(
@@ -186,7 +227,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: user_input.get(CONF_USERNAME),
                 }
             )
-            errors = await self.hass.async_add_executor_job(validate_input, user_input)
+            errors = await validate_input(self.hass, user_input, dict(entry.options))
             if not errors:
                 return self.async_update_and_abort(
                     entry,
@@ -201,13 +242,47 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+
+        entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            errors = await validate_input(
+                self.hass, {**entry.data, **user_input}, dict(entry.options)
+            )
+            if not errors:
+                return self.async_update_and_abort(
+                    entry,
+                    data_updates=user_input,
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_REAUTH_DATA_SCHEMA,
+                suggested_values=user_input
+                or {CONF_USERNAME: entry.data.get(CONF_USERNAME)},
+            ),
+            errors=errors,
+        )
+
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""
 
         options = {CONF_TIMEOUT: import_info.pop(CONF_TIMEOUT, DEFAULT_TIMEOUT)}
         self._async_abort_entries_match(import_info)
 
-        errors = await self.hass.async_add_executor_job(validate_input, import_info)
+        errors = await validate_input(self.hass, import_info, options)
+
         if not errors:
             title = (
                 import_info.get(CONF_NAME)
@@ -232,42 +307,36 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason=errors["base"])
 
 
-def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
+async def validate_input(
+    hass: HomeAssistant, user_input: dict[str, Any], options: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     errors: dict[str, str] = {}
-    ssl_context = create_client_context() if user_input[CONF_VERIFY_SSL] else None
-    mail: SMTP_SSL | SMTP | None = None
     try:
-        if user_input[CONF_ENCRYPTION] == "tls":
-            mail = SMTP_SSL(
-                user_input[CONF_SERVER],
-                user_input[CONF_PORT],
-                timeout=DEFAULT_TIMEOUT,
-                context=ssl_context,
-            )
-        else:
-            mail = SMTP(
-                user_input[CONF_SERVER], user_input[CONF_PORT], timeout=DEFAULT_TIMEOUT
-            )
-        mail.ehlo_or_helo_if_needed()
-        if user_input[CONF_ENCRYPTION] == "starttls":
-            mail.starttls(context=ssl_context)
-            mail.ehlo()
-        if user_input.get(CONF_USERNAME) and user_input.get(CONF_PASSWORD):
-            mail.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-
+        async with SMTP(
+            hostname=user_input[CONF_SERVER],
+            port=user_input[CONF_PORT],
+            username=user_input.get(CONF_USERNAME),
+            password=user_input.get(CONF_PASSWORD),
+            timeout=options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            use_tls=user_input[CONF_ENCRYPTION] == "tls",
+            start_tls=user_input[CONF_ENCRYPTION] == "starttls",
+            tls_context=(
+                client_context()
+                if user_input[CONF_VERIFY_SSL]
+                else client_context_no_verify()
+            ),
+        ):
+            pass
+    except SMTPTimeoutError:
+        errors["base"] = "timeout_connect"
     except SMTPAuthenticationError:
         errors["base"] = "invalid_auth"
-    except SSLCertVerificationError:
-        errors["base"] = "invalid_cert"
-    except socket.gaierror, ConnectionRefusedError:
+    except SMTPException:
         errors["base"] = "cannot_connect"
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
-    finally:
-        if mail is not None:
-            mail.quit()
 
     return errors
 
@@ -281,23 +350,63 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
         """User flow to add a new recipient."""
 
         if user_input is not None:
-            return self.async_create_entry(
+            result = self.async_create_entry(
                 title=user_input.get(CONF_NAME, user_input[CONF_RECIPIENT]),
                 data={},
                 unique_id=user_input[CONF_RECIPIENT],
             )
+            self.hass.config_entries.async_schedule_reload(self._get_entry().entry_id)
+            return result
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Required(CONF_RECIPIENT): TextSelector(
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Required(CONF_RECIPIENT): TextSelector(
                         TextSelectorConfig(
-                            type=TextSelectorType.TEXT,
+                            type=TextSelectorType.EMAIL,
                             autocomplete="email",
                         ),
                     ),
                 }
+            ),
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure flow to update a recipient."""
+
+        entry = self._get_entry()
+        subentry = self._get_reconfigure_subentry()
+
+        if user_input is not None:
+            return self.async_update_and_abort(
+                entry,
+                subentry=subentry,
+                title=(
+                    user_input[CONF_RECIPIENT]
+                    if subentry.title == subentry.unique_id
+                    else subentry.title
+                ),
+                data_updates={CONF_OLD_RECIPIENT: subentry.unique_id},
+                unique_id=user_input[CONF_RECIPIENT],
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=probatio.Schema(
+                    {
+                        probatio.Required(CONF_RECIPIENT): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.EMAIL,
+                                autocomplete="email",
+                            ),
+                        )
+                    }
+                ),
+                suggested_values={CONF_RECIPIENT: subentry.unique_id},
             ),
         )
 

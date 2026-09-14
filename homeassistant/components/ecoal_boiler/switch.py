@@ -1,6 +1,6 @@
 """Allows to configuration ecoal (esterownik.pl) pumps as switches."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -60,11 +60,13 @@ class EcoalSwitch(SwitchEntity):
         """
         self._ecoal_contr.status = None
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._contr_set_fun(1)
         self.invalidate_ecoal_cache()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._contr_set_fun(0)

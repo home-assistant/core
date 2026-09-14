@@ -5,7 +5,6 @@ from pathlib import Path
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.exception_translations import (
     ExceptionTranslationsChecker,
 )
@@ -14,7 +13,7 @@ from pylint_home_assistant.helpers.translations import clear_translations_cache
 import pytest
 import yaml
 
-from . import assert_no_messages
+from . import assert_no_messages, walk_checker
 
 # Pre-load so astroid can resolve exception classes in parsed snippets.
 astroid.MANAGER.ast_from_module_name("homeassistant.exceptions")
@@ -125,11 +124,8 @@ def test_no_warning(
     root_node = astroid.parse(code, "homeassistant.components.test_int.coordinator")
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, translations_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -164,9 +160,7 @@ def test_hardcoded_string_flagged(
     root_node = astroid.parse(code, "homeassistant.components.test_int.coordinator")
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-    walker.walk(root_node)
+    walk_checker(linter, translations_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -218,9 +212,7 @@ def test_translation_key_domain_mismatch_flagged(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-    walker.walk(root_node)
+    walk_checker(linter, translations_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -249,9 +241,7 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-    walker.walk(root_node)
+    walk_checker(linter, translations_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -280,9 +270,7 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-    walker.walk(root_node)
+    walk_checker(linter, translations_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -312,11 +300,8 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, translations_checker, root_node)
 
 
 def test_extra_placeholders_flagged(
@@ -344,9 +329,7 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-    walker.walk(root_node)
+    walk_checker(linter, translations_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -378,9 +361,7 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-    walker.walk(root_node)
+    walk_checker(linter, translations_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -412,11 +393,8 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, translations_checker, root_node)
 
 
 def test_placeholder_variable_resolved(
@@ -445,11 +423,8 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, translations_checker, root_node)
 
 
 def test_placeholder_variable_mismatch_flagged(
@@ -478,9 +453,7 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-    walker.walk(root_node)
+    walk_checker(linter, translations_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -513,11 +486,8 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, translations_checker, root_node)
 
 
 def test_constant_placeholder_keys_ok(
@@ -546,11 +516,8 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, translations_checker, root_node)
 
 
 def test_key_reference_resolution(
@@ -588,11 +555,8 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, translations_checker, root_node)
 
 
 def test_no_strings_json_flags_missing_key(
@@ -614,9 +578,7 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-    walker.walk(root_node)
+    walk_checker(linter, translations_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -647,9 +609,7 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-    walker.walk(root_node)
+    walk_checker(linter, translations_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -682,9 +642,7 @@ raise HomeAssistantError(
     )
     root_node.file = str(integration_dir / "coordinator.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
-    walker.walk(root_node)
+    walk_checker(linter, translations_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -700,8 +658,6 @@ def test_not_integration_ignored(
         f'{_HA_IMPORTS}\nraise HomeAssistantError("hardcoded")',
         "tests.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(translations_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, translations_checker, root_node)

@@ -2,10 +2,10 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from victron_ble_ha_parser import VictronBluetoothDeviceData
-import voluptuous as vol
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -19,9 +19,9 @@ from .const import DOMAIN, VICTRON_IDENTIFIER
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_ACCESS_TOKEN_DATA_SCHEMA = vol.Schema(
+STEP_ACCESS_TOKEN_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ACCESS_TOKEN): str,
+        probatio.Required(CONF_ACCESS_TOKEN): str,
     }
 )
 
@@ -37,6 +37,7 @@ class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, str] = {}
         self._discovered_devices_info: dict[str, BluetoothServiceInfoBleak] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -86,6 +87,7 @@ class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -120,8 +122,8 @@ class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): probatio.In(self._discovered_devices)}
             ),
         )
 

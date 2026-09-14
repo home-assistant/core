@@ -7,7 +7,7 @@ import os
 from typing import TYPE_CHECKING, Any
 
 from asyncinotify import Inotify, Mask
-import voluptuous as vol
+import probatio
 
 if TYPE_CHECKING:
     from evdev import InputDevice
@@ -58,28 +58,34 @@ _EMULATE_KEY_HOLD = "emulate_key_hold"
 _EMULATE_KEY_HOLD_DELAY = "emulate_key_hold_delay"
 _EMULATE_KEY_HOLD_REPEAT = "emulate_key_hold_repeat"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Exclusive(_DEVICE_DESCRIPTOR, _DEVICE_ID_GROUP): cv.string,
-                        vol.Exclusive(_DEVICE_NAME, _DEVICE_ID_GROUP): cv.string,
-                        vol.Optional(_TYPE, default=["key_up"]): vol.All(
-                            cv.ensure_list, [vol.In(KEY_VALUE)]
+                        probatio.Exclusive(
+                            _DEVICE_DESCRIPTOR, _DEVICE_ID_GROUP
+                        ): cv.string,
+                        probatio.Exclusive(_DEVICE_NAME, _DEVICE_ID_GROUP): cv.string,
+                        probatio.Optional(_TYPE, default=["key_up"]): probatio.All(
+                            cv.ensure_list, [probatio.In(KEY_VALUE)]
                         ),
-                        vol.Optional(_EMULATE_KEY_HOLD, default=False): cv.boolean,
-                        vol.Optional(_EMULATE_KEY_HOLD_DELAY, default=0.250): float,
-                        vol.Optional(_EMULATE_KEY_HOLD_REPEAT, default=0.033): float,
+                        probatio.Optional(_EMULATE_KEY_HOLD, default=False): cv.boolean,
+                        probatio.Optional(
+                            _EMULATE_KEY_HOLD_DELAY, default=0.250
+                        ): float,
+                        probatio.Optional(
+                            _EMULATE_KEY_HOLD_REPEAT, default=0.033
+                        ): float,
                     }
                 ),
                 cv.has_at_least_one_key(_DEVICE_DESCRIPTOR, _DEVICE_NAME),
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

@@ -3,9 +3,10 @@
 from collections import namedtuple
 from http import HTTPStatus
 import logging
+from typing import override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -23,10 +24,10 @@ DEFAULT_TYPE = "rogers"
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.string,
     }
 )
 
@@ -65,12 +66,14 @@ class HitronCODADeviceScanner(DeviceScanner):
 
         self.success_init = self._update_info()
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return [device.mac for device in self.last_results]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the device with the given MAC address."""
         return next(

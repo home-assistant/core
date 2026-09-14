@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
 from ayla_iot_unofficial.fujitsu_consts import FGLAIR_APP_CREDENTIALS
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
@@ -18,11 +18,11 @@ from .const import API_TIMEOUT, DOMAIN, REGION_DEFAULT, REGION_EU
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_REGION, default=REGION_DEFAULT): SelectSelector(
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_REGION, default=REGION_DEFAULT): SelectSelector(
             SelectSelectorConfig(
                 options=[region.lower() for region in FGLAIR_APP_CREDENTIALS],
                 translation_key=CONF_REGION,
@@ -30,9 +30,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ),
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -68,6 +68,7 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

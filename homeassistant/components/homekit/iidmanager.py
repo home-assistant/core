@@ -6,6 +6,7 @@ be stable between reboots and upgrades.
 This module generates and stores them in a HA storage.
 """
 
+from typing import override
 from uuid import UUID
 
 from pyhap.util import uuid_to_hap_type
@@ -30,6 +31,7 @@ ACCESSORY_INFORMATION_SERVICE = "3E"
 class IIDStorage(Store):
     """Storage class for IIDManager."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,

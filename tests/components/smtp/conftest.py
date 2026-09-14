@@ -7,6 +7,8 @@ import pytest
 
 from homeassistant.components.smtp.const import (
     CONF_ENCRYPTION,
+    CONF_REPLY_TO,
+    CONF_REPLY_TO_NAME,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DOMAIN,
@@ -24,6 +26,17 @@ from homeassistant.const import (
 
 from tests.common import MockConfigEntry
 
+USER_INPUT = {
+    CONF_SENDER: "email@example.com",
+    CONF_SENDER_NAME: "Home Assistant",
+    CONF_SERVER: "mail.example.com",
+    CONF_PORT: 587,
+    CONF_ENCRYPTION: "starttls",
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+    CONF_VERIFY_SSL: True,
+}
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -38,25 +51,76 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_smtp() -> Generator[MagicMock]:
     """Mock smtplib.SMTP."""
 
-    with (
-        patch(
-            "homeassistant.components.smtp.notify.smtplib.SMTP", autospec=True
-        ) as mock_client,
-        patch("homeassistant.components.smtp.config_flow.SMTP", new=mock_client),
-    ):
-        client = mock_client.return_value
-        yield client
-
-
-@pytest.fixture(name="smtp_ssl")
-def mock_smtp_ssl() -> Generator[MagicMock]:
-    """Mock SMTP."""
-
     with patch(
-        "homeassistant.components.smtp.config_flow.SMTP_SSL", autospec=True
+        "homeassistant.components.smtp.helpers.smtplib.SMTP", autospec=True
     ) as mock_client:
         client = mock_client.return_value
+        client.cls = mock_client
         yield client
+
+
+@pytest.fixture(name="aiosmtplib")
+def mock_aiosmtplib() -> Generator[AsyncMock]:
+    """Mock aiosmtplib."""
+
+    with (
+        patch(
+            "homeassistant.components.smtp.config_flow.SMTP", autospec=True
+        ) as mock_client,
+        patch("homeassistant.components.smtp.SMTP", new=mock_client),
+    ):
+        client = mock_client.return_value
+        client.cls = mock_client
+        yield client
+
+
+@pytest.fixture(name="make_msgid")
+def mock_make_msgid() -> Generator[None]:
+    """Mock email.utils.make_msgid."""
+
+    with patch(
+        "homeassistant.components.smtp.notify.email.utils.make_msgid",
+        return_value="<177777777700.12345.12345678901234567890@mock>",
+    ):
+        yield
+
+
+@pytest.fixture(name="randrange")
+def mock_randrange() -> Generator[None]:
+    """Mock random.randrange."""
+
+    with patch(
+        "random.randrange",
+        side_effect=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+    ):
+        yield
+
+
+@pytest.fixture(name="version")
+def mock_version() -> Generator[None]:
+    """Mock Home Assistant version."""
+
+    with patch(
+        "homeassistant.components.smtp.notify.__version__",
+        "2026.10.0",
+    ):
+        yield
+
+
+@pytest.fixture(name="client_context")
+def mock_client_context() -> Generator[None]:
+    """Mock client_context."""
+
+    with (
+        patch(
+            "homeassistant.components.smtp.config_flow.client_context"
+        ) as mock_client,
+        patch(
+            "homeassistant.components.smtp.client_context",
+            new=mock_client,
+        ),
+    ):
+        yield mock_client
 
 
 @pytest.fixture(name="config_entry")
@@ -65,18 +129,11 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Home Assistant",
-        data={
-            CONF_SENDER: "email@example.com",
-            CONF_SENDER_NAME: "Home Assistant",
-            CONF_SERVER: "mail.example.com",
-            CONF_PORT: 587,
-            CONF_ENCRYPTION: "starttls",
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            CONF_VERIFY_SSL: True,
-        },
+        data=USER_INPUT,
         options={
-            CONF_TIMEOUT: 5,
+            CONF_TIMEOUT: 1312,
+            CONF_REPLY_TO: "replyto@example.com",
+            CONF_REPLY_TO_NAME: "Reply To Name",
         },
         entry_id="123456789",
         subentries_data=[

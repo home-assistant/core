@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 import aiolifx_effects
 from aiolifx_themes.painter import ThemePainter
 from aiolifx_themes.themes import Theme, ThemeLibrary
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -106,49 +106,62 @@ PULSE_MODES = [
 ]
 
 LIFX_EFFECT_SCHEMA = {
-    vol.Optional(ATTR_POWER_ON, default=True): cv.boolean,
+    probatio.Optional(ATTR_POWER_ON, default=True): cv.boolean,
 }
 
 LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-        vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
-        vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
-        vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
-            vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
+        probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+        probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        probatio.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
+        probatio.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): probatio.All(
+            probatio.Coerce(tuple), probatio.ExactSequence((cv.byte, cv.byte, cv.byte))
         ),
-        vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
-            vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
+        probatio.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): probatio.All(
+            probatio.Coerce(tuple),
+            probatio.ExactSequence((cv.small_float, cv.small_float)),
         ),
-        vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
-            vol.Coerce(tuple),
-            vol.ExactSequence(
+        probatio.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): probatio.All(
+            probatio.Coerce(tuple),
+            probatio.ExactSequence(
                 (
-                    vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
-                    vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+                    probatio.All(
+                        probatio.Coerce(float), probatio.Range(min=0, max=360)
+                    ),
+                    probatio.All(
+                        probatio.Coerce(float), probatio.Range(min=0, max=100)
+                    ),
                 )
             ),
         ),
-        vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): vol.All(
-            vol.Coerce(int), vol.Range(min=1500, max=9000)
+        probatio.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1500, max=9000)
         ),
-        ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Range(min=0.05)),
-        ATTR_CYCLES: vol.All(vol.Coerce(float), vol.Range(min=1)),
-        ATTR_MODE: vol.In(PULSE_MODES),
+        ATTR_PERIOD: probatio.All(probatio.Coerce(float), probatio.Range(min=0.05)),
+        ATTR_CYCLES: probatio.All(probatio.Coerce(float), probatio.Range(min=1)),
+        ATTR_MODE: probatio.In(PULSE_MODES),
     }
 )
 
 LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-        vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
-        ATTR_SATURATION_MAX: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100)),
-        ATTR_SATURATION_MIN: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100)),
-        ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Clamp(min=0.05)),
-        ATTR_CHANGE: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
-        ATTR_SPREAD: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
+        probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+        probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        ATTR_SATURATION_MAX: probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
+        ),
+        ATTR_SATURATION_MIN: probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
+        ),
+        ATTR_PERIOD: probatio.All(probatio.Coerce(float), probatio.Clamp(min=0.05)),
+        ATTR_CHANGE: probatio.All(
+            probatio.Coerce(float), probatio.Clamp(min=0, max=360)
+        ),
+        ATTR_SPREAD: probatio.All(
+            probatio.Coerce(float), probatio.Clamp(min=0, max=360)
+        ),
         ATTR_TRANSITION: cv.positive_float,
     }
 )
@@ -158,18 +171,18 @@ LIFX_EFFECT_STOP_SCHEMA = cv.make_entity_service_schema({})
 LIFX_EFFECT_FLAME_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=25)),
+        ATTR_SPEED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=1, max=25)),
     }
 )
 
-HSBK_SCHEMA = vol.All(
-    vol.Coerce(tuple),
-    vol.ExactSequence(
+HSBK_SCHEMA = probatio.All(
+    probatio.Coerce(tuple),
+    probatio.ExactSequence(
         (
-            vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
-            vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
-            vol.All(vol.Coerce(float), vol.Clamp(min=0, max=100)),
-            vol.All(vol.Coerce(int), vol.Clamp(min=1500, max=9000)),
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=360)),
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100)),
+            probatio.All(probatio.Coerce(float), probatio.Clamp(min=0, max=100)),
+            probatio.All(probatio.Coerce(int), probatio.Clamp(min=1500, max=9000)),
         )
     ),
 )
@@ -177,11 +190,9 @@ HSBK_SCHEMA = vol.All(
 LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=25)),
-        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.Optional(
-            vol.In(ThemeLibrary().themes)
-        ),
-        vol.Exclusive(ATTR_PALETTE, COLOR_GROUP): vol.All(
+        ATTR_SPEED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=1, max=25)),
+        probatio.Exclusive(ATTR_THEME, COLOR_GROUP): probatio.In(ThemeLibrary().themes),
+        probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
             cv.ensure_list, [HSBK_SCHEMA]
         ),
     }
@@ -190,31 +201,39 @@ LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
 LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        ATTR_SPEED: vol.All(vol.Coerce(float), vol.Clamp(min=0.1, max=60)),
-        ATTR_DIRECTION: vol.In(EFFECT_MOVE_DIRECTIONS),
-        ATTR_THEME: vol.Optional(vol.In(ThemeLibrary().themes)),
+        ATTR_SPEED: probatio.All(
+            probatio.Coerce(float), probatio.Clamp(min=0.1, max=60)
+        ),
+        ATTR_DIRECTION: probatio.In(EFFECT_MOVE_DIRECTIONS),
+        probatio.Optional(ATTR_THEME): probatio.In(ThemeLibrary().themes),
     }
 )
 
 LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=86400)),
-        ATTR_SKY_TYPE: vol.In(EFFECT_SKY_SKY_TYPES),
-        ATTR_CLOUD_SATURATION_MIN: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
-        ATTR_CLOUD_SATURATION_MAX: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
-        ATTR_PALETTE: vol.All(cv.ensure_list, [HSBK_SCHEMA]),
+        ATTR_SPEED: probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=1, max=86400)
+        ),
+        ATTR_SKY_TYPE: probatio.In(EFFECT_SKY_SKY_TYPES),
+        ATTR_CLOUD_SATURATION_MIN: probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=255)
+        ),
+        ATTR_CLOUD_SATURATION_MAX: probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=255)
+        ),
+        ATTR_PALETTE: probatio.All(cv.ensure_list, [HSBK_SCHEMA]),
     }
 )
 
 LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        ATTR_TRANSITION: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3600)),
-        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.Optional(
-            vol.In(ThemeLibrary().themes)
+        ATTR_TRANSITION: probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=1, max=3600)
         ),
-        vol.Exclusive(ATTR_PALETTE, COLOR_GROUP): vol.All(
+        probatio.Exclusive(ATTR_THEME, COLOR_GROUP): probatio.In(ThemeLibrary().themes),
+        probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
             cv.ensure_list, [HSBK_SCHEMA]
         ),
     }

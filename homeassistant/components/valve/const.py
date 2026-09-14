@@ -1,8 +1,16 @@
 """Constants for the Valve entity platform."""
 
 from enum import IntFlag, StrEnum
+from typing import Final
 
-DOMAIN = "valve"
+DOMAIN: Final = "valve"
+
+
+class ValveEntityStateAttribute(StrEnum):
+    """State attributes for valve entities."""
+
+    IS_CLOSED = "is_closed"
+    CURRENT_POSITION = "current_position"
 
 
 class ValveDeviceClass(StrEnum):

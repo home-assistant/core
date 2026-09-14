@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.water_heater import WaterHeater, WaterHeaterOperationMode
@@ -80,16 +80,19 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
         self.water_heater = water_heater
 
     @property
+    @override
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
         return self._econet.away
 
     @property
+    @override
     def current_operation(self) -> str:
         """Return current operation."""
         return _operation_mode_to_ha(self.water_heater.mode)
 
     @property
+    @override
     def operation_list(self) -> list[str]:
         """List of available operation modes."""
         return list(
@@ -105,6 +108,7 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
         )
 
     @property
+    @override
     def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         if self.water_heater.modes:
@@ -118,6 +122,7 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
             )
         return WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
@@ -125,6 +130,7 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
         else:
             _LOGGER.error("A target temperature must be provided")
 
+    @override
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set operation mode."""
         op_mode_to_set = HA_STATE_TO_ECONET.get(operation_mode)
@@ -134,16 +140,19 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
             _LOGGER.error("Invalid operation mode: %s", operation_mode)
 
     @property
+    @override
     def target_temperature(self) -> int:
         """Return the temperature we try to reach."""
         return self.water_heater.set_point
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self.water_heater.set_point_limits[0]
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self.water_heater.set_point_limits[1]
@@ -153,10 +162,12 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
         await self.water_heater.get_energy_usage()
         await self.water_heater.get_water_usage()
 
+    @override
     def turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         self.water_heater.set_away_mode(True)
 
+    @override
     def turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         self.water_heater.set_away_mode(False)

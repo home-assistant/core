@@ -3,10 +3,10 @@
 import asyncio
 import logging
 from types import MappingProxyType
-from typing import Any
+from typing import Any, override
 
 from nessclient import Client
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import (
@@ -41,17 +41,21 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_INFER_ARMING_STATE, default=DEFAULT_INFER_ARMING_STATE): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(
+            CONF_INFER_ARMING_STATE, default=DEFAULT_INFER_ARMING_STATE
+        ): bool,
     }
 )
 
-ZONE_SCHEMA = vol.Schema(
+ZONE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TYPE, default=DEFAULT_ZONE_TYPE): selector.SelectSelector(
+        probatio.Required(
+            CONF_TYPE, default=DEFAULT_ZONE_TYPE
+        ): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=[cls.value for cls in BinarySensorDeviceClass],
                 mode=selector.SelectSelectorMode.DROPDOWN,
@@ -70,6 +74,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -80,6 +85,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
@@ -99,6 +105,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await client.close()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -213,9 +220,9 @@ class NessAlarmOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_SHOW_HOME_MODE, default=True): bool,
+                        probatio.Required(CONF_SHOW_HOME_MODE, default=True): bool,
                     }
                 ),
                 self.config_entry.options,
@@ -253,9 +260,9 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ZONE_NUMBER): selector.NumberSelector(
+                    probatio.Required(CONF_ZONE_NUMBER): selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             min=1,
                             max=32,

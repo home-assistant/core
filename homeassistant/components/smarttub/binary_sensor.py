@@ -1,10 +1,10 @@
 """Platform for binary sensor integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from smarttub import Spa, SpaError, SpaReminder
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -37,13 +37,13 @@ ATTR_UPDATED_AT = "updated_at"
 # how many days to snooze the reminder for
 ATTR_REMINDER_DAYS = "days"
 RESET_REMINDER_SCHEMA: VolDictType = {
-    vol.Required(ATTR_REMINDER_DAYS): vol.All(
-        vol.Coerce(int), vol.Range(min=30, max=365)
+    probatio.Required(ATTR_REMINDER_DAYS): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=30, max=365)
     )
 }
 SNOOZE_REMINDER_SCHEMA: VolDictType = {
-    vol.Required(ATTR_REMINDER_DAYS): vol.All(
-        vol.Coerce(int), vol.Range(min=10, max=120)
+    probatio.Required(ATTR_REMINDER_DAYS): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=10, max=120)
     )
 }
 
@@ -110,6 +110,7 @@ class SmartTubOnline(SmartTubOnboardSensorBase, BinarySensorEntity):
         super().__init__(coordinator, spa, "Online", "online")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._state is True
@@ -145,11 +146,13 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         return self.coordinator.data[self.spa.id][ATTR_REMINDERS][self.reminder_id]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the specified maintenance action needs to be taken."""
         return self.reminder.remaining_days == 0
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
@@ -196,11 +199,13 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
         return errors[0]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if an error is signaled."""
         return self.error is not None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if (error := self.error) is None:
@@ -223,6 +228,7 @@ class SmartTubCoverSensor(SmartTubExternalSensorBase, BinarySensorEntity):
     _attr_translation_key = "cover_sensor"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return False if the cover is closed, True if open."""
         # magnet is True when the cover is closed, False when open

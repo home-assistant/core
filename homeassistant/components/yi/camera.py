@@ -1,10 +1,11 @@
 """Support for Xiaomi Cameras (HiSilicon Hi3518e V200)."""
 
 import logging
+from typing import override
 
 from aioftp import Client, StatusCodeError
 from haffmpeg.camera import CameraMjpeg
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
@@ -40,13 +41,13 @@ CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
+        probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
     }
 )
 
@@ -116,6 +117,7 @@ class YiCamera(Camera):
             self._attr_is_on = False
             return None
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -133,6 +135,7 @@ class YiCamera(Camera):
 
         return self._last_image
 
+    @override
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         if not self._attr_is_on:

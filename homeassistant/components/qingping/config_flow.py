@@ -1,9 +1,9 @@
 """Config flow for Qingping integration."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from qingping_ble import QingpingBluetoothDeviceData as DeviceData
-import voluptuous as vol
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -49,6 +49,7 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
             ADDITIONAL_DISCOVERY_TIMEOUT,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -85,6 +86,7 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -114,7 +116,7 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): probatio.In(self._discovered_devices)}
             ),
         )

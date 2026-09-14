@@ -1,11 +1,11 @@
 """Config flow for Adax integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import adax
 import adax_local
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -39,13 +39,14 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONNECTION_TYPE, default=CLOUD): vol.In(
+                probatio.Required(CONNECTION_TYPE, default=CLOUD): probatio.In(
                     (
                         CLOUD,
                         LOCAL,
@@ -68,10 +69,10 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the local step."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(WIFI_SSID): str,
-                vol.Required(WIFI_PSWD): TextSelector(
+                probatio.Required(WIFI_SSID): str,
+                probatio.Required(WIFI_PSWD): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.PASSWORD,
                         autocomplete="current-password",
@@ -123,8 +124,8 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the cloud step."""
-        data_schema = vol.Schema(
-            {vol.Required(ACCOUNT_ID): int, vol.Required(CONF_PASSWORD): str}
+        data_schema = probatio.Schema(
+            {probatio.Required(ACCOUNT_ID): int, probatio.Required(CONF_PASSWORD): str}
         )
         if user_input is None:
             return self.async_show_form(step_id="cloud", data_schema=data_schema)

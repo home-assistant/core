@@ -7,11 +7,11 @@ from http import HTTPStatus
 from itertools import groupby
 import logging
 import re
-from typing import Any, Final, cast, final
+from typing import Any, Final, cast, final, override
 
 from aiohttp import web
 from dateutil.rrule import rrulestr
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_CONTROL, POLICY_READ
@@ -24,7 +24,7 @@ from homeassistant.components.websocket_api import (
     ActiveConnection,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import CONF_EVENT, STATE_OFF, STATE_ON
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
@@ -45,7 +45,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import (
-    CONF_EVENT,
     DATA_COMPONENT,
     DOMAIN,
     EVENT_DESCRIPTION,
@@ -69,6 +68,8 @@ from .const import (
     EVENT_UID,
     LIST_EVENT_FIELDS,
     CalendarEntityFeature,
+    CalendarEntityStateAttribute,
+    CalendarEventStatus,
 )
 
 # mypy: disallow-any-generics
@@ -103,7 +104,7 @@ def _has_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
                 and isinstance(value, datetime.datetime)
                 and value.tzinfo is None
             ):
-                raise vol.Invalid("Expected all values to have a timezone")
+                raise probatio.Invalid("Expected all values to have a timezone")
         return obj
 
     return validate
@@ -121,7 +122,7 @@ def _has_consistent_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str,
             tzinfos.append(value.tzinfo)
         uniq_values = groupby(tzinfos)
         if len(list(uniq_values)) > 1:
-            raise vol.Invalid("Expected all values to have the same timezone")
+            raise probatio.Invalid("Expected all values to have the same timezone")
         return obj
 
     return validate
@@ -149,7 +150,7 @@ def _has_min_duration(
         if (start := obj.get(start_key)) and (end := obj.get(end_key)):
             duration = end - start
             if duration < min_duration:
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     "Expected minimum event duration"
                     f" of {min_duration} ({start}, {end})"
                 )
@@ -166,12 +167,12 @@ def _has_positive_interval(
     def validate(obj: dict[str, Any]) -> dict[str, Any]:
         if (duration := obj.get(duration_key)) is not None:
             if duration <= datetime.timedelta(seconds=0):
-                raise vol.Invalid(f"Expected positive duration ({duration})")
+                raise probatio.Invalid(f"Expected positive duration ({duration})")
             return obj
 
         if (start := obj.get(start_key)) and (end := obj.get(end_key)):
             if start >= end:
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     f"Expected end time to be after start time ({start}, {end})"
                 )
         return obj
@@ -186,7 +187,7 @@ def _has_same_type(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
         """Test that all keys in the dict have values of the same type."""
         uniq_values = groupby(type(obj[k]) for k in keys)
         if len(list(uniq_values)) > 1:
-            raise vol.Invalid(f"Expected all values to be the same type: {keys}")
+            raise probatio.Invalid(f"Expected all values to be the same type: {keys}")
         return obj
 
     return validate
@@ -195,23 +196,23 @@ def _has_same_type(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
 def _validate_rrule(value: Any) -> str:
     """Validate a recurrence rule string."""
     if value is None:
-        raise vol.Invalid("rrule value is None")
+        raise probatio.Invalid("rrule value is None")
 
     if not isinstance(value, str):
-        raise vol.Invalid("rrule value expected a string")
+        raise probatio.Invalid("rrule value expected a string")
 
     try:
         rrulestr(value)
     except ValueError as err:
-        raise vol.Invalid(f"Invalid rrule '{value}': {err}") from err
+        raise probatio.Invalid(f"Invalid rrule '{value}': {err}") from err
 
     # Example format: FREQ=DAILY;UNTIL=...
     rule_parts = dict(s.split("=", 1) for s in value.split(";"))
     if not (freq := rule_parts.get("FREQ")):
-        raise vol.Invalid("rrule did not contain FREQ")
+        raise probatio.Invalid("rrule did not contain FREQ")
 
     if freq not in VALID_FREQS:
-        raise vol.Invalid(f"Invalid frequency for rule: {value}")
+        raise probatio.Invalid(f"Invalid frequency for rule: {value}")
 
     return str(value)
 
@@ -222,34 +223,34 @@ def _empty_as_none(value: str | None) -> str | None:
 
 
 CREATE_EVENT_SERVICE = "create_event"
-CREATE_EVENT_SCHEMA = vol.All(
+CREATE_EVENT_SCHEMA = probatio.All(
     cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
     cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
     cv.make_entity_service_schema(
         {
-            vol.Required(EVENT_SUMMARY): cv.string,
-            vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
-            vol.Optional(EVENT_LOCATION): cv.string,
-            vol.Inclusive(
+            probatio.Required(EVENT_SUMMARY): cv.string,
+            probatio.Optional(EVENT_DESCRIPTION, default=""): cv.string,
+            probatio.Optional(EVENT_LOCATION): cv.string,
+            probatio.Inclusive(
                 EVENT_START_DATE, "dates", "Start and end dates must both be specified"
             ): cv.date,
-            vol.Inclusive(
+            probatio.Inclusive(
                 EVENT_END_DATE, "dates", "Start and end dates must both be specified"
             ): cv.date,
-            vol.Inclusive(
+            probatio.Inclusive(
                 EVENT_START_DATETIME,
                 "datetimes",
                 "Start and end datetimes must both be specified",
             ): cv.datetime,
-            vol.Inclusive(
+            probatio.Inclusive(
                 EVENT_END_DATETIME,
                 "datetimes",
                 "Start and end datetimes must both be specified",
             ): cv.datetime,
-            vol.Optional(EVENT_IN): vol.Schema(
+            probatio.Optional(EVENT_IN): probatio.Schema(
                 {
-                    vol.Exclusive(EVENT_IN_DAYS, EVENT_TYPES): cv.positive_int,
-                    vol.Exclusive(EVENT_IN_WEEKS, EVENT_TYPES): cv.positive_int,
+                    probatio.Exclusive(EVENT_IN_DAYS, EVENT_TYPES): cv.positive_int,
+                    probatio.Exclusive(EVENT_IN_WEEKS, EVENT_TYPES): cv.positive_int,
                 }
             ),
         },
@@ -260,15 +261,15 @@ CREATE_EVENT_SCHEMA = vol.All(
     _has_min_duration(EVENT_START_DATETIME, EVENT_END_DATETIME, MIN_NEW_EVENT_DURATION),
 )
 
-WEBSOCKET_EVENT_SCHEMA = vol.Schema(
-    vol.All(
+WEBSOCKET_EVENT_SCHEMA = probatio.Schema(
+    probatio.All(
         {
-            vol.Required(EVENT_START): vol.Any(cv.date, cv.datetime),
-            vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
-            vol.Required(EVENT_SUMMARY): cv.string,
-            vol.Optional(EVENT_DESCRIPTION): cv.string,
-            vol.Optional(EVENT_LOCATION): cv.string,
-            vol.Optional(EVENT_RRULE): _validate_rrule,
+            probatio.Required(EVENT_START): probatio.Any(cv.date, cv.datetime),
+            probatio.Required(EVENT_END): probatio.Any(cv.date, cv.datetime),
+            probatio.Required(EVENT_SUMMARY): cv.string,
+            probatio.Optional(EVENT_DESCRIPTION): cv.string,
+            probatio.Optional(EVENT_LOCATION): cv.string,
+            probatio.Optional(EVENT_RRULE): _validate_rrule,
         },
         _has_same_type(EVENT_START, EVENT_END),
         _has_consistent_timezone(EVENT_START, EVENT_END),
@@ -278,31 +279,31 @@ WEBSOCKET_EVENT_SCHEMA = vol.Schema(
 )
 
 # Validation for the CalendarEvent dataclass
-CALENDAR_EVENT_SCHEMA = vol.Schema(
-    vol.All(
+CALENDAR_EVENT_SCHEMA = probatio.Schema(
+    probatio.All(
         {
-            vol.Required("start"): vol.Any(cv.date, cv.datetime),
-            vol.Required("end"): vol.Any(cv.date, cv.datetime),
-            vol.Required(EVENT_SUMMARY): cv.string,
-            vol.Optional(EVENT_RRULE): _validate_rrule,
+            probatio.Required("start"): probatio.Any(cv.date, cv.datetime),
+            probatio.Required("end"): probatio.Any(cv.date, cv.datetime),
+            probatio.Required(EVENT_SUMMARY): cv.string,
+            probatio.Optional(EVENT_RRULE): _validate_rrule,
         },
         _has_same_type("start", "end"),
         _has_timezone("start", "end"),
         _as_local_timezone("start", "end"),
         _has_min_duration("start", "end", MIN_EVENT_DURATION),
     ),
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 SERVICE_GET_EVENTS: Final = "get_events"
-SERVICE_GET_EVENTS_SCHEMA: Final = vol.All(
+SERVICE_GET_EVENTS_SCHEMA: Final = probatio.All(
     cv.has_at_least_one_key(EVENT_END_DATETIME, EVENT_DURATION),
     cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
     cv.make_entity_service_schema(
         {
-            vol.Optional(EVENT_START_DATETIME): cv.datetime,
-            vol.Optional(EVENT_END_DATETIME): cv.datetime,
-            vol.Optional(EVENT_DURATION): vol.All(
+            probatio.Optional(EVENT_START_DATETIME): cv.datetime,
+            probatio.Optional(EVENT_END_DATETIME): cv.datetime,
+            probatio.Optional(EVENT_DURATION): probatio.All(
                 cv.time_period, cv.positive_timedelta
             ),
         }
@@ -379,6 +380,7 @@ class CalendarEvent:
     uid: str | None = None
     recurrence_id: str | None = None
     rrule: str | None = None
+    status: CalendarEventStatus | None = None
 
     @property
     def start_datetime_local(self) -> datetime.datetime:
@@ -410,7 +412,7 @@ class CalendarEvent:
 
         try:
             CALENDAR_EVENT_SCHEMA(dataclasses.asdict(self, dict_factory=skip_none))
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             raise HomeAssistantError(
                 f"Failed to validate CalendarEvent: {err}"
             ) from err
@@ -520,7 +522,9 @@ class CalendarEntity(Entity):
 
     entity_description: CalendarEntityDescription
 
-    _entity_component_unrecorded_attributes = frozenset({"description"})
+    _entity_component_unrecorded_attributes = frozenset(
+        {CalendarEntityStateAttribute.DESCRIPTION}
+    )
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
     _event_listeners: (
@@ -546,6 +550,7 @@ class CalendarEntity(Entity):
             return self.entity_description.initial_color
         return None
 
+    @override
     def get_initial_entity_options(self) -> er.EntityOptionsType | None:
         """Return initial entity options."""
         if self.initial_color is None:
@@ -554,7 +559,7 @@ class CalendarEntity(Entity):
         # Validate that it's a valid hex color string with # prefix
         try:
             validated_color = cv.color_hex(self.initial_color)
-        except vol.Invalid:
+        except probatio.Invalid:
             return None
 
         return {DOMAIN: {"color": validated_color}}
@@ -566,22 +571,28 @@ class CalendarEntity(Entity):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the entity state attributes."""
         if (event := self.event) is None:
             return None
 
         return {
-            "message": event.summary,
-            "all_day": event.all_day,
-            "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
-            "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
-            "location": event.location or "",
-            "description": event.description or "",
+            CalendarEntityStateAttribute.MESSAGE: event.summary,
+            CalendarEntityStateAttribute.ALL_DAY: event.all_day,
+            CalendarEntityStateAttribute.START_TIME: event.start_datetime_local.strftime(
+                DATE_STR_FORMAT
+            ),
+            CalendarEntityStateAttribute.END_TIME: event.end_datetime_local.strftime(
+                DATE_STR_FORMAT
+            ),
+            CalendarEntityStateAttribute.LOCATION: event.location or "",
+            CalendarEntityStateAttribute.DESCRIPTION: event.description or "",
         }
 
     @final
     @property
+    @override
     def state(self) -> str:
         """Return the state of the calendar event."""
         if (event := self.event) is None:
@@ -595,6 +606,7 @@ class CalendarEntity(Entity):
         return STATE_OFF
 
     @callback
+    @override
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine.
 
@@ -653,6 +665,7 @@ class CalendarEntity(Entity):
             self._event_listener_debouncer.async_cancel()
             self._event_listener_debouncer = None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
 
@@ -860,8 +873,8 @@ class CalendarListView(http.HomeAssistantView):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "calendar/event/create",
-        vol.Required("entity_id"): cv.entity_id,
+        probatio.Required("type"): "calendar/event/create",
+        probatio.Required("entity_id"): cv.entity_id,
         CONF_EVENT: WEBSOCKET_EVENT_SCHEMA,
     }
 )
@@ -898,13 +911,13 @@ async def handle_calendar_event_create(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "calendar/event/delete",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Required(EVENT_UID): cv.string,
-        vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
-            vol.All(cv.string, _empty_as_none), None
+        probatio.Required("type"): "calendar/event/delete",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Required(EVENT_UID): cv.string,
+        probatio.Optional(EVENT_RECURRENCE_ID): probatio.Any(
+            probatio.All(cv.string, _empty_as_none), None
         ),
-        vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+        probatio.Optional(EVENT_RECURRENCE_RANGE): cv.string,
     }
 )
 @websocket_api.async_response
@@ -945,14 +958,14 @@ async def handle_calendar_event_delete(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "calendar/event/update",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Required(EVENT_UID): cv.string,
-        vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
-            vol.All(cv.string, _empty_as_none), None
+        probatio.Required("type"): "calendar/event/update",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Required(EVENT_UID): cv.string,
+        probatio.Optional(EVENT_RECURRENCE_ID): probatio.Any(
+            probatio.All(cv.string, _empty_as_none), None
         ),
-        vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
-        vol.Required(CONF_EVENT): WEBSOCKET_EVENT_SCHEMA,
+        probatio.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+        probatio.Required(CONF_EVENT): WEBSOCKET_EVENT_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -994,10 +1007,10 @@ async def handle_calendar_event_update(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "calendar/event/subscribe",
-        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
-        vol.Required("start"): cv.datetime,
-        vol.Required("end"): cv.datetime,
+        probatio.Required("type"): "calendar/event/subscribe",
+        probatio.Required("entity_id"): cv.entity_domain(DOMAIN),
+        probatio.Required("start"): cv.datetime,
+        probatio.Required("end"): cv.datetime,
     }
 )
 @websocket_api.async_response

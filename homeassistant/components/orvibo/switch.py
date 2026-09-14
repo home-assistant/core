@@ -1,10 +1,10 @@
 """Switch platform for the Orvibo integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from orvibo.s20 import S20, S20Exception
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components.switch import (
@@ -42,17 +42,17 @@ PARALLEL_UPDATES = 1
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_SWITCHES, default=[]): vol.All(
+        probatio.Required(CONF_SWITCHES, default=[]): probatio.All(
             cv.ensure_list,
             [
                 {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Optional(CONF_MAC): cv.string,
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                    probatio.Required(CONF_HOST): cv.string,
+                    probatio.Optional(CONF_MAC): cv.string,
+                    probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 }
             ],
         ),
-        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+        probatio.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
     }
 )
 
@@ -155,6 +155,7 @@ class S20Switch(SwitchEntity):
             connections={(CONNECTION_NETWORK_MAC, self._mac)},
         )
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         try:
@@ -166,6 +167,7 @@ class S20Switch(SwitchEntity):
                 translation_placeholders={"name": self._name},
             ) from err
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         try:

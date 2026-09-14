@@ -95,6 +95,7 @@ components: &components
   - homeassistant/components/input_select/**
   - homeassistant/components/input_text/**
   - homeassistant/components/labs/**
+  - homeassistant/components/llm/**
   - homeassistant/components/logbook/**
   - homeassistant/components/logger/**
   - homeassistant/components/lovelace/**
@@ -117,6 +118,7 @@ components: &components
   - homeassistant/components/sun/**
   - homeassistant/components/system_health/**
   - homeassistant/components/tag/**
+  - homeassistant/components/telegram_bot/**
   - homeassistant/components/template/**
   - homeassistant/components/timer/**
   - homeassistant/components/trace/**

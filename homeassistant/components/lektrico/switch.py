@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from lektricowifi import Device
 
@@ -97,10 +97,12 @@ class LektricoSwitch(LektricoEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.set_value_fn(
@@ -108,6 +110,7 @@ class LektricoSwitch(LektricoEntity, SwitchEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.set_value_fn(

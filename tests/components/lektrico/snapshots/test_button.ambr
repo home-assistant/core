@@ -39,7 +39,7 @@
 # name: test_all_entities[button.1p7k_500006_charge_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1p7k_500006 Charge start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Charge start',
     }),
     'context': <ANY>,
     'entity_id': 'button.1p7k_500006_charge_start',
@@ -89,7 +89,7 @@
 # name: test_all_entities[button.1p7k_500006_charge_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1p7k_500006 Charge stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Charge stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.1p7k_500006_charge_stop',
@@ -139,7 +139,7 @@
 # name: test_all_entities[button.1p7k_500006_charging_schedule_override-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1p7k_500006 Charging schedule override',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Charging schedule override',
     }),
     'context': <ANY>,
     'entity_id': 'button.1p7k_500006_charging_schedule_override',
@@ -189,8 +189,8 @@
 # name: test_all_entities[button.1p7k_500006_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': '1p7k_500006 Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.1p7k_500006_restart',

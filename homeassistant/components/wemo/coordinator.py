@@ -5,7 +5,7 @@ from dataclasses import dataclass, fields
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Literal
+from typing import Literal, override
 
 from pywemo import Insight, LongPressMixin, WeMoDevice
 from pywemo.exceptions import ActionException, PyWeMoException
@@ -140,6 +140,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
                 )
             )
 
+    @override
     async def async_shutdown(self) -> None:
         """Unregister push subscriptions and remove from coordinators dict."""
         if self._shutdown_requested:
@@ -239,6 +240,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
             and self.last_update_success
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Update WeMo state."""
         # No need to poll if the device will push updates.

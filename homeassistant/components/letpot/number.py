@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from letpot.deviceclient import LetPotDeviceClient
 from letpot.models import DeviceFeature, LetPotDeviceStatus, LetPotGardenStatus
@@ -130,16 +130,19 @@ class LetPotNumberEntity[_DataT: LetPotDeviceStatus](
         )
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum available value."""
         return self.entity_description.max_value_fn(self.coordinator)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the number value."""
         return self.entity_description.value_fn(self.coordinator)
 
     @exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the number value."""
         return await self.entity_description.set_value_fn(

@@ -647,3 +647,158 @@ async def test_handle_unique_id_change(
     # Verify that the old unique id is removed from the allocations
     # and that the new unique id assumes the old aid
     assert aid_storage.allocations == {"demo.light.new_unique": 4202023227}
+
+
+async def test_entity_is_allocated(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test detecting whether an entity already has an allocated aid."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    light_ent = entity_registry.async_get_or_create(
+        "light", "device", "unique_id", device_id=device_entry.id
+    )
+    hass.states.async_set(light_ent.entity_id, "on")
+    hass.states.async_set("remote.has_no_unique_id", "on")
+
+    with patch(
+        "homeassistant.components.homekit.aidmanager.AccessoryAidStorage.async_schedule_save"
+    ):
+        aid_storage = AccessoryAidStorage(hass, config_entry.entry_id)
+    await aid_storage.async_initialize()
+
+    # Nothing allocated yet
+    assert not aid_storage.entity_is_allocated(light_ent.entity_id)
+    assert not aid_storage.entity_is_allocated("remote.has_no_unique_id")
+
+    # Allocation is keyed by the system unique id for registered entities
+    aid_storage.get_or_allocate_aid_for_entity_id(light_ent.entity_id)
+    assert aid_storage.entity_is_allocated(light_ent.entity_id)
+
+    # Unregistered entities are keyed by entity id
+    aid_storage.get_or_allocate_aid_for_entity_id("remote.has_no_unique_id")
+    assert aid_storage.entity_is_allocated("remote.has_no_unique_id")
+
+    # A changed unique id is still recognized through previous_unique_id
+    entity_registry.async_update_entity(
+        light_ent.entity_id, new_unique_id="new_unique_id"
+    )
+    assert aid_storage.entity_is_allocated(light_ent.entity_id)
+
+
+async def test_accessory_type_round_trip(hass: HomeAssistant) -> None:
+    """Test the stored accessory type persists through storage."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    aid_storage = AccessoryAidStorage(hass, config_entry.entry_id)
+    await aid_storage.async_initialize()
+    assert aid_storage.get_accessory_type("climate.demo") is None
+
+    # Setting the current value again is a no-op
+    aid_storage.async_set_accessory_type("climate.demo", None)
+    assert aid_storage.get_accessory_type("climate.demo") is None
+
+    aid_storage.async_set_accessory_type("climate.demo", "heater_cooler")
+    aid_storage.async_set_accessory_type("climate.demo", "heater_cooler")
+    await aid_storage.async_save()
+
+    fresh_storage = AccessoryAidStorage(hass, config_entry.entry_id)
+    await fresh_storage.async_initialize()
+    assert fresh_storage.get_accessory_type("climate.demo") == "heater_cooler"
+
+    fresh_storage.async_set_accessory_type("climate.demo", None)
+    await fresh_storage.async_save()
+
+    final_storage = AccessoryAidStorage(hass, config_entry.entry_id)
+    await final_storage.async_initialize()
+    assert final_storage.get_accessory_type("climate.demo") is None
+
+
+async def test_accessory_type_survives_repeated_unique_id_changes(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test reads heal the stored key so a second migration cannot orphan it."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    climate_ent = entity_registry.async_get_or_create(
+        "climate", "device", "u1", device_id=device_entry.id
+    )
+
+    aid_storage = AccessoryAidStorage(hass, config_entry.entry_id)
+    await aid_storage.async_initialize()
+    aid_storage.async_set_accessory_type(climate_ent.entity_id, "heater_cooler")
+
+    # Only the latest previous unique id stays resolvable, so the read
+    # moves the entry forward after each migration
+    entity_registry.async_update_entity(climate_ent.entity_id, new_unique_id="u2")
+    await hass.async_block_till_done()
+    assert aid_storage.get_accessory_type(climate_ent.entity_id) == "heater_cooler"
+    assert aid_storage.accessory_types == {"device.climate.u2": "heater_cooler"}
+
+    entity_registry.async_update_entity(climate_ent.entity_id, new_unique_id="u3")
+    await hass.async_block_till_done()
+    assert aid_storage.get_accessory_type(climate_ent.entity_id) == "heater_cooler"
+    assert aid_storage.accessory_types == {"device.climate.u3": "heater_cooler"}
+
+
+async def test_accessory_type_survives_entity_renames(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the stored accessory type follows the entity through renames."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    climate_ent = entity_registry.async_get_or_create(
+        "climate", "device", "unique_id", device_id=device_entry.id
+    )
+
+    aid_storage = AccessoryAidStorage(hass, config_entry.entry_id)
+    await aid_storage.async_initialize()
+
+    aid_storage.async_set_accessory_type(climate_ent.entity_id, "heater_cooler")
+    assert aid_storage.get_accessory_type(climate_ent.entity_id) == "heater_cooler"
+    # Registered entities are stored by the system unique id
+    assert aid_storage.accessory_types == {"device.climate.unique_id": "heater_cooler"}
+
+    # An entity id rename keeps the choice through the stable identity
+    entity_registry.async_update_entity(
+        climate_ent.entity_id, new_entity_id="climate.renamed"
+    )
+    await hass.async_block_till_done()
+    assert aid_storage.get_accessory_type("climate.renamed") == "heater_cooler"
+
+    # A unique id change is still recognized through previous_unique_id
+    entity_registry.async_update_entity(
+        "climate.renamed", new_unique_id="new_unique_id"
+    )
+    await hass.async_block_till_done()
+    assert aid_storage.get_accessory_type("climate.renamed") == "heater_cooler"
+
+    # Allocating migrates the stored choice to the new unique id
+    aid_storage.get_or_allocate_aid_for_entity_id("climate.renamed")
+    assert aid_storage.accessory_types == {
+        "device.climate.new_unique_id": "heater_cooler"
+    }
+    assert aid_storage.get_accessory_type("climate.renamed") == "heater_cooler"
+
+    # Clearing the choice removes the stored identity
+    aid_storage.async_set_accessory_type("climate.renamed", None)
+    assert aid_storage.get_accessory_type("climate.renamed") is None
+    assert not aid_storage.accessory_types

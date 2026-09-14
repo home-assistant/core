@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aioruckus import AjaxSession
 from aioruckus.exceptions import AuthenticationError, SchemaError
@@ -46,11 +47,13 @@ class RuckusDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("fetched %d active clients", len(clients))
         return {client[API_CLIENT_MAC]: client for client in clients}
 
+    @override
     async def async_shutdown(self) -> None:
         """Close the Ruckus session on shutdown."""
         await super().async_shutdown()
         await self.ruckus.close()
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch Ruckus data."""
         try:

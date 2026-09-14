@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Generic
+from typing import Any, Generic, override
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Pet, Robot
 
@@ -128,8 +128,8 @@ ROBOT_SENSOR_MAP: dict[
             value_fn=lambda robot: robot.cycle_count,
         ),
     ],
-    LitterRobot4: [
-        RobotSensorEntityDescription[LitterRobot4](
+    (LitterRobot4, LitterRobot5): [
+        RobotSensorEntityDescription[LitterRobot4 | LitterRobot5](
             key="hopper_status",
             translation_key="hopper_status",
             device_class=SensorDeviceClass.ENUM,
@@ -140,6 +140,10 @@ ROBOT_SENSOR_MAP: dict[
                 "motor_ot_amps",
                 "motor_disconnected",
                 "empty",
+                "litter_low",
+                "ready",
+                "jammed",
+                "offline",
             ],
             value_fn=(
                 lambda robot: (
@@ -147,8 +151,6 @@ ROBOT_SENSOR_MAP: dict[
                 )
             ),
         ),
-    ],
-    (LitterRobot4, LitterRobot5): [
         RobotSensorEntityDescription[LitterRobot4 | LitterRobot5](
             key="litter_level",
             translation_key="litter_level",
@@ -295,11 +297,13 @@ class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
     entity_description: RobotSensorEntityDescription[_WhiskerEntityT]
 
     @property
+    @override
     def native_value(self) -> float | datetime | str | None:
         """Return the state."""
         return self.entity_description.value_fn(self.robot)
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
         if (icon := self.entity_description.icon_fn(self.state)) is not None:
@@ -307,6 +311,7 @@ class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
         return super().icon
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         return self.entity_description.last_reset_fn() or super().last_reset

@@ -2,11 +2,10 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.duplicate_const import DuplicateConstChecker
 import pytest
 
-from . import assert_no_messages
+from . import assert_no_messages, walk_checker
 
 # Pre-load homeassistant.const so astroid can resolve it.
 astroid.MANAGER.ast_from_module_name("homeassistant.const")
@@ -64,11 +63,9 @@ def test_no_warning(
 ) -> None:
     """Test cases that should not trigger a warning."""
     root_node = astroid.parse(code, "homeassistant.components.test_integration.const")
-    walker = ASTWalker(linter)
-    walker.add_checker(duplicate_const_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, duplicate_const_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -121,9 +118,7 @@ def test_duplicate_const_flagged(
 ) -> None:
     """Test that duplicate constants are flagged."""
     root_node = astroid.parse(code, "homeassistant.components.test_integration.const")
-    walker = ASTWalker(linter)
-    walker.add_checker(duplicate_const_checker)
-    walker.walk(root_node)
+    walk_checker(linter, duplicate_const_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -142,8 +137,6 @@ CONF_HOST = "host"
 """,
         "tests.components.test_integration.test_const",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(duplicate_const_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, duplicate_const_checker, root_node)

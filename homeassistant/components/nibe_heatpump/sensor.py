@@ -1,5 +1,7 @@
 """The Nibe Heat Pump sensors."""
 
+from typing import override
+
 from nibe.coil import Coil, CoilData
 
 from homeassistant.components.sensor import (
@@ -162,6 +164,13 @@ UNIT_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
     ),
+    "l/min": SensorEntityDescription(
+        key="l/min",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+    ),
     "m³/h": SensorEntityDescription(
         key="m³/h",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -212,5 +221,6 @@ class Sensor(CoilEntity, SensorEntity):
             self._attr_native_unit_of_measurement = coil.unit
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
+    @override
     def _async_read_coil(self, data: CoilData):
         self._attr_native_value = data.value

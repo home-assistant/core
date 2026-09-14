@@ -3,7 +3,7 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from aioflo.api import API
 from aioflo.errors import RequestError
@@ -57,6 +57,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=60),
         )
 
+    @override
     async def _async_update_data(self):
         """Update data via library."""
         try:
@@ -246,6 +247,9 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         start_date = datetime(today.year, today.month, today.day, 0, 0)
         end_date = datetime(today.year, today.month, today.day, 23, 59, 59, 999000)
         self._water_usage = await self.api_client.water.get_consumption_info(
-            self._flo_location_id, start_date, end_date
+            self._flo_location_id,
+            start_date,
+            end_date,
+            device_mac_address=self.mac_address,
         )
         LOGGER.debug("Updated Flo consumption data: %s", self._water_usage)

@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import dataclasses
-from typing import Any
+from typing import Any, override
 
 from bthome_ble import BTHomeBluetoothDeviceData as DeviceData
 from bthome_ble.parser import EncryptionScheme
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import onboarding
 from homeassistant.components.bluetooth import (
@@ -43,6 +43,7 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: DeviceData | None = None
         self._discovered_devices: dict[str, Discovery] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -93,7 +94,9 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="get_encryption_key",
             description_placeholders=self.context["title_placeholders"],
-            data_schema=vol.Schema({vol.Required("bindkey"): vol.All(str, vol.Strip)}),
+            data_schema=probatio.Schema(
+                {probatio.Required("bindkey"): probatio.All(str, probatio.Strip)}
+            ),
             errors=errors,
         )
 
@@ -110,6 +113,7 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -152,7 +156,9 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): probatio.In(titles)}
+            ),
         )
 
     async def async_step_reauth(

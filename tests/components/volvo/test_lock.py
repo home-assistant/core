@@ -162,3 +162,51 @@ async def test_lock_unavailable_when_api_field_missing(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("full_model")
+async def test_ha_lock_triggers_location_update(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+    mock_api: VolvoCarsApi,
+) -> None:
+    """Test that locking via HA triggers a location update."""
+
+    with patch("homeassistant.components.volvo.PLATFORMS", [Platform.LOCK]):
+        assert await setup_integration()
+
+    location_call_count_before: int = mock_api.async_get_location.call_count
+
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_LOCK,
+        {ATTR_ENTITY_ID: "lock.volvo_xc40_lock"},
+        blocking=True,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_api.async_get_location.call_count > location_call_count_before
+
+
+@pytest.mark.usefixtures("full_model")
+async def test_ha_unlock_does_not_trigger_location_update(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+    mock_api: VolvoCarsApi,
+) -> None:
+    """Test that unlocking via HA does not trigger a location update."""
+
+    with patch("homeassistant.components.volvo.PLATFORMS", [Platform.LOCK]):
+        assert await setup_integration()
+
+    location_call_count_before: int = mock_api.async_get_location.call_count
+
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: "lock.volvo_xc40_lock"},
+        blocking=True,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_api.async_get_location.call_count == location_call_count_before

@@ -39,7 +39,7 @@
 # name: test_switch[switch.adguard_home_filtering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Filtering',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Filtering',
     }),
     'context': <ANY>,
     'entity_id': 'switch.adguard_home_filtering',
@@ -89,7 +89,7 @@
 # name: test_switch[switch.adguard_home_parental_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Parental control',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Parental control',
     }),
     'context': <ANY>,
     'entity_id': 'switch.adguard_home_parental_control',
@@ -139,7 +139,7 @@
 # name: test_switch[switch.adguard_home_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Protection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.adguard_home_protection',
@@ -189,7 +189,7 @@
 # name: test_switch[switch.adguard_home_query_log-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Query log',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Query log',
     }),
     'context': <ANY>,
     'entity_id': 'switch.adguard_home_query_log',
@@ -239,7 +239,7 @@
 # name: test_switch[switch.adguard_home_safe_browsing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Safe browsing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Safe browsing',
     }),
     'context': <ANY>,
     'entity_id': 'switch.adguard_home_safe_browsing',
@@ -289,7 +289,7 @@
 # name: test_switch[switch.adguard_home_safe_search-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Safe search',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Safe search',
     }),
     'context': <ANY>,
     'entity_id': 'switch.adguard_home_safe_search',

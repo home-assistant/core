@@ -1,9 +1,10 @@
 """Config flow to configure ZWaveMe integration."""
 
 import logging
+from typing import override
 
+import probatio
 from url_normalize import url_normalize
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, CONF_URL
@@ -24,6 +25,7 @@ class ZWaveMeConfigFlow(ConfigFlow, domain=DOMAIN):
         self.token: str | None = None
         self.uuid: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -41,16 +43,16 @@ class ZWaveMeConfigFlow(ConfigFlow, domain=DOMAIN):
             "remote_url": "wss://87.250.250.242:8083",
         }
         if self.url is None:
-            schema = vol.Schema(
+            schema = probatio.Schema(
                 {
-                    vol.Required(CONF_URL): str,
-                    vol.Required(CONF_TOKEN): str,
+                    probatio.Required(CONF_URL): str,
+                    probatio.Required(CONF_TOKEN): str,
                 }
             )
         else:
-            schema = vol.Schema(
+            schema = probatio.Schema(
                 {
-                    vol.Required(CONF_TOKEN): str,
+                    probatio.Required(CONF_TOKEN): str,
                 }
             )
 
@@ -84,6 +86,7 @@ class ZWaveMeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

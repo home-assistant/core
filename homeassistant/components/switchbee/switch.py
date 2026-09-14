@@ -1,6 +1,6 @@
 """Support for SwitchBee switch."""
 
-from typing import Any
+from typing import Any, override
 
 from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import (
@@ -61,6 +61,7 @@ class SwitchBeeSwitchEntity[
         self._attr_is_on = False
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_from_coordinator()
@@ -82,10 +83,12 @@ class SwitchBeeSwitchEntity[
         # regular switches state is ON/OFF (1/0 respectively)
         self._attr_is_on = coordinator_device.state != ApiStateCommand.OFF
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async function to set on to switch."""
         return await self._async_set_state(ApiStateCommand.ON)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Async function to set off to switch."""
         return await self._async_set_state(ApiStateCommand.OFF)

@@ -3,10 +3,10 @@
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -33,8 +33,8 @@ URL = "https://haveibeenpwned.com/api/v3/breachedaccount/"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_EMAIL): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_API_KEY): cv.string,
     }
 )
 
@@ -66,6 +66,7 @@ class HaveIBeenPwnedSensor(SensorEntity):
         self._attr_native_unit_of_measurement = "Breaches"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes of the sensor."""
         val: dict[str, Any] = {}
@@ -83,6 +84,7 @@ class HaveIBeenPwnedSensor(SensorEntity):
 
         return val
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Get initial data."""
         # To make sure we get initial data for the sensors ignoring the normal

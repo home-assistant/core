@@ -1,11 +1,11 @@
 """Config flow for TRMNL."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from trmnl import TRMNLClient
 from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -18,7 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
-STEP_USER_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+STEP_USER_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
 
 TRMNL_ACCOUNT_URL = "https://trmnl.com/account"
 
@@ -26,6 +26,7 @@ TRMNL_ACCOUNT_URL = "https://trmnl.com/account"
 class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
     """TRMNL config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

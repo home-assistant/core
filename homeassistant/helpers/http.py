@@ -16,7 +16,7 @@ from aiohttp.web_exceptions import (
     HTTPUnauthorized,
 )
 from aiohttp.web_urldispatcher import AbstractResource, AbstractRoute
-import voluptuous as vol
+import probatio
 
 from homeassistant import exceptions
 from homeassistant.const import CONTENT_TYPE_JSON
@@ -26,6 +26,10 @@ from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS, format_unserializabl
 from .json import find_paths_unserializable_data, json_bytes, json_dumps
 
 _LOGGER = logging.getLogger(__name__)
+
+# Responses smaller than this fit within a single network packet, so
+# compressing them wastes event-loop CPU without reducing round-trips.
+MIN_COMPRESSED_RESPONSE_SIZE: Final = 1024
 
 
 type AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
@@ -60,12 +64,9 @@ def request_handler_factory(
             from .network import NoURLAvailableError, get_url  # noqa: PLC0415
 
             # Get the current request header to include as resource metadata
-            # endpoint for RFC9728. We currently prefer external since this
-            # is likely most used by remote OAuth clients
+            # endpoint for RFC9728.
             try:
-                url_prefix = get_url(
-                    hass, require_current_request=True, prefer_external=True
-                )
+                url_prefix = get_url(hass, require_current_request=True)
             except NoURLAvailableError:
                 # Omit header to avoid leaking configured URLs
                 raise HTTPUnauthorized from None
@@ -91,7 +92,7 @@ def request_handler_factory(
                 result = await handler(request, **request.match_info)
             else:
                 result = handler(request, **request.match_info)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             raise HTTPBadRequest from err
         except exceptions.ServiceNotFound as err:
             raise HTTPInternalServerError from err
@@ -163,7 +164,8 @@ class HomeAssistantView:
             headers=headers,
             zlib_executor_size=32768,
         )
-        response.enable_compression()
+        if len(msg) > MIN_COMPRESSED_RESPONSE_SIZE:
+            response.enable_compression()
         return response
 
     def json_message(

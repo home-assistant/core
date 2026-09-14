@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 import datetime
 import logging
+from typing import override
 
 import aiohttp
 from pyrainbird.async_client import (
@@ -13,9 +14,10 @@ from pyrainbird.async_client import (
 )
 from pyrainbird.data import ModelAndVersion, Schedule
 
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
@@ -104,14 +106,20 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
         """Return information about the device."""
         if self._unique_id is None:
             return None
-        return DeviceInfo(
+        device_info = DeviceInfo(
             name=self.device_name,
             identifiers={(DOMAIN, self._unique_id)},
             manufacturer=MANUFACTURER,
             model=self._model_info.model_name,
             sw_version=f"{self._model_info.major}.{self._model_info.minor}",
         )
+        # The unique id is the formatted MAC for current config entries, but was
+        # historically the serial number, so derive the connection from the MAC.
+        if mac_address := self.config_entry.data.get(CONF_MAC):
+            device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac_address)}
+        return device_info
 
+    @override
     async def _async_update_data(self) -> RainbirdDeviceState:
         """Fetch data from Rain Bird device."""
         try:
@@ -165,6 +173,7 @@ class RainbirdScheduleUpdateCoordinator(DataUpdateCoordinator[Schedule]):
         self._controller = controller
         self._device_lock = device_lock
 
+    @override
     async def _async_update_data(self) -> Schedule:
         """Fetch data from Rain Bird device."""
         try:

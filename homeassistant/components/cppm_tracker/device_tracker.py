@@ -2,9 +2,10 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from clearpasspy import ClearPass
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -22,9 +23,9 @@ GRANT_TYPE = "client_credentials"
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_CLIENT_ID): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
     }
 )
 
@@ -57,11 +58,13 @@ class CPPMDeviceScanner(DeviceScanner):
         self._cppm = cppm
         self.results = None
 
+    @override
     def scan_devices(self):
         """Initialize scanner."""
         self.get_cppm_data()
         return [device["mac"] for device in self.results]
 
+    @override
     def get_device_name(self, device):
         """Retrieve device name."""
         return next(

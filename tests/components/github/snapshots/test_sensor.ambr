@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,9 +41,9 @@
 # name: test_all_entities[sensor.octocat_followers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'octocat Followers',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'followers',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat Followers',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'followers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.octocat_followers',
@@ -60,7 +60,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -95,9 +95,9 @@
 # name: test_all_entities[sensor.octocat_following-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'octocat Following',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'users',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat Following',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'users',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.octocat_following',
@@ -114,7 +114,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -149,10 +149,10 @@
 # name: test_all_entities[sensor.octocat_hello_world_discussions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Discussions',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'discussions',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Discussions',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'discussions',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.octocat_hello_world_discussions',
@@ -169,7 +169,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -204,10 +204,10 @@
 # name: test_all_entities[sensor.octocat_hello_world_forks-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Forks',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'forks',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Forks',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'forks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.octocat_hello_world_forks',
@@ -224,7 +224,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -259,10 +259,10 @@
 # name: test_all_entities[sensor.octocat_hello_world_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Issues',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'issues',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Issues',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.octocat_hello_world_issues',
@@ -312,8 +312,8 @@
 # name: test_all_entities[sensor.octocat_hello_world_latest_commit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Latest commit',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest commit',
       'sha': '6dcb09b5b57875f334f61aebed695e2e4193db5e',
       'url': 'https://github.com/octocat/Hello-World/commit/6dcb09b5b57875f334f61aebed695e2e4193db5e',
     }),
@@ -365,8 +365,8 @@
 # name: test_all_entities[sensor.octocat_hello_world_latest_discussion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Latest discussion',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest discussion',
       'number': 1347,
       'url': 'https://github.com/octocat/Hello-World/discussions/1347',
     }),
@@ -418,8 +418,8 @@
 # name: test_all_entities[sensor.octocat_hello_world_latest_issue-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Latest issue',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest issue',
       'number': 1347,
       'url': 'https://github.com/octocat/Hello-World/issues/1347',
     }),
@@ -471,8 +471,8 @@
 # name: test_all_entities[sensor.octocat_hello_world_latest_pull_request-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Latest pull request',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest pull request',
       'number': 1347,
       'url': 'https://github.com/octocat/Hello-World/pull/1347',
     }),
@@ -524,8 +524,8 @@
 # name: test_all_entities[sensor.octocat_hello_world_latest_release-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Latest release',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest release',
       'tag': 'v1.0.0',
       'url': 'https://github.com/octocat/Hello-World/releases/v1.0.0',
     }),
@@ -577,8 +577,8 @@
 # name: test_all_entities[sensor.octocat_hello_world_latest_tag-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Latest tag',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest tag',
       'url': 'https://github.com/octocat/Hello-World/commit/6dcb09b5b57875f334f61aebed695e2e4193db5e',
     }),
     'context': <ANY>,
@@ -596,7 +596,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -631,10 +631,10 @@
 # name: test_all_entities[sensor.octocat_hello_world_merged_pull_requests-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Merged pull requests',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'pull requests',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Merged pull requests',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pull requests',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.octocat_hello_world_merged_pull_requests',
@@ -651,7 +651,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -686,10 +686,10 @@
 # name: test_all_entities[sensor.octocat_hello_world_pull_requests-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Pull requests',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pull requests',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Pull requests',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pull requests',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.octocat_hello_world_pull_requests',
@@ -706,7 +706,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -741,10 +741,10 @@
 # name: test_all_entities[sensor.octocat_hello_world_stars-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Stars',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'stars',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Stars',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'stars',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.octocat_hello_world_stars',
@@ -761,7 +761,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -796,10 +796,10 @@
 # name: test_all_entities[sensor.octocat_hello_world_watchers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by the GitHub API',
-      'friendly_name': 'octocat/Hello-World Watchers',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'watchers',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Watchers',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'watchers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.octocat_hello_world_watchers',
@@ -816,7 +816,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -851,9 +851,9 @@
 # name: test_all_entities[sensor.octocat_public_gists-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'octocat Public gists',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gists',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat Public gists',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'gists',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.octocat_public_gists',
@@ -870,7 +870,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -905,9 +905,9 @@
 # name: test_all_entities[sensor.octocat_public_repositories-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'octocat Public repositories',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'repositories',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat Public repositories',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'repositories',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.octocat_public_repositories',

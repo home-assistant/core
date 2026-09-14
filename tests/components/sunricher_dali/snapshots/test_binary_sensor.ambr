@@ -39,8 +39,8 @@
 # name: test_setup_entry[binary_sensor.motion_sensor_0000_10_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'Motion Sensor 0000-10 Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion Sensor 0000-10 Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.motion_sensor_0000_10_motion',
@@ -90,8 +90,8 @@
 # name: test_setup_entry[binary_sensor.motion_sensor_0000_10_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Motion Sensor 0000-10 Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion Sensor 0000-10 Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.motion_sensor_0000_10_occupancy',

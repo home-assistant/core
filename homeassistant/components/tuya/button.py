@@ -1,5 +1,7 @@
 """Support for Tuya buttons."""
 
+from typing import override
+
 from tuya_device_handlers.definition.button import (
     ButtonDefinition,
     get_default_definition,
@@ -121,6 +123,7 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
         super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.button_wrapper
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, True)

@@ -1,10 +1,10 @@
 """Support for Rflink sensors."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from rflink.parser import PACKET_FIELDS, UNITS
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -15,14 +15,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     CONF_DEVICES,
     CONF_NAME,
     CONF_SENSOR_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
     UV_INDEX,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -30,6 +28,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolumetricFlux,
@@ -85,7 +84,7 @@ SENSOR_TYPES = (
         name="CO2 air quality",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     SensorEntityDescription(
         key="command",
@@ -140,7 +139,7 @@ SENSOR_TYPES = (
         name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     SensorEntityDescription(
         key="humidity_status",
@@ -269,14 +268,14 @@ SENSOR_TYPES = (
 SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
 RFLINK_PLATFORM = {
-    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-    vol.Optional(CONF_DEVICES, default={}): {
-        cv.string: vol.Schema(
+    probatio.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
+    probatio.Optional(CONF_DEVICES, default={}): {
+        cv.string: probatio.Schema(
             {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Required(CONF_SENSOR_TYPE): cv.string,
-                vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Required(CONF_SENSOR_TYPE): cv.string,
+                probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
             }
@@ -286,7 +285,7 @@ RFLINK_PLATFORM = {
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -370,10 +369,12 @@ class RflinkSensor(RflinkDevice, SensorEntity):
 
         super().__init__(device_id, initial_event=initial_event, **kwargs)
 
+    @override
     def _handle_event(self, event):
         """Domain specific event handler."""
         self._state = event["value"]
 
+    @override
     # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
@@ -414,6 +415,7 @@ class RflinkSensor(RflinkDevice, SensorEntity):
             self.handle_event_callback(self._initial_event)
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return measurement unit."""
         if self._unit_of_measurement:
@@ -423,6 +425,7 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         return None
 
     @property
+    @override
     def native_value(self):
         """Return value."""
         return self._state

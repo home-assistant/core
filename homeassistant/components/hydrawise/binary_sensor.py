@@ -3,9 +3,10 @@
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
+import probatio
 from pydrawise import Controller, Zone
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -70,10 +71,12 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
 )
 
 SCHEMA_START_WATERING: VolDictType = {
-    vol.Optional("duration"): vol.All(vol.Coerce(int), vol.Range(min=0, max=1440)),
+    probatio.Optional("duration"): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=1440)
+    ),
 }
 SCHEMA_SUSPEND: VolDictType = {
-    vol.Required("until"): cv.datetime,
+    probatio.Required("until"): cv.datetime,
 }
 
 
@@ -150,11 +153,13 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
 
     entity_description: HydrawiseBinarySensorEntityDescription
 
+    @override
     def _update_attrs(self) -> None:
         """Update state attributes."""
         self._attr_is_on = self.entity_description.value_fn(self)
 
     @property
+    @override
     def available(self) -> bool:
         """Set the entity availability."""
         if self.entity_description.always_available:

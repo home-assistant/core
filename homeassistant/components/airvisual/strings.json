@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -37,6 +36,9 @@
         "title": "Re-authenticate AirVisual"
       },
       "user": {
+        "data": {
+          "type": "Integration type"
+        },
         "description": "Pick what type of AirVisual data you want to monitor.",
         "title": "Configure AirVisual"
       }

@@ -1,8 +1,8 @@
 """Config flow for Google Maps Travel Time integration."""
 
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -10,7 +10,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
@@ -57,32 +57,24 @@ from .schemas import (
     UNITS_SELECTOR,
 )
 
-RECONFIGURE_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_DESTINATION): cv.string,
-        vol.Required(CONF_ORIGIN): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_DESTINATION): cv.string,
+        probatio.Required(CONF_ORIGIN): cv.string,
     }
 )
 
-CONFIG_SCHEMA = RECONFIGURE_SCHEMA.extend(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        # Name field is no longer allowed in config flow schemas
-        # pylint: disable-next=home-assistant-config-flow-name-field
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_LANGUAGE): LANGUAGE_SELECTOR,
-        vol.Optional(CONF_AVOID): AVOID_SELECTOR,
-        vol.Optional(CONF_TRAFFIC_MODEL): TRAFFIC_MODEL_SELECTOR,
-        vol.Optional(CONF_TRANSIT_MODE): TRANSIT_MODE_SELECTOR,
-        vol.Optional(
+        probatio.Optional(CONF_LANGUAGE): LANGUAGE_SELECTOR,
+        probatio.Optional(CONF_AVOID): AVOID_SELECTOR,
+        probatio.Optional(CONF_TRAFFIC_MODEL): TRAFFIC_MODEL_SELECTOR,
+        probatio.Optional(CONF_TRANSIT_MODE): TRANSIT_MODE_SELECTOR,
+        probatio.Optional(
             CONF_TRANSIT_ROUTING_PREFERENCE
         ): TRANSIT_ROUTING_PREFERENCE_SELECTOR,
-        vol.Required(CONF_MODE): SelectSelector(
+        probatio.Required(CONF_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=TRAVEL_MODES,
                 sort=True,
@@ -90,9 +82,9 @@ OPTIONS_SCHEMA = vol.Schema(
                 translation_key=CONF_MODE,
             )
         ),
-        vol.Required(CONF_UNITS): UNITS_SELECTOR,
-        vol.Required(CONF_TIME_TYPE): TIME_TYPE_SELECTOR,
-        vol.Optional(CONF_TIME): TimeSelector(),
+        probatio.Required(CONF_UNITS): UNITS_SELECTOR,
+        probatio.Required(CONF_TIME_TYPE): TIME_TYPE_SELECTOR,
+        probatio.Optional(CONF_TIME): TimeSelector(),
     }
 )
 
@@ -168,12 +160,14 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> GoogleOptionsFlow:
         """Get the options flow for this handler."""
         return GoogleOptionsFlow()
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] | None = None
@@ -182,7 +176,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await validate_input(self.hass, user_input)
             if not errors:
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                    title=DEFAULT_NAME,
                     data=user_input,
                     options=default_options(self.hass),
                 )
@@ -208,7 +202,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                RECONFIGURE_SCHEMA, self._get_reconfigure_entry().data
+                CONFIG_SCHEMA, self._get_reconfigure_entry().data
             ),
             errors=errors,
         )

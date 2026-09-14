@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from aioimaplib import IMAP4_SSL, AioImapException, Response
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
@@ -50,25 +50,25 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-_SERVICE_UID_SCHEMA = vol.Schema(
+_SERVICE_UID_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ENTRY): cv.string,
-        vol.Required(CONF_UID): cv.string,
+        probatio.Required(CONF_ENTRY): cv.string,
+        probatio.Required(CONF_UID): cv.string,
     }
 )
 
 SERVICE_SEEN_SCHEMA = _SERVICE_UID_SCHEMA
 SERVICE_MOVE_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     {
-        vol.Optional(CONF_SEEN): cv.boolean,
-        vol.Required(CONF_TARGET_FOLDER): cv.string,
+        probatio.Optional(CONF_SEEN): cv.boolean,
+        probatio.Required(CONF_TARGET_FOLDER): cv.string,
     }
 )
 SERVICE_DELETE_SCHEMA = _SERVICE_UID_SCHEMA
 SERVICE_FETCH_TEXT_SCHEMA = _SERVICE_UID_SCHEMA
 SERVICE_FETCH_PART_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     {
-        vol.Required(CONF_PART): cv.string,
+        probatio.Required(CONF_PART): cv.string,
     }
 )
 

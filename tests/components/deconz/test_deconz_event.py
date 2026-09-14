@@ -93,8 +93,8 @@ async def test_deconz_events(
 
     await sensor_ws_data({"id": "1", "state": {"buttonevent": 2000}})
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:00:00:01")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:00:00:01"), config_entry_setup.entry_id
     )
 
     assert len(captured_events) == 1
@@ -107,8 +107,8 @@ async def test_deconz_events(
 
     await sensor_ws_data({"id": "3", "state": {"buttonevent": 2000}})
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:00:00:03")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:00:00:03"), config_entry_setup.entry_id
     )
 
     assert len(captured_events) == 2
@@ -122,8 +122,8 @@ async def test_deconz_events(
 
     await sensor_ws_data({"id": "4", "state": {"gesture": 0}})
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:00:00:04")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:00:00:04"), config_entry_setup.entry_id
     )
 
     assert len(captured_events) == 3
@@ -141,8 +141,8 @@ async def test_deconz_events(
     }
     await sensor_ws_data(event_changed_sensor)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:00:00:05")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:00:00:05"), config_entry_setup.entry_id
     )
 
     assert len(captured_events) == 4
@@ -249,8 +249,8 @@ async def test_deconz_alarm_events(
 
     await sensor_ws_data({"state": {"action": AncillaryControlAction.EMERGENCY}})
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:00:00:01")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:00:00:01"), config_entry_setup.entry_id
     )
 
     assert len(captured_events) == 1
@@ -265,8 +265,8 @@ async def test_deconz_alarm_events(
 
     await sensor_ws_data({"state": {"action": AncillaryControlAction.FIRE}})
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:00:00:01")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:00:00:01"), config_entry_setup.entry_id
     )
 
     assert len(captured_events) == 2
@@ -281,8 +281,8 @@ async def test_deconz_alarm_events(
 
     await sensor_ws_data({"state": {"action": AncillaryControlAction.INVALID_CODE}})
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:00:00:01")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:00:00:01"), config_entry_setup.entry_id
     )
 
     assert len(captured_events) == 3
@@ -297,8 +297,8 @@ async def test_deconz_alarm_events(
 
     await sensor_ws_data({"state": {"action": AncillaryControlAction.PANIC}})
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:00:00:01")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:00:00:01"), config_entry_setup.entry_id
     )
 
     assert len(captured_events) == 4
@@ -365,8 +365,8 @@ async def test_deconz_presence_events(
         == 2
     )
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "xx:xx:xx:xx:xx:xx:xx:xx")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "xx:xx:xx:xx:xx:xx:xx:xx"), config_entry_setup.entry_id
     )
 
     captured_events = async_capture_events(hass, CONF_DECONZ_PRESENCE_EVENT)
@@ -442,8 +442,8 @@ async def test_deconz_relative_rotary_events(
         == 2
     )
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "xx:xx:xx:xx:xx:xx:xx:xx")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "xx:xx:xx:xx:xx:xx:xx:xx"), config_entry_setup.entry_id
     )
 
     captured_events = async_capture_events(hass, CONF_DECONZ_RELATIVE_ROTARY_EVENT)

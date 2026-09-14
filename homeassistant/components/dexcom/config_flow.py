@@ -1,11 +1,11 @@
 """Config flow for Dexcom integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pydexcom import Dexcom, Region
 from pydexcom.errors import AccountError, SessionError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -14,11 +14,11 @@ from .const import CONF_SERVER, DOMAIN, SERVER_OUS, SERVER_US
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_SERVER): vol.In({SERVER_US, SERVER_OUS}),
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_SERVER): probatio.In({SERVER_US, SERVER_OUS}),
     }
 )
 
@@ -28,6 +28,7 @@ class DexcomConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

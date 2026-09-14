@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pysensibo.model import SensiboDevice
 
@@ -124,10 +124,12 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self.entity_description.value_fn(self.device_data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         func = getattr(SensiboDeviceSwitch, self.entity_description.command_on)
@@ -137,6 +139,7 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
             value=True,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         func = getattr(SensiboDeviceSwitch, self.entity_description.command_off)
@@ -147,6 +150,7 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         if self.entity_description.extra_fn:

@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "sections": {
-          "advanced": "mdi:cog",
+          "additional": "mdi:cog",
           "auth": "mdi:lock"
         }
       }
@@ -13,7 +13,7 @@
     "step": {
       "init": {
         "sections": {
-          "advanced": "mdi:cog"
+          "additional": "mdi:cog"
         }
       }
     }

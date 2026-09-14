@@ -2,14 +2,14 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectionError
 from intellifire4py.cloud_interface import IntelliFireCloudInterface
 from intellifire4py.exceptions import LoginError
 from intellifire4py.local_api import IntelliFireAPILocal
 from intellifire4py.model import IntelliFireCommonFireplaceData
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -43,7 +43,7 @@ from .const import (
 )
 from .coordinator import IntellifireConfigEntry
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 MANUAL_ENTRY_STRING = "IP Address"  # Simplified so it does not have to be translated
 
@@ -97,6 +97,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
         # Define a cloud api interface we can use
         self.cloud_api_interface = IntelliFireCloudInterface()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -140,10 +141,10 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="cloud_api",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
         )
@@ -202,9 +203,9 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="pick_cloud_device",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SERIAL): vol.In(
+                    probatio.Required(CONF_SERIAL): probatio.In(
                         [fp.serial for fp in available_fireplaces]
                     )
                 }
@@ -251,6 +252,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_cloud_api()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -277,6 +279,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: IntellifireConfigEntry) -> OptionsFlow:
         """Create the options flow."""
         return IntelliFireOptionsFlowHandler()
@@ -336,15 +339,15 @@ class IntelliFireOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_READ_MODE,
                         default=user_input.get(CONF_READ_MODE, existing_read)
                         if user_input
                         else existing_read,
                     ): selector.SelectSelector(cloud_local_options),
-                    vol.Required(
+                    probatio.Required(
                         CONF_CONTROL_MODE,
                         default=user_input.get(CONF_CONTROL_MODE, existing_control)
                         if user_input

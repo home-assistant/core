@@ -13,9 +13,9 @@ from ipaddress import (
     ip_address,
     ip_network,
 )
-from typing import Any, cast
+from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -42,24 +42,26 @@ CONF_ALLOW_BYPASS_LOGIN = "allow_bypass_login"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
-        vol.Required(CONF_TRUSTED_NETWORKS): vol.All(cv.ensure_list, [ip_network]),
-        vol.Optional(CONF_TRUSTED_USERS, default={}): vol.Schema(
+        probatio.Required(CONF_TRUSTED_NETWORKS): probatio.All(
+            cv.ensure_list, [ip_network]
+        ),
+        probatio.Optional(CONF_TRUSTED_USERS, default={}): probatio.Schema(
             # we only validate the format of user_id or group_id
             {
-                ip_network: vol.All(
+                ip_network: probatio.All(
                     cv.ensure_list,
                     [
-                        vol.Or(
+                        probatio.Or(
                             cv.uuid4_hex,
-                            vol.Schema({vol.Required(CONF_GROUP): str}),
+                            probatio.Schema({probatio.Required(CONF_GROUP): str}),
                         )
                     ],
                 )
             }
         ),
-        vol.Optional(CONF_ALLOW_BYPASS_LOGIN, default=False): cv.boolean,
+        probatio.Optional(CONF_ALLOW_BYPASS_LOGIN, default=False): cv.boolean,
     },
-    extra=vol.PREVENT_EXTRA,
+    extra=probatio.PREVENT_EXTRA,
 )
 
 
@@ -98,10 +100,12 @@ class TrustedNetworksAuthProvider(AuthProvider):
         ]
 
     @property
+    @override
     def support_mfa(self) -> bool:
         """Trusted Networks auth provider does not support MFA."""
         return False
 
+    @override
     async def async_login_flow(
         self, context: AuthFlowContext | None
     ) -> TrustedNetworksLoginFlow:
@@ -144,6 +148,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
             self.config[CONF_ALLOW_BYPASS_LOGIN],
         )
 
+    @override
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
@@ -172,6 +177,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         # We only allow login as exist user
         raise InvalidUserError
 
+    @override
     async def async_user_meta_for_credentials(
         self, credentials: Credentials
     ) -> UserMeta:
@@ -203,6 +209,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
             raise InvalidAuthError("Can't allow access from Home Assistant Cloud")
 
     @callback
+    @override
     def async_validate_refresh_token(
         self, refresh_token: RefreshToken, remote_ip: str | None = None
     ) -> None:
@@ -230,6 +237,7 @@ class TrustedNetworksLoginFlow(LoginFlow[TrustedNetworksAuthProvider]):
         self._ip_address = ip_addr
         self._allow_bypass_login = allow_bypass_login
 
+    @override
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> AuthFlowResult:
@@ -250,7 +258,7 @@ class TrustedNetworksLoginFlow(LoginFlow[TrustedNetworksAuthProvider]):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {vol.Required("user"): vol.In(self._available_users)}
+            data_schema=probatio.Schema(
+                {probatio.Required("user"): probatio.In(self._available_users)}
             ),
         )

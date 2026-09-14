@@ -1,11 +1,11 @@
 """Config Flow for Cielo integration."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientError
 from cieloconnectapi import CieloClient
 from cieloconnectapi.exceptions import AuthenticationError, CieloError
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -19,9 +19,9 @@ from homeassistant.helpers.selector import (
 
 from .const import DEFAULT_NAME, DOMAIN, LOGGER, TIMEOUT
 
-DATA_SCHEMA: Final = vol.Schema(
+DATA_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(CONF_API_KEY): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -61,6 +61,7 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return client.user_id, {CONF_TOKEN: token}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

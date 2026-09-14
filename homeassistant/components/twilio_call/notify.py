@@ -1,11 +1,11 @@
 """Twilio Call platform for notify component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 import urllib
 
+import probatio
 from twilio.base.exceptions import TwilioRestException
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_TARGET,
@@ -23,8 +23,8 @@ CONF_FROM_NUMBER = "from_number"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_FROM_NUMBER): vol.All(
-            cv.string, vol.Match(r"^\+?[1-9]\d{1,14}$")
+        probatio.Required(CONF_FROM_NUMBER): probatio.All(
+            cv.string, probatio.Match(r"^\+?[1-9]\d{1,14}$")
         )
     }
 )
@@ -49,6 +49,7 @@ class TwilioCallNotificationService(BaseNotificationService):
         self.client = twilio_client
         self.from_number = from_number
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Call to specified target users."""
         if not (targets := kwargs.get(ATTR_TARGET)):

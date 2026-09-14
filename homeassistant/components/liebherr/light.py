@@ -1,7 +1,7 @@
 """Light platform for Liebherr integration."""
 
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyliebherrhomeapi import PresentationLightControl
 from pyliebherrhomeapi.const import (
@@ -69,7 +69,7 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
     ) -> None:
         """Initialize the presentation light entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.device_id}_presentation_light"
+        self._attr_unique_id = f"{coordinator.device_id}_presentation_light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     def _light_control(self) -> PresentationLightControl | None:
@@ -78,11 +78,13 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
         return controls.get(CONTROL_PRESENTATION_LIGHT)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._light_control is not None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
         control = self._light_control
@@ -93,6 +95,7 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
         return control.value > 0
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of the light (0-255)."""
         control = self._light_control
@@ -102,6 +105,7 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
             return None
         return math.ceil(control.value * 255 / control.max)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         control = self._light_control
@@ -121,6 +125,7 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
             )
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._async_send_command(

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from kiosker import KioskerAPI
 
@@ -98,6 +99,7 @@ class KioskerButton(KioskerEntity, ButtonEntity):
 
     entity_description: KioskerButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle button press."""
         if action_fn := self.entity_description.action_fn:

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from pydexcom import Dexcom, GlucoseReading
 
@@ -37,6 +38,7 @@ class DexcomCoordinator(DataUpdateCoordinator[GlucoseReading | None]):
         )
         self.dexcom = dexcom
 
+    @override
     async def _async_update_data(self) -> GlucoseReading | None:
         """Fetch data from API endpoint."""
         return await self.hass.async_add_executor_job(

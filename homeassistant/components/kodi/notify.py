@@ -1,11 +1,11 @@
 """Kodi notification service."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 import jsonrpc_async
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -35,11 +35,11 @@ DEFAULT_TIMEOUT = 5
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
-        vol.Inclusive(CONF_USERNAME, "auth"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "auth"): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
+        probatio.Inclusive(CONF_USERNAME, "auth"): cv.string,
+        probatio.Inclusive(CONF_PASSWORD, "auth"): cv.string,
     }
 )
 
@@ -92,6 +92,7 @@ class KodiNotificationService(BaseNotificationService):
 
         self._server = jsonrpc_async.Server(self._url, **kwargs)
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to Kodi."""
         try:

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiotedee import TedeeLock
 from aiotedee.models import TedeeDoorState, TedeeLockState
@@ -112,11 +113,13 @@ class TedeeBinarySensorEntity(TedeeDescriptionEntity, BinarySensorEntity):
     entity_description: TedeeBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on_fn(self._lock)
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if the binary sensor is available."""
         if self.entity_description.always_available:

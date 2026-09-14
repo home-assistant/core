@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 import time
+from typing import override
 
 from pycync import Cync, CyncDevice, User
 from pycync.exceptions import AuthFailedError
@@ -44,12 +45,14 @@ class CyncCoordinator(DataUpdateCoordinator[dict[int, CyncDevice]]):
         merged_data = self.data | data if self.data else data
         self.async_set_updated_data(merged_data)
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator with initial device states."""
         logged_in_user = self.cync.get_logged_in_user()
         if logged_in_user.access_token != self.config_entry.data[CONF_ACCESS_TOKEN]:
             await self._update_config_cync_credentials(logged_in_user)
 
+    @override
     async def _async_update_data(self) -> dict[int, CyncDevice]:
         """Refresh the user's auth token if it expires within one hour.
 

@@ -2,11 +2,11 @@
 
 import asyncio
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import aiohttp
+import probatio
 from sharkiq import SharkIqAuthError, get_ayla_api
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
@@ -23,11 +23,11 @@ from .const import (
     SHARKIQ_REGION_OPTIONS,
 )
 
-SHARKIQ_SCHEMA = vol.Schema(
+SHARKIQ_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(
             CONF_REGION, default=SHARKIQ_REGION_DEFAULT
         ): selector.SelectSelector(
             selector.SelectSelectorConfig(
@@ -103,6 +103,7 @@ class SharkIqConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return info, errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
