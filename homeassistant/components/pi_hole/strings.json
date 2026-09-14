@@ -94,6 +94,14 @@
       }
     }
   },
+  "exceptions": {
+    "disable_failed": {
+      "message": "Failed to disable Pi-hole: {error}"
+    },
+    "enable_failed": {
+      "message": "Failed to enable Pi-hole: {error}"
+    }
+  },
   "issues": {
     "v5_to_v6_migration": {
       "description": "You've likely updated your Pi-hole to API v6 from v5. Some sensors changed in the new API, the daily sensors were removed, and your old API token is invalid. Provide your new app password by re-authenticating in repairs or in **Settings -> Devices & services -> Pi-hole**.",

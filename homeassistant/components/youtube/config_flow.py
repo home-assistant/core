@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from youtubeaio.types import AuthScope, ForbiddenError
 from youtubeaio.youtube import YouTube
 
@@ -227,9 +227,9 @@ class OAuth2FlowHandler(
         self._channel_titles = channel_titles
         return self.async_show_form(
             step_id="channels",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CHANNELS): SelectSelector(
+                    probatio.Required(CONF_CHANNELS): SelectSelector(
                         SelectSelectorConfig(
                             options=selectable_channels,
                             multiple=True,
@@ -281,9 +281,9 @@ class ChannelFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="no_subscriptions")
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CHANNEL_ID): SelectSelector(
+                    probatio.Required(CONF_CHANNEL_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=options, mode=SelectSelectorMode.DROPDOWN
                         )

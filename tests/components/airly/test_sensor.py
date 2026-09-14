@@ -5,6 +5,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from airly.exceptions import AirlyError
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.airly.const import DOMAIN
@@ -43,8 +44,17 @@ async def test_sensor(
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        AirlyError(HTTPStatus.NOT_FOUND, {"message": "Not found"}),
+        TimeoutError(),
+    ],
+)
 async def test_availability(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    exception: Exception,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly.
 
@@ -58,9 +68,7 @@ async def test_availability(
     assert state.state == "68.35"
 
     aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        API_POINT_URL, exc=AirlyError(HTTPStatus.NOT_FOUND, {"message": "Not found"})
-    )
+    aioclient_mock.get(API_POINT_URL, exc=exception)
     future = utcnow() + timedelta(minutes=60)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()

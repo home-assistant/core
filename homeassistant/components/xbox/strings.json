@@ -92,7 +92,7 @@
     },
     "sensor": {
       "follower": {
-        "name": "Follower",
+        "name": "Followers",
         "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
       },
       "following": {
@@ -155,6 +155,9 @@
     },
     "auth_exception": {
       "message": "Xbox Network authentication failed, re-authentication required"
+    },
+    "command_failed": {
+      "message": "Command failed."
     },
     "media_not_found": {
       "message": "The requested media could not be found."

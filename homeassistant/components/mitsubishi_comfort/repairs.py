@@ -6,7 +6,7 @@ from typing import cast
 
 from aiohttp import ClientSession
 from mitsubishi_comfort import DeviceInfo, probe_candidate_ips
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.dhcp import async_discovered_service_info
 from homeassistant.components.repairs import (
@@ -187,7 +187,7 @@ class MissingAddressRepairFlow(RepairsFlow):
                 for info in async_discovered_service_info(self.hass)
                 if (formatted := dr.format_mac(info.macaddress)) in macs
             }
-        schema = vol.Schema({vol.Optional(mac): str for mac in macs})
+        schema = probatio.Schema({probatio.Optional(mac): str for mac in macs})
         return self.async_show_form(
             step_id="addresses",
             data_schema=self.add_suggested_values_to_schema(schema, user_input),
