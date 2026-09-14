@@ -171,6 +171,9 @@ class MideaNumber(MideaEntity, NumberEntity):
         value = self._device.get_attribute(self.entity_description.key)
         if not isinstance(value, (int, float)):
             return None
+        if self.entity_description.key == "fan_speed" and value > 100:
+            # Midea protocol uses >100 for auto fan speed; treat that as "unknown"
+            return None
         return float(value)
 
     @override
