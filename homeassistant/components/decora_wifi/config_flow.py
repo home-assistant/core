@@ -5,7 +5,7 @@ from typing import Any, override
 
 from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.person import Person
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -17,10 +17,10 @@ from homeassistant.helpers.selector import (
 
 from .const import DOMAIN
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): TextSelector(),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_USERNAME): TextSelector(),
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }

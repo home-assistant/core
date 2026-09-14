@@ -7,8 +7,8 @@ from functools import partial
 import logging
 from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
@@ -113,7 +113,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_batched_entity_service(
         SERVICE_CLEAN_AREA,
         {
-            vol.Required("cleaning_area_id"): vol.All(cv.ensure_list, [str]),
+            probatio.Required("cleaning_area_id"): probatio.All(cv.ensure_list, [str]),
         },
         StateVacuumEntity.async_internal_clean_area,
         [VacuumEntityFeature.CLEAN_AREA],
@@ -132,15 +132,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_SET_FAN_SPEED,
-        {vol.Required(ATTR_FAN_SPEED): cv.string},
+        {probatio.Required(ATTR_FAN_SPEED): cv.string},
         "async_set_fan_speed",
         [VacuumEntityFeature.FAN_SPEED],
     )
     component.async_register_entity_service(
         SERVICE_SEND_COMMAND,
         {
-            vol.Required(ATTR_COMMAND): cv.string,
-            vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
+            probatio.Required(ATTR_COMMAND): cv.string,
+            probatio.Optional(ATTR_PARAMS): probatio.Any(dict, cv.ensure_list),
         },
         "async_send_command",
         [VacuumEntityFeature.SEND_COMMAND],
