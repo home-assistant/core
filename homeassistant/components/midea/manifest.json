@@ -1,7 +1,7 @@
 {
   "domain": "midea",
   "name": "Midea",
-  "codeowners": ["@chemelli74", "@rokam", "@caibinqing"],
+  "codeowners": ["@chemelli74", "@rokam"],
   "config_flow": true,
   "dhcp": [
     {
@@ -13,5 +13,5 @@
   "iot_class": "local_polling",
   "loggers": ["midealocal"],
   "quality_scale": "bronze",
-  "requirements": ["midea-local==11.0.1"]
+  "requirements": ["midea-local==12.0.0"]
 }

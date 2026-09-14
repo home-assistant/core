@@ -6,7 +6,7 @@ from typing import Any, cast, override
 from xmlrpc.client import Fault
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_HOST,
@@ -57,20 +57,20 @@ async def validate_user_input(
     return user_input
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): selector.TextSelector(),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): selector.NumberSelector(
+        probatio.Required(CONF_HOST): selector.TextSelector(),
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=1, max=65535, mode=selector.NumberSelectorMode.BOX
             )
         ),
-        vol.Required(CONF_USERNAME): selector.TextSelector(),
-        vol.Required(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(CONF_USERNAME): selector.TextSelector(),
+        probatio.Required(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
-        vol.Required(CONF_SSL, default=DEFAULT_SSL): selector.BooleanSelector(),
-        vol.Required(
+        probatio.Required(CONF_SSL, default=DEFAULT_SSL): selector.BooleanSelector(),
+        probatio.Required(
             CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
         ): selector.BooleanSelector(),
     }

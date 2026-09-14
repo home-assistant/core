@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
 from homeassistant.components.climate import (
@@ -56,9 +56,9 @@ PARALLEL_UPDATES = 1
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(
             CONF_GATEWAY_ADDRESS, default=DEFAULT_GATEWAY_ADDRESS
         ): cv.positive_int,
     }
@@ -187,6 +187,9 @@ class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
     )
     _attr_target_temperature_step = 1
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    # Two of the five speeds the gateway addresses have no name of their own in
+    # the climate component, so they are named here.
+    _attr_translation_key = "air_conditioner"
 
     def __init__(
         self,
