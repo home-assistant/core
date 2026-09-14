@@ -53,9 +53,6 @@ SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 SIRENS[DeviceCategory.DGHSXJ] = SIRENS[DeviceCategory.SP]
 
-# Video peephole camera / video intercom doorbell (duplicate of `sp`)
-SIRENS[DeviceCategory.KSDJML] = SIRENS[DeviceCategory.SP]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,

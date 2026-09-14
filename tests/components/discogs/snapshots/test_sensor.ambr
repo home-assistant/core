@@ -1,0 +1,167 @@
+# serializer version: 1
+# name: test_sensors[sensor.testuser_collection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testuser_collection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Collection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:album',
+    'original_name': 'Collection',
+    'platform': 'discogs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'collection',
+    'unique_id': '12345_collection',
+    'unit_of_measurement': 'records',
+  })
+# ---
+# name: test_sensors[sensor.testuser_collection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Discogs',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Collection',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:album',
+      'identity': 'testuser',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'records',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testuser_collection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42',
+  })
+# ---
+# name: test_sensors[sensor.testuser_random_record-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testuser_random_record',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Random record',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:record-player',
+    'original_name': 'Random record',
+    'platform': 'discogs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'random_record',
+    'unique_id': '12345_random_record',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testuser_random_record-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Discogs',
+      'cat_no': 'CAT001',
+      'cover_image': 'https://example.com/cover.jpg',
+      'format': 'Vinyl (LP)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Random record',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:record-player',
+      'identity': 'testuser',
+      'label': 'Label Name',
+      'released': '2023',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testuser_random_record',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Artist Name - Album Title',
+  })
+# ---
+# name: test_sensors[sensor.testuser_wantlist-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testuser_wantlist',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wantlist',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:album',
+    'original_name': 'Wantlist',
+    'platform': 'discogs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wantlist',
+    'unique_id': '12345_wantlist',
+    'unit_of_measurement': 'records',
+  })
+# ---
+# name: test_sensors[sensor.testuser_wantlist-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Discogs',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Wantlist',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:album',
+      'identity': 'testuser',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'records',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testuser_wantlist',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---

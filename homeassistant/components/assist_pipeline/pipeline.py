@@ -2,10 +2,9 @@
 
 import array
 import asyncio
-from collections import defaultdict, deque
+from collections import deque
 from collections.abc import AsyncGenerator, AsyncIterable, Callable
 from dataclasses import asdict, dataclass, field
-from enum import StrEnum
 import logging
 from pathlib import Path
 from queue import Empty, Queue
@@ -35,7 +34,6 @@ from homeassistant.helpers import (
     intent,
 )
 from homeassistant.helpers.collection import (
-    CHANGE_UPDATED,
     CollectionError,
     ItemNotFound,
     SerializedStorageCollection,
@@ -45,14 +43,11 @@ from homeassistant.helpers.collection import (
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType, VolDictType
-from homeassistant.util import (
-    dt as dt_util,
-    language as language_util,
-    ulid as ulid_util,
-)
+from homeassistant.util import language as language_util, ulid as ulid_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
+from . import models as _models, runtime as _runtime
 from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadSpeexEnhancer
 from .const import (
     ACKNOWLEDGE_PATH,
@@ -83,6 +78,22 @@ from .error import (
 )
 from .vad import AudioBuffer, VoiceActivityTimeout, VoiceCommandSegmenter, chunk_samples
 
+PIPELINE_STAGE_ORDER = _models.PIPELINE_STAGE_ORDER
+AudioSettings = _models.AudioSettings
+Pipeline = _models.Pipeline
+PipelineEvent = _models.PipelineEvent
+PipelineEventCallback = _models.PipelineEventCallback
+PipelineEventType = _models.PipelineEventType
+PipelineStage = _models.PipelineStage
+WakeWordSettings = _models.WakeWordSettings
+
+KEY_ASSIST_PIPELINE = _runtime.KEY_ASSIST_PIPELINE
+AssistDevice = _runtime.AssistDevice
+DeviceAudioQueue = _runtime.DeviceAudioQueue
+PipelineData = _runtime.PipelineData
+PipelineRunDebug = _runtime.PipelineRunDebug
+PipelineRuns = _runtime.PipelineRuns
+
 if TYPE_CHECKING:
     from hassil.recognize import RecognizeResult
 
@@ -97,7 +108,6 @@ ENGINE_LANGUAGE_PAIRS = (
     ("tts_engine", "tts_language"),
 )
 
-KEY_ASSIST_PIPELINE: HassKey[PipelineData] = HassKey(DOMAIN)
 KEY_PIPELINE_CONVERSATION_DATA: HassKey[dict[str, PipelineConversationData]] = HassKey(
     "pipeline_conversation_data"
 )
@@ -382,164 +392,6 @@ async def async_update_pipeline(
     )
 
     await pipeline_data.pipeline_store.async_update_item(pipeline.id, updates)
-
-
-class PipelineEventType(StrEnum):
-    """Event types emitted during a pipeline run."""
-
-    RUN_START = "run-start"
-    RUN_END = "run-end"
-    WAKE_WORD_START = "wake_word-start"
-    WAKE_WORD_END = "wake_word-end"
-    STT_START = "stt-start"
-    STT_VAD_START = "stt-vad-start"
-    STT_VAD_END = "stt-vad-end"
-    STT_END = "stt-end"
-    INTENT_START = "intent-start"
-    INTENT_PROGRESS = "intent-progress"
-    INTENT_END = "intent-end"
-    TTS_START = "tts-start"
-    TTS_END = "tts-end"
-    ERROR = "error"
-
-
-@dataclass(frozen=True)
-class PipelineEvent:
-    """Events emitted during a pipeline run."""
-
-    type: PipelineEventType
-    data: dict[str, Any] | None = None
-    timestamp: str = field(default_factory=lambda: dt_util.utcnow().isoformat())
-
-
-type PipelineEventCallback = Callable[[PipelineEvent], None]
-
-
-@dataclass(frozen=True)
-class Pipeline:
-    """A voice assistant pipeline."""
-
-    conversation_engine: str
-    conversation_language: str
-    language: str
-    name: str
-    stt_engine: str | None
-    stt_language: str | None
-    tts_engine: str | None
-    tts_language: str | None
-    tts_voice: str | None
-    wake_word_entity: str | None
-    wake_word_id: str | None
-    prefer_local_intents: bool = False
-
-    id: str = field(default_factory=ulid_util.ulid_now)
-
-    @classmethod
-    def from_json(cls, data: dict[str, Any]) -> Pipeline:
-        """Create an instance from a JSON serialization.
-
-        This function was added in HA Core 2023.10, previous versions will raise
-        if there are unexpected items in the serialized data.
-        """
-        return cls(
-            conversation_engine=data["conversation_engine"],
-            conversation_language=data["conversation_language"],
-            id=data["id"],
-            language=data["language"],
-            name=data["name"],
-            stt_engine=data["stt_engine"],
-            stt_language=data["stt_language"],
-            tts_engine=data["tts_engine"],
-            tts_language=data["tts_language"],
-            tts_voice=data["tts_voice"],
-            wake_word_entity=data["wake_word_entity"],
-            wake_word_id=data["wake_word_id"],
-            prefer_local_intents=data.get("prefer_local_intents", False),
-        )
-
-    def to_json(self) -> dict[str, Any]:
-        """Return a JSON serializable representation for storage."""
-        return {
-            "conversation_engine": self.conversation_engine,
-            "conversation_language": self.conversation_language,
-            "id": self.id,
-            "language": self.language,
-            "name": self.name,
-            "stt_engine": self.stt_engine,
-            "stt_language": self.stt_language,
-            "tts_engine": self.tts_engine,
-            "tts_language": self.tts_language,
-            "tts_voice": self.tts_voice,
-            "wake_word_entity": self.wake_word_entity,
-            "wake_word_id": self.wake_word_id,
-            "prefer_local_intents": self.prefer_local_intents,
-        }
-
-
-class PipelineStage(StrEnum):
-    """Stages of a pipeline."""
-
-    WAKE_WORD = "wake_word"
-    STT = "stt"
-    INTENT = "intent"
-    TTS = "tts"
-    END = "end"
-
-
-PIPELINE_STAGE_ORDER = [
-    PipelineStage.WAKE_WORD,
-    PipelineStage.STT,
-    PipelineStage.INTENT,
-    PipelineStage.TTS,
-]
-
-
-@dataclass(frozen=True)
-class WakeWordSettings:
-    """Settings for wake word detection."""
-
-    timeout: float | None = None
-    """Seconds of silence before detection times out."""
-
-    audio_seconds_to_buffer: float = 0
-    """Seconds of audio to buffer before detection and forward to STT."""
-
-
-@dataclass(frozen=True)
-class AudioSettings:
-    """Settings for pipeline audio processing."""
-
-    noise_suppression_level: int = 0
-    """Level of noise suppression (0 = disabled, 4 = max)"""
-
-    auto_gain_dbfs: int = 0
-    """Amount of automatic gain in dbFS (0 = disabled, 31 = max)"""
-
-    volume_multiplier: float = 1.0
-    """Multiplier used directly on PCM samples (1.0 = no change, 2.0 = twice as loud)"""
-
-    is_vad_enabled: bool = True
-    """True if VAD is used to determine the end of the voice command."""
-
-    silence_seconds: float = 0.7
-    """Seconds of silence after voice command has ended."""
-
-    def __post_init__(self) -> None:
-        """Verify settings post-initialization."""
-        if (self.noise_suppression_level < 0) or (self.noise_suppression_level > 4):
-            raise ValueError("noise_suppression_level must be in [0, 4]")
-
-        if (self.auto_gain_dbfs < 0) or (self.auto_gain_dbfs > 31):
-            raise ValueError("auto_gain_dbfs must be in [0, 31]")
-
-    @property
-    def needs_processor(self) -> bool:
-        """True if an audio processor is needed."""
-        return (
-            self.is_vad_enabled
-            or (self.noise_suppression_level > 0)
-            or (self.auto_gain_dbfs > 0)
-        )
 
 
 @dataclass
@@ -2109,82 +1961,6 @@ class PipelineStorageCollectionWebsocket(
             )
             return
         connection.send_result(msg["id"])
-
-
-class PipelineRuns:
-    """Class managing pipelineruns."""
-
-    def __init__(self, pipeline_store: PipelineStorageCollection) -> None:
-        """Initialize."""
-        self._pipeline_runs: dict[str, dict[str, PipelineRun]] = defaultdict(dict)
-        self._pipeline_store = pipeline_store
-        pipeline_store.async_add_listener(self._change_listener)
-
-    def add_run(self, pipeline_run: PipelineRun) -> None:
-        """Add pipeline run."""
-        pipeline_id = pipeline_run.pipeline.id
-        self._pipeline_runs[pipeline_id][pipeline_run.id] = pipeline_run
-
-    def remove_run(self, pipeline_run: PipelineRun) -> None:
-        """Remove pipeline run."""
-        pipeline_id = pipeline_run.pipeline.id
-        self._pipeline_runs[pipeline_id].pop(pipeline_run.id)
-
-    async def _change_listener(
-        self, change_type: str, item_id: str, change: dict
-    ) -> None:
-        """Handle pipeline store changes."""
-        if change_type != CHANGE_UPDATED:
-            return
-        if pipeline_runs := self._pipeline_runs.get(item_id):
-            # Create a temporary list in case the list is modified while we iterate
-            for pipeline_run in list(pipeline_runs.values()):
-                pipeline_run.abort_wake_word_detection = True
-
-
-@dataclass(slots=True)
-class DeviceAudioQueue:
-    """Audio capture queue for a satellite device."""
-
-    queue: asyncio.Queue[bytes | None]
-    """Queue of audio chunks (None = stop signal)"""
-
-    id: str = field(default_factory=ulid_util.ulid_now)
-    """Unique id to ensure the correct audio queue is cleaned up in websocket API."""
-
-    overflow: bool = False
-    """Flag to be set if audio samples were dropped because the queue was full."""
-
-
-@dataclass(slots=True)
-class AssistDevice:
-    """Assist device."""
-
-    domain: str
-    unique_id_prefix: str
-
-
-class PipelineData:
-    """Store and debug data stored in hass.data."""
-
-    def __init__(self, pipeline_store: PipelineStorageCollection) -> None:
-        """Initialize."""
-        self.pipeline_store = pipeline_store
-        self.pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]] = {}
-        self.pipeline_devices: dict[str, AssistDevice] = {}
-        self.pipeline_runs = PipelineRuns(pipeline_store)
-        self.device_audio_queues: dict[str, DeviceAudioQueue] = {}
-
-
-@dataclass(slots=True)
-class PipelineRunDebug:
-    """Debug data for a pipelinerun."""
-
-    events: list[PipelineEvent] = field(default_factory=list, init=False)
-    timestamp: str = field(
-        default_factory=lambda: dt_util.utcnow().isoformat(),
-        init=False,
-    )
 
 
 class PipelineStore(Store[SerializedPipelineStorageCollection]):

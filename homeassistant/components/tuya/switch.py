@@ -800,6 +800,18 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             translation_key="mute",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_KB_SOUND,
+            # Poorly translated as "Key tone switch of host" in the official Tuya app
+            translation_key="keypad_sound",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_ALARM_PROPEL,
+            # Poorly translated as "alarm push switch" in the official Tuya app
+            translation_key="alarm_push_notifications",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.WK: (
         SwitchEntityDescription(
@@ -932,9 +944,6 @@ SWITCHES[DeviceCategory.CZ] = SWITCHES[DeviceCategory.PC]
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 SWITCHES[DeviceCategory.DGHSXJ] = SWITCHES[DeviceCategory.SP]
-
-# Video peephole camera / video intercom doorbell (duplicate of `sp`)
-SWITCHES[DeviceCategory.KSDJML] = SWITCHES[DeviceCategory.SP]
 
 
 async def async_setup_entry(

@@ -527,6 +527,9 @@
       "session_energy": {
         "name": "Session energy"
       },
+      "storage_free_space": {
+        "name": "Free storage space"
+      },
       "temperature_with_channel_name": {
         "name": "{channel_name} temperature"
       },
