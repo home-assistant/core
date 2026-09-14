@@ -16,7 +16,11 @@ from homeassistant.components.neopool.services import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import Context, HomeAssistant, ServiceCall
-from homeassistant.exceptions import ServiceValidationError, Unauthorized
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -246,13 +250,13 @@ async def test_get_device_time_read_error_translates(
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """A library error while reading the time surfaces as ServiceValidationError."""
+    """A library error while reading the time surfaces as HomeAssistantError."""
     await setup_integration(hass, mock_config_entry)
     mock_neopool_client.async_read_register = AsyncMock(
         side_effect=ConnectionError("Modbus down")
     )
 
-    with pytest.raises(ServiceValidationError) as exc_info:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_DEVICE_TIME,
@@ -268,11 +272,11 @@ async def test_get_device_time_short_read_translates(
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """A truncated clock read surfaces as ServiceValidationError, not IndexError."""
+    """A truncated clock read surfaces as HomeAssistantError, not IndexError."""
     await setup_integration(hass, mock_config_entry)
     mock_neopool_client.async_read_register = AsyncMock(return_value=[123])
 
-    with pytest.raises(ServiceValidationError) as exc_info:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_DEVICE_TIME,
@@ -288,7 +292,7 @@ async def test_get_device_time_undecodable_translates(
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """An unparsable clock value surfaces as ServiceValidationError, not a crash."""
+    """An unparsable clock value surfaces as HomeAssistantError, not a crash."""
     await setup_integration(hass, mock_config_entry)
     mock_neopool_client.async_read_register = AsyncMock(return_value=[0, 0])
 
@@ -297,7 +301,7 @@ async def test_get_device_time_undecodable_translates(
             "homeassistant.components.neopool.services.decode_device_time",
             return_value=None,
         ),
-        pytest.raises(ServiceValidationError) as exc_info,
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -339,7 +343,7 @@ async def test_set_device_time_none_response_raises(
     await setup_integration(hass, mock_config_entry)
     mock_neopool_client.async_sync_device_time = AsyncMock(return_value=None)
 
-    with pytest.raises(ServiceValidationError) as exc_info:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_DEVICE_TIME,
@@ -354,13 +358,13 @@ async def test_set_device_time_error_translates(
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """A library error while syncing surfaces as ServiceValidationError."""
+    """A library error while syncing surfaces as HomeAssistantError."""
     await setup_integration(hass, mock_config_entry)
     mock_neopool_client.async_sync_device_time = AsyncMock(
         side_effect=ConnectionError("Modbus down")
     )
 
-    with pytest.raises(ServiceValidationError) as exc_info:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_DEVICE_TIME,
