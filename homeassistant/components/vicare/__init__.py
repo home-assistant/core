@@ -12,6 +12,7 @@ from PyViCare.PyViCareOAuthManager import obtain_token_via_basic_auth_pkce
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
+    PyViCareRateLimitError,
 )
 
 from homeassistant.components.application_credentials import (
@@ -160,6 +161,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
         PyViCareInvalidCredentialsError,
     ) as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err
+    except PyViCareRateLimitError as err:
+        # The quota recovers on its own.
+        raise ConfigEntryNotReady(
+            f"ViCare API rate limit exceeded, resets at {err.limitResetDate}"
+        ) from err
 
     # Group devices by gateway: in viaGateway mode one bulk fetch refreshes
     # every device behind a gateway, so one coordinator serves the gateway.
