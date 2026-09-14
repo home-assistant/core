@@ -185,7 +185,7 @@ class ScriptIntentHandler(intent.IntentHandler):
         slots: dict[str, Any] = {
             key: value["value"] for key, value in intent_slots.items()
         }
-        if intent_obj.device_id:
+        if intent_obj.device_id and "device_id" not in slots:
             slots["device_id"] = intent_obj.device_id
 
         _LOGGER.debug(
