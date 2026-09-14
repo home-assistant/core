@@ -39,6 +39,8 @@ class _BackupStore(Store[StoredBackupData]):
             STORAGE_KEY,
             max_readable_version=self._MAX_READABLE_VERSION,
             minor_version=STORAGE_VERSION_MINOR,
+            # The store persists the automatic backup password in plaintext.
+            private=True,
         )
 
     @override
