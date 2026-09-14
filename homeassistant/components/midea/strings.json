@@ -214,11 +214,11 @@
       }
     },
     "number": {
-      "fan_speed": {
-        "name": "Fan speed"
-      },
       "dry_level": {
         "name": "Dry level"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
       },
       "flushing_days": {
         "name": "Flushing days"
