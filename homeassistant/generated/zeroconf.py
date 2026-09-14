@@ -525,6 +525,11 @@ ZEROCONF = {
             "domain": "energieleser",
         },
     ],
+    "_gaspulse._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
     "_googlecast._tcp.local.": [
         {
             "domain": "cast",
@@ -690,6 +695,10 @@ ZEROCONF = {
                 "vendor": "tailwind",
             },
         },
+        {
+            "domain": "velux",
+            "name": "velux_klf_lan_*",
+        },
     ],
     "_hue._tcp.local.": [
         {
@@ -819,6 +828,11 @@ ZEROCONF = {
             "domain": "bluesound",
         },
     ],
+    "_mypv._tcp.local.": [
+        {
+            "domain": "my_pv",
+        },
+    ],
     "_nanoleafapi._tcp.local.": [
         {
             "domain": "nanoleaf",
@@ -872,6 +886,11 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise",
+        },
+    ],
+    "_powerhub._udp.local.": [
+        {
+            "domain": "bitvis",
         },
     ],
     "_powerview._tcp.local.": [
@@ -958,6 +977,11 @@ ZEROCONF = {
             "domain": "cambridge_audio",
         },
     ],
+    "_solaredge-modbus._tcp.local.": [
+        {
+            "domain": "solaredge_modbus",
+        },
+    ],
     "_solarman._tcp.local.": [
         {
             "domain": "solarman",
@@ -1011,6 +1035,11 @@ ZEROCONF = {
             "domain": "systemnexa2",
         },
     ],
+    "_tbk_vmc._tcp.local.": [
+        {
+            "domain": "flow_it",
+        },
+    ],
     "_technove-stations._tcp.local.": [
         {
             "domain": "technove",
@@ -1060,6 +1089,12 @@ ZEROCONF = {
     "_wled._tcp.local.": [
         {
             "domain": "wled",
+        },
+    ],
+    "_ws._tcp.local.": [
+        {
+            "domain": "hotspring",
+            "name": "watkins_spa*",
         },
     ],
     "_wyoming._tcp.local.": [

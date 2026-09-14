@@ -56,7 +56,9 @@ async def test_device_diagnostics(
     # Ensure integration is set up so device exists
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, SUBENTRY_ID_1)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SUBENTRY_ID_1), mock_config_entry.entry_id
+    )
     assert device is not None
 
     # Trigger update for the coordinator before diagnostics

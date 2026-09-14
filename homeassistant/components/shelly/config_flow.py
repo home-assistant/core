@@ -31,7 +31,7 @@ from aioshelly.rpc_device import RpcDevice
 from aioshelly.rpc_device.models import ShellyWiFiNetwork
 from aioshelly.zeroconf import async_discover_devices, async_lookup_device_by_name
 from bleak.backends.device import BLEDevice
-import voluptuous as vol
+import probatio
 from zeroconf import IPVersion
 
 from homeassistant.components import zeroconf
@@ -99,11 +99,11 @@ from .utils import (
     mac_address_from_name,
 )
 
-CONFIG_SCHEMA: Final = vol.Schema(
+CONFIG_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_HTTP_PORT): vol.Coerce(int),
-        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_HTTP_PORT): probatio.Coerce(int),
+        probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
 )
 
@@ -239,14 +239,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if port != DEFAULT_HTTPS_PORT:
             return {}
         return {CONF_VERIFY_SSL: verify_ssl}
-
-    @staticmethod
-    def _check_enhanced_security(info: dict[str, Any], port: int) -> int:
-        """Return HTTPS port if device reports enhanced_security is enabled."""
-        if info.get("enhanced_security"):
-            return DEFAULT_HTTPS_PORT
-
-        return port
 
     @staticmethod
     def _get_name_from_mac_and_ble_model(
@@ -449,7 +441,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
         self.host = host
-        self.port = self._check_enhanced_security(self.info, port)
+        self.port = port
         self.verify_ssl = verify_ssl
 
         if get_info_auth(self.info):
@@ -557,9 +549,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE): SelectSelector(
+                    probatio.Required(CONF_DEVICE): SelectSelector(
                         SelectSelectorConfig(
                             options=device_options,
                             translation_key=CONF_DEVICE,
@@ -651,22 +643,22 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if get_info_gen(self.info) in RPC_GENERATIONS:
             schema = {
-                vol.Required(
+                probatio.Required(
                     CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                 ): str,
             }
         else:
             schema = {
-                vol.Required(
+                probatio.Required(
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                 ): str,
             }
 
         return self.async_show_form(
-            step_id="credentials", data_schema=vol.Schema(schema), errors=errors
+            step_id="credentials", data_schema=probatio.Schema(schema), errors=errors
         )
 
     @callback
@@ -802,10 +794,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional("disable_ap", default=True): bool,
-                    vol.Optional("disable_ble_rpc", default=True): bool,
+                    probatio.Optional("disable_ap", default=True): bool,
+                    probatio.Optional("disable_ble_rpc", default=True): bool,
                 }
             ),
             description_placeholders={
@@ -854,16 +846,16 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="wifi_scan",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_SSID): SelectSelector(
+                        probatio.Required(CONF_SSID): SelectSelector(
                             SelectSelectorConfig(
                                 options=ssid_options,
                                 mode=SelectSelectorMode.DROPDOWN,
                                 custom_value=True,
                             )
                         ),
-                        vol.Required(CONF_PASSWORD): str,
+                        probatio.Required(CONF_PASSWORD): str,
                     }
                 ),
                 suggested_values,
@@ -1044,8 +1036,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # Device appeared on network but can't connect - allow retry
             return None
 
-        self.port = self._check_enhanced_security(self.info, self.port)
-
         if get_info_auth(self.info):
             # Device requires authentication - show credentials step
             return await self.async_step_credentials()
@@ -1190,7 +1180,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._async_handle_zeroconf_mac_discovery(mac, host, port)
 
         self.host = host
-        self.port = self._check_enhanced_security(self.info, port)
+        self.port = port
         self.verify_ssl = verify_ssl
         self.context.update(
             {
@@ -1276,8 +1266,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             if get_device_entry_gen(reauth_entry) != 1:
                 user_input[CONF_USERNAME] = "admin"
 
-            port = self._check_enhanced_security(info, port)
-
             try:
                 await validate_input(
                     self.hass, host, port, info, user_input, verify_ssl
@@ -1296,15 +1284,15 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if get_device_entry_gen(reauth_entry) in BLOCK_GENERATIONS:
             schema = {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_USERNAME): str,
+                probatio.Required(CONF_PASSWORD): str,
             }
         else:
-            schema = {vol.Required(CONF_PASSWORD): str}
+            schema = {probatio.Required(CONF_PASSWORD): str}
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             errors=errors,
         )
 
@@ -1332,8 +1320,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(info[CONF_MAC])
                 self._abort_if_unique_id_mismatch(reason="another_device")
 
-                port = self._check_enhanced_security(info, port)
-
                 data_updates: dict[str, Any] = {
                     CONF_HOST: host,
                     CONF_PORT: port,
@@ -1351,11 +1337,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=self.host): str,
-                    vol.Required(CONF_PORT, default=self.port): vol.Coerce(int),
-                    vol.Optional(CONF_VERIFY_SSL, default=self.verify_ssl): bool,
+                    probatio.Required(CONF_HOST, default=self.host): str,
+                    probatio.Required(CONF_PORT, default=self.port): probatio.Coerce(
+                        int
+                    ),
+                    probatio.Optional(CONF_VERIFY_SSL, default=self.verify_ssl): bool,
                 }
             ),
             description_placeholders={"device_name": reconfigure_entry.title},
@@ -1420,9 +1408,9 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_BLE_SCANNER_MODE,
                         default=self.config_entry.options.get(
                             CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED

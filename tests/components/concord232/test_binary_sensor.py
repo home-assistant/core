@@ -153,11 +153,11 @@ async def test_zone_update_refresh(
 
     freezer.tick(datetime.timedelta(seconds=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     freezer.tick(datetime.timedelta(seconds=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("binary_sensor.zone_1")
     assert state.state == "on"

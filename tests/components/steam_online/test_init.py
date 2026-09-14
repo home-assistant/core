@@ -110,7 +110,10 @@ async def test_device_info(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, ACCOUNT_1)}) == snapshot
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, ACCOUNT_1), config_entry.entry_id
+        )
+        == snapshot
     )
 
 
@@ -172,4 +175,6 @@ async def test_migrate_entry(
 
     assert config_entry.options == {}
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, ACCOUNT_2)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, ACCOUNT_2), config_entry.entry_id
+    )

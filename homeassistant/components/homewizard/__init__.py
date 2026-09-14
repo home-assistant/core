@@ -17,6 +17,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
+from .entity import create_main_device_info
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -> bool:
@@ -59,6 +60,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
             and progress_flow["context"].get("source") == SOURCE_REAUTH
         ):
             hass.config_entries.flow.async_abort(progress_flow["flow_id"])
+
+    # Register the main device up front so external sub-device sensors can
+    # resolve it as their via_device parent regardless of entity add order.
+    if coordinator.data.device.serial is not None:
+        dr.async_get(hass).async_get_or_create(
+            config_entry_id=entry.entry_id,
+            **create_main_device_info(coordinator),
+        )
 
     # Finalize
     entry.async_on_unload(coordinator.api.close)

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Any, override
 
 import aiolifx_effects as aiolifx_effects_module
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -27,7 +27,6 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    _LOGGER,
     ATTR_DURATION,
     ATTR_INFRARED,
     ATTR_POWER,
@@ -36,10 +35,7 @@ from .const import (
     DOMAIN,
     INFRARED_BRIGHTNESS,
     LIFX_CEILING_PRODUCT_IDS,
-)
-from .coordinator import FirmwareEffect, LIFXConfigEntry, LIFXUpdateCoordinator
-from .entity import LIFXEntity
-from .manager import (
+    LOGGER,
     SERVICE_EFFECT_COLORLOOP,
     SERVICE_EFFECT_FLAME,
     SERVICE_EFFECT_MORPH,
@@ -47,8 +43,10 @@ from .manager import (
     SERVICE_EFFECT_PULSE,
     SERVICE_EFFECT_SKY,
     SERVICE_EFFECT_STOP,
-    LIFXManager,
 )
+from .coordinator import FirmwareEffect, LIFXConfigEntry, LIFXUpdateCoordinator
+from .entity import LIFXEntity
+from .manager import LIFXManager
 from .util import convert_8_to_16, convert_16_to_8, find_hsbk, lifx_features, merge_hsbk
 
 LIFX_STATE_SETTLE_DELAY = 0.3
@@ -57,8 +55,8 @@ SERVICE_LIFX_SET_STATE = "set_state"
 
 LIFX_SET_STATE_SCHEMA: VolDictType = {
     **LIGHT_TURN_ON_SCHEMA,
-    ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
-    ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
+    ATTR_INFRARED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=255)),
+    ATTR_ZONES: probatio.All(cv.ensure_list, [cv.positive_int]),
     ATTR_POWER: cv.boolean,
 }
 
@@ -66,8 +64,10 @@ LIFX_SET_STATE_SCHEMA: VolDictType = {
 SERVICE_LIFX_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
 
 LIFX_SET_HEV_CYCLE_STATE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_POWER): cv.boolean,
-    ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
+    probatio.Required(ATTR_POWER): cv.boolean,
+    ATTR_DURATION: probatio.All(
+        probatio.Coerce(float), probatio.Clamp(min=0, max=86400)
+    ),
 }
 
 HSBK_HUE = 0
@@ -227,7 +227,7 @@ class LIFXLight(LIFXEntity, LightEntity):
             infrared_entity_id = self.coordinator.async_get_entity_id(
                 Platform.SELECT, INFRARED_BRIGHTNESS
             )
-            _LOGGER.warning(
+            LOGGER.warning(
                 (
                     "The 'infrared' attribute of 'lifx.set_state' is deprecated:"
                     " call 'select.select_option' targeting '%s' instead"

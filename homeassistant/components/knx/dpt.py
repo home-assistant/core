@@ -4,7 +4,14 @@ from collections.abc import Mapping
 from functools import cache
 from typing import Literal, NotRequired, TypedDict, cast
 
-from xknx.dpt import DPTBase, DPTComplex, DPTComplexFieldSchema, DPTEnum, DPTNumeric
+from xknx.dpt import (
+    DPTBase,
+    DPTBinary,
+    DPTComplex,
+    DPTComplexFieldSchema,
+    DPTEnum,
+    DPTNumeric,
+)
 from xknx.dpt.dpt_16 import DPTString
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -63,6 +70,17 @@ def get_supported_dpts() -> Mapping[str, DPTInfo]:
             _add_complex_details(info, cast(type[DPTComplex], dpt_class))
         dpts[dpt_number_str] = info
     return dpts
+
+
+def raw_payload_length(dpt_cls: type[DPTBase]) -> int:
+    """Return the payload length to use for a `RawValue` of a DPT.
+
+    DPT 1, 2 and 3 are integrated in the APDU header. Their transcoders report a
+    bit count while `RawValue` uses `0` to mark such binary payloads.
+    """
+    if dpt_cls.payload_type is DPTBinary:
+        return 0
+    return dpt_cls.payload_length
 
 
 def _ha_dpt_class(dpt_cls: type[DPTBase]) -> HaDptClass:

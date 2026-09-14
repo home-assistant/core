@@ -8,8 +8,8 @@ import pytest
 import requests
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_SSL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CoreState, HomeAssistant
 
 from . import setup_integration
 from .conftest import TEST_HOST, TEST_PASSWORD, TEST_PORT, TEST_USERNAME
@@ -37,6 +37,36 @@ async def test_setup_and_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_hikcamera.return_value.disconnect.assert_called_once()
+
+
+async def test_stream_stopped_on_shutdown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test the event stream thread is joined before the event loop closes."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_hikcamera.return_value.disconnect.assert_called_once()
+
+
+async def test_stream_stopped_when_shutdown_starts_during_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test the stream is stopped when shutdown begins while setting up."""
+    hass.set_state(CoreState.stopping)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_hikcamera.return_value.disconnect.assert_called_once()
 
 

@@ -54,6 +54,7 @@ async def test_activate_scene(
 
 async def test_updating(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
     scene: AsyncMock,
@@ -63,7 +64,7 @@ async def test_updating(
 
     # Resolve the created scene entity dynamically
     entity_entries = er.async_entries_for_config_entry(
-        er.async_get(hass),  # pylint: disable=home-assistant-tests-registry-fixtures
+        entity_registry,
         mock_config_entry.entry_id,
     )
     scene_entities = [e for e in entity_entries if e.domain == SCENE_DOMAIN]

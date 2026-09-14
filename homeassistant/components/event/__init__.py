@@ -165,7 +165,13 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         """Process a new event."""
         if event_type not in self.event_types:
             raise ValueError(f"Invalid event type {event_type} for {self.entity_id}")
-        self.__last_event_triggered = dt_util.utcnow()
+        triggered = dt_util.utcnow()
+        # Force the timestamp to strictly increase so multiple events fired
+        # within the same millisecond stay distinct state changes, which state
+        # triggers such as event.received rely on to fire once per event.
+        if (last := self.__last_event_triggered) is not None:
+            triggered = max(triggered, last + timedelta(milliseconds=1))
+        self.__last_event_triggered = triggered
         self.__last_event_type = event_type
         self.__last_event_attributes = event_attributes
 

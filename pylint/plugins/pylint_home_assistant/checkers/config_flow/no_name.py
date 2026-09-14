@@ -46,7 +46,7 @@ class HassEnforceConfigFlowNoNameChecker(BaseChecker):
     options = ()
 
     def visit_call(self, node: nodes.Call) -> None:
-        """Check for name fields in vol.Required/Optional calls."""
+        """Check for name fields in probatio.Required/Optional calls."""
         parsed = parse_module(node.root().name)
         if parsed is None or parsed.module != Module.CONFIG_FLOW:
             return

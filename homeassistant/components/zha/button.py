@@ -48,10 +48,8 @@ class ZHAButton(ZHAEntity, ButtonEntity):
     def __init__(self, entity_data: EntityData) -> None:
         """Initialize the ZHA binary sensor."""
         super().__init__(entity_data)
-        if self.entity_data.entity.info_object.device_class is not None:
-            self._attr_device_class = ButtonDeviceClass(
-                self.entity_data.entity.info_object.device_class
-            )
+        if self._zha_state.device_class is not None:
+            self._attr_device_class = ButtonDeviceClass(self._zha_state.device_class)
 
     @convert_zha_error_to_ha_error()
     @override
