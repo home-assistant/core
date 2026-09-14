@@ -1711,10 +1711,10 @@ async def test_scanner_entity_attaches_to_split_of_composite_device(
         identifiers={("other", "x")},
     )
     # Simulate a migration split: both devices share the pre-migration composite id
-    device_registry.devices[own_split.id] = attr.evolve(
+    device_registry._devices[own_split.id] = attr.evolve(
         own_split, composite_device_id=old_id
     )
-    device_registry.devices[other_split.id] = attr.evolve(
+    device_registry._devices[other_split.id] = attr.evolve(
         other_split, composite_device_id=old_id
     )
     # async_get_device now resolves the shared MAC to the synthesized composite
@@ -1723,7 +1723,7 @@ async def test_scanner_entity_attaches_to_split_of_composite_device(
     )
     assert composite is not None
     assert composite.id == old_id
-    assert old_id not in device_registry.devices
+    assert old_id not in device_registry._devices
 
     scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
     scanner_entity.entity_id = "device_tracker.composite_scanner"
@@ -1760,7 +1760,7 @@ async def test_scanner_entity_composite_device_without_own_split(
             connections={(dr.CONNECTION_NETWORK_MAC, mac)},
             identifiers={("other", identifier)},
         )
-        device_registry.devices[split.id] = attr.evolve(
+        device_registry._devices[split.id] = attr.evolve(
             split, composite_device_id=old_id
         )
     composite = device_registry.async_get_device(
@@ -1768,7 +1768,7 @@ async def test_scanner_entity_composite_device_without_own_split(
     )
     assert composite is not None
     assert composite.id == old_id
-    assert old_id not in device_registry.devices
+    assert old_id not in device_registry._devices
 
     scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
     scanner_entity.entity_id = "device_tracker.composite_scanner"
@@ -1921,7 +1921,7 @@ async def test_scanner_entity_prunes_composite_identifiers(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)},
         identifiers={("other", "copied-identifier")},
     )
-    device_registry.devices[own_split.id] = attr.evolve(
+    device_registry._devices[own_split.id] = attr.evolve(
         own_split,
         composite_device_id="composite00000000000000000000000",
         has_composite_identifiers=True,

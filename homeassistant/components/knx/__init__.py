@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Final
 
-import voluptuous as vol
+import probatio
 from xknx.exceptions import XKNXException
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
@@ -70,10 +70,10 @@ _KNX_YAML_CONFIG: Final = "knx_yaml_config"
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            vol.Schema(
+        DOMAIN: probatio.All(
+            probatio.Schema(
                 {
                     **EventSchema.SCHEMA,
                     **ExposeSchema.platform_node(),
@@ -98,7 +98,7 @@ CONFIG_SCHEMA = vol.Schema(
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -278,7 +278,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     knx_module = hass.data[KNX_MODULE_KEY]

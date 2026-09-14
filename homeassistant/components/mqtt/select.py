@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import select
 from homeassistant.components.select import (
@@ -52,14 +52,16 @@ MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
 
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Required(CONF_OPTIONS): cv.ensure_list,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Required(CONF_OPTIONS): cv.ensure_list,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
+DISCOVERY_SCHEMA = probatio.All(
+    PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
+)
 
 
 async def async_setup_entry(

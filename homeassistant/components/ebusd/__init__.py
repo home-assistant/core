@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 import ebusdpy
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_HOST,
@@ -34,26 +34,28 @@ def verify_ebusd_config(config: ConfigType) -> ConfigType:
     circuit: str = config[CONF_CIRCUIT]
     for condition in config[CONF_MONITORED_CONDITIONS]:
         if condition not in SENSOR_TYPES[circuit]:
-            raise vol.Invalid(f"Condition '{condition}' not in '{circuit}'.")
+            raise probatio.Invalid(f"Condition '{condition}' not in '{circuit}'.")
     return config
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
-            vol.All(
+        DOMAIN: probatio.Schema(
+            probatio.All(
                 {
-                    vol.Required(CONF_CIRCUIT): cv.string,
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): cv.ensure_list,
+                    probatio.Required(CONF_CIRCUIT): cv.string,
+                    probatio.Required(CONF_HOST): cv.string,
+                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                    probatio.Optional(
+                        CONF_MONITORED_CONDITIONS, default=[]
+                    ): cv.ensure_list,
                 },
                 verify_ebusd_config,
             )
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

@@ -968,7 +968,7 @@
     'object_id_base': 'Wi-Fi RSSI',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Wi-Fi RSSI',
     'platform': 'homewizard',
@@ -983,6 +983,7 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_wi_fi_rssi:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi RSSI',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',

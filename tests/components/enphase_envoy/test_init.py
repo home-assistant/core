@@ -42,7 +42,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import setup_integration
+from . import TOKEN_SIGNING_KEY, setup_integration
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 from tests.typing import WebSocketGenerator
@@ -72,7 +72,7 @@ async def test_token_in_config_file(
     """Test coordinator with token provided from config."""
     token = encode(
         payload={"name": "envoy", "exp": 1907837780},
-        key="secret",
+        key=TOKEN_SIGNING_KEY,
         algorithm="HS256",
     )
     entry = MockConfigEntry(
@@ -105,7 +105,7 @@ async def test_expired_token_in_config(
     current_token = encode(
         # some time in 2021
         payload={"name": "envoy", "exp": 1627314600},
-        key="secret",
+        key=TOKEN_SIGNING_KEY,
         algorithm="HS256",
     )
 
@@ -305,7 +305,7 @@ async def test_coordinator_token_refresh_error(
     token = encode(
         # some time in 2021
         payload={"name": "envoy", "exp": 1627314600},
-        key="secret",
+        key=TOKEN_SIGNING_KEY,
         algorithm="HS256",
     )
     entry = MockConfigEntry(
@@ -344,7 +344,7 @@ async def test_coordinator_first_update_auth_error(
     current_token = encode(
         # some time in future
         payload={"name": "envoy", "exp": 1927314600},
-        key="secret",
+        key=TOKEN_SIGNING_KEY,
         algorithm="HS256",
     )
 
@@ -796,7 +796,7 @@ async def test_retry_timeout_settings(
     """Test coordinator with token provided from config."""
     token = encode(
         payload={"name": "envoy", "exp": 1907837780},
-        key="secret",
+        key=TOKEN_SIGNING_KEY,
         algorithm="HS256",
     )
     entry = MockConfigEntry(

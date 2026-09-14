@@ -4,8 +4,8 @@ import asyncio
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import light, switch
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -80,9 +80,7 @@ async def test_async_match_states(
         suggested_object_id="kitchen",
         original_name="kitchen light",
     )
-    entity_registry.async_update_entity(
-        state1.entity_id, area_id=area_kitchen.id, aliases=[er.COMPUTED_NAME]
-    )
+    entity_registry.async_update_entity(state1.entity_id, area_id=area_kitchen.id)
 
     entity_registry.async_get_or_create(
         "switch",
@@ -228,7 +226,6 @@ async def test_async_match_targets(
     kitchen_outlet = entity_registry.async_update_entity(
         kitchen_outlet.entity_id,
         name="kitchen outlet",
-        aliases=[er.COMPUTED_NAME],
         device_class=switch.SwitchDeviceClass.OUTLET,
         area_id=area_kitchen.id,
     )
@@ -262,7 +259,6 @@ async def test_async_match_targets(
     bedroom_switch_2 = entity_registry.async_update_entity(
         bedroom_switch_2.entity_id,
         name="second floor bedroom switch",
-        aliases=[er.COMPUTED_NAME],
         area_id=area_bedroom_2.id,
     )
     state_bedroom_switch_2 = State(
@@ -298,7 +294,6 @@ async def test_async_match_targets(
     bedroom_switch_3 = entity_registry.async_update_entity(
         bedroom_switch_3.entity_id,
         name="third floor bedroom switch",
-        aliases=[er.COMPUTED_NAME],
         area_id=area_bedroom_3.id,
     )
     state_bedroom_switch_3 = State(
@@ -658,13 +653,13 @@ async def test_match_child_device_area(
 
 def test_async_validate_slots() -> None:
     """Test async_validate_slots of IntentHandler."""
-    handler1 = MockIntentHandler({vol.Required("name"): cv.string})
+    handler1 = MockIntentHandler({probatio.Required("name"): cv.string})
 
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({})
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({"name": 1})
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({"name": "kitchen"})
     handler1.async_validate_slots({"name": {"value": "kitchen"}})
     handler1.async_validate_slots(
