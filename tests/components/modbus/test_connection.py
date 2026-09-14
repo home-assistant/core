@@ -3,7 +3,7 @@
 from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, patch
 
-from modbus_connection import ModbusSerialParams, ModbusTcpParams
+from modbus_connection import ModbusSerialParams, ModbusTcpParams, ModbusTlsParams
 from modbus_connection.tmodbus import ModbusConnection
 import pytest
 
@@ -114,9 +114,7 @@ async def test_one_device_cannot_be_used_with_two_link_settings(
     async_get_unit(hass, entry, ModbusTcpParams(host="1.2.3.4", port=502), 1)
 
     with pytest.raises(HomeAssistantError, match="different link settings"):
-        async_get_unit(
-            hass, entry, ModbusTcpParams(host="1.2.3.4", port=502, framer="rtu"), 2
-        )
+        async_get_unit(hass, entry, ModbusTlsParams(host="1.2.3.4", port=502), 2)
 
 
 async def test_the_last_consumer_closes_the_connection(
@@ -251,7 +249,7 @@ async def test_a_temporary_unit_cannot_clash_with_held_link_settings(
 
     with pytest.raises(HomeAssistantError, match="different link settings"):
         async with async_get_temporary_unit(
-            hass, ModbusTcpParams(host="1.2.3.4", port=502, framer="rtu"), 2
+            hass, ModbusTlsParams(host="1.2.3.4", port=502), 2
         ):
             pass
 
