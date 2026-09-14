@@ -898,6 +898,28 @@ async def test_binary_sensor_person_detected(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_binary_sensor_glass_break_device_class(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """Test the glass break binary sensor device class."""
+    doorbell.feature_flags.smart_detect_audio_types = [SmartDetectAudioType.GLASS_BREAK]
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    description = next(d for d in CAMERA_SENSORS if d.key == "smart_audio_glass_break")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, doorbell, description
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert (
+        state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.GLASS_BREAK.value
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("key", "make_disabled"),
     [
