@@ -36,6 +36,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.bluetooth import (
     async_discovered_service_info,
     async_request_active_scan,
+    async_scanner_count,
 )
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -227,6 +228,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Select an account vehicle to add over Bluetooth, then pair it."""
+        if not async_scanner_count(self.hass, connectable=True):
+            return self.async_abort(reason="bluetooth_not_available")
         entry = self._get_entry()
         if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
