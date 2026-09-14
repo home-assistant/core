@@ -3608,6 +3608,37 @@ async def test_entry_reload_from_migration_error(
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
+async def test_async_retry_migration_with_incorrect_state(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test that we can recover from a migration error."""
+    entry = MockConfigEntry(domain="comp")
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
+    async_migrate_entry = AsyncMock(side_effect=[False, False, True])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+            async_migrate_entry=async_migrate_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    with pytest.raises(config_entries.OperationNotAllowed):
+        await manager.async_retry_migration(entry.entry_id)
+
+
 async def test_entry_reload_from_migration_error_fails(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
