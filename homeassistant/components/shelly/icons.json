@@ -1,10 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "storage": {
-        "default": "mdi:server"
-      }
-    },
     "button": {
       "mute_alarm": {
         "default": "mdi:volume-mute"
@@ -63,6 +58,9 @@
       },
       "self_test": {
         "default": "mdi:progress-wrench"
+      },
+      "storage_free_space": {
+        "default": "mdi:sd"
       },
       "tilt": {
         "default": "mdi:angle-acute"
