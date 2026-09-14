@@ -50,7 +50,7 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery:
     status: exempt
     comment: |
@@ -74,12 +74,10 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: The created entities are useful for shared vehicle tracking and should be enabled by default.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done

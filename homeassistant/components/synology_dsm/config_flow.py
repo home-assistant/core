@@ -237,7 +237,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             self.shares = await self.api.file.get_shared_folders(only_writable=True)
 
         if self.shares and not backup_path:
-            return await self.async_step_backup_share(user_input)
+            self.saved_user_input = user_input
+            return await self.async_step_backup_share()
 
         # unique_id should be serial for services purpose
         existing_entry = await self.async_set_unique_id(serial, raise_on_progress=False)
@@ -409,16 +410,13 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(user_input)
 
     async def async_step_backup_share(
-        self, user_input: dict[str, Any], errors: dict[str, str] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select backup location."""
         if TYPE_CHECKING:
             assert self.shares is not None
 
-        if not self.saved_user_input:
-            self.saved_user_input = user_input
-
-        if CONF_BACKUP_PATH not in user_input and CONF_BACKUP_SHARE not in user_input:
+        if user_input is None:
             return self.async_show_form(
                 step_id="backup_share",
                 data_schema=vol.Schema(
@@ -435,15 +433,15 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                         vol.Required(
                             CONF_BACKUP_PATH,
                             default=f"{DEFAULT_BACKUP_PATH}_{slugify(self.hass.config.location_name)}",
-                        ): str,
+                        ): vol.All(str, vol.Length(min=1)),
                     }
                 ),
             )
 
-        user_input = {**self.saved_user_input, **user_input}
-        self.saved_user_input = {}
-
-        return await self.async_step_user(user_input)
+        # The credentials stay available, so a retry after a failure still has them
+        return await self.async_validate_input_create_entry(
+            {**self.saved_user_input, **user_input}, step_id="user"
+        )
 
     def _async_get_existing_entry(self, discovered_mac: str) -> ConfigEntry | None:
         """See if we already have a configured NAS with this MAC address."""

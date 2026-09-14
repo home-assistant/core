@@ -577,7 +577,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     "format": {
                         "type": "json_schema",
                         "schema": {
-                            **to_openapi(location_schema),
+                            **to_openapi(location_schema, openapi_version="3.1.0"),
                             "additionalProperties": False,
                         },
                     }

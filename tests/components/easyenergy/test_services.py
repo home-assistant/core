@@ -3,7 +3,13 @@
 from datetime import date
 from unittest.mock import MagicMock
 
-from easyenergy import ElectricityGranularity, VatOption
+from easyenergy import (
+    EasyEnergyConnectionError,
+    EasyEnergyError,
+    EasyEnergyNoDataError,
+    ElectricityGranularity,
+    VatOption,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -18,7 +24,7 @@ from homeassistant.components.easyenergy.services import (
     GAS_SERVICE_NAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry
 
@@ -459,6 +465,7 @@ async def test_service_validation_config_entry_not_found(
 async def test_service_validation_invalid_date(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_easyenergy: MagicMock,
     service: str,
     date_field: str,
     date_value: str,
@@ -470,6 +477,8 @@ async def test_service_validation_invalid_date(
     }
     if service != ENERGY_RETURN_SERVICE_NAME:
         service_data["incl_vat"] = True
+
+    mock_easyenergy.reset_mock()
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
@@ -483,3 +492,58 @@ async def test_service_validation_invalid_date(
     assert str(err.value) == f"Invalid date provided. Got {date_value}"
     assert err.value.translation_key == "invalid_date"
     assert err.value.translation_placeholders == {"date": date_value}
+    mock_easyenergy.gas_prices.assert_not_awaited()
+    mock_easyenergy.energy_prices.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("service", "method", "service_data"),
+    [
+        (GAS_SERVICE_NAME, "gas_prices", {"incl_vat": True}),
+        (ENERGY_USAGE_SERVICE_NAME, "energy_prices", {"incl_vat": True}),
+        (ENERGY_RETURN_SERVICE_NAME, "energy_prices", {}),
+    ],
+)
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(
+            EasyEnergyError("Unexpected response", {"response": "raw API data"}),
+            id="api_error",
+        ),
+        pytest.param(
+            EasyEnergyConnectionError("Connection failed"), id="connection_error"
+        ),
+        pytest.param(EasyEnergyNoDataError("No prices found"), id="no_data"),
+    ],
+)
+async def test_service_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_easyenergy: MagicMock,
+    service: str,
+    method: str,
+    service_data: dict[str, bool],
+    exception: EasyEnergyError,
+) -> None:
+    """Test API failures raise translated execution errors for every action."""
+    mock_method = getattr(mock_easyenergy, method)
+    mock_method.reset_mock()
+    mock_method.side_effect = exception
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id} | service_data,
+            blocking=True,
+            return_response=True,
+        )
+
+    assert not isinstance(err.value, ServiceValidationError)
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "fetch_prices_error"
+    assert str(err.value) == "Error fetching prices from the easyEnergy API"
+    assert err.value.__cause__ is exception
+    mock_method.assert_awaited_once()

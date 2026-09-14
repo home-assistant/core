@@ -15,7 +15,7 @@ from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
-from homeassistant.helpers.json import json_bytes, json_fragment
+from homeassistant.helpers.json import cached_json_fragment, json_fragment
 from homeassistant.util.yaml import Secrets, load_yaml_dict
 
 from .const import (
@@ -182,7 +182,7 @@ class LovelaceStorage(LovelaceConfig):
         """Build JSON representation of the config."""
         if self._data is None or self._data["config"] is None:
             raise ConfigNotFound
-        self._json_config = json_fragment(json_bytes(self._data["config"]))
+        self._json_config = cached_json_fragment(self._data["config"])
         return self._json_config
 
 
@@ -260,7 +260,7 @@ class LovelaceYAML(LovelaceConfig):
         except FileNotFoundError:
             raise ConfigNotFound from None
 
-        json = json_fragment(json_bytes(config))
+        json = cached_json_fragment(config)
         self._cache = (config, time.time(), json)
         return is_updated, config, json
 

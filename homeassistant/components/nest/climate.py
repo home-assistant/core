@@ -126,7 +126,6 @@ class ThermostatEntity(ClimateEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
-        self._attr_supported_features = self._get_supported_features()
         self.async_on_remove(
             self._device.add_update_listener(self.async_write_ha_state)
         )
@@ -264,6 +263,12 @@ class ThermostatEntity(ClimateEntity):
             return FAN_INV_MODES
         return []
 
+    @property
+    @override
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the bitmap of supported features, computed from current traits."""
+        return self._get_supported_features()
+
     def _get_supported_features(self) -> ClimateEntityFeature:
         """Compute the bitmap of supported features from the current state."""
         features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
@@ -348,10 +353,6 @@ class ThermostatEntity(ClimateEntity):
         """Set new target fan mode."""
         if fan_mode not in self.fan_modes:
             raise ValueError(f"Unsupported fan_mode '{fan_mode}'")
-        if fan_mode == FAN_ON and self.hvac_mode == HVACMode.OFF:
-            raise ValueError(
-                "Cannot turn on fan, please set an HVAC mode (e.g. heat/cool) first"
-            )
         trait = self._device.traits[FanTrait.NAME]
         duration = None
         if fan_mode != FAN_OFF:
@@ -367,12 +368,6 @@ class ThermostatEntity(ClimateEntity):
         """Set a short term fan timer."""
         if not self.supported_features & ClimateEntityFeature.FAN_MODE:
             raise HomeAssistantError(f"Entity {self.entity_id} does not support fan")
-
-        if self.hvac_mode == HVACMode.OFF:
-            raise HomeAssistantError(
-                f"Cannot turn on fan for {self.entity_id},"
-                " please set an HVAC mode (e.g. heat/cool) first"
-            )
 
         seconds = int(duration.total_seconds())
         if seconds <= 0 or seconds > MAX_FAN_DURATION:

@@ -148,7 +148,6 @@ NON_MIGRATED_INTEGRATIONS = {
     "device_automation",
     "geo_location",
     "homeassistant",
-    "knx",
     "lg_netcast",
     "litejet",
     "persistent_notification",
@@ -159,7 +158,6 @@ NON_MIGRATED_INTEGRATIONS = {
     "webhook",
     "webostv",
     "zone",
-    "zwave_js",
 }
 
 

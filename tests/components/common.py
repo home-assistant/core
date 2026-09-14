@@ -3,18 +3,17 @@
 from collections.abc import Iterable
 import copy
 from enum import StrEnum
+import inspect
 import itertools
 import logging
 from pathlib import Path
+import re
 from typing import Any, TypedDict
 
 import pytest
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
-    ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_CONDITION,
@@ -29,17 +28,22 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
     label_registry as lr,
 )
 from homeassistant.helpers.condition import (
+    Condition,
     ConditionCheckerTypeOptional,
+    EntityConditionBase,
     async_from_config as async_condition_from_config,
     async_validate_condition_config,
 )
 from homeassistant.helpers.trigger import (
+    EntityTriggerBase,
+    Trigger,
     async_initialize_triggers,
     async_validate_trigger_config,
 )
@@ -185,7 +189,31 @@ async def target_entities(
 def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
     """Parametrize target entities for different target types.
 
-    Meant to be used with target_entities.
+    Meant to be used with target_entities. Each row is a
+    ``(target_config, entity_id, entities_in_target)`` triple.
+
+    Only two representative rows are kept:
+
+    - ``entity`` — a direct ``entity_id`` reference to two standalone entities.
+      This preserves the direct-reference resolution path (state-machine-only,
+      non-registry entities) and a guaranteed multi-entity target, so the
+      all/first/count behavior assertions stay non-vacuous.
+    - ``label-entity`` — a ``label_id`` reference that resolves to three
+      entities: the labeled entity directly and, via label->device expansion,
+      the device-attached entities. This preserves indirect resolution
+      end-to-end plus everything that only fires when excluded entities sit
+      inside the resolved target scope: in-scope cross-domain exclusion (E2),
+      in-scope device_class/feature-filter negatives (E3), and battery's
+      ``primary_entities_only=False`` flag, which only has an observable effect
+      when a categorized entity is reached through device expansion (E1).
+
+    The dropped rows (area, floor, device_id, and the label/area/floor rows
+    that drive the device-attached entity) only varied *how* a target config
+    resolves to an entity set. That resolution is domain-independent machinery
+    covered centrally by ``tests/helpers/test_target.py`` (area->entity,
+    floor->area, area/label/floor->device, direct device incl. child devices,
+    and the ``primary_entities_only`` category asymmetry), so re-exercising it
+    per domain was pure duplication.
     """
     return [
         (
@@ -199,13 +227,267 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
             2,
         ),
         ({ATTR_LABEL_ID: "test_label"}, f"{domain}.label_{domain}", 3),
-        ({ATTR_AREA_ID: "test_area"}, f"{domain}.area_{domain}", 3),
-        ({ATTR_FLOOR_ID: "test_floor"}, f"{domain}.area_{domain}", 3),
-        ({ATTR_LABEL_ID: "test_label"}, f"{domain}.device_{domain}", 3),
-        ({ATTR_AREA_ID: "test_area"}, f"{domain}.device_{domain}", 3),
-        ({ATTR_FLOOR_ID: "test_floor"}, f"{domain}.device_{domain}", 3),
-        ({ATTR_DEVICE_ID: "test_device"}, f"{domain}.device_{domain}", 2),
     ]
+
+
+class TargetSupport(StrEnum):
+    """Declared level of user-target support for a registered trigger/condition."""
+
+    # Supports a user target via the shared entity base-class machinery: fully
+    # certified (subclasses the entity base, inherits the target machinery
+    # unmodified, carries the `target: cv.TARGET_FIELDS` slot, and passes
+    # init/entity_filter hygiene).
+    STANDARD = "standard"
+    # Does not support a user target (synthesized or absent); asserted to expose
+    # no `target` schema slot.
+    NONE = "none"
+    # Supports a user target but resolves it with its own machinery; only a
+    # `target: cv.TARGET_FIELDS` slot is asserted, and the machinery/entity-base
+    # checks are skipped (its own dedicated tests cover resolution correctness).
+    CUSTOM = "custom"
+
+
+# Target-resolution machinery a target-supporting trigger/condition class must
+# inherit unchanged from its entity base class. ``entity_filter`` is intentionally
+# absent: it runs inside the resolution choke point on the already-resolved entity
+# set, so an override that narrows the base result is allowed and is checked
+# separately by _entity_filter_hygiene_violation.
+_TRIGGER_TARGET_MACHINERY = frozenset(
+    {
+        "async_validate_complete_config",
+        "async_validate_config",
+        "async_attach_action",
+        "async_attach_runner",
+        "count_matches",
+        "_cancel_invalidated_timers",
+        "_combined_state_still_valid",
+    }
+)
+_CONDITION_TARGET_MACHINERY = frozenset(
+    {
+        "async_validate_complete_config",
+        "async_validate_config",
+        "async_check",
+        "async_unload",
+        "_async_unload",
+        "_async_setup",
+        "_async_check",
+        "_check_any_match_state",
+        "_check_all_match_state",
+        "_async_on_entities_update",
+        "_async_prime_valid_since",
+        "_async_refine_anchors_from_history",
+        "_valid_since_from_history",
+        "_update_valid_since",
+    }
+)
+_TARGET_HELPER_MODULES = frozenset(
+    {"homeassistant.helpers.trigger", "homeassistant.helpers.condition"}
+)
+
+
+def _foreign_names(cls: type) -> set[str]:
+    """Return names defined by MRO classes outside the trigger/condition helpers."""
+    names: set[str] = set()
+    for klass in cls.__mro__:
+        if klass.__module__ in _TARGET_HELPER_MODULES:
+            continue
+        names.update(vars(klass))
+    return names
+
+
+def _target_slot_validator(cls: type) -> object | None:
+    """Return the ``target`` schema validator for a class, or None if it has none.
+
+    A class exposes a user-configurable target iff its ``_schema`` carries a
+    ``target`` marker. Bespoke or synthesized-target classes (e.g. zone.occupancy_*
+    or the legacy ``_`` platforms) have no such marker.
+    """
+    mapping = getattr(getattr(cls, "_schema", None), "schema", None)
+    if not isinstance(mapping, dict):
+        return None
+    for marker, validator in mapping.items():
+        if str(marker) == "target":
+            return validator
+    return None
+
+
+def _init_hygiene_violation(cls: type, key: str, config_cls_name: str) -> str | None:
+    """Return an error if an __init__ override rewrites the config or target."""
+    for klass in cls.__mro__:
+        if klass.__module__ in _TARGET_HELPER_MODULES:
+            return None
+        if "__init__" not in vars(klass):
+            continue
+        src = inspect.getsource(klass.__init__)
+        if "super().__init__(hass, config)" not in src:
+            return f"{key}: __init__ must delegate the unmodified config to super()"
+        if re.search(r"self\._target\b\s*=", src):
+            return f"{key}: __init__ must not assign self._target"
+        if f"{config_cls_name}(" in src or "replace(config" in src:
+            return f"{key}: __init__ must not rebuild the config object"
+        # ConditionConfig is @dataclass(slots=True) but NOT frozen (unlike
+        # TriggerConfig), so a mutation would rewrite the user target at runtime
+        # while passing the checks above. The (?!=) excludes the `==` comparison
+        # and the optional subscript excludes reads. Freezing ConditionConfig
+        # upstream would be a stronger, product-side fix.
+        if re.search(r"config\.target\b\s*(?:\[[^\]]*\])?\s*=(?!=)", src):
+            return f"{key}: __init__ must not assign to config.target"
+        continue
+    return None
+
+
+def _entity_filter_hygiene_violation(cls: type, key: str) -> str | None:
+    """Return an error if an entity_filter override does not narrow the base."""
+    for klass in cls.__mro__:
+        if klass.__module__ in _TARGET_HELPER_MODULES:
+            return None
+        if "entity_filter" not in vars(klass):
+            continue
+        src = inspect.getsource(klass.entity_filter)
+        if "super().entity_filter(" not in src:
+            return f"{key}: entity_filter override must narrow the base result"
+        continue
+    return None
+
+
+def _target_supporting_violations(
+    cls: type,
+    key: str,
+    *,
+    entity_base: type,
+    machinery: frozenset[str],
+    config_cls: str,
+) -> list[str]:
+    """Return violations for a class declared to support a user target."""
+    if not issubclass(cls, entity_base):
+        return [
+            f"{key} ({cls.__name__}): declared target-supporting but does not "
+            f"subclass {entity_base.__name__}"
+        ]
+    violations: list[str] = []
+    overridden = _foreign_names(cls) & machinery
+    if overridden:
+        violations.append(
+            f"{key} overrides target machinery {sorted(overridden)}; it no longer "
+            "inherits the shared target resolution"
+        )
+    if _target_slot_validator(cls) is not cv.TARGET_FIELDS:
+        violations.append(
+            f"{key}: schema does not carry the standard `target: cv.TARGET_FIELDS` slot"
+        )
+    violations.extend(
+        violation
+        for violation in (
+            _init_hygiene_violation(cls, key, config_cls),
+            _entity_filter_hygiene_violation(cls, key),
+        )
+        if violation is not None
+    )
+    return violations
+
+
+def _assert_target_support(
+    registry: dict[str, type],
+    declaration: dict[str, TargetSupport],
+    *,
+    entity_base: type,
+    machinery: frozenset[str],
+    config_cls: str,
+    kind: str,
+) -> None:
+    """Certify one registry against its ``key -> TargetSupport`` declaration."""
+    missing = set(registry) - set(declaration)
+    extra = set(declaration) - set(registry)
+    assert not missing, (
+        f"{kind}s registered but not declared: {sorted(missing)} -- add them to the "
+        "target-support declaration"
+    )
+    assert not extra, (
+        f"{kind}s declared but not registered: {sorted(extra)} -- remove them from "
+        "the target-support declaration"
+    )
+
+    violations: list[str] = []
+    for key in sorted(registry):
+        cls = registry[key]
+        support = declaration[key]
+        if support is TargetSupport.STANDARD:
+            violations.extend(
+                _target_supporting_violations(
+                    cls,
+                    key,
+                    entity_base=entity_base,
+                    machinery=machinery,
+                    config_cls=config_cls,
+                )
+            )
+        elif support is TargetSupport.NONE:
+            if _target_slot_validator(cls) is not None:
+                violations.append(
+                    f"{key}: declared TargetSupport.NONE, but its schema exposes a "
+                    "`target` slot"
+                )
+        elif support is TargetSupport.CUSTOM:
+            # Custom-machinery target: only require that a user target slot
+            # exists; the class's own tests cover resolution correctness. The
+            # standard machinery/entity-base checks are intentionally skipped,
+            # and this state must be opted into explicitly -- a class declared
+            # STANDARD that forgot to subclass the entity base still fails above.
+            if _target_slot_validator(cls) is not cv.TARGET_FIELDS:
+                violations.append(
+                    f"{key}: declared TargetSupport.CUSTOM but its schema does not "
+                    "carry a `target: cv.TARGET_FIELDS` slot"
+                )
+        else:
+            violations.append(
+                f"{key}: invalid target-support declaration value {support!r}; use a "
+                "TargetSupport member"
+            )
+    assert not violations, f"{kind} target-support violations:\n" + "\n".join(
+        violations
+    )
+
+
+def assert_triggers_target_support(
+    registry: dict[str, type[Trigger]], declaration: dict[str, TargetSupport]
+) -> None:
+    """Certify a domain's trigger registry against its target-support declaration.
+
+    ``declaration`` maps every registered trigger key to a ``TargetSupport`` member:
+    ``STANDARD`` (inherits the shared target-resolution machinery unmodified, so the
+    collapsed two-row target axis still certifies it), ``NONE`` (exposes no
+    ``target`` schema slot -- bespoke or synthesized target, e.g. zone.occupancy_*),
+    or ``CUSTOM`` (exposes a ``target`` slot but resolves it with its own machinery,
+    e.g. timer.remaining_time_reached). Battery's ``primary_entities_only=False`` is
+    intentionally not pinned here -- its behavior tests with DIAGNOSTIC fixtures
+    already fail loudly on a silent flip.
+    """
+    _assert_target_support(
+        registry,
+        declaration,
+        entity_base=EntityTriggerBase,
+        machinery=_TRIGGER_TARGET_MACHINERY,
+        config_cls="TriggerConfig",
+        kind="trigger",
+    )
+
+
+def assert_conditions_target_support(
+    registry: dict[str, type[Condition]], declaration: dict[str, TargetSupport]
+) -> None:
+    """Certify a domain's condition registry against its target-support declaration.
+
+    See assert_triggers_target_support; the same contract on the condition base.
+    """
+    _assert_target_support(
+        registry,
+        declaration,
+        entity_base=EntityConditionBase,
+        machinery=_CONDITION_TARGET_MACHINERY,
+        config_cls="ConditionConfig",
+        kind="condition",
+    )
 
 
 class StateDescription(TypedDict):
