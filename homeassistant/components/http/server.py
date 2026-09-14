@@ -121,9 +121,9 @@ def make_server(
     )
 
 
-def _resolve_hosts(hosts: list[str]) -> list[tuple[str, int, str]]:
-    """Resolve hosts to (host, family, address) like create_server() does."""
-    resolved: list[tuple[str, int, str]] = []
+def _resolve_hosts(hosts: list[str]) -> list[tuple[str, int, tuple[Any, ...]]]:
+    """Resolve hosts to (host, family, sockaddr) like create_server() does."""
+    resolved: list[tuple[str, int, tuple[Any, ...]]] = []
     for host in hosts:
         try:
             infos = socket.getaddrinfo(
@@ -137,9 +137,7 @@ def _resolve_hosts(hosts: list[str]) -> list[tuple[str, int, str]]:
             raise HomeAssistantError(
                 f"Cannot resolve listen address {host!r}: {err}"
             ) from err
-        resolved.extend(
-            (host, family, str(sockaddr[0])) for family, _, _, _, sockaddr in infos
-        )
+        resolved.extend((host, family, sockaddr) for family, _, _, _, sockaddr in infos)
     return resolved
 
 
@@ -157,22 +155,24 @@ async def async_verify_hosts_distinct(hass: HomeAssistant, hosts: list[str]) -> 
     cannot be resolved.
     """
     resolved = await hass.async_add_executor_job(_resolve_hosts, hosts)
-    seen: dict[int, dict[str, str]] = {}
-    for host, family, address in resolved:
+    # Keyed by the full sockaddr: the same IPv6 link-local address on two
+    # interfaces (differing scope ID) binds two distinct endpoints.
+    seen: dict[int, dict[tuple[Any, ...], str]] = {}
+    for host, family, sockaddr in resolved:
         family_seen = seen.setdefault(family, {})
-        if address in family_seen:
+        if sockaddr in family_seen:
             # create_server() binds each resolved endpoint only once.
             continue
         if family_seen and (
-            address in _WILDCARD_ADDRESSES
-            or any(seen_addr in _WILDCARD_ADDRESSES for seen_addr in family_seen)
+            sockaddr[0] in _WILDCARD_ADDRESSES
+            or any(seen_addr[0] in _WILDCARD_ADDRESSES for seen_addr in family_seen)
         ):
             conflicting = next(iter(family_seen.values()))
             raise HomeAssistantError(
                 f"Listen addresses {conflicting!r} and {host!r} overlap:"
                 " both cannot listen on the same port"
             )
-        family_seen[address] = host
+        family_seen[sockaddr] = host
 
 
 async def async_verify_can_bind(hass: HomeAssistant, conf: ConfData) -> None:

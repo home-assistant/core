@@ -2449,6 +2449,8 @@ async def test_websocket_configure_same_port_host_change_is_accepted(
         # create_server() binds each resolved endpoint only once.
         pytest.param(["::1", "::1"], id="duplicate"),
         pytest.param(["0.0.0.0", "0.0.0.0"], id="duplicate_wildcard"),
+        # The same link-local address on two interfaces is two endpoints.
+        pytest.param(["fe80::1%1", "fe80::1%2"], id="scoped_link_local"),
     ],
 )
 async def test_verify_hosts_distinct_accepts(
@@ -2467,6 +2469,7 @@ async def test_verify_hosts_distinct_accepts(
         ),
         pytest.param(["::", "::1"], "::", "::1", id="v6"),
         pytest.param(["0.0.0.0", "::1", "::"], "::1", "::", id="v6_after_v4"),
+        pytest.param(["::", "fe80::1%1"], "::", "fe80::1%1", id="v6_scoped"),
     ],
 )
 async def test_verify_hosts_distinct_rejects(
