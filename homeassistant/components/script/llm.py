@@ -58,7 +58,7 @@ class ScriptTool(ActionTool):
         field, so an LLM-supplied value for that field is never
         overwritten.
         """
-        if llm_context.device_id and "device_id" not in self.parameters.schema:
+        if llm_context.device_id and "device_id" not in tool_input.tool_args:
             tool_input.tool_args["device_id"] = llm_context.device_id
         return await super().async_call(hass, tool_input, llm_context)
 
