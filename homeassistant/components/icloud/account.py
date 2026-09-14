@@ -81,12 +81,12 @@ _AUTH_REQUIRED_STATUSES = frozenset(
 )
 
 
-def _is_auth_error(err: PyiCloudAPIResponseException) -> bool:
+def is_auth_error(err: PyiCloudAPIResponseException) -> bool:
     """Return True if the account has to authenticate again to recover."""
     return isinstance(err.code, int) and err.code in _AUTH_REQUIRED_STATUSES
 
 
-def _is_2fa_status(err: PyiCloudAPIResponseException) -> bool:
+def is_2fa_status(err: PyiCloudAPIResponseException) -> bool:
     """Return True if the status reports a challenge rather than a rejection.
 
     The same challenge reaches us either as PyiCloud2FARequiredException or,
@@ -174,14 +174,14 @@ class IcloudAccount:
             return
 
         except PyiCloudAPIResponseException as err:
-            if not _is_auth_error(err):
+            if not is_auth_error(err):
                 # Anything else is iCloud failing rather than refusing, so let
                 # Home Assistant retry the setup with its own backoff.
                 raise ConfigEntryNotReady from err
             # self.api was never assigned, so there is no session to send a
             # code through even when the status asks for one.
             self._handle_auth_required(
-                two_factor=_is_2fa_status(err), keep_session=False
+                two_factor=is_2fa_status(err), keep_session=False
             )
             return
 
@@ -223,14 +223,14 @@ class IcloudAccount:
         except PyiCloudAPIResponseException as err:
             # Has to stay below the clause above: PyiCloudServiceNotActivatedException
             # is a subclass of this one and would otherwise never be reached.
-            if not _is_auth_error(err):
+            if not is_auth_error(err):
                 # Anything else is iCloud failing rather than refusing, so let
                 # Home Assistant retry the setup with its own backoff.
                 raise ConfigEntryNotReady from err
             # A challenge keeps its session for the code to go through. The
             # rejections do not: the session has just failed to refresh, so a
             # reauth flow sending a code through it would fail as well.
-            challenge = _is_2fa_status(err)
+            challenge = is_2fa_status(err)
             self._handle_auth_required(
                 two_factor=challenge, keep_session=challenge, start_reauth=False
             )

@@ -21,6 +21,7 @@ from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.storage import Store
 
+from .account import is_auth_error
 from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
@@ -106,12 +107,53 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=self._description_placeholders,
         )
 
-    def _login_without_stored_session(self) -> PyiCloudService:
-        """Log in after discarding a stored session iCloud has rejected.
+    async def _retry_without_stored_session(
+        self, error: Exception, user_input, step_id
+    ) -> ConfigFlowResult | None:
+        """Log in again without the session iCloud rejected.
+
+        PyiCloudService validates the stored session while it is constructed,
+        so a rejected one fails before the password is tried and re-entering
+        it would run into the same rejection. Returns a form to show when the
+        login cannot be completed, or None when it succeeded.
+        """
+        _LOGGER.debug(
+            "Stored iCloud session for %s was rejected, logging in again: %s",
+            self._username,
+            error,
+        )
+        try:
+            self.api, challenged = await self.hass.async_add_executor_job(
+                self._login_without_stored_session
+            )
+        except PyiCloudFailedLoginException as retry_error:
+            _LOGGER.error("Error logging into iCloud service: %s", retry_error)
+            self.api = None
+            return self._show_setup_form(
+                user_input, {CONF_PASSWORD: "invalid_auth"}, step_id
+            )
+        except (
+            PyiCloudAuthRequiredException,
+            PyiCloudAPIResponseException,
+        ) as retry_error:
+            _LOGGER.error(
+                "Could not log in to iCloud for %s: %s", self._username, retry_error
+            )
+            self.api = None
+            return self._show_setup_form(user_input, {"base": "unknown"}, step_id)
+
+        # The login reached a challenge rather than failing, so the session it
+        # established is what the code has to go through.
+        self._forced_2fa = self._forced_2fa or challenged
+        return None
+
+    def _login_without_stored_session(self) -> tuple[PyiCloudService, bool]:
+        """Log in with the stored session discarded, in the executor.
 
         The service validates the stored session while it is constructed, so
         it has to be built without authenticating for the session to be
-        cleared before the login is attempted. Runs in the executor.
+        cleared before the login is attempted. Returns the service and whether
+        the login ended in a 2FA challenge.
         """
         api = PyiCloudService(
             self._username,
@@ -123,8 +165,13 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             authenticate=False,
         )
         api.session.clear_persistence()
-        api.authenticate()
-        return api
+        try:
+            api.authenticate()
+        except PyiCloud2FARequiredException:
+            # The login got as far as a challenge, which is a session to send
+            # a code through rather than a failure to report.
+            return api, True
+        return api, False
 
     async def _request_2fa_code(self, errors: dict[str, str]) -> dict[str, str]:
         """Request an Apple 2FA code."""
@@ -199,37 +246,24 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 PyiCloudAuthRequiredException,
                 PyiCloudAPIResponseException,
             ) as error:
-                # PyiCloudService validates the stored session while it is
-                # constructed, so a session iCloud is rejecting fails before
-                # the password is tried and re-entering it would run into the
-                # same rejection. Discard the session and log in again.
-                _LOGGER.debug(
-                    "Stored iCloud session for %s was rejected, logging in again: %s",
-                    self._username,
-                    error,
-                )
-                try:
-                    self.api = await self.hass.async_add_executor_job(
-                        self._login_without_stored_session
-                    )
-                except PyiCloudFailedLoginException as retry_error:
-                    _LOGGER.error("Error logging into iCloud service: %s", retry_error)
-                    self.api = None
-                    errors = {CONF_PASSWORD: "invalid_auth"}
-                    return self._show_setup_form(user_input, errors, step_id)
-                except (
-                    PyiCloud2FARequiredException,
-                    PyiCloudAuthRequiredException,
-                    PyiCloudAPIResponseException,
-                ) as retry_error:
+                if isinstance(
+                    error, PyiCloudAPIResponseException
+                ) and not is_auth_error(error):
+                    # iCloud failing rather than refusing. The stored session
+                    # is not at fault and must not be thrown away over an
+                    # outage: it carries the trust token that keeps the user
+                    # from being asked for a code again.
                     _LOGGER.error(
-                        "Could not log in to iCloud for %s: %s",
-                        self._username,
-                        retry_error,
+                        "Could not log in to iCloud for %s: %s", self._username, error
                     )
                     self.api = None
                     errors = {"base": "unknown"}
                     return self._show_setup_form(user_input, errors, step_id)
+                result = await self._retry_without_stored_session(
+                    error, user_input, step_id
+                )
+                if result is not None:
+                    return result
 
         if self._requires_2fa:
             return await self.async_step_verification_code()
