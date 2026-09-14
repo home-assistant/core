@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "exceeded_api_calls": "The number of API calls has been exceeded.",
@@ -1163,6 +1162,9 @@
     }
   },
   "exceptions": {
+    "connection_error": {
+      "message": "Failed to connect to the LG ThinQ cloud. Please try again later."
+    },
     "failed_to_connect_mqtt": {
       "message": "Failed to connect MQTT: {error}"
     }

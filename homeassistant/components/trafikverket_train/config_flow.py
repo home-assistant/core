@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pytrafikverket import (
     InvalidAuthentication,
     NoTrainStationFound,
@@ -11,7 +12,6 @@ from pytrafikverket import (
     TrafikverketTrain,
     UnknownError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -38,16 +38,16 @@ from .const import CONF_FILTER_PRODUCT, CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 OPTION_SCHEMA = {
-    vol.Optional(CONF_FILTER_PRODUCT, default=""): TextSelector(),
+    probatio.Optional(CONF_FILTER_PRODUCT, default=""): TextSelector(),
 }
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): TextSelector(),
-        vol.Required(CONF_FROM): TextSelector(),
-        vol.Required(CONF_TO): TextSelector(),
-        vol.Optional(CONF_TIME): TimeSelector(),
-        vol.Required(CONF_WEEKDAY, default=WEEKDAYS): SelectSelector(
+        probatio.Required(CONF_API_KEY): TextSelector(),
+        probatio.Required(CONF_FROM): TextSelector(),
+        probatio.Required(CONF_TO): TextSelector(),
+        probatio.Optional(CONF_TIME): TimeSelector(),
+        probatio.Required(CONF_WEEKDAY, default=WEEKDAYS): SelectSelector(
             SelectSelectorConfig(
                 options=WEEKDAYS,
                 multiple=True,
@@ -57,9 +57,9 @@ DATA_SCHEMA = vol.Schema(
         ),
     }
 ).extend(OPTION_SCHEMA)
-DATA_SCHEMA_REAUTH = vol.Schema(
+DATA_SCHEMA_REAUTH = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
     }
 )
 
@@ -309,13 +309,13 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         ]
         schema = {}
         if len(from_options) > 1:
-            schema[vol.Required(CONF_FROM)] = SelectSelector(
+            schema[probatio.Required(CONF_FROM)] = SelectSelector(
                 SelectSelectorConfig(
                     options=from_options, mode=SelectSelectorMode.DROPDOWN, sort=True
                 )
             )
         if len(to_options) > 1:
-            schema[vol.Required(CONF_TO)] = SelectSelector(
+            schema[probatio.Required(CONF_TO)] = SelectSelector(
                 SelectSelectorConfig(
                     options=to_options, mode=SelectSelectorMode.DROPDOWN, sort=True
                 )
@@ -324,7 +324,7 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="select_stations",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(schema), user_input or {}
+                probatio.Schema(schema), user_input or {}
             ),
         )
 
@@ -346,7 +346,7 @@ class TVTrainOptionsFlowHandler(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(OPTION_SCHEMA),
+                probatio.Schema(OPTION_SCHEMA),
                 user_input or self.config_entry.options,
             ),
             errors=errors,

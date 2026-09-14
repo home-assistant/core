@@ -142,11 +142,16 @@ async def test_config_flow_entry_migrate(
     manager = hass.config_entries
     mock_entry = MOCK_ENTRY_VERSION_1
     mock_entry.add_to_manager(manager)
+    # The integration registers the PS4 device with a name (the console host name),
+    # so the entity id is derived from the device name.
     mock_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={(DOMAIN, MOCK_UNIQUE_ID)},
+        manufacturer="Sony Interactive Entertainment Inc.",
+        model="PlayStation 4",
+        name="My PS4",
     )
-    mock_entity_id = f"media_player.ps4_{MOCK_UNIQUE_ID}"
     mock_e_entry = entity_registry.async_get_or_create(
         "media_player",
         "ps4",
@@ -154,8 +159,9 @@ async def test_config_flow_entry_migrate(
         config_entry=mock_entry,
         device_id=mock_device_entry.id,
     )
+    mock_entity_id = mock_e_entry.entity_id
     assert len(entity_registry.entities) == 1
-    assert mock_e_entry.entity_id == mock_entity_id
+    assert mock_entity_id == "media_player.my_ps4"
     assert mock_e_entry.unique_id == MOCK_UNIQUE_ID
 
     with (
@@ -173,10 +179,9 @@ async def test_config_flow_entry_migrate(
     await hass.async_block_till_done()
 
     assert len(entity_registry.entities) == 1
-    for entity in entity_registry.entities.values():
-        mock_entity = entity
-
-    # Test that entity_id remains the same.
+    # The migration must keep the entity_id unchanged.
+    mock_entity = entity_registry.async_get(mock_entity_id)
+    assert mock_entity is not None
     assert mock_entity.entity_id == mock_entity_id
     assert mock_entity.device_id == mock_device_entry.id
 

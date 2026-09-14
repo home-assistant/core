@@ -18,7 +18,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Jellyfin component."""
-    await async_setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
@@ -81,7 +81,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) ->
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: JellyfinConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: JellyfinConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove device from a config entry."""
     coordinator = config_entry.runtime_data

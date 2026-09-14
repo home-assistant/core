@@ -257,7 +257,9 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     def installed_version(self) -> str | None:
         """Return the installed version."""
         assert self.coordinator.data.os is not None
-        return self.coordinator.data.os.version
+        return (
+            self.coordinator.data.os.version_pending or self.coordinator.data.os.version
+        )
 
     @property
     @override

@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from ollama import Message, ResponseError
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import conversation, ollama
 from homeassistant.components.conversation import trace
@@ -173,6 +173,7 @@ async def test_thinking_content(
             ollama.CONF_THINK: True,
         },
     )
+    await hass.async_block_till_done()
 
     conversation_id = "conversation_id_1234"
 
@@ -309,9 +310,9 @@ async def test_function_call(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str},
-        extra=vol.ALLOW_EXTRA,
+    mock_tool.parameters = probatio.Schema(
+        {probatio.Optional("param1", description="Test parameters"): str},
+        extra=probatio.ALLOW_EXTRA,
     )
     mock_tool.async_call.return_value = "Test response"
 
@@ -394,8 +395,8 @@ async def test_function_exception(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+    mock_tool.parameters = probatio.Schema(
+        {probatio.Optional("param1", description="Test parameters"): str}
     )
     mock_tool.async_call.side_effect = HomeAssistantError("Test tool exception")
 
@@ -717,6 +718,7 @@ async def test_message_history_unlimited(
             subentry,
             data={**subentry.data, ollama.CONF_MAX_HISTORY: 0},
         )
+        await hass.async_block_till_done()
         for i in range(100):
             result = await conversation.async_converse(
                 hass,
@@ -894,6 +896,7 @@ async def test_reasoning_filter(
             ollama.CONF_THINK: think,
         },
     )
+    await hass.async_block_till_done()
 
     with patch(
         "ollama.AsyncClient.chat",

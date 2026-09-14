@@ -28,15 +28,33 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up any temperature sensors connected to the Nobø Ecohub."""
-
-    # Setup connection with hub
     hub = config_entry.runtime_data
 
-    async_add_entities(
-        NoboTemperatureSensor(component["serial"], hub)
-        for component in hub.components.values()
-        if component[ATTR_MODEL].has_temp_sensor
-    )
+    known_components: set[str] = set()
+
+    @callback
+    def _add_sensors(_hub: nobo) -> None:
+        """Add temperature sensors for components added to the hub."""
+        if hub.connected:
+            # Forget components no longer on the hub so a removed-then-re-added
+            # component is detected as new again. Skip while disconnected: a
+            # stale/empty snapshot would drop live components and cause
+            # duplicate re-adds on reconnect.
+            known_components.intersection_update(hub.components)
+        new_components = [
+            serial
+            for serial, component in hub.components.items()
+            if component[ATTR_MODEL].has_temp_sensor and serial not in known_components
+        ]
+        known_components.update(new_components)
+        async_add_entities(
+            NoboTemperatureSensor(hass, serial, hub, config_entry.entry_id)
+            for serial in new_components
+        )
+
+    _add_sensors(hub)
+    hub.register_callback(_add_sensors)
+    config_entry.async_on_unload(lambda: hub.deregister_callback(_add_sensors))
 
 
 class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
@@ -47,9 +65,11 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 1
 
-    def __init__(self, serial: str, hub: nobo) -> None:
+    def __init__(
+        self, hass: HomeAssistant, serial: str, hub: nobo, entry_id: str
+    ) -> None:
         """Initialize the temperature sensor."""
-        super().__init__(hub)
+        super().__init__(hass, hub, entry_id)
         self._temperature: StateType = None
         self._id = serial
         component = hub.components[self._id]
@@ -64,7 +84,7 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
             name=component[ATTR_NAME],
             manufacturer=NOBO_MANUFACTURER,
             model=component[ATTR_MODEL].name,
-            via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
+            via_device_id=self._hub_device_id,
             suggested_area=suggested_area,
         )
         self._read_state()

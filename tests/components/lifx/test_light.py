@@ -9,13 +9,12 @@ import pytest
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
-from homeassistant.components.lifx.const import ATTR_POWER
-from homeassistant.components.lifx.light import ATTR_INFRARED, ATTR_ZONES
-from homeassistant.components.lifx.manager import (
+from homeassistant.components.lifx.const import (
     ATTR_CLOUD_SATURATION_MAX,
     ATTR_CLOUD_SATURATION_MIN,
     ATTR_DIRECTION,
     ATTR_PALETTE,
+    ATTR_POWER,
     ATTR_SATURATION_MAX,
     ATTR_SATURATION_MIN,
     ATTR_SKY_TYPE,
@@ -27,6 +26,7 @@ from homeassistant.components.lifx.manager import (
     SERVICE_EFFECT_SKY,
     SERVICE_PAINT_THEME,
 )
+from homeassistant.components.lifx.light import ATTR_INFRARED, ATTR_ZONES
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -110,8 +110,8 @@ async def test_light_unique_id(
     entity_id = "light.my_group_my_bulb"
     assert entity_registry.async_get(entity_id).unique_id == SERIAL
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, SERIAL)}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, SERIAL), already_migrated_config_entry.entry_id
     )
     assert device.identifiers == {(DOMAIN, SERIAL)}
 
@@ -137,8 +137,8 @@ async def test_light_unique_id_new_firmware(
 
     entity_id = "light.my_group_my_bulb"
     assert entity_registry.async_get(entity_id).unique_id == SERIAL
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS), already_migrated_config_entry.entry_id
     )
     assert device.identifiers == {(DOMAIN, SERIAL)}
 

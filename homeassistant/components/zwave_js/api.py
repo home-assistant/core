@@ -1,13 +1,15 @@
 """Websocket API for Z-Wave JS."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import dataclasses
 from functools import partial, wraps
+import logging
 from typing import TYPE_CHECKING, Any, Concatenate, Literal, cast
 
 from aiohttp import web, web_exceptions, web_request
-import voluptuous as vol
+import probatio
 from zwave_js_server.client import Client
 from zwave_js_server.const import (
     CommandClass,
@@ -51,11 +53,12 @@ from zwave_js_server.model.node.firmware import (
     NodeFirmwareUpdateProgress,
     NodeFirmwareUpdateResult,
 )
+from zwave_js_server.model.statistics import RouteStatistics
 from zwave_js_server.model.utils import (
     async_parse_qr_code_string,
     async_try_parse_dsk_from_qr_code_string,
 )
-from zwave_js_server.model.value import ConfigurationValueFormat
+from zwave_js_server.model.value import ConfigurationValueFormat, Value
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
@@ -84,12 +87,14 @@ from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    EVENT_VALUE_UPDATED,
     LOGGER,
     USER_AGENT,
 )
 from .helpers import (
     CannotConnect,
     async_enable_statistics,
+    async_get_config_entry_from_node,
     async_get_node_from_device_id,
     async_get_provisioning_entry_from_device_id,
     async_get_version_info,
@@ -101,12 +106,15 @@ if TYPE_CHECKING:
     from .models import ZwaveJSConfigEntry
 
 
+_LOGGER = logging.getLogger(__name__)
+
 DATA_UNSUBSCRIBE = "unsubs"
 
 # general API constants
 ID = "id"
 ENTRY_ID = "entry_id"
 ERR_NOT_LOADED = "not_loaded"
+ERR_RF_TOGGLE_FAILED = "rf_toggle_failed"
 NODE_ID = "node_id"
 DEVICE_ID = "device_id"
 COMMAND_CLASS_ID = "command_class_id"
@@ -190,62 +198,62 @@ MINIMUM_QR_STRING_LENGTH = 52
 
 
 # Helper schemas
-PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.All(
-    vol.Schema(
+PLANNED_PROVISIONING_ENTRY_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(DSK): str,
-            vol.Required(SECURITY_CLASSES): vol.All(
+            probatio.Required(DSK): str,
+            probatio.Required(SECURITY_CLASSES): probatio.All(
                 cv.ensure_list,
-                [vol.Coerce(SecurityClass)],
+                [probatio.Coerce(SecurityClass)],
             ),
-            vol.Optional(STATUS, default=ProvisioningEntryStatus.ACTIVE): vol.Coerce(
-                ProvisioningEntryStatus
-            ),
-            vol.Optional(REQUESTED_SECURITY_CLASSES): vol.All(
-                cv.ensure_list, [vol.Coerce(SecurityClass)]
+            probatio.Optional(
+                STATUS, default=ProvisioningEntryStatus.ACTIVE
+            ): probatio.Coerce(ProvisioningEntryStatus),
+            probatio.Optional(REQUESTED_SECURITY_CLASSES): probatio.All(
+                cv.ensure_list, [probatio.Coerce(SecurityClass)]
             ),
         },
         # Provisioning entries can have extra keys for SmartStart
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     ),
     ProvisioningEntry.from_dict,
 )
 
-QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
-    vol.Schema(
+QR_PROVISIONING_INFORMATION_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(VERSION): vol.Coerce(QRCodeVersion),
-            vol.Required(SECURITY_CLASSES): vol.All(
+            probatio.Required(VERSION): probatio.Coerce(QRCodeVersion),
+            probatio.Required(SECURITY_CLASSES): probatio.All(
                 cv.ensure_list,
-                [vol.Coerce(SecurityClass)],
+                [probatio.Coerce(SecurityClass)],
             ),
-            vol.Required(DSK): str,
-            vol.Required(GENERIC_DEVICE_CLASS): int,
-            vol.Required(SPECIFIC_DEVICE_CLASS): int,
-            vol.Required(INSTALLER_ICON_TYPE): int,
-            vol.Required(MANUFACTURER_ID): int,
-            vol.Required(PRODUCT_TYPE): int,
-            vol.Required(PRODUCT_ID): int,
-            vol.Required(APPLICATION_VERSION): str,
-            vol.Optional(MAX_INCLUSION_REQUEST_INTERVAL): vol.Any(int, None),
-            vol.Optional(UUID): vol.Any(str, None),
-            vol.Optional(SUPPORTED_PROTOCOLS): vol.All(
+            probatio.Required(DSK): str,
+            probatio.Required(GENERIC_DEVICE_CLASS): int,
+            probatio.Required(SPECIFIC_DEVICE_CLASS): int,
+            probatio.Required(INSTALLER_ICON_TYPE): int,
+            probatio.Required(MANUFACTURER_ID): int,
+            probatio.Required(PRODUCT_TYPE): int,
+            probatio.Required(PRODUCT_ID): int,
+            probatio.Required(APPLICATION_VERSION): str,
+            probatio.Optional(MAX_INCLUSION_REQUEST_INTERVAL): probatio.Any(int, None),
+            probatio.Optional(UUID): probatio.Any(str, None),
+            probatio.Optional(SUPPORTED_PROTOCOLS): probatio.All(
                 cv.ensure_list,
-                [vol.Coerce(Protocols)],
+                [probatio.Coerce(Protocols)],
             ),
-            vol.Optional(STATUS, default=ProvisioningEntryStatus.ACTIVE): vol.Coerce(
-                ProvisioningEntryStatus
-            ),
-            vol.Optional(REQUESTED_SECURITY_CLASSES): vol.All(
-                cv.ensure_list, [vol.Coerce(SecurityClass)]
+            probatio.Optional(
+                STATUS, default=ProvisioningEntryStatus.ACTIVE
+            ): probatio.Coerce(ProvisioningEntryStatus),
+            probatio.Optional(REQUESTED_SECURITY_CLASSES): probatio.All(
+                cv.ensure_list, [probatio.Coerce(SecurityClass)]
             ),
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     ),
     QRProvisioningInformation.from_dict,
 )
 
-QR_CODE_STRING_SCHEMA = vol.All(str, vol.Length(min=MINIMUM_QR_STRING_LENGTH))
+QR_CODE_STRING_SCHEMA = probatio.All(str, probatio.Length(min=MINIMUM_QR_STRING_LENGTH))
 
 
 async def _async_get_entry(
@@ -409,6 +417,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_subscribe_node_status)
     websocket_api.async_register_command(hass, websocket_node_status)
+    websocket_api.async_register_command(hass, websocket_network_neighbors)
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_node_alerts)
     websocket_api.async_register_command(hass, websocket_add_node)
@@ -444,6 +453,9 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
     websocket_api.async_register_command(hass, websocket_get_raw_config_parameter)
     websocket_api.async_register_command(hass, websocket_set_raw_config_parameter)
+    websocket_api.async_register_command(
+        hass, websocket_subscribe_config_parameter_updates
+    )
     websocket_api.async_register_command(hass, websocket_subscribe_log_updates)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
@@ -475,15 +487,15 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_invoke_cc_api)
     websocket_api.async_register_command(hass, websocket_backup_nvm)
     websocket_api.async_register_command(hass, websocket_restore_nvm)
-    hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
+    hass.http.register_view(FirmwareUploadView())
 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/network_status",
-        vol.Exclusive(DEVICE_ID, "id"): str,
-        vol.Exclusive(ENTRY_ID, "id"): str,
+        probatio.Required(TYPE): "zwave_js/network_status",
+        probatio.Exclusive(DEVICE_ID, "id"): str,
+        probatio.Exclusive(ENTRY_ID, "id"): str,
     }
 )
 @websocket_api.async_response
@@ -555,8 +567,8 @@ async def websocket_network_status(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/subscribe_node_status",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/subscribe_node_status",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -596,8 +608,8 @@ async def websocket_subscribe_node_status(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/node_status",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/node_status",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -612,10 +624,87 @@ async def websocket_node_status(
     connection.send_result(msg[ID], node_status(node))
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/node_metadata",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/network_neighbors",
+        probatio.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_network_neighbors(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ZwaveJSConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Get the node IDs of the neighbors of all nodes in the network.
+
+    Reading the routing table can wedge older controllers when the radio is
+    on or reads overlap, so refreshes are serialized and done with RF off:
+    https://zwave-js.github.io/zwave-js/#/api/controller?id=getnodeneighbors
+    """
+    controller = driver.controller
+
+    async def restore_rf() -> bool:
+        """Turn the radio back on, returning False instead of raising."""
+        try:
+            return await controller.async_toggle_rf(True)
+        except BaseZwaveJSServerError:
+            return False
+
+    async def read_network_neighbors() -> tuple[bool, bool, dict[int, list[int]]]:
+        """Read the neighbors of all nodes while the radio is off."""
+        neighbors: dict[int, list[int]] = {}
+        rf_disabled = False
+        async with entry.runtime_data.network_neighbors_lock:
+            try:
+                rf_disabled = await controller.async_toggle_rf(False)
+                if rf_disabled:
+                    # Snapshot the nodes, inclusion/exclusion can mutate the
+                    # collection while it is being iterated
+                    for node in list(controller.nodes.values()):
+                        # Long range nodes are not part of the mesh
+                        if node.protocol is Protocols.ZWAVE_LONG_RANGE:
+                            continue
+                        try:
+                            neighbors[
+                                node.node_id
+                            ] = await controller.async_get_node_neighbors(node)
+                        except FailedCommand:
+                            continue
+            finally:
+                rf_restored = await restore_rf()
+                if not rf_restored:
+                    _LOGGER.error(
+                        "Failed to re-enable RF after reading the neighbors of"
+                        " the nodes of config entry %s",
+                        entry.entry_id,
+                    )
+        return rf_disabled, rf_restored, neighbors
+
+    # The refresh runs as its own task and is only abandoned on cancellation,
+    # so a closing connection can't interrupt it while the radio is off
+    rf_disabled, rf_restored, neighbors = await asyncio.shield(
+        hass.async_create_task(read_network_neighbors())
+    )
+    if not rf_disabled:
+        connection.send_error(msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to disable RF")
+        return
+    if not rf_restored:
+        connection.send_error(msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to re-enable RF")
+        return
+    connection.send_result(msg[ID], neighbors)
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required(TYPE): "zwave_js/node_metadata",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -644,8 +733,8 @@ async def websocket_node_metadata(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/node_alerts",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/node_alerts",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -704,11 +793,13 @@ async def websocket_node_alerts(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/add_node",
-        vol.Required(ENTRY_ID): str,
-        vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.All(
-            vol.Coerce(int),
-            vol.In(
+        probatio.Required(TYPE): "zwave_js/add_node",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Optional(
+            INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT
+        ): probatio.All(
+            probatio.Coerce(int),
+            probatio.In(
                 [
                     strategy.value
                     for strategy in InclusionStrategy
@@ -716,15 +807,15 @@ async def websocket_node_alerts(
                 ]
             ),
         ),
-        vol.Optional(FORCE_SECURITY): bool,
-        vol.Exclusive(
+        probatio.Optional(FORCE_SECURITY): bool,
+        probatio.Exclusive(
             PLANNED_PROVISIONING_ENTRY, "options"
         ): PLANNED_PROVISIONING_ENTRY_SCHEMA,
-        vol.Exclusive(
+        probatio.Exclusive(
             QR_PROVISIONING_INFORMATION, "options"
         ): QR_PROVISIONING_INFORMATION_SCHEMA,
-        vol.Exclusive(QR_CODE_STRING, "options"): QR_CODE_STRING_SCHEMA,
-        vol.Exclusive(DSK, "options"): str,
+        probatio.Exclusive(QR_CODE_STRING, "options"): QR_CODE_STRING_SCHEMA,
+        probatio.Exclusive(DSK, "options"): str,
     }
 )
 @websocket_api.async_response
@@ -777,6 +868,7 @@ async def websocket_add_node(
             node.on("interview started", forward_event),
             node.on("interview completed", forward_event),
             node.on("interview stage completed", forward_stage),
+            node.on("interview progress", forward_progress),
             node.on("interview failed", forward_event),
         ]
         unsubs.extend(interview_unsubs)
@@ -810,6 +902,19 @@ async def websocket_add_node(
         connection.send_message(
             websocket_api.event_message(
                 msg[ID], {"event": event["event"], "stage": event["stageName"]}
+            )
+        )
+
+    @callback
+    def forward_progress(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "stage": event["stage"],
+                    "progress": event["progress"],
+                },
             )
         )
 
@@ -900,8 +1005,8 @@ async def websocket_add_node(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/cancel_secure_bootstrap_s2",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/cancel_secure_bootstrap_s2",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -923,8 +1028,8 @@ async def websocket_cancel_secure_bootstrap_s2(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/subscribe_s2_inclusion",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/subscribe_s2_inclusion",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -971,13 +1076,13 @@ async def websocket_subscribe_s2_inclusion(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/grant_security_classes",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(SECURITY_CLASSES): vol.All(
+        probatio.Required(TYPE): "zwave_js/grant_security_classes",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Required(SECURITY_CLASSES): probatio.All(
             cv.ensure_list,
-            [vol.Coerce(SecurityClass)],
+            [probatio.Coerce(SecurityClass)],
         ),
-        vol.Optional(CLIENT_SIDE_AUTH, default=False): bool,
+        probatio.Optional(CLIENT_SIDE_AUTH, default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -1003,9 +1108,9 @@ async def websocket_grant_security_classes(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/validate_dsk_and_enter_pin",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(PIN): str,
+        probatio.Required(TYPE): "zwave_js/validate_dsk_and_enter_pin",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Required(PIN): str,
     }
 )
 @websocket_api.async_response
@@ -1027,8 +1132,8 @@ async def websocket_validate_dsk_and_enter_pin(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/subscribe_new_devices",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/subscribe_new_devices",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1070,12 +1175,14 @@ async def websocket_subscribe_new_devices(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/provision_smart_start_node",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(QR_PROVISIONING_INFORMATION): QR_PROVISIONING_INFORMATION_SCHEMA,
-        vol.Optional(PROTOCOL): vol.Coerce(Protocols),
-        vol.Optional(DEVICE_NAME): str,
-        vol.Optional(AREA_ID): str,
+        probatio.Required(TYPE): "zwave_js/provision_smart_start_node",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Required(
+            QR_PROVISIONING_INFORMATION
+        ): QR_PROVISIONING_INFORMATION_SCHEMA,
+        probatio.Optional(PROTOCOL): probatio.Coerce(Protocols),
+        probatio.Optional(DEVICE_NAME): str,
+        probatio.Optional(AREA_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1122,6 +1229,14 @@ async def websocket_provision_smart_start_node(
             manufacturer = device_info.manufacturer
             model = device_info.label
 
+        via_device_id: str | None = None
+        if driver.controller.own_node:
+            via_device_id = dr.async_get_device_id_by_identifier(
+                hass,
+                get_device_id(driver, driver.controller.own_node),
+                config_entry_id=entry.entry_id,
+            )
+
         # Create an empty device
         device = dev_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
@@ -1129,9 +1244,7 @@ async def websocket_provision_smart_start_node(
             name=device_name,
             manufacturer=manufacturer,
             model=model,
-            via_device=get_device_id(driver, driver.controller.own_node)
-            if driver.controller.own_node
-            else None,
+            via_device_id=via_device_id,
         )
         dev_reg.async_update_device(
             device.id, area_id=msg.get(AREA_ID), name_by_user=device_name
@@ -1156,10 +1269,10 @@ async def websocket_provision_smart_start_node(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/unprovision_smart_start_node",
-        vol.Required(ENTRY_ID): str,
-        vol.Exclusive(DSK, "input"): str,
-        vol.Exclusive(NODE_ID, "input"): int,
+        probatio.Required(TYPE): "zwave_js/unprovision_smart_start_node",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Exclusive(DSK, "input"): str,
+        probatio.Exclusive(NODE_ID, "input"): int,
     }
 )
 @websocket_api.async_response
@@ -1176,7 +1289,7 @@ async def websocket_unprovision_smart_start_node(
     """Unprovision a smart start node."""
     try:
         cv.has_at_least_one_key(DSK, NODE_ID)(msg)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         connection.send_error(
             msg[ID],
             ERR_INVALID_FORMAT,
@@ -1208,8 +1321,8 @@ async def websocket_unprovision_smart_start_node(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/get_provisioning_entries",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/get_provisioning_entries",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1231,9 +1344,9 @@ async def websocket_get_provisioning_entries(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/parse_qr_code_string",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(QR_CODE_STRING): QR_CODE_STRING_SCHEMA,
+        probatio.Required(TYPE): "zwave_js/parse_qr_code_string",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Required(QR_CODE_STRING): QR_CODE_STRING_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -1257,9 +1370,9 @@ async def websocket_parse_qr_code_string(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/try_parse_dsk_from_qr_code_string",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(QR_CODE_STRING): str,
+        probatio.Required(TYPE): "zwave_js/try_parse_dsk_from_qr_code_string",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Required(QR_CODE_STRING): str,
     }
 )
 @websocket_api.async_response
@@ -1283,12 +1396,12 @@ async def websocket_try_parse_dsk_from_qr_code_string(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/lookup_device",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(MANUFACTURER_ID): int,
-        vol.Required(PRODUCT_TYPE): int,
-        vol.Required(PRODUCT_ID): int,
-        vol.Optional(APPLICATION_VERSION): str,
+        probatio.Required(TYPE): "zwave_js/lookup_device",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Required(MANUFACTURER_ID): int,
+        probatio.Required(PRODUCT_TYPE): int,
+        probatio.Required(PRODUCT_ID): int,
+        probatio.Optional(APPLICATION_VERSION): str,
     }
 )
 @websocket_api.async_response
@@ -1318,9 +1431,9 @@ async def websocket_lookup_device(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/supports_feature",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(FEATURE): vol.Coerce(ZwaveFeature),
+        probatio.Required(TYPE): "zwave_js/supports_feature",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Required(FEATURE): probatio.Coerce(ZwaveFeature),
     }
 )
 @websocket_api.async_response
@@ -1345,8 +1458,8 @@ async def websocket_supports_feature(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/stop_inclusion",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/stop_inclusion",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1372,8 +1485,8 @@ async def websocket_stop_inclusion(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/stop_exclusion",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/stop_exclusion",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1399,9 +1512,9 @@ async def websocket_stop_exclusion(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/remove_node",
-        vol.Required(ENTRY_ID): str,
-        vol.Optional(STRATEGY): vol.Coerce(ExclusionStrategy),
+        probatio.Required(TYPE): "zwave_js/remove_node",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Optional(STRATEGY): probatio.Coerce(ExclusionStrategy),
     }
 )
 @websocket_api.async_response
@@ -1462,11 +1575,13 @@ async def websocket_remove_node(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/replace_failed_node",
-        vol.Required(DEVICE_ID): str,
-        vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.All(
-            vol.Coerce(int),
-            vol.In(
+        probatio.Required(TYPE): "zwave_js/replace_failed_node",
+        probatio.Required(DEVICE_ID): str,
+        probatio.Optional(
+            INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT
+        ): probatio.All(
+            probatio.Coerce(int),
+            probatio.In(
                 [
                     strategy.value
                     for strategy in InclusionStrategy
@@ -1474,14 +1589,14 @@ async def websocket_remove_node(
                 ]
             ),
         ),
-        vol.Optional(FORCE_SECURITY): bool,
-        vol.Exclusive(
+        probatio.Optional(FORCE_SECURITY): bool,
+        probatio.Exclusive(
             PLANNED_PROVISIONING_ENTRY, "options"
         ): PLANNED_PROVISIONING_ENTRY_SCHEMA,
-        vol.Exclusive(
+        probatio.Exclusive(
             QR_PROVISIONING_INFORMATION, "options"
         ): QR_PROVISIONING_INFORMATION_SCHEMA,
-        vol.Exclusive(QR_CODE_STRING, "options"): QR_CODE_STRING_SCHEMA,
+        probatio.Exclusive(QR_CODE_STRING, "options"): QR_CODE_STRING_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -1545,6 +1660,19 @@ async def websocket_replace_failed_node(
         )
 
     @callback
+    def forward_progress(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "stage": event["stage"],
+                    "progress": event["progress"],
+                },
+            )
+        )
+
+    @callback
     def node_found(event: dict) -> None:
         node = event["node"]
         node_details = {
@@ -1563,6 +1691,7 @@ async def websocket_replace_failed_node(
             node.on("interview started", forward_event),
             node.on("interview completed", forward_event),
             node.on("interview stage completed", forward_stage),
+            node.on("interview progress", forward_progress),
             node.on("interview failed", forward_event),
         ]
         unsubs.extend(interview_unsubs)
@@ -1644,8 +1773,8 @@ async def websocket_replace_failed_node(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/remove_failed_node",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/remove_failed_node",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1688,8 +1817,8 @@ async def websocket_remove_failed_node(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/begin_rebuilding_routes",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/begin_rebuilding_routes",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1716,8 +1845,8 @@ async def websocket_begin_rebuilding_routes(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/subscribe_rebuild_routes_progress",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/subscribe_rebuild_routes_progress",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1773,8 +1902,8 @@ async def websocket_subscribe_rebuild_routes_progress(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/stop_rebuilding_routes",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/stop_rebuilding_routes",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1800,8 +1929,8 @@ async def websocket_stop_rebuilding_routes(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/rebuild_node_routes",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/rebuild_node_routes",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1828,8 +1957,8 @@ async def websocket_rebuild_node_routes(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/refresh_node_info",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/refresh_node_info",
+        probatio.Required(DEVICE_ID): str,
     },
 )
 @websocket_api.async_response
@@ -1863,11 +1992,25 @@ async def websocket_refresh_node_info(
             )
         )
 
+    @callback
+    def forward_progress(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "stage": event["stage"],
+                    "progress": event["progress"],
+                },
+            )
+        )
+
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         node.on("interview started", forward_event),
         node.on("interview completed", forward_event),
         node.on("interview stage completed", forward_stage),
+        node.on("interview progress", forward_progress),
         node.on("interview failed", forward_event),
     ]
 
@@ -1878,8 +2021,8 @@ async def websocket_refresh_node_info(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/refresh_node_values",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/refresh_node_values",
+        probatio.Required(DEVICE_ID): str,
     },
 )
 @websocket_api.async_response
@@ -1899,9 +2042,9 @@ async def websocket_refresh_node_values(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/refresh_node_cc_values",
-        vol.Required(DEVICE_ID): str,
-        vol.Required(COMMAND_CLASS_ID): int,
+        probatio.Required(TYPE): "zwave_js/refresh_node_cc_values",
+        probatio.Required(DEVICE_ID): str,
+        probatio.Required(COMMAND_CLASS_ID): int,
     },
 )
 @websocket_api.async_response
@@ -1931,12 +2074,12 @@ async def websocket_refresh_node_cc_values(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/set_config_parameter",
-        vol.Required(DEVICE_ID): str,
-        vol.Required(PROPERTY): int,
-        vol.Optional(ENDPOINT, default=0): int,
-        vol.Optional(PROPERTY_KEY): int,
-        vol.Required(VALUE): vol.Any(int, BITMASK_SCHEMA),
+        probatio.Required(TYPE): "zwave_js/set_config_parameter",
+        probatio.Required(DEVICE_ID): str,
+        probatio.Required(PROPERTY): int,
+        probatio.Optional(ENDPOINT, default=0): int,
+        probatio.Optional(PROPERTY_KEY): int,
+        probatio.Required(VALUE): probatio.Any(int, BITMASK_SCHEMA),
     }
 )
 @websocket_api.async_response
@@ -1984,8 +2127,8 @@ async def websocket_set_config_parameter(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/get_config_parameters",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/get_config_parameters",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2028,12 +2171,14 @@ async def websocket_get_config_parameters(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/set_raw_config_parameter",
-        vol.Required(DEVICE_ID): str,
-        vol.Required(PROPERTY): int,
-        vol.Required(VALUE): int,
-        vol.Required(VALUE_SIZE): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-        vol.Required(VALUE_FORMAT): vol.Coerce(ConfigurationValueFormat),
+        probatio.Required(TYPE): "zwave_js/set_raw_config_parameter",
+        probatio.Required(DEVICE_ID): str,
+        probatio.Required(PROPERTY): int,
+        probatio.Required(VALUE): int,
+        probatio.Required(VALUE_SIZE): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=4)
+        ),
+        probatio.Required(VALUE_FORMAT): probatio.Coerce(ConfigurationValueFormat),
     }
 )
 @websocket_api.async_response
@@ -2064,9 +2209,49 @@ async def websocket_set_raw_config_parameter(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/get_raw_config_parameter",
-        vol.Required(DEVICE_ID): str,
-        vol.Required(PROPERTY): int,
+        probatio.Required(TYPE): "zwave_js/subscribe_config_parameter_updates",
+        probatio.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_subscribe_config_parameter_updates(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    node: Node,
+) -> None:
+    """Subscribe to value updates for the config parameters of a node."""
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_values(event: dict) -> None:
+        value: Value = event["value"]
+        if value.command_class != CommandClass.CONFIGURATION:
+            return
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"id": value.value_id, "value": value.value}
+            )
+        )
+
+    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on(EVENT_VALUE_UPDATED, forward_values)]
+    connection.subscriptions[msg["id"]] = async_cleanup
+
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required(TYPE): "zwave_js/get_raw_config_parameter",
+        probatio.Required(DEVICE_ID): str,
+        probatio.Required(PROPERTY): int,
     }
 )
 @websocket_api.async_response
@@ -2094,15 +2279,15 @@ async def websocket_get_raw_config_parameter(
 def filename_is_present_if_logging_to_file(obj: dict) -> dict:
     """Validate that filename is provided if log_to_file is True."""
     if obj.get(LOG_TO_FILE, False) and FILENAME not in obj:
-        raise vol.Invalid("`filename` must be provided if logging to file")
+        raise probatio.Invalid("`filename` must be provided if logging to file")
     return obj
 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/subscribe_log_updates",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/subscribe_log_updates",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2169,20 +2354,20 @@ async def websocket_subscribe_log_updates(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/update_log_config",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(CONFIG): vol.All(
-            vol.Schema(
+        probatio.Required(TYPE): "zwave_js/update_log_config",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Required(CONFIG): probatio.All(
+            probatio.Schema(
                 {
-                    vol.Optional(ENABLED): cv.boolean,
-                    vol.Optional(LEVEL): vol.All(
+                    probatio.Optional(ENABLED): cv.boolean,
+                    probatio.Optional(LEVEL): probatio.All(
                         str,
-                        vol.Lower,
-                        vol.Coerce(LogLevel),
+                        probatio.Lower,
+                        probatio.Coerce(LogLevel),
                     ),
-                    vol.Optional(LOG_TO_FILE): cv.boolean,
-                    vol.Optional(FILENAME): str,
-                    vol.Optional(FORCE_CONSOLE): cv.boolean,
+                    probatio.Optional(LOG_TO_FILE): cv.boolean,
+                    probatio.Optional(FILENAME): str,
+                    probatio.Optional(FORCE_CONSOLE): cv.boolean,
                 }
             ),
             cv.has_at_least_one_key(
@@ -2213,8 +2398,8 @@ async def websocket_update_log_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/get_log_config",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/get_log_config",
+        probatio.Required(ENTRY_ID): str,
     },
 )
 @websocket_api.async_response
@@ -2238,9 +2423,9 @@ async def websocket_get_log_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/update_data_collection_preference",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(OPTED_IN): bool,
+        probatio.Required(TYPE): "zwave_js/update_data_collection_preference",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Required(OPTED_IN): bool,
     },
 )
 @websocket_api.async_response
@@ -2274,8 +2459,8 @@ async def websocket_update_data_collection_preference(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/data_collection_status",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/data_collection_status",
+        probatio.Required(ENTRY_ID): str,
     },
 )
 @websocket_api.async_response
@@ -2301,8 +2486,8 @@ async def websocket_data_collection_status(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/abort_firmware_update",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/abort_firmware_update",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2322,8 +2507,8 @@ async def websocket_abort_firmware_update(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/is_node_firmware_update_in_progress",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/is_node_firmware_update_in_progress",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2368,8 +2553,8 @@ def _get_driver_firmware_update_progress_dict(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/subscribe_firmware_update_status",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/subscribe_firmware_update_status",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2487,8 +2672,8 @@ async def websocket_subscribe_firmware_update_status(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/get_node_firmware_update_capabilities",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/get_node_firmware_update_capabilities",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2508,8 +2693,8 @@ async def websocket_get_node_firmware_update_capabilities(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/is_any_ota_firmware_update_in_progress",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/is_any_ota_firmware_update_in_progress",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2535,18 +2720,13 @@ class FirmwareUploadView(HomeAssistantView):
     url = r"/api/zwave_js/firmware/upload/{device_id}"
     name = "api:zwave_js:firmware:upload"
 
-    def __init__(self, dev_reg: dr.DeviceRegistry) -> None:
-        """Initialize view."""
-        super().__init__()
-        self._dev_reg = dev_reg
-
     @require_admin
     async def post(self, request: web.Request, device_id: str) -> web.Response:
         """Handle upload."""
         hass = request.app[KEY_HASS]
 
         try:
-            node = async_get_node_from_device_id(hass, device_id, self._dev_reg)
+            node = async_get_node_from_device_id(hass, device_id)
         except ValueError as err:
             if "not loaded" in err.args[0]:
                 raise web_exceptions.HTTPBadRequest from err
@@ -2603,8 +2783,8 @@ class FirmwareUploadView(HomeAssistantView):
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/check_for_config_updates",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/check_for_config_updates",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2632,8 +2812,8 @@ async def websocket_check_for_config_updates(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/install_config_update",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/install_config_update",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2672,8 +2852,8 @@ def _get_controller_statistics_dict(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/subscribe_controller_statistics",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/subscribe_controller_statistics",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2738,11 +2918,34 @@ def _get_node_statistics_dict(
         """Convert a node to a device id."""
         driver = node.client.driver
         assert driver
-        device = dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
-        assert device
+        entry = async_get_config_entry_from_node(hass, node)
+        device = dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, node), entry.entry_id
+        )
+        if device is None:
+            raise ValueError(f"Device for node {node.node_id} not found")
         return device.id
 
-    data: dict = {
+    def _get_route_statistics_dict(
+        route_statistics: RouteStatistics | None,
+    ) -> dict[str, Any] | None:
+        """Get dictionary of route statistics."""
+        if route_statistics is None:
+            return None
+        try:
+            data: dict[str, Any] = dict(route_statistics.as_dict())
+            for key in ("repeaters", "route_failed_between"):
+                if data[key]:
+                    data[key] = [_convert_node_to_device_id(node) for node in data[key]]
+        except KeyError, StopIteration, ValueError:
+            # The route may reference nodes that have been removed from the
+            # network (KeyError) or that don't have a device entry (ValueError),
+            # and async_get_config_entry_from_node raises StopIteration when
+            # the config entry is no longer loaded
+            return None
+        return data
+
+    return {
         "commands_tx": statistics.commands_tx,
         "commands_rx": statistics.commands_rx,
         "commands_dropped_tx": statistics.commands_dropped_tx,
@@ -2750,27 +2953,16 @@ def _get_node_statistics_dict(
         "timeout_response": statistics.timeout_response,
         "rtt": statistics.rtt,
         "rssi": statistics.rssi,
-        "lwr": statistics.lwr.as_dict() if statistics.lwr else None,
-        "nlwr": statistics.nlwr.as_dict() if statistics.nlwr else None,
+        "lwr": _get_route_statistics_dict(statistics.lwr),
+        "nlwr": _get_route_statistics_dict(statistics.nlwr),
     }
-    for key in ("lwr", "nlwr"):
-        if not data[key]:
-            continue
-        for key_2 in ("repeaters", "route_failed_between"):
-            if not data[key][key_2]:
-                continue
-            data[key][key_2] = [
-                _convert_node_to_device_id(node) for node in data[key][key_2]
-            ]
-
-    return data
 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/subscribe_node_statistics",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/subscribe_node_statistics",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2814,7 +3006,7 @@ async def websocket_subscribe_node_statistics(
             {
                 "event": "statistics updated",
                 "source": "node",
-                "nodeId": node.node_id,
+                "node_id": node.node_id,
                 **_get_node_statistics_dict(hass, node.statistics),
             },
         )
@@ -2824,8 +3016,8 @@ async def websocket_subscribe_node_statistics(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/hard_reset_controller",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/hard_reset_controller",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2852,7 +3044,7 @@ async def websocket_hard_reset_controller(
     @callback
     def _handle_device_added(device: dr.DeviceEntry) -> None:
         """Handle device is added."""
-        if entry.entry_id in device.config_entries:
+        if entry.entry_id == device.config_entry_id:
             connection.send_result(msg[ID], device.id)
             async_cleanup()
 
@@ -2892,8 +3084,8 @@ async def websocket_hard_reset_controller(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/node_capabilities",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "zwave_js/node_capabilities",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2923,15 +3115,15 @@ async def websocket_node_capabilities(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/invoke_cc_api",
-        vol.Required(DEVICE_ID): str,
-        vol.Required(ATTR_COMMAND_CLASS): vol.All(
-            vol.Coerce(int), vol.Coerce(CommandClass)
+        probatio.Required(TYPE): "zwave_js/invoke_cc_api",
+        probatio.Required(DEVICE_ID): str,
+        probatio.Required(ATTR_COMMAND_CLASS): probatio.All(
+            probatio.Coerce(int), probatio.Coerce(CommandClass)
         ),
-        vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
-        vol.Required(ATTR_METHOD_NAME): cv.string,
-        vol.Required(ATTR_PARAMETERS): list,
-        vol.Optional(ATTR_WAIT_FOR_RESULT): cv.boolean,
+        probatio.Optional(ATTR_ENDPOINT): probatio.Coerce(int),
+        probatio.Required(ATTR_METHOD_NAME): cv.string,
+        probatio.Required(ATTR_PARAMETERS): list,
+        probatio.Optional(ATTR_WAIT_FOR_RESULT): cv.boolean,
     }
 )
 @websocket_api.async_response
@@ -2971,8 +3163,8 @@ async def websocket_invoke_cc_api(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/backup_nvm",
-        vol.Required(ENTRY_ID): str,
+        probatio.Required(TYPE): "zwave_js/backup_nvm",
+        probatio.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -3032,9 +3224,9 @@ async def websocket_backup_nvm(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/restore_nvm",
-        vol.Required(ENTRY_ID): str,
-        vol.Required("data"): str,
+        probatio.Required(TYPE): "zwave_js/restore_nvm",
+        probatio.Required(ENTRY_ID): str,
+        probatio.Required("data"): str,
     }
 )
 @websocket_api.async_response

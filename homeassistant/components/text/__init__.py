@@ -7,8 +7,8 @@ import logging
 import re
 from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, MAX_LENGTH_STATE_STATE  # noqa: F401
@@ -59,7 +59,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
-        {vol.Required(ATTR_VALUE): cv.string},
+        {probatio.Required(ATTR_VALUE): cv.string},
         _async_set_value,
     )
 

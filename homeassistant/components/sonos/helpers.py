@@ -16,7 +16,7 @@ from homeassistant.core import CALLBACK_TYPE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import SONOS_SPEAKER_ACTIVITY
+from .const import DOMAIN, SONOS_SPEAKER_ACTIVITY
 from .exception import SonosUpdateError
 
 if TYPE_CHECKING:
@@ -29,6 +29,8 @@ if TYPE_CHECKING:
 
 UID_PREFIX = "RINCON_"
 UID_POSTFIX = "01400"
+
+UPNP_ERROR_COMMAND_FAILED = "800"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,8 +78,24 @@ def soco_error[_T: _SonosEntitiesType, **_P, _R](
                 if (target := _find_target_identifier(self, args_soco)) is None:
                     raise RuntimeError("Unexpected use of soco_error") from err
 
-                message = f"Error calling {function} on {target}: {err}"
-                raise SonosUpdateError(message) from err
+                translation_key = "call_failed"
+                placeholders = {
+                    "target": target,
+                    "error": str(err),
+                }
+
+                if error_code is not None:
+                    translation_key = "upnp_call_failed"
+                    placeholders["error_code"] = str(error_code)
+
+                if str(error_code) == UPNP_ERROR_COMMAND_FAILED:
+                    translation_key = "upnp_call_failed_music_service_unavailable"
+
+                raise SonosUpdateError(
+                    translation_domain=DOMAIN,
+                    translation_key=translation_key,
+                    translation_placeholders=placeholders,
+                ) from err
 
             dispatch_soco = args_soco or self.soco  # type: ignore[union-attr]
             dispatcher_send(

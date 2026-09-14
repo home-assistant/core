@@ -1,8 +1,9 @@
 """Constants for the lock entity platform."""
 
 from enum import StrEnum
+from typing import Final
 
-DOMAIN = "lock"
+DOMAIN: Final = "lock"
 
 
 class LockEntityStateAttribute(StrEnum):

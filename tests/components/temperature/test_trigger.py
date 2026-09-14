@@ -9,6 +9,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.temperature.trigger import TRIGGERS
 from homeassistant.components.water_heater import (
     ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
 )
@@ -25,12 +26,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_numerical_state_value_changed_trigger_states,
@@ -81,6 +84,12 @@ _CELSIUS_CROSSED_THRESHOLD = {
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 
 
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "changed": TargetSupport.STANDARD,
+    "crossed_threshold": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -103,6 +112,11 @@ async def test_temperature_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 # --- Sensor domain tests (value in state.state) ---

@@ -79,8 +79,8 @@ async def test_device(
     mock_device: MockDevice = request.getfixturevalue(device)
     entry = configure_integration(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
-    device_info = device_registry.async_get_device(
-        {(DOMAIN, mock_device.serial_number)}
+    device_info = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.serial_number), entry.entry_id
     )
     assert device_info == snapshot
 

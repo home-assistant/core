@@ -14,6 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     DATASET_1,
+    DATASET_1_LARGER_TIMESTAMP,
     DATASET_2,
     DATASET_3,
     ROUTER_DISCOVERY_GOOGLE_1,
@@ -55,12 +56,6 @@ DATASET_1_NO_ACTIVETIMESTAMP = (
     "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
 )
 
-DATASET_1_LARGER_TIMESTAMP = (
-    "0E080000000000020000000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
-    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
-    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
-)
-
 # Same as DATASET_1 but with WAKEUP_CHANNEL (type 0x4A) appended, same timestamp
 DATASET_1_WITH_WAKEUP_CHANNEL = (
     "0E080000000000010000000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
@@ -97,7 +92,10 @@ async def test_add_invalid_dataset(hass: HomeAssistant) -> None:
 
 async def test_add_dataset_twice(hass: HomeAssistant) -> None:
     """Test adding dataset twice does nothing."""
-    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    assert (
+        await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+        is dataset_store.DatasetAddResult.STORED
+    )
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
@@ -116,9 +114,14 @@ async def test_add_dataset_reordered(hass: HomeAssistant) -> None:
     assert len(store.datasets) == 1
     created = list(store.datasets.values())[0].created
 
-    await dataset_store.async_add_dataset(hass, "new_source", DATASET_1_REORDERED)
+    assert (
+        await dataset_store.async_add_dataset(hass, "new_source", DATASET_1_REORDERED)
+        is dataset_store.DatasetAddResult.STORED
+    )
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].created == created
+    # STORED is about the dataset, not the bytes: the stored TLV is untouched.
+    assert list(store.datasets.values())[0].tlv == DATASET_1
 
 
 async def test_delete_dataset_twice(hass: HomeAssistant) -> None:
@@ -242,7 +245,10 @@ async def test_update_dataset_newer(
 ) -> None:
     """Test updating a dataset."""
     await dataset_store.async_add_dataset(hass, "test", DATASET_1)
-    await dataset_store.async_add_dataset(hass, "test", DATASET_1_LARGER_TIMESTAMP)
+    assert (
+        await dataset_store.async_add_dataset(hass, "test", DATASET_1_LARGER_TIMESTAMP)
+        is dataset_store.DatasetAddResult.STORED
+    )
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
@@ -263,7 +269,10 @@ async def test_update_dataset_older(
 ) -> None:
     """Test updating a dataset."""
     await dataset_store.async_add_dataset(hass, "test", DATASET_1_LARGER_TIMESTAMP)
-    await dataset_store.async_add_dataset(hass, "test", DATASET_1)
+    assert (
+        await dataset_store.async_add_dataset(hass, "test", DATASET_1)
+        is dataset_store.DatasetAddResult.DISCARDED
+    )
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
@@ -905,6 +914,130 @@ async def test_automatically_set_preferred_dataset(
     assert await dataset_store.async_get_preferred_dataset(hass) == DATASET_1
 
 
+async def test_automatically_set_preferred_dataset_already_set(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test a preference chosen during discovery is not overwritten.
+
+    Discovery runs for up to BORDER_AGENT_DISCOVERY_TIMEOUT. Anything that
+    picks a preferred dataset in that window knows the network as it is now,
+    including a border router that has just been migrated to another network.
+    """
+    add_service_listener_called = asyncio.Event()
+    remove_service_listener_called = asyncio.Event()
+
+    async def mock_add_service_listener(type_: str, listener: Any):
+        add_service_listener_called.set()
+
+    async def mock_remove_service_listener(listener: Any):
+        remove_service_listener_called.set()
+
+    mock_async_zeroconf.async_add_service_listener = AsyncMock(
+        side_effect=mock_add_service_listener
+    )
+    mock_async_zeroconf.async_remove_service_listener = AsyncMock(
+        side_effect=mock_remove_service_listener
+    )
+    mock_async_zeroconf.async_get_service_info = AsyncMock()
+
+    with patch(
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
+    ):
+        await dataset_store.async_add_dataset(
+            hass,
+            "source",
+            DATASET_1,
+            preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+            preferred_extended_address=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+        )
+
+        await add_service_listener_called.wait()
+
+        # Another network becomes the preferred one while discovery runs.
+        store = await dataset_store.async_get_store(hass)
+        store.async_add("other", DATASET_2, None, None)
+        other_id = next(
+            entry.id for entry in store.datasets.values() if entry.tlv == DATASET_2
+        )
+        store.preferred_dataset = other_id
+
+        # Discover a service matching our router
+        listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
+            mock_async_zeroconf.async_add_service_listener.mock_calls[0][1][1]
+        )
+        mock_async_zeroconf.async_get_service_info.return_value = AsyncServiceInfo(
+            **ROUTER_DISCOVERY_HASS
+        )
+        listener.add_service(
+            None, ROUTER_DISCOVERY_HASS["type_"], ROUTER_DISCOVERY_HASS["name"]
+        )
+
+        await remove_service_listener_called.wait()
+
+    assert store.preferred_dataset == other_id
+    assert await dataset_store.async_get_preferred_dataset(hass) == DATASET_2
+
+
+async def test_automatically_set_preferred_dataset_deleted(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test a dataset deleted during discovery is not set as preferred.
+
+    The preferred-dataset setter raises KeyError for an unknown dataset, and
+    async_delete only refuses to delete the preferred dataset, which this one
+    is not yet.
+    """
+    add_service_listener_called = asyncio.Event()
+
+    async def mock_add_service_listener(type_: str, listener: Any):
+        add_service_listener_called.set()
+
+    mock_async_zeroconf.async_add_service_listener = AsyncMock(
+        side_effect=mock_add_service_listener
+    )
+    mock_async_zeroconf.async_remove_service_listener = AsyncMock()
+    mock_async_zeroconf.async_get_service_info = AsyncMock()
+
+    with patch(
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
+    ):
+        await dataset_store.async_add_dataset(
+            hass,
+            "source",
+            DATASET_1,
+            preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+            preferred_extended_address=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+        )
+
+        await add_service_listener_called.wait()
+
+        # The dataset is deleted while discovery runs.
+        store = await dataset_store.async_get_store(hass)
+        dataset_id = next(
+            entry.id for entry in store.datasets.values() if entry.tlv == DATASET_1
+        )
+        store.async_delete(dataset_id)
+
+        # Discover a service matching our router
+        listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
+            mock_async_zeroconf.async_add_service_listener.mock_calls[0][1][1]
+        )
+        mock_async_zeroconf.async_get_service_info.return_value = AsyncServiceInfo(
+            **ROUTER_DISCOVERY_HASS
+        )
+        listener.add_service(
+            None, ROUTER_DISCOVERY_HASS["type_"], ROUTER_DISCOVERY_HASS["name"]
+        )
+
+        # Awaiting the task directly propagates the KeyError the guard prevents.
+        await store._set_preferred_dataset_task
+
+    assert store.preferred_dataset is None
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
+
+
 async def test_automatically_set_preferred_dataset_own_and_other_router(
     hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
@@ -1107,3 +1240,79 @@ async def test_automatically_set_preferred_dataset_no_router(
         == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
     )
     assert await dataset_store.async_get_preferred_dataset(hass) is None
+
+
+async def test_add_dataset_returns_stored(hass: HomeAssistant) -> None:
+    """Test adding a dataset for a new network reports it was stored."""
+    store = await dataset_store.async_get_store(hass)
+
+    assert (
+        store.async_add("test", DATASET_1, None, None)
+        is dataset_store.DatasetAddResult.STORED
+    )
+    assert (
+        await dataset_store.async_add_dataset(hass, "test", DATASET_2)
+        is dataset_store.DatasetAddResult.STORED
+    )
+
+
+async def test_add_dataset_discarded_by_concurrent_write(hass: HomeAssistant) -> None:
+    """Test an add beaten to the store by a newer dataset is discarded."""
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1)
+    store = await dataset_store.async_get_store(hass)
+
+    await dataset_store.async_add_dataset(hass, "other", DATASET_1_LARGER_TIMESTAMP)
+
+    assert (
+        await dataset_store.async_add_dataset(hass, "test", DATASET_1)
+        is dataset_store.DatasetAddResult.DISCARDED
+    )
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
+
+
+async def test_add_dataset_stored_refreshes_border_agent(hass: HomeAssistant) -> None:
+    """Test STORED covers an identical dataset refreshing the border agent."""
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1)
+    store = await dataset_store.async_get_store(hass)
+
+    assert (
+        await dataset_store.async_add_dataset(
+            hass,
+            "test",
+            DATASET_1,
+            preferred_border_agent_id="230C6A1AC57F6F4BE262ACF32E5EF52C",
+            preferred_extended_address="AEEB2F594B570BBF",
+        )
+        is dataset_store.DatasetAddResult.STORED
+    )
+    entry = list(store.datasets.values())[0]
+    assert entry.preferred_border_agent_id == "230C6A1AC57F6F4BE262ACF32E5EF52C"
+    assert entry.preferred_extended_address == "AEEB2F594B570BBF"
+
+
+async def test_add_dataset_discarded_keeps_border_agent(hass: HomeAssistant) -> None:
+    """Test DISCARDED means nothing about the entry changed."""
+    await dataset_store.async_add_dataset(
+        hass,
+        "test",
+        DATASET_1_LARGER_TIMESTAMP,
+        preferred_border_agent_id="230C6A1AC57F6F4BE262ACF32E5EF52C",
+        preferred_extended_address="AEEB2F594B570BBF",
+    )
+    store = await dataset_store.async_get_store(hass)
+
+    assert (
+        await dataset_store.async_add_dataset(
+            hass,
+            "test",
+            DATASET_1,
+            preferred_border_agent_id="230C6A1AC57F6F4BE262ACF32E5EF52D",
+            preferred_extended_address="AEEB2F594B570BB0",
+        )
+        is dataset_store.DatasetAddResult.DISCARDED
+    )
+    entry = list(store.datasets.values())[0]
+    assert entry.tlv == DATASET_1_LARGER_TIMESTAMP
+    assert entry.preferred_border_agent_id == "230C6A1AC57F6F4BE262ACF32E5EF52C"
+    assert entry.preferred_extended_address == "AEEB2F594B570BBF"

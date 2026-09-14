@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Self, cast, override
 
-from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EntityStateAttribute
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util
@@ -176,7 +176,7 @@ class RestoreStateData:
         current_states_by_entity_id = {
             state.entity_id: state
             for state in all_states
-            if not state.attributes.get(ATTR_RESTORED)
+            if not state.attributes.get(EntityStateAttribute.RESTORED)
         }
 
         # Start with the currently registered states

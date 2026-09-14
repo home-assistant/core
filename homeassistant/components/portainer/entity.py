@@ -1,10 +1,11 @@
 """Base class for Portainer entities."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from yarl import URL
 
 from homeassistant.const import CONF_URL
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -95,7 +96,8 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         # The first one, should always be unique, it's fine if users have aliases
         # According to Docker's API docs, the first name is unique
         names = self._device_info.container.names
-        assert names, "Container names list unexpectedly empty"
+        if TYPE_CHECKING:
+            assert names is not None
         self.device_name = sanitize_container_name(names[0])
 
         self._attr_device_info = DeviceInfo(
@@ -113,11 +115,15 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
             name=self.device_name,
             # If the container belongs to a stack, nest it under the stack
             # else it's the endpoint
-            via_device=(
-                DOMAIN,
-                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{device_info.stack.id}"
-                if device_info.stack
-                else f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (
+                    DOMAIN,
+                    f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{device_info.stack.id}"
+                    if device_info.stack
+                    else f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
+                ),
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
             translation_key=None if self.device_name else "unknown_container",
             entry_type=DeviceEntryType.SERVICE,
@@ -175,9 +181,10 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
             ),
             model="Stack",
             name=self.device_name,
-            via_device=(
-                DOMAIN,
-                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_{self.endpoint_id}"),
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
         self._attr_unique_id = (
@@ -279,9 +286,10 @@ class PortainerVolumeEntity(PortainerCoordinatorEntity):
             ),
             model="Volume",
             name=self.volume_name,
-            via_device=(
-                DOMAIN,
-                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_{self.endpoint_id}"),
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
         self._attr_unique_id = (
