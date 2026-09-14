@@ -68,15 +68,15 @@ class HassEnforceConfigEntryStepIdMatchMethodChecker(BaseChecker):
             for keyword in node.keywords:
                 if keyword.arg == "step_id":
                     values = list(keyword.value.infer())
-                    step_id_node = values[0] if values else None
+                    if len(values) > 1:
+                        step_id_node = "__INCORRECT__"
+                        break
+                    step_id_node = values[0].value if values else None
                     break
 
         if step_id_node is None or method_step_id is None:
-            # step_id_node is None follows the method directly
-            # method_step_id is None when callers are not directly
-            # in the async_step_* method, e.g. in a helper method.
+            # step_id is None when it follows the method directly
             return
-        step_id_node = step_id_node.value
 
         if step_id_node != method_step_id:
             self.add_message(

@@ -144,6 +144,20 @@ def test_step_id_match_method(
             "homeassistant.components.test.config_flow",
             id="incorrect_method_custom",
         ),
+        pytest.param(
+            """
+        async def async_step_custom() -> FlowResult:
+            return self.async_show_form(
+                step_id="custom" if value is False else "user",
+                data_schema=vol.Schema({
+                    vol.Required(CONF_HOST): str,
+                    vol.Optional(CONF_USERNAME): str,
+                }),
+            )
+        """,
+            "homeassistant.components.test.config_flow",
+            id="incorrect_method_if_statement",
+        ),
     ],
 )
 def test_step_id_match_method_bad(
