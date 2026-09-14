@@ -396,27 +396,31 @@ async def test_shutdown_waits_for_a_command_already_on_the_wire(
     device = init_integration.runtime_data.device
     on_the_wire = asyncio.Event()
 
-    async def _never_returns(*args: object, **kwargs: object) -> None:
+    async def _never_answers(*args: object, **kwargs: object) -> str:
         on_the_wire.set()
         await asyncio.Event().wait()
+        raise AssertionError  # the wait above never returns
 
-    with patch.object(device, "set_airco", side_effect=_never_returns):
-        caller = asyncio.create_task(
-            hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_FAN_MODE,
-                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "auto"},
-                blocking=True,
-            )
+    mock_repository.send_airco_command.side_effect = _never_answers
+
+    caller = asyncio.create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "auto"},
+            blocking=True,
         )
-        await asyncio.wait_for(on_the_wire.wait(), timeout=5)
+    )
+    await asyncio.wait_for(on_the_wire.wait(), timeout=5)
 
-        await device.async_shutdown()
+    await device.async_shutdown()
 
-    assert not device._running_flushes
-    caller.cancel()
+    # The caller is what tells us the flush went with the coordinator: it was
+    # awaiting that send, so it comes back instead of hanging on a request
+    # nothing will answer.
     with suppress(asyncio.CancelledError):
-        await caller
+        await asyncio.wait_for(caller, timeout=5)
+    assert caller.done()
 
 
 async def test_an_unreadable_frame_survives_the_polls_that_carry_it(
@@ -433,14 +437,17 @@ async def test_an_unreadable_frame_survives_the_polls_that_carry_it(
     state as current however long the condition lasted.
     """
     device = init_integration.runtime_data.device
-    decode = device._parser.translate_bytes
+    decode = RacParser.translate_bytes
 
-    def _unreadable(raw: str) -> Aircon:
-        airco = decode(raw)
+    def _unreadable(self: RacParser, raw: str) -> Aircon:
+        airco = decode(self, raw)
         airco.OperationMode = 99
         return airco
 
-    with patch.object(device._parser, "translate_bytes", side_effect=_unreadable):
+    # Patched in the library rather than built as a frame: the encoder refuses
+    # to write a value it cannot read back, which is the whole point of the
+    # marker, so this state can only arrive from a unit - not from us.
+    with patch.object(RacParser, "translate_bytes", _unreadable):
         await _advance(hass, freezer, 3)
 
     assert device.available
