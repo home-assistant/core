@@ -13,6 +13,15 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
+def mock_setup_entry() -> Iterator[AsyncMock]:
+    """Skip integration setup during config flow tests."""
+    with patch(
+        "homeassistant.components.axle_energy.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
 def mock_event() -> GridEvent:
     """A synthetic future export event."""
     return GridEvent(

@@ -164,7 +164,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "homewizard": {"python-homewizard-energy": {"async-timeout", "backoff"}},
     "hydrawise": {"gql": {"backoff"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
-    "ipp": {"pyipp": {"backoff"}},
     "iqvia": {"pyiqvia": {"backoff"}},
     "ista_ecotrend": {"pyecotrend-ista": {"dataclasses-json"}},
     "kef": {"aiokef": {"async-timeout"}},

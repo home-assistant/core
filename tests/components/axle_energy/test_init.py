@@ -26,7 +26,7 @@ async def test_unload(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert hass.states.get("sensor.axle_energy_import_export").state == "unavailable"
+    assert hass.states.get("sensor.axle_energy_type_of_event").state == "unavailable"
     mock_client.get_event.reset_mock()
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)

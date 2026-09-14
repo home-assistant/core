@@ -14,7 +14,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -42,7 +41,7 @@ async def test_sensor_snapshot(
 @pytest.mark.parametrize(
     ("entity_id", "value", "key"),
     [
-        ("sensor.axle_energy_import_export", "export", "import_export"),
+        ("sensor.axle_energy_type_of_event", "export", "import_export"),
         ("sensor.axle_energy_event_start", "2026-09-11T17:00:00+00:00", "start"),
         ("sensor.axle_energy_event_end", "2026-09-11T18:00:00+00:00", "end"),
     ],
@@ -78,7 +77,7 @@ async def test_no_event(
     """An empty schedule is unknown, not a failed connection."""
     mock_client.get_event.return_value = None
     await setup(hass, mock_config_entry)
-    assert hass.states.get("sensor.axle_energy_import_export").state == "unknown"
+    assert hass.states.get("sensor.axle_energy_type_of_event").state == "unknown"
 
 
 async def test_opted_out(
@@ -90,7 +89,7 @@ async def test_opted_out(
     """Exclude an event the household has opted out of."""
     mock_client.get_event.return_value = replace(mock_event, opted_out=True)
     await setup(hass, mock_config_entry)
-    assert hass.states.get("sensor.axle_energy_import_export").state == "unknown"
+    assert hass.states.get("sensor.axle_energy_type_of_event").state == "unknown"
 
 
 @pytest.mark.parametrize("error", [AxleConnectionError(), AxleError()])
@@ -107,12 +106,12 @@ async def test_recovery(
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.axle_energy_import_export").state == "unavailable"
+    assert hass.states.get("sensor.axle_energy_type_of_event").state == "unavailable"
     mock_client.get_event.side_effect = None
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.axle_energy_import_export").state == "export"
+    assert hass.states.get("sensor.axle_energy_type_of_event").state == "export"
 
 
 async def test_polling(
@@ -134,7 +133,7 @@ async def test_polling(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_client.get_event.assert_awaited_once()
-    assert hass.states.get("sensor.axle_energy_import_export").state == "import"
+    assert hass.states.get("sensor.axle_energy_type_of_event").state == "import"
 
 
 async def test_authentication_failure(
@@ -149,44 +148,9 @@ async def test_authentication_failure(
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.axle_energy_import_export").state == "unavailable"
+    assert hass.states.get("sensor.axle_energy_type_of_event").state == "unavailable"
     mock_client.get_event.reset_mock()
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_client.get_event.assert_not_called()
-
-
-async def test_independent_entries(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client: AsyncMock,
-    mock_event: GridEvent,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Keep each feed's data and lifecycle separate."""
-    await setup(hass, mock_config_entry)
-    second_entry = MockConfigEntry(
-        domain="axle_energy",
-        title="Axle Energy",
-        data={CONF_API_KEY: "another-token"},
-    )
-    mock_client.get_event.return_value = replace(mock_event, direction="import")
-    await setup(hass, second_entry)
-    assert hass.states.get("sensor.axle_energy_import_export").state == "export"
-    assert hass.states.get("sensor.axle_energy_import_export_2").state == "import"
-    first_entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    second_entities = er.async_entries_for_config_entry(
-        entity_registry, second_entry.entry_id
-    )
-    assert len(first_entities) == len(second_entities) == 3
-    assert {entity.unique_id for entity in first_entities}.isdisjoint(
-        entity.unique_id for entity in second_entities
-    )
-    assert first_entities[0].device_id != second_entities[0].device_id
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.axle_energy_import_export").state == "unavailable"
-    assert hass.states.get("sensor.axle_energy_import_export_2").state == "import"

@@ -1163,8 +1163,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
-/homeassistant/components/midea/ @chemelli74 @rokam @caibinqing
-/tests/components/midea/ @chemelli74 @rokam @caibinqing
+/homeassistant/components/midea/ @chemelli74 @rokam
+/tests/components/midea/ @chemelli74 @rokam
 /homeassistant/components/miele/ @astrandb
 /tests/components/miele/ @astrandb
 /homeassistant/components/mikrotik/ @engrbm87 @chemelli74
@@ -2056,8 +2056,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvo/ @thomasddn
 /tests/components/volvo/ @thomasddn
-/homeassistant/components/wake_on_lan/ @ntilley905
-/tests/components/wake_on_lan/ @ntilley905
 /homeassistant/components/wake_word/ @home-assistant/core @synesthesiam
 /tests/components/wake_word/ @home-assistant/core @synesthesiam
 /homeassistant/components/wallbox/ @hesselonline

@@ -10,11 +10,12 @@
     "step": {
       "user": {
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "Generate a Home Assistant token in your Axle account settings."
-        }
+          "api_key": "The Home Assistant token for your Axle account."
+        },
+        "description": "Open the [Home Assistant page in your Axle account]({token_url}) and select **Generate Token**. Enter the generated token in **API key**."
       }
     }
   },
@@ -24,7 +25,7 @@
         "name": "Event end"
       },
       "import_export": {
-        "name": "Import / Export",
+        "name": "Type of Event:",
         "state": {
           "export": "Export",
           "import": "Import"

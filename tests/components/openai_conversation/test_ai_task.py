@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 import httpx
 from openai import PermissionDeniedError
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.openai_conversation import DOMAIN
@@ -95,9 +95,9 @@ async def test_generate_structured_data(
         task_name="Test Task",
         entity_id="ai_task.openai_ai_task",
         instructions="Generate test data",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,
@@ -132,9 +132,9 @@ async def test_generate_invalid_structured_data(
             task_name="Test Task",
             entity_id="ai_task.openai_ai_task",
             instructions="Generate test data",
-            structure=vol.Schema(
+            structure=probatio.Schema(
                 {
-                    vol.Required("characters"): selector.selector(
+                    probatio.Required("characters"): selector.selector(
                         {
                             "text": {
                                 "multiple": True,

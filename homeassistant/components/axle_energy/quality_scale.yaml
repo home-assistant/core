@@ -3,9 +3,7 @@ rules:
     status: exempt
     comment: This integration does not register custom actions.
   appropriate-polling: done
-  brands:
-    status: done
-    comment: Assets submitted in https://github.com/home-assistant/brands/pull/11144.
+  brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
