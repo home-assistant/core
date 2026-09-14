@@ -276,6 +276,13 @@ def _add_camera(
 async def async_setup_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> bool:
     """Set up motionEye from a config entry."""
 
+    # Register the media proxy route once for the integration.
+    if not hass.data.setdefault(DOMAIN, {}).get("media_proxy_registered"):
+        from .media_source import MotionEyeMediaProxyView
+
+        hass.http.register_view(MotionEyeMediaProxyView(hass))
+        hass.data[DOMAIN]["media_proxy_registered"] = True
+    
     client = create_motioneye_client(
         entry.data[CONF_URL],
         admin_username=entry.data.get(CONF_ADMIN_USERNAME),
