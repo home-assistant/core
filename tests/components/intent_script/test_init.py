@@ -73,7 +73,7 @@ async def test_intent_script(hass: HomeAssistant) -> None:
 
 
 async def test_intent_script_forwards_device_id(hass: HomeAssistant) -> None:
-        """Test that intent_script exposes the calling device/satellite id."""
+    """Test that intent_script exposes the calling device/satellite id."""
     calls = async_mock_service(hass, "test", "service")
 
     await async_setup_component(
