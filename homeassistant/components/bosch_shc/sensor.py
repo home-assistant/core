@@ -93,6 +93,10 @@ _VALVE_TAPPET_DESCRIPTION: SHCSensorEntityDescription[SHCThermostat] = (
         entity_registry_enabled_default=False,
         suggested_display_precision=0,
         value_fn=lambda device: device.position,
+        # Kept for anyone already reading this attribute in a template or
+        # automation, even though the same value is now also a first-class
+        # sensor below (_VALVE_TAPPET_STATE_DESCRIPTION).
+        attributes_fn=lambda device: {"valve_tappet_state": device.valvestate.name},
     )
 )
 _VALVE_TAPPET_STATE_DESCRIPTION: SHCSensorEntityDescription[SHCThermostat] = (
