@@ -2283,6 +2283,16 @@ async def test_cloud_push_between_local_ticks_keeps_owned_key(
     assert hass.states.get("sensor.energy_site_grid_services_power").state == "7.0"
 
 
+async def _tick_local_live(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, ticks: int
+) -> None:
+    """Advance time by ``ticks`` local live poll intervals."""
+    for _ in range(ticks):
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_paired_site_manual_refresh_merges_and_keeps_cloud_read(
     hass: HomeAssistant,
@@ -2365,13 +2375,104 @@ async def test_paired_site_live_read_failure_falls_back_and_recovers(
         await hass.async_block_till_done()
         assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
 
-        # The next poll succeeds and the owned key follows the local reading.
+        # The next poll, backed off to two intervals, succeeds and the owned key
+        # follows the local reading.
         mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await _tick_local_live(hass, freezer, 2)
 
     assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_paired_site_live_read_failures_back_off_and_reset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_powerwall_live_status: AsyncMock,
+) -> None:
+    """Repeated local live read failures double the poll gap to a cap, then reset."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_live_status.side_effect = PowerwallError("gateway unreachable")
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Reads land 5, 10, 20, 40 and then a capped 60 seconds apart.
+        for reads, gap in enumerate((1, 2, 4, 8, 12, 12), start=1):
+            await _tick_local_live(hass, freezer, gap - 1)
+            assert mock_powerwall_live_status.await_count == reads - 1
+            await _tick_local_live(hass, freezer, 1)
+            assert mock_powerwall_live_status.await_count == reads
+
+        # The next read, still at the cap, succeeds and restores the 5s cadence.
+        mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+        await _tick_local_live(hass, freezer, 12)
+        assert mock_powerwall_live_status.await_count == 7
+        await _tick_local_live(hass, freezer, 2)
+
+    assert mock_powerwall_live_status.await_count == 9
+    assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_paired_site_live_read_failure_logging(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_powerwall_live_status: AsyncMock,
+) -> None:
+    """The first failed local live read warns, repeats log at debug, recovery at info."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_live_status.side_effect = PowerwallError("gateway unreachable")
+
+    def poll_log_levels() -> list[int]:
+        return [
+            record.levelno
+            for record in caplog.records
+            if record.getMessage().startswith("Local live poll")
+        ]
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
+        caplog.at_level(logging.DEBUG),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await _tick_local_live(hass, freezer, 1)
+        assert poll_log_levels() == [logging.WARNING]
+
+        await _tick_local_live(hass, freezer, 2)
+        assert poll_log_levels() == [logging.WARNING, logging.DEBUG]
+
+        mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+        await _tick_local_live(hass, freezer, 4)
+        assert poll_log_levels() == [logging.WARNING, logging.DEBUG, logging.INFO]
+        assert "Local live poll for 123456 recovered" in caplog.text
+
+        # A healthy read logs nothing, and a later outage warns afresh.
+        await _tick_local_live(hass, freezer, 1)
+        mock_powerwall_live_status.side_effect = PowerwallError("gateway unreachable")
+        await _tick_local_live(hass, freezer, 1)
+
+    assert poll_log_levels() == [
+        logging.WARNING,
+        logging.DEBUG,
+        logging.INFO,
+        logging.WARNING,
+    ]
 
 
 async def test_paired_site_config_read_failure_falls_back_and_recovers(

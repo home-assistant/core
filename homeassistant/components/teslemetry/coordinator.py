@@ -1,6 +1,7 @@
 """Teslemetry Data Coordinator."""
 
 from datetime import datetime, timedelta
+import logging
 from typing import TYPE_CHECKING, Any, override
 
 from aiopowerwall import PowerwallEnergySite, PowerwallError
@@ -57,6 +58,7 @@ METADATA_INTERVAL = timedelta(hours=1)
 # A paired Powerwall's LAN gateway is not on the stream, so it is polled: the
 # live document every 5s and the slower-changing config.json every 30s.
 ENERGY_LIVE_INTERVAL = timedelta(seconds=5)
+ENERGY_LIVE_LOCAL_MAX_BACKOFF = timedelta(minutes=1)
 ENERGY_CONFIG_INTERVAL = timedelta(seconds=30)
 
 # Keys within tariff_content_v2 kept as nested dicts rather than flattened,
@@ -238,6 +240,8 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self._local: PowerwallEnergySite | None = None
         self._local_live: dict[str, Any] | None = None
         self._local_poll_in_progress = False
+        self._local_backoff_ticks = 1
+        self._local_ticks_to_skip = 0
         self.data = _index_wall_connectors(data)
 
     def enable_local_polling(
@@ -261,12 +265,19 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
         Publishes with ``async_update_listeners`` rather than through the update
         path, so a poll never touches the stream-owned success/error state. A
-        failed poll degrades the owned keys to their cloud values.
+        failed poll degrades the owned keys to their cloud values, and repeated
+        failures double the gap between reads up to
+        :data:`ENERGY_LIVE_LOCAL_MAX_BACKOFF` until a read succeeds.
         """
         # live_status performs sequential network reads that can exceed the
         # interval; skip a tick while a poll is still running so a slow poll
         # cannot replace a newer snapshot with stale data.
         if self._local is None or self._local_poll_in_progress:
+            return
+        # Backing off by skipping ticks keeps the fixed timer, so jitter in its
+        # fire time can never delay a due read by a further tick.
+        if self._local_ticks_to_skip:
+            self._local_ticks_to_skip -= 1
             return
         self._local_poll_in_progress = True
         try:
@@ -274,11 +285,23 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
                 self._local_live = (await self._local.live_status())["response"]
             except PowerwallError as e:
                 self._local_live = None
-                LOGGER.debug(
+                LOGGER.log(
+                    logging.DEBUG if self._local_backoff_ticks > 1 else logging.WARNING,
                     "Local live poll for %s failed, using cloud values: %s",
                     self.api.energy_site_id,
                     e,
                 )
+                self._local_backoff_ticks = min(
+                    self._local_backoff_ticks * 2,
+                    ENERGY_LIVE_LOCAL_MAX_BACKOFF // ENERGY_LIVE_INTERVAL,
+                )
+                self._local_ticks_to_skip = self._local_backoff_ticks - 1
+            else:
+                if self._local_backoff_ticks > 1:
+                    LOGGER.info(
+                        "Local live poll for %s recovered", self.api.energy_site_id
+                    )
+                self._local_backoff_ticks = 1
             self.data = self._merged()
             self.async_update_listeners()
         finally:
