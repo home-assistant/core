@@ -4,8 +4,8 @@ import contextlib
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from pylgnetcast import AccessTokenError, LgNetCastClient, SessionIdError
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -62,7 +62,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )
 
@@ -129,9 +129,11 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="authorize",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_ACCESS_TOKEN): vol.All(str, vol.Length(max=6)),
+                    probatio.Optional(CONF_ACCESS_TOKEN): probatio.All(
+                        str, probatio.Length(max=6)
+                    ),
                 }
             ),
             errors=errors,

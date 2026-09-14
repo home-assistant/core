@@ -8,7 +8,7 @@ from fluss_api import (
     FlussApiClientAuthenticationError,
     FlussApiClientCommunicationError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -17,7 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): cv.string})
 
 
 class FlussConfigFlow(ConfigFlow, domain=DOMAIN):

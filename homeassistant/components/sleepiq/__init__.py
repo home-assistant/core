@@ -10,7 +10,7 @@ from asyncsleepiq import (
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, PRESSURE, Platform
@@ -41,14 +41,14 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: {
-            vol.Required(CONF_USERNAME): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
+            probatio.Required(CONF_USERNAME): cv.string,
+            probatio.Required(CONF_PASSWORD): cv.string,
         }
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

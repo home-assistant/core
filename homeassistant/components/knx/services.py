@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import ConversionError
 from xknx.telegram import Telegram
@@ -97,14 +97,14 @@ def get_knx_module(hass: HomeAssistant) -> KNXModule:
         ) from err
 
 
-SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
+SERVICE_KNX_EVENT_REGISTER_SCHEMA = probatio.Schema(
     {
-        vol.Required(KNX_ADDRESS): vol.All(
+        probatio.Required(KNX_ADDRESS): probatio.All(
             cv.ensure_list,
             [ga_validator],
         ),
-        vol.Optional(CONF_TYPE): dpt_base_type_validator,
-        vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
+        probatio.Optional(CONF_TYPE): dpt_base_type_validator,
+        probatio.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
     }
 )
 
@@ -152,19 +152,19 @@ async def service_event_register_modify(call: ServiceCall) -> None:
         )
 
 
-SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
+SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = probatio.Any(
     ExposeSchema.EXPOSE_SENSOR_SCHEMA.extend(
         {
-            vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
+            probatio.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
         }
     ),
-    vol.Schema(
+    probatio.Schema(
         # for removing only `address` is required
         {
-            vol.Required(KNX_ADDRESS): ga_validator,
-            vol.Required(SERVICE_KNX_ATTR_REMOVE): vol.All(cv.boolean, True),
+            probatio.Required(KNX_ADDRESS): ga_validator,
+            probatio.Required(SERVICE_KNX_ATTR_REMOVE): probatio.All(cv.boolean, True),
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     ),
 )
 
@@ -210,29 +210,29 @@ async def service_exposure_register_modify(call: ServiceCall) -> None:
     )
 
 
-SERVICE_KNX_SEND_SCHEMA = vol.Any(
-    vol.Schema(
+SERVICE_KNX_SEND_SCHEMA = probatio.Any(
+    probatio.Schema(
         {
-            vol.Required(KNX_ADDRESS): vol.All(
+            probatio.Required(KNX_ADDRESS): probatio.All(
                 cv.ensure_list,
                 [ga_validator],
             ),
-            vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
-            vol.Required(SERVICE_KNX_ATTR_TYPE): dpt_base_type_validator,
-            vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
+            probatio.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
+            probatio.Required(SERVICE_KNX_ATTR_TYPE): dpt_base_type_validator,
+            probatio.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
         }
     ),
-    vol.Schema(
+    probatio.Schema(
         # without type given payload is treated as raw bytes
         {
-            vol.Required(KNX_ADDRESS): vol.All(
+            probatio.Required(KNX_ADDRESS): probatio.All(
                 cv.ensure_list,
                 [ga_validator],
             ),
-            vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
+            probatio.Required(SERVICE_KNX_ATTR_PAYLOAD): probatio.Any(
                 cv.positive_int, [cv.positive_int]
             ),
-            vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
+            probatio.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
         }
     ),
 )
@@ -280,9 +280,9 @@ async def service_send_to_knx_bus(call: ServiceCall) -> None:
         await knx_module.xknx.telegrams.put(telegram)
 
 
-SERVICE_KNX_READ_SCHEMA = vol.Schema(
+SERVICE_KNX_READ_SCHEMA = probatio.Schema(
     {
-        vol.Required(KNX_ADDRESS): vol.All(
+        probatio.Required(KNX_ADDRESS): probatio.All(
             cv.ensure_list,
             [ga_validator],
         )
