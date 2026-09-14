@@ -10,6 +10,7 @@ from habitron_client import (
     HabitronClient,
     HabitronConnectionError,
     HabitronError,
+    async_build_hub,
     discover_smarthubs,
     get_host_ip,
     test_connection,
@@ -22,7 +23,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_DEFAULT_HOST, DOMAIN, normalised_mac
+from .const import CONF_DEFAULT_HOST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,20 +42,18 @@ async def _async_hub_mac(host: str) -> str | None:
     """
     try:
         async with HabitronClient(host) as client:
-            info = await client.get_smhub_info()
+            hub = await async_build_hub(client)
     except (HabitronError, OSError) as err:
         raise CannotConnect from err
-    try:
-        # A hub without an Ethernet interface reports the key as null, and
-        # ``str(None)`` would normalise to the literal "none" -- an id every
-        # such hub would share. Treat it as absent, like a missing key.
-        reported = str(info["hardware"]["network"]["lan mac"] or "")
-    except (KeyError, TypeError) as err:
-        _LOGGER.debug("Hub at %s reported no readable MAC: %s", host, err)
+    if not hub.uid:
+        # A hub without an Ethernet interface reports its address as null, and
+        # a firmware placeholder is no identity either -- both leave the uid
+        # empty, and both mean "this hub cannot be told apart from another".
+        _LOGGER.debug(
+            "Hub at %s reported %r, which is no usable MAC", host, hub.lan_mac
+        )
         return None
-    if (mac := normalised_mac(reported)) is None:
-        _LOGGER.debug("Hub at %s reported %r, which is no MAC", host, reported)
-    return mac
+    return hub.uid
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:

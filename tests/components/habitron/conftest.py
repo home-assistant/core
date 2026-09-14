@@ -4,6 +4,7 @@ from collections.abc import Generator
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from habitron_client import SmartHub
 import pytest
 
 from homeassistant.components.habitron.const import DOMAIN
@@ -94,15 +95,15 @@ def mock_habitron_client() -> Generator[MagicMock]:
             new=AsyncMock(return_value=[]),
         ),
         patch(
-            "homeassistant.components.habitron.communicate.get_own_ip",
+            "homeassistant.components.habitron.coordinator.get_own_ip",
             return_value="192.168.1.10",
         ),
         patch(
-            "homeassistant.components.habitron.communicate.get_host_ip",
+            "homeassistant.components.habitron.coordinator.get_host_ip",
             new=AsyncMock(return_value=MOCK_HOST),
         ),
         patch(
-            "homeassistant.components.habitron.communicate.HabitronClient",
+            "homeassistant.components.habitron.coordinator.HabitronClient",
             autospec=True,
         ) as mock_client_cls,
     ):
@@ -113,28 +114,31 @@ def mock_habitron_client() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_smart_hub_setup() -> Generator[MagicMock]:
-    """Stub ``SmartHub.async_setup`` so config-entry tests don't touch the bus.
+def mock_coordinator_setup() -> Generator[MagicMock]:
+    """Stub the coordinator's connect/build so tests don't touch the bus.
 
-    Populates the SmartHub instance with the field set the rest of the
-    integration expects after a real ``async_setup`` would have run.
+    Populates the coordinator with the field set the rest of the integration
+    expects after a real ``_async_connect_and_build`` would have run.
     """
 
-    async def _async_setup(self) -> None:
-        self._mac = MOCK_MAC
-        self.uid = MOCK_UID
-        self._version = MOCK_VERSION
-        self._type = MOCK_HWTYPE
+    async def _connect_and_build(self) -> None:
         self.host = MOCK_HOST
-        self.addon_slug = ""
+        self.hub = SmartHub(
+            uid=MOCK_UID,
+            lan_mac=MOCK_MAC,
+            macs=[MOCK_MAC],
+            platform=MOCK_HWTYPE,
+            version=MOCK_VERSION,
+        )
+        self._uid_from_mac = True
         self.base_url = f"http://{MOCK_HOST}:7780"
-        self.router.b_uid = MOCK_UID
         self.router.modules = []
         self.router.states = []
 
     with patch(
-        "homeassistant.components.habitron.smart_hub.SmartHub.async_setup",
-        new=_async_setup,
+        "homeassistant.components.habitron.coordinator."
+        "HbtnCoordinator._async_connect_and_build",
+        new=_connect_and_build,
     ):
         yield
 
@@ -169,7 +173,7 @@ async def setup_integration(
     setup_homeassistant: None,
     mock_config_entry: MockConfigEntry,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
 ) -> MockConfigEntry:
     """Add and set up a Habitron config entry, returning the entry."""

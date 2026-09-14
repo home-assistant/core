@@ -69,7 +69,8 @@ async def test_setup_entry_timeout_marks_retry(
     """A timeout during setup surfaces as SETUP_RETRY, not SETUP_ERROR."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.habitron.smart_hub.SmartHub.async_setup",
+        "homeassistant.components.habitron.coordinator."
+        "HbtnCoordinator._async_connect_and_build",
         side_effect=TimeoutError("hub silent"),
     ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -85,7 +86,7 @@ async def test_async_remove_config_entry_device(
     """Only devices whose Habitron member is gone from the bus may be removed."""
 
     entry = setup_integration
-    smhub = entry.runtime_data.smart_hub
+    smhub = entry.runtime_data
     # Populate the model with a router uid and a live module so their devices
     # are treated as present.
     smhub.router.uid = "router-uid"
@@ -121,7 +122,8 @@ async def test_setup_entry_connection_refused_marks_retry(
     """A ``ConnectionRefusedError`` during setup surfaces as SETUP_RETRY."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.habitron.smart_hub.SmartHub.async_setup",
+        "homeassistant.components.habitron.coordinator."
+        "HbtnCoordinator._async_connect_and_build",
         side_effect=ConnectionRefusedError("hub refused"),
     ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -138,7 +140,8 @@ async def test_setup_entry_oserror_marks_retry(
     """A network-level ``OSError`` during setup surfaces as SETUP_RETRY."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.habitron.smart_hub.SmartHub.async_setup",
+        "homeassistant.components.habitron.coordinator."
+        "HbtnCoordinator._async_connect_and_build",
         side_effect=OSError("network down"),
     ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -160,7 +163,8 @@ async def test_setup_entry_habitron_error_marks_retry(
     """
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.habitron.smart_hub.SmartHub.async_setup",
+        "homeassistant.components.habitron.coordinator."
+        "HbtnCoordinator._async_connect_and_build",
         side_effect=HabitronError("protocol glitch"),
     ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -198,7 +202,7 @@ async def test_setup_entry_post_refresh_errors_are_not_masked(
     setup_homeassistant: None,
     mock_config_entry: MockConfigEntry,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     side_effect: Exception,
 ) -> None:
@@ -224,7 +228,7 @@ async def test_setup_entry_removes_stale_device(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """``_async_cleanup_stale_devices`` removes registry entries for gone modules."""
@@ -246,7 +250,7 @@ async def test_migrate_v1_entry_renames_the_host(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """A v1 entry keeps working: the host key is renamed in place.
@@ -277,7 +281,7 @@ async def test_migrate_v1_entry_without_the_old_key_is_a_no_op(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """A v1 entry that already uses the shared key is only version-bumped."""
@@ -365,7 +369,7 @@ async def test_setup_adopts_before_the_update_listener_exists(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """Rewriting the entry must not reload the entry that is still setting up.
@@ -445,7 +449,7 @@ async def test_migrate_v2_entry_is_bumped_and_keeps_the_token(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """A v2 entry from the custom integration is bumped, not stripped.
@@ -488,7 +492,7 @@ async def test_setup_entry_connection_errors_mark_retry(
     setup_homeassistant: None,
     mock_config_entry: MockConfigEntry,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     side_effect: Exception,
 ) -> None:
     """Every connection error from the first refresh becomes a retry.

@@ -4,7 +4,12 @@ from ipaddress import IPv4Address
 import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from habitron_client import HabitronConnectionError, HabitronError, HabitronTimeoutError
+from habitron_client import (
+    HabitronConnectionError,
+    HabitronError,
+    HabitronProtocolError,
+    HabitronTimeoutError,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -42,7 +47,7 @@ async def test_user_flow_success(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """The manual user flow creates an entry when the hub responds."""
@@ -259,6 +264,21 @@ async def test_ssdp_adopts_an_entry_keyed_by_the_hub_mac(
     assert entry.data[CONF_HOST] == MOCK_HOST
 
 
+def _smhub_info(lan_mac: str | None) -> dict:
+    """A complete ``GET_SMHUB_INFO`` answer carrying ``lan_mac``.
+
+    Complete on purpose: the client validates the payload before returning it,
+    so a partial one never reaches the code under test.
+    """
+    return {
+        "hardware": {
+            "platform": {"type": "Raspberry Pi 4 Model B"},
+            "network": {"ip": MOCK_HOST, "host": "smarthub", "lan mac": lan_mac},
+        },
+        "software": {"version": "5.1.0"},
+    }
+
+
 @pytest.mark.parametrize(
     ("reported", "expected"),
     [
@@ -279,9 +299,7 @@ async def test_hub_mac_is_normalised(
     the hub itself reports whichever notation its firmware happens to use.
     """
     client = AsyncMock()
-    client.get_smhub_info = AsyncMock(
-        return_value={"hardware": {"network": {"lan mac": reported}}}
-    )
+    client.get_smhub_info = AsyncMock(return_value=_smhub_info(reported))
     client.__aenter__ = AsyncMock(return_value=client)
     client.__aexit__ = AsyncMock(return_value=False)
     with patch(
@@ -308,21 +326,11 @@ async def test_hub_mac_unreachable_raises_cannot_connect() -> None:
 
 
 @pytest.mark.parametrize(
-    ("payload", "expected_id"),
-    [
-        ({"hardware": {"network": {"lan mac": None}}}, "null"),
-        ({"hardware": {"network": {"lan mac": ""}}}, "empty"),
-        ({"hardware": {"network": {"lan mac": "192.168.1.50"}}}, "an IP"),
-        ({"hardware": {"network": {"lan mac": "not-a-mac"}}}, "junk"),
-        # An answer that does not carry the field at all.
-        ({"hardware": {}}, "key missing"),
-        ({"hardware": {"network": None}}, "network null"),
-    ],
-    ids=["null", "empty", "an IP", "junk", "key missing", "network null"],
+    "reported",
+    [None, "", "192.168.1.50", "not-a-mac"],
+    ids=["null", "empty", "an IP", "junk"],
 )
-async def test_hub_mac_without_a_usable_address_is_none(
-    payload: dict, expected_id: str
-) -> None:
+async def test_hub_mac_without_a_usable_address_is_none(reported: str | None) -> None:
     """Only a real address becomes an identity.
 
     A hub that answers but sends something else -- a null ``lan mac``, or a
@@ -330,7 +338,7 @@ async def test_hub_mac_without_a_usable_address_is_none(
     unique_id that two machines could share.
     """
     client = MagicMock()
-    client.get_smhub_info = AsyncMock(return_value=payload)
+    client.get_smhub_info = AsyncMock(return_value=_smhub_info(reported))
     client.__aenter__ = AsyncMock(return_value=client)
     client.__aexit__ = AsyncMock(return_value=False)
     with patch(
@@ -338,6 +346,30 @@ async def test_hub_mac_without_a_usable_address_is_none(
         return_value=client,
     ):
         assert await _async_hub_mac(MOCK_HOST) is None
+
+
+async def test_hub_mac_unreadable_answer_raises_cannot_connect() -> None:
+    """A payload the client cannot read is a connection problem, not "no MAC".
+
+    ``get_smhub_info`` validates the answer, so an incomplete one never reaches
+    the identity check -- it arrives as a ``HabitronProtocolError``, and the
+    flow must offer "cannot connect" rather than the "update your hub" path a
+    missing MAC leads to.
+    """
+    client = MagicMock()
+    client.get_smhub_info = AsyncMock(
+        side_effect=HabitronProtocolError("SmartHub info: missing key")
+    )
+    client.__aenter__ = AsyncMock(return_value=client)
+    client.__aexit__ = AsyncMock(return_value=False)
+    with (
+        patch(
+            "homeassistant.components.habitron.config_flow.HabitronClient",
+            return_value=client,
+        ),
+        pytest.raises(CannotConnect),
+    ):
+        await _async_hub_mac(MOCK_HOST)
 
 
 @pytest.mark.parametrize(
@@ -355,7 +387,7 @@ async def test_user_step_mac_match_normalises_and_falls_through(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     reported_mac: str | None,
     expected_type: FlowResultType,
@@ -393,7 +425,7 @@ async def test_user_step_falls_back_to_the_hub_mac(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
 ) -> None:
@@ -423,7 +455,7 @@ async def test_ssdp_falls_back_to_the_hub_mac(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
 ) -> None:
@@ -505,7 +537,7 @@ async def test_user_step_probes_the_resolved_ip_for_the_local_sentinel(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
 ) -> None:
@@ -542,7 +574,7 @@ async def test_user_step_can_reconfigure_an_ignored_hub(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """A hub the user ignored can still be added by hand later.
@@ -578,7 +610,7 @@ async def test_user_step_unignores_a_mac_keyed_hub(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
 ) -> None:
@@ -1219,7 +1251,7 @@ async def test_user_flow_identity_when_nothing_configured(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
     hub_mac: str | None,
@@ -1247,7 +1279,7 @@ async def test_user_flow_recognises_a_configured_hub(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
     stored_id: str,
@@ -1272,7 +1304,7 @@ async def test_user_flow_adds_a_second_hub(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
 ) -> None:
@@ -1298,7 +1330,7 @@ async def test_ssdp_flow_identity_when_nothing_configured(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
     hub_mac: str | None,
@@ -1329,7 +1361,7 @@ async def test_ssdp_flow_recognises_a_configured_hub(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
     stored_id: str,
@@ -1350,7 +1382,7 @@ async def test_user_flow_without_a_mac_reports_it_on_the_form(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
 ) -> None:
@@ -1372,7 +1404,7 @@ async def test_ssdp_flow_without_a_mac_is_aborted(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
+    mock_coordinator_setup: None,
     mock_coordinator_refresh: AsyncMock,
     mock_hub_mac: AsyncMock,
 ) -> None:

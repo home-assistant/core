@@ -1,6 +1,6 @@
 """End-to-end setup against a recorded real SmartHub.
 
-Most config-entry tests stub ``SmartHub.async_setup`` so they never touch the
+Most config-entry tests stub the coordinator's build so they never touch the
 bus. This module instead replays an anonymised recording of a real 11-module
 installation (the exact bytes the hub returned, captured via the library's
 ``scripts/capture_hub.py``) through a full config-entry setup. It exercises the
@@ -13,7 +13,7 @@ from __future__ import annotations
 import base64
 from collections import deque
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from habitron_client import HostDiagnostics
 
@@ -118,15 +118,9 @@ async def test_real_recording_builds_devices_and_entities(
     client = _ReplayClient(recording)
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.habitron.communicate.HabitronClient",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.habitron.communicate.network.async_get_source_ip",
-            new=AsyncMock(return_value="192.168.1.10"),
-        ),
+    with patch(
+        "homeassistant.components.habitron.coordinator.HabitronClient",
+        return_value=client,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

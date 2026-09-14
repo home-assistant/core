@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from habitron_client import Area, SmartController
+from habitron_client import Area, Diagnostic, Sensor, SmartController, SmartHub
 import pytest
 
 from homeassistant.components.habitron import sensor as habitron_sensor
@@ -681,9 +681,9 @@ async def test_async_setup_entry_emits_all_sensor_types(hass: HomeAssistant) -> 
     router.voltages = [rt_vtg]
     router.areas = [Area(nmbr=0, name="House")]
 
-    smhub.router = router
     coordinator = MagicMock()
-    coordinator.smart_hub = smhub
+    coordinator.hub = smhub
+    coordinator.router = router
     entry = MagicMock()
     entry.runtime_data = coordinator
 
@@ -750,9 +750,9 @@ def _analog_coordinator(ain_area: int, module_area: int = 1) -> MagicMock:
     smhub = MagicMock()
     smhub.sensors = []
     smhub.diags = []
-    smhub.router = router
     coordinator = MagicMock()
-    coordinator.smart_hub = smhub
+    coordinator.hub = smhub
+    coordinator.router = router
     return coordinator
 
 
@@ -915,7 +915,7 @@ async def test_analog_input_created_for_module_type_beyond_hardcoded_set(
     used to be hard-coded still yields its analog input.
     """
     coordinator = _analog_coordinator(ain_area=0)
-    coordinator.smart_hub.router.modules[0].typ = b"\x01\x05"
+    coordinator.router.modules[0].typ = b"\x01\x05"
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     entry.runtime_data = coordinator
@@ -935,11 +935,12 @@ async def test_host_readings_unknown_until_first_hub_answer() -> None:
     (0 % CPU load, 0 % disk usage) rather than as a missing value, so the
     entities must report ``None`` until the first successful read.
     """
-    hub = MagicMock()
-    hub.diags = [MagicMock(value=42.0)]
-    hub.sensors = [MagicMock(value=17.0)]
-
-    hub.host_diags_valid = False
+    hub = SmartHub(
+        diags=[Diagnostic(name="CPU load", nmbr=0, type=10, value=42.0)],
+        sensors=[Sensor(name="Memory usage", nmbr=0, type=2, value=17.0)],
+    )
+    # A freshly built hub has not been polled yet.
+    assert hub.host_valid is False
     for description in (
         CPU_FREQUENCY_DESCRIPTION,
         CPU_LOAD_DESCRIPTION,
@@ -949,6 +950,6 @@ async def test_host_readings_unknown_until_first_hub_answer() -> None:
     ):
         assert description.value_fn(hub, 0) is None
 
-    hub.host_diags_valid = True
+    hub.host_valid = True
     assert CPU_LOAD_DESCRIPTION.value_fn(hub, 0) == 42.0
     assert MEMORY_DESCRIPTION.value_fn(hub, 0) == 17.0

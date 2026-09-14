@@ -90,8 +90,8 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for passed config_entry in HA."""
     hbtn_cord = entry.runtime_data
-    smhub = hbtn_cord.smart_hub
-    hbtn_rt = smhub.router
+    smhub = hbtn_cord.hub
+    hbtn_rt = hbtn_cord.router
 
     area_reg = ar.async_get(hass)
     bus_area_names = {area.nmbr: area.name for area in hbtn_rt.areas}
@@ -548,7 +548,7 @@ MEMORY_DESCRIPTION = HbtnSensorEntityDescription(
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,
-    value_fn=lambda hub, idx: hub.sensors[idx].value if hub.host_diags_valid else None,
+    value_fn=lambda hub, idx: hub.sensors[idx].value if hub.host_valid else None,
     subscribe_fn=lambda module, idx: module.sensors[idx],
 )
 DISK_DESCRIPTION = HbtnSensorEntityDescription(
@@ -560,7 +560,7 @@ DISK_DESCRIPTION = HbtnSensorEntityDescription(
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,
-    value_fn=lambda hub, idx: hub.sensors[idx].value if hub.host_diags_valid else None,
+    value_fn=lambda hub, idx: hub.sensors[idx].value if hub.host_valid else None,
     subscribe_fn=lambda module, idx: module.sensors[idx],
 )
 CPU_LOAD_DESCRIPTION = HbtnSensorEntityDescription(
@@ -572,7 +572,7 @@ CPU_LOAD_DESCRIPTION = HbtnSensorEntityDescription(
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,
-    value_fn=lambda hub, idx: hub.diags[idx].value if hub.host_diags_valid else None,
+    value_fn=lambda hub, idx: hub.diags[idx].value if hub.host_valid else None,
     subscribe_fn=lambda module, idx: module.diags[idx],
 )
 CPU_FREQUENCY_DESCRIPTION = HbtnSensorEntityDescription(
@@ -585,7 +585,7 @@ CPU_FREQUENCY_DESCRIPTION = HbtnSensorEntityDescription(
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,
-    value_fn=lambda hub, idx: hub.diags[idx].value if hub.host_diags_valid else None,
+    value_fn=lambda hub, idx: hub.diags[idx].value if hub.host_valid else None,
     subscribe_fn=lambda module, idx: module.diags[idx],
 )
 CPU_TEMPERATURE_DESCRIPTION = HbtnSensorEntityDescription(
@@ -597,7 +597,7 @@ CPU_TEMPERATURE_DESCRIPTION = HbtnSensorEntityDescription(
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,
-    value_fn=lambda hub, idx: hub.diags[idx].value if hub.host_diags_valid else None,
+    value_fn=lambda hub, idx: hub.diags[idx].value if hub.host_valid else None,
     subscribe_fn=lambda module, idx: module.diags[idx],
 )
 LOGIC_DESCRIPTION = HbtnSensorEntityDescription(

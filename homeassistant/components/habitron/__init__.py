@@ -9,10 +9,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .communicate import HbtnComm
 from .const import DOMAIN
 from .coordinator import HabitronConfigEntry, HbtnCoordinator
-from .smart_hub import SmartHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,12 +53,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -
 
 async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> bool:
     """Set up Habitron from a config entry."""
-    comm = HbtnComm(hass, entry)
-    coordinator = HbtnCoordinator(hass, entry, comm)
+    coordinator = HbtnCoordinator(hass, entry)
     entry.runtime_data = coordinator
     try:
-        # First refresh runs the SmartHub setup (connect + build model + register
-        # devices) via the coordinator, then the first bus poll.
+        # First refresh runs the coordinator setup (connect, build the hub and
+        # bus models, register the devices), then the first bus poll.
         await coordinator.async_config_entry_first_refresh()
     except (TimeoutError, HabitronTimeoutError) as ex:
         raise ConfigEntryNotReady(
@@ -103,11 +100,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> 
     # Before the update listener exists: adopting rewrites the entry, and
     # ``async_update_entry`` fires the listeners -- which would schedule a
     # reload while this very setup is still running.
-    _async_adopt_hub_identity(hass, entry, coordinator.smart_hub)
+    _async_adopt_hub_identity(hass, entry, coordinator)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    _async_cleanup_stale_devices(hass, entry, coordinator.smart_hub)
+    _async_cleanup_stale_devices(hass, entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -125,9 +122,9 @@ async def async_remove_config_entry_device(
     live devices and must not be deleted by hand; only a device whose uid no
     longer exists on the bus (a leftover of a removed module) may be removed.
     """
-    smhub = config_entry.runtime_data.smart_hub
-    present_uids = {smhub.uid, smhub.router.uid}
-    present_uids.update(module.uid for module in smhub.router.modules)
+    coordinator = config_entry.runtime_data
+    present_uids = {coordinator.uid, coordinator.router.uid}
+    present_uids.update(module.uid for module in coordinator.router.modules)
     return not any(
         identifier[0] == DOMAIN and identifier[1] in present_uids
         for identifier in device_entry.identifiers
@@ -141,7 +138,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HabitronConfigEntry) ->
         return False
 
     entry.runtime_data.async_clear_router_issue()
-    await entry.runtime_data.smart_hub.async_close()
+    await entry.runtime_data.async_close()
 
     return True
 
@@ -155,7 +152,7 @@ async def update_listener(hass: HomeAssistant, entry: HabitronConfigEntry) -> No
 def _async_adopt_hub_identity(
     hass: HomeAssistant,
     entry: HabitronConfigEntry,
-    smhub: SmartHub,
+    coordinator: HbtnCoordinator,
 ) -> None:
     """Move the entry onto the hub's MAC, the one identity every path derives.
 
@@ -167,31 +164,33 @@ def _async_adopt_hub_identity(
     recognises it, whatever address it moves to, and no extra matcher is
     needed.
     """
-    if not smhub.has_mac_uid or entry.unique_id == smhub.uid:
+    if not coordinator.has_mac_uid or entry.unique_id == coordinator.uid:
         return
     _LOGGER.debug(
         "Adopting hub identity for %s: %s -> %s",
         entry.title,
         entry.unique_id,
-        smhub.uid,
+        coordinator.uid,
     )
-    hass.config_entries.async_update_entry(entry, unique_id=smhub.uid)
+    hass.config_entries.async_update_entry(entry, unique_id=coordinator.uid)
 
 
 def _async_cleanup_stale_devices(
     hass: HomeAssistant,
     entry: HabitronConfigEntry,
-    smhub: SmartHub,
+    coordinator: HbtnCoordinator,
 ) -> None:
     """Remove device-registry entries whose Habitron module is gone.
 
-    Run after ``smhub.async_setup`` populates ``router.modules``. The
+    Run after the coordinator's setup has populated ``router.modules``. The
     hub device and the router device are kept; everything else identified
     by ``(DOMAIN, <some uid>)`` is removed if that uid is no longer in
     the router's current module list.
     """
-    keep_uids: set[str] = {smhub.uid, smhub.router.uid}
-    keep_uids.update(getattr(module, "uid", "") for module in smhub.router.modules)
+    keep_uids: set[str] = {coordinator.uid, coordinator.router.uid}
+    keep_uids.update(
+        getattr(module, "uid", "") for module in coordinator.router.modules
+    )
     keep_uids.discard("")
 
     dev_reg = dr.async_get(hass)
