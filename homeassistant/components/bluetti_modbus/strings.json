@@ -6,7 +6,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "link_settings_in_use": "This address and device ID are already in use with different Modbus settings by another entry."
+      "link_settings_in_use": "This address is already in use by another entry with different Modbus link settings."
     },
     "step": {
       "user": {
