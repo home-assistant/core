@@ -452,7 +452,13 @@ async def test_async_resolve_media_success(
         f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4",
         None,
     )
-    assert media == PlayMedia(url="http://signed", mime_type="video/mp4")
+    assert media == PlayMedia(
+        url=(
+            f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/1/"
+            "movies/0/L2Zvby5tcDQ="
+        ),
+        mime_type="video/mp4",
+    )
 
     # Test successful resolve for an image.
     media = await async_resolve_media(
