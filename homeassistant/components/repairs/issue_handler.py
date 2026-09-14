@@ -96,8 +96,8 @@ class _DeprecatedIssueIdDict[_VT](dict[str, _VT]):
 
     def _report_issue_id_usage(self, method: str) -> None:
         report_usage(
-            f"{method} `issue_id` from `user_input` in `async_step_init` of a `RepairsFlow` "
-            "instead of `self.issue_id`",
+            f"{method} `issue_id` from `user_input` in `async_step_init` of a `RepairsFlow` or "
+            "from the flow's `init_data` instead of `self.issue_id`",
             breaks_in_ha_version="2028.10.0",
             integration_domain=self._integration_domain,
         )

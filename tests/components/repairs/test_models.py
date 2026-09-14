@@ -2,6 +2,8 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from types import FrameType
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -20,9 +22,8 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.frame import IntegrationFrame
 import homeassistant.helpers.issue_registry as ir
-
-from .test_issue_handler import MockFixFlowContext
 
 from tests.common import (
     AsyncMock,
@@ -47,7 +48,9 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
         data: dict[str, str | int | float | None] | None,
     ) -> RepairsFlow:
         if issue_id == "context_issue":
-            return MockFixFlowContext()
+            return MockFixFlowContextUserInputDeprecations()
+        if issue_id == "context_init_data_issue":
+            return MockFixFlowContextInitDataDeprecations()
         return MockFixFlowNextFlow()
 
     mock_platform(
@@ -55,6 +58,53 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
         "fake_integration.repairs",
         Mock(async_create_fix_flow=AsyncMock(wraps=async_create_fix_flow)),
     )
+
+
+class MockFixFlowContextUserInputDeprecations(RepairsFlow):
+    """Mock for context deprecation tests."""
+
+    def __init__(self) -> None:
+        """Initialize a MockFlowFixContext."""
+        # Test issue_id setter and deprecation warning
+        with patch(
+            "homeassistant.helpers.frame.get_integration_frame"
+        ) as mock_integration_frame:
+            mock_code = MagicMock()
+            mock_code.co_filename = (
+                "homeassistant/components/fake_integration/repairs.py"
+            )
+            mock_frame = MagicMock(spec=FrameType)
+            mock_frame.f_code = mock_code
+            mock_frame.f_lineno = 99
+            mock_integration_frame.return_value = IntegrationFrame(
+                custom_integration=False,
+                integration="fake_integration",
+                module="repairs",
+                relative_filename="repairs.py",
+                frame=mock_frame,
+            )
+            self.issue_id = "fake_issue"
+        assert self.issue_id == "fake_issue"
+
+    async def async_step_init(self, user_input: dict | None) -> RepairsFlowResult:
+        """Test _DeprecatedIssueIdDict."""
+        assert user_input and user_input["issue_id"] == self.issue_id
+        assert user_input.get("issue_id") == self.issue_id
+        assert user_input.pop("issue_id") == self.issue_id
+        assert user_input.pop("issue_id", "test_result") == "test_result"
+        return self.async_show_form()
+
+
+class MockFixFlowContextInitDataDeprecations(RepairsFlow):
+    """Mock for context deprecation tests."""
+
+    async def async_step_init(self, user_input: dict | None) -> RepairsFlowResult:
+        """Test _DeprecatedIssueIdDict ."""
+        assert self.init_data and self.init_data["issue_id"] == self.issue_id
+        assert self.init_data.get("issue_id") == self.issue_id
+        assert self.init_data.pop("issue_id") == self.issue_id
+        assert self.init_data.pop("issue_id", "test_result") == "test_result"
+        return self.async_show_form()
 
 
 @contextmanager
@@ -210,7 +260,8 @@ async def test_issue_id_setter_getter_deprecation(
         "fake_integration", context={"issue_id": "context_issue"}
     )
     assert any(
-        "sets `issue_id` directly in a `RepairsFlow` which is unnecessary" in msg
+        "Detected that integration 'fake_integration' sets `issue_id` directly in a "
+        "`RepairsFlow` which is unnecessary" in msg
         for msg in caplog.messages
     )
 
@@ -246,7 +297,42 @@ async def test_access_issue_id_in_async_step_init_deprecation(
     await repairs.async_init("fake_integration", context={"issue_id": "context_issue"})
     for method in ("accesses", "gets", "pops"):
         assert any(
-            f"{method} `issue_id` from `user_input` in `async_step_init` of a `RepairsFlow"
+            f"{method} `issue_id` from `user_input` in `async_step_init` of a `RepairsFlow`"
+            in msg
+            for msg in caplog.messages
+        )
+
+
+@pytest.mark.parametrize(
+    ("ignore_translations_for_mock_domains"),
+    [
+        ["fake_integration"],
+    ],
+)
+async def test_access_issue_id_from_init_data_deprecation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test RepairFlow issue_id getter/setter with switch to context."""
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ir.async_create_issue(
+        hass,
+        issue_id="context_init_data_issue",
+        domain="fake_integration",
+        is_fixable=True,
+        severity="error",
+        translation_key="fake_key",
+    )
+
+    assert (repairs := repairs_flow_manager(hass))
+
+    await repairs.async_init(
+        "fake_integration", context={"issue_id": "context_init_data_issue"}
+    )
+    for method in ("accesses", "gets", "pops"):
+        assert any(
+            f"{method} `issue_id` from `user_input` in `async_step_init` of a `RepairsFlow`"
             in msg
             for msg in caplog.messages
         )

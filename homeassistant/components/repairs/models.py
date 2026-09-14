@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.frame import report_usage
 
-from .const import FlowType
+from .const import DOMAIN, FlowType
 
 
 class RepairsFlowContext(data_entry_flow.FlowContext, total=False):
@@ -65,6 +65,7 @@ class RepairsFlow(
         report_usage(
             "sets `issue_id` directly in a `RepairsFlow` which is unnecessary",
             breaks_in_ha_version="2028.10.0",
+            exclude_integrations={DOMAIN},
         )
         self._deprecated_issue_id = issue_id
 

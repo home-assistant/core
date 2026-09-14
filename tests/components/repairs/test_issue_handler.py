@@ -36,19 +36,8 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
 class MockFixFlowContext(RepairsFlow):
     """Mock for context tests."""
 
-    def __init__(self) -> None:
-        """Initialize a MockFlowFixContext."""
-        # Test issue_id setter and deprecation warning
-        self.issue_id = "fake_issue"
-        assert self.issue_id == "fake_issue"
-
     async def async_step_init(self, user_input: dict | None) -> RepairsFlowResult:
         """Initial step of a repairs flow."""
-        # Test _DeprectatedIssueIdDict
-        assert user_input and user_input["issue_id"] == self.issue_id
-        assert user_input.get("issue_id") == self.issue_id
-        assert user_input.pop("issue_id") == self.issue_id
-        assert user_input.pop("issue_id", "test_result") == "test_result"
         return self.async_show_form()
 
 
