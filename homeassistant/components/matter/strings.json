@@ -554,9 +554,6 @@
       "flow": {
         "name": "Flow"
       },
-      "frequency": {
-        "name": "[%key:component::sensor::entity_component::frequency::name%]"
-      },
       "hepa_filter_condition": {
         "name": "HEPA filter condition"
       },
@@ -604,9 +601,6 @@
       },
       "pi_heating_demand": {
         "name": "Heating demand"
-      },
-      "power_factor": {
-        "name": "[%key:component::sensor::entity_component::power_factor::name%]"
       },
       "pump_control_mode": {
         "name": "Control mode",
