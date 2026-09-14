@@ -20,7 +20,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize(
@@ -59,6 +59,11 @@ async def test_reconfigure_same_share(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_SHARE_TOKEN)
+        == "canonical-token"
+    )
 
     with patch(
         "homeassistant.components.scorpiontrack.ScorpionTrackClient",
@@ -129,15 +134,20 @@ async def test_reconfigure_validation_error(
     """Keep the reconfigure form and stored data after validation fails."""
     mock_config_entry.add_to_hass(hass)
     mock_scorpiontrack_client.async_get_share.side_effect = error
+    share_input = "https://app.scorpiontrack.com/shared/location?token=updated-token"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-        data={CONF_SHARE_TOKEN: "updated-token"},
+        data={CONF_SHARE_TOKEN: share_input},
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": expected_error}
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_SHARE_TOKEN)
+        == share_input
+    )
     assert mock_config_entry.data == {CONF_SHARE_TOKEN: "canonical-token"}
 
 
@@ -155,4 +165,8 @@ async def test_reconfigure_malformed_link(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_token"}
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_SHARE_TOKEN)
+        == " "
+    )
     assert mock_config_entry.data == {CONF_SHARE_TOKEN: "canonical-token"}
