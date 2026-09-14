@@ -23,7 +23,7 @@ CALLERS = {
 
 
 class HassEnforceConfigEntryStepIdMatchMethodChecker(BaseChecker):
-    """Checker for IP/hostname-based unique IDs."""
+    """Checker for config-flow step id that do not match their method name."""
 
     name = "home_assistant_enforce_config_entry_step_id_match_method"
     priority = -1
