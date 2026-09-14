@@ -5,7 +5,7 @@ import logging
 from neopool_modbus.decoders import combine_u32, decode_device_time
 from neopool_modbus.exceptions import NeoPoolError
 from neopool_modbus.registers import DEVICE_TIME_REGISTER
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import (
@@ -32,9 +32,9 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_GET_DEVICE_TIME = "get_device_time"
 SERVICE_SET_DEVICE_TIME = "set_device_time"
 
-SERVICE_DEVICE_TIME_SCHEMA = vol.Schema(
+SERVICE_DEVICE_TIME_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_DEVICE_ID): cv.string,
+        probatio.Optional(ATTR_DEVICE_ID): cv.string,
     }
 )
 
