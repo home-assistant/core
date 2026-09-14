@@ -8,7 +8,6 @@ import re
 from typing import Any, cast, override
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform as ep
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -27,7 +26,7 @@ from .entity import (
     format_unique_id,
     resolve_entry_identity,
 )
-from .helper import scaled_data_unit
+from .helper import GB_SCALED_UNITS, scaled_data_unit
 from .sensor_types import (  # noqa: F401
     SENSOR_SERVICES,
     SENSOR_TYPES,
@@ -260,10 +259,7 @@ class TrueNASSensor(TrueNASEntity, SensorEntity):
             self.entity_description.suggested_unit_of_measurement
         )
 
-        if self._attr_suggested_unit_of_measurement in (
-            UnitOfInformation.GIGABYTES,
-            UnitOfInformation.GIBIBYTES,
-        ):
+        if self._attr_suggested_unit_of_measurement in GB_SCALED_UNITS:
             data_unit = self.coordinator.config_entry.options.get(
                 CONF_DATA_UNIT,
                 self.coordinator.config_entry.data.get(

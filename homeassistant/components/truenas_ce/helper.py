@@ -49,6 +49,11 @@ _DECIMAL_TIERS = (
 )
 _BASE_TIER_INDEX = 2  # GiB / GB
 
+# Suggested units that opt a DATA_SIZE description into the GB/GiB scaling
+# behavior of scaled_data_unit(), shared by sensor.py (runtime entity setup)
+# and __init__.py (entity-registry unit migration) so both stay in sync.
+GB_SCALED_UNITS = (UnitOfInformation.GIGABYTES, UnitOfInformation.GIBIBYTES)
+
 
 def scaled_data_unit(value: object, binary: bool) -> tuple[str, int | None]:
     """Pick a data-size display unit (and precision) by magnitude and base."""

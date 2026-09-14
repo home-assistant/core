@@ -15,17 +15,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components import truenas_ce as init_module
 from homeassistant.components.truenas_ce import (
+    _description_references,
     _force_entity_unit,
     _migrate_data_size_units,
     _migrate_description,
+    _reset_entity_unit,
+    _reset_stale_forced_unit,
 )
 from homeassistant.components.truenas_ce.const import DOMAIN
-from homeassistant.components.truenas_ce.helper import scaled_data_unit
+from homeassistant.components.truenas_ce.helper import GB_SCALED_UNITS, scaled_data_unit
 from homeassistant.components.truenas_ce.sensor_types import (
     TrueNASSensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, UnitOfInformation
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -114,6 +117,51 @@ def test_migrate_data_size_units_processes_data_size_descriptions() -> None:
     assert migrate_mock.called
 
 
+def test_migrate_data_size_units_skips_fixed_mib_descriptions() -> None:
+    """DATA_SIZE sensors with a fixed MiB suggestion must not be forced onto the GB/GiB scale.
+
+    Only descriptions whose suggested unit is in GB_SCALED_UNITS opt in.
+    """
+    coordinator = MagicMock()
+    coordinator.ds = {}
+    entry = _config_entry(options={"data_unit": "GiB"})
+
+    with (
+        patch.object(init_module.er, "async_get", return_value=MagicMock()),
+        patch.object(init_module, "_migrate_description") as migrate_mock,
+    ):
+        _migrate_data_size_units(MagicMock(), entry, coordinator)
+
+    processed = [call.args[3] for call in migrate_mock.call_args_list]
+    assert processed
+    assert all(
+        description.suggested_unit_of_measurement in GB_SCALED_UNITS
+        for description in processed
+    )
+    processed_keys = {description.key for description in processed}
+    assert "app_stats_memory" not in processed_keys
+
+
+def test_migrate_data_size_units_resets_fixed_mib_descriptions() -> None:
+    """Descriptions excluded from the migration loop must be routed to the reset path.
+
+    They must not be silently skipped altogether.
+    """
+    coordinator = MagicMock()
+    coordinator.ds = {}
+    entry = _config_entry(options={"data_unit": "GiB"})
+
+    with (
+        patch.object(init_module.er, "async_get", return_value=MagicMock()),
+        patch.object(init_module, "_migrate_description"),
+        patch.object(init_module, "_reset_stale_forced_unit") as reset_mock,
+    ):
+        _migrate_data_size_units(MagicMock(), entry, coordinator)
+
+    reset_keys = {call.args[3].key for call in reset_mock.call_args_list}
+    assert "app_stats_memory" in reset_keys
+
+
 def test_migrate_description_noop_when_data_not_dict() -> None:
     """Migration is skipped when the description's data path isn't present as a dict."""
     coordinator = MagicMock()
@@ -167,6 +215,125 @@ def test_migrate_description_with_reference_skips_non_dict_vals() -> None:
     assert force_mock.call_count == 2
     force_mock.assert_any_call(ent_reg, "TrueNAS", description, "tank", 100, True)
     force_mock.assert_any_call(ent_reg, "TrueNAS", description, "pool3", 200, True)
+
+
+# ---------------------------
+#   _description_references / _reset_stale_forced_unit / _reset_entity_unit
+# ---------------------------
+def test_description_references_noop_when_data_not_dict() -> None:
+    """No pairs are produced when the description's data path isn't a dict."""
+    coordinator = MagicMock()
+    coordinator.ds = {}
+    description = _desc(key="pool_size", data_path="pool", data_attribute="size")
+
+    assert _description_references(coordinator, description) == []
+
+
+def test_description_references_without_reference_returns_single_pair() -> None:
+    """A description without ``data_reference`` yields exactly one (None, value) pair."""
+    coordinator = MagicMock()
+    coordinator.ds = {"system_info": {"uptime_seconds": 12345}}
+    description = _desc(
+        key="uptime", data_path="system_info", data_attribute="uptime_seconds"
+    )
+
+    assert _description_references(coordinator, description) == [(None, 12345)]
+
+
+def test_description_references_with_reference_skips_non_dict_vals() -> None:
+    """Non-dict values under a referenced data path are skipped, dict ones are kept."""
+    coordinator = MagicMock()
+    coordinator.ds = {
+        "pool": {
+            "pool1": {"name": "tank", "size": 100},
+            "pool2": "not-a-dict",
+            "pool3": {"size": 200},
+        }
+    }
+    description = _desc(
+        key="pool_size",
+        data_path="pool",
+        data_reference="name",
+        data_attribute="size",
+    )
+
+    pairs = _description_references(coordinator, description)
+
+    assert pairs == [("tank", 100), ("pool3", 200)]
+
+
+def test_reset_entity_unit_clears_mismatched_option() -> None:
+    """A stored unit that no longer matches the description's own unit is cleared."""
+    ent_reg = MagicMock()
+    ent_reg.async_get_entity_id.return_value = "sensor.truenas_app_stats_memory"
+    existing_entry = SimpleNamespace(options={"sensor": {"unit_of_measurement": "GiB"}})
+    ent_reg.async_get.return_value = existing_entry
+    description = _desc(
+        key="app_stats_memory",
+        data_attribute="memory",
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+    )
+
+    _reset_entity_unit(ent_reg, "TrueNAS", description, "myapp")
+
+    ent_reg.async_update_entity_options.assert_called_once()
+    entity_id, domain, options = ent_reg.async_update_entity_options.call_args.args
+    assert entity_id == "sensor.truenas_app_stats_memory"
+    assert domain == "sensor"
+    assert "unit_of_measurement" not in options
+
+
+def test_reset_entity_unit_noop_when_unit_already_matches() -> None:
+    """No update happens when the stored unit already matches the description's own unit."""
+    ent_reg = MagicMock()
+    ent_reg.async_get_entity_id.return_value = "sensor.truenas_app_stats_memory"
+    existing_entry = SimpleNamespace(
+        options={"sensor": {"unit_of_measurement": UnitOfInformation.MEBIBYTES}}
+    )
+    ent_reg.async_get.return_value = existing_entry
+    description = _desc(
+        key="app_stats_memory",
+        data_attribute="memory",
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+    )
+
+    _reset_entity_unit(ent_reg, "TrueNAS", description, "myapp")
+
+    ent_reg.async_update_entity_options.assert_not_called()
+
+
+def test_reset_entity_unit_noop_when_entity_missing() -> None:
+    """No update happens when the entity id can't be resolved from the unique id."""
+    ent_reg = MagicMock()
+    ent_reg.async_get_entity_id.return_value = None
+    description = _desc(
+        key="app_stats_memory",
+        data_attribute="memory",
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+    )
+
+    _reset_entity_unit(ent_reg, "TrueNAS", description, "myapp")
+
+    ent_reg.async_update_entity_options.assert_not_called()
+
+
+def test_reset_stale_forced_unit_delegates_per_reference() -> None:
+    """The stale-unit reset pass calls ``_reset_entity_unit`` once per reference."""
+    coordinator = MagicMock()
+    coordinator.ds = {"app_stats": {"a": {"app_name": "myapp", "memory": 100}}}
+    description = _desc(
+        key="app_stats_memory",
+        data_path="app_stats",
+        data_reference="app_name",
+        data_attribute="memory",
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+    )
+    ent_reg = MagicMock()
+
+    with patch.object(init_module, "_reset_entity_unit") as reset_mock:
+        _reset_stale_forced_unit(ent_reg, coordinator, "TrueNAS", description)
+
+    reset_mock.assert_called_once_with(ent_reg, "TrueNAS", description, "myapp")
 
 
 # ---------------------------
