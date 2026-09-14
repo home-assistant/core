@@ -1171,8 +1171,8 @@ async def test_async_get_all_descriptions(
 
     with (
         patch(
-            "homeassistant.helpers.trigger._load_triggers_files",
-            side_effect=trigger._load_triggers_files,
+            "homeassistant.helpers.trigger.descriptions._load_triggers_files",
+            side_effect=trigger.descriptions._load_triggers_files,
         ) as proxy_load_triggers_files,
         patch(
             "annotatedyaml.loader.load_yaml",
@@ -1311,7 +1311,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
 
     with (
         patch(
-            "homeassistant.helpers.trigger.load_yaml_dict",
+            "homeassistant.helpers.trigger.descriptions.load_yaml_dict",
             side_effect=_load_yaml_dict,
         ),
         patch.object(Integration, "has_triggers", return_value=True),

@@ -13,9 +13,11 @@ from homeassistant.const import CONF_OPTIONS, CONF_TARGET
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
+TRIGGERS: HassKey[dict[str, str]] = HassKey("triggers")
 
 _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
