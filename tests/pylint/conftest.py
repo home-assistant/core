@@ -12,7 +12,7 @@ from pylint_home_assistant.checkers.config_flow.no_polling import (
 from pylint_home_assistant.checkers.config_flow.serial_port_usb_dependency import (
     HassEnforceSerialPortSelectorUsbChecker,
 )
-from pylint_home_assistant.checkers.config_flow.step_id_not_match_metod import (
+from pylint_home_assistant.checkers.config_flow.step_id_match_method import (
     HassEnforceConfigEntryStepIdMatchMethodChecker,
 )
 from pylint_home_assistant.checkers.config_flow.unique_id_no_ip import (

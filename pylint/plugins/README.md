@@ -1046,7 +1046,7 @@ The light provides `color_mode` but no `supported_color_modes`. At runtime
 
 ## `home-assistant-step_id-match-method` checker
 
-Detects config flows using a `step_id` parameter different than the method it's
+Detects config flows using a `step_id` parameter different than the method it is
 currently in.
 
 ### `W7438`: `home-assistant-step_id-match-method`
