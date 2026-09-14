@@ -55,6 +55,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -273,16 +274,15 @@ def _add_camera(
     )
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the motionEye integration."""
+    hass.http.register_view(MotionEyeMediaProxyView(hass))
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> bool:
     """Set up motionEye from a config entry."""
-
-    # Register the media proxy route once for the integration.
-    if not hass.data.setdefault(DOMAIN, {}).get("media_proxy_registered"):
-        from .media_source import MotionEyeMediaProxyView
-
-        hass.http.register_view(MotionEyeMediaProxyView(hass))
-        hass.data[DOMAIN]["media_proxy_registered"] = True
-
+    
     client = create_motioneye_client(
         entry.data[CONF_URL],
         admin_username=entry.data.get(CONF_ADMIN_USERNAME),
