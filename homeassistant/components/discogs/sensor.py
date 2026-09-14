@@ -5,7 +5,7 @@ import random
 from typing import Any, override
 
 import discogs_client
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -62,9 +62,9 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional("name"): cv.string,
-        vol.Optional("monitored_conditions"): vol.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("monitored_conditions"): probatio.All(cv.ensure_list, [cv.string]),
     }
 )
 

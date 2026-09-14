@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
     SensorDeviceClass,
-    SensorStateClass,
 )
 from homeassistant.components.text import TextMode
 from homeassistant.const import (
@@ -407,19 +406,21 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
             probatio.Optional(CONF_GA_COLOR_TEMP): GASelector(
                 write_required=True, dpt=ColorTempModes
             ),
-            probatio.Required(
-                CONF_COLOR_TEMP_MIN, default=2700
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=10000, step=1, unit_of_measurement="K"
-                )
+            probatio.Required(CONF_COLOR_TEMP_MIN, default=2700): AllSerializeFirst(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=10000, step=1, unit_of_measurement="K"
+                    )
+                ),
+                probatio.Coerce(int),
             ),
-            probatio.Required(
-                CONF_COLOR_TEMP_MAX, default=6000
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=10000, step=1, unit_of_measurement="K"
-                )
+            probatio.Required(CONF_COLOR_TEMP_MAX, default=6000): AllSerializeFirst(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=10000, step=1, unit_of_measurement="K"
+                    )
+                ),
+                probatio.Coerce(int),
             ),
             probatio.Optional(CONF_COLOR): GroupSelect(
                 GroupSelectOption(
@@ -953,13 +954,7 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
                     sort=True,
                 )
             ),
-            probatio.Optional(CONF_SENSOR_STATE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=list(SensorStateClass),
-                    translation_key="component.knx.selector.sensor_state_class",
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                )
-            ),
+            probatio.Optional(CONF_SENSOR_STATE_CLASS): selector.StateClassSelector(),
             probatio.Optional(CONF_ALWAYS_CALLBACK): selector.BooleanSelector(),
             probatio.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
                 allow_false=True

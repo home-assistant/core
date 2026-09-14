@@ -33,6 +33,16 @@ class GatusSensorEntityDescription(SensorEntityDescription):
     ]
 
 
+DNS_RCODE_MAP = {
+    "NOERROR": "no_error",
+    "FORMERR": "format_error",
+    "SERVFAIL": "server_failure",
+    "NXDOMAIN": "non_existent_domain",
+    "NOTIMP": "not_implemented",
+    "REFUSED": "refused",
+}
+
+
 SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
     GatusSensorEntityDescription(
         key="response_time",
@@ -79,6 +89,19 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
             else None
         ),
     ),
+    GatusSensorEntityDescription(
+        key="dns_rcode",
+        translation_key="dns_rcode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator, endpoint: (
+            DNS_RCODE_MAP.get(
+                endpoint.results[-1].dns_rcode,
+                endpoint.results[-1].dns_rcode.lower(),
+            )
+            if endpoint.results and endpoint.results[-1].dns_rcode is not None
+            else None
+        ),
+    ),
 )
 
 
@@ -94,9 +117,16 @@ async def async_setup_entry(
         GatusEndpointSensor(coordinator, entry, endpoint_key, description)
         for endpoint_key, endpoint in coordinator.data.items()
         for description in SENSOR_TYPES
-        if description.key != "certificate_expiration"
-        or (
-            endpoint.results and endpoint.results[-1].certificate_expiration is not None
+        if (
+            description.key != "certificate_expiration"
+            or (
+                endpoint.results
+                and endpoint.results[-1].certificate_expiration is not None
+            )
+        )
+        and (
+            description.key != "dns_rcode"
+            or (endpoint.results and endpoint.results[-1].dns_rcode is not None)
         )
     )
 

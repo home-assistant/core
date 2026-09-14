@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 from goslideapi import GoSlideCloud, goslideapi
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -35,20 +35,20 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(
+                probatio.Required(CONF_USERNAME): cv.string,
+                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
-                vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
+                probatio.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
