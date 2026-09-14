@@ -231,6 +231,9 @@
       "smoke_with_channel_name": {
         "name": "{channel_name} smoke"
       },
+      "storage": {
+        "name": "Storage"
+      },
       "tilt": {
         "name": "Tilt"
       }

@@ -408,6 +408,13 @@ RPC_SENSORS: Final = {
         device_class=BinarySensorDeviceClass.MOTION,
         removal_condition=lambda config, _, key: not config[key].get("enable", True),
     ),
+    "storage_active": RpcBinarySensorDescription(
+        key="storage",
+        sub_key="active",
+        translation_key="storage",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda config, _, key: not config.get(key),
+    ),
 }
 
 
