@@ -4878,9 +4878,7 @@ async def test_event_trigger_composite_device_id_refresh_preserves_dismissal(
 
     refreshed = issue_registry.async_get_issue("homeassistant", COMPOSITE_ISSUE_ID)
     assert refreshed is not None
-    # The placeholders were updated in place ...
     assert "Renamed device" in refreshed.translation_placeholders["devices"]
-    # ... without resetting the dismissal.
     assert refreshed.dismissed_version == dismissed_version
 
 
