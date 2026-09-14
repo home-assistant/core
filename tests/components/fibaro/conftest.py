@@ -207,6 +207,35 @@ def mock_fgd212_light() -> Mock:
 
 
 @pytest.fixture
+def mock_multilevel_base_type_light() -> Mock:
+    """Fixture for dimming via multilevelSwitch base_type without levelChange."""
+    light = Mock()
+    light.fibaro_id = 42
+    light.parent_fibaro_id = 0
+    light.name = "Base type dimmer"
+    light.room_id = 1
+    light.dead = False
+    light.visible = True
+    light.enabled = True
+    light.type = "com.fibaro.FGD212"
+    light.base_type = "com.fibaro.multilevelSwitch"
+    light.properties = {"manufacturer": "", "isLight": True}
+    light.actions = {"setValue": 1, "turnOn": 0, "turnOff": 0}
+    light.supported_features = {}
+    light.has_interface.return_value = False
+    light.raw_data = {
+        "fibaro_id": 42,
+        "name": "Base type dimmer",
+        "properties": {"value": 20},
+    }
+    value_mock = Mock()
+    value_mock.has_value = True
+    value_mock.int_value.return_value = 20
+    light.value = value_mock
+    return light
+
+
+@pytest.fixture
 def mock_zigbee_light() -> Mock:
     """Fixture for a dimmmable zigbee light."""
     light = Mock()

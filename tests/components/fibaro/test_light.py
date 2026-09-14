@@ -71,16 +71,33 @@ async def test_fgd212_light_brightness_without_setvalue_action(
 ) -> None:
     """Test FGD212 dimmers with levelChange but no setValue action."""
 
-    # Arrange
     mock_fibaro_client.read_rooms.return_value = [mock_room]
     mock_fibaro_client.read_devices.return_value = [mock_fgd212_light]
 
     with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.LIGHT]):
-        # Act
         await init_integration(hass, mock_config_entry)
-        # Assert
         state = hass.states.get("light.room_1_8_spots_116")
         assert state.attributes[ATTR_BRIGHTNESS] == 127
+        assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
+        assert state.state == "on"
+
+
+async def test_dimming_via_multilevel_base_type_without_level_change(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_multilevel_base_type_light: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test dimming via multilevelSwitch base_type when levelChange is absent."""
+
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [mock_multilevel_base_type_light]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.LIGHT]):
+        await init_integration(hass, mock_config_entry)
+        state = hass.states.get("light.room_1_base_type_dimmer_42")
+        assert state.attributes[ATTR_BRIGHTNESS] == 51
         assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
         assert state.state == "on"
 
