@@ -212,9 +212,18 @@ def patch_discovered_controllers(
     async def _discover_one(hass: HomeAssistant, uid: str) -> ControllerEndpoint | None:
         return endpoints.get(uid)
 
+    async def _discover_by_host(
+        hass: HomeAssistant, host: str
+    ) -> ControllerEndpoint | None:
+        for endpoint in endpoints.values():
+            if endpoint.host == host:
+                return endpoint
+        return None
+
     mock_discover_all = AsyncMock(side_effect=_discover_all)
     mock_scan = AsyncMock(side_effect=_scan)
     mock_discover_one = AsyncMock(side_effect=_discover_one)
+    mock_discover_by_host = AsyncMock(side_effect=_discover_by_host)
     with (
         patch(
             "homeassistant.components.izone.discovery.async_discover_all_endpoints",
@@ -228,18 +237,48 @@ def patch_discovered_controllers(
             "homeassistant.components.izone.discovery.async_discover_endpoint",
             new=mock_discover_one,
         ),
+        patch(
+            "homeassistant.components.izone.discovery.async_discover_by_host",
+            new=mock_discover_by_host,
+        ),
     ):
         yield mock_discover_all, mock_discover_one, mock_scan
+
+
+async def async_start_user_discover(
+    hass: HomeAssistant, result: FlowResult
+) -> FlowResult:
+    """Select Search from the user menu and return the progress step."""
+    if result["type"] is FlowResultType.MENU:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "discover"}
+        )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "discover"
+    return result
 
 
 async def async_finish_user_discover(
     hass: HomeAssistant, result: FlowResult
 ) -> FlowResult:
-    """Advance a user Search flow past SHOW_PROGRESS discover."""
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["progress_action"] == "discover"
+    """Advance a user Search flow past the menu and SHOW_PROGRESS discover."""
+    result = await async_start_user_discover(hass, result)
     await hass.async_block_till_done(wait_background_tasks=True)
     return await hass.config_entries.flow.async_configure(result["flow_id"])
+
+
+async def async_choose_manual_host(
+    hass: HomeAssistant, result: FlowResult
+) -> FlowResult:
+    """Select Enter host from the user menu."""
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "manual_host"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual_host"
+    return result
 
 
 async def async_follow_user_handoff(
