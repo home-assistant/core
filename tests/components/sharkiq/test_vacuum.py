@@ -7,9 +7,9 @@ import enum
 from typing import Any
 from unittest.mock import patch
 
+from probatio.error import MultipleInvalid
 import pytest
 from sharkiq import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVacuum
-from voluptuous.error import MultipleInvalid
 
 from homeassistant import exceptions
 from homeassistant.components.homeassistant import (

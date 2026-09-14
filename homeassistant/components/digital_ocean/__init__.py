@@ -3,7 +3,7 @@
 import logging
 
 import digitalocean
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -18,9 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DIGITAL_OCEAN_PLATFORMS = [Platform.SWITCH, Platform.BINARY_SENSOR]
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema({probatio.Required(CONF_ACCESS_TOKEN): cv.string})},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
