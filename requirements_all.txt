@@ -3266,7 +3266,7 @@ thermopro-ble==1.1.4
 thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.13
+thinqconnect==1.0.14
 
 # homeassistant.components.tilt_ble
 tilt-ble==1.0.1
