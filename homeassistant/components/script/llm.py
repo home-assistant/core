@@ -52,7 +52,7 @@ class ScriptTool(ActionTool):
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
-        """Call the script, giving the context device_id precedence.
+        """Call the script, forwarding the calling device_id by default.
 
         Skipped only when the script declares its own device_id field
         and the LLM already supplied a value for it.
