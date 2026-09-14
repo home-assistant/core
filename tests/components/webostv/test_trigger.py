@@ -895,7 +895,6 @@ async def test_webostv_turn_on_trigger_reattached_during_run(
     )
     await hass.async_block_till_done()
 
-    release.set()
     task = hass.async_create_task(
         hass.services.async_call(
             "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
@@ -913,6 +912,7 @@ async def test_webostv_turn_on_trigger_reattached_during_run(
         "automation", "turn_on", {"entity_id": AUTOMATION_ID}, blocking=True
     )
 
+    release.set()
     await asyncio.wait_for(task, timeout=5)
     await hass.async_block_till_done()
     assert runs == 1
