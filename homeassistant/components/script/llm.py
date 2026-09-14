@@ -54,9 +54,8 @@ class ScriptTool(ActionTool):
     ) -> JsonObjectType:
         """Call the script, forwarding the calling device_id.
 
-        Skipped when the script already declares its own `device_id`
-        field, so an LLM-supplied value for that field is never
-        overwritten.
+        Skipped when tool_args already has a device_id, so an
+        LLM-supplied value is never overwritten.
         """
         if llm_context.device_id and "device_id" not in tool_input.tool_args:
             tool_input.tool_args["device_id"] = llm_context.device_id
