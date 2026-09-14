@@ -82,6 +82,10 @@ from .const import (
 )
 from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
 
+
+from .media_source import MotionEyeMediaProxyView
+
+
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
@@ -99,20 +103,6 @@ def get_motioneye_device_identifier(
 ) -> tuple[str, str]:
     """Get the identifiers for a motionEye device."""
     return (DOMAIN, f"{config_entry_id}_{camera_id}")
-
-
-def split_motioneye_device_identifier(
-    identifier: tuple[str, str],
-) -> tuple[str, str, int] | None:
-    """Get the identifiers for a motionEye device."""
-    if len(identifier) != 2 or identifier[0] != DOMAIN or "_" not in identifier[1]:
-        return None
-    config_id, camera_id_str = identifier[1].split("_", 1)
-    try:
-        camera_id = int(camera_id_str)
-    except ValueError:
-        return None
-    return (DOMAIN, config_id, camera_id)
 
 
 def get_camera_from_cameras(
@@ -282,7 +272,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> bool:
     """Set up motionEye from a config entry."""
-    
+
     client = create_motioneye_client(
         entry.data[CONF_URL],
         admin_username=entry.data.get(CONF_ADMIN_USERNAME),
