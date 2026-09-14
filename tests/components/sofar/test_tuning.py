@@ -65,6 +65,23 @@ async def test_tuner_withdraws_the_ask_after_a_timeout(
     assert unit.required_timeout is None
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_tuner_withdraws_the_ask_when_the_poll_raises(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test a poll that times out before anything answers is still heard."""
+    unit = mock_connection.for_unit(1)
+    await _poll(hass, freezer, CLEAN_POLLS)
+    assert unit.required_timeout == EARNED_TIMEOUT
+
+    unit.fail_requests(ModbusTimeoutError("link gone slow"))
+    await _poll(hass, freezer, 1)
+
+    assert unit.required_timeout is None
+
+
 async def test_diagnostics_report_what_the_tuner_asked(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
