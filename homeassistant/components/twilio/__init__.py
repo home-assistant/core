@@ -39,8 +39,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     conf = config[DOMAIN]
-    hass.data[DATA_TWILIO] = Client(
-        conf.get(CONF_ACCOUNT_SID), conf.get(CONF_AUTH_TOKEN)
+    hass.data[DATA_TWILIO] = await hass.async_add_executor_job(
+        Client, conf.get(CONF_ACCOUNT_SID), conf.get(CONF_AUTH_TOKEN)
     )
     return True
 

@@ -1,11 +1,15 @@
 """Test the init file of Twilio."""
 
+import threading
+from unittest.mock import patch
+
 from homeassistant import config_entries
 from homeassistant.components import twilio
 from homeassistant.components.twilio import DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator
 
@@ -42,3 +46,28 @@ async def test_config_flow_registers_webhook(
     assert len(twilio_events) == 1
     assert twilio_events[0].data["webhook_id"] == webhook_id
     assert twilio_events[0].data["hello"] == "twilio"
+
+
+async def test_setup_creates_client_in_executor(hass: HomeAssistant) -> None:
+    """Test the YAML setup creates the Twilio client off the event loop."""
+    client_thread: threading.Thread | None = None
+
+    class TestClient:
+        def __init__(self, account_sid, auth_token) -> None:
+            nonlocal client_thread
+            client_thread = threading.current_thread()
+
+    with patch("homeassistant.components.twilio.Client", TestClient):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    twilio.CONF_ACCOUNT_SID: "sid",
+                    twilio.CONF_AUTH_TOKEN: "token",
+                }
+            },
+        )
+
+    assert isinstance(hass.data[twilio.DATA_TWILIO], TestClient)
+    assert client_thread is not threading.main_thread()
