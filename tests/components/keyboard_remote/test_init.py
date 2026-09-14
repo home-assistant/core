@@ -168,10 +168,9 @@ async def test_yaml_import_triggers_config_flow(hass: HomeAssistant) -> None:
 
 async def test_yaml_import_creates_deprecation_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test YAML import creates a deprecation repair issue."""
-    issue_registry = ir.async_get(hass)
-
     with patch(
         "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
         return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
@@ -188,10 +187,9 @@ async def test_yaml_import_creates_deprecation_issue(
 
 async def test_yaml_import_failure_creates_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test YAML import failure creates an error issue."""
-    issue_registry = ir.async_get(hass)
-
     with patch(
         "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
         return_value=(None, None, None),
