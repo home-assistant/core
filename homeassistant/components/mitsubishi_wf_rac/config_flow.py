@@ -270,9 +270,9 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description = {"suggested_value": value}
         if default is None:
             return which(name, description=description)
-        # A suggestion only pre-fills the form. Without a schema default the
-        # key is simply absent when the field is cleared, and the port is read
-        # with [] - so clearing it ended the flow in "unexpected_error".
+        # A suggestion only pre-fills the form: a cleared field leaves the key
+        # out of user_input altogether, and the port is read with []. The schema
+        # default is what keeps it present.
         return which(name, description=description, default=default)
 
     async def async_step_discovery_confirm(

@@ -180,10 +180,8 @@ async def async_remove_entry(
     """Handle removal of an entry."""
 
     temp_device = await create_device_from_entry(entry, hass)
-    # delete_account() catches its own errors and returns None on failure (see
-    # coordinator.py) rather than raising, so check the result instead of
-    # try/except - the previous try/except here could never actually trigger,
-    # and the "Deleted" log below used to fire unconditionally even on failure.
+    # delete_account() reports failure by returning None rather than raising
+    # (see coordinator.py), so the result is what decides which line is logged.
     result = await temp_device.delete_account()
     if result is not None:
         _LOGGER.info("Released the controller slot on airco [%s]", temp_device.airco_id)
