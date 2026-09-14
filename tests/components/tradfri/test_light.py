@@ -245,11 +245,15 @@ async def test_turn_on(
     state_attributes: dict[str, Any],
 ) -> None:
     """Test turning on a light."""
-    # Make sure the light is off.
-    light_control = device.raw.light_control
-    assert light_control
-    light_control[0].state = 0
     await setup_integration(hass)
+
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_LIGHT_CONTROL: [{ATTR_DEVICE_STATE: 0}]}
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
