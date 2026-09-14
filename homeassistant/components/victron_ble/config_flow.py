@@ -98,6 +98,7 @@ class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             self._discovered_device = address
             title = self._discovered_devices_info[address].name
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="access_token",
                 data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA,
