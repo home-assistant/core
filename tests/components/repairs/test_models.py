@@ -88,7 +88,9 @@ class MockFixFlowContextUserInputDeprecations(RepairsFlow):
 
     async def async_step_init(self, user_input: dict | None) -> RepairsFlowResult:
         """Test _DeprecatedIssueIdDict."""
-        assert user_input and user_input["issue_id"] == self.issue_id
+        assert user_input
+        assert "issue_id" in user_input
+        assert user_input["issue_id"] == self.issue_id
         assert user_input.get("issue_id") == self.issue_id
         assert user_input.pop("issue_id") == self.issue_id
         assert user_input.pop("issue_id", "test_result") == "test_result"
@@ -100,7 +102,9 @@ class MockFixFlowContextInitDataDeprecations(RepairsFlow):
 
     async def async_step_init(self, user_input: dict | None) -> RepairsFlowResult:
         """Test _DeprecatedIssueIdDict ."""
-        assert self.init_data and self.init_data["issue_id"] == self.issue_id
+        assert self.init_data
+        assert "issue_id" in self.init_data
+        assert self.init_data["issue_id"] == self.issue_id
         assert self.init_data.get("issue_id") == self.issue_id
         assert self.init_data.pop("issue_id") == self.issue_id
         assert self.init_data.pop("issue_id", "test_result") == "test_result"
@@ -295,9 +299,9 @@ async def test_access_issue_id_in_async_step_init_deprecation(
     assert (repairs := repairs_flow_manager(hass))
 
     await repairs.async_init("fake_integration", context={"issue_id": "context_issue"})
-    for method in ("accesses", "gets", "pops"):
+    for method in ("checks for", "accesses", "gets", "pops"):
         assert any(
-            f"{method} `issue_id` from `user_input` in `async_step_init` of a `RepairsFlow`"
+            f"{method} `issue_id` from `user_input` in `async_step_init` or `init_data` of a `RepairsFlow`"
             in msg
             for msg in caplog.messages
         )
@@ -330,9 +334,9 @@ async def test_access_issue_id_from_init_data_deprecation(
     await repairs.async_init(
         "fake_integration", context={"issue_id": "context_init_data_issue"}
     )
-    for method in ("accesses", "gets", "pops"):
+    for method in ("checks for", "accesses", "gets", "pops"):
         assert any(
-            f"{method} `issue_id` from `user_input` in `async_step_init` of a `RepairsFlow`"
+            f"{method} `issue_id` from `user_input` in `async_step_init` or `init_data` of a `RepairsFlow`"
             in msg
             for msg in caplog.messages
         )

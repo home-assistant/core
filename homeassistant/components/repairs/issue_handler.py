@@ -1,6 +1,6 @@
 """The repairs integration."""
 
-from typing import Any, cast, overload, override
+from typing import Any, overload, override
 
 import probatio
 
@@ -48,12 +48,19 @@ class _MISSING_ARG:
     pass
 
 
-class _DeprecatedIssueIdDict[_VT](dict[str, _VT]):
-    """Dict to detect use of `issue_id` in async_step_init by a RepairFlow."""
+class DeprecatedIssueIdDict[_VT](dict[str, _VT]):
+    """Dict to detect use of `issue_id` in `user_input` and `init_data` of a RepairFlow."""
 
     def __init__(self, integration_domain: str, data: dict[str, _VT]) -> None:
+        """Initialize a new dict wrapper."""
         super().__init__(data)
         self._integration_domain = integration_domain
+
+    @override
+    def __contains__(self, key: object) -> bool:
+        if key == "issue_id":
+            self._report_issue_id_usage("checks for")
+        return super().__contains__(key)
 
     @override
     def __getitem__(self, key: str) -> _VT:
@@ -81,7 +88,7 @@ class _DeprecatedIssueIdDict[_VT](dict[str, _VT]):
     @overload
     def pop(self, key: str, default: _VT, /) -> _VT: ...
     @overload
-    def pop[_T](self, key: str, default: _T, /) -> _T: ...
+    def pop[_T](self, key: str, default: _T, /) -> _VT | _T: ...
 
     @override
     def pop[_T](
@@ -96,8 +103,8 @@ class _DeprecatedIssueIdDict[_VT](dict[str, _VT]):
 
     def _report_issue_id_usage(self, method: str) -> None:
         report_usage(
-            f"{method} `issue_id` from `user_input` in `async_step_init` of a `RepairsFlow` or "
-            "from the flow's `init_data` instead of `self.issue_id`",
+            f"{method} `issue_id` from `user_input` in `async_step_init` or `init_data` of a `RepairsFlow` "
+            "instead of `self.issue_id`",
             breaks_in_ha_version="2028.10.0",
             integration_domain=self._integration_domain,
         )
@@ -129,14 +136,10 @@ class RepairsFlowManager(
         if "issue_id" in _context:
             # interim compatibility fallback for custom integrations that may expect
             # "issue_id" in user_input of async_step_init
-            data = cast(
-                dict[
-                    str,
-                    Any,
-                ],
-                _DeprecatedIssueIdDict(handler, data)
+            data = (
+                DeprecatedIssueIdDict(handler, data)
                 if data is not None
-                else _DeprecatedIssueIdDict(handler, {}),
+                else DeprecatedIssueIdDict(handler, {})
             )
             data["issue_id"] = _context["issue_id"]
         return await super().async_init(handler, context=_context, data=data)
