@@ -1,4 +1,4 @@
-"""Tests for pylint hass_enforce_config_flow_no_polling plugin."""
+"""Tests for pylint home-assistant-step_id-match-method plugin."""
 
 import astroid
 from pylint.checkers import BaseChecker
