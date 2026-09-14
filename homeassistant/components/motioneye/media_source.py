@@ -162,13 +162,7 @@ class MotionEyeMediaSource(MediaSource):
             media_path,
             preview=False,
         )
-        url = async_sign_path(
-            self.hass,
-            proxy_path,
-            timedelta(minutes=5),
-            use_content_user=True,
-        )
-        return PlayMedia(url, MIME_TYPE_MAP[kind])
+    return PlayMedia(proxy_path, MIME_TYPE_MAP[kind])
 
     @callback
     @classmethod
