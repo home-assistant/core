@@ -81,8 +81,6 @@ from .const import (
     WEB_HOOK_SENTINEL_VALUE,
 )
 from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
-
-
 from .media_source import MotionEyeMediaProxyView
 
 
