@@ -11,9 +11,9 @@ import time
 from typing import Any, Protocol, override
 import wave
 
-from homeassistant.components import stt
+from homeassistant.components import conversation, stt
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import chat_session
+from homeassistant.helpers import chat_session, llm
 from homeassistant.util import ulid as ulid_util
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
@@ -22,6 +22,7 @@ from .const import (
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
     DATA_LAST_WAKE_UP,
+    DOMAIN,
     SAMPLE_CHANNELS,
     SAMPLE_RATE,
     SAMPLE_WIDTH,
@@ -44,6 +45,7 @@ from .models import (
     WakeWordSettings,
 )
 from .runtime import KEY_ASSIST_PIPELINE, PipelineRunDebug
+from .tool_host import PipelineToolHost
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,6 +110,7 @@ class PipelineRun:
     tts_audio_output: str | dict[str, Any] | None = None
     wake_word_settings: WakeWordSettings | None = None
     audio_settings: AudioSettings = field(default_factory=AudioSettings)
+    llm_api_id: str | list[str] = llm.LLM_API_ASSIST
 
     id: str = field(default_factory=ulid_util.ulid_now)
     debug_recording_thread: Thread | None = None
@@ -123,6 +126,10 @@ class PipelineRun:
     _registered: bool = field(init=False, default=False, repr=False)
     _started: bool = field(init=False, default=False, repr=False)
     _ended: bool = field(init=False, default=False, repr=False)
+    _tool_host: PipelineToolHost | None = field(init=False, default=None, repr=False)
+    _tool_host_lock: asyncio.Lock = field(
+        init=False, default_factory=asyncio.Lock, repr=False
+    )
 
     def __post_init__(self) -> None:
         """Initialize the pipeline controller."""
@@ -170,6 +177,23 @@ class PipelineRun:
         )
         self._response_audio_outputs.append(output)
         return output
+
+    async def async_get_tool_host(self) -> PipelineToolHost:
+        """Return the Home Assistant tool host for this pipeline run."""
+        async with self._tool_host_lock:
+            if self._tool_host is None:
+                self._tool_host = await PipelineToolHost.async_create(
+                    self.hass,
+                    self.llm_api_id,
+                    llm.LLMContext(
+                        platform=DOMAIN,
+                        context=self.context,
+                        language=self.language,
+                        assistant=conversation.DOMAIN,
+                        device_id=self._device_id,
+                    ),
+                )
+            return self._tool_host
 
     @callback
     def process_event(self, event: PipelineEvent) -> None:

@@ -58,6 +58,7 @@ if TYPE_CHECKING:
     from hassil.recognize import RecognizeResult
 
     from .run import _PipelineProcessorRequest
+    from .tool_host import PipelineToolHost
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,6 +145,9 @@ class _PipelineController(Protocol):
         self, extension: str, content_type: str
     ) -> AudioOutputStream:
         """Create a controller-owned response audio stream."""
+
+    async def async_get_tool_host(self) -> PipelineToolHost:
+        """Return the Home Assistant tool host for this pipeline run."""
 
 
 @dataclass
