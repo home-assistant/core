@@ -233,6 +233,9 @@
   "services": {
     "add_password": {
       "service": "mdi:key-plus"
+    },
+    "get_keypad_info": {
+      "service": "mdi:information-outline"
     }
   }
 }
