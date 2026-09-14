@@ -2446,6 +2446,9 @@ async def test_websocket_configure_same_port_host_change_is_accepted(
         pytest.param(["0.0.0.0", "::1"], id="ipv4_wildcard_ipv6_loopback"),
         pytest.param(["127.0.0.1", "::1"], id="loopback_only"),
         pytest.param(["127.0.0.1"], id="single"),
+        # create_server() binds each resolved endpoint only once.
+        pytest.param(["::1", "::1"], id="duplicate"),
+        pytest.param(["0.0.0.0", "0.0.0.0"], id="duplicate_wildcard"),
     ],
 )
 async def test_verify_hosts_distinct_accepts(
@@ -2463,7 +2466,6 @@ async def test_verify_hosts_distinct_accepts(
             ["127.0.0.1", "0.0.0.0"], "127.0.0.1", "0.0.0.0", id="v4_reversed"
         ),
         pytest.param(["::", "::1"], "::", "::1", id="v6"),
-        pytest.param(["::1", "::1"], "::1", "::1", id="duplicate"),
         pytest.param(["0.0.0.0", "::1", "::"], "::1", "::", id="v6_after_v4"),
     ],
 )
@@ -2495,6 +2497,8 @@ async def test_verify_hosts_distinct_resolves_host_names(
 
     with patch("homeassistant.components.http.server.socket.getaddrinfo", _getaddrinfo):
         await http.server.async_verify_hosts_distinct(hass, ["localhost", "192.0.2.1"])
+        # localhost and 127.0.0.1 resolve to the same endpoint, bound once.
+        await http.server.async_verify_hosts_distinct(hass, ["localhost", "127.0.0.1"])
         with pytest.raises(
             HomeAssistantError,
             match="Listen addresses 'localhost' and '::' overlap",

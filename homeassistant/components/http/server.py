@@ -137,17 +137,17 @@ def _resolve_hosts(hosts: list[str]) -> list[tuple[str, int, str]]:
             raise HomeAssistantError(
                 f"Cannot resolve listen address {host!r}: {err}"
             ) from err
-        # getaddrinfo can report an address more than once for one host.
-        addresses = {(family, str(sockaddr[0])) for family, _, _, _, sockaddr in infos}
-        resolved.extend((host, family, address) for family, address in addresses)
+        resolved.extend(
+            (host, family, str(sockaddr[0])) for family, _, _, _, sockaddr in infos
+        )
     return resolved
 
 
 async def async_verify_hosts_distinct(hass: HomeAssistant, hosts: list[str]) -> None:
     """Verify the configured hosts can all listen on the same port.
 
-    Sockets of one address family conflict on a port when either is bound to
-    the wildcard address or both to the same address. The server binds with
+    Sockets of one address family conflict on a port when one of them is
+    bound to the wildcard address. The server binds with
     ``SO_REUSEADDR``, which lets such sockets bind alongside each other while
     only one of them can listen, so the conflict would surface only once the
     server starts serving. Checking the resolved addresses catches it up
@@ -160,13 +160,14 @@ async def async_verify_hosts_distinct(hass: HomeAssistant, hosts: list[str]) -> 
     seen: dict[int, dict[str, str]] = {}
     for host, family, address in resolved:
         family_seen = seen.setdefault(family, {})
-        conflicting = family_seen.get(address)
-        if conflicting is None and (
+        if address in family_seen:
+            # create_server() binds each resolved endpoint only once.
+            continue
+        if family_seen and (
             address in _WILDCARD_ADDRESSES
             or any(seen_addr in _WILDCARD_ADDRESSES for seen_addr in family_seen)
         ):
-            conflicting = next(iter(family_seen.values()), None)
-        if conflicting is not None:
+            conflicting = next(iter(family_seen.values()))
             raise HomeAssistantError(
                 f"Listen addresses {conflicting!r} and {host!r} overlap:"
                 " both cannot listen on the same port"
