@@ -188,7 +188,9 @@ async def test_fix_issue_next_flow(hass: HomeAssistant, flow_type: FlowType) -> 
         ["fake_integration"],
     ],
 )
-async def test_issue_id_setter_getter(hass: HomeAssistant) -> None:
+async def test_issue_id_setter_getter_deprecation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test RepairFlow issue_id getter/setter with switch to context."""
 
     assert await async_setup_component(hass, DOMAIN, {})
@@ -207,7 +209,44 @@ async def test_issue_id_setter_getter(hass: HomeAssistant) -> None:
     result = await repairs.async_init(
         "fake_integration", context={"issue_id": "context_issue"}
     )
+    assert any(
+        "sets `issue_id` directly in a `RepairsFlow` which is unnecessary" in msg
+        for msg in caplog.messages
+    )
 
     assert result["type"] == "form"
     result = repairs.async_get(result["flow_id"])
     assert result["context"] == {"issue_id": "context_issue"}
+
+
+@pytest.mark.parametrize(
+    ("ignore_translations_for_mock_domains"),
+    [
+        ["fake_integration"],
+    ],
+)
+async def test_access_issue_id_in_async_step_init_deprecation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test RepairFlow issue_id getter/setter with switch to context."""
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ir.async_create_issue(
+        hass,
+        issue_id="context_issue",
+        domain="fake_integration",
+        is_fixable=True,
+        severity="error",
+        translation_key="fake_key",
+    )
+
+    assert (repairs := repairs_flow_manager(hass))
+
+    await repairs.async_init("fake_integration", context={"issue_id": "context_issue"})
+    for method in ("accesses", "gets", "pops"):
+        assert any(
+            f"{method} `issue_id` from `user_input` in `async_step_init` of a `RepairsFlow"
+            in msg
+            for msg in caplog.messages
+        )

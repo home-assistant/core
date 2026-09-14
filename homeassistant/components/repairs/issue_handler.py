@@ -1,6 +1,6 @@
 """The repairs integration."""
 
-from typing import Any, override
+from typing import Any, cast, overload, override
 
 import voluptuous as vol
 
@@ -8,6 +8,7 @@ from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 
 from .const import DOMAIN
@@ -42,6 +43,59 @@ class ConfirmRepairFlow(RepairsFlow):
         )
 
 
+class _DeprectatedIssueIdDict[_VT](dict[str, _VT]):
+    """Dict to detect use of `issue_id` in async_step_init by a RepairFlow."""
+
+    def __init__(self, integration_domain: str, data: dict[str, _VT]) -> None:
+        super().__init__(data)
+        self._integration_domain = integration_domain
+
+    @override
+    def __getitem__(self, key: str) -> _VT:
+        """Deprecation warning on issue_id key access."""
+        if key == "issue_id":
+            self._report_issue_id_usage("accesses")
+        return super().__getitem__(key)
+
+    @overload
+    def get(self, key: str, default: None = None, /) -> _VT | None: ...
+    @overload
+    def get(self, key: str, default: _VT, /) -> _VT: ...
+    @overload
+    def get[_T](self, key: str, default: _T, /) -> _VT | _T: ...
+
+    @override
+    def get[_T](self, key: str, default: _T | None = None, /) -> _VT | _T | None:
+        """Deprecation warning on issue_id key access."""
+        if key == "issue_id":
+            self._report_issue_id_usage("gets")
+        return super().get(key, default)
+
+    @overload
+    def pop(self, key: str, /) -> _VT: ...
+    @overload
+    def pop(self, key: str, default: _VT, /) -> _VT: ...
+    @overload
+    def pop[_T](self, key: str, default: _T, /) -> _T: ...
+
+    @override
+    def pop[_T](self, key: str, default: _T | _VT | None = None, /) -> _VT | _T:
+        """Deprecation warning on issue_id key access."""
+        if key == "issue_id":
+            self._report_issue_id_usage("pops")
+        if default is None:
+            return super().pop(key)
+        return super().pop(key, default)
+
+    def _report_issue_id_usage(self, method: str) -> None:
+        report_usage(
+            f"{method} `issue_id` from `user_input` in `async_step_init` of a `RepairsFlow` "
+            "instead of `self.issue_id`",
+            breaks_in_ha_version="2028.10.0",
+            integration_domain=self._integration_domain,
+        )
+
+
 class RepairsFlowManager(
     data_entry_flow.FlowManager[RepairsFlowContext, RepairsFlowResult, str]
 ):
@@ -60,10 +114,24 @@ class RepairsFlowManager(
         if "issue_id" not in _context and data is not None and "issue_id" in data:
             # fallback for custom integrations
             _context |= {"issue_id": data["issue_id"]}
+            report_usage(
+                "initiates a repair flow by passing `issue_id` via `data` rather than `context`",
+                breaks_in_ha_version="2028.10.0",
+                integration_domain=handler,
+            )
         if "issue_id" in _context:
             # interim compatibility fallback for custom integrations that may expect
             # "issue_id" in user_input of async_step_init
-            data = {**(data or {}), "issue_id": _context["issue_id"]}
+            data = cast(
+                dict[
+                    str,
+                    Any,
+                ],
+                _DeprectatedIssueIdDict(handler, data)
+                if data is not None
+                else _DeprectatedIssueIdDict(handler, {}),
+            )
+            data["issue_id"] = _context["issue_id"]
         return await super().async_init(handler, context=_context, data=data)
 
     @override
