@@ -12,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 INDOOR_AIR_QUALITY_ENTITY_ID = "sensor.001122334455_indoor_air_quality"
-AIR_INTAKE_TEMPERATURE_ENTITY_ID = "sensor.001122334455_air_intake_temperature"
+INDOOR_AIR_TEMPERATURE_ENTITY_ID = "sensor.001122334455_indoor_air_temperature"
 
 
 async def test_sensor_setup(
@@ -47,7 +47,7 @@ async def test_sensor_none_values(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(AIR_INTAKE_TEMPERATURE_ENTITY_ID)
+    state = hass.states.get(INDOOR_AIR_TEMPERATURE_ENTITY_ID)
     assert state
     assert state.state == STATE_UNKNOWN
 
