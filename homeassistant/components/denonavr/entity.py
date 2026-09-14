@@ -68,14 +68,25 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
 
     @callback
     def _async_handle_pending_expiry(self, _now: Any) -> None:
-        """Write state when an optimistic value expires.
+        """Give up on an unconfirmed pending value and request a fresh read.
 
         Otherwise HA's stored state would keep showing it past the
-        timeout, since nothing else would re-evaluate it.
+        timeout with nothing to ever correct it - if the receiver
+        actually applied the command but was just slow to confirm (e.g.
+        Audyssey polling is off by default, so the one debounced
+        post-action refresh is the only read that would otherwise ever
+        happen), this catches up instead of getting stuck showing stale
+        cached data indefinitely.
         """
         self._pending_value_expiry_unsub = None
         self._pending_value = None
         self.async_write_ha_state()
+        if self.coordinator.config_entry:
+            self.coordinator.config_entry.async_create_task(
+                self.hass,
+                self.coordinator.async_request_refresh(),
+                "denonavr pending value expiry refresh",
+            )
 
     @property
     def _current_value(self) -> _T | None:

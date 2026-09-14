@@ -858,3 +858,33 @@ async def test_pending_option_expires_instead_of_masking_forever(
         await async_update_entity(hass, entity_id)
 
     assert hass.states.get(entity_id).state == "Dim"
+
+
+async def test_pending_expiry_triggers_a_fresh_refresh(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """Expiry alone should ask for one more read, not just show stale data.
+
+    Without this, a command that was simply slow to actually apply (not
+    lost or rejected) would be stuck showing the stale pre-command
+    value forever, since nothing else would ever refresh it again.
+    """
+    with patch("homeassistant.components.denonavr.entity.PENDING_VALUE_TIMEOUT", 0.01):
+        await setup_denonavr(hass)
+        entity_id = _entity_id(hass, "dimmer")
+
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Dark"},
+            blocking=True,
+        )
+        await _wait_for_debounced_refresh(hass)
+        calls_after_action = client.async_update.await_count
+
+        # No manual poll or action here - expiry itself must be what
+        # triggers the next read.
+        await asyncio.sleep(0.02)
+        await hass.async_block_till_done()
+
+    assert client.async_update.await_count > calls_after_action

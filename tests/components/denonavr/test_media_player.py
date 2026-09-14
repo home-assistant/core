@@ -6,9 +6,11 @@ from unittest.mock import MagicMock, patch
 
 from denonavr.const import POWER_ON
 from denonavr.exceptions import (
+    AvrCommandError,
     AvrIncompleteResponseError,
     AvrInvalidResponseError,
     AvrNetworkError,
+    AvrProcessingError,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -27,7 +29,13 @@ from homeassistant.components.denonavr.services import (
     SERVICE_SET_DYNAMIC_EQ,
     SERVICE_UPDATE_AUDYSSEY,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_MODEL,
+    SERVICE_VOLUME_UP,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -158,6 +166,54 @@ async def test_get_command(hass: HomeAssistant, client: MagicMock) -> None:
     await hass.async_block_till_done()
 
     client.async_get_command.assert_awaited_with("test_command")
+
+
+async def test_avr_processing_error_does_not_mark_unavailable(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """An AvrProcessingError is logged but doesn't affect availability.
+
+    Unlike the connectivity-type errors, this means the receiver
+    responded but wasn't fully done updating yet - not a reason to
+    mark it unavailable.
+    """
+    entry = await setup_denonavr(hass)
+    client.async_volume_up.side_effect = AvrProcessingError(
+        "Update not complete", "SetVolume"
+    )
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert entry.runtime_data.coordinator.last_update_success is True
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+
+async def test_avr_command_error_does_not_mark_unavailable(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """An AvrCommandError (rejected command) is logged but doesn't mark unavailable.
+
+    Not a connectivity problem - just this one command being rejected.
+    """
+    entry = await setup_denonavr(hass)
+    client.async_volume_up.side_effect = AvrCommandError(
+        "Could not set volume", "SetVolume"
+    )
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert entry.runtime_data.coordinator.last_update_success is True
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
 
 
 async def test_dynamic_eq_attribute_updates_from_audyssey_coordinator(

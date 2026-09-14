@@ -73,17 +73,32 @@ async def async_refresh_status(receiver: DenonAVR) -> None:
 
 
 async def async_refresh_audyssey(receiver: DenonAVR) -> None:
-    """Refresh Audyssey settings, unless Telnet already keeps them current.
+    """Refresh Audyssey settings for every configured zone.
 
-    Mirrors async_refresh_status's own guard: once Telnet is healthy,
-    "PS" events already push these settings live (see __init__.py's
-    Telnet listener), so fetching them over HTTP too - up to ~10s on
-    some receivers - would just repeat what Telnet already delivered,
-    whether this call is a scheduled poll or a post-action confirmation.
+    Each zone is its own object with its own cached Audyssey state
+    (denonavr's async_update_audyssey() only updates the zone it's
+    called on), so Zone2/Zone3 media players need their own fetch too -
+    matching receiver.py's Telnet-setup fetch and async_refresh_status's
+    own per-zone loop.
+
+    Skips the HTTP poll if Telnet is already healthy and keeping
+    everything current, for the same reason and in the same
+    all-zones-at-once way as async_refresh_status's matching guard.
     """
     if receiver.telnet_connected and receiver.telnet_healthy:
         return
-    await receiver.async_update_audyssey()
+    for zone_receiver in receiver.zones.values():
+        try:
+            await zone_receiver.async_update_audyssey()
+        except UNAVAILABLE_ON:
+            raise
+        except DenonAvrError as err:
+            _LOGGER.debug(
+                "Error refreshing Audyssey for zone %s for %s: %s",
+                zone_receiver.zone,
+                receiver.name,
+                err,
+            )
 
 
 class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
