@@ -64,7 +64,9 @@ class UnmappedEnumValueFlow(RepairsFlow):
     def __init__(self, issue_id: str, data: dict[str, str]) -> None:
         """Initialize."""
         self.description_placeholders: dict[str, str] = {
-            "device_name": data["device_name"]
+            "device_name": data["device_name"],
+            "entity_id": data.get("entity_id", ""),
+            "raw_value": data.get("raw_value", ""),
         }
         self.device_id: str = data["device_id"]
         self._issue_id: str = issue_id

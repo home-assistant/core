@@ -635,6 +635,11 @@ async def test_unmapped_enum_value_confirm_step(
     data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
     flow_id = data["flow_id"]
     assert data["step_id"] == "init"
+    assert data["description_placeholders"]["device_name"] == device.name
+    assert (
+        data["description_placeholders"]["entity_id"] == "sensor.adc_t3000_power_source"
+    )
+    assert data["description_placeholders"]["raw_value"] == "99"
 
     data = await process_repair_fix_flow(http_client, flow_id)
     assert data["type"] == "menu"

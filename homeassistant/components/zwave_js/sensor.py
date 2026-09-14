@@ -1019,8 +1019,6 @@ class ZWaveListSensor(ZwaveSensor):
     @callback
     def _async_report_unmapped_value(self, raw_value: str) -> None:
         """Raise a repair when the device reports a value not in its interview metadata."""
-        if self._unmapped_value_reported:
-            return
         if self.device_entry is None:
             return
         device_name = (
@@ -1033,6 +1031,8 @@ class ZWaveListSensor(ZwaveSensor):
             data={
                 "device_id": self.device_entry.id,
                 "device_name": device_name,
+                "entity_id": self.entity_id,
+                "raw_value": raw_value,
             },
             is_fixable=True,
             is_persistent=False,
