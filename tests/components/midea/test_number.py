@@ -276,35 +276,21 @@ async def test_number_not_created_when_attribute_missing(
     assert entity_entries(hass, config_entry) == {}
 
 
-async def test_number_not_created_for_other_device_type(
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        pytest.param({}, id="capability-absent"),
+        pytest.param({"fan_custom": False}, id="capability-false"),
+    ],
+)
+async def test_ac_fan_speed_not_created_without_custom_capability(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    capabilities: dict[str, bool],
 ) -> None:
-    """Test AC fan_speed is not created when custom fan speed capability is absent."""
-    device = DummyDevice(
-        DeviceType.AC,
-        attributes={
-            ACAttributes.power: True,
-            ACAttributes.mode: 1,
-            ACAttributes.target_temperature: 22.0,
-            ACAttributes.indoor_temperature: 21.0,
-            ACAttributes.fan_speed: 60,
-        },
-    )
-    config_entry = mock_config_entry(device)
-    with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
-        await setup_integration(hass, config_entry, device)
-
-    assert entity_entries(hass, config_entry) == {}
-
-
-async def test_ac_fan_speed_not_created_when_custom_capability_missing(
-    hass: HomeAssistant,
-    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
-) -> None:
-    """Test AC fan_speed is not created when custom fan speed capability is missing."""
+    """Test AC fan_speed is not created when custom fan speed capability is absent or false."""
     device = _ac_device()
-    device.capabilities = {"fan_custom": False}
+    device.capabilities = capabilities
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, config_entry, device)
