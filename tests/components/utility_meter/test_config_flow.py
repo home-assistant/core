@@ -408,7 +408,7 @@ async def test_change_device_source(
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id not in current_device.config_entries
+    assert current_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Check that the entities are linked to the expected device
     for (
@@ -442,14 +442,14 @@ async def test_change_device_source(
     previous_device = device_registry.async_get(
         device_id=previous_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id not in previous_device.config_entries
+    assert previous_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Confirm that the configuration entry is not in
     # the source entity 2 (current) device registry
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id not in current_device.config_entries
+    assert current_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Check that the entities are linked to the expected device
     for (
@@ -483,7 +483,7 @@ async def test_change_device_source(
     previous_device = device_registry.async_get(
         device_id=previous_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id not in previous_device.config_entries
+    assert previous_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Check that the entities are no longer linked to a device
     for (
@@ -525,7 +525,7 @@ async def test_change_device_source(
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id not in current_device.config_entries
+    assert current_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Check that the entities are linked to the expected device
     for (

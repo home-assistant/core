@@ -147,6 +147,9 @@
       },
       "tank_full": {
         "name": "Tank full"
+      },
+      "water_pump_running": {
+        "name": "Water pump running"
       }
     },
     "button": {

@@ -1,7 +1,7 @@
 """Amber Electric Service class."""
 
 from amberelectric.models.channel import ChannelType
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
@@ -26,10 +26,10 @@ from .const import (
 from .coordinator import AmberConfigEntry
 from .helpers import format_cents_to_dollars, normalize_descriptor
 
-GET_FORECASTS_SCHEMA = vol.Schema(
+GET_FORECASTS_SCHEMA = probatio.Schema(
     {
         ATTR_CONFIG_ENTRY_ID: ConfigEntrySelector({"integration": DOMAIN}),
-        ATTR_CHANNEL_TYPE: vol.In(
+        ATTR_CHANNEL_TYPE: probatio.In(
             [GENERAL_CHANNEL, CONTROLLED_LOAD_CHANNEL, FEED_IN_CHANNEL]
         ),
     }
