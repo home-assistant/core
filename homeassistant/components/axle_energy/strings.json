@@ -25,7 +25,7 @@
         "name": "Event end"
       },
       "import_export": {
-        "name": "Type of Event:",
+        "name": "Event type",
         "state": {
           "export": "Export",
           "import": "Import"

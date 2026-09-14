@@ -41,7 +41,7 @@ async def test_sensor_snapshot(
 @pytest.mark.parametrize(
     ("entity_id", "value", "key"),
     [
-        ("sensor.axle_energy_type_of_event", "export", "import_export"),
+        ("sensor.axle_energy_event_type", "export", "import_export"),
         ("sensor.axle_energy_event_start", "2026-09-11T17:00:00+00:00", "start"),
         ("sensor.axle_energy_event_end", "2026-09-11T18:00:00+00:00", "end"),
     ],
@@ -77,7 +77,7 @@ async def test_no_event(
     """An empty schedule is unknown, not a failed connection."""
     mock_client.get_event.return_value = None
     await setup(hass, mock_config_entry)
-    assert hass.states.get("sensor.axle_energy_type_of_event").state == "unknown"
+    assert hass.states.get("sensor.axle_energy_event_type").state == "unknown"
 
 
 async def test_opted_out(
@@ -89,7 +89,7 @@ async def test_opted_out(
     """Exclude an event the household has opted out of."""
     mock_client.get_event.return_value = replace(mock_event, opted_out=True)
     await setup(hass, mock_config_entry)
-    assert hass.states.get("sensor.axle_energy_type_of_event").state == "unknown"
+    assert hass.states.get("sensor.axle_energy_event_type").state == "unknown"
 
 
 @pytest.mark.parametrize("error", [AxleConnectionError(), AxleError()])
@@ -106,12 +106,12 @@ async def test_recovery(
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.axle_energy_type_of_event").state == "unavailable"
+    assert hass.states.get("sensor.axle_energy_event_type").state == "unavailable"
     mock_client.get_event.side_effect = None
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.axle_energy_type_of_event").state == "export"
+    assert hass.states.get("sensor.axle_energy_event_type").state == "export"
 
 
 async def test_polling(
@@ -133,7 +133,7 @@ async def test_polling(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_client.get_event.assert_awaited_once()
-    assert hass.states.get("sensor.axle_energy_type_of_event").state == "import"
+    assert hass.states.get("sensor.axle_energy_event_type").state == "import"
 
 
 async def test_authentication_failure(
@@ -148,7 +148,7 @@ async def test_authentication_failure(
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.axle_energy_type_of_event").state == "unavailable"
+    assert hass.states.get("sensor.axle_energy_event_type").state == "unavailable"
     mock_client.get_event.reset_mock()
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)

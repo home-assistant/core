@@ -101,7 +101,7 @@
     'state': '2026-09-11T17:00:00+00:00',
   })
 # ---
-# name: test_sensor_snapshot[sensor.axle_energy_type_of_event-entry]
+# name: test_sensor_snapshot[sensor.axle_energy_event_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -120,7 +120,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.axle_energy_type_of_event',
+    'entity_id': 'sensor.axle_energy_event_type',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -128,12 +128,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Type of Event:',
+    'object_id_base': 'Event type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Type of Event:',
+    'original_name': 'Event type',
     'platform': 'axle_energy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -143,18 +143,18 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.axle_energy_type_of_event-state]
+# name: test_sensor_snapshot[sensor.axle_energy_event_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Axle Energy Type of Event:',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Axle Energy Event type',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'import',
         'export',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.axle_energy_type_of_event',
+    'entity_id': 'sensor.axle_energy_event_type',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
