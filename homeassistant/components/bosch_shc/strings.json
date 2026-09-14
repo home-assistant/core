@@ -78,9 +78,9 @@
           "run_to_start_position": "Running to start position",
           "start_position_requested": "Start position requested",
           "unknown": "Unknown",
-          "valve_adaption_in_progress": "Adaption in progress",
-          "valve_adaption_requested": "Adaption requested",
-          "valve_adaption_successful": "Adaption successful",
+          "valve_adaption_in_progress": "Adaptation in progress",
+          "valve_adaption_requested": "Adaptation requested",
+          "valve_adaption_successful": "Adaptation successful",
           "valve_too_tight": "Valve too tight"
         }
       },
