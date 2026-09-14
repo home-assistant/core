@@ -6,8 +6,8 @@ import logging
 from typing import Any, override
 from uuid import uuid4
 
+import probatio
 from pywfrac import Repository, WfRacError
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -180,7 +180,7 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_create_common(
         self,
         step_id: str,
-        data_schema: vol.Schema,
+        data_schema: probatio.Schema,
         user_input: dict[str, Any] | None = None,
         description_placeholders: dict[str, str] | None = None,
         allow_port_fallback: bool = False,
@@ -291,10 +291,10 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input.setdefault(CONF_PORT, self._discovery_info[CONF_PORT])
 
         field = partial(self._field, user_input)
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
                 field(
-                    CONF_PORT, vol.Optional, self._discovery_info[CONF_PORT]
+                    CONF_PORT, probatio.Optional, self._discovery_info[CONF_PORT]
                 ): cv.port,
             }
         )
@@ -314,11 +314,11 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle adding device manually."""
 
         field = partial(self._field, user_input)
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                field(CONF_HOST, vol.Required): cv.string,
-                field(CONF_PORT, vol.Optional, DEFAULT_PORT): cv.port,
-                field(CONF_FORCE_UPDATE, vol.Optional, False): cv.boolean,
+                field(CONF_HOST, probatio.Required): cv.string,
+                field(CONF_PORT, probatio.Optional, DEFAULT_PORT): cv.port,
+                field(CONF_FORCE_UPDATE, probatio.Optional, False): cv.boolean,
             }
         )
 
