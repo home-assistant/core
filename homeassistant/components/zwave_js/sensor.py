@@ -956,7 +956,6 @@ class ZWaveListSensor(ZwaveSensor):
         super().__init__(
             config_entry, driver, info, entity_description, unit_of_measurement
         )
-        self._unmapped_value_reported = False
 
         # Entity class attributes
         # Notification sensors use the notification event label as the name
@@ -1029,7 +1028,6 @@ class ZWaveListSensor(ZwaveSensor):
             },
             severity=ir.IssueSeverity.WARNING,
         )
-        self._unmapped_value_reported = True
 
     @callback
     def _async_clear_unmapped_value(self) -> None:
@@ -1039,7 +1037,6 @@ class ZWaveListSensor(ZwaveSensor):
         freshly rediscovered entity instance clears a stale issue left by
         the prior instance that was removed during metadata rediscovery.
         """
-        self._unmapped_value_reported = False
         if (issue_id := self._unmapped_issue_id) is not None:
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
