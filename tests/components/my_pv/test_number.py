@@ -46,7 +46,7 @@ async def test_number_unavailable_not_connected(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("number.my_pv_ac_elwa_2_temperature")
+    state = hass.states.get("number.my_pv_ac_elwa_2_boost_target_temperature")
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -65,5 +65,5 @@ async def test_number_unavailable_setup_value_none(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("number.my_pv_ac_elwa_2_temperature")
+    state = hass.states.get("number.my_pv_ac_elwa_2_boost_target_temperature")
     assert state.state == STATE_UNAVAILABLE
