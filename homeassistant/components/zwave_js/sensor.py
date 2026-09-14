@@ -75,7 +75,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import entity_platform, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
@@ -970,6 +970,7 @@ class ZWaveListSensor(ZwaveSensor):
         super().__init__(
             config_entry, driver, info, entity_description, unit_of_measurement
         )
+        self._unmapped_value_reported = False
 
         # Entity class attributes
         # Notification sensors use the notification event label as the name
@@ -991,6 +992,68 @@ class ZWaveListSensor(ZwaveSensor):
         if self.info.primary_value.metadata.states:
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(info.primary_value.metadata.states.values())
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return state of the sensor."""
+        if self.info.primary_value.value is None:
+            return None
+        key = str(self.info.primary_value.value)
+        states = self.info.primary_value.metadata.states
+        if not states or key not in states:
+            if self.device_class is SensorDeviceClass.ENUM:
+                self._async_report_unmapped_value(key)
+                return None
+            return self.info.primary_value.value
+        self._async_clear_unmapped_value()
+        return str(states[key])
+
+    @property
+    def _unmapped_issue_id(self) -> str | None:
+        """Return the issue ID for this entity's unmapped value repair."""
+        if self.device_entry is None:
+            return None
+        return f"unmapped_enum_value.{self.device_entry.id}.{self.info.primary_value.value_id}"
+
+    @callback
+    def _async_report_unmapped_value(self, raw_value: str) -> None:
+        """Raise a repair when the device reports a value not in its interview metadata."""
+        if self._unmapped_value_reported:
+            return
+        if self.device_entry is None:
+            return
+        device_name = (
+            self.device_entry.name_by_user or self.device_entry.name or "Unknown device"
+        )
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            self._unmapped_issue_id,
+            data={
+                "device_id": self.device_entry.id,
+                "device_name": device_name,
+            },
+            is_fixable=True,
+            is_persistent=False,
+            translation_key="unmapped_enum_value",
+            translation_placeholders={
+                "device_name": device_name,
+                "entity_id": self.entity_id,
+                "raw_value": raw_value,
+            },
+            severity=ir.IssueSeverity.WARNING,
+        )
+        self._unmapped_value_reported = True
+
+    @callback
+    def _async_clear_unmapped_value(self) -> None:
+        """Clear the repair once values resolve after re-interview."""
+        if not self._unmapped_value_reported:
+            return
+        self._unmapped_value_reported = False
+        if (issue_id := self._unmapped_issue_id) is not None:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
     @callback
     @override
