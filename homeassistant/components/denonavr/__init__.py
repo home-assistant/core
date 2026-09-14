@@ -123,18 +123,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
         update_interval=update_interval if update_audyssey else None,
         refresh_fn=async_refresh_audyssey,
     )
-    # Audyssey values (dynamic_eq, reference_level_offset, dynamic_volume,
-    # multi_eq) aren't populated by the receiver's regular status queries
-    # at all, so without this the entities backed by them would start
-    # (and without Telnet, stay) unavailable. Not every receiver
-    # supports Audyssey though, so a failure here shouldn't block setup
-    # the way the main coordinator's failure does - just leave those
-    # entities unavailable, as expected.
-    #
-    # Skipped when Telnet and "Update Audyssey settings" are both on:
-    # receiver.py's connection step already fetched this once for every
-    # zone in that case, so refreshing again here would just repeat a
-    # request that can take ~10s, on every setup or reload.
+    # Audyssey values aren't populated by regular status queries, so
+    # without this the backing entities would start unavailable - a
+    # failure here shouldn't block setup though, unlike the general
+    # coordinator's. Skipped when Telnet and "Update Audyssey settings"
+    # are both on: receiver.py's connection step already fetched this.
     if not (use_telnet and update_audyssey):
         await audyssey_coordinator.async_refresh()
 
