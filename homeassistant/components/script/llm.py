@@ -52,12 +52,15 @@ class ScriptTool(ActionTool):
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
-        """Call the script, forwarding the calling device_id.
+        """Call the script, giving the context device_id precedence.
 
-        Skipped when tool_args already has a device_id, so an
-        LLM-supplied value is never overwritten.
+        Skipped only when the script declares its own device_id field
+        and the LLM already supplied a value for it.
         """
-        if llm_context.device_id and "device_id" not in tool_input.tool_args:
+        if llm_context.device_id and not (
+            "device_id" in self.parameters.schema
+            and "device_id" in tool_input.tool_args
+        ):
             tool_input.tool_args["device_id"] = llm_context.device_id
         return await super().async_call(hass, tool_input, llm_context)
 
