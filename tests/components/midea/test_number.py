@@ -21,7 +21,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -334,7 +334,9 @@ async def test_ac_fan_speed_unavailable_when_power_off(
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, config_entry, device)
 
-    entity_id = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_fan_speed"].entity_id
+    entity_id = entity_entries(hass, config_entry)[
+        f"{TEST_DEVICE_ID}_fan_speed"
+    ].entity_id
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state != STATE_UNAVAILABLE
 
