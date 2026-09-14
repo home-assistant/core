@@ -101,6 +101,12 @@ class DeprecatedIssueIdDict[_VT](dict[str, _VT]):
             return super().pop(key)
         return super().pop(key, default)
 
+    @override
+    def setdefault(self, key: str, default: _VT) -> _VT:
+        if key == "issue_id":
+            self._report_issue_id_usage("calls setdefault on")
+        return super().setdefault(key, default)
+
     def _report_issue_id_usage(self, method: str) -> None:
         report_usage(
             f"{method} `issue_id` from `user_input` in `async_step_init` or `init_data` of a `RepairsFlow` "
