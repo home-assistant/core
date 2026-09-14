@@ -8,10 +8,12 @@ import pytest
 
 from homeassistant.components.greencell.const import GREENCELL_DISC_TOPIC
 from homeassistant.components.mqtt import ReceiveMessage
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import TEST_SERIAL_NUMBER, TEST_VOLTAGE_TOPIC
+from .conftest import TEST_CURRENT_TOPIC, TEST_SERIAL_NUMBER, TEST_VOLTAGE_TOPIC
 
 from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClient
@@ -123,6 +125,76 @@ async def test_async_setup_entry_not_ready(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "no_device_data"
+
+
+async def test_setup_entry_mqtt_client_unavailable(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setup retries with a translated error when the MQTT client never comes up."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.greencell.mqtt.async_wait_for_mqtt_client",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "mqtt_unavailable"
+
+
+async def test_setup_entry_mqtt_subscribe_error(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setup retries with a translated error when subscribing raises."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.greencell.mqtt.async_subscribe",
+        side_effect=HomeAssistantError("boom"),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "mqtt_error"
+
+
+async def test_setup_platform_mqtt_subscribe_error(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The sensor platform gives up on its entities when subscribing raises."""
+    mock_config_entry.add_to_hass(hass)
+
+    ready = await _mock_subscribe_fires(
+        [(GREENCELL_DISC_TOPIC, f'{{"id": "{TEST_SERIAL_NUMBER}"}}')]
+    )
+
+    async def _subscribe(
+        hass_arg: HomeAssistant, topic: str, msg_callback, *args, **kwargs
+    ) -> Callable[[], None]:
+        """Let the entry become ready, then fail on the first sensor topic."""
+        if topic == TEST_CURRENT_TOPIC:
+            raise HomeAssistantError("boom")
+        return await ready(hass_arg, topic, msg_callback, *args, **kwargs)
+
+    with patch(
+        "homeassistant.components.greencell.mqtt.async_subscribe",
+        side_effect=_subscribe,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not hass.states.async_entity_ids(SENSOR_DOMAIN)
 
 
 async def test_async_unload_entry_success(

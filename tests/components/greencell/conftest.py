@@ -1,19 +1,25 @@
 """Shared test fixtures and constants for Greencell integration tests."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 import time
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import mqtt as real_mqtt
 from homeassistant.components.greencell.const import (
     CONF_SERIAL_NUMBER,
     DOMAIN,
     GREENCELL_BROADCAST_TOPIC,
     GREENCELL_DISC_TOPIC,
 )
+from homeassistant.components.mqtt import ReceiveMessage
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from tests.common import MockConfigEntry
+from tests.typing import MqttMockHAClient
 
 # Test constants
 TEST_SERIAL_NUMBER = "EVGC021A22750001ZM0001"
@@ -50,6 +56,9 @@ TEST_STATUS_PAYLOAD_WAITING_FOR_CAR = b'{"state": "WAITING_FOR_CAR"}'
 TEST_STATUS_PAYLOAD_ERROR_CAR = b'{"state": "ERROR_CAR"}'
 TEST_STATUS_PAYLOAD_UNAVAILABLE = b"UNAVAILABLE"
 TEST_STATUS_PAYLOAD_OFFLINE = b"OFFLINE"
+
+# MQTT message payloads - Device state
+TEST_DEVICE_STATE_PAYLOAD_EXECUTE = b'{"level": "EXECUTE"}'
 
 
 @pytest.fixture
@@ -101,3 +110,50 @@ def mock_setup_entry():
         return_value=True,
     ) as mock_setup:
         yield mock_setup
+
+
+@contextmanager
+def patch_device_ready() -> Generator[None]:
+    """Patch async_subscribe so entry setup sees the device immediately."""
+    real_async_subscribe = real_mqtt.async_subscribe
+
+    async def _mock_init_subscribe(hass_arg, topic, msg_callback, *args, **kwargs):
+        """Fire discovery payload immediately, pass everything else through."""
+        if topic == GREENCELL_DISC_TOPIC:
+            msg_callback(
+                ReceiveMessage(
+                    topic=GREENCELL_DISC_TOPIC,
+                    payload=f'{{"id": "{TEST_SERIAL_NUMBER}"}}',
+                    qos=0,
+                    retain=False,
+                    subscribed_topic=GREENCELL_DISC_TOPIC,
+                    timestamp=time.time(),
+                )
+            )
+            return lambda: None
+        return await real_async_subscribe(
+            hass_arg, topic, msg_callback, *args, **kwargs
+        )
+
+    with patch(
+        "homeassistant.components.greencell.mqtt.async_subscribe",
+        side_effect=_mock_init_subscribe,
+    ):
+        yield
+
+
+@pytest.fixture
+async def setup_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mqtt_mock: MqttMockHAClient,
+) -> MockConfigEntry:
+    """Set up the greencell integration with device-ready fired synchronously."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    with patch_device_ready():
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry

@@ -85,6 +85,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: data,
     ),
     GreencellSensorDescription(
@@ -94,6 +95,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: data,
     ),
     GreencellSensorDescription(
@@ -103,6 +105,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: data,
     ),
     GreencellSensorDescription(
@@ -223,6 +226,22 @@ async def async_setup_entry(
         """Handle the device state message. If device was unavailable, enable the entity."""
         access.on_msg(msg.payload)
 
+    unavailable_logged = False
+
+    @callback
+    def log_availability_change() -> None:
+        """Log the device going unavailable and coming back, once per transition."""
+        nonlocal unavailable_logged
+        if access.is_disabled():
+            if not unavailable_logged:
+                _LOGGER.warning("Device %s is unavailable", serial_number)
+                unavailable_logged = True
+        elif unavailable_logged:
+            _LOGGER.info("Device %s is available again", serial_number)
+            unavailable_logged = False
+
+    access.register_listener(log_availability_change)
+
     try:
         for topic, handler in (
             (mqtt_topic_current, current_message_received),
@@ -235,7 +254,11 @@ async def async_setup_entry(
             if unsub is not None:
                 entry.async_on_unload(unsub)
     except HomeAssistantError as err:
-        raise ConfigEntryNotReady(f"MQTT is unavailable: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="subscribe_failed",
+            translation_placeholders={"serial": serial_number, "error": str(err)},
+        ) from err
 
     async_add_entities(sensors)
 

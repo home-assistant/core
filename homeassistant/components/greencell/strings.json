@@ -65,5 +65,19 @@
         "name": "Voltage phase L3"
       }
     }
+  },
+  "exceptions": {
+    "mqtt_error": {
+      "message": "Error while communicating over MQTT: {error}"
+    },
+    "mqtt_unavailable": {
+      "message": "The MQTT integration is not available"
+    },
+    "no_device_data": {
+      "message": "No data received from device {serial}"
+    },
+    "subscribe_failed": {
+      "message": "Failed to subscribe to the MQTT topics of device {serial}: {error}"
+    }
   }
 }

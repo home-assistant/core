@@ -14,7 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
-from .const import CONF_SERIAL_NUMBER, DISCOVERY_TIMEOUT, GREENCELL_DISC_TOPIC
+from .const import CONF_SERIAL_NUMBER, DISCOVERY_TIMEOUT, DOMAIN, GREENCELL_DISC_TOPIC
 from .models import GreencellConfigEntry, GreencellRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreencellConfigEntry) ->
     """Set up Greencell from a config entry."""
 
     if not await mqtt.async_wait_for_mqtt_client(hass):
-        raise ConfigEntryNotReady("MQTT integration is not available")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="mqtt_unavailable",
+        )
 
     serial: str = entry.data[CONF_SERIAL_NUMBER]
     device_ready_event = asyncio.Event()
@@ -69,9 +72,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreencellConfigEntry) ->
             unsub_disc()
             unsub_volt()
     except TimeoutError as err:
-        raise ConfigEntryNotReady(f"No initial data from device {serial}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="no_device_data",
+            translation_placeholders={"serial": serial},
+        ) from err
     except HomeAssistantError as err:
-        raise ConfigEntryNotReady(f"MQTT error: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="mqtt_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     entry.runtime_data = GreencellRuntimeData(
         access=GreencellAccess(GreencellHaAccessLevel.EXECUTE),
