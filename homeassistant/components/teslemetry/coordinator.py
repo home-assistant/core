@@ -333,7 +333,10 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
                 translation_key="update_failed",
                 translation_placeholders={"message": e.message},
             ) from e
-        return _index_wall_connectors(data)
+        if self._local is None:
+            return _index_wall_connectors(data)
+        self._cloud_live = data
+        return self._merged()
 
 
 class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):

@@ -37,6 +37,10 @@ from tesla_fleet_api.tesla import EnergySiteRouter, VehicleRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStreamAuthenticationError
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -94,6 +98,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.setup import async_setup_component
 
 from . import mock_config_entry, setup_platform
 from .const import (
@@ -2275,6 +2280,59 @@ async def test_cloud_push_between_local_ticks_keeps_owned_key(
     assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
     # ...while a cloud-only key does take the pushed value, proving the push was
     # merged against the cached local snapshot rather than dropped or stored raw.
+    assert hass.states.get("sensor.energy_site_grid_services_power").state == "7.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_paired_site_manual_refresh_merges_and_keeps_cloud_read(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_live_status: MagicMock,
+    mock_powerwall_live_status: AsyncMock,
+) -> None:
+    """A manual refresh on a paired site publishes merged data and keeps its cloud read."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+    assert await async_setup_component(hass, HA_DOMAIN, {})
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
+
+        refreshed = deepcopy(LIVE_STATUS)
+        refreshed["response"]["solar_power"] = 9999
+        refreshed["response"]["grid_services_power"] = 7000
+        mock_live_status.side_effect = lambda: deepcopy(refreshed)
+        await hass.services.async_call(
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: "sensor.energy_site_grid_services_power"},
+            blocking=True,
+        )
+
+        # The owned key keeps the local reading while the cloud-only key takes
+        # the refreshed value, so the refresh published the merged view.
+        assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
+        assert hass.states.get("sensor.energy_site_grid_services_power").state == "7.0"
+
+        # The next local poll re-merges against the refreshed cloud read, not
+        # the snapshot from before the refresh.
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
     assert hass.states.get("sensor.energy_site_grid_services_power").state == "7.0"
 
 
