@@ -1,7 +1,13 @@
 """Tests for the BLUETTI Modbus sensor entities."""
 
+from bluetti_modbus_lib.devices.getter import get_device
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bluetti_modbus.const import (
+    DEVICE_TYPE_BALCO260,
+    EXCLUDED_FIELDS,
+)
+from homeassistant.components.bluetti_modbus.sensor import SENSOR_DESCRIPTIONS
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -12,7 +18,11 @@ from tests.common import MockConfigEntry, snapshot_platform
 VOLTAGE_ENTITY = "sensor.balco260_battery_voltage"
 ENERGY_ENTITY = "sensor.balco260_total_battery_charged_energy"
 BATTERY_LEVEL_ENTITY = "sensor.balco260_battery_soc"
+TOTAL_BATTERY_LEVEL_ENTITY = "sensor.balco260_total_battery_soc"
 CYCLE_COUNT_ENTITY = "sensor.balco260_battery_cycle_count"
+
+# Shown as DeviceInfo (serial number, firmware) rather than as sensors.
+DEVICE_INFO_FIELDS = {"d_serial", "d_ver_arm", "d_ver_dsp"}
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -50,15 +60,32 @@ async def test_energy_sensor_is_a_total_increasing_counter(
     assert state.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
 
 
-async def test_battery_level_sensor_gets_the_battery_device_class(
+async def test_only_the_present_charge_level_is_a_battery_sensor(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """The present charge level is a battery sensor, unlike SoH percentages."""
+    """b_soc gets the battery device class; b_soc_total and SoH do not."""
     await _setup(hass, mock_config_entry)
 
     state = hass.states.get(BATTERY_LEVEL_ENTITY)
     assert state is not None
     assert state.attributes["device_class"] == SensorDeviceClass.BATTERY
+
+    state = hass.states.get(TOTAL_BATTERY_LEVEL_ENTITY)
+    assert state is not None
+    assert "device_class" not in state.attributes
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+
+
+def test_every_readable_field_has_exactly_one_description() -> None:
+    """The static description table and the library's register map stay in step."""
+    device = get_device(DEVICE_TYPE_BALCO260)
+    assert device is not None
+    expected = set(device.field_names()) - EXCLUDED_FIELDS - DEVICE_INFO_FIELDS
+
+    keys = [description.key for description in SENSOR_DESCRIPTIONS]
+
+    assert len(keys) == len(set(keys))
+    assert set(keys) == expected
 
 
 async def test_diagnostic_fields_are_categorized_as_diagnostic(
