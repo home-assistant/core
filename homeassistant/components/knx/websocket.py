@@ -867,17 +867,17 @@ def ws_validate_expose(
     )
 
 
-_ENTITY_LINK_DATA_SCHEMA: dict[str | vol.Marker, Any] = {
-    vol.Required(CONF_ENTITY_ID): str,
-    vol.Required(CONF_DATA): dict,  # validation done in handler
+_ENTITY_LINK_DATA_SCHEMA: dict[str | probatio.Marker, Any] = {
+    probatio.Required(CONF_ENTITY_ID): str,
+    probatio.Required(CONF_DATA): dict,  # validation done in handler
 }
 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_entity_link_schema",
-        vol.Required(CONF_PLATFORM): vol.Coerce(Platform),
+        probatio.Required("type"): "knx/get_entity_link_schema",
+        probatio.Required(CONF_PLATFORM): probatio.Coerce(Platform),
     }
 )
 @websocket_api.async_response
@@ -898,7 +898,7 @@ async def ws_get_entity_link_schema(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_entity_links",
+        probatio.Required("type"): "knx/get_entity_links",
     }
 )
 @provide_knx
@@ -916,8 +916,8 @@ def ws_get_entity_links(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_entity_link_config",
-        vol.Required(CONF_ENTITY_ID): str,
+        probatio.Required("type"): "knx/get_entity_link_config",
+        probatio.Required(CONF_ENTITY_ID): str,
     }
 )
 @provide_knx
@@ -937,7 +937,7 @@ def ws_get_entity_link_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/validate_entity_link",
+        probatio.Required("type"): "knx/validate_entity_link",
         **_ENTITY_LINK_DATA_SCHEMA,
     }
 )
@@ -961,7 +961,7 @@ def ws_validate_entity_link(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/update_entity_link",
+        probatio.Required("type"): "knx/update_entity_link",
         **_ENTITY_LINK_DATA_SCHEMA,
     }
 )
@@ -996,8 +996,8 @@ async def ws_update_entity_link(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/delete_entity_link",
-        vol.Required(CONF_ENTITY_ID): str,
+        probatio.Required("type"): "knx/delete_entity_link",
+        probatio.Required(CONF_ENTITY_ID): str,
     }
 )
 @websocket_api.async_response
