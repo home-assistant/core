@@ -197,6 +197,7 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle configuration by re-auth."""
         reauth_entry = self._get_reauth_entry()
         self._data = dict(reauth_entry.data)
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={CONF_NAME: reauth_entry.title},
