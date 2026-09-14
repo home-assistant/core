@@ -2342,15 +2342,18 @@ async def test_rpc_storage_fs_free_sensor(
     config = {"storage:0": {"id": 0}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
-    entity_id = f"{SENSOR_DOMAIN}.test_name_storage_free_space"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_free_storage_space"
     await init_integration(hass, 4, model=MODEL_CAMERA)
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == "10.0"
+    assert state.state == "10.48576"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfInformation.MEGABYTES
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DATA_SIZE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-storage:0-storage_fs_free"
+    assert entry.unit_of_measurement == UnitOfInformation.MEGABYTES
 
     mutate_rpc_device_status(
         monkeypatch, mock_rpc_device, "storage:0", "fs_free", 20971520
@@ -2358,7 +2361,7 @@ async def test_rpc_storage_fs_free_sensor(
     mock_rpc_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == "20.0"
+    assert state.state == "20.97152"
 
 
 async def test_rpc_storage_fs_free_sensor_removal(
@@ -2380,7 +2383,7 @@ async def test_rpc_storage_fs_free_sensor_removal(
     entity_id = register_entity(
         hass,
         SENSOR_DOMAIN,
-        "test_name_storage_free_space",
+        "test_name_free_storage_space",
         "storage:0-storage_fs_free",
         config_entry,
         device_id=device_entry.id,
