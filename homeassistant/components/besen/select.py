@@ -17,18 +17,6 @@ from .entity import BesenEntity
 
 PARALLEL_UPDATES = 0
 
-LANGUAGE_OPTIONS: Final = {
-    "english": "English",
-    "italian": "Italiano",
-    "german": "Deutsch",
-    "french": "Fran\u00e7ais",
-    "spanish": "Espa\u00f1ol",
-    "hebrew": "\u05e2\u05d1\u05e8\u05d9\u05ea",
-    "polish": "Polski",
-    "chinese": "\u4e2d\u6587",
-}
-LANGUAGE_VALUES: Final = {value: key for key, value in LANGUAGE_OPTIONS.items()}
-
 TEMPERATURE_UNIT_OPTIONS: Final = {
     "celsius": "Celsius",
     "fahrenheit": "Fahrenheit",
@@ -54,19 +42,6 @@ class BesenSelectEntityDescription(SelectEntityDescription):
 
 
 SELECT_DESCRIPTIONS: tuple[BesenSelectEntityDescription, ...] = (
-    BesenSelectEntityDescription(
-        key="language",
-        translation_key="language",
-        entity_category=EntityCategory.CONFIG,
-        options=list(LANGUAGE_OPTIONS),
-        current_option_fn=lambda data: _option_value(
-            data.config.language, LANGUAGE_VALUES
-        ),
-        option_values=LANGUAGE_OPTIONS,
-        select_option_fn=lambda coordinator, option: coordinator.async_set_language(
-            option
-        ),
-    ),
     BesenSelectEntityDescription(
         key="temperature_unit",
         translation_key="temperature_unit",
