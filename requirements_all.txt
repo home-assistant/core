@@ -1641,7 +1641,7 @@ mitsubishi-comfort==0.5.2
 moat-ble==0.1.1
 
 # homeassistant.components.modbus
-modbus-connection[tmodbus]==4.12.0
+modbus-connection[tmodbus]==4.12.1
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
