@@ -43,7 +43,12 @@ class ConfirmRepairFlow(RepairsFlow):
         )
 
 
-class _DeprectatedIssueIdDict[_VT](dict[str, _VT]):
+# Sentinel to handle overload missing arg
+class _MISSING_ARG:
+    pass
+
+
+class _DeprecatedIssueIdDict[_VT](dict[str, _VT]):
     """Dict to detect use of `issue_id` in async_step_init by a RepairFlow."""
 
     def __init__(self, integration_domain: str, data: dict[str, _VT]) -> None:
@@ -79,11 +84,13 @@ class _DeprectatedIssueIdDict[_VT](dict[str, _VT]):
     def pop[_T](self, key: str, default: _T, /) -> _T: ...
 
     @override
-    def pop[_T](self, key: str, default: _T | _VT | None = None, /) -> _VT | _T:
+    def pop[_T](
+        self, key: str, default: _T | _VT | _MISSING_ARG = _MISSING_ARG(), /
+    ) -> _VT | _T:
         """Deprecation warning on issue_id key access."""
         if key == "issue_id":
             self._report_issue_id_usage("pops")
-        if default is None:
+        if isinstance(default, _MISSING_ARG):
             return super().pop(key)
         return super().pop(key, default)
 
@@ -127,9 +134,9 @@ class RepairsFlowManager(
                     str,
                     Any,
                 ],
-                _DeprectatedIssueIdDict(handler, data)
+                _DeprecatedIssueIdDict(handler, data)
                 if data is not None
-                else _DeprectatedIssueIdDict(handler, {}),
+                else _DeprecatedIssueIdDict(handler, {}),
             )
             data["issue_id"] = _context["issue_id"]
         return await super().async_init(handler, context=_context, data=data)
