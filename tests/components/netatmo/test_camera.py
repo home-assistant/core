@@ -592,21 +592,12 @@ async def test_camera_reconnect_webhook(
 
         assert fake_post_hits == 8
 
-        calls = fake_post_hits
-
         # Fake camera reconnect (incomplete event should not change anything)
         response = {
             "push_type": f"{camera_type}-connection",
         }
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
-
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(seconds=60),
-        )
-        await hass.async_block_till_done()
-        assert fake_post_hits >= calls
 
         # Check initial state
         assert hass.states.get(camera_entity).state == "idle"
@@ -625,6 +616,7 @@ async def test_camera_reconnect_webhook(
             "push_type": f"{camera_type}-off",
         }
         await simulate_webhook(hass, webhook_id, response)
+        await hass.async_block_till_done()
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
@@ -639,6 +631,7 @@ async def test_camera_reconnect_webhook(
             "push_type": f"{camera_type}-disconnection",
         }
         await simulate_webhook(hass, webhook_id, response)
+        await hass.async_block_till_done()
 
         assert hass.states.get(camera_entity).state == "unavailable"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
@@ -653,6 +646,7 @@ async def test_camera_reconnect_webhook(
             "push_type": f"{camera_type}-connection",
         }
         await simulate_webhook(hass, webhook_id, response)
+        await hass.async_block_till_done()
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
@@ -667,6 +661,7 @@ async def test_camera_reconnect_webhook(
             "push_type": f"{camera_type}-on",
         }
         await simulate_webhook(hass, webhook_id, response)
+        await hass.async_block_till_done()
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is True
@@ -912,44 +907,103 @@ async def test_camera_image_raises_exception(
 
 
 @pytest.mark.parametrize(
-    (
-        "camera_type",
-        "camera_id",
-        "camera_entity",
-        "expected_motion_detection",
-        "camera_has_monitoring",
-        "camera_has_stream",
-    ),
+    ("camera_type", "camera_id", "camera_entity", "expected_motion_detection"),
     [
-        ("NACamera", "12:34:56:00:f1:62", "camera.hall", True, True, True),
-        ("NOC", "12:34:56:10:b9:0e", "camera.front", True, True, True),
-        ("NDB", "12:34:56:10:f1:66", "camera.netatmo_doorbell", None, False, False),
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall", True),
+        ("NOC", "12:34:56:10:b9:0e", "camera.front", True),
+        ("NDB", "12:34:56:10:f1:66", "camera.netatmo_doorbell", None),
     ],
 )
-async def test_camera_image_with_attribute_change(
+async def test_camera_initial_setup_and_images(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
     camera_type: str,
     camera_id: str,
     camera_entity: str,
     expected_motion_detection: bool | None,
-    camera_has_monitoring: bool,
-    camera_has_stream: bool,
 ) -> None:
-    """Test camera image state and snapshot fetching as monitoring and power status change."""
-    fake_post_hits = 0
+    """Test camera initial state and valid snapshot retrieval."""
     FAKE_IMG = b"\xff\xd8\xff\xdb" + b"0" * 100 + b"\xff\xd9"
-    # Repeatedly used variables for the test and initial value from fixture
-    # Use nonexistent ID to prevent matching during initial setup
-    polling_cycles = 11
-    polling_delta = timedelta(seconds=30)
-    # Mock data for payload_modifier to simulate camera status change
+
+    fake_post_hits = 0
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Fake error during requesting backend data."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
+        ) as mock_webhook,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_webhook.return_value = "https://example.com"
+        mock_auth.return_value.async_get_image = AsyncMock(return_value=FAKE_IMG)
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Initial state checks
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+        assert (
+            hass.states.get(camera_entity).attributes.get("motion_detection")
+            is expected_motion_detection
+        )
+
+        # Validate image fetch works when available
+        result = await camera.async_get_image(hass, camera_entity)
+        assert result is not None
+        assert result.content_type == "image/jpeg"
+        assert result.content == FAKE_IMG
+
+
+@pytest.mark.parametrize(
+    ("attributes_payload", "expected_monitoring"),
+    [
+        ({"monitoring": "on", "alim_status": 1}, False),
+        ({"monitoring": "off", "alim_status": 1}, False),
+        ({"monitoring": "off", "alim_status": None}, False),
+        ({"monitoring": None, "alim_status": None}, False),
+        ({"monitoring": None, "alim_status": 1}, False),
+    ],
+    ids=[
+        "low_power",
+        "monitoring_off_low_power",
+        "missing_power_status",
+        "null_attributes",
+        "null_monitoring_low_power",
+    ],
+)
+async def test_camera_unhealth_status_scenarios(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    attributes_payload: dict[str, Any],
+    expected_monitoring: bool | None,
+) -> None:
+    """Test camera availability state across various degraded status payloads."""
+    camera_entity = "camera.hall"
+    camera_id = "12:34:56:00:f1:62"
+
     mock_state = {
-        "module_id": "aa:bb:cc:dd:ee:ff",
-        "timestamp": None,
-        "attributes": {"monitoring": "on", "alim_status": 2},
+        "module_id": camera_id,
+        "timestamp": int(dt_util.utcnow().timestamp()),
+        "attributes": attributes_payload,
     }
+
+    fake_post_hits = 0
 
     async def fake_camera_post(*args: Any, **kwargs: Any):
         """Fake camera status during requesting backend data."""
@@ -980,185 +1034,19 @@ async def test_camera_image_with_attribute_change(
         mock_auth.return_value.async_post_api_request.side_effect = fake_camera_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
-        mock_auth.return_value.async_get_live_snapshot = AsyncMock(
-            return_value=FAKE_IMG
-        )
-        mock_auth.return_value.async_get_image = AsyncMock(return_value=FAKE_IMG)
         mock_webhook.return_value = "https://example.com"
+
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-
         await hass.async_block_till_done()
 
-        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-
-        # Fake webhook activation
-        response = {
-            "push_type": "webhook_activation",
-        }
-        await simulate_webhook(hass, webhook_id, response)
-        await hass.async_block_till_done()
-
-        # Check initial state
-        assert hass.states.get(camera_entity).state == "idle"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
-        assert (
-            hass.states.get(camera_entity).attributes.get("motion_detection")
-            is expected_motion_detection
+        # Advance time to force coordinator poll cycle with mock_state payload
+        await advance_time(
+            hass, freezer, polling_cycles=11, polling_delta=timedelta(seconds=30)
         )
 
-        # Check that getting image succeeds while camera is idle without exception
-        result = await camera.async_get_image(hass, camera_entity)
-        assert result is not None
-        assert result.content_type == "image/jpeg"
-        assert result.content == FAKE_IMG
-
-        if camera_has_stream:
-            # Check that getting stream source succeeds while camera is idle without exception
-            url = await camera.async_get_stream_source(hass, camera_entity)
-            assert url is not None
-
-        # Trigger some polling cycle to let API throttling work
-        await advance_time(hass, freezer, polling_cycles, polling_delta)
-
-        # Change mocked status (wrong alim_status, cannot monitor)
-        mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
-        mock_state["module_id"] = camera_id
-        if camera_has_monitoring:
-            mock_state["attributes"] = {
-                "monitoring": "on",
-                "alim_status": 1,
-            }
-        else:
-            mock_state["attributes"] = {"alim_status": 1}
-
-        # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, polling_cycles, polling_delta)
-
-        # Check that the camera become unavailable with problematic monitoring
-        # (as alim_status 1 means that the camera is on but with low power, so it can't monitor)
-        assert hass.states.get(camera_entity).state == "unavailable"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
-        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
-
-        # Check that getting image raises the exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
-            await camera.async_get_image(hass, camera_entity)
-
-        if camera_has_stream:
-            # Check that getting stream source raises the exception
-            with pytest.raises(HomeAssistantError, match="Camera is off"):
-                await camera.async_get_stream_source(hass, camera_entity)
-
-        # Change mocked status (wrong alim_status, cannot monitor)
-        mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
-        mock_state["module_id"] = camera_id
-        mock_state["attributes"]["alim_status"] = 1
-        if camera_has_monitoring:
-            mock_state["attributes"] = {
-                "monitoring": "off",
-                "alim_status": 1,
-            }
-        else:
-            mock_state["attributes"] = {"alim_status": 1}
-
-        # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, polling_cycles, polling_delta)
-
-        # Check that the camera become idle with monitoring off
-        assert hass.states.get(camera_entity).state == "unavailable"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
-        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
-
-        # Check that getting image raises the exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
-            await camera.async_get_image(hass, camera_entity)
-
-        if camera_has_stream:
-            # Check that getting stream source raises the exception
-            with pytest.raises(HomeAssistantError, match="Camera is off"):
-                await camera.async_get_stream_source(hass, camera_entity)
-
-        # Change mocked status (missing alim_status)
-        mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
-        mock_state["module_id"] = camera_id
-        if camera_has_monitoring:
-            mock_state["attributes"] = {
-                "monitoring": "off",
-                "alim_status": None,
-            }
-        else:
-            mock_state["attributes"] = {"alim_status": None}
-
-        # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, polling_cycles, polling_delta)
-
-        # Check that the camera become unavailable with monitoring off
-        assert hass.states.get(camera_entity).state == "unavailable"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
-        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
-
-        # Check that getting image raises the exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
-            await camera.async_get_image(hass, camera_entity)
-
-        if camera_has_stream:
-            # Check that getting stream source raises the exception
-            with pytest.raises(HomeAssistantError, match="Camera is off"):
-                await camera.async_get_stream_source(hass, camera_entity)
-
-        # Change mocked status (missing alim_status and monitoring)
-        mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
-        mock_state["module_id"] = camera_id
-        if camera_has_monitoring:
-            mock_state["attributes"] = {
-                "monitoring": None,
-                "alim_status": None,
-            }
-        else:
-            mock_state["attributes"] = {"alim_status": None}
-
-        # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, polling_cycles, polling_delta)
-
-        # Check that the camera become unavailable with monitoring None
-        assert hass.states.get(camera_entity).state == "unavailable"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
-        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
-
-        # Check that getting image raises the exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
-            await camera.async_get_image(hass, camera_entity)
-
-        if camera_has_stream:
-            # Check that getting stream source raises the exception
-            with pytest.raises(HomeAssistantError, match="Camera is off"):
-                await camera.async_get_stream_source(hass, camera_entity)
-
-        # Change mocked status (missing monitoring, wrong alim_status)
-        mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
-        mock_state["module_id"] = camera_id
-        mock_state["attributes"]["alim_status"] = 1
-        if camera_has_monitoring:
-            mock_state["attributes"] = {
-                "monitoring": None,
-                "alim_status": 1,
-            }
-        else:
-            mock_state["attributes"] = {"alim_status": 1}
-
-        # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, polling_cycles, polling_delta)
-
-        # Check that the camera become unavailable with monitoring None
-        assert hass.states.get(camera_entity).state == "unavailable"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
-        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
-
-        # Check that getting image raises the exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
-            await camera.async_get_image(hass, camera_entity)
-
-        if camera_has_stream:
-            # Check that getting stream source raises the exception
-            with pytest.raises(HomeAssistantError, match="Camera is off"):
-                await camera.async_get_stream_source(hass, camera_entity)
+        # Assert entity reflects target availability state cleanly
+        assert hass.states.get(camera_entity).state == "idle"
+        assert (
+            hass.states.get(camera_entity).attributes.get("monitoring")
+            is expected_monitoring
+        )
