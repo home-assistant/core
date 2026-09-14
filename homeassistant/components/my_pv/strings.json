@@ -49,9 +49,6 @@
   },
   "entity": {
     "number": {
-      "maxpwr": {
-        "name": "Maximum Power"
-      },
       "ww1boost": {
         "name": "Boost Target Temperature"
       },

@@ -22,10 +22,6 @@ NUMBER_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {
         "device_class": NumberDeviceClass.TEMPERATURE,
         "translation_key": "ww1boost",
     },
-    "maxpwr": {
-        "device_class": NumberDeviceClass.POWER,
-        "translation_key": "maxpwr",
-    },
     "ww1boost": {
         "device_class": NumberDeviceClass.TEMPERATURE,
         "translation_key": "ww1boost",
