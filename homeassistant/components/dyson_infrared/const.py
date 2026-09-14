@@ -15,10 +15,3 @@ class DysonDeviceType(StrEnum):
 
     FAN = "fan"
     HEATER_COOLER = "heater_cooler"
-
-
-class DysonTemperatureUnit(StrEnum):
-    """Temperature unit the device itself is set to display."""
-
-    CELSIUS = "celsius"
-    FAHRENHEIT = "fahrenheit"

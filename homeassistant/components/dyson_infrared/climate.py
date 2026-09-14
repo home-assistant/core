@@ -18,7 +18,6 @@ from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_TEMPERATURE_UNIT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTemperature,
@@ -34,21 +33,17 @@ from .const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
     DEFAULT_COMMAND_STEP_DELAY,
     DOMAIN,
-    DysonTemperatureUnit,
 )
 
 PARALLEL_UPDATES = 1
 
 # HEAT_UP/HEAT_DOWN step by one degree in whatever unit the device itself is
-# set to display, so the entity works natively in that unit rather than
-# converting; the AM09 covers the same range either way.
-_UNITS: dict[DysonTemperatureUnit, UnitOfTemperature] = {
-    DysonTemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
-    DysonTemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
-}
-_TEMP_RANGES: dict[DysonTemperatureUnit, tuple[int, int]] = {
-    DysonTemperatureUnit.CELSIUS: (1, 37),
-    DysonTemperatureUnit.FAHRENHEIT: (34, 99),
+# set to display, which is assumed to match the system unit; the entity then
+# works natively in it rather than converting. The AM09 covers the same range
+# either way.
+_TEMP_RANGES: dict[UnitOfTemperature, tuple[int, int]] = {
+    UnitOfTemperature.CELSIUS: (1, 37),
+    UnitOfTemperature.FAHRENHEIT: (34, 99),
 }
 
 _SPEED_COUNT = 10
@@ -103,7 +98,6 @@ async def async_setup_entry(
     """Set up the Dyson infrared heater/cooler platform from a config entry."""
     infrared_emitter_entity_id = entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
     step_delay = entry.data.get(CONF_COMMAND_STEP_DELAY, DEFAULT_COMMAND_STEP_DELAY)
-    temperature_unit = DysonTemperatureUnit(entry.data[CONF_TEMPERATURE_UNIT])
     async_add_entities(
         [
             DysonInfraredHeaterCooler(
@@ -111,7 +105,7 @@ async def async_setup_entry(
                 entry.entry_id,
                 entry.title,
                 step_delay,
-                temperature_unit,
+                hass.config.units.temperature_unit,
             )
         ]
     )
@@ -137,13 +131,13 @@ class DysonInfraredHeaterCooler(
         unique_id: str,
         name: str,
         step_delay: float = DEFAULT_COMMAND_STEP_DELAY,
-        temperature_unit: DysonTemperatureUnit = DysonTemperatureUnit.CELSIUS,
+        temperature_unit: UnitOfTemperature = UnitOfTemperature.CELSIUS,
     ) -> None:
         """Initialize the Dyson infrared heater/cooler entity."""
         self._infrared_emitter_entity_id = infrared_emitter_entity_id
         self._step_delay = step_delay
 
-        self._attr_temperature_unit = _UNITS[temperature_unit]
+        self._attr_temperature_unit = temperature_unit
         self._attr_min_temp, self._attr_max_temp = _TEMP_RANGES[temperature_unit]
 
         self._attr_unique_id = unique_id
@@ -189,7 +183,7 @@ class DysonInfraredHeaterCooler(
             HVACMode.HEAT,
         ):
             self._last_active_mode = HVACMode(restored.last_active_mode)
-        # A changed temperature unit option rescales the range, which would make
+        # A changed system temperature unit rescales the range, which would make
         # the stored target mean a different temperature than it was set to.
         if (
             restored.temperature_unit == self._attr_temperature_unit
@@ -296,8 +290,8 @@ class DysonInfraredHeaterCooler(
                 )
             await self.async_set_hvac_mode(hvac_mode)
 
-        # round(), not int(), since a system unit differing from the device's
-        # unit means this may arrive as a converted, non-integer value.
+        # round(), not int(), since the service accepts targets finer than the
+        # whole degree the AM09 steps by.
         target = max(
             self._attr_min_temp,
             min(self._attr_max_temp, round(kwargs[ATTR_TEMPERATURE])),

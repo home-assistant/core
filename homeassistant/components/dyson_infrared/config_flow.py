@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.components import infrared
 from homeassistant.components.infrared import DOMAIN as INFRARED_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_TEMPERATURE_UNIT, UnitOfTemperature
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     EntitySelector,
@@ -27,7 +26,6 @@ from .const import (
     DEFAULT_COMMAND_STEP_DELAY,
     DOMAIN,
     DysonDeviceType,
-    DysonTemperatureUnit,
 )
 
 DEVICE_TYPE_NAMES: dict[DysonDeviceType, str] = {
@@ -40,9 +38,6 @@ class DysonIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Dyson Infrared."""
 
     VERSION = 1
-
-    _data: dict[str, Any]
-    _title: str
 
     @override
     async def async_step_user(
@@ -68,13 +63,9 @@ class DysonIrConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             device_type_name = DEVICE_TYPE_NAMES[device_type]
 
-            self._data = user_input
-            self._title = f"Dyson {device_type_name} via {entity_name}"
-
-            if device_type is DysonDeviceType.HEATER_COOLER:
-                return await self.async_step_heater_cooler()
-
-            return self.async_create_entry(title=self._title, data=user_input)
+            return self.async_create_entry(
+                title=f"Dyson {device_type_name} via {entity_name}", data=user_input
+            )
 
         return self.async_show_form(
             step_id="user",
@@ -104,39 +95,6 @@ class DysonIrConfigFlow(ConfigFlow, domain=DOMAIN):
                             step=0.05,
                             unit_of_measurement="s",
                             mode=NumberSelectorMode.BOX,
-                        )
-                    ),
-                }
-            ),
-        )
-
-    async def async_step_heater_cooler(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the settings that only apply to a heater/cooler."""
-
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self._title, data={**self._data, **user_input}
-            )
-
-        default_temperature_unit = (
-            DysonTemperatureUnit.FAHRENHEIT
-            if self.hass.config.units.temperature_unit == UnitOfTemperature.FAHRENHEIT
-            else DysonTemperatureUnit.CELSIUS
-        ).value
-
-        return self.async_show_form(
-            step_id="heater_cooler",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_TEMPERATURE_UNIT, default=default_temperature_unit
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[unit.value for unit in DysonTemperatureUnit],
-                            translation_key=CONF_TEMPERATURE_UNIT,
-                            mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
                 }

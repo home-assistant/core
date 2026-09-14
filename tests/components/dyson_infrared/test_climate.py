@@ -34,13 +34,11 @@ from homeassistant.components.dyson_infrared.const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
     DOMAIN,
     DysonDeviceType,
-    DysonTemperatureUnit,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    CONF_TEMPERATURE_UNIT,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
@@ -69,7 +67,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_DEVICE_TYPE: DysonDeviceType.HEATER_COOLER,
             CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
             CONF_COMMAND_STEP_DELAY: 0,
-            CONF_TEMPERATURE_UNIT: DysonTemperatureUnit.CELSIUS,
         },
         unique_id=f"heater_cooler_{MOCK_INFRARED_ENTITY_ID}",
     )
@@ -741,12 +738,12 @@ async def test_set_temperature_rounds_fractional_value(
 
 
 @pytest.mark.usefixtures("mock_make_dyson_am09_command")
-async def test_fahrenheit_device_uses_fahrenheit_range_and_single_steps(
+async def test_fahrenheit_system_uses_fahrenheit_range_and_single_steps(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a Fahrenheit device exposes the Fahrenheit range and sends one command per degree."""
+    """Test a Fahrenheit system exposes the Fahrenheit range and sends one command per degree."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -756,7 +753,6 @@ async def test_fahrenheit_device_uses_fahrenheit_range_and_single_steps(
             CONF_DEVICE_TYPE: DysonDeviceType.HEATER_COOLER,
             CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
             CONF_COMMAND_STEP_DELAY: 0,
-            CONF_TEMPERATURE_UNIT: DysonTemperatureUnit.FAHRENHEIT,
         },
         unique_id=f"heater_cooler_fahrenheit_{MOCK_INFRARED_ENTITY_ID}",
     )
@@ -795,57 +791,37 @@ async def test_fahrenheit_device_uses_fahrenheit_range_and_single_steps(
     assert state.attributes[ATTR_TEMPERATURE] == 35
 
 
-@pytest.mark.usefixtures("mock_make_dyson_am09_command")
-async def test_fahrenheit_device_rounds_converted_celsius_request(
+@pytest.mark.usefixtures("init_integration")
+async def test_fractional_target_rounds_to_whole_degree(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-    entity_registry: er.EntityRegistry,
+    climate_entity_id: str,
 ) -> None:
-    """Test a Celsius request onto a Fahrenheit device rounds to the nearest degree.
-
-    The system unit is left metric while the device is in Fahrenheit, so the
-    service converts the target and hands over a fractional value.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id="01JTEST0000000000000000004",
-        title="Dyson Heater/Cooler via Test IR emitter",
-        data={
-            CONF_DEVICE_TYPE: DysonDeviceType.HEATER_COOLER,
-            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
-            CONF_COMMAND_STEP_DELAY: 0,
-            CONF_TEMPERATURE_UNIT: DysonTemperatureUnit.FAHRENHEIT,
-        },
-        unique_id=f"heater_cooler_converted_{MOCK_INFRARED_ENTITY_ID}",
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_id = er.async_entries_for_config_entry(entity_registry, entry.entry_id)[
-        0
-    ].entity_id
-
+    """Test a fractional target rounds to the nearest whole degree the AM09 steps by."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        {ATTR_ENTITY_ID: climate_entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
 
-    # 2 degrees Celsius converts to 35.6 F, two steps up from the 34 F minimum
-    # the entity starts at. Truncating instead of rounding would send only one.
+    # 3.6 rounds up to 4, three steps up from the 1 degree minimum the entity
+    # starts at. Truncating instead of rounding would send only two.
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 2},
+        {ATTR_ENTITY_ID: climate_entity_id, ATTR_TEMPERATURE: 3.6},
         blocking=True,
     )
 
     assert mock_infrared_emitter_entity.send_command_calls == (
-        [DysonAm09Code.HEAT_UP] * 2
+        [DysonAm09Code.HEAT_UP] * 3
     )
+
+    state = hass.states.get(climate_entity_id)
+    assert state
+    assert state.attributes[ATTR_TEMPERATURE] == 4
 
 
 @pytest.mark.usefixtures("init_integration")
