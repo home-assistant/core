@@ -14,6 +14,9 @@ from tests.common import MockConfigEntry
 
 SETUP_CONFIGURATION = {
     "bsttemp": {"type": "number", "step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0},
+    "ww1boost": {"type": "number", "step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0},
+    "ww_boost_h": {"type": "number", "step": 0.1, "unit": "°C", "min": 0.1, "max": 9.9},
+    "ww_targ_h": {"type": "number", "step": 0.1, "unit": "°C", "min": 0.1, "max": 9.9},
     "ww1target": {"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0},
 }
 
@@ -21,6 +24,9 @@ COMMAND_CONFIGURATION = {"reboot_device": {"type": "any"}}
 
 SETUP_VALUE = {
     "bsttemp": 55.0,
+    "ww1boost": 65.0,
+    "ww_boost_h": 3.5,
+    "ww_targ_h": 4.5,
 }
 
 
