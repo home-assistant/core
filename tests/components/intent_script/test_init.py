@@ -72,6 +72,37 @@ async def test_intent_script(hass: HomeAssistant) -> None:
     assert response.card["simple"]["content"] == "Content for Paulus"
 
 
+async def test_intent_script_forwards_device_id(hass: HomeAssistant) -> None:
+    """Test that intent_script exposes the calling device_id to the action."""
+    calls = async_mock_service(hass, "test", "service")
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "intent_script": {
+                "DeviceIdIntent": {
+                    "action": {
+                        "service": "test.service",
+                        "data_template": {
+                            "device_id": "{{ device_id if device_id is defined }}"
+                        },
+                    }
+                }
+            }
+        },
+    )
+
+    await intent.async_handle(hass, "test", "DeviceIdIntent")
+    assert len(calls) == 1
+    assert calls[0].data["device_id"] == ""
+    calls.clear()
+
+    await intent.async_handle(hass, "test", "DeviceIdIntent", device_id="abc123")
+    assert len(calls) == 1
+    assert calls[0].data["device_id"] == "abc123"
+
+
 async def test_intent_script_wait_response(hass: HomeAssistant) -> None:
     """Test intent scripts work."""
     calls = async_mock_service(hass, "test", "service")
