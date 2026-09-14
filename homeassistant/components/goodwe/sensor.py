@@ -219,6 +219,8 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
             else:
                 self.entity_description = DIAG_SENSOR
                 self._attr_native_unit_of_measurement = sensor.unit
+        if sensor.id_ == "timestamp":
+            self._attr_entity_registry_enabled_default = False
         self._attr_icon = _ICONS.get(sensor.kind)
         # Set the inverter SoC as main device battery sensor
         if sensor.id_ == BATTERY_SOC:
