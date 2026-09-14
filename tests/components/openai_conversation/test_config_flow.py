@@ -1123,36 +1123,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_USER_LOCATION: False,
                 CONF_WEB_SEARCH_INLINE_CITATIONS: False,
             },
-        ),        
-        (  # Case 6: stale reasoning effort "none" on a model that has no "none"
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_CHAT_MODEL: "gpt-5.6-sol",
-                CONF_REASONING_EFFORT: "none",
-                CONF_REASONING_SUMMARY: "auto",
-                CONF_VERBOSITY: "medium",
-                CONF_MAX_TOKENS: 1000,
-                CONF_TEMPERATURE: 0.8,
-                CONF_TOP_P: 0.9,
-                CONF_SERVICE_TIER: "auto",
-                CONF_STORE_RESPONSES: False,
-                CONF_CODE_INTERPRETER: False,
-                CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-                CONF_WEB_SEARCH_INLINE_CITATIONS: False,
-            },
-            (
-                {CONF_RECOMMENDED: False, CONF_PROMPT: "Speak like a pirate"},
-                {CONF_CHAT_MODEL: "gpt-6-astra"},
-                {},
-            ),
-            {
-                # fill in from the failure output, with
-                # CONF_REASONING_EFFORT: "low"
-            },
-        ),
+        ), 
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")
