@@ -71,6 +71,29 @@ async def test_unknown_device_id_raises(
 
 
 @pytest.mark.usefixtures("mock_neopool_client")
+async def test_empty_device_id_raises(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An explicitly empty device_id is a bad target, not an omitted one.
+
+    cv.string accepts "", so the resolver must route it through target
+    resolution and raise device_not_found rather than silently falling back
+    to the only loaded entry.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_DEVICE_TIME,
+            {"device_id": ""},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "device_not_found"
+
+
+@pytest.mark.usefixtures("mock_neopool_client")
 async def test_explicit_device_id_must_be_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
