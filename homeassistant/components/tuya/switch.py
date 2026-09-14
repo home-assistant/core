@@ -933,6 +933,9 @@ SWITCHES[DeviceCategory.CZ] = SWITCHES[DeviceCategory.PC]
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 SWITCHES[DeviceCategory.DGHSXJ] = SWITCHES[DeviceCategory.SP]
 
+# Video peephole camera / video intercom doorbell (duplicate of `sp`)
+SWITCHES[DeviceCategory.KSDJML] = SWITCHES[DeviceCategory.SP]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
