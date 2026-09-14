@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenThermGatewayHub
 from .const import (
+    BOILER_DEVICE_DESCRIPTION,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
     GATEWAY_DEVICE_DESCRIPTION,
@@ -41,6 +42,12 @@ BUTTON_DESCRIPTIONS: tuple[OpenThermButtonEntityDescription, ...] = (
         translation_key="cancel_room_setpoint_override",
         device_description=THERMOSTAT_DEVICE_DESCRIPTION,
         action=lambda hub: hub.set_room_setpoint(0),
+    ),
+    OpenThermButtonEntityDescription(
+        key="hot_water_push",
+        translation_key="hot_water_push",
+        device_description=BOILER_DEVICE_DESCRIPTION,
+        action=lambda hub: hub.gateway.set_hot_water_ovrd("P"),
     ),
     OpenThermButtonEntityDescription(
         key="restart_button",
