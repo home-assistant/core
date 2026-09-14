@@ -126,7 +126,6 @@ class MotionEyeMediaProxyView(HomeAssistantView):
 
 async def async_get_media_source(hass: HomeAssistant) -> MotionEyeMediaSource:
     """Set up motionEye media source."""
-    hass.http.register_view(MotionEyeMediaProxyView(hass))
     return MotionEyeMediaSource(hass)
 
 
