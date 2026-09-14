@@ -73,7 +73,7 @@ async def test_intent_script(hass: HomeAssistant) -> None:
 
 
 async def test_intent_script_forwards_device_id(hass: HomeAssistant) -> None:
-    """Test that intent_script exposes the calling device_id to the action."""
+        """Test that intent_script exposes the calling device/satellite id."""
     calls = async_mock_service(hass, "test", "service")
 
     await async_setup_component(
@@ -103,9 +103,9 @@ async def test_intent_script_forwards_device_id(hass: HomeAssistant) -> None:
     assert calls[0].data["device_id"] == "abc123"
     calls.clear()
 
-    # A caller-supplied device_id slot (e.g. via a custom sentence or the
-    # /api/intent/handle REST endpoint's `data` field) is not overwritten by
-    # the real device_id of the triggering device.
+    # The real device_id of the triggering device always takes precedence
+    # over a caller-supplied device_id slot (e.g. via a custom sentence or
+    # the /api/intent/handle REST endpoint's `data` field).
     await intent.async_handle(
         hass,
         "test",
@@ -114,8 +114,20 @@ async def test_intent_script_forwards_device_id(hass: HomeAssistant) -> None:
         device_id="abc123",
     )
     assert len(calls) == 1
-    assert calls[0].data["device_id"] == "spoofed"
+    assert calls[0].data["device_id"] == "abc123"
+    calls.clear()
 
+    # satellite_id, when present, is preferred over device_id, as it is the
+    # more modern identifier for the triggering device.
+    await intent.async_handle(
+        hass,
+        "test",
+        "DeviceIdIntent",
+        device_id="abc123",
+        satellite_id="assist_satellite.kitchen",
+    )
+    assert len(calls) == 1
+    assert calls[0].data["device_id"] == "assist_satellite.kitchen"
 
 async def test_intent_script_wait_response(hass: HomeAssistant) -> None:
     """Test intent scripts work."""
