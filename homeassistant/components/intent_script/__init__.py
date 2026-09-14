@@ -185,9 +185,15 @@ class ScriptIntentHandler(intent.IntentHandler):
         slots: dict[str, Any] = {
             key: value["value"] for key, value in intent_slots.items()
         }
-        if intent_obj.device_id and "device_id" not in slots:
-            slots["device_id"] = intent_obj.device_id
-
+        # The real satellite_id/device_id of the triggering device always
+        # takes precedence over any caller-supplied device_id slot (e.g. via
+        # a custom sentence or the /api/intent/handle REST endpoint's `data`
+        # field). satellite_id is preferred when available, as it is the
+        # more modern identifier for the device that triggered the intent.
+        # This is always set (even to an empty string) so it is never left
+        # to fall through to the `device_id()` template function of the
+        # same name.
+        slots["device_id"] = intent_obj.satellite_id or intent_obj.device_id or ""
         _LOGGER.debug(
             "Intent named %s received with slots: %s",
             intent_obj.intent_type,
