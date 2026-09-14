@@ -693,9 +693,15 @@ class BackblazeBackupAgent(BackupAgent):
         """
         if remove_files:
             if self._is_cache_valid(self._all_files_cache_expiration):
-                self._all_files_cache.pop(tar_filename, None)
-                if metadata_filename:
-                    self._all_files_cache.pop(metadata_filename, None)
+                # Rebuild the mapping instead of popping in place: an in-flight
+                # ID search can still be iterating the old dict while suspended
+                # on a metadata download.
+                removed_names = (tar_filename, metadata_filename)
+                self._all_files_cache = {
+                    file_name: file_version
+                    for file_name, file_version in self._all_files_cache.items()
+                    if file_name not in removed_names
+                }
 
             if self._is_cache_valid(self._backup_list_cache_expiration):
                 self._backup_list_cache.pop(backup_id, None)

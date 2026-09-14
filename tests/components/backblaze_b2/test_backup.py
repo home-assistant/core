@@ -2,19 +2,23 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+from dataclasses import replace
 from io import StringIO
 import json
 import logging
 import threading
 import time
+from typing import Any
 from unittest.mock import Mock, patch
 
 from b2sdk._internal.raw_simulator import BucketSimulator
+from b2sdk.v2 import FileVersion
 from b2sdk.v2.exception import B2Error
 import pytest
 
 from homeassistant.components.backblaze_b2.backup import (
     _parse_metadata,
+    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.backblaze_b2.const import (
@@ -160,6 +164,95 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
+
+
+def _second_backup_file_versions() -> list[FileVersion]:
+    """Build file versions for a second backup next to the seeded one."""
+    second_file_versions = []
+    for file_id, file_name, size in (
+        ("second-id-tar", "testprefix/second-id.tar", 100),
+        (
+            "second-id-metadata",
+            "testprefix/second-id.metadata.json",
+            200,
+        ),
+    ):
+        second_file_versions.append(
+            FileVersion(
+                Mock(),
+                file_id,
+                file_name,
+                size,
+                "application/octet-stream",
+                "",
+                {},
+                0,
+                "account-id",
+                "bucket-id",
+                "upload",
+                None,
+                None,
+            )
+        )
+    return second_file_versions
+
+
+async def test_delete_during_id_search_keeps_iterating(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a delete during an in-flight ID search does not crash the search."""
+    agent = (await async_get_backup_agents(hass))[0]
+    second_file_versions = _second_backup_file_versions()
+    second_metadata_content = json.dumps(
+        {
+            "metadata_version": "1",
+            "backup_id": "second-id",
+            "backup_metadata": replace(TEST_BACKUP, backup_id="second-id").as_dict(),
+        }
+    ).encode("utf-8")
+    original_ls = BucketSimulator.ls
+
+    def ls(self, prefix: str = "") -> list[tuple[FileVersion, str]]:
+        listed = original_ls(self, prefix)
+        listed.extend(
+            (file_version, file_version.file_name)
+            for file_version in second_file_versions
+        )
+        return listed
+
+    download_calls = 0
+    download_started = threading.Event()
+    delete_done = threading.Event()
+    metadata_contents = {
+        f"testprefix/{TEST_BACKUP.backup_id}.metadata.json": json.dumps(
+            BACKUP_METADATA
+        ).encode("utf-8"),
+        "testprefix/second-id.metadata.json": second_metadata_content,
+    }
+
+    def download(self: FileVersion, *args: Any, **kwargs: Any) -> Mock:
+        nonlocal download_calls
+        download_calls += 1
+        if download_calls == 1:
+            download_started.set()
+            assert delete_done.wait(timeout=30)
+        downloaded = Mock()
+        downloaded.response.content = metadata_contents[self.file_name]
+        return downloaded
+
+    with (
+        patch.object(BucketSimulator, "ls", ls, create=True),
+        patch.object(FileVersion, "download", download),
+        patch.object(FileVersion, "delete"),
+    ):
+        search_task = hass.async_create_task(agent.async_get_backup("second-id"))
+        assert await hass.async_add_executor_job(download_started.wait, 30)
+        await agent.async_delete_backup(TEST_BACKUP.backup_id)
+        delete_done.set()
+        assert (await search_task).backup_id == "second-id"
+
+        backups = await agent.async_list_backups()
+        assert [backup.backup_id for backup in backups] == ["second-id"]
 
 
 async def test_agents_download(
