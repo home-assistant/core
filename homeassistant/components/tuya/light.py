@@ -374,6 +374,9 @@ LIGHTS[DeviceCategory.PC] = LIGHTS[DeviceCategory.KG]
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 LIGHTS[DeviceCategory.DGHSXJ] = LIGHTS[DeviceCategory.SP]
 
+# Video peephole camera / video intercom doorbell (duplicate of `sp`)
+LIGHTS[DeviceCategory.KSDJML] = LIGHTS[DeviceCategory.SP]
+
 # Dimmer (duplicate of `tgq`)
 LIGHTS[DeviceCategory.TDQ] = LIGHTS[DeviceCategory.TGQ]
 

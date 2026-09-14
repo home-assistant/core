@@ -77,8 +77,8 @@ dependencies = [
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.12.9",
-  "probatio==0.11.4",
+  "uv==0.12.10",
+  "probatio==0.12.1",
   "yarl==1.24.5",
   "webrtc-models==0.3.0",
   "zeroconf==0.151.3",
@@ -638,7 +638,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.16.5"
+required-version = ">=0.16.6"
 
 [tool.ruff.lint]
 select = [
@@ -848,6 +848,7 @@ mark-parentheses = false
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
 "tests".msg = "You should not import tests"
+"voluptuous".msg = "use probatio instead"
 "__future__.annotations".msg = "It should not be needed because Home Assistant requires Python 3.14+"
 
 [tool.ruff.lint.isort]

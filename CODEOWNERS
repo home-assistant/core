@@ -1161,8 +1161,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
-/homeassistant/components/midea/ @chemelli74 @rokam @caibinqing
-/tests/components/midea/ @chemelli74 @rokam @caibinqing
+/homeassistant/components/midea/ @chemelli74 @rokam
+/tests/components/midea/ @chemelli74 @rokam
 /homeassistant/components/miele/ @astrandb
 /tests/components/miele/ @astrandb
 /homeassistant/components/mikrotik/ @engrbm87 @chemelli74
@@ -1556,6 +1556,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/refoss/ @ashionky
 /homeassistant/components/rehlko/ @bdraco @peterager
 /tests/components/rehlko/ @bdraco @peterager
+/homeassistant/components/rejseplanen/ @Jawar19
+/tests/components/rejseplanen/ @Jawar19
 /homeassistant/components/remember_the_milk/ @MartinHjelmare
 /tests/components/remember_the_milk/ @MartinHjelmare
 /homeassistant/components/remote/ @home-assistant/core

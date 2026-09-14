@@ -1085,6 +1085,9 @@
       }
     },
     "switch": {
+      "alarm_push_notifications": {
+        "name": "Alarm push notifications"
+      },
       "anion": {
         "name": "Anion"
       },
@@ -1147,6 +1150,9 @@
       },
       "ionizer": {
         "name": "Ionizer"
+      },
+      "keypad_sound": {
+        "name": "Keypad sound"
       },
       "motion_alarm": {
         "name": "Motion alarm"
