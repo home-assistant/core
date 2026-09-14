@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MyPVConfigEntry, MyPVCoordinator
+from . import MyPVConfigEntry
 from .const import DOMAIN
 from .entity import MyPVBaseEntity
 
@@ -54,18 +54,6 @@ class MyPVFirmwareUpdate(MyPVBaseEntity, UpdateEntity):
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
-
-    def __init__(
-        self,
-        coordinator: MyPVCoordinator,
-        entity_description: UpdateEntityDescription,
-        serial_number: str,
-    ) -> None:
-        """Initialize the update."""
-        super().__init__(coordinator, entity_description, serial_number)
-
-        self._attr_installed_version = self.coordinator.device.firmware_version
-        self._attr_latest_version = self.coordinator.device.latest_firmware_version
 
     @property
     @override
