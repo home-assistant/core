@@ -118,11 +118,25 @@
           }
         }
       }
+    },
+    "number": {
+      "push_twist_position": {
+        "name": "Push-twist position"
+      },
+      "slot": {
+        "name": "Slot {slot_number}"
+      },
+      "twist_position": {
+        "name": "Twist position"
+      }
     }
   },
   "exceptions": {
     "cannot_connect": {
       "message": "Failed to connect to {address}. Make sure it is in range and try again."
+    },
+    "set_position_failed": {
+      "message": "Failed to send the position to {address}. Make sure it is in range and try again."
     }
   },
   "options": {

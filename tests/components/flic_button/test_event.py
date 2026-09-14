@@ -7,12 +7,19 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.flic_button.const import CONF_PUSH_TWIST_MODE
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Set up only the event platform."""
+    return [Platform.EVENT]
 
 
 @pytest.mark.usefixtures(

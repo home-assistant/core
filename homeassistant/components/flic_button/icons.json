@@ -6,6 +6,11 @@
       "button_small": { "default": "mdi:gesture-tap-button" },
       "button_twist": { "default": "mdi:gesture-tap-button" },
       "button_twist_default": { "default": "mdi:gesture-tap-button" }
+    },
+    "number": {
+      "push_twist_position": { "default": "mdi:knob" },
+      "slot": { "default": "mdi:knob" },
+      "twist_position": { "default": "mdi:knob" }
     }
   }
 }
