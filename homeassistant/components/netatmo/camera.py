@@ -100,10 +100,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         """Set up for access to the Netatmo camera images."""
         Camera.__init__(self)
         super().__init__(netatmo_device)
-        # Custom attribute to indicate pending webhook connection/monitoring status,
-        # None means no mid-poll webhook, True means positive webhook, False means negative webhook.
-        self._webhook_connection: bool | None = None
-        self._webhook_on: bool | None = None
 
         self._attr_unique_id = (
             f"{netatmo_device.device.entity_id}-{device_type_to_str(self.device_type)}"
@@ -139,21 +135,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 )
             )
 
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"signal-{DOMAIN}-update-HOME",
-                self.async_update_status_callback,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"signal-{DOMAIN}-update-EVENT",
-                self.async_update_callback,
-            )
-        )
         self.data_handler.cameras[self.device.entity_id] = self.device.name
 
     @callback
@@ -191,35 +172,28 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     data["camera_id"],
                     event_type,
                 )
-                self._webhook_connection = False
-                self._attr_motion_detection_enabled = False
+                self.device.mark_unreachable()
             elif event_type == EVENT_TYPE_OFF:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning monitoring off",
                     data["camera_id"],
                     event_type,
                 )
-                self._webhook_on = False
-                self._attr_motion_detection_enabled = False
+                self.device.monitoring = False
             elif event_type == EVENT_TYPE_CONNECTION:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning on and marking as available",
                     data["camera_id"],
                     event_type,
                 )
-                self._webhook_connection = True
-                if self.device_type != "NDB":
-                    self._webhook_on = False
-                self._attr_motion_detection_enabled = False
+                self.device.mark_reachable()
             elif event_type == EVENT_TYPE_ON:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning monitoring on",
                     data["camera_id"],
                     event_type,
                 )
-                self._webhook_on = True
-                if self.device_type != "NDB":
-                    self._attr_motion_detection_enabled = True
+                self.device.monitoring = True
             elif event_type == EVENT_TYPE_LIGHT_MODE:
                 if data.get("sub_type"):
                     self._light_state = data["sub_type"]
@@ -263,14 +237,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @property
     @override
     def is_on(self) -> bool:
-        """Return whether monitoring is currently active."""
-        # Webhook override
-        if self._webhook_on is not None:
-            if self._webhook_on and self.device_type == "NDB":
-                return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
-            return self._webhook_on
-
-        # Fallback to pyatmo property
         if self.device_type == "NDB":
             return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
         return (
@@ -280,16 +246,9 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
     @property
     @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        # Webhook override
-        if self._webhook_connection is not None:
-            return self._webhook_connection and super().available
-
-        # Fallback to pyatmo property
-        return super().available and bool(
-            getattr(self.device, "alim_status", None) == NETATMO_ALIM_STATUS_ONLINE
-        )
+    def motion_detection_enabled(self) -> bool:
+        """Return motion detection state derived directly from camera state."""
+        return self.is_on and self.device_type != "NDB"
 
     @property
     @override
@@ -323,8 +282,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             return
         try:
             await self.device.async_monitoring_off()
-            # Clear transient monitoring webhook flag to reflect the actual state from the device.
-            self._webhook_on = None
         except (
             aiohttp.ClientPayloadError,
             aiohttp.ContentTypeError,
@@ -342,8 +299,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             return
         try:
             await self.device.async_monitoring_on()
-            # Clear transient monitoring webhook flag to reflect the actual state from the device.
-            self._webhook_on = None
         except (
             aiohttp.ClientPayloadError,
             aiohttp.ContentTypeError,
@@ -383,15 +338,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         )
 
         self.async_write_ha_state()
-
-    @callback
-    def async_update_status_callback(self) -> None:
-        """Update state after a full HOME status refresh."""
-        # Clear the webhook flags as polling has updated the state,
-        # and we want to reflect the actual state from the device.
-        self._webhook_connection = None
-        self._webhook_on = None
-        self.async_update_callback()
 
     def process_events(self, event_list: list[NaEvent]) -> dict:
         """Add meta data to events."""
