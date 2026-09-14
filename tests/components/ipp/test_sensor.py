@@ -79,6 +79,7 @@ async def test_no_page_count_sensors_when_unsupported(
         impressions_completed_col={},
         pages_completed=None,
         media_sheets_completed=None,
+        supported=(),
     )
     mock_config_entry.add_to_hass(hass)
 
@@ -107,37 +108,41 @@ async def test_page_count_sensors_with_partial_counters(
     mock_printer: Printer,
     mock_ipp: MagicMock,
 ) -> None:
-    """Test only the counters the printer reports get sensors."""
+    """Test sensors follow which counters the printer supports.
+
+    A supported counter with an unknown value gets a sensor in the unknown
+    state; a counter the printer does not report gets no sensor.
+    """
     mock_printer.counters = Counters(
-        impressions_completed=2468,
-        impressions_completed_col={"monochrome": 1500},
+        impressions_completed=None,
+        impressions_completed_col={"monochrome": 1500, "full-color": None},
         pages_completed=None,
         media_sheets_completed=None,
+        supported=("impressions_completed", "pages_completed"),
     )
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    unique_id = mock_config_entry.unique_id
-    for key in (
-        "pages_completed",
-        "media_sheets_completed",
-        "impressions_completed_full_color",
-    ):
-        assert not entity_registry.async_get_entity_id(
-            "sensor", "ipp", f"{unique_id}_{key}"
-        )
-
-    state = hass.states.get("sensor.test_ha_1000_series_impressions_completed")
-    assert state
-    assert state.state == "2468"
+    assert not entity_registry.async_get_entity_id(
+        "sensor", "ipp", f"{mock_config_entry.unique_id}_media_sheets_completed"
+    )
 
     state = hass.states.get(
         "sensor.test_ha_1000_series_monochrome_impressions_completed"
     )
     assert state
     assert state.state == "1500"
+
+    for entity_id in (
+        "sensor.test_ha_1000_series_pages_completed",
+        "sensor.test_ha_1000_series_impressions_completed",
+        "sensor.test_ha_1000_series_color_impressions_completed",
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_UNKNOWN
 
 
 async def test_page_count_unknown_when_counter_missing(

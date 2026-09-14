@@ -88,7 +88,7 @@ PAGE_COUNT_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
         translation_key="pages_completed",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        exists_fn=lambda printer: printer.counters.pages_completed is not None,
+        exists_fn=lambda printer: "pages_completed" in printer.counters.supported,
         value_fn=lambda printer: printer.counters.pages_completed,
     ),
     IPPSensorEntityDescription(
@@ -96,7 +96,7 @@ PAGE_COUNT_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
         translation_key="impressions_completed",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        exists_fn=lambda printer: printer.counters.impressions_completed is not None,
+        exists_fn=lambda printer: "impressions_completed" in printer.counters.supported,
         value_fn=lambda printer: printer.counters.impressions_completed,
     ),
     IPPSensorEntityDescription(
@@ -104,7 +104,9 @@ PAGE_COUNT_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
         translation_key="media_sheets_completed",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        exists_fn=lambda printer: printer.counters.media_sheets_completed is not None,
+        exists_fn=lambda printer: (
+            "media_sheets_completed" in printer.counters.supported
+        ),
         value_fn=lambda printer: printer.counters.media_sheets_completed,
     ),
     IPPSensorEntityDescription(

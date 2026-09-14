@@ -11,6 +11,11 @@
         }),
         'media_sheets_completed': 1234,
         'pages_completed': 1234,
+        'supported': list([
+          'impressions_completed',
+          'pages_completed',
+          'media_sheets_completed',
+        ]),
       }),
       'info': dict({
         'command_set': 'ESCPL2,BDC,D4,D4PX,ESCPR7,END4,GENEP,URF',
