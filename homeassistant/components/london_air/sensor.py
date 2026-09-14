@@ -5,8 +5,8 @@ from http import HTTPStatus
 import logging
 from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -64,8 +64,8 @@ URL = "http://api.erg.kcl.ac.uk/AirQuality/Hourly/MonitoringIndex/GroupName=Lond
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_LOCATIONS, default=AUTHORITIES): vol.All(
-            cv.ensure_list, [vol.In(AUTHORITIES)]
+        probatio.Optional(CONF_LOCATIONS, default=AUTHORITIES): probatio.All(
+            cv.ensure_list, [probatio.In(AUTHORITIES)]
         )
     }
 )

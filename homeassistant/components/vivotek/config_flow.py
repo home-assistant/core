@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from libpyvivotek.vivotek import SECURITY_LEVELS, VivotekCameraError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
@@ -40,18 +40,18 @@ DESCRIPTION_PLACEHOLDERS = {
     "doc_url": "https://www.home-assistant.io/integrations/vivotek/"
 }
 
-CONF_SCHEMA = vol.Schema(
+CONF_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_PORT, default=80): cv.port,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
-            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
-        ),
-        vol.Required(CONF_SSL, default=False): cv.boolean,
-        vol.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Required(CONF_SECURITY_LEVEL): SelectSelector(
+        probatio.Required(CONF_IP_ADDRESS): cv.string,
+        probatio.Required(CONF_PORT, default=80): cv.port,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(
+            CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION
+        ): probatio.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
+        probatio.Required(CONF_SSL, default=False): cv.boolean,
+        probatio.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Required(CONF_SECURITY_LEVEL): SelectSelector(
             SelectSelectorConfig(
                 options=list(SECURITY_LEVELS.keys()),
                 mode=SelectSelectorMode.DROPDOWN,
@@ -59,16 +59,16 @@ CONF_SCHEMA = vol.Schema(
                 sort=True,
             ),
         ),
-        vol.Required(
+        probatio.Required(
             CONF_STREAM_PATH,
             default=DEFAULT_STREAM_SOURCE,
         ): cv.string,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_FRAMERATE, default=DEFAULT_FRAMERATE): NumberSelector(
+        probatio.Required(CONF_FRAMERATE, default=DEFAULT_FRAMERATE): NumberSelector(
             NumberSelectorConfig(min=0, unit_of_measurement=UnitOfFrequency.HERTZ)
         ),
     }

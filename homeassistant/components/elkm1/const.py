@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from elkm1_lib.const import Max
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_CODE, CONF_ZONE
 from homeassistant.helpers.typing import VolDictType
@@ -51,5 +51,7 @@ ATTR_CHANGED_BY_TIME = "changed_by_time"
 ATTR_VALUE = "value"
 
 ELK_USER_CODE_SERVICE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_CODE): vol.All(vol.Coerce(int), vol.Range(0, 999999))
+    probatio.Required(ATTR_CODE): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, 999999)
+    )
 }

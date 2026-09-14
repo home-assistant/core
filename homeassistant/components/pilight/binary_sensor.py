@@ -3,7 +3,7 @@
 import datetime
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -31,17 +31,17 @@ CONF_RESET_DELAY_SEC = "reset_delay_sec"
 DEFAULT_NAME = "Pilight Binary Sensor"
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_VARIABLE): cv.string,
-        vol.Required(CONF_PAYLOAD): vol.Schema(dict),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default="on"): vol.Any(
+        probatio.Required(CONF_VARIABLE): cv.string,
+        probatio.Required(CONF_PAYLOAD): probatio.Schema(dict),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PAYLOAD_ON, default="on"): probatio.Any(
             cv.positive_int, cv.small_float, cv.string
         ),
-        vol.Optional(CONF_PAYLOAD_OFF, default="off"): vol.Any(
+        probatio.Optional(CONF_PAYLOAD_OFF, default="off"): probatio.Any(
             cv.positive_int, cv.small_float, cv.string
         ),
-        vol.Optional(CONF_DISARM_AFTER_TRIGGER, default=False): cv.boolean,
-        vol.Optional(CONF_RESET_DELAY_SEC, default=30): cv.positive_int,
+        probatio.Optional(CONF_DISARM_AFTER_TRIGGER, default=False): cv.boolean,
+        probatio.Optional(CONF_RESET_DELAY_SEC, default=30): cv.positive_int,
     }
 )
 

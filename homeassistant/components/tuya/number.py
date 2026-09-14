@@ -226,6 +226,13 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.QCCDZ: (
+        NumberEntityDescription(
+            key=DPCode.CHARGE_CUR_SET,
+            translation_key="charging_current",
+            device_class=NumberDeviceClass.CURRENT,
+        ),
+    ),
     DeviceCategory.SWTZ: (
         NumberEntityDescription(
             key=DPCode.COOK_TEMPERATURE,
@@ -508,6 +515,9 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 NUMBERS[DeviceCategory.DGHSXJ] = NUMBERS[DeviceCategory.SP]
+
+# Video peephole camera / video intercom doorbell (duplicate of `sp`)
+NUMBERS[DeviceCategory.KSDJML] = NUMBERS[DeviceCategory.SP]
 
 
 async def async_setup_entry(

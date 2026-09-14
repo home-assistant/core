@@ -8,6 +8,7 @@ from tuya_device_handlers.definition.light import (
     LightDefinition,
     get_default_definition,
 )
+from tuya_device_handlers.device_wrapper.light import ColorTempWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.light import (
@@ -373,6 +374,9 @@ LIGHTS[DeviceCategory.PC] = LIGHTS[DeviceCategory.KG]
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 LIGHTS[DeviceCategory.DGHSXJ] = LIGHTS[DeviceCategory.SP]
 
+# Video peephole camera / video intercom doorbell (duplicate of `sp`)
+LIGHTS[DeviceCategory.KSDJML] = LIGHTS[DeviceCategory.SP]
+
 # Dimmer (duplicate of `tgq`)
 LIGHTS[DeviceCategory.TDQ] = LIGHTS[DeviceCategory.TGQ]
 
@@ -426,8 +430,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
     _white_color_mode = ColorMode.COLOR_TEMP
     _fixed_color_mode: ColorMode | None = None
-    _attr_min_color_temp_kelvin = 2000  # 500 Mireds
-    _attr_max_color_temp_kelvin = 6500  # 153 Mireds
+    _attr_min_color_temp_kelvin = ColorTempWrapper.MIN_KELVIN
+    _attr_max_color_temp_kelvin = ColorTempWrapper.MAX_KELVIN
 
     def __init__(
         self,
@@ -453,8 +457,12 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             color_modes.add(ColorMode.HS)
 
         # Check if the light has color temperature
-        if definition.color_temp_wrapper:
+        if color_temp_wrapper := definition.color_temp_wrapper:
             color_modes.add(ColorMode.COLOR_TEMP)
+            # LightDefinition types the wrapper as a plain DeviceWrapper[int]
+            if isinstance(color_temp_wrapper, ColorTempWrapper):
+                self._attr_min_color_temp_kelvin = color_temp_wrapper.min_kelvin
+                self._attr_max_color_temp_kelvin = color_temp_wrapper.max_kelvin
         # If light has color but does not have color_temp, check if it has
         # work_mode "white"
         elif (

@@ -3,8 +3,8 @@
 from typing import Any
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.input_number import (
     ATTR_VALUE,
@@ -134,7 +134,7 @@ async def test_set_value(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
     state = hass.states.get(entity_id)
     assert float(state.state) == 70
 
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         await set_value(hass, entity_id, "110")
 
     assert "Invalid value for input_number.test_1: 110.0 (range 0.0 - 100.0)" in str(
