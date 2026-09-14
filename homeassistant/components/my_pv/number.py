@@ -27,13 +27,13 @@ NUMBER_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {
         "translation_key": "ww1boost",
     },
     "ww_boost_h": {
-        "device_class": NumberDeviceClass.TEMPERATURE,
+        "device_class": NumberDeviceClass.TEMPERATURE_DELTA,
         "entity_category": EntityCategory.CONFIG,
         "enabled": False,
         "translation_key": "ww_boost_h",
     },
     "ww_targ_h": {
-        "device_class": NumberDeviceClass.TEMPERATURE,
+        "device_class": NumberDeviceClass.TEMPERATURE_DELTA,
         "entity_category": EntityCategory.CONFIG,
         "enabled": False,
         "translation_key": "ww_targ_h",
