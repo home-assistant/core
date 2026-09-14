@@ -143,7 +143,7 @@ Every check has a code following the
 | `W7436` | [`home-assistant-light-missing-color-mode`](#w7436-home-assistant-light-missing-color-mode) | Light entity sets supported color modes but does not report a `color_mode` |
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
 
-| `W7438` | [`home-assistant-step_id-match-method`](#w7434-home-assistant-step_id-match-method) | Config flow should use `step_id` parameter value same as the method it's in |
+| `W7438` | [`home-assistant-step_id-match-method`](#w7438-home-assistant-step_id-match-method) | Config flow should use `step_id` parameter value same as the method it's in |
 
 ## `home_assistant_logger` checker
 
