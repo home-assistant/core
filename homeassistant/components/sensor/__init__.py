@@ -29,7 +29,6 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
-from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.variance import ignore_variance
 
 from .const import (  # noqa: F401
@@ -38,6 +37,7 @@ from .const import (  # noqa: F401
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     CONF_STATE_CLASS,
+    DATA_COMPONENT,
     DEFAULT_PRECISION_LIMIT,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
@@ -59,7 +59,6 @@ from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[SensorEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

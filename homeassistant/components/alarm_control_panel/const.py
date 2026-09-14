@@ -1,7 +1,14 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import AlarmControlPanelEntity
 
 DOMAIN: Final = "alarm_control_panel"
 
@@ -57,3 +64,5 @@ CONDITION_ARMED_AWAY: Final = "is_armed_away"
 CONDITION_ARMED_NIGHT: Final = "is_armed_night"
 CONDITION_ARMED_VACATION: Final = "is_armed_vacation"
 CONDITION_ARMED_CUSTOM_BYPASS: Final = "is_armed_custom_bypass"
+
+DATA_COMPONENT: HassKey[EntityComponent[AlarmControlPanelEntity]] = HassKey(DOMAIN)

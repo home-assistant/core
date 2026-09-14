@@ -3,10 +3,16 @@
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import BaseTrackerEntity
 
 LOGGER: Final = logging.getLogger(__package__)
 
@@ -103,3 +109,5 @@ ATTR_IP: Final = "ip"
 CONNECTED_DEVICE_REGISTERED = SignalType[dict[str, str | None]](
     "device_tracker_connected_device_registered"
 )
+
+DATA_COMPONENT: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)

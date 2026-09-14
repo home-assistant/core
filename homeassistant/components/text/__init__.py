@@ -18,13 +18,13 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_MAX,
     ATTR_MIN,
     ATTR_PATTERN,
     ATTR_VALUE,
+    DATA_COMPONENT,
     DOMAIN,
     SERVICE_SET_VALUE,
     TextEntityCapabilityAttribute,
@@ -32,7 +32,6 @@ from .const import (  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[TextEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

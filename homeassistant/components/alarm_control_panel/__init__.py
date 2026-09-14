@@ -26,11 +26,11 @@ from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_CHANGED_BY,
     ATTR_CODE_ARM_REQUIRED,
+    DATA_COMPONENT,
     DOMAIN,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelEntityStateAttribute,
@@ -40,7 +40,6 @@ from .const import (  # noqa: F401
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[AlarmControlPanelEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE: Final = cv.PLATFORM_SCHEMA_BASE

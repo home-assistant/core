@@ -3,7 +3,7 @@
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import Final, Literal, final, override
+from typing import Literal, final, override
 
 import probatio
 from propcache.api import cached_property
@@ -16,12 +16,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
+
+from .const import DATA_COMPONENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN: Final = "binary_sensor"
-DATA_COMPONENT: HassKey[EntityComponent[BinarySensorEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

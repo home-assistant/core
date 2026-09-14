@@ -5,7 +5,7 @@ from datetime import timedelta
 from enum import IntFlag
 import functools as ft
 import logging
-from typing import Any, Final, final, override
+from typing import Any, final, override
 
 import probatio
 from propcache.api import cached_property
@@ -23,14 +23,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
-from .const import RemoteEntityStateAttribute
+from .const import DATA_COMPONENT, DOMAIN, RemoteEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN: Final = "remote"
-DATA_COMPONENT: HassKey[EntityComponent[RemoteEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

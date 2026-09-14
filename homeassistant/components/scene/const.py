@@ -1,4 +1,4 @@
-"""Constants for the Switch integration."""
+"""Constants for the scene integration."""
 
 from typing import TYPE_CHECKING, Final
 
@@ -7,8 +7,9 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import SwitchEntity
+    from . import BaseScene
 
-DOMAIN: Final = "switch"
 
-DATA_COMPONENT: HassKey[EntityComponent[SwitchEntity]] = HassKey(DOMAIN)
+DOMAIN: Final = "scene"
+
+DATA_COMPONENT: HassKey[EntityComponent[BaseScene]] = HassKey(DOMAIN)

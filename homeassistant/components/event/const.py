@@ -1,7 +1,14 @@
 """Provides the constants needed for the component."""
 
 from enum import StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import EventEntity
 
 DOMAIN: Final = "event"
 ATTR_EVENT_TYPE = "event_type"
@@ -40,3 +47,6 @@ class ButtonEventType(StrEnum):
     LONG_PRESS_END = "long_press_end"
     MULTI_PRESS_ONGOING = "multi_press_ongoing"
     MULTI_PRESS_END = "multi_press_end"
+
+
+DATA_COMPONENT: HassKey[EntityComponent[EventEntity]] = HassKey(DOMAIN)

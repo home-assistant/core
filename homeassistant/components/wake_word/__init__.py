@@ -17,9 +17,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import DATA_COMPONENT, DOMAIN
 from .models import DetectionResult, WakeWord
 
 __all__ = [
@@ -34,7 +33,6 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-DATA_COMPONENT: HassKey[EntityComponent[WakeWordDetectionEntity]] = HassKey(DOMAIN)
 
 TIMEOUT_FETCH_WAKE_WORDS = 10
 

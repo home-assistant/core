@@ -16,10 +16,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.hass_dict import HassKey
 
-DOMAIN: Final = "scene"
-DATA_COMPONENT: HassKey[EntityComponent[BaseScene]] = HassKey(DOMAIN)
+from .const import DATA_COMPONENT, DOMAIN
+
 STATES: Final = "states"
 
 

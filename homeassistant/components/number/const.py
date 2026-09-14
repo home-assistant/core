@@ -1,7 +1,7 @@
 """Provides the constants needed for the component."""
 
 from enum import StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import probatio
 
@@ -40,6 +40,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import (
     ApparentPowerConverter,
     AreaConverter,
@@ -74,6 +75,11 @@ from homeassistant.util.unit_conversion import (
     VolumeConverter,
     VolumeFlowRateConverter,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import NumberEntity
 
 ATTR_VALUE = "value"
 ATTR_MIN = "min"
@@ -701,3 +707,5 @@ AMBIGUOUS_UNITS: dict[str | None, str] = {
     "VArh": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
     "kVArh": UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
 }
+
+DATA_COMPONENT: HassKey[EntityComponent[NumberEntity]] = HassKey(DOMAIN)

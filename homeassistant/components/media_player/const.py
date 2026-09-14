@@ -1,9 +1,15 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import MediaPlayerEntity
 
 # How long our auth signature on the content should be valid for
 CONTENT_AUTH_EXPIRY_TIME = 3600 * 24
@@ -208,3 +214,6 @@ class MediaPlayerEntityFeature(IntFlag):
     MEDIA_ANNOUNCE = 1048576
     MEDIA_ENQUEUE = 2097152
     SEARCH_MEDIA = 4194304
+
+
+DATA_COMPONENT: HassKey[EntityComponent[MediaPlayerEntity]] = HassKey(DOMAIN)

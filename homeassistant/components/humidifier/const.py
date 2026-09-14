@@ -1,7 +1,14 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import HumidifierEntity
 
 MODE_NORMAL = "normal"
 MODE_ECO = "eco"
@@ -62,3 +69,6 @@ class HumidifierEntityFeature(IntFlag):
     """Supported features of the humidifier entity."""
 
     MODES = 1
+
+
+DATA_COMPONENT: HassKey[EntityComponent[HumidifierEntity]] = HassKey(DOMAIN)

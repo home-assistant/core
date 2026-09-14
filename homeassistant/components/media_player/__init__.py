@@ -58,7 +58,6 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .browse_media import (  # noqa: F401
     BrowseMedia,
@@ -101,6 +100,7 @@ from .const import (  # noqa: F401
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     CONTENT_AUTH_EXPIRY_TIME,
+    DATA_COMPONENT,
     DOMAIN,
     INTENT_MEDIA_SEARCH_AND_PLAY,
     REPEAT_MODES,
@@ -124,7 +124,6 @@ from .errors import BrowseError, SearchError
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[MediaPlayerEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

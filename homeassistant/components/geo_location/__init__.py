@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, Final, final, override
+from typing import Any, final, override
 
 from propcache.api import cached_property
 
@@ -17,14 +17,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
-from .const import GeolocationEntityStateAttribute
+from .const import DATA_COMPONENT, DOMAIN, GeolocationEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN: Final = "geo_location"
-DATA_COMPONENT: HassKey[EntityComponent[GeolocationEvent]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

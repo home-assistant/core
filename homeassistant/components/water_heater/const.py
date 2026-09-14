@@ -1,9 +1,15 @@
 """Support for water heater devices."""
 
 from enum import StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import WaterHeaterEntity
 
 DOMAIN: Final = "water_heater"
 
@@ -41,3 +47,5 @@ STATE_PERFORMANCE = "performance"
 STATE_HIGH_DEMAND = "high_demand"
 STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
+
+DATA_COMPONENT: HassKey[EntityComponent[WaterHeaterEntity]] = HassKey(DOMAIN)

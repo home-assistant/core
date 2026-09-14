@@ -1,7 +1,14 @@
 """Constants for the lock entity platform."""
 
 from enum import StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import LockEntity
 
 DOMAIN: Final = "lock"
 
@@ -23,3 +30,6 @@ class LockState(StrEnum):
     UNLOCKING = "unlocking"
     LOCKED = "locked"
     UNLOCKED = "unlocked"
+
+
+DATA_COMPONENT: HassKey[EntityComponent[LockEntity]] = HassKey(DOMAIN)

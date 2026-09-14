@@ -15,7 +15,8 @@ from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, BinarySensorDeviceClass
+from . import BinarySensorDeviceClass
+from .const import DOMAIN
 
 DEVICE_CLASS_NONE = "none"
 

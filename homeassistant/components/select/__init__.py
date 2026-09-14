@@ -15,11 +15,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_CYCLE,
     ATTR_OPTIONS,
+    DATA_COMPONENT,
     DOMAIN,
     SERVICE_SELECT_FIRST,
     SERVICE_SELECT_LAST,
@@ -30,7 +30,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[SelectEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

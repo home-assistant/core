@@ -14,13 +14,11 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.hass_dict import HassKey
 
-from .const import ATTR_DATETIME, DOMAIN, SERVICE_SET_VALUE
+from .const import ATTR_DATETIME, DATA_COMPONENT, DOMAIN, SERVICE_SET_VALUE
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[DateTimeEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
