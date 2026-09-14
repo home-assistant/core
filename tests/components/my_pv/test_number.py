@@ -103,12 +103,12 @@ async def test_number_set_value(
     assert state.state == "55.0"
 
 
-async def test_number_set_value_false(
+async def test_number_set_value_returns_false(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
 ) -> None:
-    """Test setting value returns false."""
+    """Test for HomeAssistantError when set_setup_value returns false."""
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.NUMBER]):
         mock_config_entry.add_to_hass(hass)
 
