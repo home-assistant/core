@@ -1,20 +1,10 @@
 """Services for the NeoPool integration."""
 
 import logging
-from typing import Any
 
-from neopool_modbus.decoders import (
-    combine_u32,
-    decode_device_time,
-    get_timer_interval,
-    hhmm_to_seconds,
-)
+from neopool_modbus.decoders import combine_u32, decode_device_time
 from neopool_modbus.exceptions import NeoPoolError
-from neopool_modbus.registers import (
-    DEVICE_TIME_REGISTER,
-    MAX_REGISTERS_PER_READ,
-    TIMER_BLOCKS,
-)
+from neopool_modbus.registers import DEVICE_TIME_REGISTER
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
@@ -35,55 +25,12 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import NeoPoolCoordinator
-from .helpers import parse_register_int, prepare_device_time
+from .helpers import prepare_device_time
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_SET_TIMER = "set_timer"
-SERVICE_WRITE_REGISTER = "write_register"
-SERVICE_READ_REGISTER = "read_register"
 SERVICE_GET_DEVICE_TIME = "get_device_time"
 SERVICE_SET_DEVICE_TIME = "set_device_time"
-
-ATTR_TIMER = "timer"
-ATTR_START = "start"
-ATTR_STOP = "stop"
-ATTR_PERIOD = "period"
-ATTR_ENABLE = "enable"
-ATTR_ADDRESS = "address"
-ATTR_VALUE = "value"
-ATTR_APPLY = "apply"
-ATTR_COUNT = "count"
-
-SERVICE_SET_TIMER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_TIMER): cv.string,
-        vol.Optional(ATTR_START): cv.string,
-        vol.Optional(ATTR_STOP): cv.string,
-        vol.Optional(ATTR_PERIOD): vol.All(int, vol.Range(min=1, max=604800)),
-        vol.Optional(ATTR_ENABLE): vol.All(int, vol.Range(min=0, max=4)),
-    }
-)
-
-SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_ADDRESS): cv.string,
-        vol.Required(ATTR_VALUE): cv.string,
-        vol.Optional(ATTR_APPLY, default=True): cv.boolean,
-    }
-)
-
-SERVICE_READ_REGISTER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_ADDRESS): cv.string,
-        vol.Optional(ATTR_COUNT, default=1): vol.All(
-            int, vol.Range(min=1, max=MAX_REGISTERS_PER_READ)
-        ),
-    }
-)
 
 SERVICE_DEVICE_TIME_SCHEMA = vol.Schema(
     {
@@ -135,184 +82,6 @@ async def _get_coordinator(
             translation_placeholders={"entry_id": entry.entry_id},
         )
     return coordinator
-
-
-async def _async_set_timer(call: ServiceCall) -> None:
-    """Set a timer on the pool controller."""
-    timer_name = call.data[ATTR_TIMER]
-    if timer_name not in TIMER_BLOCKS:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_timer",
-            translation_placeholders={
-                "timer_name": timer_name,
-                "valid_timers": ", ".join(sorted(TIMER_BLOCKS)),
-            },
-        )
-
-    coordinator = await _get_coordinator(call.hass, call)
-    start = call.data.get(ATTR_START)
-    stop = call.data.get(ATTR_STOP)
-    period = call.data.get(ATTR_PERIOD)
-    enable = call.data.get(ATTR_ENABLE)
-
-    if stop is not None and start is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="timer_stop_without_start",
-        )
-
-    try:
-        start_sec = hhmm_to_seconds(start) if start is not None else None
-        stop_sec = hhmm_to_seconds(stop) if stop is not None else None
-        interval: int | None = None
-        if start_sec is not None and stop_sec is not None:
-            interval = get_timer_interval(start_sec, stop_sec)
-    except (TypeError, ValueError) as err:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_timer_time",
-            translation_placeholders={"start": str(start), "stop": str(stop)},
-        ) from err
-
-    timer_data: dict[str, Any] = {}
-    if start_sec is not None:
-        timer_data["on"] = start_sec
-    if interval is not None:
-        timer_data["interval"] = interval
-    if period is not None:
-        timer_data["period"] = period
-    if enable is not None:
-        timer_data["enable"] = enable
-
-    if not timer_data:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="timer_no_fields",
-        )
-
-    _LOGGER.debug("Setting timer %s with data: %s", timer_name, timer_data)
-    try:
-        await coordinator.client.write_timer(timer_name, timer_data)
-    except (NeoPoolError, OSError) as err:
-        _LOGGER.error(
-            "Failed to set timer %s: %s (%s)",
-            timer_name,
-            err,
-            type(err).__name__,
-        )
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="timer_failed",
-            translation_placeholders={"error": str(err)},
-        ) from err
-    coordinator.request_refresh_with_followup()
-
-
-async def _async_write_register(call: ServiceCall) -> None:
-    """Write a value to a Modbus holding register."""
-    address = parse_register_int(call.data[ATTR_ADDRESS], "address")
-    value = parse_register_int(call.data[ATTR_VALUE], "value")
-    apply = call.data[ATTR_APPLY]
-    coordinator = await _get_coordinator(call.hass, call)
-
-    try:
-        result = await coordinator.client.async_write_register(
-            address, value, apply=apply
-        )
-    except (NeoPoolError, OSError) as err:
-        _LOGGER.error(
-            "Failed to write register 0x%04X: %s (%s)",
-            address,
-            err,
-            type(err).__name__,
-        )
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="register_write_failed",
-            translation_placeholders={
-                "address": f"0x{address:04X}",
-                "error": str(err),
-            },
-        ) from err
-
-    if result is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="write_failed",
-            translation_placeholders={"address": f"0x{address:04X}"},
-        )
-
-    confirmed = result.get("confirmed")
-    _LOGGER.debug(
-        "Service write_register: 0x%04X = %s (confirmed: %s, apply: %s)",
-        address,
-        result.get("value"),
-        confirmed,
-        apply,
-    )
-    if confirmed != value:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="write_verification_failed",
-            translation_placeholders={
-                "address": f"0x{address:04X}",
-                "value": str(value),
-                "confirmed": str(confirmed),
-            },
-        )
-    coordinator.request_refresh_with_followup()
-
-
-async def _async_read_register(call: ServiceCall) -> ServiceResponse:
-    """Read one or more Modbus registers and return the raw u16 values."""
-    address = parse_register_int(call.data[ATTR_ADDRESS], "address")
-    count = call.data[ATTR_COUNT]
-    coordinator = await _get_coordinator(call.hass, call)
-
-    try:
-        registers = await coordinator.client.async_read_register(address, count)
-    except (NeoPoolError, OSError, ValueError) as err:
-        _LOGGER.error(
-            "Failed to read register 0x%04X (count=%d): %s (%s)",
-            address,
-            count,
-            err,
-            type(err).__name__,
-        )
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="register_read_failed",
-            translation_placeholders={
-                "address": f"0x{address:04X}",
-                "error": str(err),
-            },
-        ) from err
-
-    if len(registers) != count:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="register_read_failed",
-            translation_placeholders={
-                "address": f"0x{address:04X}",
-                "error": f"short read ({len(registers)}/{count} words)",
-            },
-        )
-
-    _LOGGER.debug(
-        "Service read_register: 0x%04X (count=%d) -> %s",
-        address,
-        count,
-        registers,
-    )
-    response: dict[str, Any] = {
-        "address": f"0x{address:04X}",
-        "count": count,
-        "values": registers,
-    }
-    if count == 1:
-        response["value"] = registers[0]
-    return response
 
 
 async def _async_get_device_time(call: ServiceCall) -> ServiceResponse:
@@ -388,27 +157,6 @@ async def _async_set_device_time(call: ServiceCall) -> None:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the NeoPool services."""
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_SET_TIMER,
-        _async_set_timer,
-        schema=SERVICE_SET_TIMER_SCHEMA,
-    )
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_WRITE_REGISTER,
-        _async_write_register,
-        schema=SERVICE_WRITE_REGISTER_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_READ_REGISTER,
-        _async_read_register,
-        schema=SERVICE_READ_REGISTER_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_DEVICE_TIME,
