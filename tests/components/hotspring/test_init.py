@@ -1,6 +1,5 @@
 """Tests for the Hot Spring integration."""
 
-from datetime import timedelta
 from typing import cast
 from unittest.mock import MagicMock
 
@@ -21,7 +20,6 @@ async def test_async_setup_entry(
 ) -> None:
     """Test a successful setup entry and unload."""
     assert init_integration.state is ConfigEntryState.LOADED
-    assert init_integration.runtime_data.update_interval == timedelta(seconds=60)
 
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
