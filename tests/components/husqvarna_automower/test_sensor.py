@@ -301,6 +301,33 @@ async def test_error_sensor(
         assert state.state == expected_state
 
 
+@pytest.mark.parametrize(
+    ("serial_number", "expected_state"),
+    [
+        ("184800801", "2018-11-26"),
+        ("123", STATE_UNAVAILABLE),  # not 9 digits
+        ("18AB00801", STATE_UNAVAILABLE),  # not all digits
+        ("180000801", STATE_UNAVAILABLE),  # week 00 is out of range
+        ("215300801", STATE_UNAVAILABLE),  # 2021 has no ISO week 53
+    ],
+)
+async def test_manufacture_date_sensor(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    values: dict[str, MowerAttributes],
+    serial_number: str,
+    expected_state: str,
+) -> None:
+    """Test the manufacture date sensor decodes a 9-digit YYWWNNNNN serial number."""
+    values[TEST_MOWER_ID].system.serial_number = serial_number
+    mock_automower_client.get_status.return_value = values
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("sensor.garden_test_mower_1_manufacture_date")
+    assert state is not None
+    assert state.state == expected_state
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_snapshot(
     hass: HomeAssistant,
