@@ -63,17 +63,15 @@ async def test_energy_sensor_is_a_total_increasing_counter(
 async def test_only_the_present_charge_level_is_a_battery_sensor(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """b_soc gets the battery device class; b_soc_total and SoH do not."""
+    """b_soc gets the battery device class; SoH does not, and b_soc_total is not shown."""
     await _setup(hass, mock_config_entry)
 
     state = hass.states.get(BATTERY_LEVEL_ENTITY)
     assert state is not None
     assert state.attributes["device_class"] == SensorDeviceClass.BATTERY
 
-    state = hass.states.get(TOTAL_BATTERY_LEVEL_ENTITY)
-    assert state is not None
-    assert "device_class" not in state.attributes
-    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+    # Reads 0 at the device's own unit id regardless of the real level.
+    assert hass.states.get(TOTAL_BATTERY_LEVEL_ENTITY) is None
 
 
 def test_every_readable_field_has_exactly_one_description() -> None:

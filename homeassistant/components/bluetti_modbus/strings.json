@@ -53,14 +53,8 @@
       "b_soc": {
         "name": "Battery SoC"
       },
-      "b_soc_total": {
-        "name": "Total battery SoC"
-      },
       "b_soh": {
         "name": "Battery SoH"
-      },
-      "b_soh_total": {
-        "name": "Total battery SoH"
       },
       "b_t_avg": {
         "name": "Average battery temperature"
@@ -92,9 +86,6 @@
       },
       "d_inverter_type": {
         "name": "Inverter type"
-      },
-      "d_num_battery_packs": {
-        "name": "Number of battery packs"
       },
       "d_num_inverters": {
         "name": "Inverter count"

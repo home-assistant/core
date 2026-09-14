@@ -19,8 +19,9 @@ DEVICE_TYPE_BALCO260: Final = "balco260"
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 # Left out of the read plan: writable controls that belong on the switch and
-# number platforms, and fault/warning enums the library only decodes for
-# their zero member so far.
+# number platforms, fault/warning enums the library only decodes for their
+# zero member so far, and the pack-summary fields that only report at the
+# device's aggregate unit id (250), reading 0 at its own.
 EXCLUDED_FIELDS: Final = frozenset(
     {
         "ac_o_switch",
@@ -30,5 +31,8 @@ EXCLUDED_FIELDS: Final = frozenset(
         "b_soc_low",
         "d_inverter_fault",
         "d_inverter_warning",
+        "d_num_battery_packs",
+        "b_soc_total",
+        "b_soh_total",
     }
 )

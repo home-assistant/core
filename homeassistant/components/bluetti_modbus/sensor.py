@@ -54,9 +54,6 @@ class BluettiModbusSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Any], StateType] = _as_is
 
 
-# b_soc_total is deliberately not a battery sensor: it reads 0 on a Balco260
-# without an expansion pack while b_soc reads the real level, and a device
-# only gets one battery entity in HA's device summary.
 SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
     BluettiModbusSensorEntityDescription(
         key="d_num_inverters",
@@ -251,11 +248,6 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     BluettiModbusSensorEntityDescription(
-        key="d_num_battery_packs",
-        translation_key="d_num_battery_packs",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    BluettiModbusSensorEntityDescription(
         key="b_v_total",
         translation_key="b_v_total",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -270,19 +262,6 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-    ),
-    BluettiModbusSensorEntityDescription(
-        key="b_soc_total",
-        translation_key="b_soc_total",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    BluettiModbusSensorEntityDescription(
-        key="b_soh_total",
-        translation_key="b_soh_total",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BluettiModbusSensorEntityDescription(
         key="b_type",
@@ -314,7 +293,7 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
     BluettiModbusSensorEntityDescription(
         key="b_cycle_count",
         translation_key="b_cycle_count",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BluettiModbusSensorEntityDescription(
