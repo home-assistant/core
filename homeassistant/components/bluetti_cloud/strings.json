@@ -1,0 +1,113 @@
+{
+  "config": {
+    "abort": {
+      "all_devices_exists": "All available BLUETTI devices have already been added.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_devices_available": "No BLUETTI devices are available to add to this account.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reconfigure_failed": "The config entry being reconfigured could not be found.",
+      "success": "Successfully added your BLUETTI devices.",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "wrong_account": "The BLUETTI account you signed in with does not match this entry's existing devices. Sign in with the same account you originally used, or remove and re-add the integration to switch accounts."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The BLUETTI integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "select_devices": {
+        "data": {
+          "devices": "[%key:component::bluetti_cloud::options::step::init::data::devices%]"
+        },
+        "data_description": {
+          "devices": "[%key:component::bluetti_cloud::options::step::init::data_description::devices%]"
+        },
+        "title": "Select BLUETTI devices"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "acloadalltotalpower": {
+        "name": "AC Output Power"
+      },
+      "chgfulltime": {
+        "name": "Time to Full"
+      },
+      "dsgfulltime": {
+        "name": "Time to Empty"
+      },
+      "gridalltotalpower": {
+        "name": "Grid Power"
+      },
+      "invworkstate": {
+        "name": "Inverter Status"
+      },
+      "pvalltotalpower": {
+        "name": "Solar Input Power"
+      },
+      "setctrlac": {
+        "name": "AC Output"
+      },
+      "setctrlpoweron": {
+        "name": "Power"
+      },
+      "setctrlworkmode": {
+        "name": "Work Mode"
+      },
+      "setctrlworkmodebalco": {
+        "name": "Work Mode"
+      },
+      "soc": {
+        "name": "Battery Level"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_expired": {
+      "message": "BLUETTI authentication expired"
+    },
+    "setup_failed": {
+      "message": "BLUETTI setup failed: {error}"
+    },
+    "update_failed": {
+      "message": "Error communicating with BLUETTI API: {error}"
+    }
+  },
+  "options": {
+    "abort": {
+      "all_devices_exists": "[%key:component::bluetti_cloud::config::abort::all_devices_exists%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices_available": "[%key:component::bluetti_cloud::config::abort::no_devices_available%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "devices": "Devices"
+        },
+        "data_description": {
+          "devices": "BLUETTI devices bound to your account that are not yet added to Home Assistant."
+        },
+        "description": "Select any additional devices bound to your BLUETTI account that you want to add to Home Assistant.",
+        "title": "Add BLUETTI devices"
+      }
+    }
+  }
+}

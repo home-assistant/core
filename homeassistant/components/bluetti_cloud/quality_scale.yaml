@@ -1,0 +1,113 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: >-
+      No custom service actions are registered; only standard entity
+      services (turn_on/turn_off/select_option) are used, which Home
+      Assistant handles natively.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  # ^ pybluetti is a properly published, versioned PyPI package - no
+  #   vendored code.
+  docs-actions:
+    status: exempt
+    comment: No custom service actions are provided by this integration.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide any conditions.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide any triggers.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: >-
+      Deferred to a follow-up PR per reviewer feedback (keep the first PR
+      focused on OAuth2 + websocket data).
+  discovery-update-info:
+    status: exempt
+    comment: Devices are added via the BLUETTI cloud account, not discovered.
+  discovery:
+    status: exempt
+    comment: >-
+      Devices are added via the BLUETTI cloud account (OAuth2); there is no
+      discovery protocol (mDNS/SSDP/etc.) for it.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: todo
+    comment: >-
+      Batteries-included: every setup fetches the account's current device
+      list fresh and adds anything new, with no options flow or user
+      interaction (the previous "select it yourself" step is gone). Still
+      todo because that only happens on the next setup/reload, not live
+      while the entry is running - the rule requires fully automatic
+      detection with no action needed at all, including no reload.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: No entity here is a "less popular or noisy" candidate to disable.
+  entity-translations:
+    status: todo
+    comment: >-
+      Real translations exist now for the fn_codes seen in
+      doc/diagnostics/{balco260,ebox-ep2000}.json (see
+      _TRANSLATED_FN_CODES in sensor.py) - still todo because an
+      unrecognized fn_code from a model or firmware we haven't seen a
+      dump for still falls back to the cloud's own fnName rather than a
+      translated string.
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: >-
+      No repairable issues are raised - an invalid/expired token starts the
+      standard reauth flow directly (async_start_reauth_if_available)
+      instead.
+  stale-devices: done
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: >-
+      mypy --strict already passes locally and in CI (scripts/typecheck).
+      What's left is out of this repo's hands: the rule also requires the
+      integration's own entry in home-assistant/core's .strict-typing file,
+      only possible once actually submitted to core.
