@@ -390,8 +390,18 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
     def _schedule_flush(self, _now: datetime) -> None:
         """Run the debounced write as a tracked task so removal can await it."""
         self._write_unsub = None
+        # Detach this batch synchronously, before the task is scheduled: a
+        # set_value that runs before _async_flush must start a fresh future and
+        # its own timer, not reuse this batch or have its newer timer cleared by
+        # the coroutine. _pending_value stays put to back the optimistic value.
+        future = self._write_future
+        self._write_future = None
+        token = self._pending_token
+        pending = self._pending_value
         task = self.coordinator.config_entry.async_create_background_task(
-            self.hass, self._async_flush(), name=f"{self._attr_unique_id}_flush"
+            self.hass,
+            self._async_flush(future, pending, token),
+            name=f"{self._attr_unique_id}_flush",
         )
         # Track every in-flight flush: a second set_value spaced beyond
         # WRITE_DELAY can start a new task while an earlier one is still in its
@@ -399,16 +409,13 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         self._flush_tasks.add(task)
         task.add_done_callback(self._flush_tasks.discard)
 
-    async def _async_flush(self) -> None:
+    async def _async_flush(
+        self,
+        future: asyncio.Future[Exception | None] | None,
+        pending: float | None,
+        token: int,
+    ) -> None:
         """Write the settled value, resolving the awaited coalesce future."""
-        self._write_unsub = None
-        # Detach this batch: a set_value during the write below starts a fresh
-        # future and its own flush, not reusing or resolving this one.
-        future = self._write_future
-        self._write_future = None
-        # Leave _pending_value in place: it backs the optimistic native_value.
-        pending = self._pending_value
-        token = self._pending_token
         # False until a run reaches the end; the finally fails any earlier exit.
         resolved = False
         try:
