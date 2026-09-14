@@ -63,20 +63,25 @@ class HassEnforceConfigEntryStepIdMatchMethodChecker(BaseChecker):
                 method_step_id = ancestor.name.removeprefix("async_step_")
                 break
 
-        step_id_node: nodes.NodeNG | None = None
+        step_id_node: str | None = None
         if node.keywords:
             for keyword in node.keywords:
                 if keyword.arg == "step_id":
                     try:
                         values = list(keyword.value.infer())
                     except InferenceError:
-                        values = []
-                    if values[0] is Uninferable:
-                        values = []
+                        break
+                    if not values or values[0] is Uninferable:
+                        break
                     if len(values) > 1:
                         step_id_node = "__INCORRECT__"
                         break
-                    step_id_node = values[0].value if values else None
+                    inferred = values[0]
+                    if not isinstance(inferred, nodes.Const) or not isinstance(
+                        inferred.value, str
+                    ):
+                        break
+                    step_id_node = inferred.value
                     break
 
         if step_id_node is None or method_step_id is None:
