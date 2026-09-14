@@ -74,7 +74,7 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     _attr_hvac_modes: list[HVACMode] = SUPPORTED_HVAC_MODES
     _attr_fan_modes: list[str] = SUPPORTED_FAN_MODES
     _attr_hvac_action: HVACAction | None = None
-    _attr_fan_mode: str = FAN_AUTO
+    _attr_fan_mode: str | None = FAN_AUTO
     _attr_swing_mode: str | None = SWING_VERTICAL_AUTO
     _attr_swing_modes: list[str] | None = SUPPORT_SWING_MODES
     _attr_swing_horizontal_mode: str | None = SWING_HORIZONTAL_AUTO
@@ -163,6 +163,14 @@ class AircoClimate(WfRacEntity, ClimateEntity):
         in the very next step of the same automation. Holding it to the default
         18C floor there rejects a cooling setpoint the unit takes happily once
         it is cooling.
+
+        The same reasoning is why min_temp/max_temp advertise the union rather
+        than the current mode's range: climate validates a service call against
+        those two before this entity sees hvac_mode, so a mode-dependent
+        advertised range rejects "cool at 16" while the unit is still heating -
+        the one call that states its mode outright. The per-mode range is
+        applied in async_set_temperature instead, where the target mode is
+        known.
         """
         if hvac_mode in REGULATING_HVAC_MODES:
             return (
@@ -177,14 +185,14 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     @override
     @property
     def min_temp(self) -> float:
-        """Return the lowest setpoint the current mode allows."""
-        return self._setpoint_range_for_mode(self._attr_hvac_mode)[0]
+        """Return the lowest setpoint any of this unit's modes allows."""
+        return self._setpoint_range_for_mode(None)[0]
 
     @override
     @property
     def max_temp(self) -> float:
-        """Return the highest setpoint the current mode allows."""
-        return self._setpoint_range_for_mode(self._attr_hvac_mode)[1]
+        """Return the highest setpoint any of this unit's modes allows."""
+        return self._setpoint_range_for_mode(None)[1]
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -346,6 +354,13 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     @override
     def _mark_state_unknown(self) -> None:
         self._attr_hvac_mode = None
+        self._attr_hvac_action = None
+        self._attr_target_temperature = None
+        self._attr_current_temperature = None
+        self._attr_fan_mode = None
+        self._attr_swing_mode = None
+        self._attr_swing_horizontal_mode = None
+        self._attr_preset_mode = None
 
     @override
     def _update_state(self) -> None:
