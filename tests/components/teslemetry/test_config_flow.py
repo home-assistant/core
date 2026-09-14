@@ -8,7 +8,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from urllib.parse import parse_qs, urlparse
 
-from aiohttp import ClientConnectionError, ClientError, ClientResponseError, RequestInfo
+from aiohttp import ClientConnectionError, ClientError
 from aiopowerwall import (
     PowerwallAuthenticationError,
     PowerwallConnectionError,
@@ -17,18 +17,17 @@ from aiopowerwall import (
 from bleak.exc import BleakError
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from multidict import CIMultiDict
 import probatio
 import pytest
 from tesla_fleet_api.const import AuthorizedClientState
 from tesla_fleet_api.exceptions import (
+    BadGateway,
     BluetoothTimeout,
     BluetoothTransportError,
     InvalidResponse,
     InvalidToken,
     NotOnWhitelistFault,
     PrivateKeyError,
-    ResponseError,
     SubscriptionRequired,
     TeslaFleetError,
     WhitelistOperationAttemptingToAddExistingKey,
@@ -36,7 +35,6 @@ from tesla_fleet_api.exceptions import (
 from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, AuthorizedClients
-from yarl import URL
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -1487,19 +1485,6 @@ _TEST_RSA_KEY_PEM = rsa.generate_private_key(
     encryption_algorithm=serialization.NoEncryption(),
 )
 
-# A bodyless 502 surfaces as ResponseError; one with a JSON body as
-# ClientResponseError. Both are the gateway-unreachable condition.
-POWERWALL_502_ERRORS = [
-    pytest.param(ResponseError(status=502), id="response_error"),
-    pytest.param(ClientResponseError(None, (), status=502), id="client_response_error"),
-]
-
-# A well-formed non-502 ClientResponseError; a real one carries request_info,
-# so it renders when logged, unlike the bodyless 502 fixtures above.
-_NON_502_CLIENT_RESPONSE_ERROR = ClientResponseError(
-    RequestInfo(URL("http://gateway"), "GET", CIMultiDict()), (), status=500
-)
-
 
 def _entry_with_powerwall() -> MockConfigEntry:
     """Return a config entry whose energy site subentry is already paired."""
@@ -2359,17 +2344,14 @@ async def test_pair_step_second_lookup_errors(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-@pytest.mark.parametrize("error", POWERWALL_502_ERRORS)
-async def test_pairing_verify_powerwall_unreachable(
-    hass: HomeAssistant, error: Exception
-) -> None:
-    """A 502 while checking the key re-shows the form with the retryable message."""
+async def test_pairing_verify_powerwall_unreachable(hass: HomeAssistant) -> None:
+    """An unreachable gateway while checking the key re-shows the form as retryable."""
     entry = await _setup_account_no_subentry(hass)
 
     with (
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=AsyncMock(side_effect=error),
+            new=AsyncMock(side_effect=BadGateway),
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
@@ -2385,11 +2367,8 @@ async def test_pairing_verify_powerwall_unreachable(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-@pytest.mark.parametrize("error", POWERWALL_502_ERRORS)
-async def test_pairing_add_client_powerwall_unreachable(
-    hass: HomeAssistant, error: Exception
-) -> None:
-    """A 502 while registering the key re-shows the form with the retryable message."""
+async def test_pairing_add_client_powerwall_unreachable(hass: HomeAssistant) -> None:
+    """An unreachable gateway while registering the key re-shows the form as retryable."""
     entry = await _setup_account_no_subentry(hass)
 
     with (
@@ -2399,7 +2378,7 @@ async def test_pairing_add_client_powerwall_unreachable(
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
-            new=AsyncMock(side_effect=error),
+            new=AsyncMock(side_effect=BadGateway),
         ),
     ):
         result = await _start_add_flow_select_site(hass, entry)
@@ -2410,17 +2389,8 @@ async def test_pairing_add_client_powerwall_unreachable(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-@pytest.mark.parametrize(
-    "error",
-    [
-        pytest.param(TeslaFleetError(), id="tesla_fleet_error"),
-        pytest.param(_NON_502_CLIENT_RESPONSE_ERROR, id="client_response_error"),
-    ],
-)
-async def test_pairing_add_client_generic_error(
-    hass: HomeAssistant, error: Exception
-) -> None:
-    """A non-502 error while registering the key re-shows the form, never crashes."""
+async def test_pairing_add_client_generic_error(hass: HomeAssistant) -> None:
+    """A non-gateway API error while registering the key re-shows the form."""
     entry = await _setup_account_no_subentry(hass)
 
     with (
@@ -2430,7 +2400,7 @@ async def test_pairing_add_client_generic_error(
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
-            new=AsyncMock(side_effect=error),
+            new=AsyncMock(side_effect=TeslaFleetError),
         ),
     ):
         result = await _start_add_flow_select_site(hass, entry)
@@ -2441,17 +2411,14 @@ async def test_pairing_add_client_generic_error(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-@pytest.mark.parametrize("error", POWERWALL_502_ERRORS)
-async def test_pair_step_powerwall_unreachable(
-    hass: HomeAssistant, error: Exception
-) -> None:
-    """A 502 while checking approval on submit re-shows the pair form as retryable."""
+async def test_pair_step_powerwall_unreachable(hass: HomeAssistant) -> None:
+    """An unreachable gateway on submit re-shows the pair form as retryable."""
     entry = await _setup_account_no_subentry(hass)
 
     with (
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=AsyncMock(side_effect=[_empty_clients(), error]),
+            new=AsyncMock(side_effect=[_empty_clients(), BadGateway()]),
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
@@ -2471,11 +2438,10 @@ async def test_pair_step_powerwall_unreachable(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-@pytest.mark.parametrize("error", POWERWALL_502_ERRORS)
 async def test_pair_step_timeout_retry_powerwall_unreachable(
-    hass: HomeAssistant, error: Exception
+    hass: HomeAssistant,
 ) -> None:
-    """A 502 re-registering after expiry re-shows the pair form as retryable."""
+    """An unreachable gateway re-registering after expiry re-shows the pair form."""
     entry = await _setup_account_no_subentry(hass)
 
     with (
@@ -2487,7 +2453,7 @@ async def test_pair_step_timeout_retry_powerwall_unreachable(
                     _own_key_clients(
                         AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT
                     ),
-                    error,
+                    BadGateway(),
                 ]
             ),
         ),
@@ -2943,17 +2909,16 @@ async def test_reconfigure_aborts_when_local_and_cloud_lookups_fail(
 
 
 @pytest.mark.usefixtures("mock_rsa_key", "mock_local_authorized_clients")
-@pytest.mark.parametrize("error", POWERWALL_502_ERRORS)
 async def test_reconfigure_aborts_when_powerwall_unreachable(
-    hass: HomeAssistant, error: Exception
+    hass: HomeAssistant,
 ) -> None:
-    """Reconfigure aborts with the retryable message when the gateway is unreachable."""
+    """Reconfigure aborts as retryable when the gateway is unreachable."""
     entry = await _setup_paired_account(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
 
     with patch(
         "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-        new=AsyncMock(side_effect=error),
+        new=AsyncMock(side_effect=BadGateway),
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
 
