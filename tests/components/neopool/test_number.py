@@ -1142,6 +1142,70 @@ async def test_client_close_waits_for_inflight_flush(
     assert close_saw_write_active is False
 
 
+async def test_client_close_waits_for_all_overlapping_flushes(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Removal cancels every overlapping flush, not just the most recent one.
+
+    Two set_value calls spaced beyond the settle delay start two flush tasks.
+    The first is inside the library call (holding the flush lock) when the
+    second fires and blocks on that lock. Tracking only the latest task would
+    leave the first device call live past removal, racing the client close.
+    """
+    in_write = asyncio.Event()
+    write_active = False
+    close_saw_write_active: bool | None = None
+
+    async def _blocking_setpoint(kind: SetpointKind, value: int) -> dict[str, Any]:
+        nonlocal write_active
+        write_active = True
+        in_write.set()
+        try:
+            # Never released: removal must cancel this to let the unload finish.
+            await asyncio.Event().wait()
+            return {"MBF_PAR_PH1": value}
+        finally:
+            write_active = False
+
+    async def _record_close() -> None:
+        nonlocal close_saw_write_active
+        close_saw_write_active = write_active
+
+    mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=_blocking_setpoint)
+    mock_neopool_client.close = AsyncMock(side_effect=_record_close)
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+
+    # First write enters the library call and blocks, holding the flush lock.
+    first = _set_value_nowait(hass, ph1_entity_id, 7.0)
+    await _let_park(hass)
+    freezer.tick(FLUSH)
+    async_fire_time_changed(hass)
+    await in_write.wait()
+
+    # A second value's flush fires while the first is in flight; it blocks on
+    # the flush lock as a separate task, so two flush tasks are now active.
+    second = _set_value_nowait(hass, ph1_entity_id, 8.0)
+    await _let_park(hass)
+    freezer.tick(FLUSH)
+    async_fire_time_changed(hass)
+    await _let_park(hass)
+
+    # Unload must cancel and await both tasks, including the first still in the
+    # library call, before the client closes.
+    assert await hass.config_entries.async_unload(mock_config_entry_number.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    await first
+    await second
+    mock_neopool_client.close.assert_awaited_once()
+    assert close_saw_write_active is False
+
+
 async def test_queued_flush_aborts_after_lock_when_removed(
     hass: HomeAssistant,
     mock_config_entry_number: MockConfigEntry,
