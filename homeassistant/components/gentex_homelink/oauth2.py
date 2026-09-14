@@ -12,7 +12,9 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from .const import OAUTH2_AUTHORIZE_URL, OAUTH2_TOKEN_URL
 
 
-class HomeLinkOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
+class HomeLinkOAuth2Implementation(
+    config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce
+):
     """HomeLink OAuth2 implementation."""
 
     def __init__(self, hass: HomeAssistant, domain: str) -> None:
@@ -21,7 +23,6 @@ class HomeLinkOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implement
             hass,
             domain,
             COGNITO_CLIENT_ID,
-            "",
             OAUTH2_AUTHORIZE_URL,
             OAUTH2_TOKEN_URL,
         )

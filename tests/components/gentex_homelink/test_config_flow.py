@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from homelink.settings import COGNITO_CLIENT_ID
 import pytest
+from yarl import URL
 
 from homeassistant.components.gentex_homelink.const import (
     DOMAIN,
@@ -78,11 +79,16 @@ async def test_full_flow(
     )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE_URL}?response_type=code&client_id={COGNITO_CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
+    result_url = URL(result["url"])
+    assert f"{result_url.origin()}{result_url.path}" == OAUTH2_AUTHORIZE_URL
+    assert result_url.query["response_type"] == "code"
+    assert result_url.query["client_id"] == COGNITO_CLIENT_ID
+    assert (
+        result_url.query["redirect_uri"] == "https://example.com/auth/external/callback"
     )
+    assert result_url.query["state"] == state
+    assert result_url.query["code_challenge"]
+    assert result_url.query["code_challenge_method"] == "S256"
 
     result = await complete_oauth_flow(
         hass, hass_client_no_auth, aioclient_mock, result["flow_id"], TEST_ACCESS_JWT
