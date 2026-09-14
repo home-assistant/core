@@ -185,15 +185,19 @@ class ScriptIntentHandler(intent.IntentHandler):
         slots: dict[str, Any] = {
             key: value["value"] for key, value in intent_slots.items()
         }
-        # The real satellite_id/device_id of the triggering device always
-        # takes precedence over any caller-supplied device_id slot (e.g. via
-        # a custom sentence or the /api/intent/handle REST endpoint's `data`
-        # field). satellite_id is preferred when available, as it is the
-        # more modern identifier for the device that triggered the intent.
-        # This is always set (even to an empty string) so it is never left
-        # to fall through to the `device_id()` template function of the
-        # same name.
-        slots["device_id"] = intent_obj.satellite_id or intent_obj.device_id or ""
+        # The real device_id/satellite_id of the triggering device are
+        # always exposed to the action, regardless of any caller-supplied
+        # slot with the same name (e.g. via a custom sentence or the
+        # /api/intent/handle REST endpoint's `data` field). satellite_id
+        # (an assist_satellite.* entity_id) is populated only when the
+        # intent was triggered by a voice satellite; device_id (a
+        # device-registry id) is kept alongside it because LLM tool calls
+        # (e.g. Ollama) only ever forward device_id, never satellite_id.
+        # Both are always set, even to an empty string, so neither is
+        # ever left to fall through to a global template function of the
+        # same name (such as `device_id()`).
+        slots["device_id"] = intent_obj.device_id or ""
+        slots["satellite_id"] = intent_obj.satellite_id or ""
         _LOGGER.debug(
             "Intent named %s received with slots: %s",
             intent_obj.intent_type,
