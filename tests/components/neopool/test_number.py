@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+import gc
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -641,6 +642,63 @@ async def test_coalesced_callers_all_raise_together(
         SetpointKind.PH_MAX, 750
     )
     assert all(isinstance(r, HomeAssistantError) for r in results)
+
+
+async def test_failed_write_survives_a_cancelled_coalesced_caller(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A failed coalesced write raises for the survivor and logs no warning.
+
+    Two callers share one coalesce future; one is cancelled before the delayed
+    write fails. Cancelling a caller makes asyncio.shield attach its own logger
+    to the shared future, so failing it via set_exception would be reported as
+    an unretrieved error at teardown. The write instead carries its outcome as
+    the future's result, so the survivor still re-raises the device error and
+    no "exception in shielded future" warning is logged.
+    """
+    in_write = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _blocking_boom(kind: SetpointKind, value: int) -> dict[str, Any]:
+        in_write.set()
+        await release.wait()
+        raise NeoPoolConnectionError("boom")
+
+    mock_neopool_client.async_set_setpoint = AsyncMock(side_effect=_blocking_boom)
+    await setup_integration(hass, mock_config_entry_number)
+
+    ph1_entity_id = _number_entity_id(hass, mock_config_entry_number, "mbf_par_ph1")
+
+    # Two callers coalesce onto one batch; the write enters the library call and
+    # blocks there, so both are parked on the shared shielded future.
+    victim = _set_value_nowait(hass, ph1_entity_id, 7.5)
+    survivor = _set_value_nowait(hass, ph1_entity_id, 7.5)
+    await _let_park(hass)
+    freezer.tick(FLUSH)
+    async_fire_time_changed(hass)
+    await in_write.wait()
+
+    # Cancel one caller; the shield spares the batch, so the write still runs.
+    victim.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await victim
+
+    # Let the shielded write finish and fail; the survivor observes the error.
+    release.set()
+    with pytest.raises(HomeAssistantError):
+        await survivor
+    await hass.async_block_till_done()
+
+    # Force a GC pass so any unretrieved shielded future would surface a warning.
+    gc.collect()
+    await asyncio.sleep(0)
+
+    assert "exception in shielded future" not in caplog.text
+    assert "exception was never retrieved" not in caplog.text
 
 
 async def test_write_queued_during_flush_gets_its_own_outcome(

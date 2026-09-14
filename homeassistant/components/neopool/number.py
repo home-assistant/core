@@ -299,7 +299,7 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         self._pending_value: float | None = None
         # Bumped per set_value; a flush clears only the value it queued.
         self._pending_token = 0
-        self._write_future: asyncio.Future[None] | None = None
+        self._write_future: asyncio.Future[Exception | None] | None = None
         self._flush_lock = asyncio.Lock()
         self._flush_tasks: set[asyncio.Task[None]] = set()
         self._removing = False
@@ -360,11 +360,18 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         )
         try:
             # Shield so cancelling one caller's task does not cancel the batch.
-            await asyncio.shield(future)
+            # The coalesced write never fails the future: cancelling any caller
+            # makes asyncio.shield attach its own logger to the shared future,
+            # which would report a later set_exception as an unretrieved error.
+            # So the write carries its outcome as the future's result instead:
+            # None on success, or the error to re-raise here.
+            outcome = await asyncio.shield(future)
         except asyncio.CancelledError:
             if self._removing:
                 return
             raise
+        if outcome is not None:
+            raise outcome
 
     @callback
     def _schedule_flush(self, _now: datetime) -> None:
@@ -463,7 +470,9 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                 future.cancel()  # pragma: no cover - task cancel is non-deterministic
 
     @callback
-    def _abort_if_removing(self, future: asyncio.Future[None] | None) -> bool:
+    def _abort_if_removing(
+        self, future: asyncio.Future[Exception | None] | None
+    ) -> bool:
         """Skip the write when removed, releasing the detached future cleanly."""
         if not self._removing:
             return False
@@ -474,14 +483,18 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
     @callback
     def _report_write_failure(
         self,
-        future: asyncio.Future[None] | None,
+        future: asyncio.Future[Exception | None] | None,
         batch_token: int,
         exc: Exception,
     ) -> None:
         """Roll the optimistic value back and fail the awaiting caller."""
         self._clear_pending_if_current(batch_token)
         if future is not None and not future.done():
-            future.set_exception(exc)
+            # Carry the error as the result, not via set_exception: a cancelled
+            # caller leaves asyncio.shield's logger on the shared future, which
+            # would report a set_exception as unretrieved. Surviving callers
+            # re-raise it after the shield returns.
+            future.set_result(exc)
 
     @callback
     def _clear_pending_if_current(self, batch_token: int) -> None:
