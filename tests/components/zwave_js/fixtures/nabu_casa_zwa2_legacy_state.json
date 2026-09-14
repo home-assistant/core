@@ -1,0 +1,231 @@
+{
+  "nodeId": 1,
+  "index": 0,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "manufacturerId": 1126,
+  "productId": 1,
+  "productType": 1,
+  "firmwareVersion": "1.0",
+  "deviceConfig": {
+    "filename": "/data/db/devices/0x0466/zwa-2.json",
+    "isEmbedded": true,
+    "manufacturer": "Nabu Casa",
+    "manufacturerId": 1126,
+    "label": "NC-ZWA-9734",
+    "description": "Home Assistant Connect ZWA-2",
+    "devices": [
+      {
+        "productType": 1,
+        "productId": 1
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "preferred": false
+  },
+  "label": "NC-ZWA-9734",
+  "interviewAttempts": 0,
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "deviceClass": {
+    "basic": {
+      "key": 2,
+      "label": "Static Controller"
+    },
+    "generic": {
+      "key": 2,
+      "label": "Static Controller"
+    },
+    "specific": {
+      "key": 1,
+      "label": "PC Controller"
+    }
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0466:0x0001:0x0001:1.0",
+  "statistics": {
+    "commandsTX": 0,
+    "commandsRX": 0,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 0
+  },
+  "isControllerNode": true,
+  "keepAwake": false,
+  "protocol": 0,
+  "sdkVersion": "7.23.1",
+  "values": [
+    {
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 2,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Red",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Red channel.",
+        "label": "Current value (Red)",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 255
+    },
+    {
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 3,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Green",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Green channel.",
+        "label": "Current value (Green)",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 227
+    },
+    {
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 4,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Blue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Blue channel.",
+        "label": "Current value (Blue)",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 181
+    },
+    {
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyName": "currentColor",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Current color",
+        "stateful": true,
+        "secret": false
+      },
+      "value": {
+        "red": 255,
+        "green": 227,
+        "blue": 181
+      }
+    },
+    {
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyName": "targetColor",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true,
+        "label": "Target color",
+        "valueChangeOptions": ["transitionDuration"],
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "hexColor",
+      "propertyName": "hexColor",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "color",
+        "readable": true,
+        "writeable": true,
+        "label": "RGB Color",
+        "valueChangeOptions": ["transitionDuration"],
+        "minLength": 6,
+        "maxLength": 7,
+        "stateful": true,
+        "secret": false
+      },
+      "value": "ffe3b5"
+    },
+    {
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 0,
+      "propertyName": "enableTiltIndicator",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Enable Tilt Indicator",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false
+      },
+      "value": 1
+    }
+  ],
+  "endpoints": [
+    {
+      "nodeId": 1,
+      "index": 0,
+      "deviceClass": {
+        "basic": {
+          "key": 2,
+          "label": "Static Controller"
+        },
+        "generic": {
+          "key": 2,
+          "label": "Static Controller"
+        },
+        "specific": {
+          "key": 1,
+          "label": "PC Controller"
+        }
+      },
+      "commandClasses": []
+    }
+  ]
+}

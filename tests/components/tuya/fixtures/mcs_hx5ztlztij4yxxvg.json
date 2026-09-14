@@ -1,0 +1,35 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": true,
+  "name": "Steel cage door",
+  "category": "mcs",
+  "product_id": "hx5ztlztij4yxxvg",
+  "product_name": "Door Detector",
+  "online": true,
+  "sub": false,
+  "time_zone": "-05:00",
+  "active_time": "2020-05-28T22:07:06+00:00",
+  "create_time": "2020-05-28T22:07:06+00:00",
+  "update_time": "2020-05-28T22:07:06+00:00",
+  "function": {},
+  "status_range": {
+    "doorcontact_state": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    }
+  },
+  "status": {
+    "doorcontact_state": false,
+    "battery_state": "high"
+  },
+  "set_up": true,
+  "support_local": true
+}

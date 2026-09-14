@@ -1,0 +1,2325 @@
+{
+  "nodeId": 10,
+  "index": 0,
+  "installerIcon": 6400,
+  "userIcon": 6400,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": true,
+  "manufacturerId": 271,
+  "productId": 4096,
+  "productType": 771,
+  "firmwareVersion": "5.1",
+  "zwavePlusVersion": 1,
+  "name": "fgr 223 test cover",
+  "location": "test location",
+  "deviceConfig": {
+    "filename": "/data/db/devices/0x010f/fgr223.json",
+    "isEmbedded": true,
+    "manufacturer": "Fibargroup",
+    "manufacturerId": 271,
+    "label": "FGR223",
+    "description": "Roller Shutter 3",
+    "devices": [
+      {
+        "productType": 771,
+        "productId": 4096
+      },
+      {
+        "productType": 771,
+        "productId": 12288
+      },
+      {
+        "productType": 771,
+        "productId": 16384
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "preferred": false,
+    "paramInformation": {
+      "_map": {}
+    },
+    "proprietary": {
+      "fibaroCCs": [38]
+    }
+  },
+  "label": "FGR223",
+  "endpointCountIsDynamic": false,
+  "endpointsHaveIdenticalCapabilities": false,
+  "individualEndpointCount": 2,
+  "aggregatedEndpointCount": 0,
+  "interviewAttempts": 0,
+  "endpoints": [
+    {
+      "nodeId": 10,
+      "index": 0,
+      "installerIcon": 6400,
+      "userIcon": 6400,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 6,
+          "label": "Motor Control Class B"
+        },
+        "mandatorySupportedCCs": [32, 38, 37, 114, 134],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 85,
+          "name": "Transport Service",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 86,
+          "name": "CRC-16 Encapsulation",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 50,
+          "name": "Meter",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": true
+        },
+        {
+          "id": 117,
+          "name": "Protection",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 96,
+          "name": "Multi Channel",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 91,
+          "name": "Central Scene",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 4,
+          "isSecure": true
+        }
+      ]
+    },
+    {
+      "nodeId": 10,
+      "index": 1,
+      "installerIcon": 6400,
+      "userIcon": 6400,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 6,
+          "label": "Motor Control Class B"
+        },
+        "mandatorySupportedCCs": [32, 38, 37, 114, 134],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 50,
+          "name": "Meter",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": true
+        },
+        {
+          "id": 37,
+          "name": "Binary Switch",
+          "version": 2,
+          "isSecure": false
+        }
+      ]
+    },
+    {
+      "nodeId": 10,
+      "index": 2,
+      "installerIcon": 6400,
+      "userIcon": 6400,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 6,
+          "label": "Motor Control Class B"
+        },
+        "mandatorySupportedCCs": [32, 38, 37, 114, 134],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 37,
+          "name": "Binary Switch",
+          "version": 2,
+          "isSecure": false
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "001",
+      "propertyName": "scene",
+      "propertyKeyName": "001",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Scene 001",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown",
+          "3": "KeyPressed2x",
+          "4": "KeyPressed3x"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "002",
+      "propertyName": "scene",
+      "propertyKeyName": "002",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Scene 002",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown",
+          "3": "KeyPressed2x",
+          "4": "KeyPressed3x"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "slowRefresh",
+      "propertyName": "slowRefresh",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "description": "When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms.",
+        "label": "Send held down notifications at a slow rate",
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 108,
+      "commandClassName": "Supervision",
+      "property": "ccSupported",
+      "propertyKey": 91,
+      "propertyName": "ccSupported",
+      "propertyKeyName": "91",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true,
+        "stateful": true,
+        "secret": false
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 20,
+      "propertyName": "Switch type",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Switch type",
+        "default": 2,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Momentary switches",
+          "1": "Toggle switches",
+          "2": "Single momentary switch (S1)"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "name": "Switch type"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 24,
+      "propertyName": "Inputs orientation",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Inputs orientation",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "default",
+          "1": "reversed"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "name": "Inputs orientation"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 25,
+      "propertyName": "Outputs orientation",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Outputs orientation",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "default",
+          "1": "reversed"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "name": "Outputs orientation"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 40,
+      "propertyKey": 1,
+      "propertyName": "S1 scenes: Pressed 1 time",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Send a Central Scene notification when S1 is pressed 1 time",
+        "label": "S1 scenes: Pressed 1 time",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "S1 scenes: Pressed 1 time",
+        "info": "Send a Central Scene notification when S1 is pressed 1 time"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 40,
+      "propertyKey": 2,
+      "propertyName": "S1 scenes: Pressed 2 times",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Send a Central Scene notification when S1 is pressed 2 times",
+        "label": "S1 scenes: Pressed 2 times",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "S1 scenes: Pressed 2 times",
+        "info": "Send a Central Scene notification when S1 is pressed 2 times"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 40,
+      "propertyKey": 4,
+      "propertyName": "S1 scenes: Pressed 3 time",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Send a Central Scene notification when S1 is pressed 3 times",
+        "label": "S1 scenes: Pressed 3 time",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "S1 scenes: Pressed 3 time",
+        "info": "Send a Central Scene notification when S1 is pressed 3 times"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 40,
+      "propertyKey": 8,
+      "propertyName": "S1 scenes: Hold down / Release",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Send a Central Scene notification when S1 is held down or released",
+        "label": "S1 scenes: Hold down / Release",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "S1 scenes: Hold down / Release",
+        "info": "Send a Central Scene notification when S1 is held down or released"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 41,
+      "propertyKey": 1,
+      "propertyName": "S2 scenes: Pressed 1 time",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Send a Central Scene notification when S2 is pressed 1 time",
+        "label": "S2 scenes: Pressed 1 time",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "S2 scenes: Pressed 1 time",
+        "info": "Send a Central Scene notification when S2 is pressed 1 time"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 41,
+      "propertyKey": 2,
+      "propertyName": "S2 scenes: Pressed 2 times",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Send a Central Scene notification when S2 is pressed 2 times",
+        "label": "S2 scenes: Pressed 2 times",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "S2 scenes: Pressed 2 times",
+        "info": "Send a Central Scene notification when S2 is pressed 2 times"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 41,
+      "propertyKey": 4,
+      "propertyName": "S2 scenes: Pressed 3 time",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Send a Central Scene notification when S2 is pressed 3 times",
+        "label": "S2 scenes: Pressed 3 time",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "S2 scenes: Pressed 3 time",
+        "info": "Send a Central Scene notification when S2 is pressed 3 times"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 41,
+      "propertyKey": 8,
+      "propertyName": "S2 scenes: Hold down / Release",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Send a Central Scene notification when S2 is held down or released",
+        "label": "S2 scenes: Hold down / Release",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "S2 scenes: Hold down / Release",
+        "info": "Send a Central Scene notification when S2 is held down or released"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 60,
+      "propertyName": "Measuring power consumed by the device itself",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Measuring power consumed by the device itself",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Function inactive",
+          "1": "Function active"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "name": "Measuring power consumed by the device itself"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 61,
+      "propertyName": "Power reports - on change",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Power reports - on change",
+        "default": 15,
+        "min": 0,
+        "max": 500,
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Power reports - on change"
+      },
+      "value": 15
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 62,
+      "propertyName": "Power reports - periodic",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Power reports - periodic",
+        "default": 3600,
+        "min": 0,
+        "max": 32400,
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Power reports - periodic"
+      },
+      "value": 3600
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 65,
+      "propertyName": "Energy reports - on change",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Energy reports - on change",
+        "default": 10,
+        "min": 0,
+        "max": 500,
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Energy reports - on change"
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 66,
+      "propertyName": "Energy reports - periodic",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Energy reports - periodic",
+        "default": 3600,
+        "min": 0,
+        "max": 32400,
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Energy reports - periodic"
+      },
+      "value": 3600
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 150,
+      "propertyName": "Force calibration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Force calibration",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "device is not calibrated",
+          "1": "device is calibrated",
+          "2": "force device calibration"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "name": "Force calibration"
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 151,
+      "propertyName": "Operating mode",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Operating mode",
+        "default": 1,
+        "min": 1,
+        "max": 6,
+        "states": {
+          "1": "roller blind",
+          "2": "Venetian blind",
+          "3": "gate w/o positioning",
+          "4": "gate with positioning",
+          "5": "roller blind with built-in driver",
+          "6": "roller blind with built-in driver (impulse)"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "name": "Operating mode"
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 152,
+      "propertyName": "Venetian blind - time of full turn of the slats",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Venetian blind - time of full turn of the slats",
+        "default": 150,
+        "min": 0,
+        "max": 65535,
+        "unit": "1/100 sec",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Venetian blind - time of full turn of the slats"
+      },
+      "value": 150
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 153,
+      "propertyName": "Set slats back to previous position",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Set slats back to previous position",
+        "default": 1,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "Main controller operation",
+          "1": "Controller, Momentary Switch, Limit Switch",
+          "2": "Controller, both Switches, Multilevel Stop"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "name": "Set slats back to previous position"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 154,
+      "propertyName": "Delay motor stop",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Delay motor stop after reaching end switch",
+        "label": "Delay motor stop",
+        "default": 10,
+        "min": 0,
+        "max": 255,
+        "unit": "1/10 sec",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Delay motor stop",
+        "info": "Delay motor stop after reaching end switch"
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 155,
+      "propertyName": "Motor operation detection",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Power threshold to be interpreted as reaching a limit switch",
+        "label": "Motor operation detection",
+        "default": 10,
+        "min": 0,
+        "max": 255,
+        "unit": "W",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Motor operation detection",
+        "info": "Power threshold to be interpreted as reaching a limit switch"
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 156,
+      "propertyName": "Time of up movement",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Time of up movement",
+        "default": 6000,
+        "min": 0,
+        "max": 65535,
+        "unit": "1/100 sec",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Time of up movement"
+      },
+      "value": 5000
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 157,
+      "propertyName": "Time of down movement",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Time of down movement",
+        "default": 6000,
+        "min": 0,
+        "max": 65535,
+        "unit": "1/100 sec",
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Time of down movement"
+      },
+      "value": 5000
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 30,
+      "propertyKey": 255,
+      "propertyName": "Alarm #1: Action",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which action to perform when Alarm #1 is triggered",
+        "label": "Alarm #1: Action",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "No action",
+          "1": "Open blinds",
+          "2": "Close blinds"
+        },
+        "valueSize": 4,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "name": "Alarm #1: Action",
+        "info": "Which action to perform when Alarm #1 is triggered"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 30,
+      "propertyKey": 65280,
+      "propertyName": "Alarm #1: Event/State Parameters",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which event parameters Alarm #1 should be limited to",
+        "label": "Alarm #1: Event/State Parameters",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #1: Event/State Parameters",
+        "info": "Which event parameters Alarm #1 should be limited to"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 30,
+      "propertyKey": 16711680,
+      "propertyName": "Alarm #1: Notification Status",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which notification status Alarm #1 should be limited to",
+        "label": "Alarm #1: Notification Status",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "255": "Any"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #1: Notification Status",
+        "info": "Which notification status Alarm #1 should be limited to"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 30,
+      "propertyKey": 4278190080,
+      "propertyName": "Alarm #1: Notification Type",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which notification type should raise Alarm #1",
+        "label": "Alarm #1: Notification Type",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #1: Notification Type",
+        "info": "Which notification type should raise Alarm #1"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 31,
+      "propertyKey": 255,
+      "propertyName": "Alarm #2: Action",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which action to perform when Alarm #2 is triggered",
+        "label": "Alarm #2: Action",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "No action",
+          "1": "Open blinds",
+          "2": "Close blinds"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "name": "Alarm #2: Action",
+        "info": "Which action to perform when Alarm #2 is triggered"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 31,
+      "propertyKey": 65280,
+      "propertyName": "Alarm #2: Event/State Parameters",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which event parameters Alarm #2 should be limited to",
+        "label": "Alarm #2: Event/State Parameters",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #2: Event/State Parameters",
+        "info": "Which event parameters Alarm #2 should be limited to"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 31,
+      "propertyKey": 16711680,
+      "propertyName": "Alarm #2: Notification Status",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which notification status Alarm #2 should be limited to",
+        "label": "Alarm #2: Notification Status",
+        "default": 255,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "255": "Any"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #2: Notification Status",
+        "info": "Which notification status Alarm #2 should be limited to"
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 31,
+      "propertyKey": 4278190080,
+      "propertyName": "Alarm #2: Notification Type",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which notification type should raise Alarm #2",
+        "label": "Alarm #2: Notification Type",
+        "default": 5,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #2: Notification Type",
+        "info": "Which notification type should raise Alarm #2"
+      },
+      "value": 5
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 32,
+      "propertyKey": 255,
+      "propertyName": "Alarm #3: Action",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which action to perform when Alarm #3 is triggered",
+        "label": "Alarm #3: Action",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "No action",
+          "1": "Open blinds",
+          "2": "Close blinds"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "name": "Alarm #3: Action",
+        "info": "Which action to perform when Alarm #3 is triggered"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 32,
+      "propertyKey": 65280,
+      "propertyName": "Alarm #3: Event/State Parameters",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which event parameters Alarm #3 should be limited to",
+        "label": "Alarm #3: Event/State Parameters",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #3: Event/State Parameters",
+        "info": "Which event parameters Alarm #3 should be limited to"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 32,
+      "propertyKey": 16711680,
+      "propertyName": "Alarm #3: Notification Status",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which notification status Alarm #3 should be limited to",
+        "label": "Alarm #3: Notification Status",
+        "default": 255,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "255": "Any"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #3: Notification Status",
+        "info": "Which notification status Alarm #3 should be limited to"
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 32,
+      "propertyKey": 4278190080,
+      "propertyName": "Alarm #3: Notification Type",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which notification type should raise Alarm #3",
+        "label": "Alarm #3: Notification Type",
+        "default": 1,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #3: Notification Type",
+        "info": "Which notification type should raise Alarm #3"
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 33,
+      "propertyKey": 255,
+      "propertyName": "Alarm #4: Action",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which action to perform when Alarm #4 is triggered",
+        "label": "Alarm #4: Action",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "No action",
+          "1": "Open blinds",
+          "2": "Close blinds"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "name": "Alarm #4: Action",
+        "info": "Which action to perform when Alarm #4 is triggered"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 33,
+      "propertyKey": 65280,
+      "propertyName": "Alarm #4: Event/State Parameters",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which event parameters Alarm #4 should be limited to",
+        "label": "Alarm #4: Event/State Parameters",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #4: Event/State Parameters",
+        "info": "Which event parameters Alarm #4 should be limited to"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 33,
+      "propertyKey": 16711680,
+      "propertyName": "Alarm #4: Notification Status",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which notification status Alarm #4 should be limited to",
+        "label": "Alarm #4: Notification Status",
+        "default": 255,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "255": "Any"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #4: Notification Status",
+        "info": "Which notification status Alarm #4 should be limited to"
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 33,
+      "propertyKey": 4278190080,
+      "propertyName": "Alarm #4: Notification Type",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which notification type should raise Alarm #4",
+        "label": "Alarm #4: Notification Type",
+        "default": 2,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #4: Notification Type",
+        "info": "Which notification type should raise Alarm #4"
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 34,
+      "propertyKey": 255,
+      "propertyName": "Alarm #5: Action",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which action to perform when Alarm #5 is triggered",
+        "label": "Alarm #5: Action",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "states": {
+          "0": "No action",
+          "1": "Open blinds",
+          "2": "Close blinds"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true,
+        "name": "Alarm #5: Action",
+        "info": "Which action to perform when Alarm #5 is triggered"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 34,
+      "propertyKey": 65280,
+      "propertyName": "Alarm #5: Event/State Parameters",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which event parameters Alarm #5 should be limited to",
+        "label": "Alarm #5: Event/State Parameters",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #5: Event/State Parameters",
+        "info": "Which event parameters Alarm #5 should be limited to"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 34,
+      "propertyKey": 16711680,
+      "propertyName": "Alarm #5: Notification Status",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which notification status Alarm #5 should be limited to",
+        "label": "Alarm #5: Notification Status",
+        "default": 255,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "255": "Any"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #5: Notification Status",
+        "info": "Which notification status Alarm #5 should be limited to"
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 34,
+      "propertyKey": 4278190080,
+      "propertyName": "Alarm #5: Notification Type",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Which notification type should raise Alarm #5",
+        "label": "Alarm #5: Notification Type",
+        "default": 4,
+        "min": 0,
+        "max": 255,
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true,
+        "name": "Alarm #5: Notification Type",
+        "info": "Which notification type should raise Alarm #5"
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 271
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 771
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 4096
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "local",
+      "propertyName": "local",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Local protection state",
+        "states": {
+          "0": "Unprotected",
+          "2": "NoOperationPossible"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "rf",
+      "propertyName": "rf",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "RF protection state",
+        "states": {
+          "0": "Unprotected",
+          "1": "NoControl"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "exclusiveControlNodeId",
+      "propertyName": "exclusiveControlNodeId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Node ID with exclusive control",
+        "min": 1,
+        "max": 232,
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 117,
+      "commandClassName": "Protection",
+      "property": "timeout",
+      "propertyName": "timeout",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "RF protection timeout",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "6.2"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions",
+        "stateful": true,
+        "secret": false
+      },
+      "value": ["5.1", "5.1"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": false,
+        "label": "Remaining duration",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "unknown"
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 99
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 99
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        },
+        "valueChangeOptions": ["transitionDuration"],
+        "states": {
+          "true": "Start",
+          "false": "Stop"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": false
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        },
+        "valueChangeOptions": ["transitionDuration"],
+        "states": {
+          "true": "Start",
+          "false": "Stop"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "restorePrevious",
+      "propertyName": "restorePrevious",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Restore previous value",
+        "states": {
+          "true": "Restore"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 65537,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_kWh_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumption [kWh]",
+        "ccSpecific": {
+          "meterType": 1,
+          "scale": 0,
+          "rateType": 1
+        },
+        "unit": "kWh",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0.0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 66049,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_W_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumption [W]",
+        "ccSpecific": {
+          "meterType": 1,
+          "scale": 2,
+          "rateType": 1
+        },
+        "unit": "W",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "reset",
+      "propertyName": "reset",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Reset accumulated values",
+        "states": {
+          "true": "Reset"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Over-current status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Over-current status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Over-current status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "6": "Over-current detected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "System",
+      "propertyKey": "Hardware status",
+      "propertyName": "System",
+      "propertyKeyName": "Hardware status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Hardware status",
+        "ccSpecific": {
+          "notificationType": 9
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "3": "System hardware failure (with failure code)"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmType",
+      "propertyName": "alarmType",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Type",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmLevel",
+      "propertyName": "alarmLevel",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Level",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": false,
+        "label": "Remaining duration",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "unknown"
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        },
+        "valueChangeOptions": ["transitionDuration"],
+        "states": {
+          "true": "Start",
+          "false": "Stop"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": false
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        },
+        "valueChangeOptions": ["transitionDuration"],
+        "states": {
+          "true": "Start",
+          "false": "Stop"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "restorePrevious",
+      "propertyName": "restorePrevious",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Restore previous value",
+        "states": {
+          "true": "Restore"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    }
+  ],
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 5,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 17,
+      "label": "Multilevel Switch"
+    },
+    "specific": {
+      "key": 6,
+      "label": "Motor Control Class B"
+    },
+    "mandatorySupportedCCs": [32, 38, 37, 114, 134],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x010f:0x0303:0x1000:5.1",
+  "statistics": {
+    "commandsTX": 8,
+    "commandsRX": 13,
+    "commandsDroppedRX": 12,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 1,
+    "rtt": 155.4,
+    "rssi": -66,
+    "lwr": {
+      "protocolDataRate": 2,
+      "repeaters": [11],
+      "rssi": -56,
+      "repeaterRSSI": [-55]
+    },
+    "nlwr": {
+      "protocolDataRate": 3,
+      "repeaters": [],
+      "rssi": -89,
+      "repeaterRSSI": []
+    }
+  },
+  "highestSecurityClass": 1,
+  "isControllerNode": false,
+  "keepAwake": false
+}

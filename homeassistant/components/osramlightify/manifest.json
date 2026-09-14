@@ -1,0 +1,10 @@
+{
+  "domain": "osramlightify",
+  "name": "Osramlightify",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/osramlightify",
+  "iot_class": "local_polling",
+  "loggers": ["lightify"],
+  "quality_scale": "legacy",
+  "requirements": ["lightify==1.0.7.3"]
+}

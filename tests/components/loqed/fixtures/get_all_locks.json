@@ -1,0 +1,26 @@
+{
+  "data": [
+    {
+      "id": "Foo",
+      "name": "MyLock",
+      "battery_percentage": 64,
+      "battery_type": "nickel_metal_hydride",
+      "bolt_state": "day_lock",
+      "party_mode": false,
+      "guest_access_mode": false,
+      "twist_assist": false,
+      "touch_to_connect": true,
+      "lock_direction": "clockwise",
+      "mortise_lock_type": "cylinder_operated_no_handle_on_the_outside",
+      "supported_lock_states": ["open", "day_lock", "night_lock"],
+      "online": true,
+      "bridge_ip": "192.168.12.34",
+      "bridge_hostname": "LOQED-aabbccddeeff.local",
+      "local_id": 1,
+      "key_secret": "SGFsbG8gd2VyZWxk",
+      "backend_key": "aGVsbG8gd29ybGQ=",
+      "bridge_webhook_count": 1,
+      "bridge_key": "Ym9uam91ciBtb25kZQ=="
+    }
+  ]
+}

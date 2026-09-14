@@ -1,0 +1,47 @@
+[
+  {
+    "dateObserved": "2020-12-20",
+    "hourObserved": "15:00",
+    "localTimeZone": "PST",
+    "reportingAreaName": "Central LA CO",
+    "siteID": "060371103",
+    "siteName": "Los Angeles - N. Main Street",
+    "parameterName": "OZONE",
+    "nowcastAQI": 44,
+    "aqiCategoryName": "Good",
+    "reportingAgency": "South Coast AQMD",
+    "lookupBehavior": "Closest Reading By Pollutant",
+    "consideredMonitors": "All",
+    "lookupBoundary": "50 Miles"
+  },
+  {
+    "dateObserved": "2020-12-20",
+    "hourObserved": "15:00",
+    "localTimeZone": "PST",
+    "reportingAreaName": "Central LA CO",
+    "siteID": "060371103",
+    "siteName": "Los Angeles - N. Main Street",
+    "parameterName": "PM2.5",
+    "nowcastAQI": 37,
+    "aqiCategoryName": "Good",
+    "reportingAgency": "South Coast AQMD",
+    "lookupBehavior": "Closest Reading By Pollutant",
+    "consideredMonitors": "All",
+    "lookupBoundary": "50 Miles"
+  },
+  {
+    "dateObserved": "2020-12-20",
+    "hourObserved": "15:00",
+    "localTimeZone": "PST",
+    "reportingAreaName": "Central LA CO",
+    "siteID": "060371103",
+    "siteName": "Los Angeles - N. Main Street",
+    "parameterName": "PM10",
+    "nowcastAQI": 11,
+    "aqiCategoryName": "Good",
+    "reportingAgency": "South Coast AQMD",
+    "lookupBehavior": "Closest Reading By Pollutant",
+    "consideredMonitors": "All",
+    "lookupBoundary": "50 Miles"
+  }
+]

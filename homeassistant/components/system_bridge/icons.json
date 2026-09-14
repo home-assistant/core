@@ -1,0 +1,126 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "camera_in_use": {
+        "default": "mdi:webcam"
+      },
+      "pending_reboot": {
+        "default": "mdi:restart"
+      }
+    },
+    "media_player": {
+      "media": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "sensor": {
+      "boot_time": {
+        "default": "mdi:av-timer"
+      },
+      "cpu_power_core": {
+        "default": "mdi:chip"
+      },
+      "cpu_power_package": {
+        "default": "mdi:chip"
+      },
+      "cpu_speed": {
+        "default": "mdi:speedometer"
+      },
+      "display_refresh_rate": {
+        "default": "mdi:monitor"
+      },
+      "display_resolution_x": {
+        "default": "mdi:monitor"
+      },
+      "display_resolution_y": {
+        "default": "mdi:monitor"
+      },
+      "displays_connected": {
+        "default": "mdi:monitor"
+      },
+      "gpu_core_clock_speed": {
+        "default": "mdi:speedometer"
+      },
+      "gpu_fan_speed": {
+        "default": "mdi:fan"
+      },
+      "gpu_memory_clock_speed": {
+        "default": "mdi:speedometer"
+      },
+      "gpu_memory_free": {
+        "default": "mdi:memory"
+      },
+      "gpu_memory_used": {
+        "default": "mdi:memory"
+      },
+      "gpu_memory_used_percentage": {
+        "default": "mdi:memory"
+      },
+      "gpu_power_usage": {
+        "default": "mdi:lightning-bolt"
+      },
+      "gpu_usage_percentage": {
+        "default": "mdi:percent"
+      },
+      "kernel": {
+        "default": "mdi:devices"
+      },
+      "load": {
+        "default": "mdi:percent"
+      },
+      "memory_free": {
+        "default": "mdi:memory"
+      },
+      "memory_used": {
+        "default": "mdi:memory"
+      },
+      "memory_used_percentage": {
+        "default": "mdi:memory"
+      },
+      "os": {
+        "default": "mdi:devices"
+      },
+      "power_usage": {
+        "default": "mdi:power-plug"
+      },
+      "processes": {
+        "default": "mdi:counter"
+      },
+      "processes_load_cpu": {
+        "default": "mdi:percent"
+      },
+      "space_used": {
+        "default": "mdi:harddisk"
+      },
+      "version": {
+        "default": "mdi:counter"
+      },
+      "version_latest": {
+        "default": "mdi:counter"
+      }
+    }
+  },
+  "services": {
+    "get_process_by_id": {
+      "service": "mdi:console"
+    },
+    "get_processes_by_name": {
+      "service": "mdi:console"
+    },
+    "open_path": {
+      "service": "mdi:folder-open"
+    },
+    "open_url": {
+      "service": "mdi:web"
+    },
+    "power_command": {
+      "service": "mdi:power"
+    },
+    "send_keypress": {
+      "service": "mdi:keyboard"
+    },
+    "send_text": {
+      "service": "mdi:keyboard"
+    }
+  }
+}

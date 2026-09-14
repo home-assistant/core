@@ -1,0 +1,44 @@
+{
+  "data": [
+    {
+      "command": "LOCK_REDUCED_GUARD",
+      "href": "/v2/vehicles/YV1ABCDEFG1234567/commands/lock-reduced-guard"
+    },
+    {
+      "command": "LOCK",
+      "href": "/v2/vehicles/YV1ABCDEFG1234567/commands/lock"
+    },
+    {
+      "command": "UNLOCK",
+      "href": "/v2/vehicles/YV1ABCDEFG1234567/commands/unlock"
+    },
+    {
+      "command": "HONK",
+      "href": "/v2/vehicles/YV1ABCDEFG1234567/commands/honk"
+    },
+    {
+      "command": "HONK_AND_FLASH",
+      "href": "/v2/vehicles/YV1ABCDEFG1234567/commands/honk-flash"
+    },
+    {
+      "command": "FLASH",
+      "href": "/v2/vehicles/YV1ABCDEFG1234567/commands/flash"
+    },
+    {
+      "command": "CLIMATIZATION_START",
+      "href": "/v2/vehicles/YV1ABCDEFG1234567/commands/climatization-start"
+    },
+    {
+      "command": "CLIMATIZATION_STOP",
+      "href": "/v2/vehicles/YV1ABCDEFG1234567/commands/climatization-stop"
+    },
+    {
+      "command": "ENGINE_START",
+      "href": "/v2/vehicles/YV1ABCDEFG1234567/commands/engine-start"
+    },
+    {
+      "command": "ENGINE_STOP",
+      "href": "/v2/vehicles/YV1ABCDEFG1234567/commands/engine-stop"
+    }
+  ]
+}

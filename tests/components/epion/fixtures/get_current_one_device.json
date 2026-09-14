@@ -1,0 +1,15 @@
+{
+  "devices": [
+    {
+      "deviceId": "abc",
+      "deviceName": "Test Device",
+      "co2": 500,
+      "temperature": 12.34,
+      "humidity": 34.56,
+      "pressure": 1010.101,
+      "lastMeasurement": 1705329293171,
+      "fwVersion": "1.2.3"
+    }
+  ],
+  "accountId": "account-dupe-123"
+}

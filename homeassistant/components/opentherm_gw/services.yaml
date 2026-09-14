@@ -1,0 +1,199 @@
+# Describes the format for available opentherm_gw services
+
+reset_gateway:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+
+set_central_heating_ovrd:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    ch_override:
+      required: true
+      selector:
+        boolean:
+
+set_clock:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    date:
+      example: "2018-10-23"
+      selector:
+        text:
+    time:
+      example: "19:34"
+      selector:
+        text:
+
+set_control_setpoint:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    temperature:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 90
+          step: 0.1
+          unit_of_measurement: "°"
+
+set_hot_water_ovrd:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    dhw_override:
+      required: true
+      example: "1"
+      selector:
+        text:
+
+set_hot_water_setpoint:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    temperature:
+      selector:
+        number:
+          min: 0
+          max: 90
+          step: 0.1
+          unit_of_measurement: "°"
+
+set_gpio_mode:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    id:
+      required: true
+      selector:
+        select:
+          options:
+            - "A"
+            - "B"
+    mode:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 7
+
+set_led_mode:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    id:
+      required: true
+      selector:
+        select:
+          options:
+            - "A"
+            - "B"
+            - "C"
+            - "D"
+            - "E"
+            - "F"
+    mode:
+      required: true
+      selector:
+        select:
+          options:
+            - "B"
+            - "C"
+            - "E"
+            - "F"
+            - "H"
+            - "M"
+            - "O"
+            - "P"
+            - "R"
+            - "T"
+            - "W"
+            - "X"
+
+set_max_modulation:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    level:
+      required: true
+      selector:
+        number:
+          min: -1
+          max: 100
+
+set_outside_temperature:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    temperature:
+      required: true
+      selector:
+        number:
+          min: -40
+          max: 99
+          unit_of_measurement: "°"
+
+set_setback_temperature:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    temperature:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 30
+          step: 0.1
+          unit_of_measurement: "°"
+
+send_transparent_command:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    transp_cmd:
+      required: true
+      selector:
+        text:
+    transp_arg:
+      required: true
+      selector:
+        text:

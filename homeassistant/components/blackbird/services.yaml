@@ -1,0 +1,14 @@
+set_all_zones:
+  fields:
+    entity_id:
+      required: true
+      example: "media_player.zone_1"
+      selector:
+        entity:
+          integration: blackbird
+          domain: media_player
+    source:
+      required: true
+      example: "Source 1"
+      selector:
+        text:

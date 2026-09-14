@@ -1,0 +1,60 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "update_failed": "Updating Duck DNS failed"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "access_token": "[%key:component::duckdns::config::step::user::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::duckdns::config::step::user::data_description::access_token%]"
+        },
+        "title": "Reconfigure {name}"
+      },
+      "user": {
+        "data": {
+          "access_token": "Token",
+          "domain": "Subdomain"
+        },
+        "data_description": {
+          "access_token": "Your Duck DNS account token",
+          "domain": "The Duck DNS subdomain to update"
+        },
+        "description": "Enter your Duck DNS subdomain and token below to configure dynamic DNS updates. You can find your token on the [Duck DNS]({url}) homepage after logging into your account."
+      }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Updating Duck DNS domain {domain} failed due to a connection error"
+    },
+    "entry_not_found": {
+      "message": "Duck DNS integration entry not found"
+    },
+    "update_failed": {
+      "message": "Updating Duck DNS domain {domain} failed"
+    }
+  },
+  "services": {
+    "set_txt": {
+      "description": "Sets the TXT record of your Duck DNS subdomain.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Duck DNS integration ID.",
+          "name": "Integration ID"
+        },
+        "txt": {
+          "description": "Payload for the TXT record.",
+          "name": "TXT"
+        }
+      },
+      "name": "Set TXT"
+    }
+  }
+}

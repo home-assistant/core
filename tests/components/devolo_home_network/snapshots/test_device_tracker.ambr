@@ -1,0 +1,22 @@
+# serializer version: 1
+# name: test_device_tracker
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'band': '5 GHz',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '00:00:5E:00:53:01',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+        'zone.home',
+      ]),
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:5E:00:53:01',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
+      'wifi': 'Main',
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.00_00_5e_00_53_01',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---

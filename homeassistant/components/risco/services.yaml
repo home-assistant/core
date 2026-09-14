@@ -1,0 +1,11 @@
+set_time:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: risco
+    time:
+      required: false
+      selector:
+        datetime:

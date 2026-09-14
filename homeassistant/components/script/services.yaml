@@ -1,0 +1,17 @@
+# Describes the format for available python_script services
+
+reload:
+turn_on:
+  target:
+    entity:
+      domain: script
+
+turn_off:
+  target:
+    entity:
+      domain: script
+
+toggle:
+  target:
+    entity:
+      domain: script

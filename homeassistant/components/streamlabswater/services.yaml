@@ -1,0 +1,12 @@
+set_away_mode:
+  fields:
+    away_mode:
+      required: true
+      selector:
+        select:
+          options:
+            - "away"
+            - "home"
+    location_id:
+      selector:
+        text:

@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_voltage": {
+        "default": "mdi:battery"
+      },
+      "depth_level": {
+        "default": "mdi:water"
+      },
+      "percent_level": {
+        "default": "mdi:water-percent"
+      },
+      "probe_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "status": {
+        "default": "mdi:information-outline"
+      },
+      "tx_signal": {
+        "default": "mdi:wifi"
+      },
+      "volume_level": {
+        "default": "mdi:water"
+      },
+      "wifi_signal": {
+        "default": "mdi:wifi"
+      }
+    }
+  }
+}

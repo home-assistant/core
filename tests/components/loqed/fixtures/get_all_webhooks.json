@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1,
+    "url": "http://10.10.10.10:8123/api/webhook/Webhook_id",
+    "trigger_state_changed_open": 1,
+    "trigger_state_changed_latch": 1,
+    "trigger_state_changed_night_lock": 1,
+    "trigger_state_changed_unknown": 1,
+    "trigger_state_goto_open": 1,
+    "trigger_state_goto_latch": 1,
+    "trigger_state_goto_night_lock": 1,
+    "trigger_battery": 1,
+    "trigger_online_status": 1
+  }
+]

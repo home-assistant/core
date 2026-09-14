@@ -1,0 +1,10 @@
+{
+  "domain": "iglo",
+  "name": "iGlo",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/iglo",
+  "iot_class": "local_polling",
+  "loggers": ["iglo"],
+  "quality_scale": "legacy",
+  "requirements": ["iglo==1.2.7"]
+}

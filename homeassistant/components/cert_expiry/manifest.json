@@ -1,0 +1,9 @@
+{
+  "domain": "cert_expiry",
+  "name": "Certificate Expiry",
+  "codeowners": ["@jjlawren"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/cert_expiry",
+  "integration_type": "service",
+  "iot_class": "cloud_polling"
+}

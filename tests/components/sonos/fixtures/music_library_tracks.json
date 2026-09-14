@@ -1,0 +1,14 @@
+[
+  {
+    "title": "A Hard Day's Night",
+    "item_id": "S://192.168.42.100/music/iTunes/The%20Beatles/A%20Hard%20Day%2fs%20Night/A%20Hard%20Day%2fs%20Night.mp3",
+    "parent_id": "A:ALBUMARTIST/Beatles/A%20Hard%20Day's%20Night",
+    "item_class": "object.container.album.musicTrack"
+  },
+  {
+    "title": "I Should Have Known Better",
+    "item_id": "S://192.168.42.100/music/iTunes/The%20Beatles/A%20Hard%20Day%2fs%I%20Should%20Have%20Known%20Better.mp3",
+    "parent_id": "A:ALBUMARTIST/Beatles/A%20Hard%20Day's%20Night",
+    "item_class": "object.container.album.musicTrack"
+  }
+]

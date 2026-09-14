@@ -1,0 +1,14 @@
+set_default_level:
+  fields:
+    level:
+      selector:
+        select:
+          options:
+            - "debug"
+            - "info"
+            - "warning"
+            - "error"
+            - "fatal"
+            - "critical"
+          translation_key: level
+set_level:

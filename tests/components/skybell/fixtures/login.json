@@ -1,0 +1,10 @@
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "resourceId": "0123456789abcdef01234567",
+  "createdAt": "2018-07-06T02:02:14.050Z",
+  "updatedAt": "2018-07-06T02:02:14.050Z",
+  "id": "0123456789abcdef01234567",
+  "userLinks": [],
+  "access_token": "superlongkey"
+}

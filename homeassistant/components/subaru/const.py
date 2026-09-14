@@ -1,0 +1,75 @@
+"""Constants for the Subaru integration."""
+
+from subarulink.const import ALL_DOORS, DRIVERS_DOOR, TAILGATE_DOOR
+
+from homeassistant.const import Platform
+
+DOMAIN = "subaru"
+FETCH_INTERVAL = 300
+UPDATE_INTERVAL = 7200
+CONF_UPDATE_ENABLED = "update_enabled"
+
+# update coordinator name
+COORDINATOR_NAME = "subaru_data"
+
+# info fields
+VEHICLE_VIN = "vin"
+VEHICLE_MODEL_NAME = "model_name"
+VEHICLE_MODEL_YEAR = "model_year"
+VEHICLE_NAME = "display_name"
+VEHICLE_HAS_EV = "is_ev"
+VEHICLE_API_GEN = "api_gen"
+VEHICLE_HAS_REMOTE_START = "has_res"
+VEHICLE_HAS_REMOTE_SERVICE = "has_remote"
+VEHICLE_HAS_SAFETY_SERVICE = "has_safety"
+VEHICLE_LAST_UPDATE = "last_update"
+VEHICLE_STATUS = "vehicle_status"
+VEHICLE_HEALTH = "vehicle_health"
+VEHICLE_FEATURES = "vehicle_features"
+
+# Synthetic keys for sensors that don't read a single field directly; used
+# as both unique_id suffix and translation_key, so they must stay stable
+# across releases (changing them would orphan existing entity registry
+# entries).
+KEY_RECOMMENDED_TIRE_PRESSURE_FRONT = "recommended_tire_pressure_front"
+KEY_RECOMMENDED_TIRE_PRESSURE_REAR = "recommended_tire_pressure_rear"
+
+
+API_GEN_1 = "g1"
+API_GEN_2 = "g2"
+API_GEN_3 = "g3"
+API_GEN_4 = "g4"
+# Generations that report vehicle_status/vehicle_health data, used to gate
+# binary_sensor entity creation.
+GEN_2_AND_NEWER = (API_GEN_2, API_GEN_3, API_GEN_4)
+MANUFACTURER = "Subaru"
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.SENSOR,
+]
+
+SERVICE_REMOTE_START = "remote_start"
+SERVICE_REMOTE_STOP = "remote_stop"
+SERVICE_UNLOCK_SPECIFIC_DOOR = "unlock_specific_door"
+
+ATTR_DOOR = "door"
+
+UNLOCK_DOOR_ALL = "all"
+UNLOCK_DOOR_DRIVERS = "driver"
+UNLOCK_DOOR_TAILGATE = "tailgate"
+UNLOCK_VALID_DOORS = {
+    UNLOCK_DOOR_ALL: ALL_DOORS,
+    UNLOCK_DOOR_DRIVERS: DRIVERS_DOOR,
+    UNLOCK_DOOR_TAILGATE: TAILGATE_DOOR,
+}
+
+ICONS = {
+    "Avg Fuel Consumption": "mdi:leaf",
+    "EV Range": "mdi:ev-station",
+    "Odometer": "mdi:road-variant",
+    "Range": "mdi:gas-station",
+}

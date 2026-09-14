@@ -1,0 +1,876 @@
+"""Config Flow to configure UniFi Protect Integration."""
+
+from collections.abc import Mapping
+import logging
+from pathlib import Path
+from typing import Any, override
+
+from aiohttp import CookieJar
+import probatio
+from uiprotect import ProtectApiClient
+from uiprotect.data import NVR
+from uiprotect.exceptions import ClientError, NotAuthorized
+from unifi_discovery import async_console_is_alive
+
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_ID,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import selector
+from homeassistant.helpers.aiohttp_client import (
+    async_create_clientsession,
+    async_get_clientsession,
+)
+from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.loader import async_get_integration
+from homeassistant.util.network import is_ip_address
+
+from .const import (
+    CONF_ALL_UPDATES,
+    CONF_CONNECTION_MODE,
+    CONF_DISABLE_RTSP,
+    CONF_MAX_MEDIA,
+    CONF_OVERRIDE_CHOST,
+    CONNECTION_MODE_API_KEY_ONLY,
+    DEFAULT_MAX_MEDIA,
+    DEFAULT_PORT,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    MIN_REQUIRED_PROTECT_V,
+    OUTDATED_LOG_MESSAGE,
+)
+from .data import UFPConfigEntry, async_last_update_was_successful
+from .utils import (
+    _async_resolve,
+    _async_short_mac,
+    _async_unifi_mac_from_hass,
+    async_create_session_client,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def _filter_empty_credentials(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Filter out empty credential fields to preserve existing values."""
+    return {k: v for k, v in user_input.items() if v not in (None, "")}
+
+
+def _normalize_port(data: dict[str, Any]) -> dict[str, Any]:
+    """Ensure port is stored as int (NumberSelector returns float)."""
+    return {**data, CONF_PORT: int(data.get(CONF_PORT, DEFAULT_PORT))}
+
+
+def _build_data_without_credentials(entry_data: Mapping[str, Any]) -> dict[str, Any]:
+    """Build form data from existing config entry, excluding sensitive credentials."""
+    data = {
+        CONF_HOST: entry_data[CONF_HOST],
+        CONF_PORT: entry_data[CONF_PORT],
+        CONF_VERIFY_SSL: entry_data[CONF_VERIFY_SSL],
+    }
+    if username := entry_data.get(CONF_USERNAME):
+        data[CONF_USERNAME] = username
+    return data
+
+
+async def _async_clear_session_if_credentials_changed(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    new_data: Mapping[str, Any],
+) -> None:
+    """Clear stored session if credentials changed."""
+    existing_data = entry.data
+    if existing_data.get(CONF_USERNAME) != new_data.get(
+        CONF_USERNAME
+    ) or existing_data.get(CONF_PASSWORD) != new_data.get(CONF_PASSWORD):
+        _LOGGER.debug("Credentials changed, clearing stored session")
+        if (protect := async_create_session_client(hass, entry)) is None:
+            return
+        try:
+            await protect.clear_session()
+        except Exception as ex:  # noqa: BLE001
+            _LOGGER.debug("Failed to clear session, continuing anyway: %s", ex)
+
+
+ENTRY_FAILURE_STATES = (
+    ConfigEntryState.SETUP_ERROR,
+    ConfigEntryState.SETUP_RETRY,
+)
+
+# Selectors for config flow form fields
+_TEXT_SELECTOR = selector.TextSelector()
+_PASSWORD_SELECTOR = selector.TextSelector(
+    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+)
+_PORT_SELECTOR = selector.NumberSelector(
+    selector.NumberSelectorConfig(
+        mode=selector.NumberSelectorMode.BOX, min=1, max=65535
+    )
+)
+_BOOL_SELECTOR = selector.BooleanSelector()
+
+
+def _build_schema(
+    *,
+    include_host: bool = True,
+    include_connection: bool = True,
+    credentials_optional: bool = False,
+) -> probatio.Schema:
+    """Build a config flow schema.
+
+    Args:
+        include_host: Include host field (False when host comes from discovery).
+        include_connection: Include port/verify_ssl fields.
+        credentials_optional: Credentials optional (True to keep existing values).
+
+    """
+    req, opt = probatio.Required, probatio.Optional
+    cred_key = opt if credentials_optional else req
+
+    schema: dict[probatio.Marker, selector.Selector] = {}
+    if include_host:
+        schema[req(CONF_HOST)] = _TEXT_SELECTOR
+    if include_connection:
+        schema[req(CONF_PORT, default=DEFAULT_PORT)] = _PORT_SELECTOR
+        schema[req(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)] = _BOOL_SELECTOR
+    schema[req(CONF_USERNAME)] = _TEXT_SELECTOR
+    schema[cred_key(CONF_PASSWORD)] = _PASSWORD_SELECTOR
+    schema[cred_key(CONF_API_KEY)] = _PASSWORD_SELECTOR
+    return probatio.Schema(schema)
+
+
+def _build_api_key_schema() -> probatio.Schema:
+    """Build the schema for the public-API-only (API-key) connection mode."""
+    return probatio.Schema(
+        {
+            probatio.Required(CONF_HOST): _TEXT_SELECTOR,
+            probatio.Required(CONF_PORT, default=DEFAULT_PORT): _PORT_SELECTOR,
+            probatio.Required(
+                CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+            ): _BOOL_SELECTOR,
+            probatio.Required(CONF_API_KEY): _PASSWORD_SELECTOR,
+        }
+    )
+
+
+# Schemas for different flow contexts
+# User flow: all fields required
+CONFIG_SCHEMA = _build_schema()
+# Reconfigure flow: keep existing credentials if not provided
+RECONFIGURE_SCHEMA = _build_schema(credentials_optional=True)
+# Discovery flow: host comes from discovery, user sets port/ssl
+DISCOVERY_SCHEMA = _build_schema(include_host=False)
+# Public-API-only (API key, no local user) flow
+API_KEY_SCHEMA = _build_api_key_schema()
+# Discovery variant: host comes from discovery, ssl from the candidate order
+DISCOVERY_API_KEY_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): _PORT_SELECTOR,
+        probatio.Required(CONF_API_KEY): _PASSWORD_SELECTOR,
+    }
+)
+# Reauth flow: only credentials, connection settings preserved
+REAUTH_SCHEMA = _build_schema(
+    include_host=False, include_connection=False, credentials_optional=True
+)
+API_KEY_DOCUMENTATION_URL = (
+    "https://www.home-assistant.io/integrations/unifiprotect/#api-key-only"
+)
+# Reauth flow for public-API-only entries: the API key is the only credential
+REAUTH_API_KEY_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_API_KEY): _PASSWORD_SELECTOR}
+)
+
+
+async def async_local_user_documentation_url(hass: HomeAssistant) -> str:
+    """Get the documentation url for the full-access (local user) mode."""
+    integration = await async_get_integration(hass, DOMAIN)
+    return f"{integration.documentation}#full-access"
+
+
+def _host_is_direct_connect(host: str) -> bool:
+    """Check if a host is a unifi direct connect domain."""
+    return host.endswith(".ui.direct")
+
+
+async def _async_console_is_offline(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+) -> bool:
+    """Check if a console is offline.
+
+    We define offline by the config entry
+    is in a failure/retry state or the updates
+    are failing and the console is unreachable
+    since protect may be updating.
+    """
+    return bool(
+        entry.state in ENTRY_FAILURE_STATES
+        or not async_last_update_was_successful(hass, entry)
+    ) and not await async_console_is_alive(
+        async_get_clientsession(hass, verify_ssl=False), entry.data[CONF_HOST]
+    )
+
+
+class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
+    """Handle a UniFi Protect config flow."""
+
+    VERSION = 2
+
+    def __init__(self) -> None:
+        """Init the config flow."""
+        super().__init__()
+        self._discovered_device: dict[str, str] = {}
+
+    @override
+    async def async_step_integration_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> ConfigFlowResult:
+        """Handle integration discovery."""
+        self._discovered_device = discovery_info
+        mac = _async_unifi_mac_from_hass(discovery_info["hw_addr"])
+        await self.async_set_unique_id(mac)
+        source_ip = discovery_info["source_ip"]
+        direct_connect_domain = discovery_info["direct_connect_domain"]
+        for entry in self._async_current_entries():
+            if entry.source == SOURCE_IGNORE:
+                if entry.unique_id == mac:
+                    return self.async_abort(reason="already_configured")
+                continue
+            entry_host = entry.data[CONF_HOST]
+            entry_has_direct_connect = _host_is_direct_connect(entry_host)
+            if entry.unique_id == mac:
+                new_host = None
+                if (
+                    entry_has_direct_connect
+                    and direct_connect_domain
+                    and entry_host != direct_connect_domain
+                ):
+                    new_host = direct_connect_domain
+                elif (
+                    not entry_has_direct_connect
+                    and is_ip_address(entry_host)
+                    and entry_host != source_ip
+                    and await _async_console_is_offline(self.hass, entry)
+                ):
+                    new_host = source_ip
+                if new_host:
+                    self.hass.config_entries.async_update_entry(
+                        entry, data={**entry.data, CONF_HOST: new_host}
+                    )
+                return self.async_abort(reason="already_configured")
+            if entry_host in (direct_connect_domain, source_ip) or (
+                entry_has_direct_connect
+                and (ip := await _async_resolve(self.hass, entry_host))
+                and ip == source_ip
+            ):
+                return self.async_abort(reason="already_configured")
+        return await self.async_step_discovery_confirm()
+
+    @callback
+    def _async_discovery_placeholders(self) -> dict[str, str]:
+        """Build the title/description placeholders for the discovered console."""
+        discovery_info = self._discovered_device
+        return {
+            "name": discovery_info.get("name")
+            or discovery_info.get("hostname")
+            or discovery_info.get("product_name")
+            or f"NVR {_async_short_mac(discovery_info['hw_addr'])}",
+            "ip_address": discovery_info["source_ip"],
+        }
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user pick the connection mode for a discovered console."""
+        placeholders = self._async_discovery_placeholders()
+        self.context["title_placeholders"] = placeholders
+        return self.async_show_menu(
+            step_id="discovery_confirm",
+            menu_options=["discovery_full", "discovery_api_key"],
+            description_placeholders=placeholders,
+        )
+
+    async def async_step_discovery_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set up a discovered console with only an API key."""
+        errors: dict[str, str] = {}
+        discovery_info = self._discovered_device
+        placeholders = self._async_discovery_placeholders()
+
+        if user_input is not None:
+            # Prefer the direct-connect domain (verified SSL), fall back to
+            # the discovered source IP — mirroring the full-access flow.
+            candidates: list[tuple[str, bool]] = []
+            if discovery_info["direct_connect_domain"]:
+                candidates.append((discovery_info["direct_connect_domain"], True))
+            candidates.append((discovery_info["source_ip"], False))
+            for host, verify_ssl in candidates:
+                attempt = {
+                    CONF_HOST: host,
+                    CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
+                    CONF_VERIFY_SSL: verify_ssl,
+                    CONF_API_KEY: user_input[CONF_API_KEY],
+                    CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
+                }
+                mac, _, errors = await self._async_get_public_nvr_identity(attempt)
+                if mac and not errors:
+                    # Store the resolved NVR mac as the unique id (like the
+                    # manual API-key flow) so the entry's identity does not
+                    # depend on the provisional discovery hardware address.
+                    await self.async_set_unique_id(_async_unifi_mac_from_hass(mac))
+                    self._abort_if_unique_id_configured()
+                    return self._async_create_entry(placeholders["name"], attempt)
+
+        return self.async_show_form(
+            step_id="discovery_api_key",
+            description_placeholders={
+                **placeholders,
+                "api_key_documentation_url": API_KEY_DOCUMENTATION_URL,
+            },
+            data_schema=self.add_suggested_values_to_schema(
+                DISCOVERY_API_KEY_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
+
+    async def async_step_discovery_full(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set up a discovered console with a local user (full access)."""
+        errors: dict[str, str] = {}
+        discovery_info = self._discovered_device
+
+        form_data = {
+            CONF_HOST: discovery_info["direct_connect_domain"]
+            or discovery_info["source_ip"],
+            CONF_PORT: DEFAULT_PORT,
+            CONF_VERIFY_SSL: bool(discovery_info["direct_connect_domain"]),
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+        }
+
+        if user_input is not None:
+            # Merge user input with discovery info
+            merged_input = {**form_data, **user_input}
+            nvr_data = None
+            if discovery_info["direct_connect_domain"]:
+                merged_input[CONF_HOST] = discovery_info["direct_connect_domain"]
+                merged_input[CONF_VERIFY_SSL] = True
+                nvr_data, errors = await self._async_get_nvr_data(merged_input)
+            if not nvr_data or errors:
+                merged_input[CONF_HOST] = discovery_info["source_ip"]
+                merged_input[CONF_VERIFY_SSL] = False
+                nvr_data, errors = await self._async_get_nvr_data(merged_input)
+            if nvr_data and not errors:
+                return self._async_create_entry(nvr_data.display_name, merged_input)
+            # Preserve user input for form re-display, but keep discovery info
+            form_data = {
+                CONF_HOST: merged_input[CONF_HOST],
+                CONF_PORT: merged_input[CONF_PORT],
+                CONF_VERIFY_SSL: merged_input[CONF_VERIFY_SSL],
+                CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
+            }
+            if CONF_API_KEY in user_input:
+                form_data[CONF_API_KEY] = user_input[CONF_API_KEY]
+
+        placeholders = self._async_discovery_placeholders()
+        self.context["title_placeholders"] = placeholders
+        return self.async_show_form(
+            step_id="discovery_full",
+            description_placeholders={
+                **placeholders,
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
+                ),
+            },
+            data_schema=self.add_suggested_values_to_schema(
+                DISCOVERY_SCHEMA, form_data
+            ),
+            errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: UFPConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler()
+
+    @callback
+    def _async_create_entry(self, title: str, data: dict[str, Any]) -> ConfigFlowResult:
+        return self.async_create_entry(
+            title=title,
+            data={**_normalize_port(data), CONF_ID: title},
+            options={
+                CONF_DISABLE_RTSP: False,
+                CONF_ALL_UPDATES: False,
+                CONF_OVERRIDE_CHOST: False,
+                CONF_MAX_MEDIA: DEFAULT_MAX_MEDIA,
+            },
+        )
+
+    async def _async_get_nvr_data(
+        self,
+        user_input: dict[str, Any],
+    ) -> tuple[NVR | None, dict[str, str]]:
+        username = user_input.get(CONF_USERNAME, "")
+        password = user_input.get(CONF_PASSWORD, "")
+        if not username or not password:
+            # An entry created in public-API-only mode has no stored
+            # credentials to fall back on; the client constructor rejects an
+            # incomplete pair, so fail as invalid_auth before building it.
+            return None, {CONF_PASSWORD: "invalid_auth"}
+
+        session = async_create_clientsession(
+            self.hass, cookie_jar=CookieJar(unsafe=True)
+        )
+        public_api_session = async_get_clientsession(self.hass)
+
+        host = user_input[CONF_HOST]
+        port = int(user_input.get(CONF_PORT, DEFAULT_PORT))
+        verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+
+        protect = ProtectApiClient(
+            session=session,
+            public_api_session=public_api_session,
+            host=host,
+            port=port,
+            username=username,
+            password=password,
+            api_key=user_input.get(CONF_API_KEY, ""),
+            verify_ssl=verify_ssl,
+            cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
+            config_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
+        )
+
+        errors = {}
+        nvr_data = None
+        try:
+            bootstrap = await protect.get_bootstrap()
+            nvr_data = bootstrap.nvr
+        except NotAuthorized as ex:
+            _LOGGER.debug(ex)
+            errors[CONF_PASSWORD] = "invalid_auth"
+        except ClientError as ex:
+            _LOGGER.error(ex)
+            errors["base"] = "cannot_connect"
+        else:
+            if nvr_data.version < MIN_REQUIRED_PROTECT_V:
+                _LOGGER.debug(
+                    OUTDATED_LOG_MESSAGE,
+                    nvr_data.version,
+                    MIN_REQUIRED_PROTECT_V,
+                )
+                errors["base"] = "protect_version"
+
+            auth_user = bootstrap.users.get(bootstrap.auth_user_id)
+            if auth_user and auth_user.cloud_account:
+                errors["base"] = "cloud_user"
+
+        # Only validate API key if bootstrap succeeded
+        if nvr_data and not errors:
+            try:
+                await protect.get_meta_info()
+            except NotAuthorized as ex:
+                _LOGGER.debug(ex)
+                errors[CONF_API_KEY] = "invalid_auth"
+            except ClientError as ex:
+                _LOGGER.error(ex)
+                errors["base"] = "cannot_connect"
+
+        return nvr_data, errors
+
+    async def _async_validate_public_api_key(
+        self,
+        user_input: dict[str, Any],
+    ) -> tuple[ProtectApiClient | None, dict[str, str]]:
+        """Validate a public-API-only (API-key) connection's auth and version.
+
+        Returns the validated client (auth and version checked via
+        ``get_meta_info``; the public bootstrap is not primed and the identity
+        is not resolved) and any errors. Callers that need the NVR identity
+        should use ``_async_get_public_nvr_identity`` instead; this alone is
+        enough for reauth, which intentionally does not re-check identity.
+        """
+        public_api_session = async_get_clientsession(self.hass)
+        host = user_input[CONF_HOST]
+        port = int(user_input.get(CONF_PORT, DEFAULT_PORT))
+        verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+
+        protect = ProtectApiClient.public_only(
+            host,
+            port,
+            api_key=user_input[CONF_API_KEY],
+            verify_ssl=verify_ssl,
+            public_api_session=public_api_session,
+        )
+
+        errors: dict[str, str] = {}
+        try:
+            meta = await protect.get_meta_info()
+        except NotAuthorized as ex:
+            _LOGGER.debug(ex)
+            errors[CONF_API_KEY] = "invalid_auth"
+            return None, errors
+        except (TimeoutError, ClientError) as ex:
+            _LOGGER.error(ex)
+            errors["base"] = "cannot_connect"
+            return None, errors
+
+        if meta.version < MIN_REQUIRED_PROTECT_V:
+            _LOGGER.debug(OUTDATED_LOG_MESSAGE, meta.version, MIN_REQUIRED_PROTECT_V)
+            errors["base"] = "protect_version"
+            return None, errors
+
+        return protect, errors
+
+    async def _async_get_public_nvr_identity(
+        self,
+        user_input: dict[str, Any],
+    ) -> tuple[str | None, str, dict[str, str]]:
+        """Validate a public-API-only (API-key) connection and fetch its NVR.
+
+        Returns the NVR mac (the unique id), its display name (the entry title)
+        and any errors. ``GET /v1/nvrs`` carries both, and its mac is required
+        from the minimum supported version on.
+        """
+        protect, errors = await self._async_validate_public_api_key(user_input)
+        if protect is None:
+            return None, "", errors
+
+        try:
+            nvr = await protect.get_nvr_public()
+        except NotAuthorized as ex:
+            # NotAuthorized subclasses ClientError, so it has to come first or
+            # a key this endpoint rejects reads as a connection failure.
+            _LOGGER.debug(ex)
+            errors[CONF_API_KEY] = "invalid_auth"
+            return None, "", errors
+        except (TimeoutError, ClientError) as ex:
+            _LOGGER.error(ex)
+            errors["base"] = "cannot_connect"
+            return None, "", errors
+
+        if not nvr.mac:
+            errors["base"] = "cannot_connect"
+            return None, "", errors
+        return nvr.mac, nvr.display_name, errors
+
+    async def async_step_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the public-API-only (API key, no local user) setup."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            mac, name, errors = await self._async_get_public_nvr_identity(user_input)
+            if mac and not errors:
+                await self.async_set_unique_id(_async_unifi_mac_from_hass(mac))
+                self._abort_if_unique_id_configured()
+                return self._async_create_entry(
+                    name or user_input[CONF_HOST],
+                    {
+                        **user_input,
+                        CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="api_key",
+            description_placeholders={
+                "api_key_documentation_url": API_KEY_DOCUMENTATION_URL
+            },
+            data_schema=self.add_suggested_values_to_schema(API_KEY_SCHEMA, user_input),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        if entry_data.get(CONF_CONNECTION_MODE) == CONNECTION_MODE_API_KEY_ONLY:
+            # Public-API-only entry: only the API key is in use, and asking
+            # for a local user here would silently flip the mode (that
+            # belongs to reconfigure); only the API key can be renewed.
+            return await self.async_step_reauth_api_key()
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reauth a public-API-only entry with a new API key."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            validate_input = {
+                CONF_HOST: reauth_entry.data[CONF_HOST],
+                CONF_PORT: reauth_entry.data[CONF_PORT],
+                CONF_VERIFY_SSL: reauth_entry.data[CONF_VERIFY_SSL],
+                CONF_API_KEY: user_input[CONF_API_KEY],
+            }
+            # Identity is pinned by the stored host; like the full-access
+            # reauth, no identity resolution or re-check at all.
+            _, errors = await self._async_validate_public_api_key(validate_input)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data={
+                        **reauth_entry.data,
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                    },
+                )
+
+        self.context["title_placeholders"] = {
+            "name": reauth_entry.title,
+            "ip_address": reauth_entry.data[CONF_HOST],
+        }
+        return self.async_show_form(
+            step_id="reauth_api_key",
+            description_placeholders={
+                "api_key_documentation_url": API_KEY_DOCUMENTATION_URL
+            },
+            data_schema=REAUTH_API_KEY_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth."""
+        errors: dict[str, str] = {}
+
+        reauth_entry = self._get_reauth_entry()
+        form_data = _build_data_without_credentials(reauth_entry.data)
+
+        if user_input is not None:
+            # Merge with existing config - empty credentials keep existing values
+            merged_input = {
+                **reauth_entry.data,
+                **_filter_empty_credentials(user_input),
+            }
+
+            # Clear stored session if credentials changed to force fresh authentication
+            await _async_clear_session_if_credentials_changed(
+                self.hass, reauth_entry, merged_input
+            )
+
+            # validate login data
+            _, errors = await self._async_get_nvr_data(merged_input)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data=_normalize_port(merged_input)
+                )
+
+        self.context["title_placeholders"] = {
+            "name": reauth_entry.title,
+            "ip_address": reauth_entry.data[CONF_HOST],
+        }
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            description_placeholders={
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
+                ),
+            },
+            data_schema=self.add_suggested_values_to_schema(REAUTH_SCHEMA, form_data),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user pick the connection mode when reconfiguring."""
+        return self.async_show_menu(
+            step_id="reconfigure",
+            menu_options=["reconfigure_full", "reconfigure_api_key"],
+        )
+
+    async def async_step_reconfigure_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure onto (or within) the public-API-only mode.
+
+        Stored local-user credentials are kept (unused in this mode) so
+        switching back to full access is lossless.
+        """
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            mac, _, errors = await self._async_get_public_nvr_identity(user_input)
+            if mac and not errors:
+                await self.async_set_unique_id(_async_unifi_mac_from_hass(mac))
+                self._abort_if_unique_id_mismatch(reason="wrong_nvr")
+                new_data = {
+                    **reconfigure_entry.data,
+                    **_normalize_port(user_input),
+                    CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
+                    CONF_ID: reconfigure_entry.data.get(CONF_ID, user_input[CONF_HOST]),
+                }
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data=new_data
+                )
+
+        form_data = {
+            CONF_HOST: reconfigure_entry.data[CONF_HOST],
+            CONF_PORT: reconfigure_entry.data[CONF_PORT],
+            CONF_VERIFY_SSL: reconfigure_entry.data[CONF_VERIFY_SSL],
+        }
+        return self.async_show_form(
+            step_id="reconfigure_api_key",
+            description_placeholders={
+                "api_key_documentation_url": API_KEY_DOCUMENTATION_URL
+            },
+            data_schema=self.add_suggested_values_to_schema(API_KEY_SCHEMA, form_data),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure_full(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration with a local user (full access)."""
+        errors: dict[str, str] = {}
+
+        reconfigure_entry = self._get_reconfigure_entry()
+        form_data = _build_data_without_credentials(reconfigure_entry.data)
+
+        if user_input is not None:
+            # Merge with existing config - empty credentials keep existing values
+            merged_input = {
+                **reconfigure_entry.data,
+                **_filter_empty_credentials(user_input),
+            }
+            # Full access is the default mode; drop the field so the entry
+            # matches one that never switched.
+            merged_input.pop(CONF_CONNECTION_MODE, None)
+
+            # Clear stored session if credentials changed to force fresh authentication
+            await _async_clear_session_if_credentials_changed(
+                self.hass, reconfigure_entry, merged_input
+            )
+
+            # validate login data
+            nvr_data, errors = await self._async_get_nvr_data(merged_input)
+            if nvr_data and not errors:
+                new_unique_id = _async_unifi_mac_from_hass(nvr_data.mac)
+                _LOGGER.debug(
+                    "Reconfigure: Current unique_id=%s, NVR MAC=%s, formatted=%s",
+                    reconfigure_entry.unique_id,
+                    nvr_data.mac,
+                    new_unique_id,
+                )
+                await self.async_set_unique_id(new_unique_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_nvr")
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data=_normalize_port(merged_input),
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure_full",
+            description_placeholders={
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
+                ),
+            },
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA, form_data
+            ),
+            errors=errors,
+        )
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user pick the connection mode (full vs. public-API-only)."""
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["full", "api_key"],
+        )
+
+    async def async_step_full(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle full-access setup with a local user (username + password)."""
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            nvr_data, errors = await self._async_get_nvr_data(user_input)
+
+            if nvr_data and not errors:
+                await self.async_set_unique_id(nvr_data.mac)
+                self._abort_if_unique_id_configured()
+
+                return self._async_create_entry(nvr_data.display_name, user_input)
+
+        return self.async_show_form(
+            step_id="full",
+            description_placeholders={
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
+                )
+            },
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
+            errors=errors,
+        )
+
+
+class OptionsFlowHandler(OptionsFlowWithReload):
+    """Handle options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_DISABLE_RTSP,
+                        default=self.config_entry.options.get(CONF_DISABLE_RTSP, False),
+                    ): bool,
+                    probatio.Optional(
+                        CONF_ALL_UPDATES,
+                        default=self.config_entry.options.get(CONF_ALL_UPDATES, False),
+                    ): bool,
+                    probatio.Optional(
+                        CONF_OVERRIDE_CHOST,
+                        default=self.config_entry.options.get(
+                            CONF_OVERRIDE_CHOST, False
+                        ),
+                    ): bool,
+                    probatio.Optional(
+                        CONF_MAX_MEDIA,
+                        default=self.config_entry.options.get(
+                            CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA
+                        ),
+                    ): probatio.All(
+                        probatio.Coerce(int), probatio.Range(min=100, max=10000)
+                    ),
+                }
+            ),
+        )

@@ -1,0 +1,74 @@
+# serializer version: 1
+# name: test_light_platform_snapshot[device_payload0][light.device_with_led_led-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.RGB: 'rgb'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'light.device_with_led_led',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'LED',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'led_control',
+    'unique_id': 'led-10:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_light_platform_snapshot[device_payload0][light.device_with_led_led-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 204,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device with LED LED',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
+        240.0,
+        100.0,
+      ),
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
+        0,
+        0,
+        255,
+      ),
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.RGB: 'rgb'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
+        0.136,
+        0.04,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.device_with_led_led',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

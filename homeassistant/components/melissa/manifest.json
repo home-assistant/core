@@ -1,0 +1,10 @@
+{
+  "domain": "melissa",
+  "name": "Melissa",
+  "codeowners": ["@kennedyshead"],
+  "documentation": "https://www.home-assistant.io/integrations/melissa",
+  "iot_class": "cloud_polling",
+  "loggers": ["melissa"],
+  "quality_scale": "legacy",
+  "requirements": ["py-melissa-climate==3.0.3"]
+}

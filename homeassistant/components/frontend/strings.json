@@ -1,0 +1,30 @@
+{
+  "preview_features": {
+    "winter_mode": {
+      "description": "Adds falling snowflakes on your screen. Get your home ready for winter! ❄️\n\nIf you have animations disabled in your device accessibility settings, this feature will not work.",
+      "disable_confirmation": "Snowflakes will no longer fall on your screen. You can re-enable this at any time in Labs settings.",
+      "enable_confirmation": "Snowflakes will start falling on your screen. You can turn this off at any time in Labs settings.",
+      "name": "Winter mode"
+    }
+  },
+  "services": {
+    "reload_themes": {
+      "description": "Reloads themes from the YAML-configuration.",
+      "name": "Reload themes"
+    },
+    "set_theme": {
+      "description": "Sets the theme Home Assistant uses. Can be overridden by a user.",
+      "fields": {
+        "name": {
+          "description": "Name of the theme that is used by default.",
+          "name": "Theme"
+        },
+        "name_dark": {
+          "description": "Alternative dark-mode theme that is used by default.",
+          "name": "Dark theme override"
+        }
+      },
+      "name": "Set theme"
+    }
+  }
+}

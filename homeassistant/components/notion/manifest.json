@@ -1,0 +1,11 @@
+{
+  "domain": "notion",
+  "name": "Notion",
+  "codeowners": ["@bachya"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/notion",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["aionotion"],
+  "requirements": ["aionotion==2024.03.0"]
+}

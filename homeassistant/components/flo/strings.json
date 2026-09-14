@@ -1,0 +1,84 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Flo device."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "pending_system_alerts": {
+        "name": "Pending system alerts"
+      },
+      "water_detected": {
+        "name": "Water detected"
+      }
+    },
+    "sensor": {
+      "current_flow_rate": {
+        "name": "Water flow rate"
+      },
+      "current_system_mode": {
+        "name": "Current system mode"
+      },
+      "daily_consumption": {
+        "name": "Today's water usage"
+      },
+      "water_pressure": {
+        "name": "Water pressure"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      }
+    },
+    "switch": {
+      "shutoff_valve": {
+        "name": "Shutoff valve"
+      }
+    }
+  },
+  "services": {
+    "run_health_test": {
+      "description": "Requests the Flo device to run a health test.",
+      "name": "Run health test"
+    },
+    "set_away_mode": {
+      "description": "Sets the location into away mode.",
+      "name": "Set away mode"
+    },
+    "set_home_mode": {
+      "description": "Sets the location into home mode.",
+      "name": "Set home mode"
+    },
+    "set_sleep_mode": {
+      "description": "Sets the location into sleep mode.",
+      "fields": {
+        "revert_to_mode": {
+          "description": "The mode to revert to after the 'Sleep minutes' duration has elapsed.",
+          "name": "Revert to mode"
+        },
+        "sleep_minutes": {
+          "description": "The duration to sleep in minutes.",
+          "name": "Sleep minutes"
+        }
+      },
+      "name": "Set sleep mode"
+    }
+  }
+}

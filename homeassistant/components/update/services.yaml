@@ -1,0 +1,27 @@
+install:
+  target:
+    entity:
+      domain: update
+  fields:
+    version:
+      required: false
+      example: "1.0.0"
+      selector:
+        text:
+    backup:
+      filter:
+        supported_features:
+          - update.UpdateEntityFeature.BACKUP
+      required: false
+      selector:
+        boolean:
+
+skip:
+  target:
+    entity:
+      domain: update
+
+clear_skipped:
+  target:
+    entity:
+      domain: update

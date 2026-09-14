@@ -1,0 +1,8 @@
+{
+  "domain": "geo_location",
+  "name": "Geolocation",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/geo_location",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

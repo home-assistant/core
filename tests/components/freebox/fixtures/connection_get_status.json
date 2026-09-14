@@ -1,0 +1,14 @@
+{
+  "type": "ethernet",
+  "rate_down": 198900,
+  "bytes_up": 12035728872949,
+  "ipv4_port_range": [0, 65535],
+  "rate_up": 1440000,
+  "bandwidth_up": 700000000,
+  "ipv6": "2a01:e35:ffff:ffff::1",
+  "bandwidth_down": 1000000000,
+  "media": "ftth",
+  "state": "up",
+  "bytes_down": 2355966141297,
+  "ipv4": "82.67.00.00"
+}

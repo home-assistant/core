@@ -1,0 +1,43 @@
+add_device:
+  fields:
+    gw_mac:
+      required: true
+      example: 34ce00880088
+      selector:
+        text:
+play_ringtone:
+  fields:
+    gw_mac:
+      required: true
+      example: 34ce00880088
+      selector:
+        text:
+    ringtone_id:
+      required: true
+      example: 8
+      selector:
+        text:
+    ringtone_vol:
+      selector:
+        number:
+          min: 0
+          max: 100
+remove_device:
+  fields:
+    device_id:
+      required: true
+      example: 158d0000000000
+      selector:
+        text:
+    gw_mac:
+      required: true
+      example: 34ce00880088
+      selector:
+        text:
+stop_ringtone:
+  fields:
+    gw_mac:
+      required: true
+      example: 34ce00880088
+      selector:
+        text:

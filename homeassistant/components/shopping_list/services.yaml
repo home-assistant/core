@@ -1,0 +1,41 @@
+add_item:
+  fields:
+    name:
+      required: true
+      example: Beer
+      selector:
+        text:
+
+remove_item:
+  fields:
+    name:
+      required: true
+      example: Beer
+      selector:
+        text:
+
+complete_item:
+  fields:
+    name:
+      required: true
+      example: Beer
+      selector:
+        text:
+
+incomplete_item:
+  fields:
+    name:
+      example: Beer
+      required: true
+      selector:
+        text:
+
+complete_all:
+incomplete_all:
+clear_completed_items:
+sort:
+  fields:
+    reverse:
+      default: false
+      selector:
+        boolean:

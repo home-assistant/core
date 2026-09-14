@@ -1,0 +1,51 @@
+"""Support for YouTube."""
+
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
+
+from .api import AsyncConfigEntryAuth
+from .coordinator import YouTubeConfigEntry, YouTubeDataUpdateCoordinator
+
+PLATFORMS = [Platform.SENSOR]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> bool:
+    """Set up YouTube from a config entry."""
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    session = OAuth2Session(hass, entry, implementation)
+    auth = AsyncConfigEntryAuth(hass, session)
+    await auth.check_and_refresh_token()
+    coordinator = YouTubeDataUpdateCoordinator(hass, entry, auth)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    await delete_devices(hass, entry, coordinator)
+
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def delete_devices(
+    hass: HomeAssistant,
+    entry: YouTubeConfigEntry,
+    coordinator: YouTubeDataUpdateCoordinator,
+) -> None:
+    """Delete all devices created by integration."""
+    channel_ids = list(coordinator.data)
+    device_registry = dr.async_get(hass)
+    dev_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    for dev_entry in dev_entries:
+        if any(identifier[1] in channel_ids for identifier in dev_entry.identifiers):
+            device_registry.async_remove_device(dev_entry.id)

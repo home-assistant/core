@@ -1,0 +1,11 @@
+{
+  "id": 6,
+  "globalID": 6,
+  "type": "StateChanged",
+  "time": "2024-01-01T00:05:00.000000000Z",
+  "data": {
+    "folder": "test-folder",
+    "from": "idle",
+    "to": "syncing"
+  }
+}

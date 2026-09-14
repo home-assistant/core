@@ -1,0 +1,11 @@
+{
+  "domain": "firmata",
+  "name": "Firmata",
+  "codeowners": ["@DaAwesomeP"],
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/firmata",
+  "iot_class": "local_push",
+  "loggers": ["pymata_express"],
+  "quality_scale": "legacy",
+  "requirements": ["pymata-express==1.19"]
+}

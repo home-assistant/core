@@ -1,0 +1,309 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "pending_quest": {
+        "default": "mdi:script-outline",
+        "state": {
+          "on": "mdi:script-text-outline"
+        }
+      },
+      "quest_running": {
+        "default": "mdi:script-text-play"
+      }
+    },
+    "button": {
+      "allocate_all_stat_points": {
+        "default": "mdi:chart-box-outline"
+      },
+      "brightness": {
+        "default": "mdi:flare"
+      },
+      "buy_health_potion": {
+        "default": "mdi:flask-round-bottom"
+      },
+      "defensive_stance": {
+        "default": "mdi:shield-sword"
+      },
+      "earth": {
+        "default": "mdi:landslide"
+      },
+      "frost": {
+        "default": "mdi:snowflake"
+      },
+      "heal": {
+        "default": "mdi:aurora"
+      },
+      "heal_all": {
+        "default": "mdi:hand-heart-outline"
+      },
+      "intimidate": {
+        "default": "mdi:emoticon-angry"
+      },
+      "mpheal": {
+        "default": "mdi:broadcast"
+      },
+      "protect_aura": {
+        "default": "mdi:shimmer"
+      },
+      "revive": {
+        "default": "mdi:grave-stone"
+      },
+      "run_cron": {
+        "default": "mdi:weather-sunset"
+      },
+      "stealth": {
+        "default": "mdi:ninja"
+      },
+      "tools_of_trade": {
+        "default": "mdi:domino-mask"
+      },
+      "valorous_presence": {
+        "default": "mdi:shield-sun"
+      }
+    },
+    "calendar": {
+      "daily_reminders": {
+        "default": "mdi:reminder"
+      },
+      "dailys": {
+        "default": "mdi:calendar-multiple"
+      },
+      "todo_reminders": {
+        "default": "mdi:reminder"
+      },
+      "todos": {
+        "default": "mdi:calendar-check"
+      }
+    },
+    "notify": {
+      "party_chat": {
+        "default": "mdi:forum"
+      }
+    },
+    "sensor": {
+      "boss": {
+        "default": "mdi:emoticon-devil"
+      },
+      "boss_hp": {
+        "default": "mdi:heart"
+      },
+      "boss_hp_remaining": {
+        "default": "mdi:heart"
+      },
+      "class": {
+        "default": "mdi:sword",
+        "state": {
+          "healer": "mdi:shield",
+          "rogue": "mdi:ninja",
+          "warrior": "mdi:sword",
+          "wizard": "mdi:wizard-hat"
+        }
+      },
+      "collected_items": {
+        "default": "mdi:sack"
+      },
+      "constitution": {
+        "default": "mdi:run-fast"
+      },
+      "display_name": {
+        "default": "mdi:account-circle"
+      },
+      "eggs_total": {
+        "default": "mdi:egg",
+        "state": {
+          "0": "mdi:egg-off"
+        }
+      },
+      "experience": {
+        "default": "mdi:star-four-points"
+      },
+      "experience_max": {
+        "default": "mdi:star-four-points"
+      },
+      "food_total": {
+        "default": "mdi:candy",
+        "state": {
+          "0": "mdi:candy-off"
+        }
+      },
+      "gems": {
+        "default": "mdi:diamond-stone"
+      },
+      "gold": {
+        "default": "mdi:sack"
+      },
+      "group_leader": {
+        "default": "mdi:shield-crown"
+      },
+      "hatching_potions_total": {
+        "default": "mdi:flask-round-bottom"
+      },
+      "health": {
+        "default": "mdi:heart",
+        "state": {
+          "0": "mdi:skull-outline"
+        }
+      },
+      "intelligence": {
+        "default": "mdi:head-snowflake-outline"
+      },
+      "last_checkin": {
+        "default": "mdi:login-variant"
+      },
+      "level": {
+        "default": "mdi:crown-circle"
+      },
+      "mana": {
+        "default": "mdi:flask",
+        "state": {
+          "0": "mdi:flask-empty-outline"
+        }
+      },
+      "mana_max": {
+        "default": "mdi:flask"
+      },
+      "pending_damage": {
+        "default": "mdi:sword"
+      },
+      "pending_quest_items": {
+        "default": "mdi:sack"
+      },
+      "perception": {
+        "default": "mdi:eye-outline"
+      },
+      "quest": {
+        "default": "mdi:script-text-outline"
+      },
+      "quest_scrolls": {
+        "default": "mdi:script-text-outline"
+      },
+      "saddle": {
+        "default": "mdi:horse"
+      },
+      "strength": {
+        "default": "mdi:arm-flex-outline"
+      },
+      "trinkets": {
+        "default": "mdi:timer-sand"
+      }
+    },
+    "switch": {
+      "sleep": {
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
+      }
+    },
+    "todo": {
+      "dailys": {
+        "default": "mdi:calendar-month"
+      },
+      "todos": {
+        "default": "mdi:checkbox-outline"
+      }
+    }
+  },
+  "services": {
+    "abort_quest": {
+      "service": "mdi:script-text-key"
+    },
+    "accept_quest": {
+      "service": "mdi:script-text"
+    },
+    "api_call": {
+      "service": "mdi:console"
+    },
+    "cancel_quest": {
+      "service": "mdi:script-text-key"
+    },
+    "cast_skill": {
+      "service": "mdi:creation-outline"
+    },
+    "create_daily": {
+      "sections": {
+        "developer_options": "mdi:test-tube",
+        "repeat_monthly_options": "mdi:calendar-refresh",
+        "repeat_weekly_options": "mdi:calendar-refresh"
+      },
+      "service": "mdi:calendar-month"
+    },
+    "create_habit": {
+      "sections": {
+        "developer_options": "mdi:test-tube"
+      },
+      "service": "mdi:contrast-box"
+    },
+    "create_reward": {
+      "sections": {
+        "developer_options": "mdi:test-tube"
+      },
+      "service": "mdi:treasure-chest-outline"
+    },
+    "create_todo": {
+      "sections": {
+        "developer_options": "mdi:test-tube"
+      },
+      "service": "mdi:pencil-box-outline"
+    },
+    "get_tasks": {
+      "sections": {
+        "filter": "mdi:calendar-filter"
+      },
+      "service": "mdi:calendar-export"
+    },
+    "leave_quest": {
+      "service": "mdi:script-text"
+    },
+    "reject_quest": {
+      "service": "mdi:script-text"
+    },
+    "score_habit": {
+      "service": "mdi:counter"
+    },
+    "score_reward": {
+      "service": "mdi:sack"
+    },
+    "start_quest": {
+      "service": "mdi:script-text-key"
+    },
+    "transformation": {
+      "service": "mdi:flask-round-bottom"
+    },
+    "update_daily": {
+      "sections": {
+        "checklist_options": "mdi:format-list-checks",
+        "developer_options": "mdi:test-tube",
+        "reminder_options": "mdi:reminder",
+        "repeat_monthly_options": "mdi:calendar-refresh",
+        "repeat_weekly_options": "mdi:calendar-refresh",
+        "tag_options": "mdi:tag"
+      },
+      "service": "mdi:calendar-month"
+    },
+    "update_habit": {
+      "sections": {
+        "developer_options": "mdi:test-tube",
+        "tag_options": "mdi:tag"
+      },
+      "service": "mdi:contrast-box"
+    },
+    "update_reward": {
+      "sections": {
+        "developer_options": "mdi:test-tube",
+        "tag_options": "mdi:tag"
+      },
+      "service": "mdi:treasure-chest"
+    },
+    "update_todo": {
+      "sections": {
+        "checklist_options": "mdi:format-list-checks",
+        "developer_options": "mdi:test-tube",
+        "duedate_options": "mdi:calendar-blank",
+        "reminder_options": "mdi:reminder",
+        "tag_options": "mdi:tag"
+      },
+      "service": "mdi:pencil-box-outline"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "zone": "Zone"
+        },
+        "description": "Select location to use for weather forecasting"
+      }
+    }
+  }
+}

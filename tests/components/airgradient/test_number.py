@@ -1,0 +1,187 @@
+"""Tests for the AirGradient number platform."""
+
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
+
+from airgradient import AirGradientConnectionError, AirGradientError, ApiVersion
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+
+from . import async_load_config_fixture, load_config_fixture, setup_integration
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_setting_value(
+    hass: HomeAssistant,
+    mock_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting value."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={ATTR_VALUE: 50},
+        target={ATTR_ENTITY_ID: "number.airgradient_display_brightness"},
+        blocking=True,
+    )
+    mock_airgradient_client.set_display_brightness.assert_called_once()
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={ATTR_VALUE: 50},
+        target={ATTR_ENTITY_ID: "number.airgradient_led_bar_brightness"},
+        blocking=True,
+    )
+    mock_airgradient_client.set_led_bar_brightness.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "value", "method"),
+    [
+        (
+            "number.airgradient_measurement_interval",
+            300,
+            "set_measurement_interval",
+        ),
+    ],
+)
+async def test_v1_number_writes(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    value: int,
+    method: str,
+) -> None:
+    """Test V1 number writes."""
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={ATTR_VALUE: value},
+        target={ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    getattr(mock_v1_airgradient_client, method).assert_awaited_once_with(value)
+
+
+async def test_v1_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test V1 number entities."""
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_cloud_creates_no_number(
+    hass: HomeAssistant,
+    mock_cloud_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test cloud configuration control."""
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert len(hass.states.async_all()) == 0
+
+    mock_cloud_airgradient_client.get_config.return_value = (
+        await async_load_config_fixture(hass, "get_config_local.json")
+    )
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    mock_cloud_airgradient_client.get_config.return_value = (
+        await async_load_config_fixture(hass, "get_config_cloud.json")
+    )
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_message"),
+    [
+        (
+            AirGradientConnectionError("Something happened"),
+            "An error occurred while communicating with the"
+            " Airgradient device: Something happened",
+        ),
+        (
+            AirGradientError("Something else happened"),
+            "An unknown error occurred while communicating"
+            " with the Airgradient device:"
+            " Something else happened",
+        ),
+    ],
+)
+async def test_exception_handling(
+    hass: HomeAssistant,
+    mock_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error_message: str,
+) -> None:
+    """Test exception handling."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_airgradient_client.set_display_brightness.side_effect = exception
+    with pytest.raises(HomeAssistantError, match=error_message):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            service_data={ATTR_VALUE: 50},
+            target={ATTR_ENTITY_ID: "number.airgradient_display_brightness"},
+            blocking=True,
+        )

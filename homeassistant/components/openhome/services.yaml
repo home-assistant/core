@@ -1,0 +1,14 @@
+# Describes the format for available openhome services
+
+invoke_pin:
+  target:
+    entity:
+      integration: openhome
+      domain: media_player
+  fields:
+    pin:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1000

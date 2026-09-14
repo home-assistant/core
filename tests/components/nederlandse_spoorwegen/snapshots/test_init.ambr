@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_device_registry_integration
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'nederlandse_spoorwegen',
+          '01K721DZPMEN39R5DK0ATBMSY8',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Nederlandse Spoorwegen',
+      'model': 'Route',
+      'model_id': None,
+      'name': 'To work',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'nederlandse_spoorwegen',
+          '01K721DZPMEN39R5DK0ATBMSY9',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Nederlandse Spoorwegen',
+      'model': 'Route',
+      'model_id': None,
+      'name': 'To home',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---

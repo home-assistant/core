@@ -1,0 +1,131 @@
+"""Adds config flow for Airly."""
+
+from asyncio import timeout
+from http import HTTPStatus
+import logging
+from typing import Any, override
+
+from aiohttp import ClientConnectorError, ClientSession
+from airly import Airly
+from airly.exceptions import AirlyError
+import probatio
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import (
+    CONF_USE_NEAREST,
+    DEFAULT_NAME,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+    NO_AIRLY_SENSORS,
+)
+
+DESCRIPTION_PLACEHOLDERS = {
+    "developer_registration_url": "https://developer.airly.eu/register",
+}
+_LOGGER = logging.getLogger(__name__)
+
+
+class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
+    """Config flow for Airly."""
+
+    VERSION = 1
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by the user."""
+        errors = {}
+        use_nearest = False
+
+        websession = async_get_clientsession(self.hass)
+
+        if user_input is not None:
+            await self.async_set_unique_id(
+                f"{user_input[CONF_LATITUDE]}-{user_input[CONF_LONGITUDE]}"
+            )
+            self._abort_if_unique_id_configured()
+            try:
+                location_point_valid = await check_location(
+                    websession,
+                    user_input[CONF_API_KEY],
+                    user_input[CONF_LATITUDE],
+                    user_input[CONF_LONGITUDE],
+                )
+                if not location_point_valid:
+                    location_nearest_valid = await check_location(
+                        websession,
+                        user_input[CONF_API_KEY],
+                        user_input[CONF_LATITUDE],
+                        user_input[CONF_LONGITUDE],
+                        use_nearest=True,
+                    )
+            except AirlyError as err:
+                if err.status_code == HTTPStatus.UNAUTHORIZED:
+                    errors["base"] = "invalid_api_key"
+                elif err.status_code == HTTPStatus.NOT_FOUND:
+                    errors["base"] = "wrong_location"
+                else:
+                    errors["base"] = "unknown"
+            except ClientConnectorError, TimeoutError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if not location_point_valid:
+                    if not location_nearest_valid:
+                        return self.async_abort(reason="wrong_location")
+                    use_nearest = True
+                return self.async_create_entry(
+                    title=DEFAULT_NAME,
+                    data={**user_input, CONF_USE_NEAREST: use_nearest},
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_API_KEY): str,
+                    probatio.Optional(
+                        CONF_LATITUDE, default=self.hass.config.latitude
+                    ): cv.latitude,
+                    probatio.Optional(
+                        CONF_LONGITUDE, default=self.hass.config.longitude
+                    ): cv.longitude,
+                }
+            ),
+            errors=errors,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
+        )
+
+
+async def check_location(
+    client: ClientSession,
+    api_key: str,
+    latitude: float,
+    longitude: float,
+    use_nearest: bool = False,
+) -> bool:
+    """Return true if location is valid."""
+    airly = Airly(api_key, client)
+    if use_nearest:
+        measurements = airly.create_measurements_session_nearest(
+            latitude=latitude, longitude=longitude, max_distance_km=5
+        )
+    else:
+        measurements = airly.create_measurements_session_point(
+            latitude=latitude, longitude=longitude
+        )
+    async with timeout(DEFAULT_TIMEOUT):
+        await measurements.update()
+
+    current = measurements.current
+
+    if current["indexes"][0]["description"] == NO_AIRLY_SENSORS:
+        return False
+    return True

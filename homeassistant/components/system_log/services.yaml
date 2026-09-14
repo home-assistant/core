@@ -1,0 +1,23 @@
+clear:
+write:
+  fields:
+    message:
+      required: true
+      example: Something went wrong
+      selector:
+        text:
+    level:
+      default: error
+      selector:
+        select:
+          options:
+            - "debug"
+            - "info"
+            - "warning"
+            - "error"
+            - "critical"
+          translation_key: level
+    logger:
+      example: mycomponent.myplatform
+      selector:
+        text:

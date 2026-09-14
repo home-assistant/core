@@ -1,0 +1,67 @@
+[
+  {
+    "input": "doorbell",
+    "param": "1",
+    "output": [
+      {
+        "event": "notify",
+        "param": "",
+        "schedule": {
+          "weekdays": [
+            {
+              "to": "107999",
+              "from": "108000"
+            }
+          ]
+        }
+      },
+      {
+        "event": "http",
+        "param": "0",
+        "schedule": {
+          "weekdays": [
+            {
+              "to": "107999",
+              "from": "108000"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "input": "motion",
+    "param": "",
+    "output": [
+      {
+        "event": "notify",
+        "param": "",
+        "schedule": {
+          "weekdays": [
+            {
+              "to": "107999",
+              "from": "108000"
+            }
+          ]
+        }
+      },
+      {
+        "event": "http",
+        "param": "5",
+        "schedule": {
+          "weekdays": [
+            {
+              "to": "107999",
+              "from": "108000"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "input": "relay",
+    "param": "1",
+    "output": []
+  }
+]

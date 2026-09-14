@@ -1,0 +1,8 @@
+template:
+  sensor:
+    - name: test1
+      state: "{{ (states.sensor.test2.state |int) + (states.sensor.test3.state |int)}}"
+    - name: test2
+      state: "{{ 1 }}"
+    - name: test3
+      state: "{{ 2 }}"

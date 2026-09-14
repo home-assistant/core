@@ -1,0 +1,1108 @@
+[
+  {
+    "raw": {},
+    "redacted": {}
+  },
+  {
+    "raw": {
+      "inputs": [{ "intent": "action.devices.SYNC" }],
+      "requestId": "12705793367478976640"
+    },
+    "redacted": {
+      "inputs": [{ "intent": "action.devices.SYNC" }],
+      "requestId": "12705793367478976640"
+    }
+  },
+  {
+    "raw": {
+      "agentUserId": "333dee20-1234-1234-1234-2225a0d70d4c",
+      "devices": [
+        {
+          "id": "light.test",
+          "name": { "name": "Test" },
+          "attributes": {
+            "colorModel": "hsv",
+            "colorTemperatureRange": {
+              "temperatureMaxK": 6535,
+              "temperatureMinK": 2000
+            }
+          },
+          "traits": [
+            "action.devices.traits.Brightness",
+            "action.devices.traits.OnOff",
+            "action.devices.traits.ColorSetting"
+          ],
+          "willReportState": true,
+          "type": "action.devices.types.LIGHT",
+          "otherDeviceIds": [{ "deviceId": "light.test" }],
+          "customData": {
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8",
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64"
+          }
+        },
+        {
+          "id": "climate.ecobee",
+          "name": { "name": "Ecobee" },
+          "attributes": {
+            "thermostatTemperatureUnit": "C",
+            "thermostatTemperatureRange": {
+              "minThresholdCelsius": 7,
+              "maxThresholdCelsius": 35
+            },
+            "availableThermostatModes": [
+              "off",
+              "cool",
+              "heatcool",
+              "auto",
+              "dry",
+              "fan-only",
+              "eco",
+              "on"
+            ],
+            "reversible": false,
+            "availableFanSpeeds": {
+              "speeds": [
+                {
+                  "speed_name": "on_low",
+                  "speed_values": [
+                    { "speed_synonym": ["on_low"], "lang": "en" }
+                  ]
+                },
+                {
+                  "speed_name": "on_high",
+                  "speed_values": [
+                    { "speed_synonym": ["on_high"], "lang": "en" }
+                  ]
+                },
+                {
+                  "speed_name": "auto_low",
+                  "speed_values": [
+                    { "speed_synonym": ["auto_low"], "lang": "en" }
+                  ]
+                },
+                {
+                  "speed_name": "auto_high",
+                  "speed_values": [
+                    { "speed_synonym": ["auto_high"], "lang": "en" }
+                  ]
+                },
+                {
+                  "speed_name": "off",
+                  "speed_values": [{ "speed_synonym": ["off"], "lang": "en" }]
+                }
+              ],
+              "ordered": true
+            }
+          },
+          "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.TemperatureSetting",
+            "action.devices.traits.FanSpeed"
+          ],
+          "willReportState": true,
+          "type": "action.devices.types.THERMOSTAT",
+          "roomHint": "Living Room"
+        },
+        {
+          "id": "fan.living_room_fan",
+          "name": { "name": "Living Room Fan" },
+          "attributes": {
+            "reversible": true,
+            "supportsFanSpeedPercent": true,
+            "availableFanSpeeds": {
+              "speeds": [
+                {
+                  "speed_name": "1/3",
+                  "speed_values": [
+                    {
+                      "speed_synonym": ["Low", "Min", "Slow", "1"],
+                      "lang": "en"
+                    }
+                  ]
+                },
+                {
+                  "speed_name": "2/3",
+                  "speed_values": [
+                    { "speed_synonym": ["Medium", "2"], "lang": "en" }
+                  ]
+                },
+                {
+                  "speed_name": "3/3",
+                  "speed_values": [
+                    {
+                      "speed_synonym": ["High", "Max", "Fast", "3"],
+                      "lang": "en"
+                    }
+                  ]
+                }
+              ],
+              "ordered": true
+            }
+          },
+          "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.FanSpeed"
+          ],
+          "willReportState": true,
+          "type": "action.devices.types.FAN",
+          "otherDeviceIds": [{ "deviceId": "fan.living_room_fan" }],
+          "customData": {
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8",
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64"
+          }
+        },
+        {
+          "id": "light.ceiling_lights",
+          "name": { "name": "Ceiling Lights" },
+          "attributes": {
+            "colorModel": "hsv",
+            "colorTemperatureRange": {
+              "temperatureMaxK": 6535,
+              "temperatureMinK": 2000
+            }
+          },
+          "traits": [
+            "action.devices.traits.Brightness",
+            "action.devices.traits.OnOff",
+            "action.devices.traits.ColorSetting"
+          ],
+          "willReportState": true,
+          "type": "action.devices.types.LIGHT",
+          "otherDeviceIds": [{ "deviceId": "light.ceiling_lights" }],
+          "customData": {
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8",
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64"
+          }
+        }
+      ]
+    },
+    "redacted": {
+      "agentUserId": "333d***0d4c",
+      "devices": [
+        {
+          "id": "light.test",
+          "name": { "name": "Test" },
+          "attributes": {
+            "colorModel": "hsv",
+            "colorTemperatureRange": {
+              "temperatureMaxK": 6535,
+              "temperatureMinK": 2000
+            }
+          },
+          "traits": [
+            "action.devices.traits.Brightness",
+            "action.devices.traits.OnOff",
+            "action.devices.traits.ColorSetting"
+          ],
+          "willReportState": true,
+          "type": "action.devices.types.LIGHT",
+          "otherDeviceIds": [{ "deviceId": "light.test" }],
+          "customData": {
+            "webhookId": "0ed9***cbf8",
+            "httpPort": 8123,
+            "uuid": "6b45***aa64"
+          }
+        },
+        {
+          "id": "climate.ecobee",
+          "name": { "name": "Ecobee" },
+          "attributes": {
+            "thermostatTemperatureUnit": "C",
+            "thermostatTemperatureRange": {
+              "minThresholdCelsius": 7,
+              "maxThresholdCelsius": 35
+            },
+            "availableThermostatModes": [
+              "off",
+              "cool",
+              "heatcool",
+              "auto",
+              "dry",
+              "fan-only",
+              "eco",
+              "on"
+            ],
+            "reversible": false,
+            "availableFanSpeeds": {
+              "speeds": [
+                {
+                  "speed_name": "on_low",
+                  "speed_values": [
+                    { "speed_synonym": ["on_low"], "lang": "en" }
+                  ]
+                },
+                {
+                  "speed_name": "on_high",
+                  "speed_values": [
+                    { "speed_synonym": ["on_high"], "lang": "en" }
+                  ]
+                },
+                {
+                  "speed_name": "auto_low",
+                  "speed_values": [
+                    { "speed_synonym": ["auto_low"], "lang": "en" }
+                  ]
+                },
+                {
+                  "speed_name": "auto_high",
+                  "speed_values": [
+                    { "speed_synonym": ["auto_high"], "lang": "en" }
+                  ]
+                },
+                {
+                  "speed_name": "off",
+                  "speed_values": [{ "speed_synonym": ["off"], "lang": "en" }]
+                }
+              ],
+              "ordered": true
+            }
+          },
+          "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.TemperatureSetting",
+            "action.devices.traits.FanSpeed"
+          ],
+          "willReportState": true,
+          "type": "action.devices.types.THERMOSTAT",
+          "roomHint": "Living Room"
+        },
+        {
+          "id": "fan.living_room_fan",
+          "name": { "name": "Living Room Fan" },
+          "attributes": {
+            "reversible": true,
+            "supportsFanSpeedPercent": true,
+            "availableFanSpeeds": {
+              "speeds": [
+                {
+                  "speed_name": "1/3",
+                  "speed_values": [
+                    {
+                      "speed_synonym": ["Low", "Min", "Slow", "1"],
+                      "lang": "en"
+                    }
+                  ]
+                },
+                {
+                  "speed_name": "2/3",
+                  "speed_values": [
+                    { "speed_synonym": ["Medium", "2"], "lang": "en" }
+                  ]
+                },
+                {
+                  "speed_name": "3/3",
+                  "speed_values": [
+                    {
+                      "speed_synonym": ["High", "Max", "Fast", "3"],
+                      "lang": "en"
+                    }
+                  ]
+                }
+              ],
+              "ordered": true
+            }
+          },
+          "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.FanSpeed"
+          ],
+          "willReportState": true,
+          "type": "action.devices.types.FAN",
+          "otherDeviceIds": [{ "deviceId": "fan.living_room_fan" }],
+          "customData": {
+            "webhookId": "0ed9***cbf8",
+            "httpPort": 8123,
+            "uuid": "6b45***aa64"
+          }
+        },
+        {
+          "id": "light.ceiling_lights",
+          "name": { "name": "Ceiling Lights" },
+          "attributes": {
+            "colorModel": "hsv",
+            "colorTemperatureRange": {
+              "temperatureMaxK": 6535,
+              "temperatureMinK": 2000
+            }
+          },
+          "traits": [
+            "action.devices.traits.Brightness",
+            "action.devices.traits.OnOff",
+            "action.devices.traits.ColorSetting"
+          ],
+          "willReportState": true,
+          "type": "action.devices.types.LIGHT",
+          "otherDeviceIds": [{ "deviceId": "light.ceiling_lights" }],
+          "customData": {
+            "webhookId": "0ed9***cbf8",
+            "httpPort": 8123,
+            "uuid": "6b45***aa64"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "raw": {
+      "requestId": "2B1B68D7A25F1F70658C45E7B9C7E8A3",
+      "inputs": [
+        {
+          "intent": "action.devices.IDENTIFY",
+          "payload": {
+            "device": {
+              "mdnsScanData": {
+                "serviceName": "home-2._home-assistant._tcp.local",
+                "name": "home-2",
+                "type": "home-assistant",
+                "protocol": "tcp",
+                "data": [
+                  "location_name=Home",
+                  "uuid=6b45123412341234123412341234aa64",
+                  "version=2024.3.0.dev0",
+                  "external_url=https://hass.my-domain.com",
+                  "internal_url=http://192.168.0.5:8123",
+                  "base_url=https://hass.my-domain.com",
+                  "requires_api_password=True"
+                ],
+                "txt": {
+                  "location_name": "Home",
+                  "uuid": "6b45123412341234123412341234aa64",
+                  "version": "2024.3.0.dev0",
+                  "external_url": "https://hass.my-domain.com",
+                  "internal_url": "http://192.168.0.5:8123",
+                  "base_url": "https://hass.my-domain.com",
+                  "requires_api_password": "True"
+                }
+              }
+            },
+            "structureData": {}
+          }
+        }
+      ],
+      "devices": [
+        {
+          "id": "light.ceiling_lights",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        },
+        {
+          "id": "light.test",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        },
+        { "id": "climate.ecobee", "customData": {} },
+        {
+          "id": "fan.living_room_fan",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        }
+      ]
+    },
+    "redacted": {
+      "requestId": "2B1B68D7A25F1F70658C45E7B9C7E8A3",
+      "inputs": [
+        {
+          "intent": "action.devices.IDENTIFY",
+          "payload": {
+            "device": {
+              "mdnsScanData": {
+                "serviceName": "home-2._home-assistant._tcp.local",
+                "name": "home-2",
+                "type": "home-assistant",
+                "protocol": "tcp",
+                "data": [
+                  "location_name=**REDACTED**",
+                  "uuid=**REDACTED**",
+                  "version=2024.3.0.dev0",
+                  "external_url=**REDACTED**",
+                  "internal_url=**REDACTED**",
+                  "base_url=**REDACTED**",
+                  "requires_api_password=True"
+                ],
+                "txt": {
+                  "location_name": "**REDACTED**",
+                  "uuid": "**REDACTED**",
+                  "version": "2024.3.0.dev0",
+                  "external_url": "**REDACTED**",
+                  "internal_url": "**REDACTED**",
+                  "base_url": "**REDACTED**",
+                  "requires_api_password": "True"
+                }
+              }
+            },
+            "structureData": {}
+          }
+        }
+      ],
+      "devices": [
+        {
+          "id": "light.ceiling_lights",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        },
+        {
+          "id": "light.test",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        },
+        { "id": "climate.ecobee", "customData": {} },
+        {
+          "id": "fan.living_room_fan",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "raw": {
+      "device": {
+        "id": "333dee20-1234-1234-1234-2225a0d70d4c",
+        "isLocalOnly": true,
+        "isProxy": true,
+        "deviceInfo": {
+          "hwVersion": "UNKNOWN_HW_VERSION",
+          "manufacturer": "Home Assistant",
+          "model": "Home Assistant",
+          "swVersion": "2024.3.0.dev0"
+        }
+      }
+    },
+    "redacted": {
+      "device": {
+        "id": "333d***0d4c",
+        "isLocalOnly": true,
+        "isProxy": true,
+        "deviceInfo": {
+          "hwVersion": "UNKNOWN_HW_VERSION",
+          "manufacturer": "Home Assistant",
+          "model": "Home Assistant",
+          "swVersion": "2024.3.0.dev0"
+        }
+      }
+    }
+  },
+  {
+    "raw": {
+      "requestId": "EB19D860FE6503EFD3A783AE040D7339",
+      "inputs": [
+        {
+          "intent": "action.devices.REACHABLE_DEVICES",
+          "payload": {
+            "device": {
+              "id": "333dee20-1234-1234-1234-2225a0d70d4c",
+              "customData": {},
+              "proxyData": {}
+            },
+            "structureData": {}
+          }
+        }
+      ],
+      "devices": [
+        {
+          "id": "light.ceiling_lights",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        },
+        {
+          "id": "333dee20-1234-1234-1234-2225a0d70d4c",
+          "customData": {},
+          "radioType": "WIFI",
+          "scanData": {
+            "mdnsScanData": {
+              "serviceName": "home-2._home-assistant._tcp.local",
+              "texts": [
+                "location_name=Home",
+                "uuid=6b45123412341234123412341234aa64",
+                "version=2024.3.0.dev0",
+                "external_url=https://hass.my-domain.com",
+                "internal_url=http://192.168.0.5:8123",
+                "base_url=https://hass.my-domain.com",
+                "requires_api_password=True"
+              ]
+            }
+          }
+        },
+        {
+          "id": "light.test",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        },
+        { "id": "climate.ecobee", "customData": {} },
+        {
+          "id": "fan.living_room_fan",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        }
+      ]
+    },
+    "redacted": {
+      "requestId": "EB19D860FE6503EFD3A783AE040D7339",
+      "inputs": [
+        {
+          "intent": "action.devices.REACHABLE_DEVICES",
+          "payload": {
+            "device": {
+              "id": "333d***0d4c",
+              "customData": {},
+              "proxyData": {}
+            },
+            "structureData": {}
+          }
+        }
+      ],
+      "devices": [
+        {
+          "id": "light.ceiling_lights",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        },
+        {
+          "id": "333d***0d4c",
+          "customData": {},
+          "radioType": "WIFI",
+          "scanData": {
+            "mdnsScanData": {
+              "serviceName": "home-2._home-assistant._tcp.local",
+              "texts": [
+                "location_name=**REDACTED**",
+                "uuid=**REDACTED**",
+                "version=2024.3.0.dev0",
+                "external_url=**REDACTED**",
+                "internal_url=**REDACTED**",
+                "base_url=**REDACTED**",
+                "requires_api_password=True"
+              ]
+            }
+          }
+        },
+        {
+          "id": "light.test",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        },
+        { "id": "climate.ecobee", "customData": {} },
+        {
+          "id": "fan.living_room_fan",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "raw": {
+      "devices": [
+        { "verificationId": "light.test" },
+        { "verificationId": "fan.living_room_fan" },
+        { "verificationId": "light.ceiling_lights" }
+      ]
+    },
+    "redacted": {
+      "devices": [
+        { "verificationId": "light.test" },
+        { "verificationId": "fan.living_room_fan" },
+        { "verificationId": "light.ceiling_lights" }
+      ]
+    }
+  },
+  {
+    "raw": {
+      "requestId": "3961722FFD1DEB36C4FFC81F919747D6",
+      "inputs": [
+        {
+          "intent": "action.devices.REACHABLE_DEVICES",
+          "payload": {
+            "device": {
+              "id": "333dee20-1234-1234-1234-2225a0d70d4c",
+              "customData": {},
+              "proxyData": {}
+            },
+            "structureData": {}
+          }
+        }
+      ],
+      "devices": [
+        {
+          "id": "light.ceiling_lights",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        },
+        {
+          "id": "333dee20-1234-1234-1234-2225a0d70d4c",
+          "customData": {},
+          "radioType": "WIFI",
+          "scanData": {
+            "mdnsScanData": {
+              "serviceName": "home-2._home-assistant._tcp.local",
+              "texts": [
+                "location_name=Home",
+                "uuid=6b45123412341234123412341234aa64",
+                "version=2024.3.0.dev0",
+                "external_url=https://hass.my-domain.com",
+                "internal_url=http://192.168.0.5:8123",
+                "base_url=https://hass.my-domain.com",
+                "requires_api_password=True"
+              ]
+            }
+          }
+        },
+        {
+          "id": "light.test",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        },
+        { "id": "climate.ecobee", "customData": {} },
+        {
+          "id": "fan.living_room_fan",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        }
+      ]
+    },
+    "redacted": {
+      "requestId": "3961722FFD1DEB36C4FFC81F919747D6",
+      "inputs": [
+        {
+          "intent": "action.devices.REACHABLE_DEVICES",
+          "payload": {
+            "device": {
+              "id": "333d***0d4c",
+              "customData": {},
+              "proxyData": {}
+            },
+            "structureData": {}
+          }
+        }
+      ],
+      "devices": [
+        {
+          "id": "light.ceiling_lights",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        },
+        {
+          "id": "333d***0d4c",
+          "customData": {},
+          "radioType": "WIFI",
+          "scanData": {
+            "mdnsScanData": {
+              "serviceName": "home-2._home-assistant._tcp.local",
+              "texts": [
+                "location_name=**REDACTED**",
+                "uuid=**REDACTED**",
+                "version=2024.3.0.dev0",
+                "external_url=**REDACTED**",
+                "internal_url=**REDACTED**",
+                "base_url=**REDACTED**",
+                "requires_api_password=True"
+              ]
+            }
+          }
+        },
+        {
+          "id": "light.test",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        },
+        { "id": "climate.ecobee", "customData": {} },
+        {
+          "id": "fan.living_room_fan",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "raw": {
+      "requestId": "2B1B68D7A25F1F70658C45E7B9C7E8A3",
+      "inputs": [
+        {
+          "intent": "action.devices.IDENTIFY",
+          "payload": {
+            "device": {
+              "mdnsScanData": {
+                "serviceName": "home-2._home-assistant._tcp.local",
+                "name": "home-2",
+                "type": "home-assistant",
+                "protocol": "tcp",
+                "data": [
+                  "location_name=Home",
+                  "uuid=6b45123412341234123412341234aa64",
+                  "version=2024.3.0.dev0",
+                  "external_url=https://hass.my-domain.com",
+                  "internal_url=http://192.168.0.5:8123",
+                  "base_url=https://hass.my-domain.com",
+                  "requires_api_password=True"
+                ],
+                "txt": "unexpected"
+              }
+            },
+            "structureData": {}
+          }
+        }
+      ],
+      "devices": [
+        {
+          "id": "light.ceiling_lights",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        },
+        {
+          "id": "light.test",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        },
+        { "id": "climate.ecobee", "customData": {} },
+        {
+          "id": "fan.living_room_fan",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        }
+      ]
+    },
+    "redacted": {
+      "requestId": "2B1B68D7A25F1F70658C45E7B9C7E8A3",
+      "inputs": [
+        {
+          "intent": "action.devices.IDENTIFY",
+          "payload": {
+            "device": {
+              "mdnsScanData": {
+                "serviceName": "home-2._home-assistant._tcp.local",
+                "name": "home-2",
+                "type": "home-assistant",
+                "protocol": "tcp",
+                "data": [
+                  "location_name=**REDACTED**",
+                  "uuid=**REDACTED**",
+                  "version=2024.3.0.dev0",
+                  "external_url=**REDACTED**",
+                  "internal_url=**REDACTED**",
+                  "base_url=**REDACTED**",
+                  "requires_api_password=True"
+                ],
+                "txt": "unexpected"
+              }
+            },
+            "structureData": {}
+          }
+        }
+      ],
+      "devices": [
+        {
+          "id": "light.ceiling_lights",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        },
+        {
+          "id": "light.test",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        },
+        { "id": "climate.ecobee", "customData": {} },
+        {
+          "id": "fan.living_room_fan",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "raw": {
+      "requestId": "3961722FFD1DEB36C4FFC81F919747D6",
+      "inputs": [
+        {
+          "intent": "action.devices.REACHABLE_DEVICES",
+          "payload": {
+            "device": {
+              "id": "333dee20-1234-1234-1234-2225a0d70d4c",
+              "customData": {},
+              "proxyData": {}
+            },
+            "structureData": {}
+          }
+        }
+      ],
+      "devices": [
+        {
+          "id": "light.ceiling_lights",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        },
+        {
+          "id": "333dee20-1234-1234-1234-2225a0d70d4c",
+          "customData": {},
+          "radioType": "WIFI",
+          "scanData": {
+            "mdnsScanData": {
+              "serviceName": "home-2._home-assistant._tcp.local",
+              "texts": "unexpected"
+            }
+          }
+        },
+        {
+          "id": "light.test",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        },
+        { "id": "climate.ecobee", "customData": {} },
+        {
+          "id": "fan.living_room_fan",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        }
+      ]
+    },
+    "redacted": {
+      "requestId": "3961722FFD1DEB36C4FFC81F919747D6",
+      "inputs": [
+        {
+          "intent": "action.devices.REACHABLE_DEVICES",
+          "payload": {
+            "device": {
+              "id": "333d***0d4c",
+              "customData": {},
+              "proxyData": {}
+            },
+            "structureData": {}
+          }
+        }
+      ],
+      "devices": [
+        {
+          "id": "light.ceiling_lights",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        },
+        {
+          "id": "333d***0d4c",
+          "customData": {},
+          "radioType": "WIFI",
+          "scanData": {
+            "mdnsScanData": {
+              "serviceName": "home-2._home-assistant._tcp.local",
+              "texts": "unexpected"
+            }
+          }
+        },
+        {
+          "id": "light.test",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        },
+        { "id": "climate.ecobee", "customData": {} },
+        {
+          "id": "fan.living_room_fan",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "raw": {
+      "requestId": "3961722FFD1DEB36C4FFC81F919747D6",
+      "inputs": [
+        {
+          "intent": "action.devices.REACHABLE_DEVICES",
+          "payload": {
+            "device": {
+              "id": "333dee20-1234-1234-1234-2225a0d70d4c",
+              "customData": {},
+              "proxyData": {}
+            },
+            "structureData": {}
+          }
+        }
+      ],
+      "devices": [
+        {
+          "id": "light.ceiling_lights",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        },
+        {
+          "id": "333dee20-1234-1234-1234-2225a0d70d4c",
+          "customData": {},
+          "radioType": "WIFI",
+          "scanData": {
+            "mdnsScanData": {
+              "serviceName": "home-2._home-assistant._tcp.local",
+              "texts": ["unexpected", 123, 234]
+            }
+          }
+        },
+        {
+          "id": "light.test",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        },
+        { "id": "climate.ecobee", "customData": {} },
+        {
+          "id": "fan.living_room_fan",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45123412341234123412341234aa64",
+            "webhookId": "0ed912341234123412341234123412341234123412341234123412341234cbf8"
+          }
+        }
+      ]
+    },
+    "redacted": {
+      "requestId": "3961722FFD1DEB36C4FFC81F919747D6",
+      "inputs": [
+        {
+          "intent": "action.devices.REACHABLE_DEVICES",
+          "payload": {
+            "device": {
+              "id": "333d***0d4c",
+              "customData": {},
+              "proxyData": {}
+            },
+            "structureData": {}
+          }
+        }
+      ],
+      "devices": [
+        {
+          "id": "light.ceiling_lights",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        },
+        {
+          "id": "333d***0d4c",
+          "customData": {},
+          "radioType": "WIFI",
+          "scanData": {
+            "mdnsScanData": {
+              "serviceName": "home-2._home-assistant._tcp.local",
+              "texts": ["unexpected", 123, 234]
+            }
+          }
+        },
+        {
+          "id": "light.test",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        },
+        { "id": "climate.ecobee", "customData": {} },
+        {
+          "id": "fan.living_room_fan",
+          "customData": {
+            "httpPort": 8123,
+            "uuid": "6b45***aa64",
+            "webhookId": "0ed9***cbf8"
+          }
+        }
+      ]
+    }
+  }
+]

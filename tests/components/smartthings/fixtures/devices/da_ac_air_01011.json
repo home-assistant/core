@@ -1,0 +1,206 @@
+{
+  "items": [
+    {
+      "deviceId": "a5662f73-57d5-ba89-bf44-8b0008b8b2f3",
+      "name": "[air purifier] Samsung",
+      "label": "Air filter",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-AC-AIR-01011",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "0ab793d8-ef93-4c27-b1c5-602c5a90ba6a",
+      "ownerId": "862a9721-9b24-59f0-aac2-d56c6d76eaf2",
+      "roomId": "b1e67439-f25e-4c62-b27c-34787273a7c7",
+      "deviceTypeName": "Samsung OCF Air Purifier",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "airConditionerFanMode",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "airQualitySensor",
+              "version": 1
+            },
+            {
+              "id": "odorSensor",
+              "version": 1
+            },
+            {
+              "id": "dustSensor",
+              "version": 1
+            },
+            {
+              "id": "veryFineDustSensor",
+              "version": 1
+            },
+            {
+              "id": "dustHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "fineDustHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "veryFineDustHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "demandResponseLoadControl",
+              "version": 1
+            },
+            {
+              "id": "custom.airQualityMaxLevel",
+              "version": 1
+            },
+            {
+              "id": "custom.welcomeCareMode",
+              "version": 1
+            },
+            {
+              "id": "custom.lowerDevicePower",
+              "version": 1
+            },
+            {
+              "id": "custom.deviceDependencyStatus",
+              "version": 1
+            },
+            {
+              "id": "custom.deviceReportStateConfiguration",
+              "version": 1
+            },
+            {
+              "id": "custom.hepaFilter",
+              "version": 1
+            },
+            {
+              "id": "custom.periodicSensing",
+              "version": 1
+            },
+            {
+              "id": "custom.doNotDisturbMode",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.energyType",
+              "version": 1
+            },
+            {
+              "id": "custom.virusDoctorMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.airPurifierLighting",
+              "version": 1
+            },
+            {
+              "id": "samsungce.airQualityHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "samsungce.alwaysOnSensing",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.quickControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.unavailableCapabilities",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "sec.wifiConfiguration",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "AirPurifier",
+              "categoryType": "manufacturer"
+            },
+            {
+              "name": "AirPurifier",
+              "categoryType": "user"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2022-11-10T21:26:28.352Z",
+      "profile": {
+        "id": "75a9d6bf-25ea-347e-9439-adecda280b55"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.airpurifier",
+        "name": "[air purifier] Samsung",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "AVT-WW-TP1-22-TOUCHOTN|10241841|70000629001610000D000800000A0000",
+        "platformVersion": "DAWIT 2.0",
+        "platformOS": "TizenRT 3.1",
+        "hwVersion": "Realtek",
+        "firmwareVersion": "AVT-WW-TP1-22-TOUCHOTN_12240702",
+        "vendorId": "DA-AC-AIR-01011",
+        "vendorResourceClientServerVersion": "Realtek Release 3.1.240221",
+        "lastSignupTime": "2022-11-10T21:26:20.091647Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

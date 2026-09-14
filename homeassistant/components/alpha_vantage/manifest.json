@@ -1,0 +1,10 @@
+{
+  "domain": "alpha_vantage",
+  "name": "Alpha Vantage",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/alpha_vantage",
+  "iot_class": "cloud_polling",
+  "loggers": ["alpha_vantage"],
+  "quality_scale": "legacy",
+  "requirements": ["alpha-vantage==2.3.1"]
+}

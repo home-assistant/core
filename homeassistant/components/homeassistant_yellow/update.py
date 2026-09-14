@@ -1,0 +1,223 @@
+"""Home Assistant Yellow firmware update entity."""
+
+import logging
+from typing import override
+
+from aiohasupervisor import SupervisorError
+from universal_silabs_flasher.flasher import YellowFlasher
+
+from homeassistant.components.homeassistant_hardware.coordinator import (
+    FirmwareUpdateCoordinator,
+)
+from homeassistant.components.homeassistant_hardware.update import (
+    BaseFirmwareUpdateEntity,
+    FirmwareUpdateEntityDescription,
+    RaspberryPiFirmwareUpdateEntity,
+)
+from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
+    FirmwareInfo,
+    async_get_raspberry_pi_firmware_info,
+)
+from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import HomeAssistantYellowConfigEntry
+from .const import DOMAIN, FIRMWARE, FIRMWARE_VERSION, MANUFACTURER, MODEL, RADIO_DEVICE
+
+_LOGGER = logging.getLogger(__name__)
+
+
+FIRMWARE_ENTITY_DESCRIPTIONS: dict[
+    ApplicationType | None, FirmwareUpdateEntityDescription
+] = {
+    ApplicationType.EZSP: FirmwareUpdateEntityDescription(
+        key="radio_firmware",
+        translation_key="radio_firmware",
+        display_precision=0,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
+        version_parser=lambda fw: fw.split(" ", 1)[0],
+        fw_type="yellow_zigbee_ncp",
+        version_key="ezsp_version",
+        expected_firmware_type=ApplicationType.EZSP,
+        firmware_name="EmberZNet Zigbee",
+    ),
+    ApplicationType.SPINEL: FirmwareUpdateEntityDescription(
+        key="radio_firmware",
+        translation_key="radio_firmware",
+        display_precision=0,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
+        version_parser=lambda fw: fw.split("/", 1)[1].split("_", 1)[0],
+        fw_type="yellow_openthread_rcp",
+        version_key="ot_rcp_version",
+        expected_firmware_type=ApplicationType.SPINEL,
+        firmware_name="OpenThread RCP",
+    ),
+    ApplicationType.CPC: FirmwareUpdateEntityDescription(
+        key="radio_firmware",
+        translation_key="radio_firmware",
+        display_precision=0,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
+        version_parser=lambda fw: fw,
+        fw_type="yellow_multipan",
+        version_key="cpc_version",
+        expected_firmware_type=ApplicationType.CPC,
+        firmware_name="Multiprotocol",
+    ),
+    ApplicationType.GECKO_BOOTLOADER: FirmwareUpdateEntityDescription(
+        key="radio_firmware",
+        translation_key="radio_firmware",
+        display_precision=0,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
+        version_parser=lambda fw: fw,
+        fw_type=None,  # We don't want to update the bootloader
+        version_key="gecko_bootloader_version",
+        expected_firmware_type=ApplicationType.GECKO_BOOTLOADER,
+        firmware_name="Gecko Bootloader",
+    ),
+    None: FirmwareUpdateEntityDescription(
+        key="radio_firmware",
+        translation_key="radio_firmware",
+        display_precision=0,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
+        version_parser=lambda fw: fw,
+        fw_type=None,
+        version_key=None,
+        expected_firmware_type=None,
+        firmware_name=None,
+    ),
+}
+
+
+def _async_create_update_entity(
+    hass: HomeAssistant,
+    config_entry: HomeAssistantYellowConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> FirmwareUpdateEntity:
+    """Create an update entity that handles firmware type changes."""
+    firmware_type = config_entry.data[FIRMWARE]
+
+    try:
+        entity_description = FIRMWARE_ENTITY_DESCRIPTIONS[
+            ApplicationType(firmware_type)
+        ]
+    except KeyError, ValueError:
+        _LOGGER.debug(
+            "Unknown firmware type %r, using default entity description", firmware_type
+        )
+        entity_description = FIRMWARE_ENTITY_DESCRIPTIONS[None]
+
+    entity = FirmwareUpdateEntity(
+        device=RADIO_DEVICE,
+        config_entry=config_entry,
+        update_coordinator=config_entry.runtime_data.coordinator,
+        entity_description=entity_description,
+    )
+
+    def firmware_type_changed(
+        old_type: ApplicationType | None, new_type: ApplicationType | None
+    ) -> None:
+        """Replace the current entity when the firmware type changes."""
+        er.async_get(hass).async_remove(entity.entity_id)
+        async_add_entities(
+            [_async_create_update_entity(hass, config_entry, async_add_entities)]
+        )
+
+    entity.async_on_remove(
+        entity.add_firmware_type_changed_callback(firmware_type_changed)
+    )
+
+    return entity
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: HomeAssistantYellowConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the firmware update config entry."""
+    entities: list[UpdateEntity] = [
+        _async_create_update_entity(hass, config_entry, async_add_entities)
+    ]
+
+    try:
+        rpi_firmware = await async_get_raspberry_pi_firmware_info(hass)
+    except SupervisorError as err:
+        # async_get_raspberry_pi_firmware_info handles 404 gracefully, anything
+        # else is a genuine Supervisor error that we should log.
+        _LOGGER.warning("Raspberry Pi firmware info unavailable: %s", err)
+        rpi_firmware = None
+
+    if rpi_firmware is not None and not rpi_firmware.update_blocked:
+        entities.append(
+            RaspberryPiFirmwareUpdateEntity(
+                rpi_firmware,
+                DeviceInfo(
+                    identifiers={(DOMAIN, "yellow")},
+                    name=MODEL,
+                    model=MODEL,
+                    manufacturer=MANUFACTURER,
+                ),
+                unique_id="yellow_rpi_firmware",
+                board="yellow",
+            )
+        )
+
+    async_add_entities(entities)
+
+
+class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
+    """Yellow firmware update entity."""
+
+    _flasher_cls = YellowFlasher
+
+    def __init__(
+        self,
+        device: str,
+        config_entry: HomeAssistantYellowConfigEntry,
+        update_coordinator: FirmwareUpdateCoordinator,
+        entity_description: FirmwareUpdateEntityDescription,
+    ) -> None:
+        """Initialize the Yellow firmware update entity."""
+        super().__init__(device, config_entry, update_coordinator, entity_description)
+        self._attr_unique_id = self.entity_description.key
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, "yellow")},
+            name=MODEL,
+            model=MODEL,
+            manufacturer=MANUFACTURER,
+            sw_version=None,  # Radio FW exposed by the update entity, removed in 2026.7.0
+        )
+
+        # Use the cached firmware info if it exists
+        if self._config_entry.data[FIRMWARE] is not None:
+            self._current_firmware_info = FirmwareInfo(
+                device=device,
+                firmware_type=ApplicationType(self._config_entry.data[FIRMWARE]),
+                firmware_version=self._config_entry.data[FIRMWARE_VERSION],
+                owners=[],
+                source="homeassistant_yellow",
+            )
+
+    @callback
+    @override
+    def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
+        """Handle updated firmware info being pushed by an integration."""
+        self.hass.config_entries.async_update_entry(
+            self._config_entry,
+            data={
+                **self._config_entry.data,
+                FIRMWARE: firmware_info.firmware_type,
+                FIRMWARE_VERSION: firmware_info.firmware_version,
+            },
+        )
+        super()._firmware_info_callback(firmware_info)

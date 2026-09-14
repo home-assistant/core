@@ -1,0 +1,52 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "water_in_valve": {
+        "default": "mdi:water-plus-outline"
+      },
+      "water_out_valve": {
+        "default": "mdi:water-minus-outline"
+      }
+    },
+    "button": {
+      "next_color": {
+        "default": "mdi:palette"
+      }
+    },
+    "number": {
+      "fan_timer": {
+        "default": "mdi:fan-auto"
+      },
+      "power_timer": {
+        "default": "mdi:power-settings"
+      },
+      "salt_bath_timer": {
+        "default": "mdi:shaker-outline"
+      }
+    },
+    "select": {
+      "lamp_mode": {
+        "default": "mdi:lightbulb-multiple-outline"
+      }
+    },
+    "sensor": {
+      "fan_timer_remaining": {
+        "default": "mdi:fan-auto"
+      },
+      "power_timer_remaining": {
+        "default": "mdi:power-settings"
+      },
+      "salt_bath_timer_remaining": {
+        "default": "mdi:shaker-outline"
+      },
+      "water_level": {
+        "default": "mdi:waves-arrow-up"
+      }
+    },
+    "switch": {
+      "aroma_therapy_on": {
+        "default": "mdi:scent"
+      }
+    }
+  }
+}

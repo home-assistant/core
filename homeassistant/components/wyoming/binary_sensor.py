@@ -1,0 +1,51 @@
+"""Binary sensor for Wyoming."""
+
+from typing import override
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .entity import WyomingSatelliteEntity
+from .models import WyomingConfigEntry
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: WyomingConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up binary sensor entities."""
+    item = config_entry.runtime_data
+
+    # Setup is only forwarded for satellites
+    assert item.device is not None
+
+    async_add_entities([WyomingSatelliteAssistInProgress(item.device)])
+
+
+class WyomingSatelliteAssistInProgress(WyomingSatelliteEntity, BinarySensorEntity):
+    """Entity to represent Assist is in progress for satellite."""
+
+    entity_description = BinarySensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="assist_in_progress",
+        translation_key="assist_in_progress",
+    )
+    _attr_is_on = False
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Call when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
+        self._device.set_is_active_listener(self._is_active_changed)
+
+    @callback
+    def _is_active_changed(self) -> None:
+        """Call when active state changed."""
+        self._attr_is_on = self._device.is_active
+        self.async_write_ha_state()

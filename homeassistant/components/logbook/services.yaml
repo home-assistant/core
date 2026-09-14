@@ -1,0 +1,19 @@
+log:
+  fields:
+    name:
+      required: true
+      example: "Kitchen"
+      selector:
+        text:
+    message:
+      required: true
+      example: "is being used"
+      selector:
+        text:
+    entity_id:
+      selector:
+        entity:
+    domain:
+      example: "light"
+      selector:
+        text:

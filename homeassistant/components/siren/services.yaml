@@ -1,0 +1,51 @@
+# Describes the format for available siren services
+
+turn_on:
+  target:
+    entity:
+      domain: siren
+      supported_features:
+        - siren.SirenEntityFeature.TURN_ON
+  fields:
+    tone:
+      example: fire
+      filter:
+        supported_features:
+          - siren.SirenEntityFeature.TONES
+      required: false
+      selector:
+        text:
+    volume_level:
+      example: 0.5
+      filter:
+        supported_features:
+          - siren.SirenEntityFeature.VOLUME_SET
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.05
+    duration:
+      example: 15
+      filter:
+        supported_features:
+          - siren.SirenEntityFeature.DURATION
+      required: false
+      selector:
+        text:
+
+turn_off:
+  target:
+    entity:
+      domain: siren
+      supported_features:
+        - siren.SirenEntityFeature.TURN_OFF
+
+toggle:
+  target:
+    entity:
+      domain: siren
+      supported_features:
+        - - siren.SirenEntityFeature.TURN_OFF
+          - siren.SirenEntityFeature.TURN_ON

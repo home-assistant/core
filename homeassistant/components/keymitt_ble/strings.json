@@ -1,0 +1,58 @@
+{
+  "config": {
+    "abort": {
+      "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "linking": "Failed to pair, please try again. Is the MicroBot in pairing mode?"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "init": {
+        "data": {
+          "address": "Device address",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "title": "Set up MicroBot device"
+      },
+      "link": {
+        "description": "Press the button on the MicroBot Push when the LED is solid pink or green to register with Home Assistant.",
+        "title": "Pairing"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "push": {
+        "name": "Push"
+      }
+    }
+  },
+  "services": {
+    "calibrate": {
+      "description": "Sets the depth, press or release duration, and operation mode. Warning - this will send a push command to the device.",
+      "fields": {
+        "depth": {
+          "description": "How far to extend the push arm.",
+          "name": "Depth"
+        },
+        "duration": {
+          "description": "How long to press or release.",
+          "name": "Duration"
+        },
+        "entity_id": {
+          "description": "Name of entity to calibrate.",
+          "name": "Entity"
+        },
+        "mode": {
+          "description": "The operation mode of the arm.",
+          "name": "[%key:common::config_flow::data::mode%]"
+        }
+      },
+      "name": "Calibrate"
+    }
+  }
+}

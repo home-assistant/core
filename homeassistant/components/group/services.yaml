@@ -1,0 +1,43 @@
+# Describes the format for available group services
+reload:
+set:
+  fields:
+    object_id:
+      required: true
+      example: "test_group"
+      selector:
+        text:
+    name:
+      example: "My test group"
+      selector:
+        text:
+    icon:
+      example: "mdi:camera"
+      selector:
+        icon:
+    entities:
+      example: domain.entity_id1, domain.entity_id2
+      selector:
+        entity:
+          multiple: true
+    add_entities:
+      example: domain.entity_id1, domain.entity_id2
+      selector:
+        entity:
+          multiple: true
+    remove_entities:
+      example: domain.entity_id1, domain.entity_id2
+      selector:
+        entity:
+          multiple: true
+    all:
+      selector:
+        boolean:
+
+remove:
+  fields:
+    object_id:
+      required: true
+      example: "test_group"
+      selector:
+        object:

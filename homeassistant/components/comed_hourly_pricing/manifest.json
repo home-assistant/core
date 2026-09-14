@@ -1,0 +1,8 @@
+{
+  "domain": "comed_hourly_pricing",
+  "name": "ComEd Hourly Pricing",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/comed_hourly_pricing",
+  "iot_class": "cloud_polling",
+  "quality_scale": "legacy"
+}

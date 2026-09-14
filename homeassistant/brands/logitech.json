@@ -1,0 +1,5 @@
+{
+  "domain": "logitech",
+  "name": "Logitech",
+  "integrations": ["harmony", "squeezebox"]
+}

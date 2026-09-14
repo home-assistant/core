@@ -1,0 +1,227 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "pid_relay_2",
+  "category": "wkcz",
+  "product_id": "gc4b1mdw7kebtuyz",
+  "product_name": "4-TH",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-01-14T16:04:37+00:00",
+  "create_time": "2025-01-14T16:04:37+00:00",
+  "update_time": "2025-01-14T16:04:37+00:00",
+  "function": {
+    "switch_all": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_2": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "upper_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -500,
+        "max": 1100,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "lower_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -500,
+        "max": 1100,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 43200,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_correction": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -90,
+        "max": 90,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "maxhum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 1000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "minihum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 1000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "hum_calibration": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": -10,
+        "max": 10,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch_all": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_2": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -500,
+        "max": 1100,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "upper_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -500,
+        "max": 1100,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "lower_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -500,
+        "max": 1100,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 43200,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_correction": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -90,
+        "max": 90,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["cooling_fault", "heating_fault", "temp_dif_fault"]
+      }
+    },
+    "humidity_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "maxhum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 1000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "minihum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 1000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "hum_calibration": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": -10,
+        "max": 10,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch_all": false,
+    "switch_1": false,
+    "switch_2": false,
+    "temp_current": 170,
+    "upper_temp": 0,
+    "lower_temp": 0,
+    "countdown_1": 0,
+    "temp_correction": 0,
+    "fault": 0,
+    "humidity_value": 38,
+    "maxhum_set": 0,
+    "minihum_set": 0,
+    "hum_calibration": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

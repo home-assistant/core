@@ -1,0 +1,6 @@
+{
+  "domain": "coautilities",
+  "name": "City of Austin Utilities",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

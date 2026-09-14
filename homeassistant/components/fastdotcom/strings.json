@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Do you want to start the setup? The initial setup will take about 30-40 seconds."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "download": {
+        "name": "Download"
+      }
+    }
+  }
+}

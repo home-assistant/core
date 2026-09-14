@@ -1,0 +1,308 @@
+{
+  "items": [
+    {
+      "deviceId": "3810e5ad-5351-d9f9-12ff-000001200000",
+      "name": "Eco Heating System",
+      "label": "W\u00e4rmepumpe",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-SAC-EHS-000002-SUB",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "705633c1-64a2-4d54-9205-bbbd4f843d95",
+      "ownerId": "312d0773-efec-21c8-279f-5b8724f3ae57",
+      "roomId": "f9fef09a-b829-4eda-897b-dbaf6eebcac3",
+      "deviceTypeName": "Samsung OCF Air Conditioner",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "thermostatHeatingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "airConditionerMode",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "demandResponseLoadControl",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "custom.energyType",
+              "version": 1
+            },
+            {
+              "id": "custom.outingMode",
+              "version": 1
+            },
+            {
+              "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "custom.deviceReportStateConfiguration",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.sacDisplayCondition",
+              "version": 1
+            },
+            {
+              "id": "samsungce.sensingOnSuspendMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsBoosterHeater",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsDiverterValve",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsFsvSettings",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsCycleData",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsTemperatureReference",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsThermostat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.toggleSwitch",
+              "version": 1
+            },
+            {
+              "id": "samsungce.systemAirConditionerReservation",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "AirConditioner",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "INDOOR1",
+          "label": "INDOOR1",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "airConditionerMode",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsDefrostMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsTemperatureReference",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsThermostat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.sacDisplayCondition",
+              "version": 1
+            },
+            {
+              "id": "samsungce.toggleSwitch",
+              "version": 1
+            },
+            {
+              "id": "samsungce.systemAirConditionerReservation",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "INDOOR2",
+          "label": "INDOOR2",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "airConditionerMode",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsDefrostMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsTemperatureReference",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsThermostat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.sacDisplayCondition",
+              "version": 1
+            },
+            {
+              "id": "samsungce.toggleSwitch",
+              "version": 1
+            },
+            {
+              "id": "samsungce.systemAirConditionerReservation",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2023-10-05T18:12:48.587Z",
+      "parentDeviceId": "3810e5ad-5351-d9f9-12ff-ed7c35d51a0c",
+      "profile": {
+        "id": "5dd2a4b2-981d-3571-96bb-eef6dc19d036"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.airconditioner",
+        "name": "Eco Heating System",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "1.2.1",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "SAC_EHS_SPLIT|220614|61007300001600000400000000000000",
+        "platformVersion": "4.0",
+        "platformOS": "Tizen",
+        "hwVersion": "",
+        "firmwareVersion": "20250317.1",
+        "vendorId": "DA-SAC-EHS-000002-SUB",
+        "vendorResourceClientServerVersion": "4.0.54",
+        "lastSignupTime": "2023-10-05T18:12:47.561228Z",
+        "transferCandidate": true,
+        "additionalAuthCodeRequired": false,
+        "modelCode": ""
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "indoorMap": {
+        "coordinates": [142.0, 36.0, 22.0],
+        "rotation": [270.0, 0.0, 0.0],
+        "visible": true,
+        "data": null
+      },
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

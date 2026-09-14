@@ -1,0 +1,27 @@
+{
+  "components": {
+    "main": {
+      "switchLevel": {
+        "levelRange": {
+          "value": null
+        },
+        "level": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": null
+        }
+      },
+      "colorTemperature": {
+        "colorTemperatureRange": {
+          "value": null
+        },
+        "colorTemperature": {
+          "value": null
+        }
+      }
+    }
+  }
+}

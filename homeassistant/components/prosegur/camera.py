@@ -1,0 +1,105 @@
+"""Support for Prosegur cameras."""
+
+import logging
+from typing import override
+
+from pyprosegur.auth import Auth
+from pyprosegur.exceptions import ProsegurException
+from pyprosegur.installation import Camera as InstallationCamera, Installation
+
+from homeassistant.components.camera import Camera
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
+)
+
+from . import ProsegurConfigEntry
+from .const import DOMAIN, SERVICE_REQUEST_IMAGE
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ProsegurConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Prosegur camera platform."""
+
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_REQUEST_IMAGE,
+        None,
+        "async_request_image",
+    )
+
+    _installation = await Installation.retrieve(
+        entry.runtime_data, entry.data["contract"]
+    )
+
+    async_add_entities(
+        [
+            ProsegurCamera(_installation, camera, entry.runtime_data)
+            for camera in _installation.cameras
+        ],
+        update_before_add=True,
+    )
+
+
+class ProsegurCamera(Camera):
+    """Representation of a Smart Prosegur Camera."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, installation: Installation, camera: InstallationCamera, auth: Auth
+    ) -> None:
+        """Initialize Prosegur Camera component."""
+        Camera.__init__(self)
+
+        self._installation = installation
+        self._camera = camera
+        self._auth = auth
+        self._attr_unique_id = f"{installation.contract} {camera.id}"
+        self._attr_name = camera.description
+
+        self._attr_device_info = DeviceInfo(
+            name=f"Contract {installation.contract}",
+            manufacturer="Prosegur",
+            model="smart",
+            identifiers={(DOMAIN, installation.contract)},
+            configuration_url="https://smart.prosegur.com",
+        )
+
+    @override
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Return bytes of camera image."""
+
+        _LOGGER.debug("Get image for %s", self._camera.description)
+        try:
+            return await self._installation.get_image(self._auth, self._camera.id)
+
+        # pylint: disable-next=home-assistant-action-swallowed-exception
+        except ProsegurException as err:
+            _LOGGER.error("Image %s doesn't exist: %s", self._camera.description, err)
+
+        return None
+
+    async def async_request_image(self):
+        """Request new image from the camera."""
+
+        _LOGGER.debug("Request image for %s", self._camera.description)
+        try:
+            await self._installation.request_image(self._auth, self._camera.id)
+
+        # pylint: disable-next=home-assistant-action-swallowed-exception
+        except ProsegurException as err:
+            _LOGGER.error(
+                "Could not request image from camera %s: %s",
+                self._camera.description,
+                err,
+            )

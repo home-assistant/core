@@ -1,0 +1,83 @@
+"""Diagnostics support for Asuswrt."""
+
+from typing import Any
+
+from homeassistant.components.diagnostics import (
+    async_redact_data,
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
+from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    ATTR_IDENTIFIERS,
+    CONF_PASSWORD,
+    CONF_UNIQUE_ID,
+    CONF_USERNAME,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from . import AsusWrtConfigEntry
+from .router import get_device_identifier
+
+TO_REDACT = {CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME}
+TO_REDACT_DEV = {ATTR_CONNECTIONS, ATTR_IDENTIFIERS}
+
+
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant, entry: AsusWrtConfigEntry
+) -> dict[str, dict[str, Any]]:
+    """Return diagnostics for a config entry."""
+    data = {"entry": async_redact_data(entry.as_dict(), TO_REDACT)}
+
+    router = entry.runtime_data
+
+    # Gather information how this AsusWrt device is represented in Home Assistant
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    hass_device = device_registry.async_get_device_by_identifier(
+        get_device_identifier(entry), entry.entry_id
+    )
+    if not hass_device:
+        return data
+
+    data["device"] = {
+        **async_redact_data(device_entry_as_dict(hass_device), TO_REDACT_DEV),
+        "entities": {},
+        "tracked_devices": [],
+    }
+
+    hass_entities = er.async_entries_for_device(
+        entity_registry,
+        device_id=hass_device.id,
+        include_disabled_entities=True,
+    )
+
+    for entity_entry in hass_entities:
+        state = hass.states.get(entity_entry.entity_id)
+        state_dict = None
+        if state:
+            state_dict = dict(state.as_dict())
+            # The entity_id is already provided at root level.
+            state_dict.pop("entity_id", None)
+            # The context doesn't provide useful information in this case.
+            state_dict.pop("context", None)
+
+        entity_dict = entity_entry_as_dict(entity_entry)
+        # The entity_id is already provided at root level (the key).
+        del entity_dict["entity_id"]
+        data["device"]["entities"][entity_entry.entity_id] = {
+            **async_redact_data(entity_dict, TO_REDACT),
+            "state": state_dict,
+        }
+
+    for device in router.devices.values():
+        data["device"]["tracked_devices"].append(
+            {
+                "name": device.name or "Unknown device",
+                "ip_address": device.ip_address,
+                "last_activity": device.last_activity,
+            }
+        )
+
+    return data

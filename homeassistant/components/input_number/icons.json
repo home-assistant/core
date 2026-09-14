@@ -1,0 +1,16 @@
+{
+  "services": {
+    "decrement": {
+      "service": "mdi:minus"
+    },
+    "increment": {
+      "service": "mdi:plus"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    },
+    "set_value": {
+      "service": "mdi:numeric"
+    }
+  }
+}

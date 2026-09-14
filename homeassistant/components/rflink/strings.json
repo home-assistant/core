@@ -1,0 +1,24 @@
+{
+  "issues": {
+    "yaml_migration": {
+      "description": "Your current RFLink {platform} YAML configuration needs to be migrated to the new configuration format.",
+      "title": "Your {platform} RFLink configuration needs to be migrated"
+    }
+  },
+  "services": {
+    "send_command": {
+      "description": "Sends device command through RFLink.",
+      "fields": {
+        "command": {
+          "description": "The command to be sent.",
+          "name": "Command"
+        },
+        "device_id": {
+          "description": "RFLink device ID.",
+          "name": "Device ID"
+        }
+      },
+      "name": "Send command"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "domain": "gitter",
+  "name": "Gitter",
+  "integration_type": "virtual",
+  "supported_by": "matrix"
+}

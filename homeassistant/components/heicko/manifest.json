@@ -1,0 +1,6 @@
+{
+  "domain": "heicko",
+  "name": "Heicko",
+  "integration_type": "virtual",
+  "supported_by": "motion_blinds"
+}

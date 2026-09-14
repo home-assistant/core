@@ -1,0 +1,25 @@
+set_room_temperature:
+  fields:
+    room_name:
+      required: true
+      example: "kitchen"
+      selector:
+        text:
+    away_temp:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "°"
+    comfort_temp:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "°"
+    sleep_temp:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "°"

@@ -1,0 +1,456 @@
+"""Template config validator."""
+
+from collections.abc import Callable
+from contextlib import suppress
+import itertools
+import logging
+from typing import Any
+
+import probatio
+
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.blueprint import (
+    is_blueprint_instance_config,
+    schemas as blueprint_schemas,
+)
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
+from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
+from homeassistant.config import async_log_schema_error, config_without_domain
+from homeassistant.const import (
+    CONF_ACTION,
+    CONF_ACTIONS,
+    CONF_BINARY_SENSORS,
+    CONF_CONDITION,
+    CONF_CONDITIONS,
+    CONF_NAME,
+    CONF_SENSORS,
+    CONF_TRIGGER,
+    CONF_TRIGGERS,
+    CONF_UNIQUE_ID,
+    CONF_VARIABLES,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.condition import async_validate_conditions_config
+from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.trigger import async_validate_trigger_config
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import async_notify_setup_error
+from homeassistant.util import yaml as yaml_util
+
+from . import (
+    alarm_control_panel as alarm_control_panel_platform,
+    binary_sensor as binary_sensor_platform,
+    button as button_platform,
+    cover as cover_platform,
+    device_tracker as device_tracker_platform,
+    event as event_platform,
+    fan as fan_platform,
+    image as image_platform,
+    light as light_platform,
+    lock as lock_platform,
+    number as number_platform,
+    select as select_platform,
+    sensor as sensor_platform,
+    switch as switch_platform,
+    update as update_platform,
+    vacuum as vacuum_platform,
+    weather as weather_platform,
+)
+from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS, TemplateConfig
+from .helpers import async_get_blueprints
+
+_LOGGER = logging.getLogger(__name__)
+
+PACKAGE_MERGE_HINT = "list"
+
+
+_DEFAULT_NAME = "Template Entity"
+_DEFAULT_NAMES = {
+    Platform.ALARM_CONTROL_PANEL: alarm_control_panel_platform.DEFAULT_NAME,
+    Platform.BINARY_SENSOR: binary_sensor_platform.DEFAULT_NAME,
+    Platform.BUTTON: button_platform.DEFAULT_NAME,
+    Platform.COVER: cover_platform.DEFAULT_NAME,
+    Platform.DEVICE_TRACKER: device_tracker_platform.DEFAULT_NAME,
+    Platform.EVENT: event_platform.DEFAULT_NAME,
+    Platform.FAN: fan_platform.DEFAULT_NAME,
+    Platform.IMAGE: image_platform.DEFAULT_NAME,
+    Platform.LIGHT: light_platform.DEFAULT_NAME,
+    Platform.LOCK: lock_platform.DEFAULT_NAME,
+    Platform.NUMBER: number_platform.DEFAULT_NAME,
+    Platform.SELECT: select_platform.DEFAULT_NAME,
+    Platform.SENSOR: sensor_platform.DEFAULT_NAME,
+    Platform.SWITCH: switch_platform.DEFAULT_NAME,
+    Platform.UPDATE: update_platform.DEFAULT_NAME,
+    Platform.VACUUM: vacuum_platform.DEFAULT_NAME,
+    Platform.WEATHER: weather_platform.DEFAULT_NAME,
+}
+
+
+def _identify_entity_config_requires_trigger(
+    platform: Platform, option: str, entity_config: ConfigType
+) -> None:
+    """Raise probatio.Invalid if an entity sets an option that requires a trigger."""
+    if option not in entity_config:
+        return
+
+    _default_name = _DEFAULT_NAMES.get(platform, _DEFAULT_NAME)
+    identifier = f"{CONF_NAME}: {_default_name}"
+    if (
+        (name := entity_config.get(CONF_NAME))
+        and isinstance(name, Template)
+        and name.template != _default_name
+    ):
+        identifier = f"{CONF_NAME}: {name.template}"
+    elif default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
+        identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+    elif unique_id := entity_config.get(CONF_UNIQUE_ID):
+        identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
+
+    raise probatio.Invalid(
+        f"The {option} option for template {platform.replace('_', ' ')}: {identifier} "
+        f"requires a trigger, remove the {option} option or rewrite "
+        "configuration to use a trigger"
+    )
+
+
+def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
+    """Validate that binary sensors with auto_off have triggers."""
+    if CONF_TRIGGERS not in obj and BINARY_SENSOR_DOMAIN in obj:
+        binary_sensors: list[ConfigType] = obj[BINARY_SENSOR_DOMAIN]
+        for binary_sensor in binary_sensors:
+            _identify_entity_config_requires_trigger(
+                Platform.BINARY_SENSOR,
+                binary_sensor_platform.CONF_AUTO_OFF,
+                binary_sensor,
+            )
+
+    return obj
+
+
+def validate_entity_config_with_conditions_has_trigger(obj: dict) -> dict:
+    """Validate entity condition requires trigger."""
+    if CONF_TRIGGERS not in obj:
+        for platform in PLATFORMS:
+            if platform not in obj:
+                continue
+
+            for entity_config in obj[platform]:
+                _identify_entity_config_requires_trigger(
+                    platform,
+                    CONF_CONDITIONS,
+                    entity_config,
+                )
+
+    return obj
+
+
+def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict], dict]:
+    """Validate that config does not contain trigger and action."""
+    domains = set(keys)
+
+    def validate(obj: dict):
+        options = set(obj.keys())
+        if found_domains := domains.intersection(options):
+            invalid = {CONF_TRIGGERS, CONF_ACTIONS}
+            if found_invalid := invalid.intersection(set(obj.keys())):
+                raise probatio.Invalid(
+                    f"Unsupported option(s) found for domain"
+                    f" {found_domains.pop()}, please remove"
+                    f" ({', '.join(found_invalid)})"
+                    " from your configuration",
+                )
+
+        return obj
+
+    return validate
+
+
+def create_trigger_format_issue(
+    hass: HomeAssistant, config: ConfigType, option: str
+) -> None:
+    """Create a warning when a rogue trigger or action is found."""
+    issue_id = hex(hash(frozenset(config)))
+    yaml_config = yaml_util.dump(config)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key=f"config_format_{option}",
+        translation_placeholders={"config": yaml_config},
+    )
+
+
+def validate_trigger_format(
+    hass: HomeAssistant, config_section: ConfigType, raw_config: ConfigType
+) -> None:
+    """Validate the config section."""
+    options = set(config_section.keys())
+
+    if CONF_TRIGGERS in options and not options.intersection(
+        [CONF_SENSORS, CONF_BINARY_SENSORS, *PLATFORMS]
+    ):
+        _LOGGER.warning(
+            "Invalid template configuration found,"
+            " trigger option is missing matching domain"
+        )
+        create_trigger_format_issue(hass, raw_config, CONF_TRIGGERS)
+
+    elif CONF_ACTIONS in options and CONF_TRIGGERS not in options:
+        _LOGGER.warning(
+            "Invalid template configuration found, action option requires a trigger"
+        )
+        create_trigger_format_issue(hass, raw_config, CONF_ACTIONS)
+
+
+def _backward_compat_schema(value: Any | None) -> Any:
+    """Backward compatibility for automations."""
+
+    value = cv.renamed(CONF_TRIGGER, CONF_TRIGGERS)(value)
+    value = cv.renamed(CONF_ACTION, CONF_ACTIONS)(value)
+    return cv.renamed(CONF_CONDITION, CONF_CONDITIONS)(value)
+
+
+CONFIG_SECTION_SCHEMA = probatio.All(
+    _backward_compat_schema,
+    probatio.Schema(
+        {
+            probatio.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
+            probatio.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
+            probatio.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
+            probatio.Optional(CONF_UNIQUE_ID): cv.string,
+            probatio.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            probatio.Optional(ALARM_CONTROL_PANEL_DOMAIN): probatio.All(
+                cv.ensure_list,
+                [alarm_control_panel_platform.ALARM_CONTROL_PANEL_YAML_SCHEMA],
+            ),
+            probatio.Optional(BINARY_SENSOR_DOMAIN): probatio.All(
+                cv.ensure_list, [binary_sensor_platform.BINARY_SENSOR_YAML_SCHEMA]
+            ),
+            probatio.Optional(BUTTON_DOMAIN): probatio.All(
+                cv.ensure_list, [button_platform.BUTTON_YAML_SCHEMA]
+            ),
+            probatio.Optional(COVER_DOMAIN): probatio.All(
+                cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
+            ),
+            probatio.Optional(DEVICE_TRACKER_DOMAIN): probatio.All(
+                cv.ensure_list, [device_tracker_platform.TRACKER_YAML_SCHEMA]
+            ),
+            probatio.Optional(EVENT_DOMAIN): probatio.All(
+                cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
+            ),
+            probatio.Optional(FAN_DOMAIN): probatio.All(
+                cv.ensure_list, [fan_platform.FAN_YAML_SCHEMA]
+            ),
+            probatio.Optional(IMAGE_DOMAIN): probatio.All(
+                cv.ensure_list, [image_platform.IMAGE_YAML_SCHEMA]
+            ),
+            probatio.Optional(LIGHT_DOMAIN): probatio.All(
+                cv.ensure_list, [light_platform.LIGHT_YAML_SCHEMA]
+            ),
+            probatio.Optional(LOCK_DOMAIN): probatio.All(
+                cv.ensure_list, [lock_platform.LOCK_YAML_SCHEMA]
+            ),
+            probatio.Optional(NUMBER_DOMAIN): probatio.All(
+                cv.ensure_list, [number_platform.NUMBER_YAML_SCHEMA]
+            ),
+            probatio.Optional(SELECT_DOMAIN): probatio.All(
+                cv.ensure_list, [select_platform.SELECT_YAML_SCHEMA]
+            ),
+            probatio.Optional(SENSOR_DOMAIN): probatio.All(
+                cv.ensure_list, [sensor_platform.SENSOR_YAML_SCHEMA]
+            ),
+            probatio.Optional(SWITCH_DOMAIN): probatio.All(
+                cv.ensure_list, [switch_platform.SWITCH_YAML_SCHEMA]
+            ),
+            probatio.Optional(UPDATE_DOMAIN): probatio.All(
+                cv.ensure_list, [update_platform.UPDATE_YAML_SCHEMA]
+            ),
+            probatio.Optional(VACUUM_DOMAIN): probatio.All(
+                cv.ensure_list, [vacuum_platform.VACUUM_YAML_SCHEMA]
+            ),
+            probatio.Optional(WEATHER_DOMAIN): probatio.All(
+                cv.ensure_list,
+                [
+                    probatio.Any(
+                        weather_platform.WEATHER_YAML_SCHEMA,
+                        weather_platform.WEATHER_MODERN_YAML_SCHEMA,
+                    )
+                ],
+            ),
+        },
+    ),
+    ensure_domains_do_not_have_trigger_or_action(
+        BUTTON_DOMAIN,
+    ),
+    validate_binary_sensor_auto_off_has_trigger,
+    validate_entity_config_with_conditions_has_trigger,
+)
+
+TEMPLATE_BLUEPRINT_SCHEMA = probatio.All(
+    _backward_compat_schema, blueprint_schemas.BLUEPRINT_SCHEMA
+)
+
+
+def _merge_section_variables(config: ConfigType, section_variables: ConfigType) -> None:
+    """Merges a template entity configuration's variables with the section variables."""
+    if (variables := config.pop(CONF_VARIABLES, None)) and isinstance(variables, dict):
+        config[CONF_VARIABLES] = {**section_variables, **variables}
+    else:
+        config[CONF_VARIABLES] = section_variables
+
+
+async def _async_resolve_template_config(
+    hass: HomeAssistant,
+    config: ConfigType,
+) -> TemplateConfig:
+    """If a config item requires a blueprint, resolve that item to an actual config."""
+    raw_config = None
+    raw_blueprint_inputs = None
+
+    with suppress(ValueError):  # Invalid config
+        raw_config = dict(config)
+
+    original_config = config
+    config = _backward_compat_schema(config)
+    if is_blueprint_instance_config(config):
+        blueprints = async_get_blueprints(hass)
+
+        blueprint_inputs = await blueprints.async_inputs_from_config(config)
+        raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+
+        config = blueprint_inputs.async_substitute()
+
+        platforms = [platform for platform in PLATFORMS if platform in config]
+        platform_config: list[ConfigType] | ConfigType
+        if len(platforms) > 1:
+            raise probatio.Invalid("more than one platform defined per blueprint")
+        if len(platforms) == 1:
+            platform = platforms.pop()
+            for prop in (CONF_NAME, CONF_UNIQUE_ID):
+                if prop in config:
+                    platform_config = config[platform]
+                    if isinstance(platform_config, dict):
+                        platform_config[prop] = config.pop(prop)
+                        continue
+
+                    if len(platform_config) > 1:
+                        raise probatio.Invalid(
+                            f"more than one {platform} entity defined in blueprint"
+                        )
+                    platform_config[0][prop] = config.pop(prop)
+
+            # State based template entities remove CONF_VARIABLES because they pass
+            # blueprint inputs to the template entities. Trigger based template entities
+            # retain CONF_VARIABLES because the variables are always executed between
+            # the trigger and action.
+            if CONF_TRIGGERS not in config and CONF_VARIABLES in config:
+                section_variables = config.pop(CONF_VARIABLES)
+                platform_config = config[platform]
+                if isinstance(platform_config, dict):
+                    platform_config = [platform_config]
+                for entity_config in platform_config:
+                    _merge_section_variables(entity_config, section_variables)
+
+        raw_config = dict(config)
+
+    # Trigger based template entities retain CONF_VARIABLES because the variables are
+    # always executed between the trigger and action.
+    elif CONF_TRIGGERS not in config and CONF_VARIABLES in config:
+        # State based template entities have 2 layers of
+        # variables. Variables at the section level and
+        # variables at the entity level should be merged
+        # together at the entity level.
+        section_variables = config.pop(CONF_VARIABLES)
+        platforms = [platform for platform in PLATFORMS if platform in config]
+        for platform in platforms:
+            platform_config = config[platform]
+            if platform in PLATFORMS:
+                if isinstance(platform_config, dict):
+                    platform_config = [platform_config]
+
+                for entity_config in platform_config:
+                    _merge_section_variables(entity_config, section_variables)
+
+    validate_trigger_format(hass, config, original_config)
+    template_config = TemplateConfig(CONFIG_SECTION_SCHEMA(config))
+    template_config.raw_blueprint_inputs = raw_blueprint_inputs
+    template_config.raw_config = raw_config
+
+    return template_config
+
+
+async def async_validate_config_section(
+    hass: HomeAssistant, config: ConfigType
+) -> TemplateConfig:
+    """Validate an entire config section for the template integration."""
+
+    validated_config = await _async_resolve_template_config(hass, config)
+
+    if CONF_TRIGGERS in validated_config:
+        validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
+            hass, validated_config[CONF_TRIGGERS]
+        )
+
+    if CONF_CONDITIONS in validated_config:
+        validated_config[CONF_CONDITIONS] = await async_validate_conditions_config(
+            hass, validated_config[CONF_CONDITIONS]
+        )
+
+    return validated_config
+
+
+async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
+    """Validate config."""
+
+    configs = []
+    for key in config:
+        if DOMAIN not in key:
+            continue
+
+        if key == DOMAIN or (key.startswith(DOMAIN) and len(key.split()) > 1):
+            configs.append(cv.ensure_list(config[key]))
+
+    if not configs:
+        return config
+
+    config_sections = []
+
+    for cfg in itertools.chain(*configs):
+        try:
+            template_config: TemplateConfig = await async_validate_config_section(
+                hass, cfg
+            )
+        except probatio.Invalid as err:
+            async_log_schema_error(err, DOMAIN, cfg, hass)
+            async_notify_setup_error(hass, DOMAIN)
+            continue
+
+        config_sections.append(template_config)
+
+    # Create a copy of the configuration with all config for current
+    # component removed and add validated config back in.
+    config = config_without_domain(config, DOMAIN)
+    config[DOMAIN] = config_sections
+
+    return config

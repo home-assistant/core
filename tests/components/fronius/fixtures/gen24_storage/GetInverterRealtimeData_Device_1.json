@@ -1,0 +1,80 @@
+{
+  "Body": {
+    "Data": {
+      "DAY_ENERGY": {
+        "Unit": "Wh",
+        "Value": null
+      },
+      "DeviceStatus": {
+        "ErrorCode": 0,
+        "InverterState": "Running",
+        "StatusCode": 7
+      },
+      "FAC": {
+        "Unit": "Hz",
+        "Value": 49.981552124023438
+      },
+      "IAC": {
+        "Unit": "A",
+        "Value": 1.1086627244949341
+      },
+      "IDC": {
+        "Unit": "A",
+        "Value": 0.39519637823104858
+      },
+      "IDC_2": {
+        "Unit": "A",
+        "Value": 0.35640031099319458
+      },
+      "IDC_3": {
+        "Unit": "A",
+        "Value": null
+      },
+      "PAC": {
+        "Unit": "W",
+        "Value": 250.90925598144531
+      },
+      "SAC": {
+        "Unit": "VA",
+        "Value": 250.9410400390625
+      },
+      "TOTAL_ENERGY": {
+        "Unit": "Wh",
+        "Value": 7512794.0116666667
+      },
+      "UAC": {
+        "Unit": "V",
+        "Value": 227.35398864746094
+      },
+      "UDC": {
+        "Unit": "V",
+        "Value": 419.10092163085938
+      },
+      "UDC_2": {
+        "Unit": "V",
+        "Value": 318.81027221679688
+      },
+      "UDC_3": {
+        "Unit": "V",
+        "Value": null
+      },
+      "YEAR_ENERGY": {
+        "Unit": "Wh",
+        "Value": null
+      }
+    }
+  },
+  "Head": {
+    "RequestArguments": {
+      "DataCollection": "CommonInverterData",
+      "DeviceId": "1",
+      "Scope": "Device"
+    },
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2021-11-28T13:51:45+00:00"
+  }
+}

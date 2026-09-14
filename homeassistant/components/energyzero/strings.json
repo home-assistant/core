@@ -1,0 +1,158 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "step": {
+      "user": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "all_in_average_price": {
+        "name": "Average all-in price"
+      },
+      "all_in_current_price": {
+        "name": "Current all-in price"
+      },
+      "all_in_max_price": {
+        "name": "Maximum all-in price"
+      },
+      "all_in_min_price": {
+        "name": "Minimum all-in price"
+      },
+      "all_in_next_price": {
+        "name": "Next all-in price"
+      },
+      "average_price": {
+        "name": "Average market price"
+      },
+      "current_hour_price": {
+        "name": "Current hour"
+      },
+      "current_price": {
+        "name": "Current market price"
+      },
+      "highest_price_time": {
+        "name": "Highest market price time"
+      },
+      "hours_priced_equal_or_lower": {
+        "name": "Market periods priced equal or lower"
+      },
+      "lowest_price_time": {
+        "name": "Lowest market price time"
+      },
+      "max_price": {
+        "name": "Maximum market price"
+      },
+      "min_price": {
+        "name": "Minimum market price"
+      },
+      "next_hour_price": {
+        "name": "Next hour"
+      },
+      "next_price": {
+        "name": "Next market price"
+      },
+      "percentage_of_max": {
+        "name": "Market percentage of maximum"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_date": {
+      "message": "Invalid date provided. Got {date}"
+    },
+    "invalid_range": {
+      "message": "Invalid date range provided. End {end} must be after start {start}."
+    },
+    "no_data": {
+      "message": "No price data available for {date}."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "electricity_price_interval": "Electricity price interval"
+        }
+      }
+    }
+  },
+  "selector": {
+    "electricity_price_interval": {
+      "options": {
+        "hourly": "Hourly",
+        "quarter_hourly": "Quarter-hourly"
+      }
+    },
+    "interval": {
+      "options": {
+        "hour": "[%key:component::energyzero::selector::electricity_price_interval::options::hourly%]",
+        "quarter": "[%key:component::energyzero::selector::electricity_price_interval::options::quarter_hourly%]"
+      }
+    },
+    "price_type": {
+      "options": {
+        "all_in": "All-in",
+        "market": "Market"
+      }
+    }
+  },
+  "services": {
+    "get_energy_prices": {
+      "description": "Requests energy prices from EnergyZero.",
+      "fields": {
+        "config_entry": {
+          "description": "[%key:component::energyzero::services::get_gas_prices::fields::config_entry::description%]",
+          "name": "[%key:component::energyzero::services::get_gas_prices::fields::config_entry::name%]"
+        },
+        "end": {
+          "description": "[%key:component::energyzero::services::get_gas_prices::fields::end::description%]",
+          "name": "[%key:component::energyzero::services::get_gas_prices::fields::end::name%]"
+        },
+        "incl_vat": {
+          "description": "[%key:component::energyzero::services::get_gas_prices::fields::incl_vat::description%]",
+          "name": "[%key:component::energyzero::services::get_gas_prices::fields::incl_vat::name%]"
+        },
+        "interval": {
+          "description": "The interval of electricity prices to retrieve. Defaults to hourly, independently of the electricity price interval configured for entities.",
+          "name": "Interval"
+        },
+        "price_type": {
+          "description": "The type of electricity prices to retrieve. Defaults to market prices.",
+          "name": "Price type"
+        },
+        "start": {
+          "description": "[%key:component::energyzero::services::get_gas_prices::fields::start::description%]",
+          "name": "[%key:component::energyzero::services::get_gas_prices::fields::start::name%]"
+        }
+      },
+      "name": "Get energy prices"
+    },
+    "get_gas_prices": {
+      "description": "Requests gas prices from EnergyZero.",
+      "fields": {
+        "config_entry": {
+          "description": "The config entry to use for this action.",
+          "name": "Config entry"
+        },
+        "end": {
+          "description": "Specifies the date and time until which to retrieve prices. Defaults to today if omitted.",
+          "name": "End"
+        },
+        "incl_vat": {
+          "description": "Include VAT in the prices.",
+          "name": "Including VAT"
+        },
+        "start": {
+          "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted.",
+          "name": "Start"
+        }
+      },
+      "name": "Get gas prices"
+    }
+  }
+}

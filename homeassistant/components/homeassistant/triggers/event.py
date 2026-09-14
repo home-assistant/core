@@ -1,0 +1,249 @@
+"""Offer event listening automation rules."""
+
+from collections.abc import ItemsView, Mapping
+import logging
+from typing import Any
+
+import probatio
+
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_EVENT_DATA,
+    CONF_PLATFORM,
+    EVENT_STATE_REPORTED,
+)
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    template,
+)
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import yaml as yaml_util
+
+_LOGGER = logging.getLogger(__name__)
+
+CONF_EVENT_TYPE = "event_type"
+CONF_EVENT_CONTEXT = "context"
+
+
+def _validate_event_types(value: Any) -> Any:
+    """Validate the event types.
+
+    If the event types are templated, we check when attaching the trigger.
+    """
+    templates: list[template.Template] = value
+    if any(tpl.is_static and tpl.template == EVENT_STATE_REPORTED for tpl in templates):
+        raise probatio.Invalid(
+            f"Can't listen to {EVENT_STATE_REPORTED} in event trigger"
+        )
+    return value
+
+
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+    {
+        probatio.Required(CONF_PLATFORM): "event",
+        probatio.Required(CONF_EVENT_TYPE): probatio.All(
+            cv.ensure_list, [cv.template], _validate_event_types
+        ),
+        probatio.Optional(CONF_EVENT_DATA): probatio.All(dict, cv.template_complex),
+        probatio.Optional(CONF_EVENT_CONTEXT): probatio.All(dict, cv.template_complex),
+    }
+)
+
+
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate trigger config.
+
+    Warn if the trigger filters event_data.device_id on a pre-migration composite device
+    id - a device that was split into one device per config entry.
+    A templated device id is a Template (not a plain string) and is left alone.
+    """
+    validated_config: ConfigType = TRIGGER_SCHEMA(config)
+    if (
+        CONF_EVENT_DATA in validated_config
+        and isinstance(
+            device_id := validated_config[CONF_EVENT_DATA].get(CONF_DEVICE_ID), str
+        )
+        and (
+            split_devices := dr.async_get(
+                hass
+            ).async_get_devices_for_composite_device_id(device_id)
+        )
+    ):
+        _log_composite_device_id_warning(hass, config, device_id, split_devices)
+    return validated_config
+
+
+@callback
+def _log_composite_device_id_warning(
+    hass: HomeAssistant,
+    config: ConfigType,
+    device_id: str,
+    split_devices: list[dr.DeviceEntry],
+) -> None:
+    """Warn that an event trigger filters on a split (pre-migration) device id."""
+
+    device_summaries: list[str] = []
+    for device in split_devices:
+        entry = hass.config_entries.async_get_entry(device.config_entry_id)
+        domain = entry.domain if entry else "unknown"
+        name = device.name_by_user or device.name or device.id
+        device_summaries.append(f"{name} ({device.id}) from the {domain} integration")
+
+    _LOGGER.warning(
+        "Event trigger filters on device '%s', which was split into one device per "
+        "integration and no longer exists, so the trigger can no longer fire. Update the "
+        "automation, script or template entity to filter on one of these devices instead: "
+        "%s.\nThe affected trigger is configured as:\n%s",
+        device_id,
+        ", ".join(device_summaries),
+        yaml_util.dump(config),
+    )
+
+
+def _schema_value(value: Any) -> Any:
+    if isinstance(value, list):
+        return probatio.In(value)
+
+    return value
+
+
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+    *,
+    platform_type: str = "event",
+) -> CALLBACK_TYPE:
+    """Listen for events based on configuration."""
+    trigger_data = trigger_info["trigger_data"]
+    variables = trigger_info["variables"]
+
+    event_types = template.render_complex(
+        config[CONF_EVENT_TYPE], variables, limited=True
+    )
+    if EVENT_STATE_REPORTED in event_types:
+        raise HomeAssistantError(
+            f"Can't listen to {EVENT_STATE_REPORTED} in event trigger"
+        )
+    event_data_schema: probatio.Schema | None = None
+    event_data_items: ItemsView | None = None
+    if CONF_EVENT_DATA in config:
+        # Render the schema input
+        event_data = {}
+        event_data.update(
+            template.render_complex(config[CONF_EVENT_DATA], variables, limited=True)
+        )
+
+        # For performance reasons, we want to avoid using a probatio schema here
+        # unless required. Thus, if possible, we try to use a simple items comparison
+        # For that, we explicitly do not check for list like the context data below
+        # since lists are a special case only used for context data, see test
+        # test_event_data_with_list. Otherwise, we build a volutupus schema, see test
+        # test_event_data_with_list_nested
+        if any(isinstance(value, dict) for value in event_data.values()):
+            event_data_schema = probatio.Schema(
+                event_data,
+                extra=probatio.ALLOW_EXTRA,
+                required=True,
+            )
+        else:
+            # Use a simple items comparison if possible
+            event_data_items = event_data.items()
+
+    event_context_schema: probatio.Schema | None = None
+    event_context_items: ItemsView | None = None
+    if CONF_EVENT_CONTEXT in config:
+        # Render the schema input
+        event_context = {}
+        event_context.update(
+            template.render_complex(config[CONF_EVENT_CONTEXT], variables, limited=True)
+        )
+        # Build the schema or a an items view if the schema is simple
+        # and does not contain lists. Lists are a special case to support
+        # matching events by user_id. (see test test_if_fires_on_multiple_user_ids)
+        # This can likely be optimized further in the future to handle the
+        # multiple user_id case without requiring expensive schema
+        # validation.
+        if any(isinstance(value, list) for value in event_context.values()):
+            event_context_schema = probatio.Schema(
+                {
+                    probatio.Required(key): _schema_value(value)
+                    for key, value in event_context.items()
+                },
+                extra=probatio.ALLOW_EXTRA,
+            )
+        else:
+            # Use a simple items comparison if possible
+            event_context_items = event_context.items()
+
+    job = HassJob(action, f"event trigger {trigger_info}")
+
+    @callback
+    def filter_event(event_data: Mapping[str, Any]) -> bool:
+        """Filter events."""
+        try:
+            # Check that the event data and context match the configured
+            # schema if one was provided
+            if event_data_items:
+                # Fast path for simple items comparison
+                if not (event_data.items() >= event_data_items):
+                    return False
+            elif event_data_schema:
+                # Slow path for schema validation
+                event_data_schema(event_data)
+        except probatio.Invalid:
+            # If event doesn't match, skip event
+            return False
+        return True
+
+    @callback
+    def handle_event(event: Event) -> None:
+        """Listen for events and calls the action when data matches."""
+        if event_context_items:
+            # Fast path for simple items comparison
+            # This is safe because we do not mutate the event context
+            if not (event.context._as_dict.items() >= event_context_items):  # noqa: SLF001
+                return
+        elif event_context_schema:
+            try:
+                # Slow path for schema validation
+                # This is safe because we make a copy of the event context
+                event_context_schema(dict(event.context._as_dict))  # noqa: SLF001
+            except probatio.Invalid:
+                # If event doesn't match, skip event
+                return
+
+        hass.loop.call_soon(
+            hass.async_run_hass_job,
+            job,
+            {
+                "trigger": {
+                    **trigger_data,
+                    "platform": platform_type,
+                    "event": event,
+                    "description": f"event '{event.event_type}'",
+                }
+            },
+            event.context,
+        )
+
+    event_filter = filter_event if event_data_items or event_data_schema else None
+    removes = [
+        hass.bus.async_listen(event_type, handle_event, event_filter=event_filter)
+        for event_type in event_types
+    ]
+
+    @callback
+    def remove_listen_events() -> None:
+        """Remove event listeners."""
+        for remove in removes:
+            remove()
+
+    return remove_listen_events

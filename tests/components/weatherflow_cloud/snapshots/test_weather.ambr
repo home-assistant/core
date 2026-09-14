@@ -1,0 +1,66 @@
+# serializer version: 1
+# name: test_weather[weather.my_home_station-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'weather',
+    'entity_category': None,
+    'entity_id': 'weather.my_home_station',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WeatherEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'weatherflow_forecast_24432',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_weather[weather.my_home_station-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <WeatherEntityStateAttribute.DEW_POINT: 'dew_point'>: -13.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station',
+      <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 27,
+      <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 795.8,
+      <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 3>,
+      <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 4.0,
+      <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WeatherEntityStateAttribute.UV_INDEX: 'uv_index'>: 2,
+      <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+      <WeatherEntityStateAttribute.WIND_BEARING: 'wind_bearing'>: 40.0,
+      <WeatherEntityStateAttribute.WIND_GUST_SPEED: 'wind_gust_speed'>: 14.4,
+      <WeatherEntityStateAttribute.WIND_SPEED: 'wind_speed'>: 7.2,
+      <WeatherEntityStateAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.my_home_station',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sunny',
+  })
+# ---

@@ -1,0 +1,32 @@
+"""Constants for the AVM FRITZ!SmartHome integration."""
+
+import logging
+from typing import Final
+
+from homeassistant.const import Platform
+
+ATTR_STATE_BATTERY_LOW: Final = "battery_low"
+ATTR_STATE_HOLIDAY_MODE: Final = "holiday_mode"
+ATTR_STATE_SUMMER_MODE: Final = "summer_mode"
+ATTR_STATE_WINDOW_OPEN: Final = "window_open"
+
+COLOR_MODE: Final = "1"
+COLOR_TEMP_MODE: Final = "4"
+
+DEFAULT_URL: Final = "http://fritz.box"
+DEFAULT_USERNAME: Final = "admin"
+DEFAULT_VERIFY_SSL: Final = True
+
+DOMAIN: Final = "fritzbox"
+
+LOGGER: Final[logging.Logger] = logging.getLogger(__package__)
+
+PLATFORMS: Final[list[Platform]] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]

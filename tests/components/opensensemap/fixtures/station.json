@@ -1,0 +1,124 @@
+{
+  "_id": "test-station-id",
+  "name": "Test Station",
+  "exposure": "outdoor",
+  "model": "homeV2EthernetFeinstaub",
+  "description": "Test fixture station",
+  "currentLocation": {
+    "coordinates": [13.0, 52.0],
+    "type": "Point",
+    "timestamp": "2024-01-01T00:00:00.000Z"
+  },
+  "sensors": [
+    {
+      "_id": "sensor-pm25",
+      "title": "PM2.5",
+      "unit": "µg/m³",
+      "sensorType": "SDS 011",
+      "lastMeasurement": {
+        "value": "5.42",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "_id": "sensor-pm10",
+      "title": "PM10",
+      "unit": "µg/m³",
+      "sensorType": "SDS 011",
+      "lastMeasurement": {
+        "value": "9.17",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "_id": "sensor-pm1",
+      "title": "PM1.0",
+      "unit": "µg/m³",
+      "sensorType": "SDS 011",
+      "lastMeasurement": {
+        "value": "3.10",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "_id": "sensor-temperature",
+      "title": "Temperature",
+      "unit": "°C",
+      "sensorType": "HDC1080",
+      "lastMeasurement": {
+        "value": "21.30",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "_id": "sensor-humidity",
+      "title": "Humidity",
+      "unit": "%",
+      "sensorType": "HDC1080",
+      "lastMeasurement": {
+        "value": "47.10",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "_id": "sensor-pressure",
+      "title": "Air Pressure",
+      "unit": "hPa",
+      "sensorType": "BMP280",
+      "lastMeasurement": {
+        "value": "1013.20",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "_id": "sensor-illuminance",
+      "title": "Illuminance",
+      "unit": "lx",
+      "sensorType": "TSL45315",
+      "lastMeasurement": {
+        "value": "12500.00",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "_id": "sensor-uv",
+      "title": "UV",
+      "unit": "UV Index",
+      "sensorType": "VEML6070",
+      "lastMeasurement": {
+        "value": "3.40",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "_id": "sensor-wind-speed",
+      "title": "Wind Speed",
+      "unit": "m/s",
+      "sensorType": "MISOL",
+      "lastMeasurement": {
+        "value": "2.50",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "_id": "sensor-wind-direction",
+      "title": "Wind Direction",
+      "unit": "°",
+      "sensorType": "MISOL",
+      "lastMeasurement": {
+        "value": "180.00",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "_id": "sensor-precipitation",
+      "title": "Precipitation",
+      "unit": "mm",
+      "sensorType": "MISOL",
+      "lastMeasurement": {
+        "value": "0.30",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    }
+  ]
+}

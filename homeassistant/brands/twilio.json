@@ -1,0 +1,5 @@
+{
+  "domain": "twilio",
+  "name": "Twilio",
+  "integrations": ["twilio", "twilio_call", "twilio_sms"]
+}

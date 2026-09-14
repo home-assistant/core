@@ -1,0 +1,134 @@
+add_all_link:
+  fields:
+    group:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+    mode:
+      required: true
+      selector:
+        select:
+          options:
+            - "controller"
+            - "responder"
+delete_all_link:
+  fields:
+    group:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+load_all_link_database:
+  fields:
+    entity_id:
+      required: true
+      example: "light.1a2b3c"
+      selector:
+        text:
+    reload:
+      default: false
+      selector:
+        boolean:
+print_all_link_database:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: insteon
+print_im_all_link_database:
+x10_all_units_off:
+  fields:
+    housecode:
+      required: true
+      selector:
+        select:
+          options:
+            - "a"
+            - "b"
+            - "c"
+            - "d"
+            - "e"
+            - "f"
+            - "g"
+            - "h"
+            - "i"
+            - "j"
+            - "k"
+            - "l"
+            - "m"
+            - "n"
+            - "o"
+            - "p"
+x10_all_lights_on:
+  fields:
+    housecode:
+      required: true
+      selector:
+        select:
+          options:
+            - "a"
+            - "b"
+            - "c"
+            - "d"
+            - "e"
+            - "f"
+            - "g"
+            - "h"
+            - "i"
+            - "j"
+            - "k"
+            - "l"
+            - "m"
+            - "n"
+            - "o"
+            - "p"
+x10_all_lights_off:
+  fields:
+    housecode:
+      required: true
+      selector:
+        select:
+          options:
+            - "a"
+            - "b"
+            - "c"
+            - "d"
+            - "e"
+            - "f"
+            - "g"
+            - "h"
+            - "i"
+            - "j"
+            - "k"
+            - "l"
+            - "m"
+            - "n"
+            - "o"
+            - "p"
+scene_on:
+  fields:
+    group:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+scene_off:
+  fields:
+    group:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+add_default_links:
+  fields:
+    entity_id:
+      required: true
+      example: "light.1a2b3c"
+      selector:
+        text:

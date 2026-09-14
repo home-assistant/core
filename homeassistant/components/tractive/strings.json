@@ -1,0 +1,87 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_failed_existing": "Could not update the config entry, please remove the integration and set it up again.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "rate_limit_exceeded": "Too many requests. Please try again later.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    }
+  },
+  "device": {
+    "tracker": {
+      "name": "Tracker {id}"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "tracker_power_saving": {
+        "name": "Power saving"
+      }
+    },
+    "sensor": {
+      "activity_time": {
+        "name": "Activity time"
+      },
+      "daily_goal": {
+        "name": "Daily goal"
+      },
+      "minutes_day_sleep": {
+        "name": "Day sleep"
+      },
+      "minutes_night_sleep": {
+        "name": "Night sleep"
+      },
+      "rest_time": {
+        "name": "Rest time"
+      },
+      "tracker_state": {
+        "name": "Status",
+        "state": {
+          "inaccurate_position": "Inaccurate position",
+          "not_reporting": "Not reporting",
+          "operational": "Operational",
+          "system_shutdown_user": "System shutdown user",
+          "system_startup": "System startup"
+        }
+      }
+    },
+    "switch": {
+      "live_tracking": {
+        "name": "Live tracking"
+      },
+      "tracker_buzzer": {
+        "name": "Buzzer"
+      },
+      "tracker_led": {
+        "name": "LED"
+      }
+    }
+  },
+  "exceptions": {
+    "failed_to_turn_off": {
+      "message": "An error occurred while trying to turn off {entity}"
+    },
+    "failed_to_turn_on": {
+      "message": "An error occurred while trying to turn on {entity}"
+    }
+  }
+}

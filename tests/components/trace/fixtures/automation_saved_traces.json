@@ -1,0 +1,487 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "trace.saved_traces",
+  "data": {
+    "automation.sun": [
+      {
+        "extended_dict": {
+          "last_step": "action/0",
+          "run_id": "d09f46a4007732c53fa69f434acc1c02",
+          "state": "stopped",
+          "script_execution": "error",
+          "timestamp": {
+            "start": "2021-10-14T06:43:39.540977+00:00",
+            "finish": "2021-10-14T06:43:39.542744+00:00"
+          },
+          "domain": "automation",
+          "item_id": "sun",
+          "error": "Unable to find service test.automation",
+          "trigger": "event 'test_event'",
+          "trace": {
+            "trigger/0": [
+              {
+                "path": "trigger/0",
+                "timestamp": "2021-10-14T06:43:39.541024+00:00",
+                "changed_variables": {
+                  "this": {
+                    "entity_id": "automation.automation_0",
+                    "state": "on",
+                    "attributes": {
+                      "last_triggered": null,
+                      "mode": "single",
+                      "current": 0,
+                      "id": "sun",
+                      "friendly_name": "automation 0"
+                    },
+                    "last_changed": "2021-10-14T06:43:39.368423+00:00",
+                    "last_updated": "2021-10-14T06:43:39.368423+00:00",
+                    "context": {
+                      "id": "c62f6b3f975b4f9bd479b10a4d7425db",
+                      "parent_id": null,
+                      "user_id": null
+                    }
+                  },
+                  "trigger": {
+                    "id": "0",
+                    "idx": "0",
+                    "platform": "event",
+                    "event": {
+                      "event_type": "test_event",
+                      "data": {},
+                      "origin": "LOCAL",
+                      "time_fired": "2021-10-14T06:43:39.540382+00:00",
+                      "context": {
+                        "id": "66934a357e691e845d7f00ee953c0f0f",
+                        "parent_id": null,
+                        "user_id": null
+                      }
+                    },
+                    "description": "event 'test_event'"
+                  }
+                }
+              }
+            ],
+            "action/0": [
+              {
+                "path": "action/0",
+                "timestamp": "2021-10-14T06:43:39.541738+00:00",
+                "changed_variables": {
+                  "context": {
+                    "id": "4438e85e335bd05e6474d2846d7001cc",
+                    "parent_id": "66934a357e691e845d7f00ee953c0f0f",
+                    "user_id": null
+                  }
+                },
+                "error": "Unable to find service test.automation",
+                "result": {
+                  "params": {
+                    "domain": "test",
+                    "service": "automation",
+                    "service_data": {},
+                    "target": {}
+                  },
+                  "running_script": false,
+                  "limit": 10
+                }
+              }
+            ]
+          },
+          "config": {
+            "id": "sun",
+            "trigger": {
+              "platform": "event",
+              "event_type": "test_event"
+            },
+            "action": {
+              "service": "test.automation"
+            }
+          },
+          "blueprint_inputs": null,
+          "context": {
+            "id": "4438e85e335bd05e6474d2846d7001cc",
+            "parent_id": "66934a357e691e845d7f00ee953c0f0f",
+            "user_id": null
+          }
+        },
+        "short_dict": {
+          "last_step": "action/0",
+          "run_id": "d09f46a4007732c53fa69f434acc1c02",
+          "state": "stopped",
+          "script_execution": "error",
+          "timestamp": {
+            "start": "2021-10-14T06:43:39.540977+00:00",
+            "finish": "2021-10-14T06:43:39.542744+00:00"
+          },
+          "domain": "automation",
+          "item_id": "sun",
+          "error": "Unable to find service test.automation",
+          "trigger": "event 'test_event'"
+        }
+      }
+    ],
+    "automation.moon": [
+      {
+        "extended_dict": {
+          "last_step": "action/0",
+          "run_id": "511d210ac62aa04668ab418063b57e2c",
+          "state": "stopped",
+          "script_execution": "finished",
+          "timestamp": {
+            "start": "2021-10-14T06:43:39.545290+00:00",
+            "finish": "2021-10-14T06:43:39.546962+00:00"
+          },
+          "domain": "automation",
+          "item_id": "moon",
+          "trigger": "event 'test_event2'",
+          "trace": {
+            "trigger/0": [
+              {
+                "path": "trigger/0",
+                "timestamp": "2021-10-14T06:43:39.545313+00:00",
+                "changed_variables": {
+                  "this": {
+                    "entity_id": "automation.automation_1",
+                    "state": "on",
+                    "attributes": {
+                      "last_triggered": null,
+                      "mode": "single",
+                      "current": 0,
+                      "id": "moon",
+                      "friendly_name": "automation 1"
+                    },
+                    "last_changed": "2021-10-14T06:43:39.369282+00:00",
+                    "last_updated": "2021-10-14T06:43:39.369282+00:00",
+                    "context": {
+                      "id": "c914e818f5b234c0fc0dfddf75e98b0e",
+                      "parent_id": null,
+                      "user_id": null
+                    }
+                  },
+                  "trigger": {
+                    "id": "0",
+                    "idx": "0",
+                    "platform": "event",
+                    "event": {
+                      "event_type": "test_event2",
+                      "data": {},
+                      "origin": "LOCAL",
+                      "time_fired": "2021-10-14T06:43:39.545003+00:00",
+                      "context": {
+                        "id": "66934a357e691e845d7f00ee953c0f0f",
+                        "parent_id": null,
+                        "user_id": null
+                      }
+                    },
+                    "description": "event 'test_event2'"
+                  }
+                }
+              }
+            ],
+            "condition/0": [
+              {
+                "path": "condition/0",
+                "timestamp": "2021-10-14T06:43:39.545336+00:00",
+                "result": {
+                  "result": true,
+                  "entities": []
+                }
+              }
+            ],
+            "action/0": [
+              {
+                "path": "action/0",
+                "timestamp": "2021-10-14T06:43:39.546378+00:00",
+                "changed_variables": {
+                  "context": {
+                    "id": "8948898e0074ecaa98be2e041256c81b",
+                    "parent_id": "66934a357e691e845d7f00ee953c0f0f",
+                    "user_id": null
+                  }
+                },
+                "result": {
+                  "event": "another_event",
+                  "event_data": {}
+                }
+              }
+            ]
+          },
+          "config": {
+            "id": "moon",
+            "trigger": [
+              {
+                "platform": "event",
+                "event_type": "test_event2"
+              },
+              {
+                "platform": "event",
+                "event_type": "test_event3"
+              }
+            ],
+            "condition": {
+              "condition": "template",
+              "value_template": "{{ trigger.event.event_type=='test_event2' }}"
+            },
+            "action": {
+              "event": "another_event"
+            }
+          },
+          "blueprint_inputs": null,
+          "context": {
+            "id": "8948898e0074ecaa98be2e041256c81b",
+            "parent_id": "66934a357e691e845d7f00ee953c0f0f",
+            "user_id": null
+          }
+        },
+        "short_dict": {
+          "last_step": "action/0",
+          "run_id": "511d210ac62aa04668ab418063b57e2c",
+          "state": "stopped",
+          "script_execution": "finished",
+          "timestamp": {
+            "start": "2021-10-14T06:43:39.545290+00:00",
+            "finish": "2021-10-14T06:43:39.546962+00:00"
+          },
+          "domain": "automation",
+          "item_id": "moon",
+          "trigger": "event 'test_event2'"
+        }
+      },
+      {
+        "extended_dict": {
+          "last_step": "condition/0",
+          "run_id": "e2c97432afe9b8a42d7983588ed5e6ef",
+          "state": "stopped",
+          "script_execution": "failed_conditions",
+          "timestamp": {
+            "start": "2021-10-14T06:43:39.549081+00:00",
+            "finish": "2021-10-14T06:43:39.549468+00:00"
+          },
+          "domain": "automation",
+          "item_id": "moon",
+          "trigger": "event 'test_event3'",
+          "trace": {
+            "trigger/1": [
+              {
+                "path": "trigger/1",
+                "timestamp": "2021-10-14T06:43:39.549115+00:00",
+                "changed_variables": {
+                  "this": {
+                    "entity_id": "automation.automation_1",
+                    "state": "on",
+                    "attributes": {
+                      "last_triggered": "2021-10-14T06:43:39.545943+00:00",
+                      "mode": "single",
+                      "current": 0,
+                      "id": "moon",
+                      "friendly_name": "automation 1"
+                    },
+                    "last_changed": "2021-10-14T06:43:39.369282+00:00",
+                    "last_updated": "2021-10-14T06:43:39.546662+00:00",
+                    "context": {
+                      "id": "8948898e0074ecaa98be2e041256c81b",
+                      "parent_id": "66934a357e691e845d7f00ee953c0f0f",
+                      "user_id": null
+                    }
+                  },
+                  "trigger": {
+                    "id": "1",
+                    "idx": "1",
+                    "platform": "event",
+                    "event": {
+                      "event_type": "test_event3",
+                      "data": {},
+                      "origin": "LOCAL",
+                      "time_fired": "2021-10-14T06:43:39.548788+00:00",
+                      "context": {
+                        "id": "5f5113a378b3c06fe146ead2908f6f44",
+                        "parent_id": null,
+                        "user_id": null
+                      }
+                    },
+                    "description": "event 'test_event3'"
+                  }
+                }
+              }
+            ],
+            "condition/0": [
+              {
+                "path": "condition/0",
+                "timestamp": "2021-10-14T06:43:39.549136+00:00",
+                "result": {
+                  "result": false,
+                  "entities": []
+                }
+              }
+            ]
+          },
+          "config": {
+            "id": "moon",
+            "trigger": [
+              {
+                "platform": "event",
+                "event_type": "test_event2"
+              },
+              {
+                "platform": "event",
+                "event_type": "test_event3"
+              }
+            ],
+            "condition": {
+              "condition": "template",
+              "value_template": "{{ trigger.event.event_type=='test_event2' }}"
+            },
+            "action": {
+              "event": "another_event"
+            }
+          },
+          "blueprint_inputs": null,
+          "context": {
+            "id": "77d041c4e0ecc91ab5e707239c983faf",
+            "parent_id": "5f5113a378b3c06fe146ead2908f6f44",
+            "user_id": null
+          }
+        },
+        "short_dict": {
+          "last_step": "condition/0",
+          "run_id": "e2c97432afe9b8a42d7983588ed5e6ef",
+          "state": "stopped",
+          "script_execution": "failed_conditions",
+          "timestamp": {
+            "start": "2021-10-14T06:43:39.549081+00:00",
+            "finish": "2021-10-14T06:43:39.549468+00:00"
+          },
+          "domain": "automation",
+          "item_id": "moon",
+          "trigger": "event 'test_event3'"
+        }
+      },
+      {
+        "extended_dict": {
+          "last_step": "action/0",
+          "run_id": "f71d7fa261d361ed999c1dda0a846c99",
+          "state": "stopped",
+          "script_execution": "finished",
+          "timestamp": {
+            "start": "2021-10-14T06:43:39.551485+00:00",
+            "finish": "2021-10-14T06:43:39.552822+00:00"
+          },
+          "domain": "automation",
+          "item_id": "moon",
+          "trigger": "event 'test_event2'",
+          "trace": {
+            "trigger/0": [
+              {
+                "path": "trigger/0",
+                "timestamp": "2021-10-14T06:43:39.551503+00:00",
+                "changed_variables": {
+                  "this": {
+                    "entity_id": "automation.automation_1",
+                    "state": "on",
+                    "attributes": {
+                      "last_triggered": "2021-10-14T06:43:39.545943+00:00",
+                      "mode": "single",
+                      "current": 0,
+                      "id": "moon",
+                      "friendly_name": "automation 1"
+                    },
+                    "last_changed": "2021-10-14T06:43:39.369282+00:00",
+                    "last_updated": "2021-10-14T06:43:39.546662+00:00",
+                    "context": {
+                      "id": "8948898e0074ecaa98be2e041256c81b",
+                      "parent_id": "66934a357e691e845d7f00ee953c0f0f",
+                      "user_id": null
+                    }
+                  },
+                  "trigger": {
+                    "id": "0",
+                    "idx": "0",
+                    "platform": "event",
+                    "event": {
+                      "event_type": "test_event2",
+                      "data": {},
+                      "origin": "LOCAL",
+                      "time_fired": "2021-10-14T06:43:39.551202+00:00",
+                      "context": {
+                        "id": "66a59f97502785c544724fdb46bcb94d",
+                        "parent_id": null,
+                        "user_id": null
+                      }
+                    },
+                    "description": "event 'test_event2'"
+                  }
+                }
+              }
+            ],
+            "condition/0": [
+              {
+                "path": "condition/0",
+                "timestamp": "2021-10-14T06:43:39.551524+00:00",
+                "result": {
+                  "result": true,
+                  "entities": []
+                }
+              }
+            ],
+            "action/0": [
+              {
+                "path": "action/0",
+                "timestamp": "2021-10-14T06:43:39.552236+00:00",
+                "changed_variables": {
+                  "context": {
+                    "id": "3128b5fa3494cb17cfb485176ef2cee3",
+                    "parent_id": "66a59f97502785c544724fdb46bcb94d",
+                    "user_id": null
+                  }
+                },
+                "result": {
+                  "event": "another_event",
+                  "event_data": {}
+                }
+              }
+            ]
+          },
+          "config": {
+            "id": "moon",
+            "trigger": [
+              {
+                "platform": "event",
+                "event_type": "test_event2"
+              },
+              {
+                "platform": "event",
+                "event_type": "test_event3"
+              }
+            ],
+            "condition": {
+              "condition": "template",
+              "value_template": "{{ trigger.event.event_type=='test_event2' }}"
+            },
+            "action": {
+              "event": "another_event"
+            }
+          },
+          "blueprint_inputs": null,
+          "context": {
+            "id": "3128b5fa3494cb17cfb485176ef2cee3",
+            "parent_id": "66a59f97502785c544724fdb46bcb94d",
+            "user_id": null
+          }
+        },
+        "short_dict": {
+          "last_step": "action/0",
+          "run_id": "f71d7fa261d361ed999c1dda0a846c99",
+          "state": "stopped",
+          "script_execution": "finished",
+          "timestamp": {
+            "start": "2021-10-14T06:43:39.551485+00:00",
+            "finish": "2021-10-14T06:43:39.552822+00:00"
+          },
+          "domain": "automation",
+          "item_id": "moon",
+          "trigger": "event 'test_event2'"
+        }
+      }
+    ]
+  }
+}

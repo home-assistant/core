@@ -1,0 +1,277 @@
+fan_reset_filter:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: fan
+
+fan_set_extra_features:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: fan
+    features:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1
+
+light_set_scene:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+    scene:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 6
+
+light_set_delayed_turn_off:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+    time_period:
+      required: true
+      example: "5, '0:05', {'minutes': 5}"
+      selector:
+        object:
+
+light_reminder_on:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+
+light_reminder_off:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+
+light_night_light_mode_on:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+
+light_night_light_mode_off:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+
+light_eyecare_mode_on:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+
+light_eyecare_mode_off:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+
+remote_learn_command:
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: remote
+  fields:
+    slot:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 1000000
+    timeout:
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+
+remote_set_led_on:
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: remote
+
+remote_set_led_off:
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: remote
+
+switch_set_wifi_led_on:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: switch
+
+switch_set_wifi_led_off:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: switch
+
+switch_set_power_price:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: switch
+    mode:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 999
+
+switch_set_power_mode:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: switch
+    mode:
+      required: true
+      selector:
+        select:
+          options:
+            - "green"
+            - "normal"
+
+vacuum_remote_control_start:
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+
+vacuum_remote_control_stop:
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+
+vacuum_remote_control_move:
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+  fields:
+    velocity:
+      selector:
+        number:
+          min: -0.29
+          max: 0.29
+          step: 0.01
+    rotation:
+      selector:
+        number:
+          min: -179
+          max: 179
+          unit_of_measurement: "°"
+    duration:
+      selector:
+        number:
+          min: 1
+          max: 86400
+          unit_of_measurement: seconds
+
+vacuum_remote_control_move_step:
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+  fields:
+    velocity:
+      selector:
+        number:
+          min: -0.29
+          max: 0.29
+          step: 0.01
+    rotation:
+      selector:
+        number:
+          min: -179
+          max: 179
+          unit_of_measurement: "°"
+    duration:
+      selector:
+        number:
+          min: 1
+          max: 86400
+          unit_of_measurement: seconds
+
+vacuum_clean_zone:
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+  fields:
+    zone:
+      example: "[[23510,25311,25110,26362]]"
+      selector:
+        object:
+    repeats:
+      selector:
+        number:
+          min: 1
+          max: 3
+
+vacuum_goto:
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+  fields:
+    x_coord:
+      example: 27500
+      selector:
+        text:
+    y_coord:
+      example: 32000
+      selector:
+        text:
+
+vacuum_clean_segment:
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+  fields:
+    segments:
+      example: "[1,2]"
+      selector:
+        object:

@@ -1,0 +1,9 @@
+{
+  "domain": "meraki",
+  "name": "Meraki",
+  "codeowners": [],
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/meraki",
+  "iot_class": "cloud_polling",
+  "quality_scale": "legacy"
+}

@@ -1,0 +1,231 @@
+"""Config flow for LastFm."""
+
+import logging
+from typing import Any, override
+
+import probatio
+from pylast import LastFMNetwork, PyLastError, User, WSError
+
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
+from homeassistant.const import CONF_API_KEY
+from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
+
+from .const import CONF_MAIN_USER, CONF_USERS, DOMAIN, ERROR_CODE_LOGIN_REQUIRED
+from .coordinator import LastFMConfigEntry
+
+PLACEHOLDERS = {
+    "api_account_url": "https://www.last.fm/api/account/create",
+    "privacy_settings_url": "https://www.last.fm/settings/privacy",
+}
+
+CONFIG_SCHEMA: probatio.Schema = probatio.Schema(
+    {
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_MAIN_USER): str,
+    }
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def get_lastfm_user(api_key: str, username: str) -> tuple[User, dict[str, str]]:
+    """Get and validate lastFM User."""
+    user = LastFMNetwork(api_key=api_key).get_user(username)
+    errors = {}
+    try:
+        user.get_playcount()
+        user.get_recent_tracks(limit=1)
+    except WSError as error:
+        if error.status == ERROR_CODE_LOGIN_REQUIRED:
+            errors["base"] = "hidden_recent_tracks"
+        elif error.details == "User not found":
+            errors["base"] = "invalid_account"
+        elif (
+            error.details
+            == "Invalid API key - You must be granted a valid key by last.fm"
+        ):
+            errors["base"] = "invalid_auth"
+        else:
+            errors["base"] = "unknown"
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+    return user, errors
+
+
+def validate_lastfm_users(
+    api_key: str, usernames: list[str]
+) -> tuple[list[str], dict[str, str]]:
+    """Validate list of users. Return tuple of valid users and errors."""
+    valid_users = []
+    errors = {}
+    for username in usernames:
+        _, lastfm_errors = get_lastfm_user(api_key, username)
+        if lastfm_errors:
+            errors = lastfm_errors
+        else:
+            valid_users.append(username)
+    return valid_users, errors
+
+
+def get_user_friends(api_key: str, username: str) -> list[User]:
+    """Get the friends of a Last.fm user."""
+    user, _ = get_lastfm_user(api_key, username)
+    return user.get_friends()
+
+
+class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
+    """Config flow handler for LastFm."""
+
+    data: dict[str, Any] = {}
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: LastFMConfigEntry,
+    ) -> LastFmOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return LastFmOptionsFlowHandler()
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Initialize user input."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self.data = user_input.copy()
+            _, errors = await self.hass.async_add_executor_job(
+                get_lastfm_user, self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
+            )
+            if not errors:
+                return await self.async_step_friends()
+        return self.async_show_form(
+            step_id="user",
+            errors=errors,
+            description_placeholders=PLACEHOLDERS,
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
+        )
+
+    async def async_step_friends(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Form to select other users and friends."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            users, errors = await self.hass.async_add_executor_job(
+                validate_lastfm_users,
+                self.data[CONF_API_KEY],
+                user_input[CONF_USERS],
+            )
+            user_input[CONF_USERS] = users
+            if not errors:
+                return self.async_create_entry(
+                    title="LastFM",
+                    data={},
+                    options={
+                        CONF_API_KEY: self.data[CONF_API_KEY],
+                        CONF_MAIN_USER: self.data[CONF_MAIN_USER],
+                        CONF_USERS: [
+                            self.data[CONF_MAIN_USER],
+                            *user_input[CONF_USERS],
+                        ],
+                    },
+                )
+        try:
+            friends_response = await self.hass.async_add_executor_job(
+                get_user_friends, self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
+            )
+            friends = [
+                SelectOptionDict(value=friend.name, label=friend.get_name(True))
+                for friend in friends_response
+            ]
+        except PyLastError:
+            friends = []
+        return self.async_show_form(
+            step_id="friends",
+            errors=errors,
+            description_placeholders=PLACEHOLDERS,
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_USERS): SelectSelector(
+                            SelectSelectorConfig(
+                                options=friends, custom_value=True, multiple=True
+                            )
+                        ),
+                    }
+                ),
+                user_input or {CONF_USERS: []},
+            ),
+        )
+
+
+class LastFmOptionsFlowHandler(OptionsFlowWithReload):
+    """LastFm Options flow handler."""
+
+    config_entry: LastFMConfigEntry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Initialize form."""
+        errors: dict[str, str] = {}
+        options = self.config_entry.options
+        if user_input is not None:
+            users, errors = await self.hass.async_add_executor_job(
+                validate_lastfm_users,
+                options[CONF_API_KEY],
+                user_input[CONF_USERS],
+            )
+            user_input[CONF_USERS] = users
+            if not errors:
+                return self.async_create_entry(
+                    title="LastFM",
+                    data={
+                        **options,
+                        CONF_USERS: user_input[CONF_USERS],
+                    },
+                )
+        if options[CONF_MAIN_USER]:
+            try:
+                friends_response = await self.hass.async_add_executor_job(
+                    get_user_friends,
+                    options[CONF_API_KEY],
+                    options[CONF_MAIN_USER],
+                )
+                friends = [
+                    SelectOptionDict(value=friend.name, label=friend.get_name(True))
+                    for friend in friends_response
+                ]
+            except PyLastError:
+                friends = []
+        else:
+            friends = []
+        return self.async_show_form(
+            step_id="init",
+            errors=errors,
+            description_placeholders=PLACEHOLDERS,
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_USERS): SelectSelector(
+                            SelectSelectorConfig(
+                                options=friends, custom_value=True, multiple=True
+                            )
+                        ),
+                    }
+                ),
+                user_input or options,
+            ),
+        )

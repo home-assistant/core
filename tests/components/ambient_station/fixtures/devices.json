@@ -1,0 +1,17 @@
+[
+  {
+    "macAddress": "12:34:56:78:90:AB",
+    "lastData": {
+      "dateutc": 1546889640000,
+      "baromrelin": 30.09,
+      "baromabsin": 24.61,
+      "tempinf": 68.9,
+      "humidityin": 30,
+      "date": "2019-01-07T19:34:00.000Z"
+    },
+    "info": {
+      "name": "Home",
+      "location": "Home"
+    }
+  }
+]

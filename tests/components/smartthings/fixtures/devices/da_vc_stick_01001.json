@@ -1,0 +1,168 @@
+{
+  "items": [
+    {
+      "deviceId": "e1f93c0c-6fe0-c65a-a314-c8f7b163c86b",
+      "name": "[vacuum] Samsung",
+      "label": "Stick vacuum",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-VC-STICK-01001",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "03f25476-ce87-4f94-b153-03d40451dee0",
+      "ownerId": "62619912-9710-ee72-bdf7-6e3910560913",
+      "roomId": "2f820695-73c1-4d43-8ee9-7c6a07feeb9a",
+      "deviceTypeName": "x.com.st.d.stickcleaner",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.stickCleanerStickStatus",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            },
+            {
+              "id": "samsungce.lamp",
+              "version": 1
+            },
+            {
+              "id": "samsungce.notification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.selfCheck",
+              "version": 1
+            },
+            {
+              "id": "samsungce.stickCleanerDustbinStatus",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.stickCleanerStatus",
+              "version": 1
+            },
+            {
+              "id": "custom.deviceReportStateConfiguration",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledComponents",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "sec.wifiConfiguration",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "StickVacuumCleaner",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "station",
+          "label": "station",
+          "capabilities": [
+            {
+              "id": "samsungce.stickCleanerDustBag",
+              "version": 1
+            },
+            {
+              "id": "samsungce.cleanStationStickStatus",
+              "version": 1
+            },
+            {
+              "id": "samsungce.cleanStationUvCleaning",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2026-03-21T14:43:55.855Z",
+      "profile": {
+        "id": "21c15481-d69b-34a9-86a6-bcdb478a68cb"
+      },
+      "ocf": {
+        "ocfDeviceType": "x.com.st.d.stickcleaner",
+        "name": "[vacuum] Samsung",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "1.2.1",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "A-VSWW-TP1-23-VS9700|50025842|80030200001711000802000000000000",
+        "platformVersion": "SYSTEM 2.0",
+        "platformOS": "TizenRT 4.0",
+        "hwVersion": "Realtek",
+        "firmwareVersion": "A-VSWW-TP1-23-VS9700_51250514",
+        "vendorId": "DA-VC-STICK-01001",
+        "vendorResourceClientServerVersion": "Realtek Release 250514",
+        "lastSignupTime": "2026-03-21T14:43:55.796850354Z",
+        "transferCandidate": true,
+        "additionalAuthCodeRequired": false,
+        "modelCode": "VS28C9784QK/WA"
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

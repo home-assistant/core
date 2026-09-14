@@ -1,0 +1,80 @@
+"""Diagnostics support for Whirlpool."""
+
+from typing import Any
+
+from whirlpool.appliance import Appliance
+
+from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.core import HomeAssistant
+
+from . import WhirlpoolConfigEntry
+
+TO_REDACT = {
+    "MAC_Address",
+    "SAID",
+    "SERIAL_NUMBER",
+    "Serial",
+    "SerialNumber",
+    "UserId",
+    "WifiMacAddress",
+    "XCat_ApplianceInfoSetSerialNumber",
+    "XCat_PersistentInfoMacAddress",
+    "XCat_PersistentInfoSaid",
+    "_id",
+    "applianceId",
+    "macaddress",
+    "password",
+    "said",
+    "serial",
+    "serialNumber",
+    "serial_number",
+    "thingName",
+    "token",
+    "unique_id",
+    "userId",
+    "username",
+    "wifiMacAddress",
+    "wifi_mac",
+}
+
+
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant,
+    config_entry: WhirlpoolConfigEntry,
+) -> dict[str, Any]:
+    """Return diagnostics for a config entry."""
+
+    def get_appliance_diagnostics(appliance: Appliance) -> dict[str, Any]:
+        return {
+            "category": appliance.appliance_info.category,
+            "model_number": appliance.appliance_info.model_number,
+            "raw": appliance.get_raw_data(),
+        }
+
+    appliances_manager = config_entry.runtime_data
+    diagnostics_data = {
+        "washers": {
+            washer.name: get_appliance_diagnostics(washer)
+            for washer in appliances_manager.washers
+        },
+        "dryers": {
+            dryer.name: get_appliance_diagnostics(dryer)
+            for dryer in appliances_manager.dryers
+        },
+        "aircons": {
+            ac.name: get_appliance_diagnostics(ac) for ac in appliances_manager.aircons
+        },
+        "ovens": {
+            oven.name: get_appliance_diagnostics(oven)
+            for oven in appliances_manager.ovens
+        },
+        "refrigerators": {
+            refrigerator.name: get_appliance_diagnostics(refrigerator)
+            for refrigerator in appliances_manager.refrigerators
+        },
+    }
+
+    return {
+        "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
+        "appliances": async_redact_data(diagnostics_data, TO_REDACT),
+    }

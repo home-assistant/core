@@ -1,0 +1,46 @@
+# Describes the format for available Elexa Guardians services
+pair_sensor:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: guardian
+    uid:
+      required: true
+      example: 5410EC688BCF
+      selector:
+        text:
+unpair_sensor:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: guardian
+    uid:
+      required: true
+      example: 5410EC688BCF
+      selector:
+        text:
+upgrade_firmware:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: guardian
+    url:
+      example: https://repo.guardiancloud.services/gvc/fw
+      selector:
+        text:
+    port:
+      example: 443
+      selector:
+        number:
+          min: 1
+          max: 65535
+    filename:
+      example: latest.bin
+      selector:
+        text:

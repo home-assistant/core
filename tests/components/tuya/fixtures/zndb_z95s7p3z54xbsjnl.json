@@ -1,0 +1,136 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "WIFI Dual Meter",
+  "category": "zndb",
+  "product_id": "z95s7p3z54xbsjnl",
+  "product_name": "WIFI Dual Meter",
+  "online": false,
+  "sub": false,
+  "time_zone": "-03:00",
+  "active_time": "2024-10-08T14:10:35+00:00",
+  "create_time": "2024-10-08T14:10:35+00:00",
+  "update_time": "2024-10-08T14:10:35+00:00",
+  "function": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "KWH",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "KWH",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "KWH",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "KWH",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "total_power": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": -99999999,
+        "max": 99999999,
+        "scale": 1,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "forward_energy_total": 259939,
+    "reverse_energy_total": 200008,
+    "total_power": -4095
+  },
+  "set_up": true,
+  "support_local": true,
+  "local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "forward_energy_total",
+      "config_item": {
+        "statusFormat": {
+          "forward_energy_total": "$"
+        },
+        "valueDesc": {
+          "unit": "KWH",
+          "min": 0,
+          "max": 99999999,
+          "scale": 2,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "z95s7p3z54xbsjnl"
+      }
+    },
+    "2": {
+      "value_convert": "default",
+      "status_code": "reverse_energy_total",
+      "config_item": {
+        "statusFormat": {
+          "reverse_energy_total": "$"
+        },
+        "valueDesc": {
+          "unit": "KWH",
+          "min": 0,
+          "max": 99999999,
+          "scale": 2,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "z95s7p3z54xbsjnl"
+      }
+    },
+    "115": {
+      "value_convert": "default",
+      "status_code": "total_power",
+      "config_item": {
+        "statusFormat": {
+          "total_power": "$"
+        },
+        "valueDesc": {
+          "unit": "W",
+          "min": -99999999,
+          "max": 99999999,
+          "scale": 1,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "z95s7p3z54xbsjnl"
+      }
+    }
+  }
+}

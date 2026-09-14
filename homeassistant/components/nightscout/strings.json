@@ -1,0 +1,25 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "api_key": "Optional; only use it if your instance is protected (auth_default_roles != readable).",
+          "url": "The address of your Nightscout instance. For example: {example_url}."
+        },
+        "title": "Enter your Nightscout server information."
+      }
+    }
+  }
+}

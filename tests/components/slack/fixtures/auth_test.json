@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "url": "https://newscorp-tech.slack.com/",
+  "team": "Test Team",
+  "user": "user.name",
+  "team_id": "ABC123DEF",
+  "user_id": "ABCDEF12345",
+  "enterprise_id": "123ABCDEF",
+  "is_enterprise_install": false
+}

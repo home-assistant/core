@@ -1,0 +1,794 @@
+{
+  "endpoint": "https://apigw.tuyacn.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "CBE Pro 2",
+  "category": "xnyjcn",
+  "product_id": "pb0tc75khaik8qbg",
+  "product_name": "CBE Pro",
+  "online": true,
+  "sub": false,
+  "time_zone": "+08:00",
+  "active_time": "2025-06-25T11:36:33+00:00",
+  "create_time": "2025-06-25T11:36:33+00:00",
+  "update_time": "2025-06-25T11:36:33+00:00",
+  "function": {
+    "cell_heating": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "expansion_pack_count": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 99999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "grid_power": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": -100000,
+        "max": 100000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "main_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "expansion_pack1_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "expansion_pack2_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "expansion_pack3_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "expansion_pack4_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "expansion_pack5_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "pv_power_channel_3": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "pv_power_channel_4": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "offgrid1_export_power": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 99999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "cuml_e_export_offgrid1": {
+      "type": "Integer",
+      "value": {
+        "unit": "Wh",
+        "min": 0,
+        "max": 99999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "backup_reserve": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["self_powered", "time_of_use"]
+      }
+    },
+    "function_set": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    },
+    "output_power_limit": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 100000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "feedin_power_limit_enable": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "feedin_power_limit": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 100000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "country_code": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "indicator_light_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["eco", "on", "off"]
+      }
+    },
+    "smart_meter_type": {
+      "type": "Enum",
+      "value": {
+        "range": ["none", "ty_lan", "ty_rs485"]
+      }
+    },
+    "recalibrate_battery": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "offgrid1_export_enable": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "peak_shaving_enable": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "peak_shaving_threshold": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 30000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "vibe_light_scene": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    },
+    "user_schedule": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    },
+    "offgrid1_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["backup", "plugin"]
+      }
+    },
+    "inverter_input_power_limit": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": 0,
+        "max": 2500,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "panel_heartbeat": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "backup_reserve_recommanded": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "remote_pair": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "regulation_grid_export_p_limit": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 30000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "inverter_status": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    },
+    "command_receive": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    },
+    "command_send": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    }
+  },
+  "status_range": {
+    "serial_number": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "battery_capacity": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 1000000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "error_code": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "connection_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["paired_connected", "unpaired_uncon", "paired_uncon"]
+      }
+    },
+    "meter_signal_strength": {
+      "type": "Integer",
+      "value": {
+        "unit": "dBm",
+        "min": 0,
+        "max": 255,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "hardware_version": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "system_version": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "cell_heating": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "expansion_pack_count": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 99999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "pv_power_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": 0,
+        "max": 100000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "pv_power_channel_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": 0,
+        "max": 100000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "pv_power_channel_2": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": 0,
+        "max": 100000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "current_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "charge_discharge": {
+      "type": "Enum",
+      "value": {
+        "range": ["charging", "discharging", "idle"]
+      }
+    },
+    "battery_power": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": -2500000,
+        "max": 2500000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "grid_power": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": -100000,
+        "max": 100000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "inverter_output_power": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": -20000,
+        "max": 20000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "main_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "expansion_pack1_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "expansion_pack2_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "expansion_pack3_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "expansion_pack4_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "expansion_pack5_soc": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "pv_power_channel_3": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "pv_power_channel_4": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "offgrid1_export_power": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 99999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "cumulative_energy_generated_pv": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 999999999,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "cumulative_energy_output_inv": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 999999999,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "cumulative_energy_discharged": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 999999999,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "cumulative_energy_charged": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 999999999,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "cumulative_energy_charged_pv": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 999999999,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "cumulative_energy_charged_grid": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 999999999,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "cuml_e_export_offgrid1": {
+      "type": "Integer",
+      "value": {
+        "unit": "Wh",
+        "min": 0,
+        "max": 99999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "backup_reserve": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["self_powered", "time_of_use"]
+      }
+    },
+    "function_set": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    },
+    "output_power_limit": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 100000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "feedin_power_limit": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 100000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "feedin_power_limit_enable": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "country_code": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "indicator_light_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["eco", "on", "off"]
+      }
+    },
+    "smart_meter_type": {
+      "type": "Enum",
+      "value": {
+        "range": ["none", "ty_lan", "ty_rs485"]
+      }
+    },
+    "recalibrate_battery": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "offgrid1_export_enable": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "peak_shaving_enable": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "peak_shaving_threshold": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 30000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "vibe_light_scene": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    },
+    "user_schedule": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    },
+    "offgrid1_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["backup", "plugin"]
+      }
+    },
+    "timestamp": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "remote_pair": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "inverter_status": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    },
+    "command_receive": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    },
+    "command_send": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    }
+  },
+  "status": {
+    "serial_number": "sn1234",
+    "battery_capacity": 0,
+    "error_code": "",
+    "connection_state": "paired_connected",
+    "meter_signal_strength": 0,
+    "hardware_version": "",
+    "system_version": "",
+    "cell_heating": false,
+    "expansion_pack_count": 0,
+    "pv_power_total": 0,
+    "pv_power_channel_1": 2000,
+    "pv_power_channel_2": 0,
+    "current_soc": 43,
+    "charge_discharge": "discharging",
+    "battery_power": -2000,
+    "grid_power": 0,
+    "inverter_output_power": 2000,
+    "main_soc": 0,
+    "expansion_pack1_soc": 0,
+    "expansion_pack2_soc": 0,
+    "expansion_pack3_soc": 0,
+    "expansion_pack4_soc": 0,
+    "expansion_pack5_soc": 0,
+    "pv_power_channel_3": 0,
+    "pv_power_channel_4": 0,
+    "offgrid1_export_power": 0,
+    "cumulative_energy_generated_pv": 18565,
+    "cumulative_energy_output_inv": 13460,
+    "cumulative_energy_discharged": 8183,
+    "cumulative_energy_charged": 13288,
+    "cumulative_energy_charged_pv": 13288,
+    "cumulative_energy_charged_grid": 0,
+    "cuml_e_export_offgrid1": 0,
+    "backup_reserve": 59,
+    "work_mode": "self_powered",
+    "function_set": "",
+    "output_power_limit": 2,
+    "feedin_power_limit": 0,
+    "feedin_power_limit_enable": false,
+    "country_code": "",
+    "indicator_light_mode": "eco",
+    "smart_meter_type": "none",
+    "recalibrate_battery": false,
+    "offgrid1_export_enable": false,
+    "peak_shaving_enable": false,
+    "peak_shaving_threshold": 0,
+    "vibe_light_scene": "",
+    "user_schedule": "",
+    "offgrid1_mode": "backup",
+    "timestamp": "",
+    "remote_pair": false,
+    "inverter_status": "AQELAgADDAED",
+    "command_receive": "",
+    "command_send": ""
+  },
+  "set_up": true,
+  "support_local": true
+}

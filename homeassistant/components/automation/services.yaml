@@ -1,0 +1,32 @@
+# Describes the format for available automation services
+turn_on:
+  target:
+    entity:
+      domain: automation
+
+turn_off:
+  target:
+    entity:
+      domain: automation
+  fields:
+    stop_actions:
+      default: true
+      selector:
+        boolean:
+
+toggle:
+  target:
+    entity:
+      domain: automation
+
+trigger:
+  target:
+    entity:
+      domain: automation
+  fields:
+    skip_condition:
+      default: true
+      selector:
+        boolean:
+
+reload:

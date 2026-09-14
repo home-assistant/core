@@ -1,0 +1,237 @@
+"""Test Mikrotik setup process."""
+
+from librouteros.exceptions import ConnectionClosed, TrapError
+import pytest
+
+from homeassistant import config_entries
+from homeassistant.components.mikrotik.const import (
+    CONF_ARP_PING,
+    CONF_DETECTION_TIME,
+    CONF_FORCE_DHCP,
+    DOMAIN,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from .conftest import MockConfigEntryFactory
+
+DEMO_USER_INPUT = {
+    CONF_HOST: "0.0.0.0",
+    CONF_USERNAME: "username",
+    CONF_PASSWORD: "password",
+    CONF_PORT: 8278,
+    CONF_VERIFY_SSL: False,
+}
+
+DEMO_CONFIG_ENTRY = {
+    CONF_HOST: "0.0.0.0",
+    CONF_USERNAME: "username",
+    CONF_PASSWORD: "password",
+    CONF_PORT: 8278,
+    CONF_VERIFY_SSL: False,
+    CONF_FORCE_DHCP: False,
+    CONF_ARP_PING: False,
+    CONF_DETECTION_TIME: 30,
+}
+
+AUTH_ERROR = TrapError("invalid user name or password")
+CONN_ERROR = ConnectionClosed()
+
+
+async def test_flow_works(hass: HomeAssistant) -> None:
+    """Test config flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Mikrotik (0.0.0.0)"
+    assert result["data"][CONF_HOST] == "0.0.0.0"
+    assert result["data"][CONF_USERNAME] == "username"
+    assert result["data"][CONF_PASSWORD] == "password"
+    assert result["data"][CONF_PORT] == 8278
+
+
+async def test_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+) -> None:
+    """Test updating options."""
+    entry = mock_config_entry(data=DEMO_CONFIG_ENTRY)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device_tracker"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DETECTION_TIME: 30,
+            CONF_ARP_PING: True,
+            CONF_FORCE_DHCP: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_DETECTION_TIME: 30,
+        CONF_ARP_PING: True,
+        CONF_FORCE_DHCP: False,
+    }
+
+
+@pytest.mark.parametrize("mock_api_error", [AUTH_ERROR], indirect=True)
+@pytest.mark.usefixtures("mock_api_error")
+async def test_host_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+) -> None:
+    """Test host already configured."""
+
+    entry = mock_config_entry(data=DEMO_CONFIG_ENTRY)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_USER_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize("mock_api_error", [CONN_ERROR], indirect=True)
+@pytest.mark.usefixtures("mock_api_error")
+async def test_connection_error(hass: HomeAssistant) -> None:
+    """Test error when connection is unsuccessful."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_USER_INPUT
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.parametrize("mock_api_error", [AUTH_ERROR], indirect=True)
+@pytest.mark.usefixtures("mock_api_error")
+async def test_wrong_credentials(hass: HomeAssistant) -> None:
+    """Test error when credentials are wrong."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {
+        CONF_USERNAME: "invalid_auth",
+        CONF_PASSWORD: "invalid_auth",
+    }
+
+
+async def test_reauth_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+) -> None:
+    """Test we can reauth."""
+    entry = mock_config_entry(data=DEMO_USER_INPUT)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        CONF_NAME: "Mock Title",
+        CONF_USERNAME: "username",
+    }
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize("mock_api_error", [AUTH_ERROR], indirect=True)
+@pytest.mark.usefixtures("mock_api_error")
+async def test_reauth_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+) -> None:
+    """Test reauth fails due to wrong password."""
+    entry = mock_config_entry(data=DEMO_USER_INPUT)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "test-wrong-password",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {
+        CONF_PASSWORD: "invalid_auth",
+    }
+
+
+@pytest.mark.parametrize("mock_api_error", [CONN_ERROR], indirect=True)
+@pytest.mark.usefixtures("mock_api_error")
+async def test_reauth_failed_conn_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+) -> None:
+    """Test reauth failed due to connection error."""
+    entry = mock_config_entry(data=DEMO_USER_INPUT)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "test-wrong-password",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}

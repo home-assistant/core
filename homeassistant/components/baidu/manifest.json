@@ -1,0 +1,10 @@
+{
+  "domain": "baidu",
+  "name": "Baidu",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/baidu",
+  "iot_class": "cloud_push",
+  "loggers": ["aip"],
+  "quality_scale": "legacy",
+  "requirements": ["baidu-aip==1.6.6"]
+}

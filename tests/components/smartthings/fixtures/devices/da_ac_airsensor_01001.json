@@ -1,0 +1,145 @@
+{
+  "items": [
+    {
+      "deviceId": "a3a970ea-e09c-9c04-161b-94c934e21666",
+      "name": "Samsung AirMonitor",
+      "label": "\uc5d0\uc5b4\ubaa8\ub2c8\ud130 \ud50c\ub7ec\uc2a4",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-AC-AIRSENSOR-01001",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "33db9e71-abe9-43a0-acd3-3f0927bbe5b7",
+      "ownerId": "9a1ee192-04ba-46ca-9c3d-196d8dbcf807",
+      "roomId": "445c006d-1796-4dd6-8308-1c3cd045e8ff",
+      "deviceTypeName": "x.com.st.d.airqualitysensor",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "relativeHumidityMeasurement",
+              "version": 1
+            },
+            {
+              "id": "dustSensor",
+              "version": 1
+            },
+            {
+              "id": "dustHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "fineDustHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "veryFineDustSensor",
+              "version": 1
+            },
+            {
+              "id": "veryFineDustHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "airQualitySensor",
+              "version": 1
+            },
+            {
+              "id": "odorSensor",
+              "version": 1
+            },
+            {
+              "id": "carbonDioxideMeasurement",
+              "version": 1
+            },
+            {
+              "id": "carbonDioxideHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.rechargeableBattery",
+              "version": 1
+            },
+            {
+              "id": "samsungce.doNotDisturb",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "custom.deviceReportStateConfiguration",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "AirQualityDetector",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2023-12-09T04:05:59.040Z",
+      "profile": {
+        "id": "1d34dd9d-6840-3df6-a6d0-5d9f4a4af2e1"
+      },
+      "ocf": {
+        "ocfDeviceType": "x.com.st.d.airqualitysensor",
+        "name": "Samsung AirMonitor",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "1.2.1",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "ASM-KR-TP1-22-ACMB1M|10243041|75000000001611C40800020000080000",
+        "platformVersion": "DAWIT 2.0",
+        "platformOS": "TizenRT 4.0",
+        "hwVersion": "Realtek",
+        "firmwareVersion": "ASM-KR-TP1-22-ACMB1M_16240426",
+        "vendorId": "DA-AC-AIRSENSOR-01001",
+        "vendorResourceClientServerVersion": "MediaTek Release 240426",
+        "lastSignupTime": "2023-12-09T04:05:54.816486Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

@@ -1,0 +1,493 @@
+# Describes the format for available LCN services
+
+output_abs:
+  fields:
+    device_id: &device_id
+      required: true
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
+      selector:
+        device:
+          filter:
+            - integration: lcn
+              model: LCN group
+            - integration: lcn
+              model: UnknownModuleType
+            - integration: lcn
+              model: LCN-SW1.0
+            - integration: lcn
+              model: LCN-SW1.1
+            - integration: lcn
+              model: LCN-UP1.0
+            - integration: lcn
+              model: LCN-UP2
+            - integration: lcn
+              model: LCN-SW2
+            - integration: lcn
+              model: LCN-UP-Profi1-Plus
+            - integration: lcn
+              model: LCN-DI12
+            - integration: lcn
+              model: LCN-HU
+            - integration: lcn
+              model: LCN-SH
+            - integration: lcn
+              model: LCN-UP2
+            - integration: lcn
+              model: LCN-UPP
+            - integration: lcn
+              model: LCN-SK
+            - integration: lcn
+              model: LCN-LD
+            - integration: lcn
+              model: LCN-SH-Plus
+            - integration: lcn
+              model: LCN-UPS
+            - integration: lcn
+              model: LCN_UPS24V
+            - integration: lcn
+              model: LCN-GTM
+            - integration: lcn
+              model: LCN-SHS
+            - integration: lcn
+              model: LCN-ESD
+            - integration: lcn
+              model: LCN-EB2
+            - integration: lcn
+              model: LCN-MRS
+            - integration: lcn
+              model: LCN-EB11
+            - integration: lcn
+              model: LCN-UMR
+            - integration: lcn
+              model: LCN-UPU
+            - integration: lcn
+              model: LCN-UMR24V
+            - integration: lcn
+              model: LCN-SHD
+            - integration: lcn
+              model: LCN-SHU
+            - integration: lcn
+              model: LCN-SR6
+            - integration: lcn
+              model: LCN-UMF
+            - integration: lcn
+              model: LCN-WBH
+    output:
+      required: true
+      selector:
+        select:
+          options:
+            - "output1"
+            - "output2"
+            - "output3"
+            - "output4"
+    brightness:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    transition:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 486
+          step: 0.1
+          unit_of_measurement: seconds
+
+output_rel:
+  fields:
+    device_id: *device_id
+    output:
+      required: true
+      selector:
+        select:
+          options:
+            - "output1"
+            - "output2"
+            - "output3"
+            - "output4"
+    brightness:
+      required: true
+      selector:
+        number:
+          min: -100
+          max: 100
+          unit_of_measurement: "%"
+
+output_toggle:
+  fields:
+    device_id: *device_id
+    output:
+      required: true
+      selector:
+        select:
+          options:
+            - "output1"
+            - "output2"
+            - "output3"
+            - "output4"
+    transition:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 486
+          step: 0.1
+          unit_of_measurement: seconds
+
+relays:
+  fields:
+    device_id: *device_id
+    state:
+      required: true
+      example: "t---001-"
+      selector:
+        text:
+
+led:
+  fields:
+    device_id: *device_id
+    led:
+      required: true
+      selector:
+        select:
+          options:
+            - "led1"
+            - "led2"
+            - "led3"
+            - "led4"
+            - "led5"
+            - "led6"
+            - "led7"
+            - "led8"
+            - "led9"
+            - "led10"
+            - "led11"
+            - "led12"
+    state:
+      required: true
+      selector:
+        select:
+          options:
+            - "blink"
+            - "flicker"
+            - "off"
+            - "on"
+
+var_abs:
+  fields:
+    device_id: *device_id
+    variable:
+      required: true
+      default: native
+      selector:
+        select:
+          options:
+            - "r1var"
+            - "r2var"
+            - "r1varsetpoint"
+            - "r2varsetpoint"
+            - "tvar"
+            - "var1ortvar"
+            - "var2orr1var"
+            - "var3orr2var"
+            - "var1"
+            - "var2"
+            - "var3"
+            - "var4"
+            - "var5"
+            - "var6"
+            - "var7"
+            - "var8"
+            - "var9"
+            - "var10"
+            - "var11"
+            - "var12"
+    value:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100000
+    unit_of_measurement:
+      selector:
+        select:
+          options:
+            - ""
+            - "%"
+            - "°"
+            - "°C"
+            - "°F"
+            - "ampere"
+            - "amp"
+            - "a"
+            - "degree"
+            - "native"
+            - "k"
+            - "lcn"
+            - "lux_t"
+            - "lx_t"
+            - "lux_i"
+            - "lux"
+            - "lx"
+            - "m/s"
+            - "meterpersecond"
+            - "percent"
+            - "ppm"
+            - "v"
+            - "volt"
+
+var_reset:
+  fields:
+    device_id: *device_id
+    variable:
+      required: true
+      selector:
+        select:
+          options:
+            - "r1var"
+            - "r2var"
+            - "r1varsetpoint"
+            - "r2varsetpoint"
+            - "tvar"
+            - "var1ortvar"
+            - "var2orr1var"
+            - "var3orr2var"
+            - "var1"
+            - "var2"
+            - "var3"
+            - "var4"
+            - "var5"
+            - "var6"
+            - "var7"
+            - "var8"
+            - "var9"
+            - "var10"
+            - "var11"
+            - "var12"
+
+var_rel:
+  fields:
+    device_id: *device_id
+    variable:
+      required: true
+      selector:
+        select:
+          options:
+            - "r1var"
+            - "r2var"
+            - "r1varsetpoint"
+            - "r2varsetpoint"
+            - "thrs1"
+            - "thrs2"
+            - "thrs3"
+            - "thrs4"
+            - "thrs5"
+            - "thrs2_1"
+            - "thrs2_2"
+            - "thrs2_3"
+            - "thrs2_4"
+            - "thrs3_1"
+            - "thrs3_2"
+            - "thrs3_3"
+            - "thrs3_4"
+            - "thrs4_1"
+            - "thrs4_2"
+            - "thrs4_3"
+            - "thrs4_4"
+            - "tvar"
+            - "var1ortvar"
+            - "var2orr1var"
+            - "var3orr2var"
+            - "var1"
+            - "var2"
+            - "var3"
+            - "var4"
+            - "var5"
+            - "var6"
+            - "var7"
+            - "var8"
+            - "var9"
+            - "var10"
+            - "var11"
+            - "var12"
+    value:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100000
+    unit_of_measurement:
+      default: native
+      selector:
+        select:
+          options:
+            - ""
+            - "%"
+            - "°"
+            - "°C"
+            - "°F"
+            - "ampere"
+            - "amp"
+            - "a"
+            - "degree"
+            - "native"
+            - "k"
+            - "lcn"
+            - "lux_t"
+            - "lx_t"
+            - "lux_i"
+            - "lux"
+            - "lx"
+            - "m/s"
+            - "meterpersecond"
+            - "percent"
+            - "ppm"
+            - "v"
+            - "volt"
+    value_reference:
+      default: current
+      selector:
+        select:
+          options:
+            - "current"
+            - "prog"
+
+lock_regulator:
+  fields:
+    device_id: *device_id
+    setpoint:
+      required: true
+      selector:
+        select:
+          options:
+            - "thrs1"
+            - "thrs2"
+            - "thrs3"
+            - "thrs4"
+            - "thrs5"
+            - "thrs2_1"
+            - "thrs2_2"
+            - "thrs2_3"
+            - "thrs2_4"
+            - "thrs3_1"
+            - "thrs3_2"
+            - "thrs3_3"
+            - "thrs3_4"
+            - "thrs4_1"
+            - "thrs4_2"
+            - "thrs4_3"
+            - "thrs4_4"
+    state:
+      default: false
+      selector:
+        boolean:
+
+send_keys:
+  fields:
+    device_id: *device_id
+    keys:
+      required: true
+      example: "a1a5d8"
+      selector:
+        text:
+    state:
+      default: hit
+      selector:
+        select:
+          options:
+            - "hit"
+            - "make"
+            - "break"
+            - "dontsend"
+    time:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+    time_unit:
+      default: s
+      selector:
+        select:
+          options:
+            - "d"
+            - "day"
+            - "days"
+            - "h"
+            - "hour"
+            - "hours"
+            - "m"
+            - "min"
+            - "minute"
+            - "minutes"
+            - "s"
+            - "sec"
+            - "second"
+            - "seconds"
+
+lock_keys:
+  fields:
+    device_id: *device_id
+    table:
+      example: "a"
+      default: a
+      selector:
+        text:
+    state:
+      required: true
+      example: "1---t0--"
+      selector:
+        text:
+    time:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+    time_unit:
+      default: s
+      selector:
+        select:
+          options:
+            - "d"
+            - "day"
+            - "days"
+            - "h"
+            - "hour"
+            - "hours"
+            - "m"
+            - "min"
+            - "minute"
+            - "minutes"
+            - "s"
+            - "sec"
+            - "second"
+            - "seconds"
+
+dyn_text:
+  fields:
+    device_id: *device_id
+    row:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 4
+    text:
+      required: true
+      example: "text up to 60 characters"
+      selector:
+        text:
+
+pck:
+  fields:
+    device_id: *device_id
+    pck:
+      required: true
+      example: "PIN4"
+      selector:
+        text:

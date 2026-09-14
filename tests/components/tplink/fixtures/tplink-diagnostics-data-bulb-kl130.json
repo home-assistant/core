@@ -1,0 +1,108 @@
+{
+  "device_last_response": {
+    "system": {
+      "get_sysinfo": {
+        "sw_ver": "1.8.8 Build 190613 Rel.123436",
+        "hw_ver": "1.0",
+        "model": "KL130(EU)",
+        "description": "Smart Wi-Fi LED Bulb with Color Changing",
+        "alias": "bedroom light",
+        "mic_type": "IOT.SMARTBULB",
+        "dev_state": "normal",
+        "mic_mac": "aa:bb:cc:dd:ee:ff",
+        "deviceId": "1234",
+        "oemId": "1234",
+        "hwId": "1234",
+        "is_factory": false,
+        "disco_ver": "1.0",
+        "ctrl_protocols": {
+          "name": "Linkie",
+          "version": "1.0"
+        },
+        "light_state": {
+          "on_off": 1,
+          "mode": "normal",
+          "hue": 0,
+          "saturation": 0,
+          "color_temp": 2500,
+          "brightness": 58
+        },
+        "is_dimmable": 1,
+        "is_color": 1,
+        "is_variable_color_temp": 1,
+        "preferred_state": [
+          {
+            "index": 0,
+            "hue": 0,
+            "saturation": 0,
+            "color_temp": 2500,
+            "brightness": 10
+          },
+          {
+            "index": 1,
+            "hue": 299,
+            "saturation": 95,
+            "color_temp": 0,
+            "brightness": 100
+          },
+          {
+            "index": 2,
+            "hue": 120,
+            "saturation": 75,
+            "color_temp": 0,
+            "brightness": 100
+          },
+          {
+            "index": 3,
+            "hue": 240,
+            "saturation": 75,
+            "color_temp": 0,
+            "brightness": 100
+          }
+        ],
+        "rssi": -66,
+        "active_mode": "none",
+        "heapsize": 334532,
+        "err_code": 0
+      }
+    },
+    "smartlife.iot.common.emeter": {
+      "get_realtime": {
+        "power_mw": 6600,
+        "err_code": 0
+      },
+      "get_monthstat": {
+        "month_list": [
+          {
+            "year": 2022,
+            "month": 1,
+            "energy_wh": 321
+          },
+          {
+            "year": 2022,
+            "month": 2,
+            "energy_wh": 321
+          }
+        ],
+        "err_code": 0
+      },
+      "get_daystat": {
+        "day_list": [
+          {
+            "year": 2022,
+            "month": 2,
+            "day": 1,
+            "energy_wh": 123
+          },
+          {
+            "year": 2022,
+            "month": 2,
+            "day": 2,
+            "energy_wh": 123
+          }
+        ],
+        "err_code": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "buildPlate_target_temperature": 60,
+  "chamber_temperature": 27,
+  "door_open": 0,
+  "elaspedtime": 0,
+  "error_code": 200,
+  "extruder_target_temperature": 230,
+  "fanSpeed": 0,
+  "filament_type ": "ECO-ABS",
+  "firmware_version": "v3.0_R02.12.10",
+  "jobname": "D32_Imperial_Credit.gcode",
+  "jobstatus": "building",
+  "layer": 0,
+  "message": "success",
+  "networkBuild": 1,
+  "platform_temperature": 60,
+  "progress": 13.9,
+  "remaining": 3736,
+  "status": "busy",
+  "temperature": 230,
+  "totalTime": 4340
+}

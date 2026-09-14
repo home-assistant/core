@@ -1,0 +1,29 @@
+# Describes the format for available Envisalink services.
+
+alarm_keypress:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: envisalink
+          domain: alarm_control_panel
+    keypress:
+      required: true
+      example: "*71"
+      selector:
+        text:
+
+invoke_custom_function:
+  fields:
+    partition:
+      required: true
+      example: "1"
+      selector:
+        text:
+    pgm:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 4

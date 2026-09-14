@@ -1,0 +1,64 @@
+{
+  "items": [
+    {
+      "deviceId": "aaedaf28-2ae0-4c1d-b57e-87f6a420c298",
+      "name": "GE Dimmer Switch",
+      "label": "Basement Exit Light",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "31cf01ee-cb49-3d95-ac2d-2afab47f25c7",
+      "deviceManufacturerCode": "0063-4944-3130",
+      "locationId": "c4d3b2a1-09f8-765e-4d3c-2b1a09f8e7d6 ",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "components": [
+        {
+          "id": "main",
+          "label": "Basement Exit Light",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "switchLevel",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Switch",
+              "categoryType": "manufacturer"
+            },
+            {
+              "name": "Switch",
+              "categoryType": "user"
+            }
+          ]
+        }
+      ],
+      "createTime": "2020-05-25T18:18:01Z",
+      "profile": {
+        "id": "ec5458c2-c011-3479-a59b-82b42820c2f7"
+      },
+      "zwave": {
+        "networkId": "14",
+        "driverId": "2cbf55e3-dbc2-48a2-8be5-4c3ce756b692",
+        "executingLocally": true,
+        "hubId": "074fa784-8be8-4c70-8e22-6f5ed6f81b7e",
+        "networkSecurityLevel": "ZWAVE_LEGACY_NON_SECURE",
+        "provisioningState": "NONFUNCTIONAL",
+        "manufacturerId": 99,
+        "productType": 18756,
+        "productId": 12592
+      },
+      "type": "ZWAVE",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "LOCAL"
+    }
+  ],
+  "_links": {}
+}

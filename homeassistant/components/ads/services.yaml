@@ -1,0 +1,26 @@
+# Describes the format for available ADS services
+
+write_data_by_name:
+  fields:
+    adsvar:
+      required: true
+      example: ".global_var"
+      selector:
+        text:
+    adstype:
+      required: true
+      selector:
+        select:
+          options:
+            - "bool"
+            - "byte"
+            - "dint"
+            - "int"
+            - "udint"
+            - "uint"
+    value:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 10000

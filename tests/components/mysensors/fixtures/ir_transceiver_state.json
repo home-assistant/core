@@ -1,0 +1,23 @@
+{
+  "1": {
+    "sensor_id": 1,
+    "children": {
+      "1": {
+        "id": 1,
+        "type": 20,
+        "description": "",
+        "values": {
+          "2": "0",
+          "32": "test_code",
+          "50": "test_code"
+        }
+      }
+    },
+    "type": 17,
+    "sketch_name": "IR Transceiver",
+    "sketch_version": "1.0",
+    "battery_level": 0,
+    "protocol_version": "2.3.2",
+    "heartbeat": 0
+  }
+}

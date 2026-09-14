@@ -1,0 +1,10 @@
+{
+  "domain": "aruba",
+  "name": "Aruba",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/aruba",
+  "iot_class": "local_polling",
+  "loggers": ["pexpect", "ptyprocess"],
+  "quality_scale": "legacy",
+  "requirements": ["pexpect==4.9.0"]
+}

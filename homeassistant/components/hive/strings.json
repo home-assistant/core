@@ -1,0 +1,122 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown_entry": "Unable to find existing entry."
+    },
+    "error": {
+      "invalid_code": "Failed to sign in to Hive. Your two-factor authentication code was incorrect.",
+      "invalid_password": "Failed to sign in to Hive. Incorrect password, please try again.",
+      "invalid_username": "Failed to sign in to Hive. Your email address is not recognized.",
+      "no_internet_available": "An Internet connection is required to connect to Hive.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "2fa": {
+        "data": {
+          "2fa": "Two-factor code"
+        },
+        "description": "Enter your Hive authentication code.\n\nPlease enter code 0000 to request another code.",
+        "title": "Hive two-factor authentication"
+      },
+      "configuration": {
+        "data": {
+          "device_name": "Device name"
+        },
+        "description": "Enter your Hive configuration.",
+        "title": "Hive configuration"
+      },
+      "reauth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "Re-enter your Hive login information.",
+        "title": "[%key:component::hive::config::step::user::title%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "scan_interval": "Scan interval (seconds)",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "Enter your Hive login information.",
+        "title": "Hive login"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "heating": {
+        "state": {
+          "manual": "[%key:common::state::manual%]",
+          "off": "[%key:common::state::off%]",
+          "schedule": "Schedule"
+        }
+      },
+      "hot_water": {
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "schedule": "[%key:component::hive::entity::sensor::heating::state::schedule%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "data": {
+          "scan_interval": "Scan interval (seconds)"
+        },
+        "description": "Update the scan interval to poll for data more often.",
+        "title": "Options for Hive"
+      }
+    }
+  },
+  "services": {
+    "boost_heating_off": {
+      "description": "Sets the boost mode OFF.",
+      "fields": {
+        "entity_id": {
+          "description": "The entity ID to turn boost off.",
+          "name": "Entity ID"
+        }
+      },
+      "name": "Boost heating off"
+    },
+    "boost_heating_on": {
+      "description": "Sets the boost mode ON, defining the period of time and the desired target temperature for the boost.",
+      "fields": {
+        "temperature": {
+          "description": "The target temperature for the boost period.",
+          "name": "Temperature"
+        },
+        "time_period": {
+          "description": "[%key:component::hive::services::boost_hot_water::fields::time_period::description%]",
+          "name": "[%key:component::hive::services::boost_hot_water::fields::time_period::name%]"
+        }
+      },
+      "name": "Boost heating on"
+    },
+    "boost_hot_water": {
+      "description": "Sets the boost mode ON or OFF, defining the period of time for the boost.",
+      "fields": {
+        "entity_id": {
+          "description": "The entity ID to boost.",
+          "name": "Entity ID"
+        },
+        "on_off": {
+          "description": "Set the boost function on or off.",
+          "name": "[%key:common::config_flow::data::mode%]"
+        },
+        "time_period": {
+          "description": "The time period for the boost.",
+          "name": "Time period"
+        }
+      },
+      "name": "Boost hotwater"
+    }
+  }
+}

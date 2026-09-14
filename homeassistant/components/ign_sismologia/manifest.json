@@ -1,0 +1,11 @@
+{
+  "domain": "ign_sismologia",
+  "name": "IGN Sismolog\u00eda",
+  "codeowners": ["@exxamalte"],
+  "documentation": "https://www.home-assistant.io/integrations/ign_sismologia",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["georss_ign_sismologia_client"],
+  "quality_scale": "legacy",
+  "requirements": ["georss-ign-sismologia-client==0.8"]
+}

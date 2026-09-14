@@ -1,0 +1,41 @@
+# Describes the format for available timer services
+
+start:
+  target:
+    entity:
+      domain: timer
+  fields:
+    duration:
+      example: "00:01:00 or 60"
+      selector:
+        duration:
+
+pause:
+  target:
+    entity:
+      domain: timer
+
+cancel:
+  target:
+    entity:
+      domain: timer
+
+finish:
+  target:
+    entity:
+      domain: timer
+
+change:
+  target:
+    entity:
+      domain: timer
+  fields:
+    duration:
+      default: 0
+      required: true
+      example: "00:01:00, 60 or -60"
+      selector:
+        duration:
+          allow_negative: true
+
+reload:

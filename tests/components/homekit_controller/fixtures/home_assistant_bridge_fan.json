@@ -1,0 +1,253 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "description": "Identify",
+            "format": "bool",
+            "iid": 2,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          },
+          {
+            "description": "Manufacturer",
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Home Assistant"
+          },
+          {
+            "description": "Model",
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "Bridge"
+          },
+          {
+            "description": "Name",
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Home Assistant Bridge"
+          },
+          {
+            "description": "SerialNumber",
+            "format": "string",
+            "iid": 6,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "homekit.bridge"
+          },
+          {
+            "description": "FirmwareRevision",
+            "format": "string",
+            "iid": 7,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "0.104.0.dev0"
+          }
+        ],
+        "iid": 1,
+        "stype": "accessory-information",
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 1256851357,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "description": "Identify",
+            "format": "bool",
+            "iid": 2,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          },
+          {
+            "description": "Manufacturer",
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Home Assistant"
+          },
+          {
+            "description": "Model",
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "Fan"
+          },
+          {
+            "description": "Name",
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Living Room Fan"
+          },
+          {
+            "description": "SerialNumber",
+            "format": "string",
+            "iid": 6,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "fan.living_room_fan"
+          },
+          {
+            "description": "FirmwareRevision",
+            "format": "string",
+            "iid": 7,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "0.104.0.dev0"
+          }
+        ],
+        "iid": 1,
+        "stype": "accessory-information",
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "Active",
+            "format": "uint8",
+            "iid": 9,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "valid-values": [0, 1],
+            "value": 0
+          },
+          {
+            "description": "RotationDirection",
+            "format": "int",
+            "iid": 10,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000028-0000-1000-8000-0026BB765291",
+            "valid-values": [0, 1],
+            "value": 0
+          },
+          {
+            "description": "SwingMode",
+            "format": "uint8",
+            "iid": 11,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000B6-0000-1000-8000-0026BB765291",
+            "valid-values": [0, 1],
+            "value": 0
+          },
+          {
+            "description": "RotationSpeed",
+            "format": "float",
+            "iid": 12,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000029-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          }
+        ],
+        "iid": 8,
+        "stype": "fanv2",
+        "type": "000000B7-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 766313939,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "description": "Identify",
+            "format": "bool",
+            "iid": 2,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          },
+          {
+            "description": "Manufacturer",
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Home Assistant"
+          },
+          {
+            "description": "Model",
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "Fan"
+          },
+          {
+            "description": "Name",
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Ceiling Fan"
+          },
+          {
+            "description": "SerialNumber",
+            "format": "string",
+            "iid": 6,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "fan.ceiling_fan"
+          },
+          {
+            "description": "FirmwareRevision",
+            "format": "string",
+            "iid": 7,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "0.104.0.dev0"
+          }
+        ],
+        "iid": 1,
+        "stype": "accessory-information",
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "Active",
+            "format": "uint8",
+            "iid": 9,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "valid-values": [0, 1],
+            "value": 0
+          },
+          {
+            "description": "RotationSpeed",
+            "format": "float",
+            "iid": 10,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000029-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          }
+        ],
+        "iid": 8,
+        "stype": "fanv2",
+        "type": "000000B7-0000-1000-8000-0026BB765291"
+      }
+    ]
+  }
+]

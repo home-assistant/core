@@ -1,0 +1,204 @@
+"""Support for mill wifi-enabled home heaters."""
+
+from typing import Any, override
+
+import mill
+from mill_local import OperationMode
+
+from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import CONNECTION_TYPE, LOCAL, MANUFACTURER, MAX_TEMP, MIN_TEMP
+from .coordinator import MillConfigEntry, MillDataUpdateCoordinator
+from .entity import MillBaseEntity
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: MillConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Mill climate."""
+    mill_data_coordinator = entry.runtime_data
+
+    if entry.data.get(CONNECTION_TYPE) == LOCAL:
+        async_add_entities([LocalMillHeater(mill_data_coordinator)])
+        return
+
+    entities = [
+        MillHeater(mill_data_coordinator, mill_device)
+        for mill_device in mill_data_coordinator.data.values()
+        if isinstance(mill_device, mill.Heater)
+    ]
+    async_add_entities(entities)
+
+
+class MillHeater(MillBaseEntity, ClimateEntity):
+    """Representation of a Mill Thermostat device."""
+
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+    _attr_max_temp = MAX_TEMP
+    _attr_min_temp = MIN_TEMP
+    _attr_name = None
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _attr_target_temperature_step = PRECISION_TENTHS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+    def __init__(
+        self, coordinator: MillDataUpdateCoordinator, device: mill.Heater
+    ) -> None:
+        """Initialize the thermostat."""
+        self._attr_unique_id = device.device_id
+        super().__init__(coordinator, device)
+
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature and optionally HVAC mode."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+        await self.coordinator.mill_data_connection.set_heater_temp(
+            self._id, float(temperature)
+        )
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            await self.async_handle_set_hvac_mode_service(hvac_mode)
+        else:
+            await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        if hvac_mode == HVACMode.HEAT:
+            await self.coordinator.mill_data_connection.heater_control(
+                self._id, power_status=True
+            )
+        elif hvac_mode == HVACMode.OFF:
+            await self.coordinator.mill_data_connection.heater_control(
+                self._id, power_status=False
+            )
+        await self.coordinator.async_request_refresh()
+
+    @callback
+    @override
+    def _update_attr(self, device: mill.Heater) -> None:
+        self._available = device.available
+        self._attr_extra_state_attributes = {
+            "open_window": device.open_window,
+            "controlled_by_tibber": device.tibber_control,
+        }
+        if device.room_name:
+            self._attr_extra_state_attributes["room"] = device.room_name
+            self._attr_extra_state_attributes["avg_room_temp"] = device.room_avg_temp
+        else:
+            self._attr_extra_state_attributes["room"] = "Independent device"
+        self._attr_target_temperature = device.set_temp
+        self._attr_current_temperature = device.current_temp
+        if device.is_heating:
+            self._attr_hvac_action = HVACAction.HEATING
+        else:
+            self._attr_hvac_action = HVACAction.IDLE
+        if device.power_status:
+            self._attr_hvac_mode = HVACMode.HEAT
+        else:
+            self._attr_hvac_mode = HVACMode.OFF
+
+
+class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
+    """Representation of a Mill Thermostat device."""
+
+    _attr_has_entity_name = True
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO, HVACMode.OFF]
+    _attr_max_temp = MAX_TEMP
+    _attr_min_temp = MIN_TEMP
+    _attr_name = None
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _attr_target_temperature_step = PRECISION_TENTHS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+    def __init__(self, coordinator: MillDataUpdateCoordinator) -> None:
+        """Initialize the thermostat."""
+        super().__init__(coordinator)
+        if mac := coordinator.mill_data_connection.mac_address:
+            self._attr_unique_id = mac
+            self._attr_device_info = DeviceInfo(
+                connections={(CONNECTION_NETWORK_MAC, mac)},
+                configuration_url=self.coordinator.mill_data_connection.url,
+                manufacturer=MANUFACTURER,
+                model="Generation 3",
+                name=coordinator.mill_data_connection.name,
+                sw_version=coordinator.mill_data_connection.version,
+            )
+
+        self._update_attr()
+
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature and optionally HVAC mode."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+        await self.coordinator.mill_data_connection.set_target_temperature(
+            float(temperature)
+        )
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            await self.async_handle_set_hvac_mode_service(hvac_mode)
+        else:
+            await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        conn = self.coordinator.mill_data_connection
+        if hvac_mode == HVACMode.HEAT:
+            await conn.set_operation_mode_control_individually()
+        elif hvac_mode == HVACMode.OFF:
+            await conn.set_operation_mode_off()
+        elif hvac_mode == HVACMode.AUTO:
+            await conn.set_operation_mode_weekly_program()
+        await self.coordinator.async_request_refresh()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attr()
+        self.async_write_ha_state()
+
+    @callback
+    def _update_attr(self) -> None:
+        data = self.coordinator.data
+        self._attr_target_temperature = data["set_temperature"]
+        self._attr_current_temperature = data["ambient_temperature"]
+
+        operation_mode = data["operation_mode"]
+        is_heating = data["current_power"] > 0
+
+        if operation_mode == OperationMode.OFF.value:
+            self._attr_hvac_mode = HVACMode.OFF
+            self._attr_hvac_action = HVACAction.OFF
+        elif operation_mode == OperationMode.WEEKLY_PROGRAM.value:
+            self._attr_hvac_mode = HVACMode.AUTO
+            self._attr_hvac_action = (
+                HVACAction.HEATING if is_heating else HVACAction.IDLE
+            )
+        else:
+            self._attr_hvac_mode = HVACMode.HEAT
+            self._attr_hvac_action = (
+                HVACAction.HEATING if is_heating else HVACAction.IDLE
+            )

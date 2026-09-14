@@ -1,0 +1,84 @@
+"""Config flow for UpCloud."""
+
+import logging
+from typing import Any, override
+
+import probatio
+import requests.exceptions
+import upcloud_api
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class UpCloudConfigFlow(ConfigFlow, domain=DOMAIN):
+    """UpCloud config flow."""
+
+    VERSION = 1
+
+    username: str
+    password: str
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user initiated flow."""
+        if user_input is None:
+            return self._async_show_form(step_id="user")
+
+        await self.async_set_unique_id(user_input[CONF_USERNAME])
+
+        manager = upcloud_api.CloudManager(
+            user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+        )
+
+        errors = {}
+        try:
+            await self.hass.async_add_executor_job(manager.authenticate)
+        except upcloud_api.UpCloudAPIError:
+            errors["base"] = "invalid_auth"
+            _LOGGER.debug("invalid_auth", exc_info=True)
+        except requests.exceptions.RequestException:
+            errors["base"] = "cannot_connect"
+            _LOGGER.debug("cannot_connect", exc_info=True)
+
+        if errors:
+            return self._async_show_form(
+                step_id="user", user_input=user_input, errors=errors
+            )
+
+        self._abort_if_unique_id_configured(
+            updates={CONF_PASSWORD: user_input[CONF_PASSWORD]}
+        )
+        return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)
+
+    @callback
+    def _async_show_form(
+        self,
+        step_id: str,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
+        """Show our form."""
+        if user_input is None:
+            user_input = {}
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
+                    ): str,
+                    probatio.Required(
+                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                    ): str,
+                }
+            ),
+            errors=errors or {},
+        )

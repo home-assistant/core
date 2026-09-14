@@ -1,0 +1,9 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up Hisense AEH-W4A1?"
+      }
+    }
+  }
+}

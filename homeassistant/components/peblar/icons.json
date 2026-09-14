@@ -1,0 +1,107 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "active_error_codes": {
+        "default": "mdi:alert"
+      },
+      "active_warning_codes": {
+        "default": "mdi:alert"
+      }
+    },
+    "button": {
+      "socket_unlock": {
+        "default": "mdi:lock-open"
+      }
+    },
+    "number": {
+      "charge_current_limit": {
+        "default": "mdi:speedometer"
+      }
+    },
+    "select": {
+      "buzzer_volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "high": "mdi:volume-high",
+          "low": "mdi:volume-low",
+          "low_medium": "mdi:volume-medium",
+          "medium": "mdi:volume-medium",
+          "off": "mdi:volume-off"
+        }
+      },
+      "led_brightness": {
+        "default": "mdi:brightness-6",
+        "state": {
+          "automatic": "mdi:brightness-auto",
+          "bright": "mdi:brightness-7",
+          "dim": "mdi:brightness-4",
+          "medium": "mdi:brightness-6",
+          "off": "mdi:led-off"
+        }
+      },
+      "smart_charging": {
+        "default": "mdi:lightning-bolt",
+        "state": {
+          "fast_solar": "mdi:solar-power",
+          "pure_solar": "mdi:solar-power-variant",
+          "scheduled": "mdi:calendar-clock",
+          "smart_solar": "mdi:solar-power"
+        }
+      }
+    },
+    "sensor": {
+      "charge_current_limit_source": {
+        "default": "mdi:arrow-collapse-up"
+      },
+      "cp_state": {
+        "default": "mdi:ev-plug-type2"
+      },
+      "uptime": {
+        "default": "mdi:timer"
+      }
+    },
+    "switch": {
+      "charge": {
+        "default": "mdi:ev-plug-type2"
+      },
+      "force_single_phase": {
+        "default": "mdi:power-cycle"
+      },
+      "socket_lock": {
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-open-variant",
+          "on": "mdi:lock"
+        }
+      }
+    },
+    "update": {
+      "customization": {
+        "default": "mdi:palette"
+      }
+    }
+  },
+  "services": {
+    "add_rfid_token": {
+      "service": "mdi:card-plus"
+    },
+    "add_vehicle_token": {
+      "service": "mdi:car-connected"
+    },
+    "authorize_charge_session": {
+      "service": "mdi:card-account-details-star"
+    },
+    "delete_rfid_token": {
+      "service": "mdi:card-remove"
+    },
+    "delete_vehicle_token": {
+      "service": "mdi:car-off"
+    },
+    "list_rfid_tokens": {
+      "service": "mdi:card-account-details"
+    },
+    "list_vehicle_tokens": {
+      "service": "mdi:car-multiple"
+    }
+  }
+}

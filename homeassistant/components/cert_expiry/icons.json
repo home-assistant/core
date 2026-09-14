@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "certificate_expiry": {
+        "default": "mdi:certificate"
+      }
+    }
+  }
+}

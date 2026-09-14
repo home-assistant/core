@@ -1,0 +1,10 @@
+{
+  "domain": "familyhub",
+  "name": "Samsung Family Hub",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/familyhub",
+  "iot_class": "local_polling",
+  "loggers": ["pyfamilyhublocal"],
+  "quality_scale": "legacy",
+  "requirements": ["python-family-hub-local==0.0.2"]
+}

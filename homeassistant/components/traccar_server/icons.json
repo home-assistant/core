@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "default": "mdi:access-point-minus",
+        "state": {
+          "off": "mdi:access-point-off",
+          "on": "mdi:access-point"
+        }
+      }
+    },
+    "sensor": {
+      "address": {
+        "default": "mdi:map-marker"
+      },
+      "altitude": {
+        "default": "mdi:altimeter"
+      },
+      "geofence": {
+        "default": "mdi:map-marker"
+      }
+    }
+  }
+}

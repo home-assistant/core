@@ -1,0 +1,220 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Garage Camera",
+  "category": "sp",
+  "product_id": "nzauwyj3mcnjnf35",
+  "product_name": "Smart Camera ",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2024-01-14T11:37:22+00:00",
+  "create_time": "2024-01-14T11:37:22+00:00",
+  "update_time": "2024-01-14T11:37:22+00:00",
+  "function": {
+    "basic_flip": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_private": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_sensitivity": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sd_umount": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_record": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "ptz_stop": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "ptz_control": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2", "3", "4", "5", "6", "7", "0"]
+      }
+    },
+    "motion_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "record_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "record_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2"]
+      }
+    },
+    "motion_tracking": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_area_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_area": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    }
+  },
+  "status_range": {
+    "basic_flip": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_private": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_sensitivity": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "sd_storge": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "sd_status": {
+      "type": "Integer",
+      "value": {
+        "min": 1,
+        "max": 5,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sd_umount": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_record": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "movement_detect_pic": {
+      "type": "Raw",
+      "value": {}
+    },
+    "ptz_stop": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sd_format_state": {
+      "type": "Integer",
+      "value": {
+        "min": -20000,
+        "max": 200000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "ptz_control": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2", "3", "4", "5", "6", "7", "0"]
+      }
+    },
+    "motion_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "record_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "record_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2"]
+      }
+    },
+    "motion_tracking": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_area_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_area": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "alarm_message": {
+      "type": "String",
+      "value": {}
+    }
+  },
+  "status": {
+    "basic_flip": true,
+    "basic_osd": true,
+    "basic_private": false,
+    "motion_sensitivity": 0,
+    "sd_storge": "896|896|0",
+    "sd_status": 5,
+    "sd_format": false,
+    "sd_umount": false,
+    "motion_record": false,
+    "movement_detect_pic": "**REDACTED**",
+    "ptz_stop": true,
+    "sd_format_state": 0,
+    "ptz_control": 3,
+    "motion_switch": false,
+    "record_switch": true,
+    "record_mode": 1,
+    "motion_tracking": false,
+    "motion_area_switch": true,
+    "motion_area": {
+      "num": 1,
+      "region0": {
+        "x": 0,
+        "y": 0,
+        "xlen": 100,
+        "ylen": 100
+      }
+    },
+    "alarm_message": "**REDACTED**"
+  },
+  "set_up": true,
+  "support_local": false
+}

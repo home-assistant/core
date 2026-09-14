@@ -1,0 +1,60 @@
+"""Support for radiotherm switches."""
+
+from typing import Any, override
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import RadioThermConfigEntry, RadioThermUpdateCoordinator
+from .entity import RadioThermostatEntity
+
+PARALLEL_UPDATES = 1
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: RadioThermConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up switches for a radiotherm device."""
+    async_add_entities([RadioThermHoldSwitch(entry.runtime_data)])
+
+
+class RadioThermHoldSwitch(RadioThermostatEntity, SwitchEntity):
+    """Provides radiotherm hold switch support."""
+
+    _attr_translation_key = "hold"
+
+    def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:
+        """Initialize the hold mode switch."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.init_data.mac}_hold"
+
+    @callback
+    @override
+    def _process_data(self) -> None:
+        """Update and validate the data from the thermostat."""
+        data = self.data.tstat
+        self._attr_is_on = bool(data["hold"])
+
+    def _set_hold(self, hold: bool) -> None:
+        """Set hold mode."""
+        self.device.hold = int(hold)
+
+    async def _async_set_hold(self, hold: bool) -> None:
+        """Set hold mode."""
+        await self.hass.async_add_executor_job(self._set_hold, hold)
+        self._attr_is_on = hold
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable permanent hold."""
+        await self._async_set_hold(True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable permanent hold."""
+        await self._async_set_hold(False)

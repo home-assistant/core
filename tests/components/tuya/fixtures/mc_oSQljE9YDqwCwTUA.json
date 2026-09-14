@@ -1,0 +1,35 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Kippenluik",
+  "category": "mc",
+  "product_id": "oSQljE9YDqwCwTUA",
+  "product_name": "Door Sensor",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2023-10-28T09:22:24+00:00",
+  "create_time": "2023-10-28T09:22:24+00:00",
+  "update_time": "2023-10-28T09:22:24+00:00",
+  "function": {},
+  "status_range": {
+    "doorcontact_state": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    }
+  },
+  "status": {
+    "doorcontact_state": true,
+    "battery_state": "high"
+  },
+  "set_up": true,
+  "support_local": true
+}

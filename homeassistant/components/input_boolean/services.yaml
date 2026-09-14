@@ -1,0 +1,16 @@
+toggle:
+  target:
+    entity:
+      domain: input_boolean
+
+turn_off:
+  target:
+    entity:
+      domain: input_boolean
+
+turn_on:
+  target:
+    entity:
+      domain: input_boolean
+
+reload:

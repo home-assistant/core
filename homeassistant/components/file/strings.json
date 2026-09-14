@@ -1,0 +1,100 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "not_allowed": "Access to the selected file path is not allowed"
+    },
+    "step": {
+      "notify": {
+        "data": {
+          "file_path": "[%key:component::file::config::step::sensor::data::file_path%]",
+          "timestamp": "Timestamp"
+        },
+        "data_description": {
+          "file_path": "A local file path to write the notification to",
+          "timestamp": "Add a timestamp to the notification"
+        },
+        "description": "Set up a service that allows to write notification to a file.",
+        "title": "Notification to file service"
+      },
+      "sensor": {
+        "data": {
+          "file_path": "File path",
+          "unit_of_measurement": "Unit of measurement",
+          "value_template": "Value template"
+        },
+        "data_description": {
+          "file_path": "The local file path to retrieve the sensor value from",
+          "unit_of_measurement": "Unit of measurement for the sensor",
+          "value_template": "A template to render the sensor's value based on the file content"
+        },
+        "description": "[%key:component::file::config::step::user::menu_options::sensor%]",
+        "title": "File sensor"
+      },
+      "user": {
+        "description": "Make a choice",
+        "menu_options": {
+          "notify": "Set up a notification service",
+          "sensor": "Set up a file-based sensor"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "dir_not_allowed": {
+      "message": "Access to {filename} is not allowed."
+    },
+    "file_decoding": {
+      "message": "Cannot read file {filename} as {encoding}."
+    },
+    "file_not_found": {
+      "message": "File {filename} not found."
+    },
+    "file_read_error": {
+      "message": "Error reading {filename}."
+    },
+    "no_access_to_path": {
+      "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+    },
+    "unsupported_file_encoding": {
+      "message": "Cannot read {filename}, unsupported file encoding {encoding}."
+    },
+    "write_access_failed": {
+      "message": "Write access to {filename} failed: {exc}."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "timestamp": "[%key:component::file::config::step::notify::data::timestamp%]",
+          "unit_of_measurement": "[%key:component::file::config::step::sensor::data::unit_of_measurement%]",
+          "value_template": "[%key:component::file::config::step::sensor::data::value_template%]"
+        },
+        "data_description": {
+          "timestamp": "[%key:component::file::config::step::notify::data_description::timestamp%]",
+          "unit_of_measurement": "[%key:component::file::config::step::sensor::data_description::unit_of_measurement%]",
+          "value_template": "[%key:component::file::config::step::sensor::data_description::value_template%]"
+        }
+      }
+    }
+  },
+  "services": {
+    "read_file": {
+      "description": "Reads a file and returns the contents.",
+      "fields": {
+        "file_encoding": {
+          "description": "Encoding of the file (JSON, YAML.)",
+          "name": "File encoding"
+        },
+        "file_name": {
+          "description": "Name of the file to read.",
+          "name": "File name"
+        }
+      },
+      "name": "Read file"
+    }
+  }
+}

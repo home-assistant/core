@@ -1,0 +1,61 @@
+"""The OurGroceries coordinator."""
+
+import asyncio
+from datetime import timedelta
+import logging
+from typing import override
+
+from ourgroceries import OurGroceries
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import DOMAIN
+
+SCAN_INTERVAL = 60
+
+_LOGGER = logging.getLogger(__name__)
+
+
+type OurGroceriesConfigEntry = ConfigEntry[OurGroceriesDataUpdateCoordinator]
+
+
+class OurGroceriesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
+    """Class to manage fetching OurGroceries data."""
+
+    config_entry: OurGroceriesConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OurGroceriesConfigEntry,
+        og: OurGroceries,
+    ) -> None:
+        """Initialize global OurGroceries data updater."""
+        self.og = og
+        self.lists: list[dict] = []
+        self._cache: dict[str, dict] = {}
+        interval = timedelta(seconds=SCAN_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=interval,
+        )
+
+    async def _update_list(self, list_id: str, version_id: str) -> None:
+        old_version = self._cache.get(list_id, {}).get("list", {}).get("versionId", "")
+        if old_version == version_id:
+            return
+        self._cache[list_id] = await self.og.get_list_items(list_id=list_id)
+
+    @override
+    async def _async_update_data(self) -> dict[str, dict]:
+        """Fetch data from OurGroceries."""
+        self.lists = (await self.og.get_my_lists())["shoppingLists"]
+        await asyncio.gather(
+            *[self._update_list(sl["id"], sl["versionId"]) for sl in self.lists]
+        )
+        return self._cache

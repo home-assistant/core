@@ -1,0 +1,64 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Hoover",
+  "category": "sd",
+  "product_id": "i6hyjg3af7doaswm",
+  "product_name": "E20",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2023-05-05T15:25:07+00:00",
+  "create_time": "2023-05-05T15:25:07+00:00",
+  "update_time": "2023-05-05T15:25:07+00:00",
+  "function": {
+    "power": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["random", "smart", "wall_follow", "chargego"]
+      }
+    },
+    "power_go": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "seek": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "power": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["random", "smart", "wall_follow", "chargego"]
+      }
+    },
+    "power_go": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "seek": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "power": true,
+    "mode": "chargego",
+    "power_go": false,
+    "seek": false
+  },
+  "set_up": true,
+  "support_local": true
+}

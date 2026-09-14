@@ -1,0 +1,56 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "description": "Gateway address to connect to DYNET network",
+        "title": "Configure Dynalite Connection"
+      }
+    }
+  },
+  "services": {
+    "request_area_preset": {
+      "description": "Requests Dynalite to report the preset for an area.",
+      "fields": {
+        "area": {
+          "description": "Area to request the preset reported.",
+          "name": "Area"
+        },
+        "channel": {
+          "description": "Channel to request the preset to be reported from.",
+          "name": "Channel"
+        },
+        "host": {
+          "description": "Host gateway IP to send to or all configured gateways if not specified.",
+          "name": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "name": "Request area preset"
+    },
+    "request_channel_level": {
+      "description": "Requests Dynalite to report the brightness level of a specific channel.",
+      "fields": {
+        "area": {
+          "description": "Area for the requested channel.",
+          "name": "[%key:component::dynalite::services::request_area_preset::fields::area::name%]"
+        },
+        "channel": {
+          "description": "Channel to request the brightness level for.",
+          "name": "Channel"
+        },
+        "host": {
+          "description": "[%key:component::dynalite::services::request_area_preset::fields::host::description%]",
+          "name": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "name": "Request channel level"
+    }
+  }
+}

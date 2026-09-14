@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "switch": {
+      "screen": {
+        "default": "mdi:television"
+      }
+    }
+  },
+  "services": {
+    "button": {
+      "service": "mdi:button-pointer"
+    },
+    "command": {
+      "service": "mdi:console"
+    },
+    "select_sound_output": {
+      "service": "mdi:volume-source"
+    }
+  }
+}

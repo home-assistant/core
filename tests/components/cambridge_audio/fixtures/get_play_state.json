@@ -1,0 +1,22 @@
+{
+  "state": "play",
+  "position": 179,
+  "presettable": false,
+  "mode_repeat": "off",
+  "mode_shuffle": "off",
+  "metadata": {
+    "class": "md.track",
+    "source": "AIRPLAY",
+    "name": "AirPlay",
+    "duration": 232,
+    "album": "Greatest Hits: God's Favorite Band",
+    "artist": "Green Day",
+    "title": "Holiday",
+    "art_url": "http://192.168.20.218:80/album-art-2d89?id=1:246",
+    "mqa": "none",
+    "codec": "ALAC",
+    "lossless": true,
+    "sample_rate": 44100,
+    "bit_depth": 16
+  }
+}

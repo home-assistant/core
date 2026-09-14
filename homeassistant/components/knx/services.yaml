@@ -1,0 +1,76 @@
+send:
+  fields:
+    address:
+      required: true
+      example: "1/1/0"
+      selector:
+        object:
+    payload:
+      required: true
+      example: "[0, 4]"
+      selector:
+        object:
+    type:
+      required: false
+      example: "temperature"
+      selector:
+        text:
+    response:
+      required: true
+      default: false
+      selector:
+        boolean:
+read:
+  fields:
+    address:
+      required: true
+      example: "1/1/0"
+      selector:
+        object:
+event_register:
+  fields:
+    address:
+      required: true
+      example: "1/1/0"
+      selector:
+        object:
+    type:
+      required: false
+      example: "2byte_float"
+      selector:
+        text:
+    remove:
+      default: false
+      required: true
+      selector:
+        boolean:
+exposure_register:
+  fields:
+    address:
+      required: true
+      example: "1/1/0"
+      selector:
+        text:
+    type:
+      required: true
+      example: "percentU8"
+      selector:
+        text:
+    entity_id:
+      required: true
+      selector:
+        entity:
+    attribute:
+      example: "brightness"
+      selector:
+        text:
+    default:
+      example: "0"
+      selector:
+        object:
+    remove:
+      default: false
+      required: true
+      selector:
+        boolean:
+reload:

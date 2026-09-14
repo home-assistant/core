@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "The selected agreement is already configured.",
+      "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_agreements": "This account has no Toon displays.",
+      "unknown_authorize_url_generation": "[%key:common::config_flow::abort::unknown_authorize_url_generation%]"
+    },
+    "step": {
+      "agreement": {
+        "data": {
+          "agreement": "Agreement"
+        },
+        "description": "Select the agreement address you want to add.",
+        "title": "Select your agreement"
+      },
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "Choose your tenant to authenticate with"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Toon device."
+    },
+    "invalid_response": {
+      "message": "Received an invalid response from the Toon device."
+    }
+  }
+}

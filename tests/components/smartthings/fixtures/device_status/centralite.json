@@ -1,0 +1,60 @@
+{
+  "components": {
+    "main": {
+      "powerMeter": {
+        "power": {
+          "value": 0.0,
+          "unit": "W",
+          "timestamp": "2025-02-09T17:49:15.190Z"
+        }
+      },
+      "switchLevel": {
+        "levelRange": {
+          "value": null
+        },
+        "level": {
+          "value": 0,
+          "unit": "%",
+          "timestamp": "2025-02-09T17:49:15.112Z"
+        }
+      },
+      "refresh": {},
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "16015010",
+          "timestamp": "2025-01-26T10:19:54.783Z"
+        },
+        "lastUpdateStatus": {
+          "value": null
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2025-01-26T10:19:54.788Z"
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2025-01-26T10:19:54.789Z"
+        },
+        "currentVersion": {
+          "value": "16015010",
+          "timestamp": "2025-01-26T10:19:54.775Z"
+        },
+        "lastUpdateTime": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-02-09T17:24:16.864Z"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+transfer:
+  target:
+    entity:
+      integration: roon
+      domain: media_player
+  fields:
+    transfer_id:
+      required: true
+      selector:
+        entity:
+          integration: roon
+          domain: media_player

@@ -1,0 +1,1 @@
+"""The GitLab-CI integration."""

@@ -1,0 +1,344 @@
+{
+  "nodeId": 61,
+  "index": 0,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": false,
+  "manufacturerId": 132,
+  "productId": 267,
+  "productType": 817,
+  "firmwareVersion": "1.11",
+  "deviceConfig": {
+    "filename": "/data/db/devices/0x0084/ssa3.json",
+    "isEmbedded": true,
+    "manufacturer": "FortrezZ LLC",
+    "manufacturerId": 132,
+    "label": "SSA3",
+    "description": "Siren and Strobe Alarm",
+    "devices": [
+      {
+        "productType": 833,
+        "productId": 517
+      },
+      {
+        "productType": 817,
+        "productId": 267
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "paramInformation": {
+      "_map": {}
+    }
+  },
+  "label": "SSA3",
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 61,
+      "index": 0,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 0,
+          "label": "Unused"
+        },
+        "mandatorySupportedCCs": [32, 38],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Transition duration"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 132
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 817
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 267
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        }
+      },
+      "value": 6
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "2.97"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["1.11"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 1,
+      "propertyName": "Delay before accept of Basic Set Off",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Delay before accept of Basic Set Off",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    }
+  ],
+  "isFrequentListening": false,
+  "maxDataRate": 40000,
+  "supportedDataRates": [40000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 17,
+      "label": "Multilevel Switch"
+    },
+    "specific": {
+      "key": 0,
+      "label": "Unused"
+    },
+    "mandatorySupportedCCs": [32, 38],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0084:0x0331:0x010b:1.11",
+  "statistics": {
+    "commandsTX": 12,
+    "commandsRX": 11,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 1
+  },
+  "highestSecurityClass": -1,
+  "isControllerNode": false
+}

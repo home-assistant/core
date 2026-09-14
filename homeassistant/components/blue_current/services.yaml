@@ -1,0 +1,12 @@
+start_charge_session:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: blue_current
+      required: true
+
+    charging_card_id:
+      selector:
+        text:
+      required: false

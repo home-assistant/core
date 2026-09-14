@@ -1,0 +1,125 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{model}",
+    "step": {
+      "confirm_discovery": {
+        "description": "Do you want to set up the spa at {host}?"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Balboa Spa Wi-Fi Device. For example, 192.168.1.58."
+        },
+        "description": "Connect to the Balboa Wi-Fi device"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "circ_pump": {
+        "name": "Circulation pump"
+      },
+      "filter_1": {
+        "name": "Filter cycle 1"
+      },
+      "filter_2": {
+        "name": "Filter cycle 2"
+      }
+    },
+    "climate": {
+      "balboa": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "ready": "Ready",
+              "ready_in_rest": "Ready-in-rest",
+              "rest": "Rest"
+            }
+          }
+        }
+      }
+    },
+    "event": {
+      "fault": {
+        "name": "Fault",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "clock_failed": "The clock has failed",
+              "flow_failed": "The water flow has failed",
+              "gfci_test_failed": "The GFCI test failed",
+              "heater_dry": "The heater is dry",
+              "heater_may_be_dry": "The heater may be dry",
+              "heater_too_hot": "The heater is too hot",
+              "hot_fault": "Hot fault",
+              "low_flow": "The water flow is low",
+              "memory_failure": "Program memory failure",
+              "priming_mode": "Priming mode",
+              "pump_stuck": "A pump may be stuck on",
+              "sensor_a_fault": "Sensor A fault",
+              "sensor_b_fault": "Sensor B fault",
+              "sensor_out_of_sync": "Sensors are out of sync",
+              "service_sensor_sync": "Sensors are out of sync -- call for service",
+              "settings_reset": "The settings have been reset",
+              "standby_mode": "Standby mode (hold mode)",
+              "water_too_hot": "The water is too hot"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "pump": {
+        "name": "Pump {index}"
+      }
+    },
+    "light": {
+      "light_of_n": {
+        "name": "Light {index}"
+      },
+      "only_light": {
+        "name": "Light"
+      }
+    },
+    "select": {
+      "temperature_range": {
+        "name": "Temperature range",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]"
+        }
+      }
+    },
+    "switch": {
+      "filter_cycle_2_enabled": {
+        "name": "Filter cycle 2 enabled"
+      }
+    },
+    "time": {
+      "filter_cycle_end": {
+        "name": "Filter cycle {index} end"
+      },
+      "filter_cycle_start": {
+        "name": "Filter cycle {index} start"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "sync_time": "Keep your Balboa spa's time synchronized with Home Assistant"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+update:
+  fields:
+    account:
+      required: true
+      example: "steve@apple.com"
+      selector:
+        text:
+
+play_sound:
+  fields:
+    account:
+      required: true
+      example: "steve@apple.com"
+      selector:
+        text:
+    device_name:
+      required: true
+      example: "stevesiphone"
+      selector:
+        text:
+
+display_message:
+  fields:
+    account:
+      required: true
+      example: "steve@apple.com"
+      selector:
+        text:
+    device_name:
+      required: true
+      example: "stevesiphone"
+      selector:
+        text:
+    message:
+      required: true
+      example: "Hey Steve !"
+      selector:
+        text:
+    sound:
+      selector:
+        boolean:
+
+lost_device:
+  fields:
+    account:
+      required: true
+      example: "steve@apple.com"
+      selector:
+        text:
+    device_name:
+      required: true
+      example: "stevesiphone"
+      selector:
+        text:
+    number:
+      required: true
+      example: "+33450020100"
+      selector:
+        text:
+    message:
+      required: true
+      example: "Call me"
+      selector:
+        text:

@@ -1,0 +1,249 @@
+{
+  "command": "getConfiguration",
+  "protocolVersion": "1.0.0",
+  "destinations": [
+    {
+      "id": 65355,
+      "animationType": 3,
+      "names": ["DACH", "", "", ""],
+      "actions": [
+        {
+          "id": 6,
+          "actionType": 2,
+          "actionDescription": 3,
+          "minValue": -127,
+          "maxValue": 127
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        },
+        {
+          "id": 23,
+          "actionType": 7,
+          "actionDescription": 12
+        }
+      ]
+    },
+    {
+      "id": 90732,
+      "animationType": 1,
+      "names": ["MARKISE LINKS", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 0,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 159890,
+      "animationType": 1,
+      "names": ["MARKISE VORNE", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 0,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 201106,
+      "animationType": 1,
+      "names": ["MARKISE RECHTS", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 0,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 317448,
+      "animationType": 6,
+      "names": ["LICHT SENKRECHT", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 8,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 17,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 6
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 382168,
+      "animationType": 6,
+      "names": ["LICHT OBEN", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 8,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 17,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 6
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 414040,
+      "animationType": 6,
+      "names": ["LICHT UNTEN", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 8,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 17,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 6
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 499120,
+      "animationType": 5,
+      "names": ["HEIZUNG LINKS", "", "", ""],
+      "actions": [
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 7
+        },
+        {
+          "id": 21,
+          "actionType": 5,
+          "actionDescription": 10
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 533844,
+      "animationType": 5,
+      "names": ["HEIZUNG RECHTS", "", "", ""],
+      "actions": [
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 7
+        },
+        {
+          "id": 21,
+          "actionType": 5,
+          "actionDescription": 10
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    }
+  ],
+  "rooms": [
+    {
+      "id": 39443,
+      "name": "Terasse",
+      "destinations": [
+        65355, 90732, 159890, 201106, 317448, 382168, 414040, 499120, 533844
+      ],
+      "scenes": []
+    }
+  ],
+  "scenes": []
+}

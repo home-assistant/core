@@ -1,0 +1,33 @@
+configure:
+  fields:
+    entity:
+      selector:
+        entity:
+          integration: deconz
+    field:
+      example: '"/lights/1/state" or "/state"'
+      selector:
+        text:
+    data:
+      required: true
+      example: '{"on": true}'
+      selector:
+        object:
+    bridgeid:
+      example: "00212EFFFF012345"
+      selector:
+        text:
+
+device_refresh:
+  fields:
+    bridgeid:
+      example: "00212EFFFF012345"
+      selector:
+        text:
+
+remove_orphaned_entries:
+  fields:
+    bridgeid:
+      example: "00212EFFFF012345"
+      selector:
+        text:

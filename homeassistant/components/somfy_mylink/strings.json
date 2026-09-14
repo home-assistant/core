@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{mac} ({ip})",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "system_id": "System ID"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Somfy MyLink hub."
+        },
+        "description": "The System ID can be obtained in the MyLink app under Integration by selecting any non-Cloud service."
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "target_id": "Configure options for a cover."
+        },
+        "title": "Configure MyLink options"
+      },
+      "target_config": {
+        "data": {
+          "reverse": "Cover is reversed"
+        },
+        "description": "Configure options for `{target_name}`",
+        "title": "Configure MyLink cover"
+      }
+    }
+  }
+}

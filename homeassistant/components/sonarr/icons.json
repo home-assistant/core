@@ -1,0 +1,44 @@
+{
+  "entity": {
+    "sensor": {
+      "commands": {
+        "default": "mdi:code-braces"
+      },
+      "diskspace": {
+        "default": "mdi:harddisk"
+      },
+      "queue": {
+        "default": "mdi:download"
+      },
+      "series": {
+        "default": "mdi:television"
+      },
+      "upcoming": {
+        "default": "mdi:television"
+      },
+      "wanted": {
+        "default": "mdi:television"
+      }
+    }
+  },
+  "services": {
+    "get_diskspace": {
+      "service": "mdi:harddisk"
+    },
+    "get_episodes": {
+      "service": "mdi:filmstrip"
+    },
+    "get_queue": {
+      "service": "mdi:download"
+    },
+    "get_series": {
+      "service": "mdi:television"
+    },
+    "get_upcoming": {
+      "service": "mdi:calendar-clock"
+    },
+    "get_wanted": {
+      "service": "mdi:magnify"
+    }
+  }
+}

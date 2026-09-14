@@ -1,0 +1,87 @@
+add_torrent:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: transmission
+    torrent:
+      required: true
+      example: http://releases.ubuntu.com/19.04/ubuntu-19.04-desktop-amd64.iso.torrent
+      selector:
+        text:
+    download_path:
+      required: false
+      example: "/path/to/download/directory"
+      selector:
+        text:
+    labels:
+      required: false
+      example: "Notify,Remove"
+      selector:
+        text:
+
+get_torrents:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: transmission
+    torrent_filter:
+      required: true
+      example: "all"
+      default: "all"
+      selector:
+        select:
+          options:
+            - "all"
+            - "active"
+            - "started"
+            - "paused"
+            - "completed"
+          translation_key: torrent_filter
+
+remove_torrent:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: transmission
+    id:
+      required: true
+      example: 123
+      selector:
+        text:
+    delete_data:
+      required: true
+      default: false
+      selector:
+        boolean:
+
+start_torrent:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: transmission
+    id:
+      required: true
+      example: 123
+      selector:
+        text:
+
+stop_torrent:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: transmission
+    id:
+      required: true
+      example: 123
+      selector:
+        text:

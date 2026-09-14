@@ -1,0 +1,15 @@
+{
+  "airFlow": {
+    "windStrengthLevel": "HIGH"
+  },
+  "dehumidifierJobMode": {
+    "currentJobMode": "SMART_HUMIDITY"
+  },
+  "humidity": {
+    "currentHumidity": 80,
+    "targetHumidity": 55
+  },
+  "operation": {
+    "dehumidifierOperationMode": "POWER_ON"
+  }
+}

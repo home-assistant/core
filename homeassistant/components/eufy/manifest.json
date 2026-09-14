@@ -1,0 +1,10 @@
+{
+  "domain": "eufy",
+  "name": "EufyHome",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/eufy",
+  "iot_class": "local_polling",
+  "loggers": ["lakeside"],
+  "quality_scale": "legacy",
+  "requirements": ["lakeside==0.13"]
+}

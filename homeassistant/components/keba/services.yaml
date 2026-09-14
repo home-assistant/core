@@ -1,0 +1,51 @@
+# Describes the format for available services for KEBA charging staitons
+
+request_data:
+authorize:
+deauthorize:
+set_energy:
+  fields:
+    energy:
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.1
+          unit_of_measurement: "kWh"
+
+set_current:
+  fields:
+    current:
+      default: 6
+      selector:
+        number:
+          min: 6
+          max: 63
+          step: 0.1
+          unit_of_measurement: "A"
+
+enable:
+disable:
+set_failsafe:
+  fields:
+    failsafe_timeout:
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    failsafe_fallback:
+      default: 6
+      selector:
+        number:
+          min: 6
+          max: 63
+          step: 0.1
+          unit_of_measurement: "A"
+    failsafe_persist:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 1

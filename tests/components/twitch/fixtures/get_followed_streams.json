@@ -1,0 +1,10 @@
+[
+  {
+    "user_id": 123,
+    "game_name": "Good game",
+    "title": "Title",
+    "thumbnail_url": "stream-medium.png",
+    "started_at": "2021-03-10T03:18:11Z",
+    "viewer_count": 42
+  }
+]

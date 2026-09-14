@@ -1,0 +1,10 @@
+{
+  "domain": "reddit",
+  "name": "Reddit",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/reddit",
+  "iot_class": "cloud_polling",
+  "loggers": ["praw", "prawcore"],
+  "quality_scale": "legacy",
+  "requirements": ["praw==7.5.0"]
+}

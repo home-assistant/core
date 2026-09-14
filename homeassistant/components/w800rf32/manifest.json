@@ -1,0 +1,10 @@
+{
+  "domain": "w800rf32",
+  "name": "WGL Designs W800RF32",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/w800rf32",
+  "iot_class": "local_push",
+  "loggers": ["W800rf32"],
+  "quality_scale": "legacy",
+  "requirements": ["pyW800rf32==0.4"]
+}

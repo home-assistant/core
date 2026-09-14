@@ -1,0 +1,32 @@
+# Ombi services.yaml entries
+submit_movie_request:
+  fields:
+    name:
+      required: true
+      example: "beverly hills cop"
+      selector:
+        text:
+
+submit_tv_request:
+  fields:
+    name:
+      required: true
+      example: "breaking bad"
+      selector:
+        text:
+    season:
+      default: latest
+      selector:
+        select:
+          options:
+            - "all"
+            - "first"
+            - "latest"
+
+submit_music_request:
+  fields:
+    name:
+      required: true
+      example: "nevermind"
+      selector:
+        text:

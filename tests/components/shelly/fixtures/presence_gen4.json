@@ -1,0 +1,264 @@
+{
+  "config": {
+    "ble": {
+      "enable": false,
+      "rpc": {
+        "enable": false
+      }
+    },
+    "bthome": {},
+    "cloud": {
+      "enable": false,
+      "server": "iot.shelly.cloud:6012/jrpc"
+    },
+    "illuminance:0": {
+      "bright_thr": 50,
+      "dark_thr": 10,
+      "id": 0,
+      "name": null
+    },
+    "mqtt": {
+      "client_id": "shellypresence-aabbccddeeff",
+      "enable": false,
+      "enable_control": true,
+      "enable_rpc": true,
+      "rpc_ntf": true,
+      "server": "mqtt.test.server",
+      "ssl_ca": null,
+      "status_ntf": false,
+      "topic_prefix": "shellypresence-aabbccddeeff",
+      "use_client_cert": false,
+      "user": null
+    },
+    "presence": {
+      "blind": [],
+      "enable": true,
+      "leds": {
+        "brightness": 20.0,
+        "night_mode": {
+          "active_between": [],
+          "brightness": 20.0,
+          "enable": false
+        }
+      },
+      "main_zone": "presencezone:200",
+      "sensor": {
+        "flipped": false,
+        "height": 2.0,
+        "max_velocity": 20.0,
+        "points": 40,
+        "position": "center",
+        "power": "high",
+        "snr": 40,
+        "state": {
+          "act_free_thr": 12,
+          "det_act_thr": 3,
+          "det_free_thr": 3,
+          "sleep_free_thr": 600,
+          "stat_free_thr": 500
+        },
+        "tilt": 15.0,
+        "velocity": 0.1
+      },
+      "zmax": 3.0,
+      "zmin": 0.0
+    },
+    "presencezone:200": {
+      "absence_thr": 0,
+      "area": [[-8, 16, 8, 0]],
+      "color": [255, 255, 255],
+      "enable": true,
+      "id": 200,
+      "name": "Room",
+      "presence_thr": 0,
+      "zmax": 3,
+      "zmin": 0
+    },
+    "presencezone:201": {
+      "absence_thr": 0,
+      "area": [[-4, 8, 5, 2]],
+      "color": [0, 84, 255],
+      "enable": true,
+      "id": 201,
+      "name": "My zone",
+      "presence_thr": 0,
+      "zmax": 3,
+      "zmin": 0
+    },
+    "presencezone:202": {
+      "absence_thr": 0,
+      "area": [[-4, 15, 5, 8]],
+      "color": [249, 202, 31],
+      "enable": true,
+      "id": 202,
+      "name": "New zone",
+      "presence_thr": 0,
+      "zmax": 3,
+      "zmin": 0
+    },
+    "sys": {
+      "cfg_rev": 9,
+      "debug": {
+        "file_level": null,
+        "file_log": {
+          "enable": false
+        },
+        "level": 2,
+        "mqtt": {
+          "enable": false
+        },
+        "udp": {
+          "addr": null
+        },
+        "websocket": {
+          "enable": false
+        }
+      },
+      "device": {
+        "discoverable": true,
+        "eco_mode": false,
+        "enhanced_security": false,
+        "fw_id": "20251027-143056/r1.7-554-g8b637985d-4330-presenceg4-device-stop-detecting-objects",
+        "mac": "AABBCCDDEEFF",
+        "name": "Test Name",
+        "tls_check_cert_validity_time": true
+      },
+      "location": {
+        "lat": 22.2244,
+        "lon": 11.7788,
+        "tz": "Europe/Warsaw"
+      },
+      "rpc_udp": {
+        "dst_addr": null,
+        "listen_port": null
+      },
+      "sntp": {
+        "server": "sntp.test.server"
+      },
+      "ui_data": {}
+    },
+    "wifi": {
+      "ap": {
+        "enable": false,
+        "is_open": true,
+        "range_extender": {
+          "enable": false
+        },
+        "ssid": "ShellyPresence-AABBCCDDEEFF"
+      },
+      "roam": {
+        "interval": 60,
+        "rssi_thr": -80
+      },
+      "sta": {
+        "enable": true,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": false,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": "Wifi-Network-Name"
+      },
+      "sta1": {
+        "enable": false,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": true,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": null
+      }
+    },
+    "ws": {
+      "enable": false,
+      "server": null,
+      "ssl_ca": "ca.pem"
+    }
+  },
+  "shelly": {
+    "app": "PresenceG4",
+    "auth_domain": null,
+    "auth_en": false,
+    "fw_id": "20251027-143056/r1.7-554-g8b637985d-4330-presenceg4-device-stop-detecting-objects",
+    "gen": 4,
+    "id": "shellypresence-aabbccddeeff",
+    "mac": "AABBCCDDEEFF",
+    "model": "S4SN-0U61X",
+    "name": "Test Name",
+    "slot": 0,
+    "ver": "1.8.99"
+  },
+  "status": {
+    "ble": {},
+    "bthome": {
+      "errors": ["bluetooth_disabled"]
+    },
+    "cloud": {
+      "connected": false
+    },
+    "illuminance:0": {
+      "id": 0,
+      "illumination": "twilight"
+    },
+    "mqtt": {
+      "connected": false
+    },
+    "presence": {
+      "live_track": {
+        "interval": 1.0,
+        "timer_duration": 60.0,
+        "timer_started_at": 1762084292.41
+      }
+    },
+    "presencezone:200": {
+      "id": 200,
+      "num_objects": 1,
+      "value": true
+    },
+    "presencezone:201": {
+      "id": 201,
+      "num_objects": 1,
+      "value": true
+    },
+    "presencezone:202": {
+      "id": 202,
+      "num_objects": 0,
+      "value": false
+    },
+    "sys": {
+      "available_updates": {},
+      "backup": {},
+      "btrelay_rev": 0,
+      "cfg_rev": 9,
+      "fs_free": 487424,
+      "fs_size": 917504,
+      "kvs_rev": 0,
+      "last_sync_ts": 1762083786,
+      "mac": "AABBCCDDEEFF",
+      "ram_free": 209180,
+      "ram_min_free": 199664,
+      "ram_size": 345948,
+      "reset_reason": 1,
+      "restart_required": false,
+      "schedule_rev": 0,
+      "time": "12:51",
+      "unixtime": 1762084306,
+      "uptime": 526,
+      "utc_offset": 3600,
+      "webhook_rev": 0
+    },
+    "wifi": {
+      "bssid": "cc:dd:ff:eb:aa:66",
+      "rssi": -60,
+      "ssid": "Wifi-Network-Name",
+      "sta_ip": "192.168.2.242",
+      "sta_ip6": ["fe80::7e2c:aabb:ccdd:eeff"],
+      "status": "got ip"
+    },
+    "ws": {
+      "connected": false
+    }
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "duplicate_persistence_file": "[%key:component::mysensors::config::error::duplicate_persistence_file%]",
+      "duplicate_topic": "[%key:component::mysensors::config::error::duplicate_topic%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_device": "[%key:component::mysensors::config::error::invalid_device%]",
+      "invalid_ip": "Invalid IP address",
+      "invalid_persistence_file": "[%key:component::mysensors::config::error::invalid_persistence_file%]",
+      "invalid_port": "[%key:component::mysensors::config::error::invalid_port%]",
+      "invalid_publish_topic": "[%key:component::mysensors::config::error::invalid_publish_topic%]",
+      "invalid_serial": "[%key:component::mysensors::config::error::invalid_serial%]",
+      "invalid_subscribe_topic": "[%key:component::mysensors::config::error::invalid_subscribe_topic%]",
+      "invalid_version": "[%key:component::mysensors::config::error::invalid_version%]",
+      "mqtt_required": "The MQTT integration is not set up",
+      "not_a_number": "[%key:component::mysensors::config::error::not_a_number%]",
+      "port_out_of_range": "[%key:component::mysensors::config::error::port_out_of_range%]",
+      "same_topic": "[%key:component::mysensors::config::error::same_topic%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "duplicate_persistence_file": "Persistence file already in use",
+      "duplicate_topic": "Topic already in use",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_device": "Invalid device",
+      "invalid_ip": "Invalid IP address",
+      "invalid_persistence_file": "Invalid persistence file",
+      "invalid_port": "Invalid port number",
+      "invalid_publish_topic": "Invalid publish topic",
+      "invalid_serial": "Invalid serial port",
+      "invalid_subscribe_topic": "Invalid subscribe topic",
+      "invalid_version": "Invalid MySensors version",
+      "not_a_number": "Please enter a number",
+      "port_out_of_range": "Port number must be at least 1 and at most 65535",
+      "same_topic": "Subscribe and publish topics are the same",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "gw_mqtt": {
+        "data": {
+          "persistence_file": "[%key:component::mysensors::config::step::gw_tcp::data::persistence_file%]",
+          "retain": "MQTT retain",
+          "topic_in_prefix": "Prefix for input topics (topic_in_prefix)",
+          "topic_out_prefix": "Prefix for output topics (topic_out_prefix)",
+          "version": "[%key:component::mysensors::config::step::gw_tcp::data::version%]"
+        },
+        "description": "MQTT gateway setup"
+      },
+      "gw_serial": {
+        "data": {
+          "baud_rate": "Baud rate",
+          "device": "Serial port",
+          "persistence_file": "[%key:component::mysensors::config::step::gw_tcp::data::persistence_file%]",
+          "version": "[%key:component::mysensors::config::step::gw_tcp::data::version%]"
+        },
+        "description": "Serial gateway setup"
+      },
+      "gw_tcp": {
+        "data": {
+          "device": "IP address of the gateway",
+          "persistence_file": "Persistence file (leave empty to auto-generate)",
+          "tcp_port": "[%key:common::config_flow::data::port%]",
+          "version": "MySensors version"
+        },
+        "description": "Ethernet gateway setup"
+      },
+      "select_gateway_type": {
+        "description": "Select which gateway to configure.",
+        "menu_options": {
+          "gw_mqtt": "Configure an MQTT gateway",
+          "gw_serial": "Configure a serial gateway",
+          "gw_tcp": "Configure a TCP gateway"
+        }
+      },
+      "user": {
+        "data": {
+          "gateway_type": "Gateway type"
+        },
+        "description": "Choose connection method to the gateway"
+      }
+    }
+  }
+}

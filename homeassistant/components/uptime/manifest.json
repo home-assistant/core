@@ -1,0 +1,11 @@
+{
+  "domain": "uptime",
+  "name": "Uptime",
+  "codeowners": ["@frenck"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/uptime",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "quality_scale": "internal",
+  "single_config_entry": true
+}

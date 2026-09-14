@@ -1,0 +1,8 @@
+{
+  "version": "V2.3",
+  "power": "ON",
+  "mode": 2,
+  "deviceId": "air-purifier-id-1",
+  "deviceType": "Air Purifier Table PM2.5",
+  "hubDeviceId": "test-hub-id"
+}

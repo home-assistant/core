@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'basement',
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'aosmith',
+        'junctionId',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'A. O. Smith',
+    'model': 'Example model',
+    'model_id': None,
+    'name': 'My water heater',
+    'name_by_user': None,
+    'serial_number': 'serial',
+    'sw_version': '2.14',
+    'via_device_id': None,
+  })
+# ---

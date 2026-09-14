@@ -1,0 +1,18 @@
+{
+  "domain": "actron_air",
+  "name": "Actron Air",
+  "codeowners": ["@kclif9", "@JagadishDhanamjayam"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "neo-*",
+      "macaddress": "FC0FE7*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/actron_air",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["actron_neo_api"],
+  "quality_scale": "silver",
+  "requirements": ["actron-neo-api==0.5.16"]
+}

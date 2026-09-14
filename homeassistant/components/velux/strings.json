@@ -1,0 +1,102 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The password for your KLF200 gateway."
+        },
+        "description": "Please enter the password for {name} ({host})"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The password for your KLF200 gateway."
+        },
+        "description": "The password for {host} is incorrect. Please enter the correct password."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your KLF200 gateway.",
+          "password": "The password for your KLF200 gateway."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "rain_sensor": {
+        "name": "Rain sensor"
+      }
+    },
+    "cover": {
+      "cover": {
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "Default",
+              "fast": "Fast",
+              "silent": "Silent"
+            }
+          }
+        }
+      },
+      "dual_roller_shutter_lower": {
+        "name": "Lower shutter",
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::default%]",
+              "fast": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::fast%]",
+              "silent": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::silent%]"
+            }
+          }
+        }
+      },
+      "dual_roller_shutter_upper": {
+        "name": "Upper shutter",
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::default%]",
+              "fast": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::fast%]",
+              "silent": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::silent%]"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "closed_position_limitation": {
+        "name": "Closed position limit"
+      },
+      "open_position_limitation": {
+        "name": "Open position limit"
+      }
+    }
+  },
+  "exceptions": {
+    "device_communication_error": {
+      "message": "Failed to communicate with Velux device: {error}"
+    },
+    "reboot_failed": {
+      "message": "Failed to reboot gateway. Try again in a few moments or power cycle the device manually"
+    }
+  }
+}

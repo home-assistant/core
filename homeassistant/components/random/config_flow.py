@@ -1,0 +1,180 @@
+"""Config flow for Random helper."""
+
+from collections.abc import Callable, Coroutine, Mapping
+from enum import StrEnum
+from typing import Any, cast, override
+
+import probatio
+
+from homeassistant.components.sensor import DEVICE_CLASS_UNITS
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_MAXIMUM,
+    CONF_MINIMUM,
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
+    Platform,
+)
+from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
+    SchemaFlowMenuStep,
+)
+from homeassistant.helpers.selector import (
+    DeviceClassSelector,
+    DeviceClassSelectorConfig,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TextSelector,
+)
+
+from .const import DOMAIN
+from .sensor import DEFAULT_MAX, DEFAULT_MIN
+
+
+class _FlowType(StrEnum):
+    CONFIG = "config"
+    OPTION = "option"
+
+
+def _generate_schema(domain: str, flow_type: _FlowType) -> probatio.Schema:
+    """Generate schema."""
+    schema: dict[probatio.Marker, Any] = {}
+
+    if flow_type == _FlowType.CONFIG:
+        schema[probatio.Required(CONF_NAME)] = TextSelector()
+
+        if domain == Platform.BINARY_SENSOR:
+            schema[probatio.Optional(CONF_DEVICE_CLASS)] = DeviceClassSelector(
+                DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR)
+            )
+
+    if domain == Platform.SENSOR:
+        schema.update(
+            {
+                probatio.Optional(CONF_MINIMUM, default=DEFAULT_MIN): cv.positive_int,
+                probatio.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): cv.positive_int,
+                probatio.Optional(CONF_DEVICE_CLASS): DeviceClassSelector(
+                    DeviceClassSelectorConfig(domain=Platform.NUMBER)
+                ),
+                probatio.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            str(unit)
+                            for units in DEVICE_CLASS_UNITS.values()
+                            for unit in units
+                            if unit is not None
+                        ],
+                        sort=True,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key="sensor_unit_of_measurement",
+                        custom_value=True,
+                    ),
+                ),
+            }
+        )
+
+    return probatio.Schema(schema)
+
+
+async def choose_options_step(options: dict[str, Any]) -> str:
+    """Return next step_id for options flow according to entity_type."""
+    return cast(str, options["entity_type"])
+
+
+def _validate_unit(options: dict[str, Any]) -> None:
+    """Validate unit of measurement."""
+    if (
+        (device_class := options.get(CONF_DEVICE_CLASS))
+        and (units := DEVICE_CLASS_UNITS.get(device_class))
+        and (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) not in units
+    ):
+        # Sort twice to make sure strings with same case-insensitive order of
+        # letters are sorted consistently still (sorted() is guaranteed stable).
+        sorted_units = sorted(
+            sorted(
+                [f"'{unit!s}'" if unit else "no unit of measurement" for unit in units],
+            ),
+            key=str.casefold,
+        )
+        if len(sorted_units) == 1:
+            units_string = sorted_units[0]
+        else:
+            units_string = f"one of {', '.join(sorted_units)}"
+
+        raise probatio.Invalid(
+            f"'{unit}' is not a valid unit for device class '{device_class}'; "
+            f"expected {units_string}"
+        )
+
+
+def validate_user_input(
+    entity_type: str,
+) -> Callable[
+    [SchemaCommonFlowHandler, dict[str, Any]],
+    Coroutine[Any, Any, dict[str, Any]],
+]:
+    """Do post validation of user input.
+
+    For sensors: Validate unit of measurement.
+    """
+
+    async def _validate_user_input(
+        _: SchemaCommonFlowHandler,
+        user_input: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Add entity type to user input."""
+        if entity_type == Platform.SENSOR:
+            _validate_unit(user_input)
+        return {"entity_type": entity_type} | user_input
+
+    return _validate_user_input
+
+
+RANDOM_TYPES = [
+    Platform.BINARY_SENSOR.value,
+    Platform.SENSOR.value,
+]
+
+CONFIG_FLOW = {
+    "user": SchemaFlowMenuStep(RANDOM_TYPES),
+    Platform.BINARY_SENSOR: SchemaFlowFormStep(
+        _generate_schema(Platform.BINARY_SENSOR, _FlowType.CONFIG),
+        validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
+    ),
+    Platform.SENSOR: SchemaFlowFormStep(
+        _generate_schema(Platform.SENSOR, _FlowType.CONFIG),
+        validate_user_input=validate_user_input(Platform.SENSOR),
+    ),
+}
+
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(next_step=choose_options_step),
+    Platform.BINARY_SENSOR: SchemaFlowFormStep(
+        _generate_schema(Platform.BINARY_SENSOR, _FlowType.OPTION),
+        validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
+    ),
+    Platform.SENSOR: SchemaFlowFormStep(
+        _generate_schema(Platform.SENSOR, _FlowType.OPTION),
+        validate_user_input=validate_user_input(Platform.SENSOR),
+    ),
+}
+
+
+class RandomConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
+    """Handle config flow for random helper."""
+
+    config_flow = CONFIG_FLOW
+    options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
+
+    @callback
+    @override
+    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
+        """Return config entry title."""
+        return cast(str, options["name"])

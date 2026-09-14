@@ -1,0 +1,154 @@
+{
+  "components": {
+    "main": {
+      "ocf": {
+        "st": {
+          "value": null,
+          "timestamp": "2020-10-06T23:01:03.011Z"
+        },
+        "mndt": {
+          "value": null,
+          "timestamp": "2021-01-28T11:54:37.203Z"
+        },
+        "mnfv": {
+          "value": null,
+          "timestamp": "2020-12-20T14:21:43.766Z"
+        },
+        "mnhw": {
+          "value": null,
+          "timestamp": "2021-01-25T22:57:01.985Z"
+        },
+        "di": {
+          "value": "C0972771-01D0-0000-0000-000000000000",
+          "timestamp": "2019-08-10T18:37:20.487Z"
+        },
+        "mnsl": {
+          "value": null,
+          "timestamp": "2020-12-20T14:21:31.219Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2019-08-10T18:37:20.514Z"
+        },
+        "n": {
+          "value": "Washer",
+          "timestamp": "2019-08-10T18:37:20.555Z"
+        },
+        "mnmo": {
+          "value": "TP6X_WA54M8750AV|20183944|20000101001111000100000000000000",
+          "timestamp": "2019-08-10T18:37:20.409Z"
+        },
+        "vid": {
+          "value": "DA-WM-WM-100001",
+          "timestamp": "2019-08-10T18:37:20.381Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2019-08-10T18:37:20.436Z"
+        },
+        "mnml": {
+          "value": null,
+          "timestamp": "2021-01-28T11:54:37.092Z"
+        },
+        "mnpv": {
+          "value": null,
+          "timestamp": "2021-01-26T20:55:28.663Z"
+        },
+        "mnos": {
+          "value": null,
+          "timestamp": "2021-01-26T20:55:28.411Z"
+        },
+        "pi": {
+          "value": "shp",
+          "timestamp": "2019-08-10T18:37:20.457Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2019-08-10T18:37:20.534Z"
+        }
+      },
+      "remoteControlStatus": {
+        "remoteControlEnabled": {
+          "value": "false",
+          "timestamp": "2025-04-06T17:30:05.372Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 22100103,
+          "timestamp": "2022-11-01T11:53:01.255Z"
+        }
+      },
+      "refresh": {},
+      "samsungce.washerOperatingState": {
+        "washerJobState": {
+          "value": "none",
+          "timestamp": "2025-04-18T13:17:00.432Z"
+        },
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2025-04-18T13:17:00.432Z"
+        },
+        "supportedOperatingStates": {
+          "value": ["ready", "running", "paused"],
+          "timestamp": "2022-11-01T11:53:01.255Z"
+        },
+        "scheduledJobs": {
+          "value": null
+        },
+        "scheduledPhases": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        },
+        "remainingTimeStr": {
+          "value": "00:57",
+          "timestamp": "2025-04-18T13:17:00.432Z"
+        },
+        "washerJobPhase": {
+          "value": null
+        },
+        "operationTime": {
+          "value": null
+        },
+        "remainingTime": {
+          "value": 57,
+          "unit": "min",
+          "timestamp": "2025-04-18T13:17:00.432Z"
+        }
+      },
+      "execute": {
+        "data": {
+          "value": null,
+          "data": {},
+          "timestamp": "2020-10-05T02:10:50.602Z"
+        }
+      },
+      "washerOperatingState": {
+        "completionTime": {
+          "value": "2025-04-18T14:14:00Z",
+          "timestamp": "2025-04-18T13:17:00.432Z"
+        },
+        "machineState": {
+          "value": "stop",
+          "timestamp": "2025-04-18T13:17:00.432Z"
+        },
+        "washerJobState": {
+          "value": "none",
+          "timestamp": "2025-04-18T13:17:00.432Z"
+        },
+        "supportedMachineStates": {
+          "value": null,
+          "timestamp": "2020-08-14T14:25:00.803Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": null,
+          "timestamp": "2020-09-13T18:32:28.637Z"
+        }
+      }
+    }
+  }
+}

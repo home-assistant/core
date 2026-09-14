@@ -1,0 +1,34 @@
+{
+  "conditions": {
+    "is_available": {
+      "condition": "mdi:package-up"
+    },
+    "is_not_available": {
+      "condition": "mdi:package"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "default": "mdi:package-up",
+      "state": {
+        "off": "mdi:package"
+      }
+    }
+  },
+  "services": {
+    "clear_skipped": {
+      "service": "mdi:package"
+    },
+    "install": {
+      "service": "mdi:package-down"
+    },
+    "skip": {
+      "service": "mdi:package-check"
+    }
+  },
+  "triggers": {
+    "became_available": {
+      "trigger": "mdi:package-up"
+    }
+  }
+}

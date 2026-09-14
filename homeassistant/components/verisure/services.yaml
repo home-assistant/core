@@ -1,0 +1,17 @@
+capture_smartcam:
+  target:
+    entity:
+      integration: verisure
+      domain: camera
+
+enable_autolock:
+  target:
+    entity:
+      integration: verisure
+      domain: lock
+
+disable_autolock:
+  target:
+    entity:
+      integration: verisure
+      domain: lock

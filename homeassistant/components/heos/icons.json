@@ -1,0 +1,28 @@
+{
+  "services": {
+    "get_queue": {
+      "service": "mdi:playlist-music"
+    },
+    "group_volume_down": {
+      "service": "mdi:volume-low"
+    },
+    "group_volume_set": {
+      "service": "mdi:volume-medium"
+    },
+    "group_volume_up": {
+      "service": "mdi:volume-high"
+    },
+    "move_queue_item": {
+      "service": "mdi:playlist-edit"
+    },
+    "remove_from_queue": {
+      "service": "mdi:playlist-remove"
+    },
+    "sign_in": {
+      "service": "mdi:login"
+    },
+    "sign_out": {
+      "service": "mdi:logout"
+    }
+  }
+}

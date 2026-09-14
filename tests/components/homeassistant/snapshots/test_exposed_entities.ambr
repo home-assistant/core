@@ -1,0 +1,15 @@
+# serializer version: 1
+# name: test_get_assistant_settings
+  dict({
+    'climate.test_unique1': ReadOnlyDict({
+      'should_expose': True,
+    }),
+    'light.not_in_registry': dict({
+      'should_expose': True,
+    }),
+  })
+# ---
+# name: test_get_assistant_settings.1
+  dict({
+  })
+# ---

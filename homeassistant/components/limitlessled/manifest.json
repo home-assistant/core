@@ -1,0 +1,10 @@
+{
+  "domain": "limitlessled",
+  "name": "LimitlessLED",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/limitlessled",
+  "iot_class": "assumed_state",
+  "loggers": ["limitlessled"],
+  "quality_scale": "legacy",
+  "requirements": ["limitlessled==1.1.3"]
+}

@@ -1,0 +1,352 @@
+"""Test the switchbot init."""
+
+from collections.abc import Callable
+from unittest.mock import AsyncMock, patch
+
+import pytest
+import switchbot
+
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.switchbot.const import (
+    CONF_CURTAIN_SPEED,
+    CONF_RETRY_COUNT,
+    DEFAULT_CURTAIN_SPEED,
+    DEFAULT_RETRY_COUNT,
+    DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+    DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
+    DOMAIN,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SENSOR_TYPE
+from homeassistant.core import HomeAssistant
+
+from . import (
+    AIR_PURIFIER_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_US_SERVICE_INFO,
+    AIR_PURIFIER_US_SERVICE_INFO,
+    HUBMINI_MATTER_SERVICE_INFO,
+    LOCK_SERVICE_INFO,
+    STANDING_FAN_SERVICE_INFO,
+    WOCURTAIN_SERVICE_INFO,
+    WOMETERTHPC_SERVICE_INFO,
+    WOSENSORTH_SERVICE_INFO,
+    patch_async_ble_device_from_address,
+)
+
+from tests.common import MockConfigEntry
+from tests.components.bluetooth import inject_bluetooth_service_info
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_message"),
+    [
+        (
+            ValueError("wrong model"),
+            "Switchbot device initialization failed because of"
+            " incorrect configuration parameters: wrong model",
+        ),
+    ],
+)
+async def test_exception_handling_for_device_initialization(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    exception: Exception,
+    error_message: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test exception handling for lock initialization."""
+    inject_bluetooth_service_info(hass, LOCK_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="lock")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock.__init__",
+        side_effect=exception,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    assert error_message in caplog.text
+
+
+async def test_setup_entry_without_ble_device(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup entry without ble device."""
+
+    entry = mock_entry_factory("hygrometer_co2")
+    entry.add_to_hass(hass)
+
+    with patch_async_ble_device_from_address(None):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        "Could not find Switchbot hygrometer_co2 with address aa:bb:cc:dd:ee:ff"
+        in caplog.text
+    )
+
+
+async def test_setup_entry_meter_pro_co2_uses_non_connectable(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test that Meter Pro CO2 setup uses connectable=False for BLE lookup.
+
+    Meter Pro CO2 is in both CONNECTABLE and NON_CONNECTABLE model types,
+    so async_ble_device_from_address should be called with connectable=False
+    to support passive BT proxies.
+    """
+    inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
+
+    entry = mock_entry_factory("hygrometer_co2")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bluetooth.async_ble_device_from_address",
+    ) as mock_ble:
+        mock_ble.return_value = WOMETERTHPC_SERVICE_INFO.device
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # connectable should be False since METER_PRO_C is in both lists
+        assert mock_ble.call_args_list[0][0][2] is False
+
+
+async def test_coordinator_wait_ready_timeout(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the coordinator async_wait_ready timeout by calling it directly."""
+
+    inject_bluetooth_service_info(hass, HUBMINI_MATTER_SERVICE_INFO)
+
+    entry = mock_entry_factory("hubmini_matter")
+    entry.add_to_hass(hass)
+
+    timeout_mock = AsyncMock()
+    timeout_mock.__aenter__.side_effect = TimeoutError
+    timeout_mock.__aexit__.return_value = None
+
+    with patch(
+        "homeassistant.components.switchbot.coordinator.asyncio.timeout",
+        return_value=timeout_mock,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert "aa:bb:cc:dd:ee:ff is not advertising state" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("sensor_type", "service_info", "expected_options"),
+    [
+        (
+            "curtain",
+            WOCURTAIN_SERVICE_INFO,
+            {
+                CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
+                CONF_CURTAIN_SPEED: DEFAULT_CURTAIN_SPEED,
+            },
+        ),
+        (
+            "hygrometer",
+            WOSENSORTH_SERVICE_INFO,
+            {
+                CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
+            },
+        ),
+    ],
+)
+async def test_migrate_entry_from_v1_1_to_v1_2(
+    hass: HomeAssistant,
+    sensor_type: str,
+    service_info,
+    expected_options: dict,
+) -> None:
+    """Test migration from version 1.1 to 1.2 adds default options."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: sensor_type,
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=1,
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert entry.options == expected_options
+
+
+async def test_migrate_entry_preserves_existing_options(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration preserves existing options."""
+    inject_bluetooth_service_info(hass, WOCURTAIN_SERVICE_INFO)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: "curtain",
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=1,
+        options={CONF_RETRY_COUNT: 5},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    # Existing retry_count should be preserved, curtain_speed added
+    assert entry.options[CONF_RETRY_COUNT] == 5
+    assert entry.options[CONF_CURTAIN_SPEED] == DEFAULT_CURTAIN_SPEED
+
+
+async def test_migrate_entry_fails_for_future_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration fails for future versions."""
+    inject_bluetooth_service_info(hass, WOCURTAIN_SERVICE_INFO)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: "curtain",
+        },
+        unique_id="aabbccddeeff",
+        version=2,
+        minor_version=1,
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Entry should not be loaded due to failed migration
+    assert entry.version == 2
+    assert entry.minor_version == 1
+
+
+@pytest.mark.parametrize(
+    ("old_sensor_type", "service_info", "expected_sensor_type"),
+    [
+        (
+            DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+            AIR_PURIFIER_JP_SERVICE_INFO,
+            "air_purifier_jp",
+        ),
+        (
+            DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+            AIR_PURIFIER_US_SERVICE_INFO,
+            "air_purifier_us",
+        ),
+        (
+            DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
+            AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
+            "air_purifier_table_jp",
+        ),
+        (
+            DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
+            AIR_PURIFIER_TABLE_US_SERVICE_INFO,
+            "air_purifier_table_us",
+        ),
+    ],
+)
+async def test_migrate_deprecated_air_purifier_sensor_type(
+    hass: HomeAssistant,
+    old_sensor_type: str,
+    service_info: BluetoothServiceInfoBleak,
+    expected_sensor_type: str,
+) -> None:
+    """Test deprecated air_purifier types are migrated via BLE."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: old_sensor_type,
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=2,
+        options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.data[CONF_SENSOR_TYPE] == expected_sensor_type
+
+
+async def test_migrate_deprecated_air_purifier_sensor_type_device_not_in_range(
+    hass: HomeAssistant,
+) -> None:
+    """Test deprecated air_purifier entry not loaded when out of range."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=2,
+        options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # sensor_type unchanged and entry not loaded; will retry when device advertises
+    assert entry.data[CONF_SENSOR_TYPE] == DEPRECATED_SENSOR_TYPE_AIR_PURIFIER
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_standing_fan_setup(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the Standing Fan is recognized and set up."""
+    inject_bluetooth_service_info(hass, STANDING_FAN_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="standing_fan")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.switchbot.switchbot.SwitchbotStandingFan.get_basic_info",
+        new=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert isinstance(entry.runtime_data.device, switchbot.SwitchbotStandingFan)

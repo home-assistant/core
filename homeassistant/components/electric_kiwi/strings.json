@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Electric Kiwi integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "entity": {
+    "select": { "hop_selector": { "name": "Hour of free power" } },
+    "sensor": {
+      "hop_free_power_end": {
+        "name": "Hour of free power end"
+      },
+      "hop_free_power_start": {
+        "name": "Hour of free power start"
+      },
+      "hop_power_savings": {
+        "name": "Hour of power savings"
+      },
+      "next_billing_date": {
+        "name": "Next billing date"
+      },
+      "total_current_balance": {
+        "name": "Total current balance"
+      },
+      "total_running_balance": {
+        "name": "Total running balance"
+      }
+    }
+  }
+}

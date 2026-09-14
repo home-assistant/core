@@ -1,0 +1,10 @@
+{
+  "domain": "lacrosse",
+  "name": "LaCrosse",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/lacrosse",
+  "iot_class": "local_polling",
+  "loggers": ["pylacrosse"],
+  "quality_scale": "legacy",
+  "requirements": ["pylacrosse==0.4"]
+}

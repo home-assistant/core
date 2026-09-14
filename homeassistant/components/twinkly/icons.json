@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "light": {
+      "light": {
+        "default": "mdi:string-lights"
+      }
+    },
+    "select": {
+      "mode": {
+        "default": "mdi:cogs"
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+set_datetime:
+  target:
+    entity:
+      domain: input_datetime
+  fields:
+    date:
+      example: '"2019-04-20"'
+      selector:
+        text:
+    time:
+      example: '"05:04:20"'
+      selector:
+        time:
+    datetime:
+      example: '"2019-04-20 05:04:20"'
+      selector:
+        text:
+    timestamp:
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          mode: box
+
+reload:

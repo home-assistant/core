@@ -1,0 +1,143 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": false,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "P1 Energia Elettrica",
+  "category": "dlq",
+  "product_id": "r9kg2g1uhhyicycb",
+  "product_name": "Breaker ",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2022-12-10T17:33:13+00:00",
+  "create_time": "2022-12-10T17:33:13+00:00",
+  "update_time": "2022-12-10T17:33:13+00:00",
+  "function": {
+    "switch_prepayment": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "clear_energy": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "charge_energy": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "total_forward_energy": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "phase_a": {
+      "type": "Raw",
+      "value": {}
+    },
+    "phase_b": {
+      "type": "Raw",
+      "value": {}
+    },
+    "phase_c": {
+      "type": "Raw",
+      "value": {}
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": [
+          "short_circuit_alarm",
+          "surge_alarm",
+          "overload_alarm",
+          "leakagecurr_alarm",
+          "temp_dif_fault",
+          "fire_alarm",
+          "high_power_alarm",
+          "self_test_alarm",
+          "ov_cr",
+          "unbalance_alarm",
+          "ov_vol",
+          "undervoltage_alarm",
+          "miss_phase_alarm",
+          "outage_alarm",
+          "magnetism_alarm",
+          "credit_alarm",
+          "no_balance_alarm"
+        ]
+      }
+    },
+    "switch_prepayment": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "energy_reset": {
+      "type": "Enum",
+      "value": {
+        "range": ["empty"]
+      }
+    },
+    "balance_energy": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "charge_energy": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "breaker_number": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    }
+  },
+  "status": {
+    "total_forward_energy": 2279960,
+    "phase_a": "CGYAPCgADPIACw==",
+    "phase_b": "AAAAAAAAAAAAAA==",
+    "phase_c": "AAAAAAAAAAAAAA==",
+    "fault": 0,
+    "switch_prepayment": false,
+    "energy_reset": "",
+    "balance_energy": 0,
+    "charge_energy": 0,
+    "switch": true,
+    "breaker_number": "FSE-F723C5EA0AC8B6"
+  },
+  "set_up": true,
+  "support_local": true
+}

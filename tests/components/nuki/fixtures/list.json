@@ -1,0 +1,30 @@
+[
+  {
+    "nukiId": 1,
+    "deviceType": 0,
+    "name": "Home",
+    "lastKnownState": {
+      "mode": 2,
+      "state": 1,
+      "stateName": "unlocked",
+      "batteryCritical": false,
+      "batteryCharging": false,
+      "batteryChargeState": 85,
+      "doorsensorState": 2,
+      "doorsensorStateName": "door closed",
+      "timestamp": "2018-10-03T06:49:00+00:00"
+    }
+  },
+  {
+    "nukiId": 2,
+    "deviceType": 2,
+    "name": "Community door",
+    "lastKnownState": {
+      "mode": 3,
+      "state": 3,
+      "stateName": "rto active",
+      "batteryCritical": false,
+      "timestamp": "2018-10-03T06:49:00+00:00"
+    }
+  }
+]

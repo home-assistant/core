@@ -1,0 +1,9 @@
+{
+  "domain": "zengge",
+  "name": "Zengge",
+  "codeowners": ["@emontnemery"],
+  "documentation": "https://www.home-assistant.io/integrations/zengge",
+  "iot_class": "local_polling",
+  "loggers": ["zengge"],
+  "quality_scale": "legacy"
+}

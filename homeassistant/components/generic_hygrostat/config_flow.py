@@ -1,0 +1,93 @@
+"""Config flow for Generic hygrostat."""
+
+from collections.abc import Mapping
+from typing import Any, cast, override
+
+import probatio
+
+from homeassistant.components import fan, switch
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, PERCENTAGE, Platform
+from homeassistant.helpers import selector
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
+)
+
+from . import (
+    CONF_DRY_TOLERANCE,
+    CONF_HUMIDIFIER,
+    CONF_MIN_DUR,
+    CONF_SENSOR,
+    CONF_WET_TOLERANCE,
+    DEFAULT_TOLERANCE,
+    DOMAIN,
+)
+
+OPTIONS_SCHEMA = {
+    probatio.Required(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+        selector.DeviceClassSelectorConfig(domain=Platform.HUMIDIFIER)
+    ),
+    probatio.Required(CONF_SENSOR): selector.EntitySelector(
+        selector.EntitySelectorConfig(
+            domain=SENSOR_DOMAIN, device_class=SensorDeviceClass.HUMIDITY
+        )
+    ),
+    probatio.Required(CONF_HUMIDIFIER): selector.EntitySelector(
+        selector.EntitySelectorConfig(domain=[switch.DOMAIN, fan.DOMAIN])
+    ),
+    probatio.Required(
+        CONF_DRY_TOLERANCE, default=DEFAULT_TOLERANCE
+    ): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0,
+            max=100,
+            step=0.5,
+            unit_of_measurement=PERCENTAGE,
+            mode=selector.NumberSelectorMode.BOX,
+        )
+    ),
+    probatio.Required(
+        CONF_WET_TOLERANCE, default=DEFAULT_TOLERANCE
+    ): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0,
+            max=100,
+            step=0.5,
+            unit_of_measurement=PERCENTAGE,
+            mode=selector.NumberSelectorMode.BOX,
+        )
+    ),
+    probatio.Optional(CONF_MIN_DUR): selector.DurationSelector(
+        selector.DurationSelectorConfig(allow_negative=False)
+    ),
+}
+
+CONFIG_SCHEMA = {
+    probatio.Required(CONF_NAME): selector.TextSelector(),
+    **OPTIONS_SCHEMA,
+}
+
+
+CONFIG_FLOW = {
+    "user": SchemaFlowFormStep(probatio.Schema(CONFIG_SCHEMA)),
+}
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(probatio.Schema(OPTIONS_SCHEMA)),
+}
+
+
+class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
+    """Handle a config or options flow."""
+
+    MINOR_VERSION = 2
+
+    config_flow = CONFIG_FLOW
+    options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
+
+    @override
+    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
+        """Return config entry title."""
+        return cast(str, options["name"])

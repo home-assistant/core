@@ -1,0 +1,34 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "wrong_account": "You are authenticated with a different account than the one set up. Please authenticate with the configured account."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "oauth_discovery": {
+        "description": "Home Assistant has found an Aladdin Connect device on your network. Press **Submit** to continue setting up Aladdin Connect."
+      },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "Aladdin Connect needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "exceptions": {
+    "close_door_failed": {
+      "message": "Failed to close the garage door"
+    },
+    "open_door_failed": {
+      "message": "Failed to open the garage door"
+    }
+  }
+}

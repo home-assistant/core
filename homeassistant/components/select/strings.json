@@ -1,0 +1,104 @@
+{
+  "conditions": {
+    "is_option_selected": {
+      "description": "Tests if one or more dropdowns have a specific option selected.",
+      "fields": {
+        "behavior": {
+          "name": "Condition passes if"
+        },
+        "for": {
+          "name": "For at least"
+        },
+        "option": {
+          "description": "The options to check for.",
+          "name": "Option"
+        }
+      },
+      "name": "Dropdown option is selected"
+    }
+  },
+  "device_automation": {
+    "action_type": {
+      "select_first": "Change {entity_name} to first option",
+      "select_last": "Change {entity_name} to last option",
+      "select_next": "Change {entity_name} to next option",
+      "select_option": "Change {entity_name} option",
+      "select_previous": "Change {entity_name} to previous option"
+    },
+    "condition_type": {
+      "selected_option": "Current {entity_name} selected option"
+    },
+    "extra_fields": {
+      "cycle": "Cycle",
+      "for": "[%key:common::device_automation::extra_fields::for%]",
+      "from": "From",
+      "option": "Option",
+      "to": "[%key:common::device_automation::extra_fields::to%]"
+    },
+    "trigger_type": {
+      "current_option_changed": "{entity_name} option changed"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::select::title%]",
+      "state_attributes": {
+        "options": {
+          "name": "Options"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "not_valid_option": {
+      "message": "Option {option} is not valid for entity {entity_id}, valid options are: {options}."
+    }
+  },
+  "services": {
+    "select_first": {
+      "description": "Selects the first option of a select.",
+      "name": "Select first option"
+    },
+    "select_last": {
+      "description": "Selects the last option of a select.",
+      "name": "Select last option"
+    },
+    "select_next": {
+      "description": "Selects the next option of a select.",
+      "fields": {
+        "cycle": {
+          "description": "If the option should cycle from the last to the first.",
+          "name": "Cycle"
+        }
+      },
+      "name": "Select next option"
+    },
+    "select_option": {
+      "description": "Selects an option of a select.",
+      "fields": {
+        "option": {
+          "description": "Option to be selected.",
+          "name": "Option"
+        }
+      },
+      "name": "Select option"
+    },
+    "select_previous": {
+      "description": "Selects the previous option of a select.",
+      "fields": {
+        "cycle": {
+          "description": "If the option should cycle from the first to the last.",
+          "name": "Cycle"
+        }
+      },
+      "name": "Select previous option"
+    }
+  },
+  "title": "Select",
+  "triggers": {
+    "selection_changed": {
+      "description": "Triggers when the selected option of one or more dropdowns changes.",
+      "name": "Dropdown selection changed"
+    }
+  }
+}

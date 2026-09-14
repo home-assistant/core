@@ -1,0 +1,23 @@
+set_vane_horizontal:
+  target:
+    entity:
+      integration: melcloud
+      domain: climate
+  fields:
+    position:
+      required: true
+      example: "auto"
+      selector:
+        text:
+
+set_vane_vertical:
+  target:
+    entity:
+      integration: melcloud
+      domain: climate
+  fields:
+    position:
+      required: true
+      example: "auto"
+      selector:
+        text:

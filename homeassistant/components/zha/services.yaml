@@ -1,0 +1,305 @@
+# Describes the format for available zha services
+
+permit:
+  fields:
+    duration:
+      default: 60
+      selector:
+        number:
+          min: 0
+          max: 254
+          unit_of_measurement: seconds
+    ieee:
+      example: "00:0d:6f:00:05:7d:2d:34"
+      selector:
+        text:
+    source_ieee:
+      example: "00:0a:bf:00:01:10:23:35"
+      selector:
+        text:
+    install_code:
+      example: "1234-5678-1234-5678-AABB-CCDD-AABB-CCDD-EEFF"
+      selector:
+        text:
+    qr_code:
+      example: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051"
+      selector:
+        text:
+
+remove:
+  fields:
+    ieee:
+      required: true
+      example: "00:0d:6f:00:05:7d:2d:34"
+      selector:
+        text:
+
+reconfigure_device:
+  fields:
+    ieee:
+      required: true
+      example: "00:0d:6f:00:05:7d:2d:34"
+      selector:
+        text:
+
+set_zigbee_cluster_attribute:
+  fields:
+    ieee:
+      required: true
+      example: "00:0d:6f:00:05:7d:2d:34"
+      selector:
+        text:
+    endpoint_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          mode: box
+    cluster_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+    cluster_type:
+      default: "in"
+      selector:
+        select:
+          options:
+            - "in"
+            - "out"
+    attribute:
+      required: true
+      example: 0
+      selector:
+        number:
+          min: 1
+          max: 65535
+    value:
+      required: true
+      example: 0x0001
+      selector:
+        text:
+    manufacturer:
+      example: 0x00FC
+      selector:
+        text:
+
+issue_zigbee_cluster_command:
+  fields:
+    ieee:
+      required: true
+      example: "00:0d:6f:00:05:7d:2d:34"
+      selector:
+        text:
+    endpoint_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+    cluster_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+    cluster_type:
+      default: "in"
+      selector:
+        select:
+          options:
+            - "in"
+            - "out"
+    command:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+    command_type:
+      required: true
+      selector:
+        select:
+          options:
+            - "client"
+            - "server"
+    args:
+      example: "[arg1, arg2, argN]"
+      selector:
+        object:
+    params:
+      selector:
+        object:
+    manufacturer:
+      example: 0x00FC
+      selector:
+        text:
+
+issue_zigbee_group_command:
+  fields:
+    group:
+      required: true
+      example: 0x0222
+      selector:
+        text:
+    cluster_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+    cluster_type:
+      default: "in"
+      selector:
+        select:
+          options:
+            - "in"
+            - "out"
+    command:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+    args:
+      example: "[arg1, arg2, argN]"
+      selector:
+        object:
+    manufacturer:
+      example: 0x00FC
+      selector:
+        text:
+
+warning_device_squawk:
+  fields:
+    ieee:
+      required: true
+      example: "00:0d:6f:00:05:7d:2d:34"
+      selector:
+        text:
+    mode:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 1
+          mode: box
+    strobe:
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 1
+          mode: box
+    level:
+      default: 2
+      selector:
+        number:
+          min: 0
+          max: 3
+          mode: box
+
+warning_device_warn:
+  fields:
+    ieee:
+      required: true
+      example: "00:0d:6f:00:05:7d:2d:34"
+      selector:
+        text:
+    mode:
+      default: 3
+      selector:
+        number:
+          min: 0
+          max: 6
+          mode: box
+    strobe:
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 1
+          mode: box
+    level:
+      default: 2
+      selector:
+        number:
+          min: 0
+          max: 3
+          mode: box
+    duration:
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 65535
+          unit_of_measurement: seconds
+    duty_cycle:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 10
+    intensity:
+      default: 2
+      selector:
+        number:
+          min: 0
+          max: 3
+          mode: box
+
+clear_lock_user_code:
+  target:
+    entity:
+      domain: lock
+      integration: zha
+  fields:
+    code_slot:
+      required: true
+      example: 1
+      selector:
+        text:
+
+enable_lock_user_code:
+  target:
+    entity:
+      domain: lock
+      integration: zha
+  fields:
+    code_slot:
+      required: true
+      example: 1
+      selector:
+        text:
+
+disable_lock_user_code:
+  target:
+    entity:
+      domain: lock
+      integration: zha
+  fields:
+    code_slot:
+      required: true
+      example: 1
+      selector:
+        text:
+
+set_lock_user_code:
+  target:
+    entity:
+      domain: lock
+      integration: zha
+  fields:
+    code_slot:
+      required: true
+      example: 1
+      selector:
+        text:
+    user_code:
+      required: true
+      example: 1234
+      selector:
+        text:

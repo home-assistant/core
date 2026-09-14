@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "sensor": {
+      "derivative": {
+        "default": "mdi:chart-line"
+      }
+    }
+  },
+  "services": {
+    "reload": {
+      "service": "mdi:reload"
+    }
+  }
+}

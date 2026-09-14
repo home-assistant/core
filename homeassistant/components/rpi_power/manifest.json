@@ -1,0 +1,11 @@
+{
+  "domain": "rpi_power",
+  "name": "Raspberry Pi Power Supply Checker",
+  "codeowners": ["@shenxn", "@swetoast"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rpi_power",
+  "iot_class": "local_polling",
+  "loggers": ["rpi_bad_power"],
+  "requirements": ["rpi-bad-power==0.1.0"],
+  "single_config_entry": true
+}

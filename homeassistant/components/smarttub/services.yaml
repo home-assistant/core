@@ -1,0 +1,69 @@
+set_primary_filtration:
+  target:
+    entity:
+      integration: smarttub
+      domain: sensor
+  fields:
+    duration:
+      default: 8
+      selector:
+        number:
+          min: 1
+          max: 24
+          unit_of_measurement: "hours"
+          mode: slider
+      example: 8
+    start_hour:
+      default: 0
+      example: 2
+      selector:
+        number:
+          min: 0
+          max: 23
+          unit_of_measurement: "hour"
+
+set_secondary_filtration:
+  target:
+    entity:
+      integration: smarttub
+      domain: sensor
+  fields:
+    mode:
+      selector:
+        select:
+          options:
+            - "frequent"
+            - "infrequent"
+            - "away"
+      required: true
+      example: "frequent"
+
+snooze_reminder:
+  target:
+    entity:
+      integration: smarttub
+      domain: binary_sensor
+  fields:
+    days:
+      required: true
+      example: 7
+      selector:
+        number:
+          min: 10
+          max: 120
+          unit_of_measurement: days
+
+reset_reminder:
+  target:
+    entity:
+      integration: smarttub
+      domain: binary_sensor
+  fields:
+    days:
+      required: true
+      example: 180
+      selector:
+        number:
+          min: 30
+          max: 365
+          unit_of_measurement: days

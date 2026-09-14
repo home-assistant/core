@@ -1,0 +1,81 @@
+[
+  {
+    "l2ident": {
+      "id": "8C:97:EA:00:00:01",
+      "type": "mac_address"
+    },
+    "active": true,
+    "persistent": false,
+    "names": [
+      {
+        "name": "d633d0c8-958c-42cc-e807-d881b476924b",
+        "source": "mdns"
+      },
+      {
+        "name": "Freebox Player POP 2",
+        "source": "mdns_srv"
+      }
+    ],
+    "vendor_name": "Freebox SAS",
+    "host_type": "smartphone",
+    "interface": "pub",
+    "id": "ether-8c:97:ea:00:00:01",
+    "last_time_reachable": 1614107662,
+    "primary_name_manual": false,
+    "l3connectivities": [
+      {
+        "addr": "192.168.27.181",
+        "active": true,
+        "reachable": true,
+        "last_activity": 1614107614,
+        "af": "ipv4",
+        "last_time_reachable": 1614104242
+      },
+      {
+        "addr": "fe80::dcef:dbba:6604:31d1",
+        "active": true,
+        "reachable": true,
+        "last_activity": 1614107645,
+        "af": "ipv6",
+        "last_time_reachable": 1614107645
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:8102:4704:7ce0:2ace",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1611574428,
+        "af": "ipv6",
+        "last_time_reachable": 1611574428
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:c8e5:c524:c96d:5f5e",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1612475101,
+        "af": "ipv6",
+        "last_time_reachable": 1612475101
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:583a:49df:1df0:c2df",
+        "active": true,
+        "reachable": true,
+        "last_activity": 1614107652,
+        "af": "ipv6",
+        "last_time_reachable": 1614107652
+      },
+      {
+        "addr": "2a01:e34:eda1:eb40:147e:3569:86ab:6aaa",
+        "active": false,
+        "reachable": false,
+        "last_activity": 1612486752,
+        "af": "ipv6",
+        "last_time_reachable": 1612486752
+      }
+    ],
+    "default_name": "Freebox Player POP",
+    "model": "fbx8am",
+    "reachable": true,
+    "last_activity": 1614107652,
+    "primary_name": "Freebox Player POP"
+  }
+]

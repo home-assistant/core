@@ -1,0 +1,184 @@
+{
+  "items": [
+    {
+      "deviceId": "83d660e4-b0c8-4881-a674-d9f1730366c1",
+      "name": "Tag(UWB)",
+      "label": "SmartTag+ black",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "IM-SmartTag-BLE-UWB",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "redacted_locid",
+      "ownerId": "redacted",
+      "roomId": "redacted_roomid",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "alarm",
+              "version": 1
+            },
+            {
+              "id": "tag.tagButton",
+              "version": 1
+            },
+            {
+              "id": "audioVolume",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            },
+            {
+              "id": "tag.factoryReset",
+              "version": 1
+            },
+            {
+              "id": "tag.e2eEncryption",
+              "version": 1
+            },
+            {
+              "id": "tag.tagStatus",
+              "version": 1
+            },
+            {
+              "id": "geolocation",
+              "version": 1
+            },
+            {
+              "id": "geofence",
+              "version": 1
+            },
+            {
+              "id": "tag.uwbActivation",
+              "version": 1
+            },
+            {
+              "id": "tag.updatedInfo",
+              "version": 1
+            },
+            {
+              "id": "tag.searchingStatus",
+              "version": 1
+            },
+            {
+              "id": "firmwareUpdate",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "BluetoothTracker",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2023-05-25T09:42:59.720Z",
+      "profile": {
+        "id": "e443f3e8-a926-3deb-917c-e5c6de3af70f"
+      },
+      "bleD2D": {
+        "encryptionKey": "ZTbd_04NISrhQODE7_i8JdcG2ZWwqmUfY60taptK7J0=",
+        "cipher": "AES_128-CBC-PKCS7Padding",
+        "identifier": "415D4Y16F97F",
+        "configurationVersion": "2.0",
+        "configurationUrl": "https://apis.samsungiotcloud.com/v1/miniature/profile/b8e65e7e-6152-4704-b9f5-f16352034237",
+        "bleDeviceType": "BLE",
+        "metadata": {
+          "regionCode": 11,
+          "privacyIdPoolSize": 2000,
+          "privacyIdSeed": "AAAAAAAX8IQ=",
+          "privacyIdInitialVector": "ZfqZKLRGSeCwgNhdqHFRpw==",
+          "numAllowableConnections": 2,
+          "firmware": {
+            "version": "1.03.07",
+            "specVersion": "0.5.6",
+            "updateTime": 1685007914000,
+            "latestFirmware": {
+              "id": 581,
+              "version": "1.03.07",
+              "data": {
+                "checksum": "50E7",
+                "size": "586004",
+                "supportedVersion": "0.5.6"
+              }
+            }
+          },
+          "currentServerTime": 1739095473,
+          "searchingStatus": "stop",
+          "lastKnownConnection": {
+            "updated": 1713422813,
+            "connectedUser": {
+              "id": "sk3oyvsbkm",
+              "name": ""
+            },
+            "connectedDevice": {
+              "id": "4f3faa4c-976c-3bd8-b209-607f3a5a9814",
+              "name": ""
+            },
+            "d2dStatus": "bleScanned",
+            "nearby": true,
+            "onDemand": false
+          },
+          "e2eEncryption": {
+            "enabled": false
+          },
+          "timer": 1713422675,
+          "category": {
+            "id": 0
+          },
+          "remoteRing": {
+            "enabled": false
+          },
+          "petWalking": {
+            "enabled": false
+          },
+          "onboardedBy": {
+            "saGuid": "sk3oyvsbkm"
+          },
+          "shareable": {
+            "enabled": false
+          },
+          "agingCounter": {
+            "status": "VALID",
+            "updated": 1713422675
+          },
+          "vendor": {
+            "mnId": "0AFD",
+            "setupId": "432",
+            "modelName": "EI-T7300"
+          },
+          "priorityConnection": {
+            "lba": false,
+            "cameraShutter": false
+          },
+          "createTime": 1685007780,
+          "updateTime": 1713422675,
+          "fmmSearch": false,
+          "ooTime": {
+            "currentOoTime": 8,
+            "defaultOoTime": 8
+          },
+          "pidPoolSize": {
+            "desiredPidPoolSize": 2000,
+            "currentPidPoolSize": 2000
+          },
+          "activeMode": {
+            "mode": 0
+          },
+          "itemConfig": {
+            "searchingStatus": "stop"
+          }
+        }
+      },
+      "type": "BLE_D2D",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

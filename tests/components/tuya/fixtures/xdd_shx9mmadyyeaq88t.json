@@ -1,0 +1,139 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Plafond bureau ",
+  "category": "xdd",
+  "product_id": "shx9mmadyyeaq88t",
+  "product_name": "Five way ceiling lamp",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2023-11-10T15:45:03+00:00",
+  "create_time": "2023-11-10T15:45:03+00:00",
+  "update_time": "2023-11-10T15:45:03+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "colour_data": {
+      "type": "Json",
+      "value": {}
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "music_data": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "control_data": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "do_not_disturb": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "colour_data": {
+      "type": "Json",
+      "value": {}
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "do_not_disturb": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_led": true,
+    "work_mode": "white",
+    "bright_value": 946,
+    "temp_value": 689,
+    "colour_data": {
+      "h": 308,
+      "s": 381,
+      "v": 1000
+    },
+    "countdown": 0,
+    "do_not_disturb": false
+  },
+  "set_up": true,
+  "support_local": true
+}

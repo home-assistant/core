@@ -1,0 +1,90 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'forecast': list([
+      dict({
+        'detailedForecast': 'A detailed forecast.',
+        'dewpoint': 4,
+        'iconTime': 'night',
+        'iconWeather': list([
+          list([
+            'lightning-rainy',
+            40,
+          ]),
+          list([
+            'lightning-rainy',
+            90,
+          ]),
+        ]),
+        'isDaytime': False,
+        'name': 'Tonight',
+        'number': 1,
+        'probabilityOfPrecipitation': 89,
+        'relativeHumidity': 75,
+        'shortForecast': 'A short forecast.',
+        'startTime': '2019-08-12T20:00:00-04:00',
+        'temperature': 10,
+        'timestamp': '2019-08-12T23:53:00+00:00',
+        'windBearing': 180,
+        'windSpeedAvg': 10,
+      }),
+    ]),
+    'forecast_hourly': list([
+      dict({
+        'detailedForecast': 'A detailed forecast.',
+        'dewpoint': 4,
+        'iconTime': 'night',
+        'iconWeather': list([
+          list([
+            'lightning-rainy',
+            40,
+          ]),
+          list([
+            'lightning-rainy',
+            90,
+          ]),
+        ]),
+        'isDaytime': False,
+        'name': 'Tonight',
+        'number': 1,
+        'probabilityOfPrecipitation': 89,
+        'relativeHumidity': 75,
+        'shortForecast': 'A short forecast.',
+        'startTime': '2019-08-12T20:00:00-04:00',
+        'temperature': 10,
+        'timestamp': '2019-08-12T23:53:00+00:00',
+        'windBearing': 180,
+        'windSpeedAvg': 10,
+      }),
+    ]),
+    'info': dict({
+      'api_key': '**REDACTED**',
+      'latitude': '**REDACTED**',
+      'longitude': '**REDACTED**',
+      'station': '**REDACTED**',
+    }),
+    'observation': dict({
+      'barometricPressure': 100000,
+      'dewpoint': 5,
+      'heatIndex': 15,
+      'iconTime': 'day',
+      'iconWeather': list([
+        list([
+          'Fair/clear',
+          None,
+        ]),
+      ]),
+      'relativeHumidity': 10,
+      'seaLevelPressure': 100000,
+      'station': '**REDACTED**',
+      'temperature': 10,
+      'textDescription': 'A long description',
+      'timestamp': '2019-08-12T23:53:00+00:00',
+      'visibility': 10000,
+      'windChill': 5,
+      'windDirection': 180,
+      'windGust': 20,
+      'windSpeed': 10,
+    }),
+  })
+# ---

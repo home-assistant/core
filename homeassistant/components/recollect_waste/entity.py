@@ -1,0 +1,40 @@
+"""Define a base ReCollect Waste entity."""
+
+from typing import override
+
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN
+from .coordinator import RecollectWasteConfigEntry, ReCollectWasteDataUpdateCoordinator
+
+
+class ReCollectWasteEntity(CoordinatorEntity[ReCollectWasteDataUpdateCoordinator]):
+    """Define a base ReCollect Waste entity."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: ReCollectWasteDataUpdateCoordinator,
+        entry: RecollectWasteConfigEntry,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        self._identifier = f"{entry.data[CONF_PLACE_ID]}_{entry.data[CONF_SERVICE_ID]}"
+
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._identifier)},
+            manufacturer="ReCollect Waste",
+            name="ReCollect Waste",
+        )
+        self._attr_extra_state_attributes = {}
+        self._entry = entry
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()

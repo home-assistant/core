@@ -1,0 +1,15 @@
+start_record:
+  fields:
+    guid:
+      required: true
+      example: "245EBE933C0A597EBE865C0A245E0002"
+      selector:
+        text:
+
+stop_record:
+  fields:
+    guid:
+      required: true
+      example: "245EBE933C0A597EBE865C0A245E0002"
+      selector:
+        text:

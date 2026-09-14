@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "button": {
+      "phone_modem_reject": {
+        "default": "mdi:phone-hangup"
+      }
+    },
+    "sensor": {
+      "incoming_call": {
+        "default": "mdi:phone-classic"
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: update
+  fields:
+    behavior:
+      required: true
+      default: each
+      selector:
+        automation_behavior:
+          mode: trigger
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+became_available: *trigger_common

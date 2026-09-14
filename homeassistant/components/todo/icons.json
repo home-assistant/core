@@ -1,0 +1,43 @@
+{
+  "conditions": {
+    "all_completed": {
+      "condition": "mdi:clipboard-check"
+    },
+    "incomplete": {
+      "condition": "mdi:clipboard-alert"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "default": "mdi:clipboard-list"
+    }
+  },
+  "services": {
+    "add_item": {
+      "service": "mdi:clipboard-plus"
+    },
+    "get_items": {
+      "service": "mdi:clipboard-arrow-down"
+    },
+    "remove_completed_items": {
+      "service": "mdi:clipboard-remove"
+    },
+    "remove_item": {
+      "service": "mdi:clipboard-minus"
+    },
+    "update_item": {
+      "service": "mdi:clipboard-edit"
+    }
+  },
+  "triggers": {
+    "item_added": {
+      "trigger": "mdi:clipboard-plus"
+    },
+    "item_completed": {
+      "trigger": "mdi:clipboard-check"
+    },
+    "item_removed": {
+      "trigger": "mdi:clipboard-minus"
+    }
+  }
+}

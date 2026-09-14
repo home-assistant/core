@@ -1,0 +1,86 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "Please re-enter the API key for {latitude}, {longitude}.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "elevation": "[%key:common::config_flow::data::elevation%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        },
+        "title": "Fill in your information"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "protection_window": {
+        "name": "Protection window"
+      }
+    },
+    "sensor": {
+      "current_ozone_level": {
+        "name": "Current ozone level"
+      },
+      "current_uv_index": {
+        "name": "Current UV index"
+      },
+      "current_uv_level": {
+        "name": "Current UV level",
+        "state": {
+          "extreme": "Extreme",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "moderate": "Moderate",
+          "very_high": "[%key:common::state::very_high%]"
+        }
+      },
+      "max_uv_index": {
+        "name": "Max UV index"
+      },
+      "skin_type_1_safe_exposure_time": {
+        "name": "Skin type 1 safe exposure time"
+      },
+      "skin_type_2_safe_exposure_time": {
+        "name": "Skin type 2 safe exposure time"
+      },
+      "skin_type_3_safe_exposure_time": {
+        "name": "Skin type 3 safe exposure time"
+      },
+      "skin_type_4_safe_exposure_time": {
+        "name": "Skin type 4 safe exposure time"
+      },
+      "skin_type_5_safe_exposure_time": {
+        "name": "Skin type 5 safe exposure time"
+      },
+      "skin_type_6_safe_exposure_time": {
+        "name": "Skin type 6 safe exposure time"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "from_window": "Starting UV index for the protection window",
+          "to_window": "Ending UV index for the protection window"
+        },
+        "title": "Configure OpenUV"
+      }
+    }
+  }
+}

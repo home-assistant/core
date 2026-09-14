@@ -1,0 +1,12 @@
+{
+  "domain": "netio",
+  "name": "Netio",
+  "codeowners": ["@agners"],
+  "config_flow": true,
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/netio",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "legacy",
+  "requirements": ["Netio==2.0.1", "pynetio==0.1.9.1"]
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "google_maps",
+  "name": "Google Maps",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/google_maps",
+  "iot_class": "cloud_polling",
+  "loggers": ["locationsharinglib"],
+  "quality_scale": "legacy",
+  "requirements": ["locationsharinglib==5.0.1"]
+}

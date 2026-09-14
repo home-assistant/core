@@ -1,0 +1,216 @@
+{
+  "config": {
+    "ble": {
+      "enable": false,
+      "rpc": {
+        "enable": true
+      }
+    },
+    "bthome": {},
+    "cloud": {
+      "enable": false,
+      "server": "iot.shelly.cloud:6012/jrpc"
+    },
+    "em:0": {
+      "blink_mode_selector": "active_energy",
+      "ct_type": "120A",
+      "id": 0,
+      "monitor_phase_sequence": false,
+      "name": null,
+      "phase_selector": "all",
+      "reverse": {}
+    },
+    "emdata:0": {},
+    "eth": {
+      "enable": false,
+      "gw": null,
+      "ip": null,
+      "ipv4mode": "dhcp",
+      "nameserver": null,
+      "netmask": null,
+      "server_mode": false
+    },
+    "modbus": {
+      "enable": true
+    },
+    "mqtt": {
+      "client_id": "shellypro3em-aabbccddeeff",
+      "enable": false,
+      "enable_control": true,
+      "enable_rpc": true,
+      "rpc_ntf": true,
+      "server": "mqtt.test.server",
+      "ssl_ca": null,
+      "status_ntf": true,
+      "topic_prefix": "shellypro3em-aabbccddeeff",
+      "use_client_cert": false,
+      "user": "iot"
+    },
+    "sys": {
+      "cfg_rev": 50,
+      "debug": {
+        "file_level": null,
+        "level": 2,
+        "mqtt": {
+          "enable": false
+        },
+        "udp": {
+          "addr": null
+        },
+        "websocket": {
+          "enable": false
+        }
+      },
+      "device": {
+        "addon_type": null,
+        "discoverable": true,
+        "eco_mode": false,
+        "fw_id": "20250508-110717/1.6.1-g8dbd358",
+        "mac": "AABBCCDDEEFF",
+        "name": "Test Name",
+        "profile": "triphase",
+        "sys_btn_toggle": true
+      },
+      "location": {
+        "lat": 22.55775,
+        "lon": 54.94637,
+        "tz": "Europe/Warsaw"
+      },
+      "rpc_udp": {
+        "dst_addr": null,
+        "listen_port": null
+      },
+      "sntp": {
+        "server": "sntp.test.server"
+      },
+      "ui_data": {}
+    },
+    "temperature:0": {
+      "id": 0,
+      "name": null,
+      "offset_C": 0.0,
+      "report_thr_C": 5.0
+    },
+    "wifi": {
+      "sta": {
+        "ssid": "Wifi-Network-Name",
+        "is_open": false,
+        "enable": true,
+        "ipv4mode": "dhcp",
+        "ip": null,
+        "netmask": null,
+        "gw": null,
+        "nameserver": null
+      }
+    },
+    "ws": {
+      "enable": false,
+      "server": null,
+      "ssl_ca": "ca.pem"
+    }
+  },
+  "shelly": {
+    "app": "Pro3EM",
+    "auth_domain": "shellypro3em-aabbccddeeff",
+    "auth_en": true,
+    "fw_id": "20250508-110717/1.6.1-g8dbd358",
+    "gen": 2,
+    "id": "shellypro3em-aabbccddeeff",
+    "mac": "AABBCCDDEEFF",
+    "model": "SPEM-003CEBEU",
+    "name": "Test Name",
+    "profile": "triphase",
+    "slot": 0,
+    "ver": "1.6.1"
+  },
+  "status": {
+    "ble": {},
+    "bthome": {
+      "errors": ["bluetooth_disabled"]
+    },
+    "cloud": {
+      "connected": false
+    },
+    "em:0": {
+      "a_act_power": 2166.2,
+      "a_aprt_power": 2175.9,
+      "a_current": 9.592,
+      "a_freq": 49.9,
+      "a_pf": 0.99,
+      "a_voltage": 227.0,
+      "b_act_power": 3.6,
+      "b_aprt_power": 10.1,
+      "b_current": 0.044,
+      "b_freq": 49.9,
+      "b_pf": 0.36,
+      "b_voltage": 230.0,
+      "c_act_power": 244.0,
+      "c_aprt_power": 339.7,
+      "c_current": 1.479,
+      "c_freq": 49.9,
+      "c_pf": 0.72,
+      "c_voltage": 230.2,
+      "id": 0,
+      "n_current": 3.124,
+      "total_act_power": 2413.825,
+      "total_aprt_power": 2525.779,
+      "total_current": 11.116,
+      "user_calibrated_phase": []
+    },
+    "emdata:0": {
+      "a_total_act_energy": 3105576.42,
+      "a_total_act_ret_energy": 0.0,
+      "b_total_act_energy": 195765.72,
+      "b_total_act_ret_energy": 0.0,
+      "c_total_act_energy": 2114072.05,
+      "c_total_act_ret_energy": 0.0,
+      "id": 0,
+      "total_act": 5415414.19,
+      "total_act_ret": 0.0
+    },
+    "eth": {
+      "ip": null,
+      "ip6": null
+    },
+    "modbus": {},
+    "mqtt": {
+      "connected": false
+    },
+    "sys": {
+      "available_updates": {},
+      "btrelay_rev": 0,
+      "cfg_rev": 50,
+      "fs_free": 180224,
+      "fs_size": 524288,
+      "kvs_rev": 1,
+      "last_sync_ts": 1747561099,
+      "mac": "AABBCCDDEEFF",
+      "ram_free": 113080,
+      "ram_min_free": 97524,
+      "ram_size": 247524,
+      "reset_reason": 3,
+      "restart_required": false,
+      "schedule_rev": 0,
+      "time": "11:38",
+      "unixtime": 1747561101,
+      "uptime": 501683,
+      "utc_offset": 7200,
+      "webhook_rev": 0
+    },
+    "temperature:0": {
+      "id": 0,
+      "tC": 46.3,
+      "tF": 115.4
+    },
+    "wifi": {
+      "rssi": -57,
+      "ssid": "Wifi-Network-Name",
+      "sta_ip": "192.168.2.151",
+      "sta_ip6": [],
+      "status": "got ip"
+    },
+    "ws": {
+      "connected": false
+    }
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_empty": {
+        "default": "mdi:battery-clock"
+      },
+      "cpu_pressure_some_avg10": {
+        "default": "mdi:gauge"
+      },
+      "cpu_pressure_some_avg300": {
+        "default": "mdi:gauge"
+      },
+      "cpu_pressure_some_avg60": {
+        "default": "mdi:gauge"
+      },
+      "cpu_pressure_some_total": {
+        "default": "mdi:timer-outline"
+      },
+      "disk_free": {
+        "default": "mdi:harddisk"
+      },
+      "disk_use": {
+        "default": "mdi:harddisk"
+      },
+      "disk_use_percent": {
+        "default": "mdi:harddisk"
+      },
+      "fan_speed": {
+        "default": "mdi:fan"
+      },
+      "io_pressure_full_avg10": {
+        "default": "mdi:gauge"
+      },
+      "io_pressure_full_avg300": {
+        "default": "mdi:gauge"
+      },
+      "io_pressure_full_avg60": {
+        "default": "mdi:gauge"
+      },
+      "io_pressure_full_total": {
+        "default": "mdi:timer-outline"
+      },
+      "io_pressure_some_avg10": {
+        "default": "mdi:gauge"
+      },
+      "io_pressure_some_avg300": {
+        "default": "mdi:gauge"
+      },
+      "io_pressure_some_avg60": {
+        "default": "mdi:gauge"
+      },
+      "io_pressure_some_total": {
+        "default": "mdi:timer-outline"
+      },
+      "ipv4_address": {
+        "default": "mdi:ip-network"
+      },
+      "ipv6_address": {
+        "default": "mdi:ip-network"
+      },
+      "memory_free": {
+        "default": "mdi:memory"
+      },
+      "memory_pressure_full_avg10": {
+        "default": "mdi:gauge"
+      },
+      "memory_pressure_full_avg300": {
+        "default": "mdi:gauge"
+      },
+      "memory_pressure_full_avg60": {
+        "default": "mdi:gauge"
+      },
+      "memory_pressure_full_total": {
+        "default": "mdi:timer-outline"
+      },
+      "memory_pressure_some_avg10": {
+        "default": "mdi:gauge"
+      },
+      "memory_pressure_some_avg300": {
+        "default": "mdi:gauge"
+      },
+      "memory_pressure_some_avg60": {
+        "default": "mdi:gauge"
+      },
+      "memory_pressure_some_total": {
+        "default": "mdi:timer-outline"
+      },
+      "memory_use": {
+        "default": "mdi:memory"
+      },
+      "memory_use_percent": {
+        "default": "mdi:memory"
+      },
+      "network_in": {
+        "default": "mdi:server-network"
+      },
+      "network_out": {
+        "default": "mdi:server-network"
+      },
+      "packets_in": {
+        "default": "mdi:server-network"
+      },
+      "packets_out": {
+        "default": "mdi:server-network"
+      },
+      "swap_free": {
+        "default": "mdi:harddisk"
+      },
+      "swap_use": {
+        "default": "mdi:harddisk"
+      },
+      "swap_use_percent": {
+        "default": "mdi:harddisk"
+      }
+    }
+  }
+}

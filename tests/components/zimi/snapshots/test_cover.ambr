@@ -1,0 +1,18 @@
+# serializer version: 1
+# name: test_cover_entity
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cover Controller Test Entity Name',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_entity_room_cover_controller_test_entity_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---

@@ -1,0 +1,17 @@
+# Describes the format for available services for nissan_leaf
+
+start_charge:
+  fields:
+    vin:
+      required: true
+      example: WBANXXXXXX1234567
+      selector:
+        text:
+
+update:
+  fields:
+    vin:
+      required: true
+      example: WBANXXXXXX1234567
+      selector:
+        text:

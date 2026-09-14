@@ -1,0 +1,10 @@
+{
+  "domain": "bbox",
+  "name": "Bbox",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/bbox",
+  "iot_class": "local_polling",
+  "loggers": ["pybbox"],
+  "quality_scale": "legacy",
+  "requirements": ["pybbox==0.0.5-alpha"]
+}

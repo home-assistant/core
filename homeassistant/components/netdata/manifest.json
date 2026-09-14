@@ -1,0 +1,10 @@
+{
+  "domain": "netdata",
+  "name": "Netdata",
+  "codeowners": ["@fabaff"],
+  "documentation": "https://www.home-assistant.io/integrations/netdata",
+  "iot_class": "local_polling",
+  "loggers": ["netdata"],
+  "quality_scale": "legacy",
+  "requirements": ["netdata==1.3.0"]
+}

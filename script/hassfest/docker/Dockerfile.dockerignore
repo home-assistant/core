@@ -1,0 +1,5 @@
+# No need to include the Dockerfile
+script/hassfest/docker/Dockerfile*
+
+# Temporary files
+**/__pycache__

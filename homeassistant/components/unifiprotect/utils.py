@@ -1,0 +1,219 @@
+"""UniFi Protect Integration utils."""
+
+from collections.abc import Callable, Coroutine, Generator, Iterable
+import contextlib
+from functools import wraps
+from pathlib import Path
+import socket
+from typing import TYPE_CHECKING, Any, Concatenate, cast
+
+from aiohttp import CookieJar
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
+    Bootstrap,
+    ChannelQuality,
+    LightModeEnableType,
+    LightModeType,
+    ProtectAdoptableDeviceModel,
+)
+from uiprotect.data.public_devices import PublicDeviceModel, PublicLight
+from uiprotect.exceptions import ClientError, NotAuthorized
+
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.storage import STORAGE_DIR
+
+from .const import (
+    CONF_ALL_UPDATES,
+    CONF_CONNECTION_MODE,
+    CONF_OVERRIDE_CHOST,
+    CONNECTION_MODE_API_KEY_ONLY,
+    DEVICES_FOR_SUBSCRIBE,
+    DEVICES_WS_SUBSCRIBED_MODELS,
+    DOMAIN,
+    ModelType,
+)
+
+if TYPE_CHECKING:
+    from .data import UFPConfigEntry
+
+
+@callback
+def _async_unifi_mac_from_hass(mac: str) -> str:
+    # MAC addresses in UFP are always caps
+    return mac.replace(":", "").upper()
+
+
+@callback
+def _async_short_mac(mac: str) -> str:
+    """Get the short mac address from the full mac."""
+    return _async_unifi_mac_from_hass(mac)[-6:]
+
+
+async def _async_resolve(hass: HomeAssistant, host: str) -> str | int | None:
+    """Resolve a hostname to an ip."""
+    with contextlib.suppress(OSError):
+        return next(
+            iter(
+                raw[0]
+                for family, _, _, _, raw in await hass.loop.getaddrinfo(
+                    host, None, type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP
+                )
+                if family == socket.AF_INET
+            ),
+            None,
+        )
+    return None
+
+
+@callback
+def async_get_devices_by_type(
+    bootstrap: Bootstrap, device_type: ModelType
+) -> dict[str, ProtectAdoptableDeviceModel]:
+    """Get devices by type."""
+    devices: dict[str, ProtectAdoptableDeviceModel]
+    devices = getattr(bootstrap, device_type.devices_key)
+    return devices
+
+
+@callback
+def async_get_devices(
+    bootstrap: Bootstrap, model_type: Iterable[ModelType]
+) -> Generator[ProtectAdoptableDeviceModel]:
+    """Return all device by type."""
+    return (
+        device
+        for device_type in model_type
+        for device in async_get_devices_by_type(bootstrap, device_type).values()
+    )
+
+
+@callback
+def async_get_light_motion_current_public(obj: PublicDeviceModel) -> str | None:
+    """Get light motion mode for a Flood Light from the public API."""
+    settings = cast(PublicLight, obj).light_mode_settings
+    if (mode := settings.mode) is None:
+        return None
+    if mode is LightModeType.MOTION and settings.enable_at is LightModeEnableType.DARK:
+        return f"{LightModeType.MOTION.value}_dark"
+    return mode.value
+
+
+@callback
+def async_entry_is_public_only(entry: UFPConfigEntry) -> bool:
+    """Return whether an entry uses the public-API-only (API-key) mode.
+
+    The mode is an explicit field: local-user credentials may still be stored
+    (kept on a mode switch so switching back is lossless), so their presence
+    says nothing about the mode.
+    """
+    return entry.data.get(CONF_CONNECTION_MODE) == CONNECTION_MODE_API_KEY_ONLY
+
+
+@callback
+def async_create_api_client(
+    hass: HomeAssistant, entry: UFPConfigEntry
+) -> ProtectApiClient:
+    """Create ProtectApiClient from config entry."""
+
+    if async_entry_is_public_only(entry):
+        return ProtectApiClient.public_only(
+            entry.data[CONF_HOST],
+            entry.data[CONF_PORT],
+            api_key=entry.data[CONF_API_KEY],
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
+            public_api_session=async_create_clientsession(hass),
+            devices_ws_subscribed_models=DEVICES_WS_SUBSCRIBED_MODELS,
+            ignore_unadopted=False,
+            override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
+        )
+
+    return _async_create_full_client(hass, entry)
+
+
+@callback
+def async_create_session_client(
+    hass: HomeAssistant, entry: UFPConfigEntry
+) -> ProtectApiClient | None:
+    """Create a client that can clear the entry's stored private session.
+
+    A public-only client carries no username, so its ``clear_session`` returns
+    early. An entry switched to API-key-only keeps its local-user credentials,
+    so a session stored before the switch has to be cleared through a
+    full-access client. ``None`` when no credentials are stored.
+    """
+    if not entry.data.get(CONF_USERNAME) or not entry.data.get(CONF_PASSWORD):
+        return None
+    return _async_create_full_client(hass, entry)
+
+
+@callback
+def _async_create_full_client(
+    hass: HomeAssistant, entry: UFPConfigEntry
+) -> ProtectApiClient:
+    """Create a full-access (local user) ProtectApiClient from a config entry."""
+    public_api_session = async_create_clientsession(hass)
+    session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    return ProtectApiClient(
+        host=entry.data[CONF_HOST],
+        port=entry.data[CONF_PORT],
+        username=entry.data[CONF_USERNAME],
+        password=entry.data[CONF_PASSWORD],
+        api_key=entry.data.get("api_key"),
+        verify_ssl=entry.data[CONF_VERIFY_SSL],
+        session=session,
+        public_api_session=public_api_session,
+        subscribed_models=DEVICES_FOR_SUBSCRIBE,
+        devices_ws_subscribed_models=DEVICES_WS_SUBSCRIBED_MODELS,
+        override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
+        ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
+        ignore_unadopted=False,
+        cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
+        config_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
+    )
+
+
+@callback
+def get_camera_base_name(quality: ChannelQuality) -> str:
+    """Get base name for a camera's RTSPS quality channel."""
+
+    if quality is ChannelQuality.PACKAGE:
+        return "Package Camera"
+    return f"{quality.value.title()} resolution channel"
+
+
+def async_ufp_instance_command[_EntityT, **_P](
+    func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate UniFi Protect entity instance commands to handle exceptions.
+
+    A decorator that wraps the passed in function, catches Protect errors,
+    and re-raises them as HomeAssistantError with translations.
+    """
+
+    @wraps(func)
+    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except NotAuthorized as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_authorized",
+            ) from err
+        except ClientError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+    return handler

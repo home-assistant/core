@@ -1,0 +1,11 @@
+{
+  "domain": "freedompro",
+  "name": "Freedompro",
+  "codeowners": ["@stefano055415"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/freedompro",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyfreedompro"],
+  "requirements": ["pyfreedompro==1.1.0"]
+}

@@ -1,0 +1,1021 @@
+"""Validate requirements."""
+
+from collections import deque
+from collections.abc import Collection
+from contextlib import suppress
+from functools import cache
+from importlib.metadata import PackageMetadata, files, metadata
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+from typing import Any, TypedDict
+
+from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.specifiers import SpecifierSet
+from packaging.utils import canonicalize_name
+from packaging.version import InvalidVersion, Version
+from tqdm import tqdm
+
+import homeassistant.util.package as pkg_util
+from script.gen_requirements_all import (
+    EXCLUDED_REQUIREMENTS_ALL,
+    normalize_package_name,
+)
+
+from .model import Config, Integration
+
+PACKAGE_CHECK_VERSION_RANGE = {
+    "aiohttp": "SemVer",
+    "attrs": "CalVer",
+    "awesomeversion": "CalVer",
+    "bleak": "SemVer",
+    "grpcio": "SemVer",
+    "httpx": "SemVer",
+    "lxml": "SemVer",
+    "mashumaro": "SemVer",
+    "numpy": "SemVer",
+    "pandas": "SemVer",
+    "pillow": "SemVer",
+    "pydantic": "SemVer",
+    "pyjwt": "SemVer",
+    "pymodbus": "Custom",
+    "pytz": "CalVer",
+    "requests": "SemVer",
+    "serialx": "SemVer",
+    "typing-extensions": "SemVer",
+    "urllib3": "SemVer",
+    "yarl": "SemVer",
+    "zeroconf": "SemVer",
+}
+PACKAGE_CHECK_PREPARE_UPDATE: dict[str, int] = {
+    # In the form dict("dependencyX": n+1)
+    # - dependencyX should be the name of the referenced dependency
+    # - current major version +1
+    # Pandas will only fully support Python 3.14 in v3.
+    # Zeroconf will switch to v1 soon, without any breaking changes.
+    "pandas": 3,
+    "zeroconf": 1,
+}
+PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
+    # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - dependencyX should be the name of the referenced dependency
+    "altruist": {"altruistclient": {"zeroconf"}},
+    "geocaching": {
+        # scipy version closely linked to numpy
+        # geocachingapi > reverse_geocode > scipy > numpy
+        "scipy": {"numpy"}
+    },
+    "noaa_tides": {
+        # https://github.com/GClunies/noaa_coops/pull/69
+        "noaa-coops": {"pandas"}
+    },
+    "smarty": {
+        # Current has an upper bound on major >=3.11.0,<4.0.0
+        "pysmarty2": {"pymodbus"}
+    },
+    "stiebel_eltron": {
+        # Current has an upper bound on major >=3.10.0,<4.0.0
+        "pystiebeleltron": {"pymodbus"}
+    },
+    "telegram_bot": {"python-telegram-bot": {"httpx"}},
+    "xiaomi_miio": {
+        "python-miio": {"zeroconf"},
+    },
+}
+
+# Constraints use an impossible version to prohibit a package altogether.
+PROHIBITED_VERSION = "1000000000.0.0"
+
+# Hassfest runs the Python version Home Assistant requires, but on a single
+# platform. Markers are evaluated against every platform a requirement could
+# land on, so one is only skipped when it can never be installed at all.
+MARKER_ENVIRONMENTS = tuple(
+    {
+        "os_name": os_name,
+        "platform_machine": platform_machine,
+        "platform_system": platform_system,
+        "sys_platform": sys_platform,
+    }
+    for os_name, platform_system, sys_platform in (
+        ("posix", "Linux", "linux"),
+        ("posix", "Darwin", "darwin"),
+        ("nt", "Windows", "win32"),
+    )
+    for platform_machine in ("aarch64", "armv7l", "i686", "x86_64")
+)
+
+PACKAGE_REGEX = re.compile(
+    r"^(?:--.+\s)?([-_,\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
+)
+PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
+PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
+
+FORBIDDEN_PACKAGES = {
+    # Not longer needed, as we could use the standard library
+    "async-timeout": "be replaced by asyncio.timeout (Python 3.11+)",
+    # backoff is archived / unmaintained
+    # it imports asyncio.iscoroutinefunction scheduled for removal in 3.16
+    "backoff": "be replaced with python-backoff (it will break in Python 3.16)",
+    # Only needed for tests
+    "codecov": "not be a runtime dependency",
+    # Coloredlogs is unmaintained and contains a '.pth' file
+    "coloredlogs": "be replaced with colorlog",
+    # dataclasses-json is no longer maintained
+    # Some uses will start to break in Python 3.15
+    "dataclasses-json": "be removed (it can break in Python 3.15)",
+    # Only needed for docs
+    "mkdocs": "not be a runtime dependency",
+    # See https://developers.home-assistant.io/blog/2026/04/27/pyserial-to-serialx/
+    "pyserial-asyncio": "be replaced by serialx",
+    # Only needed for tests
+    "pytest": "not be a runtime dependency",
+    # Only needed for build
+    "setuptools": "not be a runtime dependency",
+    # Only needed for docs
+    "sphinx": "not be a runtime dependency",
+    # Only needed for build
+    "wheel": "not be a runtime dependency",
+}
+FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
+    # In the form dict("domain": {"package": {"reason1", "reason2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - reasonX should be the name of the invalid dependency
+    "adax": {"adax": {"async-timeout"}, "adax-local": {"async-timeout"}},
+    "airthings": {"airthings-cloud": {"async-timeout"}},
+    "apache_kafka": {"aiokafka": {"async-timeout"}},
+    "aseko_pool_live": {"gql": {"backoff"}},
+    "coinbase": {"coinbase-advanced-py": {"backoff"}},
+    "cmus": {
+        # https://github.com/mtreinish/pycmus/issues/4
+        # pycmus > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "delijn": {"pydelijn": {"async-timeout"}},
+    "efergy": {
+        # https://github.com/tkdrob/pyefergy/issues/46
+        # pyefergy > codecov
+        # pyefergy > types-pytz
+        "pyefergy": {"codecov", "types-pytz"}
+    },
+    "emulated_kasa": {"sense-energy": {"async-timeout"}},
+    "energyid": {"energyid-webhooks": {"backoff"}},
+    "entur_public_transport": {"enturclient": {"async-timeout"}},
+    "escea": {"pescea": {"async-timeout"}},
+    "evil_genius_labs": {"pyevilgenius": {"async-timeout"}},
+    "familyhub": {"python-family-hub-local": {"async-timeout"}},
+    "ffmpeg": {"ha-ffmpeg": {"async-timeout"}},
+    "fitbit": {
+        # https://github.com/orcasgit/python-fitbit/pull/178
+        # but project seems unmaintained
+        # fitbit > setuptools
+        "fitbit": {"setuptools"}
+    },
+    "flux_led": {"flux-led": {"async-timeout"}},
+    "foobot": {"foobot-async": {"async-timeout"}},
+    "geocaching": {"geocachingapi": {"backoff"}},
+    "github": {"aiogithubapi": {"backoff"}},
+    "google_maps": {"locationsharinglib": {"coloredlogs"}},
+    "harmony": {"aioharmony": {"async-timeout"}},
+    "here_travel_time": {
+        "here-routing": {"async-timeout"},
+        "here-transit": {"async-timeout"},
+    },
+    "homeassistant_hardware": {"universal-silabs-flasher": {"coloredlogs"}},
+    "homewizard": {"python-homewizard-energy": {"async-timeout", "backoff"}},
+    "hydrawise": {"gql": {"backoff"}},
+    "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
+    "iqvia": {"pyiqvia": {"backoff"}},
+    "ista_ecotrend": {"pyecotrend-ista": {"dataclasses-json"}},
+    "kef": {"aiokef": {"async-timeout"}},
+    "kodi": {"jsonrpc-websocket": {"async-timeout"}},
+    "lametric": {"demetriek": {"backoff"}},
+    "ld2410_ble": {"ld2410-ble": {"async-timeout"}},
+    "led_ble": {"flux-led": {"async-timeout"}},
+    "lektrico": {"lektricowifi": {"async-timeout"}},
+    "lifx": {"aiolifx": {"async-timeout"}},
+    "linkplay": {
+        "python-linkplay": {"async-timeout"},
+    },
+    "loqed": {"loqedapi": {"async-timeout"}},
+    "mediaroom": {"pymediaroom": {"async-timeout"}},
+    "met": {"pymetno": {"async-timeout"}},
+    "met_eireann": {"pymeteireann": {"async-timeout"}},
+    "microbees": {
+        # https://github.com/microBeesTech/pythonSDK/issues/6
+        # microbeespy > setuptools
+        "microbeespy": {"setuptools"}
+    },
+    "mill": {"millheater": {"async-timeout"}, "mill-local": {"async-timeout"}},
+    "mochad": {
+        # https://github.com/mtreinish/pymochad/issues/8
+        # pymochad > pbr > setuptools
+        "pbr": {"setuptools"}
+    },
+    "modern_forms": {"aiomodernforms": {"backoff"}},
+    "monarch_money": {"gql": {"backoff"}},
+    "nibe_heatpump": {"nibe": {"async-timeout"}},
+    "norway_air": {"pymetno": {"async-timeout"}},
+    "opengarage": {"open-garage": {"async-timeout"}},
+    "overkiz": {"pyoverkiz": {"backoff"}},
+    "prosegur": {"pyprosegur": {"backoff"}},
+    "radio_browser": {"radios": {"backoff"}},
+    "remote_rpi_gpio": {
+        # https://github.com/waveform80/colorzero/issues/9
+        # gpiozero > colorzero > setuptools
+        "colorzero": {"setuptools"}
+    },
+    "ring": {"ring-doorbell": {"async-timeout"}},
+    "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
+    "roku": {"rokuecp": {"backoff"}},
+    "screenlogic": {"screenlogicpy": {"async-timeout"}},
+    "sense": {"sense-energy": {"async-timeout"}},
+    "simplefin": {"simplefin4py": {"dataclasses-json"}},
+    "simplisafe": {"simplisafe-python": {"backoff"}},
+    "slimproto": {"aioslimproto": {"async-timeout"}},
+    "surepetcare": {"surepy": {"async-timeout"}},
+    "tailwind": {"gotailwind": {"backoff"}},
+    "tibber": {"gql": {"backoff"}},
+    "toon": {"toonapi": {"backoff"}},
+    "travisci": {
+        # https://github.com/menegazzo/travispy seems to be unmaintained
+        # and unused https://www.home-assistant.io/integrations/travisci
+        # travispy > pytest-rerunfailures > pytest
+        "pytest-rerunfailures": {"pytest"},
+        # travispy > pytest
+        "travispy": {"pytest"},
+    },
+    "velbus": {"velbus-aio": {"backoff"}},
+    "volkszaehler": {"volkszaehler": {"async-timeout"}},
+    "weatherflow_cloud": {"weatherflow4py": {"dataclasses-json"}},
+    "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
+    "zamg": {"zamg": {"async-timeout"}},
+    "zha": {
+        # https://github.com/waveform80/colorzero/issues/9
+        # zha > zigpy-zigate > gpiozero > colorzero > setuptools
+        "colorzero": {"setuptools"},
+        "zigpy-znp": {"coloredlogs"},
+    },
+}
+
+FORBIDDEN_FILE_NAMES: set[str] = {
+    "py.typed",  # should be placed inside a package
+}
+FORBIDDEN_PACKAGE_NAMES: set[str] = {
+    "doc",
+    "docs",
+    "test",
+    "tests",
+}
+FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
+    # In the form dict("domain": {"package": {"reason1", "reason2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - reasonX should be the name of the invalid dependency
+    # https://github.com/jaraco/jaraco.net
+    "abode": {"jaraco-abode": {"jaraco-net"}},
+    # https://github.com/Azure/azure-kusto-python/
+    "azure_data_explorer": {
+        # Legacy namespace packages, resolved with >=5.0.5
+        # azure_kusto_data-*-nspkg.pth
+        # azure_kusto_ingest-*-nspkg.pth
+        "homeassistant": {"azure-kusto-data", "azure-kusto-ingest"},
+        "azure-kusto-ingest": {"azure-kusto-data"},
+    },
+    # https://github.com/coinbase/coinbase-advanced-py
+    "cmus": {
+        # Setuptools - distutils-precedence.pth
+        "pbr": {"setuptools"}
+    },
+    "coinbase": {"homeassistant": {"coinbase-advanced-py"}},
+    # https://github.com/lawtancool/pyControl4 - ships tests/ in wheel
+    "control4": {"homeassistant": {"pycontrol4"}},
+    # https://github.com/u9n/dlms-cosem
+    "dsmr": {"dsmr-parser": {"dlms-cosem"}},
+    # https://github.com/tkdrob/pyefergy
+    # pyefergy declares codecov as a runtime dependency, which pulls in
+    # coverage; coverage ships an 'a1_coverage.pth' file starting from
+    # 7.13.x. Upstream fix pending in
+    # https://github.com/tkdrob/pyefergy/pull/47
+    "efergy": {"codecov": {"coverage"}},
+    # https://github.com/ChrisMandich/PyFlume  # Fixed with >=0.7.1
+    "fitbit": {
+        # Setuptools - distutils-precedence.pth
+        "fitbit": {"setuptools"}
+    },
+    "flume": {"homeassistant": {"pyflume"}},
+    # https://github.com/fortinet-solutions-cse/fortiosapi
+    "fortios": {"homeassistant": {"fortiosapi"}},
+    # https://github.com/manzanotti/geniushub-client
+    "geniushub": {"homeassistant": {"geniushub-client"}},
+    # https://github.com/costastf/locationsharinglib
+    "google_maps": {
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        "locationsharinglib": {"coloredlogs"},
+    },
+    # https://github.com/NabuCasa/universal-silabs-flasher
+    "homeassistant_hardware": {
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        "universal-silabs-flasher": {"coloredlogs"},
+    },
+    # https://github.com/basnijholt/aiokef
+    "kef": {"homeassistant": {"aiokef"}},
+    # https://github.com/hthiery/python-lacrosse
+    "lacrosse": {"homeassistant": {"pylacrosse"}},
+    # ???
+    "linode": {"homeassistant": {"linode-api"}},
+    # https://github.com/microBeesTech/pythonSDK/
+    "microbees": {
+        "homeassistant": {"microbeespy"},
+        "microbeespy": {"setuptools"},
+    },
+    "mochad": {
+        # Setuptools - distutils-precedence.pth
+        "pbr": {"setuptools"}
+    },
+    # https://github.com/ejpenney/pyobihai
+    "obihai": {"homeassistant": {"pyobihai"}},
+    # https://github.com/iamkubi/pydactyl
+    "pterodactyl": {"homeassistant": {"py-dactyl"}},
+    "remote_rpi_gpio": {
+        # Setuptools - distutils-precedence.pth
+        "colorzero": {"setuptools"}
+    },
+    # https://github.com/sstallion/sensorpush-api
+    "sensorpush_cloud": {
+        "homeassistant": {"sensorpush-api"},
+        "sensorpush-ha": {"sensorpush-api"},
+    },
+    # https://github.com/smappee/pysmappee
+    "smappee": {"homeassistant": {"pysmappee"}},
+    # https://github.com/mosquito/caio/pull/75
+    "velbus": {"aiofile": {"caio"}},
+    # https://github.com/watergate-ai/watergate-local-api-python
+    "watergate": {"homeassistant": {"watergate-local-api"}},
+    # https://github.com/markusressel/xs1-api-client
+    "xs1": {"homeassistant": {"xs1-api-client"}},
+    # https://github.com/zigpy/zigpy-znp
+    "zha": {
+        # Setuptools - distutils-precedence.pth
+        "colorzero": {"setuptools"},
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        # https://github.com/xolox/python-coloredlogs/blob/15.0.1/coloredlogs.pth
+        "zigpy-znp": {"coloredlogs"},
+    },
+}
+
+PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
+    # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - dependencyX should be the name of the referenced dependency
+    "python_script": {
+        # Security audits are needed for each Python version
+        "homeassistant": {"restrictedpython"}
+    },
+}
+
+
+class _PackageFilesCheckResult(TypedDict):
+    """Data structure to store results of package files check."""
+
+    top_level: set[str]
+    file_names: set[str]
+
+
+_packages_checked_files_cache: dict[str, _PackageFilesCheckResult] = {}
+
+
+def validate(integrations: dict[str, Integration], config: Config) -> None:
+    """Handle requirements for integrations."""
+    # Check if we are doing format-only validation.
+    if not config.requirements:
+        for integration in integrations.values():
+            if validate_requirements_format(integration) and not integration.core:
+                validate_custom_requirements(integration, config)
+        return
+
+    # check for incompatible requirements
+
+    disable_tqdm = bool(config.specific_integrations or os.environ.get("CI"))
+
+    for integration in tqdm(integrations.values(), disable=disable_tqdm):
+        validate_requirements(integration, config)
+
+
+def validate_requirements_format(integration: Integration) -> bool:
+    """Validate requirements format.
+
+    Returns if valid.
+    """
+    start_errors = len(integration.errors)
+
+    for req in integration.requirements:
+        if " " in req:
+            integration.add_error(
+                "requirements",
+                f'Requirement "{req}" contains a space',
+            )
+            continue
+
+        if not (match := PACKAGE_REGEX.match(req)):
+            integration.add_error(
+                "requirements",
+                f'Requirement "{req}" does not match package regex pattern',
+            )
+            continue
+        pkg, sep, version = match.groups()
+
+        if integration.core and sep != "==":
+            integration.add_error(
+                "requirements",
+                f'Requirement {req} need to be pinned "<pkg name>==<version>".',
+            )
+            continue
+
+        if not version:
+            continue
+
+        if integration.core:
+            for part in version.split(";", 1)[0].split(","):
+                version_part = PIP_VERSION_RANGE_SEPARATOR.match(part)
+                if (
+                    version_part
+                    and AwesomeVersion(version_part.group(2)).strategy
+                    == AwesomeVersionStrategy.UNKNOWN
+                ):
+                    integration.add_error(
+                        "requirements",
+                        f"Unable to parse package version ({version}) for {pkg}.",
+                    )
+                    continue
+
+    return len(integration.errors) == start_errors
+
+
+@cache
+def _load_requirement_file(path: Path) -> dict[str, SpecifierSet]:
+    """Read a pip requirements file into a map of package name to version specifier."""
+    requirements: dict[str, SpecifierSet] = {}
+    if not path.is_file():
+        return requirements
+
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+
+        # Skip comments and pip options such as "-r requirements.txt"
+        if not line or line.startswith(("#", "-")):
+            continue
+
+        try:
+            requirement = Requirement(line)
+        except InvalidRequirement:
+            continue
+
+        # These files can name a package more than once, each line narrows it.
+        package = canonicalize_name(requirement.name)
+        requirements[package] = (
+            requirements.get(package, SpecifierSet()) & requirement.specifier
+        )
+
+    return requirements
+
+
+def _probe_versions(*specifier_sets: SpecifierSet) -> set[Version]:
+    """Return the versions worth probing to compare specifier sets.
+
+    A specifier set describes a union of version intervals, so a non-empty
+    intersection of two of them always contains a version that sits on, just
+    below, or just above one of the boundaries either of them mentions. The
+    release suffix covers boundaries that exclude their own pre and post
+    releases, such as ">1.0" not allowing "1.0.post0".
+    """
+    versions = {Version("0")}
+
+    for specifiers in specifier_sets:
+        for specifier in specifiers:
+            boundary = specifier.version.removesuffix(".*")
+            for suffix in ("", ".dev0", ".post0", ".0.0.1"):
+                with suppress(InvalidVersion):
+                    versions.add(Version(f"{boundary}{suffix}"))
+
+    return versions
+
+
+def _specifiers_conflict(left: SpecifierSet, right: SpecifierSet) -> bool:
+    """Return if no single version can satisfy both specifier sets."""
+    return not any(
+        left.contains(version, prereleases=True)
+        and right.contains(version, prereleases=True)
+        for version in _probe_versions(left, right)
+    )
+
+
+def validate_custom_requirements(integration: Integration, config: Config) -> bool:
+    """Validate a custom integration against the requirements of Home Assistant.
+
+    Custom integrations are installed into the same Python environment as Home
+    Assistant itself. A requirement that rules out the version Home Assistant
+    needs takes the whole installation down with it.
+
+    Returns if valid.
+    """
+    if integration.core:
+        return True
+
+    start_errors = len(integration.errors)
+
+    core_requirements = _load_requirement_file(config.root / "requirements.txt")
+    all_requirements = _load_requirement_file(config.root / "requirements_all.txt")
+    constraints = _load_requirement_file(
+        config.root / "homeassistant/package_constraints.txt"
+    )
+
+    for req in integration.requirements:
+        try:
+            requirement = Requirement(req)
+        except InvalidRequirement:
+            continue
+
+        if requirement.marker and not any(
+            requirement.marker.evaluate(environment)
+            for environment in MARKER_ENVIRONMENTS
+        ):
+            continue
+
+        package = canonicalize_name(requirement.name)
+
+        if package in core_requirements:
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is a dependency of Home Assistant itself and "
+                "must not be listed in the manifest of a custom integration.",
+            )
+            continue
+
+        pinned = all_requirements.get(package)
+        constraint = constraints.get(package)
+
+        if constraint is not None and any(
+            specifier.version == PROHIBITED_VERSION for specifier in constraint
+        ):
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is prohibited by Home Assistant, "
+                f"{package} must not be installed.",
+            )
+            continue
+
+        if pinned is not None and _specifiers_conflict(requirement.specifier, pinned):
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is incompatible with {package}{pinned}, which "
+                "Home Assistant depends on.",
+            )
+            continue
+
+        if constraint is not None and _specifiers_conflict(
+            requirement.specifier, constraint
+        ):
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is incompatible with {package}{constraint}, "
+                "which Home Assistant's package constraints require.",
+            )
+            continue
+
+        # Pinning a package Home Assistant ships breaks the moment we bump it.
+        # Constrained packages are left alone, we only bound those.
+        if pinned is not None and (
+            exact := sorted(
+                specifier.version
+                for specifier in requirement.specifier
+                if specifier.operator in ("==", "===")
+                and not specifier.version.endswith(".*")
+            )
+        ):
+            suggestion = f"{package}>={exact[0]}"
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} pins a package Home Assistant depends on "
+                f'({package}{pinned}). Use a minimum version ("{suggestion}") '
+                "instead, so it can follow along when Home Assistant updates it.",
+            )
+
+    return len(integration.errors) == start_errors
+
+
+def validate_requirements(integration: Integration, config: Config) -> None:
+    """Validate requirements."""
+    if not validate_requirements_format(integration):
+        return
+
+    # Installing a requirement we already rejected would downgrade the
+    # environment hassfest itself runs in.
+    if not validate_custom_requirements(integration, config):
+        return
+
+    integration_requirements = set()
+    integration_packages = set()
+    for req in integration.requirements:
+        package = normalize_package_name(req)
+        if not package:
+            integration.add_error(
+                "requirements",
+                f"Failed to normalize package name from requirement {req}",
+            )
+            return
+        if package in EXCLUDED_REQUIREMENTS_ALL:
+            continue
+        integration_requirements.add(req)
+        integration_packages.add(package)
+
+    if integration.disabled:
+        return
+
+    install_ok = install_requirements(integration, integration_requirements)
+
+    if not install_ok:
+        return
+
+    all_integration_requirements = get_requirements(integration, integration_packages)
+
+    if integration_requirements and not all_integration_requirements:
+        integration.add_error(
+            "requirements",
+            f"Failed to resolve requirements {integration_requirements}",
+        )
+        return
+
+    # Check for requirements incompatible with standard library.
+    standard_library_violations = set()
+    for req in all_integration_requirements:
+        if req in sys.stdlib_module_names:
+            standard_library_violations.add(req)
+
+    if standard_library_violations:
+        integration.add_error(
+            "requirements",
+            (
+                f"Package {req} has dependencies {standard_library_violations} which "
+                "are not compatible with the Python standard library"
+            ),
+        )
+
+
+@cache
+def get_pipdeptree() -> dict[str, dict[str, Any]]:
+    """Get pipdeptree output. Cached on first invocation.
+
+    {
+        "flake8-docstring": {
+            "key": "flake8-docstrings",
+            "package_name": "flake8-docstrings",
+            "installed_version": "1.5.0"
+            "dependencies": {"flake8": ">=1.2.3, <4.5.0"}
+        }
+    }
+    """
+    deptree = {}
+
+    for item in json.loads(
+        subprocess.run(
+            ["pipdeptree", "-w", "silence", "--json"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    ):
+        deptree[item["package"]["key"]] = {
+            **item["package"],
+            "dependencies": {
+                dep["key"]: dep["required_version"] for dep in item["dependencies"]
+            },
+        }
+    return deptree
+
+
+@cache
+def metadata_cache(package: str) -> PackageMetadata:
+    """Return package metadata, cached."""
+    return metadata(package)
+
+
+def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
+    """Return all (recursively) requirements for an integration."""
+    deptree = get_pipdeptree()
+
+    all_requirements = set()
+
+    to_check = deque(packages)
+
+    forbidden_package_exceptions = FORBIDDEN_PACKAGE_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+    needs_forbidden_package_exceptions = False
+
+    packages_checked_files: set[str] = set()
+    forbidden_package_files_exceptions = FORBIDDEN_PACKAGE_FILES_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+    needs_forbidden_package_files_exception = False
+
+    package_version_check_exceptions = PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+    needs_package_version_check_exception = False
+
+    python_version_check_exceptions = PYTHON_VERSION_CHECK_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+    needs_python_version_check_exception = False
+
+    while to_check:
+        package = to_check.popleft()
+
+        if package in all_requirements:
+            continue
+
+        all_requirements.add(package)
+
+        item = deptree.get(package)
+
+        if item is None:
+            # Only warn if direct dependencies could not be resolved
+            if package in packages:
+                integration.add_error(
+                    "requirements", f"Failed to resolve requirements for {package}"
+                )
+            continue
+
+        # Check for restrictive version limits on Python
+        if (
+            requires_python := metadata_cache(package).get("Requires-Python")
+        ) and not all(
+            _is_dependency_version_range_valid(version_part, "SemVer")
+            for version_part in requires_python.split(",")
+        ):
+            needs_python_version_check_exception = True
+            integration.add_warning_or_error(
+                package in python_version_check_exceptions.get("homeassistant", set()),
+                "requirements",
+                "Version restrictions for Python are too strict "
+                f"({requires_python}) in {package}",
+            )
+
+        # Check package names
+        if package not in packages_checked_files:
+            packages_checked_files.add(package)
+            if not check_dependency_files(
+                integration,
+                "homeassistant",
+                package,
+                forbidden_package_files_exceptions.get("homeassistant", ()),
+            ):
+                needs_forbidden_package_files_exception = True
+
+        # Use inner loop to check dependencies
+        # so we have access to the dependency parent (=current package)
+        dependencies: dict[str, str] = item["dependencies"]
+        for pkg, version in dependencies.items():
+            # Check for forbidden packages
+            if pkg.startswith("types-") or pkg in FORBIDDEN_PACKAGES:
+                reason = FORBIDDEN_PACKAGES.get(pkg, "not be a runtime dependency")
+                needs_forbidden_package_exceptions = True
+                integration.add_warning_or_error(
+                    pkg in forbidden_package_exceptions.get(package, set()),
+                    "requirements",
+                    f"Package {pkg} should {reason} in {package}",
+                )
+            # Check for restrictive version limits on common packages
+            if not check_dependency_version_range(
+                integration,
+                package,
+                pkg,
+                version,
+                package_version_check_exceptions.get(package, set()),
+            ):
+                needs_package_version_check_exception = True
+
+            # Check package names
+            if pkg not in packages_checked_files:
+                packages_checked_files.add(pkg)
+                if not check_dependency_files(
+                    integration,
+                    package,
+                    pkg,
+                    forbidden_package_files_exceptions.get(package, ()),
+                ):
+                    needs_forbidden_package_files_exception = True
+
+        to_check.extend(dependencies)
+
+    if forbidden_package_exceptions and not needs_forbidden_package_exceptions:
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} runtime dependency exceptions "
+            "have been resolved, please remove from `FORBIDDEN_PACKAGE_EXCEPTIONS`",
+        )
+    if package_version_check_exceptions and not needs_package_version_check_exception:
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} version restrictions checks have been "
+            "resolved, please remove from `PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS`",
+        )
+    if python_version_check_exceptions and not needs_python_version_check_exception:
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} version restrictions for Python have "
+            "been resolved, please remove from `PYTHON_VERSION_CHECK_EXCEPTIONS`",
+        )
+    if (
+        forbidden_package_files_exceptions
+        and not needs_forbidden_package_files_exception
+    ):
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} runtime"
+            " files dependency exceptions have been"
+            " resolved, please remove from"
+            " `FORBIDDEN_PACKAGE_FILES_EXCEPTIONS`",
+        )
+
+    return all_requirements
+
+
+def check_dependency_version_range(
+    integration: Integration,
+    source: str,
+    pkg: str,
+    version: str,
+    package_exceptions: set[str],
+) -> bool:
+    """Check requirement version range.
+
+    We want to avoid upper version bounds that are too strict for common packages.
+    """
+    if (
+        version == "Any"
+        or (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is None
+        or all(
+            _is_dependency_version_range_valid(version_part, convention, pkg)
+            for version_part in version.split(";", 1)[0].split(",")
+        )
+    ):
+        return True
+
+    integration.add_warning_or_error(
+        pkg in package_exceptions,
+        "requirements",
+        f"Version restrictions for {pkg} are too strict ({version}) in {source}",
+    )
+    return False
+
+
+def _is_dependency_version_range_valid(
+    version_part: str, convention: str, pkg: str | None = None
+) -> bool:
+    prepare_update = PACKAGE_CHECK_PREPARE_UPDATE.get(pkg) if pkg else None
+    version_match = PIP_VERSION_RANGE_SEPARATOR.match(version_part.strip())
+    operator = version_match.group(1)
+    version = version_match.group(2)
+    awesome = AwesomeVersion(version)
+
+    if operator in (">", ">=", "!="):
+        # Lower version binding and version exclusion are fine
+        return True
+
+    if prepare_update is not None:
+        if operator in ("==", "~="):
+            # Only current major version allowed which prevents updates to the next one
+            return False
+        # Allow upper constraints for major version + 1
+        if operator == "<" and awesome.section(0) < prepare_update + 1:
+            return False
+        if operator == "<=" and awesome.section(0) < prepare_update:
+            return False
+
+    if convention == "SemVer":
+        if operator == "==":
+            # Explicit version with wildcard is allowed only on major version
+            # e.g. ==1.* is allowed, but ==1.2.* is not
+            return version.endswith(".*") and version.count(".") == 1
+
+        if operator in ("<", "<="):
+            # Upper version binding only allowed on major version
+            # e.g. <=3 is allowed, but <=3.1 is not
+            return awesome.section(1) == 0 and awesome.section(2) == 0
+
+        if operator == "~=":
+            # Compatible release operator is only allowed on major or minor version
+            # e.g. ~=1.2 is allowed, but ~=1.2.3 is not
+            return awesome.section(2) == 0
+
+    return False
+
+
+def check_dependency_files(
+    integration: Integration,
+    package: str,
+    pkg: str,
+    package_exceptions: Collection[str],
+) -> bool:
+    """Check dependency files for forbidden files and forbidden package names."""
+    if (results := _packages_checked_files_cache.get(pkg)) is None:
+        top_level: set[str] = set()
+        file_names: set[str] = set()
+        for file in files(pkg) or ():
+            if not (top := file.parts[0].lower()).endswith((".dist-info", ".py")):
+                top_level.add(top)
+            if (name := str(file).lower()) in FORBIDDEN_FILE_NAMES or (
+                name.endswith((".pth", ".start")) and len(file.parts) == 1
+            ):
+                file_names.add(str(file))
+        results = _PackageFilesCheckResult(
+            top_level=FORBIDDEN_PACKAGE_NAMES & top_level,
+            file_names=file_names,
+        )
+        _packages_checked_files_cache[pkg] = results
+    if not (results["top_level"] or results["file_names"]):
+        return True
+
+    for dir_name in results["top_level"]:
+        integration.add_warning_or_error(
+            pkg in package_exceptions,
+            "requirements",
+            f"Package {pkg} has a forbidden top level"
+            f" directory '{dir_name}' in {package}",
+        )
+    for file_name in results["file_names"]:
+        integration.add_warning_or_error(
+            pkg in package_exceptions,
+            "requirements",
+            f"Package {pkg} has a forbidden file '{file_name}' in {package}",
+        )
+    return False
+
+
+def install_requirements(integration: Integration, requirements: set[str]) -> bool:
+    """Install integration requirements.
+
+    Return True if successful.
+    """
+    deptree = get_pipdeptree()
+
+    for req in requirements:
+        match = PIP_REGEX.search(req)
+
+        if not match:
+            integration.add_error(
+                "requirements",
+                f"Failed to parse requirement {req} before installation",
+            )
+            continue
+
+        install_args = match.group(1)
+        requirement_arg = match.group(2)
+
+        is_installed = False
+
+        normalized = normalize_package_name(requirement_arg)
+
+        if normalized and "==" in requirement_arg:
+            ver = requirement_arg.split("==")[-1]
+            item = deptree.get(normalized)
+            is_installed = bool(item and item["installed_version"] == ver)
+
+        if not is_installed:
+            try:
+                is_installed = pkg_util.is_installed(req)
+            except ValueError:
+                is_installed = False
+
+        if is_installed:
+            continue
+
+        args = ["uv", "pip", "install", "--quiet"]
+        if install_args:
+            args.append(install_args)
+        args.append(requirement_arg)
+        try:
+            result = subprocess.run(args, check=True, capture_output=True, text=True)
+        except subprocess.SubprocessError:
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} failed to install",
+            )
+        else:
+            # Clear the pipdeptree cache if something got installed
+            if "Successfully installed" in result.stdout:
+                get_pipdeptree.cache_clear()
+
+    if integration.errors:
+        return False
+
+    return True

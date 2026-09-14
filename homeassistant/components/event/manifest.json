@@ -1,0 +1,8 @@
+{
+  "domain": "event",
+  "name": "Event",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/event",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

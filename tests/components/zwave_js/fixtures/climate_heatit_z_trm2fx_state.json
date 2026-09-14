@@ -1,0 +1,1445 @@
+{
+  "nodeId": 26,
+  "index": 0,
+  "installerIcon": 4608,
+  "userIcon": 4609,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": false,
+  "manufacturerId": 411,
+  "productId": 514,
+  "productType": 3,
+  "firmwareVersion": "3.6",
+  "zwavePlusVersion": 1,
+  "deviceConfig": {
+    "filename": "/usr/src/node_modules/@zwave-js/config/config/devices/0x019b/z-trm2fx_3.0.json",
+    "manufacturer": "ThermoFloor",
+    "manufacturerId": 411,
+    "label": "Z-TRM2fx",
+    "description": "Floor thermostat",
+    "devices": [
+      {
+        "productType": 3,
+        "productId": 514
+      }
+    ],
+    "firmwareVersion": {
+      "min": "3.0",
+      "max": "255.255"
+    },
+    "paramInformation": {
+      "_map": {}
+    },
+    "compat": {
+      "valueIdRegex": {},
+      "skipConfigurationInfoQuery": true
+    },
+    "isEmbedded": true
+  },
+  "label": "Z-TRM2fx",
+  "neighbors": [6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 19, 20, 24, 25],
+  "endpointCountIsDynamic": false,
+  "endpointsHaveIdenticalCapabilities": false,
+  "individualEndpointCount": 4,
+  "aggregatedEndpointCount": 0,
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 26,
+      "index": 0,
+      "installerIcon": 4608,
+      "userIcon": 4609,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 8,
+          "label": "Thermostat"
+        },
+        "specific": {
+          "key": 6,
+          "label": "General Thermostat V2"
+        },
+        "mandatorySupportedCCs": [32, 114, 64, 67, 134],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 64,
+          "name": "Thermostat Mode",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 67,
+          "name": "Thermostat Setpoint",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 96,
+          "name": "Multi Channel",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 50,
+          "name": "Meter",
+          "version": 3,
+          "isSecure": false
+        }
+      ]
+    },
+    {
+      "nodeId": 26,
+      "index": 1,
+      "installerIcon": 4608,
+      "userIcon": 4609,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 8,
+          "label": "Thermostat"
+        },
+        "specific": {
+          "key": 6,
+          "label": "General Thermostat V2"
+        },
+        "mandatorySupportedCCs": [32, 114, 64, 67, 134],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 26,
+      "index": 2,
+      "installerIcon": 3328,
+      "userIcon": 3329,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 33,
+          "label": "Multilevel Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Routing Multilevel Sensor"
+        },
+        "mandatorySupportedCCs": [32, 49],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 26,
+      "index": 3,
+      "installerIcon": 3328,
+      "userIcon": 3329,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 33,
+          "label": "Multilevel Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Routing Multilevel Sensor"
+        },
+        "mandatorySupportedCCs": [32, 49],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 26,
+      "index": 4,
+      "installerIcon": 1792,
+      "userIcon": 1793,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 16,
+          "label": "Binary Switch"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Binary Power Switch"
+        },
+        "mandatorySupportedCCs": [32, 37, 39],
+        "mandatoryControlledCCs": []
+      }
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 411
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 514
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type"
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "5.3"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["3.6"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "sdkVersion",
+      "propertyName": "sdkVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      },
+      "value": "6.71.3"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationFrameworkAPIVersion",
+      "propertyName": "applicationFrameworkAPIVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      },
+      "value": "3.1.1"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationFrameworkBuildNumber",
+      "propertyName": "applicationFrameworkBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      },
+      "value": 52445
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hostInterfaceVersion",
+      "propertyName": "hostInterfaceVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      },
+      "value": "unused"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hostInterfaceBuildNumber",
+      "propertyName": "hostInterfaceBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "zWaveProtocolVersion",
+      "propertyName": "zWaveProtocolVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      },
+      "value": "5.3.0"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "zWaveProtocolBuildNumber",
+      "propertyName": "zWaveProtocolBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      },
+      "value": 43
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationVersion",
+      "propertyName": "applicationVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      },
+      "value": "unused"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationBuildNumber",
+      "propertyName": "applicationBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 96,
+      "commandClassName": "Multi Channel",
+      "property": "endpointIndizes",
+      "propertyName": "endpointIndizes",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      },
+      "value": [1, 2, 3, 4]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 1,
+      "propertyName": "Operation mode",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Operation mode",
+        "default": 0,
+        "min": 0,
+        "max": 11,
+        "states": {
+          "0": "Off. (default)",
+          "1": "Heating mode",
+          "2": "Cooling mode (not implemented)",
+          "11": "Energy saving heating mode"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 2,
+      "propertyName": "Sensor mode",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Sensor mode",
+        "default": 0,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "F-mode, floor sensor mode",
+          "3": "A2-mode, external room sensor mode",
+          "4": "A2F-mode, external sensor with floor limitation"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyName": "Floor sensor type",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Floor sensor type",
+        "default": 0,
+        "min": 0,
+        "max": 5,
+        "states": {
+          "0": "10K-NTC (default)",
+          "1": "12K-NTC",
+          "2": "15K-NTC",
+          "3": "22K-NTC",
+          "4": "33K-NTC",
+          "5": "47K-NTC"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 4,
+      "propertyName": "Temperature control hysteresis (DIFF I)",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Temperature control hysteresis (DIFF I)",
+        "default": 5,
+        "min": 3,
+        "max": 30,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 5
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 5,
+      "propertyName": "Floor minimum temperature limit (FLo)",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Floor minimum temperature limit (FLo)",
+        "default": 50,
+        "min": 50,
+        "max": 400,
+        "unit": "oC",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 50
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 6,
+      "propertyName": "Floor maximum temperature (FHi)",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Floor maximum temperature (FHi)",
+        "default": 400,
+        "min": 50,
+        "max": 400,
+        "unit": "oC",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 400
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 7,
+      "propertyName": "Air (A2) minimum temperature limit (ALo)",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Air (A2) minimum temperature limit (ALo)",
+        "default": 50,
+        "min": 50,
+        "max": 400,
+        "unit": "oC",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 50
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 8,
+      "propertyName": "Air (A2) maximum temperature limit (AHi)",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Air (A2) maximum temperature limit (AHi)",
+        "default": 400,
+        "min": 50,
+        "max": 400,
+        "unit": "oC",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 400
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 9,
+      "propertyName": "Heating mode setpoint (CO)",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Heating mode setpoint (CO)",
+        "default": 210,
+        "min": 50,
+        "max": 400,
+        "unit": "oC",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 290
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 10,
+      "propertyName": "Energy saving mode setpoint (ECO)",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Energy saving mode setpoint (ECO)",
+        "default": 180,
+        "min": 50,
+        "max": 400,
+        "unit": "oC",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 250
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 11,
+      "propertyName": "Cooling setpoint (COOL)",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Cooling setpoint (COOL)",
+        "default": 210,
+        "min": 50,
+        "max": 400,
+        "unit": "oC",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 200
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 12,
+      "propertyName": "Floor sensor calibration",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Floor sensor calibration",
+        "default": 0,
+        "min": -40,
+        "max": 40,
+        "unit": "oC",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 13,
+      "propertyName": "External sensor calibration",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "External sensor calibration",
+        "default": 0,
+        "min": -40,
+        "max": 40,
+        "unit": "oC",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 14,
+      "propertyName": "Temperature display",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Temperature display",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Display setpoint temperature (default)",
+          "1": "Display measured temperature"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 15,
+      "propertyName": "Button brightness - dimmed state",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Button brightness - dimmed state",
+        "default": 50,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 16,
+      "propertyName": "Button brightness - active state",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Button brightness - active state",
+        "default": 100,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 17,
+      "propertyName": "Display brightness - dimmed state",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Display brightness - dimmed state",
+        "default": 50,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 18,
+      "propertyName": "Display brightness - active state",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Display brightness - active state",
+        "default": 100,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 19,
+      "propertyName": "Temperature report interval",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Temperature report interval",
+        "default": 60,
+        "min": 0,
+        "max": 32767,
+        "unit": "seconds",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 60
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 20,
+      "propertyName": "Temperature report hysteresis",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Temperature report hysteresis",
+        "default": 10,
+        "min": 1,
+        "max": 100,
+        "unit": "oC",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 21,
+      "propertyName": "Meter report interval",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Meter report interval",
+        "default": 60,
+        "min": 0,
+        "max": 32767,
+        "unit": "seconds",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 60
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 22,
+      "propertyName": "Meter report delta value",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Meter report delta value",
+        "default": 10,
+        "min": 0,
+        "max": 127,
+        "unit": "kWh/10",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 64,
+      "commandClassName": "Thermostat Mode",
+      "property": "mode",
+      "propertyName": "mode",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Thermostat mode",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Off",
+          "1": "Heat",
+          "2": "Cool",
+          "11": "Energy heat"
+        }
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 64,
+      "commandClassName": "Thermostat Mode",
+      "property": "manufacturerData",
+      "propertyName": "manufacturerData",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 67,
+      "commandClassName": "Thermostat Setpoint",
+      "property": "setpoint",
+      "propertyKey": 1,
+      "propertyName": "setpoint",
+      "propertyKeyName": "Heating",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "ccSpecific": {
+          "setpointType": 1
+        },
+        "unit": "\u00b0C"
+      },
+      "value": 29
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 67,
+      "commandClassName": "Thermostat Setpoint",
+      "property": "setpoint",
+      "propertyKey": 2,
+      "propertyName": "setpoint",
+      "propertyKeyName": "Cooling",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "ccSpecific": {
+          "setpointType": 2
+        },
+        "unit": "\u00b0C"
+      },
+      "value": 20
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 67,
+      "commandClassName": "Thermostat Setpoint",
+      "property": "setpoint",
+      "propertyKey": 11,
+      "propertyName": "setpoint",
+      "propertyKeyName": "Energy Save Heating",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "ccSpecific": {
+          "setpointType": 11
+        },
+        "unit": "\u00b0C"
+      },
+      "value": 25
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type"
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Air temperature",
+      "propertyName": "Air temperature",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Air temperature",
+        "ccSpecific": {
+          "sensorType": 1,
+          "scale": 0
+        },
+        "unit": "\u00b0C"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 32,
+      "commandClassName": "Basic",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "min": 0,
+        "max": 99
+      }
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Air temperature",
+      "propertyName": "Air temperature",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Air temperature",
+        "ccSpecific": {
+          "sensorType": 1,
+          "scale": 0
+        },
+        "unit": "\u00b0C"
+      },
+      "value": 28.8
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value"
+      },
+      "value": false
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value"
+      }
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 65537,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_kWh_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [kWh]",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 0
+        },
+        "unit": "kWh"
+      },
+      "value": 795.7
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 66049,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_W_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [W]",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 2
+        },
+        "unit": "W"
+      },
+      "value": 493.57
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 66561,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_V_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [V]",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 4
+        },
+        "unit": "V"
+      },
+      "value": 237.1
+    }
+  ],
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 5,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 8,
+      "label": "Thermostat"
+    },
+    "specific": {
+      "key": 6,
+      "label": "General Thermostat V2"
+    },
+    "mandatorySupportedCCs": [32, 114, 64, 67, 134],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "isControllerNode": false
+}

@@ -1,0 +1,53 @@
+{
+  "userData": {
+    "hubName": "UG93ZXJ2aWV3IEdlbmVyYXRpb24gMg==",
+    "localTimeDataSet": true,
+    "enableScheduledEvents": true,
+    "editingEnabled": true,
+    "setupCompleted": false,
+    "gateway": "192.168.0.1",
+    "dns": "192.168.0.1",
+    "staticIp": false,
+    "_id": "zX7RBfmotYK8LwcD",
+    "color": {
+      "red": 0,
+      "green": 0,
+      "blue": 255,
+      "brightness": 50
+    },
+    "autoBackup": true,
+    "ip": "192.168.0.21",
+    "macAddress": "AA:BB:CC:DD:EE:FF",
+    "mask": "255.255.255.0",
+    "firmware": {
+      "mainProcessor": {
+        "name": "Powerview Generation 2",
+        "revision": 2,
+        "subRevision": 0,
+        "build": 1056
+      },
+      "radio": {
+        "revision": 2,
+        "subRevision": 0,
+        "build": 2610
+      }
+    },
+    "serialNumber": "A1B2C3D4E5G6H7",
+    "rfIDInt": 59742,
+    "rfID": "0xE95E",
+    "rfStatus": 0,
+    "ssid": "Hub-E5:G6:H7",
+    "wireless": false,
+    "times": {
+      "timezone": "Australia/Sydney",
+      "localSunriseTimeInMinutes": 372,
+      "localSunsetTimeInMinutes": 1071,
+      "currentOffset": 36000,
+      "longitude": 149.1244,
+      "latitude": -35.3081
+    },
+    "rcUp": true,
+    "brand": "HD",
+    "remoteConnectEnabled": true
+  }
+}

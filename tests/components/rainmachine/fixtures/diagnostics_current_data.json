@@ -1,0 +1,21 @@
+{
+  "hasWifi": true,
+  "uptime": "3 days, 18:14:14",
+  "uptimeSeconds": 324854,
+  "memUsage": 16196,
+  "networkStatus": true,
+  "bootCompleted": true,
+  "lastCheckTimestamp": 1659895175,
+  "wizardHasRun": true,
+  "standaloneMode": false,
+  "cpuUsage": 1,
+  "lastCheck": "2022-08-07 11:59:35",
+  "softwareVersion": "4.0.1144",
+  "internetStatus": true,
+  "locationStatus": true,
+  "timeStatus": true,
+  "wifiMode": null,
+  "gatewayAddress": "172.16.20.1",
+  "cloudStatus": 0,
+  "weatherStatus": true
+}

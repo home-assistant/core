@@ -1,0 +1,600 @@
+{
+  "components": {
+    "main": {
+      "doorControl": {
+        "door": {
+          "value": null
+        }
+      },
+      "samsungce.kitchenDeviceDefaults": {
+        "defaultOperationTime": {
+          "value": 30,
+          "timestamp": "2022-03-23T15:59:12.609Z"
+        },
+        "defaultOvenMode": {
+          "value": "MicroWave",
+          "timestamp": "2025-02-08T21:13:36.289Z"
+        },
+        "defaultOvenSetpoint": {
+          "value": null
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": null
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": null
+        },
+        "description": {
+          "value": null
+        },
+        "releaseYear": {
+          "value": null
+        },
+        "binaryId": {
+          "value": "TP2X_DA-KS-MICROWAVE-0101X",
+          "timestamp": "2025-02-08T21:13:36.256Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-02-09T00:11:12.010Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "AKS-WW-TP2-20-MICROWAVE-OTR_40230125",
+          "timestamp": "2023-07-03T06:44:54.757Z"
+        },
+        "mnhw": {
+          "value": "MediaTek",
+          "timestamp": "2022-03-23T15:59:12.742Z"
+        },
+        "di": {
+          "value": "2bad3237-4886-e699-1b90-4a51a3d55c8a",
+          "timestamp": "2022-03-23T15:59:12.742Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2022-03-23T15:59:12.742Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2023-07-03T22:00:58.832Z"
+        },
+        "n": {
+          "value": "Samsung Microwave",
+          "timestamp": "2023-07-03T06:44:54.757Z"
+        },
+        "mnmo": {
+          "value": "TP2X_DA-KS-MICROWAVE-0101X|40436241|50040100011411000200000000000000",
+          "timestamp": "2023-07-03T06:44:54.757Z"
+        },
+        "vid": {
+          "value": "DA-KS-MICROWAVE-0101X",
+          "timestamp": "2022-03-23T15:59:12.742Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2022-03-23T15:59:12.742Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2022-03-23T15:59:12.742Z"
+        },
+        "mnpv": {
+          "value": "DAWIT 3.0",
+          "timestamp": "2023-07-03T06:44:54.757Z"
+        },
+        "mnos": {
+          "value": "TizenRT 2.0 + IPv6",
+          "timestamp": "2023-07-03T06:44:54.757Z"
+        },
+        "pi": {
+          "value": "2bad3237-4886-e699-1b90-4a51a3d55c8a",
+          "timestamp": "2022-03-23T15:59:12.742Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2022-03-23T15:59:12.742Z"
+        }
+      },
+      "samsungce.kitchenDeviceIdentification": {
+        "regionCode": {
+          "value": "US",
+          "timestamp": "2025-02-08T21:13:36.289Z"
+        },
+        "modelCode": {
+          "value": "ME8000T-/AA0",
+          "timestamp": "2025-02-08T21:13:36.289Z"
+        },
+        "fuel": {
+          "value": null
+        },
+        "type": {
+          "value": "microwave",
+          "timestamp": "2022-03-23T15:59:10.971Z"
+        },
+        "representativeComponent": {
+          "value": null
+        }
+      },
+      "samsungce.kitchenModeSpecification": {
+        "specification": {
+          "value": {
+            "single": [
+              {
+                "mode": "MicroWave",
+                "supportedOptions": {
+                  "operationTime": {
+                    "max": "01:40:00"
+                  },
+                  "powerLevel": {
+                    "default": "100%",
+                    "supportedValues": [
+                      "0%",
+                      "10%",
+                      "20%",
+                      "30%",
+                      "40%",
+                      "50%",
+                      "60%",
+                      "70%",
+                      "80%",
+                      "90%",
+                      "100%"
+                    ]
+                  }
+                }
+              },
+              {
+                "mode": "ConvectionBake",
+                "supportedOptions": {
+                  "temperature": {
+                    "F": {
+                      "min": 100,
+                      "max": 425,
+                      "default": 350,
+                      "supportedValues": [
+                        100, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425
+                      ]
+                    }
+                  },
+                  "operationTime": {
+                    "max": "01:40:00"
+                  }
+                }
+              },
+              {
+                "mode": "ConvectionRoast",
+                "supportedOptions": {
+                  "temperature": {
+                    "F": {
+                      "min": 200,
+                      "max": 425,
+                      "default": 325,
+                      "supportedValues": [
+                        200, 225, 250, 275, 300, 325, 350, 375, 400, 425
+                      ]
+                    }
+                  },
+                  "operationTime": {
+                    "max": "01:40:00"
+                  }
+                }
+              },
+              {
+                "mode": "Grill",
+                "supportedOptions": {
+                  "temperature": {
+                    "F": {
+                      "min": 425,
+                      "max": 425,
+                      "default": 425,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "max": "01:40:00"
+                  }
+                }
+              },
+              {
+                "mode": "SpeedBake",
+                "supportedOptions": {
+                  "operationTime": {
+                    "max": "01:40:00"
+                  },
+                  "powerLevel": {
+                    "default": "30%",
+                    "supportedValues": ["10%", "30%", "50%", "70%"]
+                  }
+                }
+              },
+              {
+                "mode": "SpeedRoast",
+                "supportedOptions": {
+                  "operationTime": {
+                    "max": "01:40:00"
+                  },
+                  "powerLevel": {
+                    "default": "30%",
+                    "supportedValues": ["10%", "30%", "50%", "70%"]
+                  }
+                }
+              },
+              {
+                "mode": "KeepWarm",
+                "supportedOptions": {
+                  "temperature": {
+                    "F": {
+                      "min": 175,
+                      "max": 175,
+                      "default": 175,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "max": "01:40:00"
+                  }
+                }
+              },
+              {
+                "mode": "Autocook",
+                "supportedOptions": {}
+              },
+              {
+                "mode": "Cookie",
+                "supportedOptions": {
+                  "temperature": {
+                    "F": {
+                      "min": 325,
+                      "max": 325,
+                      "default": 325,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "max": "01:40:00"
+                  }
+                }
+              },
+              {
+                "mode": "SteamClean",
+                "supportedOptions": {
+                  "operationTime": {
+                    "max": "00:06:30"
+                  }
+                }
+              }
+            ]
+          },
+          "timestamp": "2025-02-08T10:21:03.790Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": ["doorControl", "samsungce.hoodFanSpeed"],
+          "timestamp": "2025-02-08T21:13:36.152Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 22120101,
+          "timestamp": "2023-07-03T09:36:13.282Z"
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": ["errCode", "dump"],
+          "timestamp": "2025-02-08T21:13:36.256Z"
+        },
+        "endpoint": {
+          "value": "SSM",
+          "timestamp": "2025-02-08T21:13:36.256Z"
+        },
+        "minVersion": {
+          "value": "1.0",
+          "timestamp": "2025-02-08T21:13:36.256Z"
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": "621",
+          "timestamp": "2025-02-08T21:13:36.256Z"
+        },
+        "protocolType": {
+          "value": "wifi_https",
+          "timestamp": "2025-02-08T21:13:36.256Z"
+        },
+        "tsId": {
+          "value": null
+        },
+        "mnId": {
+          "value": "0AJT",
+          "timestamp": "2025-02-08T21:13:36.256Z"
+        },
+        "dumpType": {
+          "value": "file",
+          "timestamp": "2025-02-08T21:13:36.256Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 1,
+          "unit": "F",
+          "timestamp": "2025-02-09T00:11:15.291Z"
+        }
+      },
+      "samsungce.ovenOperatingState": {
+        "completionTime": {
+          "value": "2025-02-08T21:13:36.184Z",
+          "timestamp": "2025-02-08T21:13:36.188Z"
+        },
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2025-02-08T21:13:36.188Z"
+        },
+        "progress": {
+          "value": 0,
+          "timestamp": "2025-02-08T21:13:36.188Z"
+        },
+        "ovenJobState": {
+          "value": "ready",
+          "timestamp": "2025-02-08T21:13:36.160Z"
+        },
+        "operationTime": {
+          "value": "00:00:00",
+          "timestamp": "2025-02-08T21:13:36.188Z"
+        }
+      },
+      "ovenMode": {
+        "supportedOvenModes": {
+          "value": [
+            "Microwave",
+            "ConvectionBake",
+            "ConvectionRoast",
+            "grill",
+            "Others",
+            "warming"
+          ],
+          "timestamp": "2025-02-08T10:21:03.790Z"
+        },
+        "ovenMode": {
+          "value": "Others",
+          "timestamp": "2025-02-08T21:13:36.289Z"
+        }
+      },
+      "samsungce.ovenMode": {
+        "supportedOvenModes": {
+          "value": [
+            "MicroWave",
+            "ConvectionBake",
+            "ConvectionRoast",
+            "Grill",
+            "SpeedBake",
+            "SpeedRoast",
+            "KeepWarm",
+            "Autocook",
+            "Cookie",
+            "SteamClean"
+          ],
+          "timestamp": "2025-02-08T10:21:03.790Z"
+        },
+        "ovenMode": {
+          "value": "NoOperation",
+          "timestamp": "2025-02-08T21:13:36.289Z"
+        }
+      },
+      "samsungce.kidsLock": {
+        "lockState": {
+          "value": "unlocked",
+          "timestamp": "2025-02-08T21:13:36.152Z"
+        }
+      },
+      "ovenSetpoint": {
+        "ovenSetpointRange": {
+          "value": null
+        },
+        "ovenSetpoint": {
+          "value": 0,
+          "timestamp": "2025-02-09T00:01:09.108Z"
+        }
+      },
+      "refresh": {},
+      "samsungce.hoodFanSpeed": {
+        "settableMaxFanSpeed": {
+          "value": 3,
+          "timestamp": "2025-02-09T00:01:06.959Z"
+        },
+        "hoodFanSpeed": {
+          "value": 0,
+          "timestamp": "2025-02-09T00:01:07.813Z"
+        },
+        "supportedHoodFanSpeed": {
+          "value": [0, 1, 2, 3, 4, 5],
+          "timestamp": "2022-03-23T15:59:12.796Z"
+        },
+        "settableMinFanSpeed": {
+          "value": 0,
+          "timestamp": "2025-02-09T00:01:06.959Z"
+        }
+      },
+      "samsungce.doorState": {
+        "doorState": {
+          "value": "closed",
+          "timestamp": "2025-02-08T21:13:36.227Z"
+        }
+      },
+      "samsungce.microwavePower": {
+        "supportedPowerLevels": {
+          "value": [
+            "0%",
+            "10%",
+            "20%",
+            "30%",
+            "40%",
+            "50%",
+            "60%",
+            "70%",
+            "80%",
+            "90%",
+            "100%"
+          ],
+          "timestamp": "2025-02-08T21:13:36.160Z"
+        },
+        "powerLevel": {
+          "value": "0%",
+          "timestamp": "2025-02-08T21:13:36.160Z"
+        }
+      },
+      "execute": {
+        "data": {
+          "value": {
+            "payload": {
+              "rt": ["x.com.samsung.da.temperatures"],
+              "if": ["oic.if.baseline", "oic.if.a"],
+              "x.com.samsung.da.items": [
+                {
+                  "x.com.samsung.da.id": "0",
+                  "x.com.samsung.da.description": "Temperature",
+                  "x.com.samsung.da.desired": "0",
+                  "x.com.samsung.da.current": "1",
+                  "x.com.samsung.da.increment": "5",
+                  "x.com.samsung.da.unit": "Fahrenheit"
+                }
+              ]
+            }
+          },
+          "data": {
+            "href": "/temperatures/vs/0"
+          },
+          "timestamp": "2023-07-19T05:50:12.609Z"
+        }
+      },
+      "remoteControlStatus": {
+        "remoteControlEnabled": {
+          "value": "false",
+          "timestamp": "2025-02-08T21:13:36.357Z"
+        }
+      },
+      "samsungce.definedRecipe": {
+        "definedRecipe": {
+          "value": {
+            "cavityId": "0",
+            "recipeType": "0",
+            "categoryId": 0,
+            "itemId": 0,
+            "servingSize": 0,
+            "browingLevel": 0,
+            "option": 0
+          },
+          "timestamp": "2025-02-08T21:13:36.160Z"
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": null
+        },
+        "otnDUID": {
+          "value": "U7CNQWBWSCD7C",
+          "timestamp": "2025-02-08T21:13:36.256Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2025-02-08T21:13:36.213Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2025-02-08T21:13:36.213Z"
+        },
+        "operatingState": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "ovenOperatingState": {
+        "completionTime": {
+          "value": "2025-02-08T21:13:36.184Z",
+          "timestamp": "2025-02-08T21:13:36.188Z"
+        },
+        "machineState": {
+          "value": "ready",
+          "timestamp": "2025-02-08T21:13:36.188Z"
+        },
+        "progress": {
+          "value": 0,
+          "unit": "%",
+          "timestamp": "2025-02-08T21:13:36.188Z"
+        },
+        "supportedMachineStates": {
+          "value": null
+        },
+        "ovenJobState": {
+          "value": "ready",
+          "timestamp": "2025-02-08T21:13:36.160Z"
+        },
+        "operationTime": {
+          "value": 0,
+          "timestamp": "2025-02-08T21:13:36.188Z"
+        }
+      }
+    },
+    "hood": {
+      "samsungce.hoodFanSpeed": {
+        "settableMaxFanSpeed": {
+          "value": 3,
+          "timestamp": "2025-02-09T00:01:06.959Z"
+        },
+        "hoodFanSpeed": {
+          "value": 0,
+          "timestamp": "2025-02-09T00:01:07.813Z"
+        },
+        "supportedHoodFanSpeed": {
+          "value": [0, 1, 2, 3, 4, 5],
+          "timestamp": "2022-03-23T15:59:12.796Z"
+        },
+        "settableMinFanSpeed": {
+          "value": 0,
+          "timestamp": "2025-02-09T00:01:06.959Z"
+        }
+      },
+      "samsungce.lamp": {
+        "brightnessLevel": {
+          "value": "off",
+          "timestamp": "2025-02-08T21:13:36.289Z"
+        },
+        "supportedBrightnessLevel": {
+          "value": ["off", "low", "high"],
+          "timestamp": "2025-02-08T21:13:36.289Z"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+# Describes the format for available file services
+read_file:
+  fields:
+    file_name:
+      example: "www/my_file.json"
+      selector:
+        text:
+    file_encoding:
+      example: "JSON"
+      selector:
+        select:
+          options:
+            - "JSON"
+            - "YAML"

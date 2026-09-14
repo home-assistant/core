@@ -1,0 +1,482 @@
+"""Tests for the Sonos Media Browser."""
+
+from functools import partial
+from unittest.mock import MagicMock, Mock
+
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
+)
+from homeassistant.components.sonos.const import MEDIA_TYPE_DIRECTORY, SONOS_TRACKS
+from homeassistant.components.sonos.media_browser import (
+    build_item_response,
+    get_media,
+    get_thumbnail_url_full,
+)
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
+
+from .conftest import MockMusicServiceItem, SoCoMockFactory
+
+from tests.typing import WebSocketGenerator
+
+
+def mock_browse_by_idstring(
+    search_type: str, idstring: str, start=0, max_items=100, full_album_art_uri=False
+) -> list[MockMusicServiceItem]:
+    """Mock the call to browse_by_id_string."""
+    if search_type == "albums" and idstring in (
+        "A:ALBUM/Abbey%20Road",
+        "A:ALBUM/Abbey Road",
+    ):
+        return [
+            MockMusicServiceItem(
+                "Come Together",
+                "S://192.168.42.10/music/The%20Beatles/Abbey%20Road/01%20Come%20Together.mp3",
+                "A:ALBUM/Abbey%20Road",
+                "object.item.audioItem.musicTrack",
+            ),
+            MockMusicServiceItem(
+                "Something",
+                "S://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+                "A:ALBUM/Abbey%20Road",
+                "object.item.audioItem.musicTrack",
+            ),
+        ]
+    return None
+
+
+@pytest.mark.parametrize(
+    ("idstring", "expected_type"),
+    [
+        pytest.param("A:ALBUM/Abbey%20Road", MediaType.ALBUM, id="album"),
+        pytest.param(
+            "A:ALBUMARTIST/The%20Beatles", MediaType.ARTIST, id="album_artist"
+        ),
+    ],
+)
+def test_build_item_response_container_art_uses_media_type(
+    idstring: str, expected_type: MediaType
+) -> None:
+    """Test container art is requested with a MediaType, not a Sonos search type.
+
+    async_get_browse_image matches on MediaType, so requesting the container art
+    with the Sonos search type makes the browse image proxy return no image.
+    """
+    music_library = MagicMock()
+    music_library.browse_by_idstring.return_value = [
+        MockMusicServiceItem(
+            "Come Together",
+            "x-file-cifs://192.168.42.10/music/01%20Come%20Together.mp3",
+            idstring,
+            "object.item.audioItem.musicTrack",
+        )
+    ]
+    music_library.get_music_library_information.return_value = []
+    get_thumbnail_url = Mock(return_value="/thumb")
+
+    build_item_response(
+        music_library,
+        {"search_type": MediaType.ALBUM, "idstring": idstring},
+        get_thumbnail_url,
+    )
+
+    assert get_thumbnail_url.call_args.args[0] == expected_type
+
+
+@pytest.mark.parametrize(
+    ("idstring", "child_class", "expected_can_play"),
+    [
+        pytest.param(
+            "A:ALBUM/Abbey%20Road",
+            "object.item.audioItem.musicTrack",
+            True,
+            id="single_album",
+        ),
+        pytest.param(
+            "A:ALBUM",
+            "object.container.album.musicAlbum",
+            False,
+            id="album_listing",
+        ),
+    ],
+)
+def test_build_item_response_playable_only_for_a_single_album(
+    idstring: str, child_class: str, expected_can_play: bool
+) -> None:
+    """Test a resolved album is playable while the album listing is not.
+
+    can_play is passed a Sonos search type, which for the listing would otherwise
+    mark every library listing playable.
+    """
+    music_library = MagicMock()
+    music_library.browse_by_idstring.return_value = [
+        MockMusicServiceItem(
+            "Abbey Road", "A:ALBUM/Abbey%20Road", idstring, child_class
+        )
+    ]
+    music_library.get_music_library_information.return_value = []
+
+    response = build_item_response(
+        music_library,
+        {"search_type": MediaType.ALBUM, "idstring": idstring},
+        Mock(return_value="/thumb"),
+    )
+
+    assert response.can_play is expected_can_play
+
+
+async def test_build_item_response(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    soco,
+    discover,
+) -> None:
+    """Test building a browse item response."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    soco_mock.music_library.browse_by_idstring = mock_browse_by_idstring
+    browse_item: BrowseMedia = build_item_response(
+        soco_mock.music_library,
+        {"search_type": MediaType.ALBUM, "idstring": "A:ALBUM/Abbey%20Road"},
+        partial(
+            get_thumbnail_url_full,
+            soco_mock.music_library,
+            True,
+            None,
+        ),
+    )
+    assert browse_item.title == "Abbey Road"
+    assert browse_item.media_class == MediaClass.ALBUM
+    assert browse_item.media_content_id == "A:ALBUM/Abbey%20Road"
+    assert len(browse_item.children) == 2
+    assert browse_item.children[0].media_class == MediaClass.TRACK
+    assert browse_item.children[0].title == "Come Together"
+    assert (
+        browse_item.children[0].media_content_id
+        == "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/01%20Come%20Together.mp3"
+    )
+    assert browse_item.children[1].media_class == MediaClass.TRACK
+    assert browse_item.children[1].title == "Something"
+    assert (
+        browse_item.children[1].media_content_id
+        == "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3"
+    )
+
+
+def test_get_media_multisegment_album_id_uses_album_segment() -> None:
+    """Test `A:ALBUM/<album>/<artist>` uses album name as lookup search term."""
+    music_library = MagicMock()
+    music_library.get_music_library_information.return_value = []
+    result = get_media(
+        music_library,
+        "A:ALBUM/Abbey%20Road/The%20Beatles",
+        "album",
+    )
+
+    assert result is None
+    assert music_library.get_music_library_information.call_count == 1
+    assert music_library.get_music_library_information.call_args.args == ("albums",)
+    assert music_library.get_music_library_information.call_args.kwargs == {
+        "search_term": "Abbey Road",
+        "full_album_art_uri": True,
+    }
+
+
+def test_get_media_multisegment_album_id_prefers_exact_item_id_match() -> None:
+    """Test multi-match disambiguation prefers exact `item_id`."""
+    music_library = MagicMock()
+    exact_item = MockMusicServiceItem(
+        "Abbey Road (Remaster)",
+        "A:ALBUM/Abbey%20Road/The%20Beatles",
+        "A:ALBUM",
+        "object.container.album.musicAlbum",
+    )
+    music_library.get_music_library_information.return_value = [
+        MockMusicServiceItem(
+            "Abbey Road",
+            "A:ALBUM/Abbey%20Road/Someone%20Else",
+            "A:ALBUM",
+            "object.container.album.musicAlbum",
+        ),
+        exact_item,
+    ]
+
+    result = get_media(
+        music_library,
+        "A:ALBUM/Abbey%20Road/The%20Beatles",
+        "album",
+    )
+
+    assert result is exact_item
+
+
+def test_get_media_multisegment_album_id_falls_back_to_exact_title_match() -> None:
+    """Test multi-match disambiguation falls back to exact title match."""
+    music_library = MagicMock()
+    title_match_item = MockMusicServiceItem(
+        "Abbey Road",
+        "A:ALBUM/Abbey%20Road/The%20Beatles%20(Remaster)",
+        "A:ALBUM",
+        "object.container.album.musicAlbum",
+    )
+    music_library.get_music_library_information.return_value = [
+        MockMusicServiceItem(
+            "Abbey Road (Live)",
+            "A:ALBUM/Abbey%20Road/The%20Beatles%20(Live)",
+            "A:ALBUM",
+            "object.container.album.musicAlbum",
+        ),
+        title_match_item,
+    ]
+
+    result = get_media(
+        music_library,
+        "A:ALBUM/Abbey%20Road/The%20Beatles",
+        "album",
+    )
+
+    assert result is title_match_item
+
+
+async def test_browse_media_root(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    soco,
+    discover,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the async_browse_media method."""
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.zone_a",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["children"] == snapshot
+
+
+async def test_browse_media_library(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    soco,
+    discover,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the async_browse_media method."""
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.zone_a",
+            "media_content_id": "",
+            "media_content_type": "library",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["children"] == snapshot
+
+
+async def test_browse_media_library_albums(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    soco,
+    discover,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the async_browse_media method."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.zone_a",
+            "media_content_id": "A:ALBUM",
+            "media_content_type": "album",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["children"] == snapshot
+    assert soco_mock.music_library.browse_by_idstring.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("media_content_id", "media_content_type"),
+    [
+        (
+            "",
+            "favorites",
+        ),
+        (
+            "object.item.audioItem.audioBook",
+            "favorites_folder",
+        ),
+        (
+            "object.container.album.musicAlbum",
+            "favorites_folder",
+        ),
+        (
+            "object.container.podcast",
+            "favorites_folder",
+        ),
+    ],
+)
+async def test_browse_media_favorites(
+    async_autosetup_sonos,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    media_content_id,
+    media_content_type,
+) -> None:
+    """Test the async_browse_media method."""
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.zone_a",
+            "media_content_id": media_content_id,
+            "media_content_type": media_content_type,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
+
+
+@pytest.mark.parametrize(
+    "media_content_id",
+    [
+        ("S:"),
+        ("S://192.168.1.1/music"),
+    ],
+)
+async def test_browse_media_library_folders(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    media_content_id: str,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the async_browse_media method."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_ID: media_content_id,
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_DIRECTORY,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
+    assert soco_mock.music_library.browse_by_idstring.call_count == 1
+
+
+async def test_search_media(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    soco,
+    discover,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the async_search_media method returns tracks matching the query."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    mock_items = [
+        MockMusicServiceItem(
+            "Come Together",
+            "S://192.168.42.10/music/The%20Beatles/Abbey%20Road/01%20Come%20Together.mp3",
+            "A:ALBUM/Abbey%20Road",
+            "object.item.audioItem.musicTrack",
+            album_art_uri="http://example.com/abbey_road.jpg",
+        ),
+        MockMusicServiceItem(
+            "Something",
+            "S://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+            "A:ALBUM/Abbey%20Road",
+            "object.item.audioItem.musicTrack",
+            album_art_uri="http://example.com/abbey_road.jpg",
+        ),
+    ]
+    soco_mock.music_library.get_music_library_information = Mock(
+        return_value=mock_items
+    )
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/search_media",
+            "entity_id": "media_player.zone_a",
+            "search_query": "Come Together",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    assert response["result"] == snapshot
+
+    assert soco_mock.music_library.get_music_library_information.call_args.args == (
+        SONOS_TRACKS,
+    )
+    assert soco_mock.music_library.get_music_library_information.call_args.kwargs == {
+        "search_term": "Come Together",
+        "full_album_art_uri": True,
+        "complete_result": True,
+    }
+
+
+async def test_search_media_invalid_media_content_type(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that async_search_media raises on an unsupported media_content_type."""
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/search_media",
+            "entity_id": "media_player.zone_a",
+            "media_content_type": "movie",
+            "media_content_id": "some_id",
+            "search_query": "test",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert response["error"]["translation_key"] == "invalid_media_content_type"
+    assert response["error"]["translation_placeholders"] == {
+        "media_content_type": "movie"
+    }

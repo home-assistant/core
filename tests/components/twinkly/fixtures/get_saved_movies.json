@@ -1,0 +1,12 @@
+{
+  "movies": [
+    {
+      "id": 1,
+      "name": "Rainbow"
+    },
+    {
+      "id": 2,
+      "name": "Flare"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "Successfully updated credentials"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_auth_key": "API credentials rejected by Coinbase due to an invalid API key.",
+      "invalid_auth_secret": "API credentials rejected by Coinbase due to an invalid API secret.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_token": "API secret"
+        },
+        "description": "Your current Coinbase API key appears to be for the deprecated v2 API. Please reconfigure with a new API key created for the v3 API. Visit the [Developer Platform]({developer_url}) to create new credentials for {account_name}.",
+        "title": "Update Coinbase API credentials"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_token": "API secret"
+        },
+        "description": "Please enter the details of your API key as provided by Coinbase.",
+        "title": "Coinbase API key details"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "currency_unavailable": "One or more of the requested currency balances is not provided by your Coinbase API.",
+      "exchange_rate_unavailable": "One or more of the requested exchange rates is not provided by Coinbase.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "account_balance_currencies": "Wallet balances to report.",
+          "exchange_base": "Base currency for exchange rate sensors.",
+          "exchange_rate_currencies": "Exchange rates to report.",
+          "exchange_rate_precision": "Number of decimal places for exchange rates."
+        },
+        "description": "Adjust Coinbase options"
+      }
+    }
+  }
+}

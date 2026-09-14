@@ -1,0 +1,215 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "bad_station_id": "Station code is invalid, missing, or not found in the station code database",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "error_response": "Response from Environment Canada in error",
+      "too_many_attempts": "Connections to Environment Canada are rate limited; Try again in 60 seconds",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "language": "Weather information language",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "station": "Weather station"
+        },
+        "description": "Select a weather station from the dropdown, or specify coordinates to use the closest station. The default coordinates are from your Home Assistant installation. Weather information can be retrieved in English or French.",
+        "title": "Environment Canada: weather location and language"
+      }
+    }
+  },
+  "entity": {
+    "camera": {
+      "radar": {
+        "name": "Radar"
+      }
+    },
+    "sensor": {
+      "advisories": {
+        "name": "Advisories"
+      },
+      "aqhi": {
+        "name": "AQHI"
+      },
+      "condition": {
+        "name": "Current condition"
+      },
+      "dewpoint": {
+        "name": "Dew point"
+      },
+      "endings": {
+        "name": "Endings"
+      },
+      "high_temp": {
+        "name": "High temperature"
+      },
+      "humidex": {
+        "name": "Humidex"
+      },
+      "icon_code": {
+        "name": "Icon code"
+      },
+      "low_temp": {
+        "name": "Low temperature"
+      },
+      "normal_high": {
+        "name": "Normal high temperature"
+      },
+      "normal_low": {
+        "name": "Normal low temperature"
+      },
+      "pop": {
+        "name": "Chance of precipitation"
+      },
+      "pressure": {
+        "name": "Barometric pressure"
+      },
+      "statements": {
+        "name": "Statements"
+      },
+      "tendency": {
+        "name": "Tendency"
+      },
+      "text_summary": {
+        "name": "Summary"
+      },
+      "timestamp": {
+        "name": "Observation time"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "visibility": {
+        "name": "Visibility"
+      },
+      "warnings": {
+        "name": "Warnings"
+      },
+      "watches": {
+        "name": "Watches"
+      },
+      "wind_bearing": {
+        "name": "Wind bearing"
+      },
+      "wind_chill": {
+        "name": "Wind chill"
+      },
+      "wind_dir": {
+        "name": "Wind direction"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      }
+    },
+    "weather": {
+      "forecast": {
+        "name": "Forecast"
+      }
+    }
+  },
+  "exceptions": {
+    "not_connected": {
+      "message": "Environment Canada is not connected"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "sections": {
+          "image": {
+            "data": {
+              "radar_fps": "Loop frame rate",
+              "radar_interpolation": "Smooth radar image"
+            },
+            "data_description": {
+              "radar_fps": "Frame rate of the radar animation",
+              "radar_interpolation": "Smooth the radar image instead of leaving it pixelated (uses more bandwidth)"
+            },
+            "name": "Image"
+          },
+          "map": {
+            "data": {
+              "radar_radius": "Map radius"
+            },
+            "data_description": {
+              "radar_radius": "Radius of the radar map in kilometres"
+            },
+            "name": "Map"
+          },
+          "radar": {
+            "data": {
+              "radar_colors": "Colour scale",
+              "radar_layer": "Radar type",
+              "radar_legend": "Show legend",
+              "radar_opacity": "Radar opacity"
+            },
+            "data_description": {
+              "radar_colors": "Number of colours in the rain/snow radar scale (has no effect on the precipitation type layer)",
+              "radar_opacity": "Opacity of the radar layer overlay (0-100)"
+            },
+            "name": "Radar"
+          },
+          "time": {
+            "data": {
+              "radar_duration": "Past minutes",
+              "radar_future_minutes": "Future minutes",
+              "radar_timestamp": "Show timestamp"
+            },
+            "data_description": {
+              "radar_duration": "How far back the radar animation goes, in minutes (0 for the full available history)",
+              "radar_future_minutes": "Extend the radar loop past now using Environment Canada's short-term forecast (nowcast) layer, in minutes (up to 72, the limit of the available data). Only affects Rain and Snow; no effect on Precipitation type"
+            },
+            "name": "Time"
+          }
+        },
+        "title": "Radar camera options"
+      }
+    }
+  },
+  "selector": {
+    "radar_colors": {
+      "options": {
+        "8": "8 colours",
+        "14": "14 colours"
+      }
+    },
+    "radar_layer": {
+      "options": {
+        "precip_type": "Precipitation type",
+        "rain": "Rain",
+        "snow": "Snow"
+      }
+    }
+  },
+  "services": {
+    "get_alerts": {
+      "description": "Retrieves the alerts from the selected weather service.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Environment Canada service to retrieve alerts from.",
+          "name": "Environment Canada service"
+        }
+      },
+      "name": "Get alerts"
+    },
+    "get_forecasts": {
+      "description": "Retrieves the forecast from selected weather services.",
+      "name": "Get forecasts"
+    },
+    "set_radar_type": {
+      "description": "Sets the type of radar image to retrieve.",
+      "fields": {
+        "radar_type": {
+          "description": "The type of radar image to display.",
+          "name": "Radar type"
+        }
+      },
+      "name": "Set radar type"
+    }
+  }
+}

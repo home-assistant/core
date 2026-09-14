@@ -1,0 +1,10 @@
+{
+  "domain": "tod",
+  "name": "Times of the Day",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tod",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
+}

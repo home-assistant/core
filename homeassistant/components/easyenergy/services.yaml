@@ -1,0 +1,97 @@
+get_gas_prices:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: easyenergy
+    incl_vat:
+      required: true
+      default: true
+      selector:
+        boolean:
+    price_type:
+      required: false
+      default: market
+      selector:
+        select:
+          translation_key: price_type_selector
+          options:
+            - market
+            - invoice
+    start:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:
+    end:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:
+get_energy_usage_prices:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: easyenergy
+    incl_vat:
+      required: true
+      default: true
+      selector:
+        boolean:
+    granularity:
+      required: false
+      default: hour
+      selector:
+        select:
+          translation_key: granularity_selector
+          options:
+            - hour
+            - quarter
+    price_type:
+      required: false
+      default: market
+      selector:
+        select:
+          translation_key: price_type_selector
+          options:
+            - market
+            - invoice
+    start:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:
+    end:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:
+get_energy_return_prices:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: easyenergy
+    granularity:
+      required: false
+      default: hour
+      selector:
+        select:
+          translation_key: granularity_selector
+          options:
+            - hour
+            - quarter
+    start:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:
+    end:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:

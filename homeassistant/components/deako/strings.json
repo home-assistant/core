@@ -1,0 +1,9 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Please confirm setting up the Deako integration"
+      }
+    }
+  }
+}

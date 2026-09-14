@@ -1,0 +1,11 @@
+{
+  "data": [{ "point_time": "2024-06-18T18:40:00+00:00", "value": 96.0 }],
+  "meta": {
+    "data_point_period_seconds": 300,
+    "region": "PJM_NJ",
+    "signal_type": "co2_moer",
+    "units": "percentile",
+    "warnings": [],
+    "model": { "date": "2022-10-01" }
+  }
+}

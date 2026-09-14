@@ -1,0 +1,11 @@
+{
+  "domain": "filter",
+  "name": "Filter",
+  "codeowners": ["@dgomes"],
+  "config_flow": true,
+  "dependencies": ["recorder"],
+  "documentation": "https://www.home-assistant.io/integrations/filter",
+  "integration_type": "helper",
+  "iot_class": "local_push",
+  "quality_scale": "internal"
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "configurator",
+  "name": "Configurator",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/configurator",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

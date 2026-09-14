@@ -1,0 +1,30 @@
+get_alerts:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: environment_canada
+
+get_forecasts:
+  target:
+    entity:
+      integration: environment_canada
+      domain: weather
+
+set_radar_type:
+  target:
+    entity:
+      integration: environment_canada
+      domain: camera
+  fields:
+    radar_type:
+      required: true
+      example: Rain
+      selector:
+        select:
+          options:
+            - "Auto"
+            - "Rain"
+            - "Snow"
+            - "Precipitation type"

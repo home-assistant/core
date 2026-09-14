@@ -1,0 +1,61 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_url": "Failed to connect. Check the URL and if the device is connected to power",
+      "missing_device_info": "Failed to read device information. Check the network connection of the device"
+    },
+    "flow_title": "{name} ({model})",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up the Lunatone device at {url}?"
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::lunatone::config::step::user::data_description::url%]"
+        },
+        "description": "Update configuration for {name}."
+      },
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The URL of the Lunatone device to connect to."
+        },
+        "description": "Enter the URL of your Lunatone device.\nHome Assistant will use this address to connect to the device API."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "scan_status": {
+        "name": "DALI scan"
+      }
+    },
+    "sensor": {
+      "dali_line_status": {
+        "name": "Status",
+        "state": {
+          "low_power": "Low bus power",
+          "no_power": "Bus power failure",
+          "not_reachable": "Not reachable",
+          "ok": "OK"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "missing_device_info": {
+      "message": "Unable to read device information. Please verify the device's network connection."
+    }
+  }
+}

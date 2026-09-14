@@ -1,0 +1,46 @@
+"""Coordinator for Daikin integration."""
+
+from datetime import timedelta
+import logging
+from typing import override
+
+from pydaikin.daikin_base import Appliance
+from pydaikin.exceptions import DaikinException
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN, TIMEOUT_SEC
+
+_LOGGER = logging.getLogger(__name__)
+
+type DaikinConfigEntry = ConfigEntry[DaikinCoordinator]
+
+
+class DaikinCoordinator(DataUpdateCoordinator[None]):
+    """Class to manage fetching Daikin data."""
+
+    def __init__(
+        self, hass: HomeAssistant, entry: DaikinConfigEntry, device: Appliance
+    ) -> None:
+        """Initialize global Daikin data updater."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=device.values.get("name", DOMAIN),
+            update_interval=timedelta(seconds=TIMEOUT_SEC),
+        )
+        self.device = device
+
+    @override
+    async def _async_update_data(self) -> None:
+        try:
+            await self.device.update_status()
+        except DaikinException as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="error_communicating",
+                translation_placeholders={"error": str(err)},
+            ) from err

@@ -1,0 +1,32 @@
+play_media:
+  target:
+    entity:
+      domain: media_player
+  fields:
+    media_content_id:
+      required: true
+      example: "https://soundcloud.com/bruttoband/brutto-11"
+      selector:
+        text:
+    media_content_type:
+      required: true
+      selector:
+        select:
+          options:
+            - "CHANNEL"
+            - "EPISODE"
+            - "PLAYLIST MUSIC"
+            - "MUSIC"
+            - "TVSHOW"
+            - "VIDEO"
+extract_media_url:
+  fields:
+    url:
+      required: true
+      example: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      selector:
+        text:
+    format_query:
+      example: "best"
+      selector:
+        text:

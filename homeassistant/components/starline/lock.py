@@ -1,0 +1,81 @@
+"""Support for StarLine lock."""
+
+from typing import Any, override
+
+from homeassistant.components.lock import LockEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import StarlineConfigEntry
+from .account import StarlineAccount, StarlineDevice
+from .entity import StarlineEntity
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: StarlineConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the StarLine lock."""
+    account = entry.runtime_data
+    entities = []
+    for device in account.api.devices.values():
+        if device.support_state:
+            lock = StarlineLock(account, device)
+            if lock.is_locked is not None:
+                entities.append(lock)
+    async_add_entities(entities)
+
+
+class StarlineLock(StarlineEntity, LockEntity):
+    """Representation of a StarLine lock."""
+
+    _attr_translation_key = "security"
+
+    def __init__(self, account: StarlineAccount, device: StarlineDevice) -> None:
+        """Initialize the lock."""
+        super().__init__(account, device, "lock")
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._device.online
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, bool]:
+        """Return the state attributes of the lock.
+
+        Possible dictionary keys:
+        add_h - Additional sensor alarm status (high level)
+        add_l - Additional channel alarm status (low level)
+        door - Doors alarm status
+        hbrake - Hand brake alarm status
+        hijack - Hijack mode status
+        hood - Hood alarm status
+        ign - Ignition alarm status
+        pbrake - Brake pedal alarm status
+        shock_h - Shock sensor alarm status (high level)
+        shock_l - Shock sensor alarm status (low level)
+        tilt - Tilt sensor alarm status
+        trunk - Trunk alarm status
+        Documentation: https://developer.starline.ru/#api-Device-DeviceState
+        """
+        return self._device.alarm_state
+
+    @property
+    @override
+    def is_locked(self) -> bool | None:
+        """Return true if lock is locked."""
+        return self._device.car_state.get("arm")
+
+    @override
+    def lock(self, **kwargs: Any) -> None:
+        """Lock the car."""
+        self._account.api.set_car_state(self._device.device_id, "arm", True)
+
+    @override
+    def unlock(self, **kwargs: Any) -> None:
+        """Unlock the car."""
+        self._account.api.set_car_state(self._device.device_id, "arm", False)

@@ -1,0 +1,74 @@
+# Describes the format for available camera services
+
+turn_off:
+  target:
+    entity:
+      domain: camera
+
+turn_on:
+  target:
+    entity:
+      domain: camera
+
+enable_motion_detection:
+  target:
+    entity:
+      domain: camera
+
+disable_motion_detection:
+  target:
+    entity:
+      domain: camera
+
+snapshot:
+  target:
+    entity:
+      domain: camera
+  fields:
+    filename:
+      required: true
+      example: "/tmp/snapshot_{{ entity_id.name }}.jpg"
+      selector:
+        text:
+
+play_stream:
+  target:
+    entity:
+      domain: camera
+  fields:
+    media_player:
+      required: true
+      selector:
+        entity:
+          domain: media_player
+    format:
+      default: "hls"
+      selector:
+        select:
+          options:
+            - "hls"
+
+record:
+  target:
+    entity:
+      domain: camera
+  fields:
+    filename:
+      required: true
+      example: "/tmp/snapshot_{{ entity_id.name }}.mp4"
+      selector:
+        text:
+    duration:
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    lookback:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: seconds

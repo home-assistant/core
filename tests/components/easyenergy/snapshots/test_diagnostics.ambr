@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'energy_return': dict({
+      'average_price': 0.09516,
+      'current_hour_price': -0.00226,
+      'highest_price_time': '2026-04-19T18:00:00+00:00',
+      'lowest_price_time': '2026-04-19T12:00:00+00:00',
+      'max_price': 0.15082,
+      'min_price': -0.003,
+      'next_hour_price': 0.01631,
+      'percentage_of_max': -1.5,
+    }),
+    'energy_usage': dict({
+      'average_price': 0.09516,
+      'current_hour_price': -0.00226,
+      'highest_price_time': '2026-04-19T18:00:00+00:00',
+      'lowest_price_time': '2026-04-19T12:00:00+00:00',
+      'max_price': 0.15082,
+      'min_price': -0.003,
+      'next_hour_price': 0.01631,
+      'percentage_of_max': -1.5,
+    }),
+    'entry': dict({
+      'title': 'energy',
+    }),
+    'gas': dict({
+      'current_hour_price': 0.6169,
+      'next_hour_price': 0.6169,
+    }),
+  })
+# ---
+# name: test_diagnostics_no_gas_today
+  dict({
+    'energy_return': dict({
+      'average_price': 0.09516,
+      'current_hour_price': -0.00226,
+      'highest_price_time': '2026-04-19T18:00:00+00:00',
+      'lowest_price_time': '2026-04-19T12:00:00+00:00',
+      'max_price': 0.15082,
+      'min_price': -0.003,
+      'next_hour_price': 0.01631,
+      'percentage_of_max': -1.5,
+    }),
+    'energy_usage': dict({
+      'average_price': 0.09516,
+      'current_hour_price': -0.00226,
+      'highest_price_time': '2026-04-19T18:00:00+00:00',
+      'lowest_price_time': '2026-04-19T12:00:00+00:00',
+      'max_price': 0.15082,
+      'min_price': -0.003,
+      'next_hour_price': 0.01631,
+      'percentage_of_max': -1.5,
+    }),
+    'entry': dict({
+      'title': 'energy',
+    }),
+    'gas': dict({
+      'current_hour_price': None,
+      'next_hour_price': None,
+    }),
+  })
+# ---

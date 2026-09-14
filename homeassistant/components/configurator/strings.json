@@ -1,0 +1,12 @@
+{
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::configurator::title%]",
+      "state": {
+        "configure": "Configure",
+        "configured": "Configured"
+      }
+    }
+  },
+  "title": "Configurator"
+}

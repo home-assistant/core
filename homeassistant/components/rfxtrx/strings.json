@@ -1,0 +1,242 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "setup_network": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your RFXCOM RFXtrx device."
+        },
+        "title": "Select connection address"
+      },
+      "setup_serial": {
+        "data": {
+          "device": "Select device"
+        },
+        "title": "[%key:common::config_flow::data::device%]"
+      },
+      "setup_serial_manual_path": {
+        "data": {
+          "device": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "title": "[%key:common::config_flow::data::path%]"
+      },
+      "user": {
+        "data": {
+          "type": "Connection type"
+        },
+        "title": "Select connection type"
+      }
+    }
+  },
+  "device_automation": {
+    "action_type": {
+      "send_command": "Send command: {subtype}",
+      "send_status": "Send status update: {subtype}"
+    },
+    "trigger_type": {
+      "command": "Received command: {subtype}",
+      "status": "Received status: {subtype}"
+    }
+  },
+  "entity": {
+    "event": {
+      "command": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "0_5_seconds_down": "0.5 seconds down",
+              "0_5_seconds_up": "0.5 seconds up",
+              "2_seconds_down": "2 seconds down",
+              "2_seconds_up": "2 seconds up",
+              "alarm": "Alarm",
+              "alarm_delayed": "Alarm delayed",
+              "alarm_delayed_tamper": "Alarm delayed tamper",
+              "alarm_tamper": "Alarm tamper",
+              "all_group_off": "All/group off",
+              "all_group_on": "All/group on",
+              "all_off": "All off",
+              "all_on": "All on",
+              "arm_away": "Arm away",
+              "arm_away_delayed": "Arm away delayed",
+              "arm_home": "Arm home",
+              "arm_home_delayed": "Arm home delayed",
+              "battery_low": "Battery low",
+              "bright": "Bright",
+              "chime": "Chime",
+              "dark_detected": "Dark detected",
+              "dim": "Dim",
+              "disable_sun_automation": "Disable sun automation",
+              "disarm": "Disarm",
+              "down": "Down",
+              "enable_sun_automation": "Enable sun automation",
+              "end_panic": "End panic",
+              "group_off": "Group off",
+              "group_on": "Group on",
+              "illegal_command": "Illegal command",
+              "ir": "IR",
+              "level_1": "Level 1",
+              "level_2": "Level 2",
+              "level_3": "Level 3",
+              "level_4": "Level 4",
+              "level_5": "Level 5",
+              "level_6": "Level 6",
+              "level_7": "Level 7",
+              "level_8": "Level 8",
+              "level_9": "Level 9",
+              "light_1_off": "Light 1 off",
+              "light_1_on": "Light 1 on",
+              "light_2_off": "Light 2 off",
+              "light_2_on": "Light 2 on",
+              "light_detected": "Light detected",
+              "motion": "Motion",
+              "motion_tamper": "Motion tamper",
+              "no_motion": "No motion",
+              "no_motion_tamper": "No motion tamper",
+              "normal": "[%key:common::state::normal%]",
+              "normal_delayed": "Normal delayed",
+              "normal_delayed_tamper": "Normal delayed tamper",
+              "normal_tamper": "Normal tamper",
+              "off": "[%key:common::state::off%]",
+              "on": "[%key:common::state::on%]",
+              "pairing_kd101": "Pairing KD101",
+              "panic": "Panic",
+              "program": "Program",
+              "scene": "Scene",
+              "set_group_level": "Set group level",
+              "set_level": "Set level",
+              "sound_0": "Sound 0",
+              "sound_1": "Sound 1",
+              "sound_10": "Sound 10",
+              "sound_11": "Sound 11",
+              "sound_12": "Sound 12",
+              "sound_13": "Sound 13",
+              "sound_14": "Sound 14",
+              "sound_15": "Sound 15",
+              "sound_2": "Sound 2",
+              "sound_3": "Sound 3",
+              "sound_4": "Sound 4",
+              "sound_5": "Sound 5",
+              "sound_6": "Sound 6",
+              "sound_7": "Sound 7",
+              "sound_8": "Sound 8",
+              "sound_9": "Sound 9",
+              "stop": "Stop",
+              "up": "Up"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "chill": {
+        "name": "Chill"
+      },
+      "count": {
+        "name": "Count"
+      },
+      "counter_value": {
+        "name": "Counter value"
+      },
+      "current_ch_1": {
+        "name": "Current Ch. 1"
+      },
+      "current_ch_2": {
+        "name": "Current Ch. 2"
+      },
+      "current_ch_3": {
+        "name": "Current Ch. 3"
+      },
+      "forecast": {
+        "name": "Forecast"
+      },
+      "forecast_status": {
+        "name": "Forecast status"
+      },
+      "humidity_status": {
+        "name": "Humidity status"
+      },
+      "instantaneous_power": {
+        "name": "Instantaneous power"
+      },
+      "sensor_status": {
+        "name": "Sensor status"
+      },
+      "sound": {
+        "name": "Sound"
+      },
+      "temperature_2": {
+        "name": "Temperature 2"
+      },
+      "total_energy_usage": {
+        "name": "Total energy usage"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "wind_average_speed": {
+        "name": "Wind average speed"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_event_code": "Invalid event code",
+      "invalid_input_2262_off": "Invalid input for command off",
+      "invalid_input_2262_on": "Invalid input for command on",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "prompt_options": {
+        "data": {
+          "automatic_add": "Enable automatic add",
+          "debug": "Enable debugging",
+          "device": "Select device to configure",
+          "event_code": "Enter event code to add",
+          "protocols": "Protocols"
+        },
+        "title": "RFXtrx options"
+      },
+      "set_device_options": {
+        "data": {
+          "command_off": "Data bits value for command off",
+          "command_on": "Data bits value for command on",
+          "data_bits": "Number of data bits",
+          "off_delay": "Off delay",
+          "off_delay_enabled": "Enable off delay",
+          "replace_device": "Select device to replace",
+          "venetian_blind_mode": "Venetian blind mode"
+        },
+        "title": "Configure device options"
+      }
+    }
+  },
+  "services": {
+    "send": {
+      "description": "Sends a raw event on radio.",
+      "fields": {
+        "event": {
+          "description": "A hexadecimal string to send.",
+          "name": "Event"
+        }
+      },
+      "name": "Send"
+    }
+  }
+}

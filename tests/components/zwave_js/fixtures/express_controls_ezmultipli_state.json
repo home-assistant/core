@@ -1,0 +1,673 @@
+{
+  "nodeId": 96,
+  "index": 0,
+  "installerIcon": 3079,
+  "userIcon": 3079,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": false,
+  "manufacturerId": 30,
+  "productId": 1,
+  "productType": 4,
+  "firmwareVersion": "1.8",
+  "zwavePlusVersion": 1,
+  "name": "HSM200",
+  "location": "Basement",
+  "deviceConfig": {
+    "filename": "/data/db/devices/0x001e/ezmultipli.json",
+    "isEmbedded": true,
+    "manufacturer": "Express Controls",
+    "manufacturerId": 30,
+    "label": "EZMultiPli",
+    "description": "Multi Sensor",
+    "devices": [
+      {
+        "productType": 4,
+        "productId": 1
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "associations": {},
+    "paramInformation": {
+      "_map": {}
+    }
+  },
+  "label": "EZMultiPli",
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 96,
+      "index": 0,
+      "installerIcon": 3079,
+      "userIcon": 3079,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 7,
+          "label": "Notification Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Notification Sensor"
+        },
+        "mandatorySupportedCCs": [],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 49,
+          "name": "Multilevel Sensor",
+          "version": 6,
+          "isSecure": false
+        },
+        {
+          "id": 51,
+          "name": "Color Switch",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 119,
+          "name": "Node Naming and Location",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": false
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Home Security",
+      "propertyKey": "Motion sensor status",
+      "propertyName": "Home Security",
+      "propertyKeyName": "Motion sensor status",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Motion sensor status",
+        "ccSpecific": {
+          "notificationType": 7
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "7": "Motion detection (location provided)"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Air temperature",
+      "propertyName": "Air temperature",
+      "ccVersion": 6,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Air temperature",
+        "ccSpecific": {
+          "sensorType": 1,
+          "scale": 0
+        },
+        "unit": "\u00b0C"
+      },
+      "value": 16.8
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Illuminance",
+      "propertyName": "Illuminance",
+      "ccVersion": 6,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Illuminance",
+        "ccSpecific": {
+          "sensorType": 3,
+          "scale": 0
+        },
+        "unit": "%"
+      },
+      "value": 61
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Remaining duration"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 2,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Red",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Red color.",
+        "label": "Current value (Red)",
+        "min": 0,
+        "max": 255
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 3,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Green",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Green color.",
+        "label": "Current value (Green)",
+        "min": 0,
+        "max": 255
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 4,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Blue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "The current value of the Blue color.",
+        "label": "Current value (Blue)",
+        "min": 0,
+        "max": 255
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyName": "currentColor",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Current Color"
+      },
+      "value": {
+        "red": 0,
+        "green": 255,
+        "blue": 0
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "hexColor",
+      "propertyName": "hexColor",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "color",
+        "readable": true,
+        "writeable": true,
+        "label": "RGB Color",
+        "minLength": 6,
+        "maxLength": 7
+      },
+      "value": "00ff00"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 2,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Red",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "The target value of the Red color.",
+        "label": "Target value (Red)",
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 3,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Green",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "The target value of the Green color.",
+        "label": "Target value (Green)",
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 4,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Blue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "The target value of the Blue color.",
+        "label": "Target value (Blue)",
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyName": "targetColor",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true,
+        "label": "Target Color",
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 30
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        }
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "4.5"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["1.8"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 1,
+      "propertyName": "OnTime",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "OnTime",
+        "default": 10,
+        "min": 0,
+        "max": 127,
+        "unit": "Minutes",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 2,
+      "propertyName": "OnLevel",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Allowable range: 0-99, 255",
+        "label": "OnLevel",
+        "default": 255,
+        "min": 0,
+        "max": 255,
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 255
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyName": "LiteMin",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "LiteMin",
+        "default": 60,
+        "min": 0,
+        "max": 127,
+        "unit": "Minutes",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 60
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 4,
+      "propertyName": "TempMin",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "A Temperature report is sent to the controller every TempMin minutes.",
+        "label": "TempMin",
+        "default": 60,
+        "min": 0,
+        "max": 127,
+        "unit": "Minutes",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 60
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 5,
+      "propertyName": "TempAdj",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "TempAdj",
+        "default": 0,
+        "min": -128,
+        "max": 127,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": -40
+    }
+  ],
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 5,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 7,
+      "label": "Notification Sensor"
+    },
+    "specific": {
+      "key": 1,
+      "label": "Notification Sensor"
+    },
+    "mandatorySupportedCCs": [],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x001e:0x0004:0x0001:1.8",
+  "statistics": {
+    "commandsTX": 147,
+    "commandsRX": 322,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 3,
+    "timeoutResponse": 0
+  },
+  "highestSecurityClass": -1,
+  "isControllerNode": false,
+  "keepAwake": false
+}

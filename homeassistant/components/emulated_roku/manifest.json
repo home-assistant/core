@@ -1,0 +1,11 @@
+{
+  "domain": "emulated_roku",
+  "name": "Emulated Roku",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/emulated_roku",
+  "iot_class": "local_push",
+  "loggers": ["emulated_roku"],
+  "requirements": ["emulated-roku==0.3.0"]
+}

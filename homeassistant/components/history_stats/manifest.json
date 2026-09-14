@@ -1,0 +1,11 @@
+{
+  "domain": "history_stats",
+  "name": "History Stats",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": ["recorder"],
+  "documentation": "https://www.home-assistant.io/integrations/history_stats",
+  "integration_type": "helper",
+  "iot_class": "local_polling",
+  "quality_scale": "internal"
+}

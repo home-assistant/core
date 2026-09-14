@@ -1,0 +1,236 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Eve Energy 50FF"
+          },
+          {
+            "format": "bool",
+            "iid": 3,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Elgato"
+          },
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "Eve Energy 20EAO8601"
+          },
+          {
+            "format": "string",
+            "iid": 6,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "AA00A0A00000"
+          },
+          {
+            "format": "string",
+            "iid": 7,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.2.9"
+          },
+          {
+            "format": "string",
+            "iid": 8,
+            "perms": ["pr"],
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "value": "1.0.0"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 18,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Logging"
+          },
+          {
+            "format": "data",
+            "iid": 19,
+            "perms": ["pr", "pw"],
+            "type": "E863F11E-079E-48FF-8F27-9C2605A29F52",
+            "value": "HwABDigAuAQKAGLrnNSTogf+"
+          },
+          {
+            "format": "uint32",
+            "iid": 20,
+            "maxValue": 4294967295,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw"],
+            "type": "E863F112-079E-48FF-8F27-9C2605A29F52",
+            "value": 0
+          },
+          {
+            "format": "data",
+            "iid": 21,
+            "perms": ["pw"],
+            "type": "E863F11C-079E-48FF-8F27-9C2605A29F52"
+          },
+          {
+            "format": "data",
+            "iid": 22,
+            "perms": ["pw"],
+            "type": "E863F121-079E-48FF-8F27-9C2605A29F52"
+          },
+          {
+            "format": "data",
+            "iid": 23,
+            "perms": ["pr"],
+            "type": "E863F116-079E-48FF-8F27-9C2605A29F52",
+            "value": "QFUeAAAAAAAAAAAABQsCDAINAgcCDgEkDQAQaCMBAAEAAAABAA=="
+          },
+          {
+            "format": "data",
+            "iid": 24,
+            "perms": ["pr"],
+            "type": "E863F117-079E-48FF-8F27-9C2605A29F52",
+            "value": "EmojAQABAAAADwAAAAAAAAAA"
+          },
+          {
+            "format": "tlv8",
+            "iid": 25,
+            "perms": ["pr"],
+            "type": "E863F131-079E-48FF-8F27-9C2605A29F52",
+            "value": "AAIoAAMCuAQEDEZWMzVHMUEwMjkyOAYCJA0HBGgjAQALAgAABQEAAgRoOQAAXwQAAAAAGQKWABQBAw8EAAAAAEUFBQAAAABGCQUAAAAOAABCBkQRBRQABQMAAAAAAAAAAAAAAABHEQVzG0Uc3xy4HXgAAAA8AAAASAYFAAAAAABKBgUAAAAAABoEAAAAAGABZNAEE7sdAJsEQFUeANIA"
+          },
+          {
+            "format": "tlv8",
+            "iid": 26,
+            "perms": ["pw"],
+            "type": "E863F11D-079E-48FF-8F27-9C2605A29F52"
+          }
+        ],
+        "iid": 17,
+        "type": "E863F007-079E-48FF-8F27-9C2605A29F52",
+        "hidden": true
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 29,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Eve Energy"
+          },
+          {
+            "format": "bool",
+            "iid": 30,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "bool",
+            "iid": 31,
+            "perms": ["pr", "ev"],
+            "type": "00000026-0000-1000-8000-0026BB765291",
+            "value": true
+          },
+          {
+            "format": "float",
+            "iid": 32,
+            "maxValue": 380,
+            "minStep": 0.1,
+            "minValue": 0,
+            "perms": ["pr"],
+            "type": "E863F10A-079E-48FF-8F27-9C2605A29F52",
+            "value": 0.4000000059604645
+          },
+          {
+            "format": "float",
+            "iid": 33,
+            "maxValue": 16,
+            "minStep": 0.1,
+            "minValue": 0,
+            "perms": ["pr"],
+            "type": "E863F126-079E-48FF-8F27-9C2605A29F52",
+            "value": 0
+          },
+          {
+            "format": "float",
+            "iid": 34,
+            "maxValue": 5000,
+            "minStep": 0.1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "E863F10D-079E-48FF-8F27-9C2605A29F52",
+            "value": 0
+          },
+          {
+            "format": "float",
+            "iid": 35,
+            "minStep": 0.1,
+            "minValue": 0,
+            "perms": ["pr"],
+            "type": "E863F10C-079E-48FF-8F27-9C2605A29F52",
+            "value": 0.28999999165534973
+          },
+          {
+            "format": "uint8",
+            "iid": 36,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000A7-0000-1000-8000-0026BB765291",
+            "value": 0
+          }
+        ],
+        "iid": 28,
+        "type": "00000047-0000-1000-8000-0026BB765291",
+        "primary": true
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 100001,
+            "perms": ["pr"],
+            "type": "E863F155-079E-48FF-8F27-9C2605A29F52",
+            "value": "03:29:72:EF:97:2F"
+          },
+          {
+            "format": "uint16",
+            "iid": 100002,
+            "perms": ["pr"],
+            "type": "E863F156-079E-48FF-8F27-9C2605A29F52",
+            "value": 7
+          },
+          {
+            "format": "uint8",
+            "iid": 100003,
+            "perms": ["pr", "ev"],
+            "type": "E863F157-079E-48FF-8F27-9C2605A29F52",
+            "value": 0
+          }
+        ],
+        "hidden": true,
+        "iid": 100000,
+        "type": "E863F00B-079E-48FF-8F27-9C2605A29F52"
+      }
+    ]
+  }
+]

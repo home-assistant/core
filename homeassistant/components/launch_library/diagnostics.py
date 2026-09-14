@@ -1,0 +1,35 @@
+"""Diagnostics support for Launch Library."""
+
+from typing import Any
+
+from pylaunches.types import Event, Launch
+
+from homeassistant.core import HomeAssistant
+
+from .coordinator import LaunchLibraryConfigEntry
+
+
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant,
+    entry: LaunchLibraryConfigEntry,
+) -> dict[str, Any]:
+    """Return diagnostics for a config entry."""
+
+    coordinator = entry.runtime_data
+    if coordinator.data is None:
+        return {}
+
+    def _first_element(data: list[Launch | Event]) -> dict[str, Any] | None:
+        if not data:
+            return None
+        return data[0]
+
+    return {
+        "next_launch": _first_element(coordinator.data["upcoming_launches"]),
+        "starship_launch": _first_element(
+            coordinator.data["starship_events"].upcoming.launches
+        ),
+        "starship_event": _first_element(
+            coordinator.data["starship_events"].upcoming.events
+        ),
+    }

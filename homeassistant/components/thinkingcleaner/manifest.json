@@ -1,0 +1,10 @@
+{
+  "domain": "thinkingcleaner",
+  "name": "Thinking Cleaner",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/thinkingcleaner",
+  "iot_class": "local_polling",
+  "loggers": ["pythinkingcleaner"],
+  "quality_scale": "legacy",
+  "requirements": ["pythinkingcleaner==0.0.3"]
+}

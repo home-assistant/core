@@ -1,0 +1,39 @@
+ptz:
+  target:
+    entity:
+      integration: foscam
+      domain: camera
+  fields:
+    movement:
+      required: true
+      selector:
+        select:
+          options:
+            - "bottom_left"
+            - "bottom_right"
+            - "down"
+            - "left"
+            - "right"
+            - "top_left"
+            - "top_right"
+            - "up"
+    travel_time:
+      default: 0.125
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.005
+          unit_of_measurement: seconds
+
+ptz_preset:
+  target:
+    entity:
+      integration: foscam
+      domain: camera
+  fields:
+    preset_name:
+      required: true
+      example: "TopMost"
+      selector:
+        text:

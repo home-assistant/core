@@ -1,0 +1,12 @@
+{
+  "components": {
+    "main": {
+      "presenceSensor": {
+        "presence": {
+          "value": "present",
+          "timestamp": "2023-09-22T18:12:25.012Z"
+        }
+      }
+    }
+  }
+}

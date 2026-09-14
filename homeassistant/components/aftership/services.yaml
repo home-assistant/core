@@ -1,0 +1,29 @@
+# Describes the format for available aftership services
+
+add_tracking:
+  fields:
+    tracking_number:
+      required: true
+      example: "123456789"
+      selector:
+        text:
+    title:
+      example: "Laptop"
+      selector:
+        text:
+    slug:
+      example: "USPS"
+      selector:
+        text:
+
+remove_tracking:
+  fields:
+    tracking_number:
+      required: true
+      example: "123456789"
+      selector:
+        text:
+    slug:
+      example: "USPS"
+      selector:
+        text:

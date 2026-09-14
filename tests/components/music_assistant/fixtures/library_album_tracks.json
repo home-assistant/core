@@ -1,0 +1,364 @@
+{
+  "library_album_tracks": [
+    {
+      "item_id": "247",
+      "provider": "library",
+      "name": "Le Mirage",
+      "version": "",
+      "sort_name": "mirage, le",
+      "uri": "library://track/247",
+      "external_ids": [["isrc", "FR10S1794640"]],
+      "media_type": "track",
+      "provider_mappings": [
+        {
+          "item_id": "70953631",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--63Pkq9Aw",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/track/70953631",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/b7b1897c/57ed/4a31/83d7/9ab3df83183a/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "Dana Murray",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 35,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": true,
+      "position": null,
+      "duration": 352,
+      "artists": [
+        {
+          "item_id": 195,
+          "provider": "library",
+          "name": "Dana Jean Phoenix",
+          "version": "",
+          "sort_name": "dana jean phoenix",
+          "uri": "library://artist/195",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album": {
+        "item_id": 95,
+        "provider": "library",
+        "name": "Synthwave (The 80S Revival)",
+        "version": "",
+        "sort_name": "synthwave (the 80s revival)",
+        "uri": "library://album/95",
+        "external_ids": [],
+        "media_type": "album",
+        "available": true,
+        "image": {
+          "type": "thumb",
+          "path": "https://resources.tidal.com/images/b7b1897c/57ed/4a31/83d7/9ab3df83183a/750x750.jpg",
+          "provider": "tidal",
+          "remotely_accessible": true
+        }
+      },
+      "disc_number": 1,
+      "track_number": 1
+    },
+    {
+      "item_id": "362",
+      "provider": "library",
+      "name": "Rabbit in the Headlights",
+      "version": "",
+      "sort_name": "rabbit in the headlights",
+      "uri": "library://track/362",
+      "external_ids": [["isrc", "GBLFP1645070"]],
+      "media_type": "track",
+      "provider_mappings": [
+        {
+          "item_id": "70953636",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--Ah76MuMg",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/track/70953636",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/b7b1897c/57ed/4a31/83d7/9ab3df83183a/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "Michael Oakley",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 34,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": true,
+      "position": null,
+      "duration": 253,
+      "artists": [
+        {
+          "item_id": 90,
+          "provider": "library",
+          "name": "Michael Oakley",
+          "version": "",
+          "sort_name": "michael oakley",
+          "uri": "library://artist/90",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album": {
+        "item_id": 95,
+        "provider": "library",
+        "name": "Synthwave (The 80S Revival)",
+        "version": "",
+        "sort_name": "synthwave (the 80s revival)",
+        "uri": "library://album/95",
+        "external_ids": [],
+        "media_type": "album",
+        "available": true,
+        "image": {
+          "type": "thumb",
+          "path": "https://resources.tidal.com/images/b7b1897c/57ed/4a31/83d7/9ab3df83183a/750x750.jpg",
+          "provider": "tidal",
+          "remotely_accessible": true
+        }
+      },
+      "disc_number": 1,
+      "track_number": 6
+    },
+    {
+      "item_id": "1",
+      "provider": "library",
+      "name": "1988 Girls",
+      "version": "",
+      "sort_name": "1988 girls",
+      "uri": "library://track/1",
+      "external_ids": [["isrc", "DEBL60768604"]],
+      "media_type": "track",
+      "provider_mappings": [
+        {
+          "item_id": "70953637",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--56X5qDS7",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/track/70953637",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/b7b1897c/57ed/4a31/83d7/9ab3df83183a/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "Kiez Beats",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 14,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": true,
+      "position": null,
+      "duration": 258,
+      "artists": [
+        {
+          "item_id": 110,
+          "provider": "library",
+          "name": "Futurecop!",
+          "version": "",
+          "sort_name": "futurecop!",
+          "uri": "library://artist/110",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album": {
+        "item_id": 95,
+        "provider": "library",
+        "name": "Synthwave (The 80S Revival)",
+        "version": "",
+        "sort_name": "synthwave (the 80s revival)",
+        "uri": "library://album/95",
+        "external_ids": [],
+        "media_type": "album",
+        "available": true,
+        "image": {
+          "type": "thumb",
+          "path": "https://resources.tidal.com/images/b7b1897c/57ed/4a31/83d7/9ab3df83183a/750x750.jpg",
+          "provider": "tidal",
+          "remotely_accessible": true
+        }
+      },
+      "disc_number": 1,
+      "track_number": 7
+    },
+    {
+      "item_id": "495",
+      "provider": "library",
+      "name": "Timmy Goes to Space",
+      "version": "",
+      "sort_name": "timmy goes to space",
+      "uri": "library://track/495",
+      "external_ids": [["isrc", "NO2D81710001"]],
+      "media_type": "track",
+      "provider_mappings": [
+        {
+          "item_id": "70953643",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--Ah76MuMg",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/track/70953643",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/b7b1897c/57ed/4a31/83d7/9ab3df83183a/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "Jens Kristian Espevik",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 4,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": true,
+      "position": null,
+      "duration": 212,
+      "artists": [
+        {
+          "item_id": 453,
+          "provider": "library",
+          "name": "Mr. Maen",
+          "version": "",
+          "sort_name": "mr. maen",
+          "uri": "library://artist/453",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album": {
+        "item_id": 95,
+        "provider": "library",
+        "name": "Synthwave (The 80S Revival)",
+        "version": "",
+        "sort_name": "synthwave (the 80s revival)",
+        "uri": "library://album/95",
+        "external_ids": [],
+        "media_type": "album",
+        "available": true,
+        "image": {
+          "type": "thumb",
+          "path": "https://resources.tidal.com/images/b7b1897c/57ed/4a31/83d7/9ab3df83183a/750x750.jpg",
+          "provider": "tidal",
+          "remotely_accessible": true
+        }
+      },
+      "disc_number": 1,
+      "track_number": 13
+    }
+  ]
+}

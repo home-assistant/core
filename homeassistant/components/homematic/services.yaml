@@ -1,0 +1,131 @@
+# Describes the format for available component services
+
+virtualkey:
+  fields:
+    address:
+      required: true
+      example: BidCoS-RF
+      selector:
+        text:
+    channel:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 6
+    param:
+      required: true
+      example: PRESS_LONG
+      selector:
+        text:
+    interface:
+      example: Interfaces name from config
+      selector:
+        text:
+
+set_variable_value:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          domain: homematic
+    name:
+      required: true
+      example: "testvariable"
+      selector:
+        text:
+    value:
+      required: true
+      example: 1
+      selector:
+        text:
+
+set_device_value:
+  fields:
+    address:
+      required: true
+      example: BidCoS-RF
+      selector:
+        text:
+    channel:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 6
+    param:
+      required: true
+      example: PRESS_LONG
+      selector:
+        text:
+    interface:
+      example: Interfaces name from config
+      selector:
+        text:
+    value:
+      required: true
+      example: 1
+      selector:
+        text:
+    value_type:
+      selector:
+        select:
+          options:
+            - "boolean"
+            - "dateTime.iso8601"
+            - "double"
+            - "int"
+            - "string"
+
+reconnect:
+set_install_mode:
+  fields:
+    interface:
+      required: true
+      example: Interfaces name from config
+      selector:
+        text:
+    mode:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 2
+    time:
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    address:
+      example: LEQ3948571
+      selector:
+        text:
+
+put_paramset:
+  fields:
+    interface:
+      required: true
+      example: wireless
+      selector:
+        text:
+    address:
+      required: true
+      example: LEQ3948571:0
+      selector:
+        text:
+    paramset_key:
+      required: true
+      example: MASTER
+      selector:
+        text:
+    paramset:
+      required: true
+      example: '{"WEEK_PROGRAM_POINTER": 1}'
+      selector:
+        object:
+    rx_mode:
+      example: BURST
+      selector:
+        text:

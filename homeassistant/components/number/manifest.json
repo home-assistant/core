@@ -1,0 +1,8 @@
+{
+  "domain": "number",
+  "name": "Number",
+  "codeowners": ["@home-assistant/core", "@Shulyaka"],
+  "documentation": "https://www.home-assistant.io/integrations/number",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

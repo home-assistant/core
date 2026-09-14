@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "account_mismatch": "The used account does not match the original account",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The SENZ integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "exceptions": {
+    "config_entry_auth_failed": {
+      "message": "Authentication failed. Please log in again."
+    },
+    "config_entry_not_ready": {
+      "message": "Error while loading the integration."
+    },
+    "set_attribute_error": {
+      "message": "Failed to set {attribute} on the device."
+    }
+  }
+}
