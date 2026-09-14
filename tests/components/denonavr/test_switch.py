@@ -226,13 +226,7 @@ async def test_turn_on_raises_on_avr_error(
 async def test_reference_level_offset_agrees_with_switch_at_setup(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Select and switch agree on Dynamic EQ state at setup time.
-
-    Both read the same receiver.dynamic_eq property, so they can't
-    disagree about the value they were set up with. See
-    test_toggling_switch_updates_dependent_select for what happens on
-    a live toggle afterward.
-    """
+    """Select and switch agree on Dynamic EQ state at setup time."""
     client.reference_level_offset = "0dB"
     client.reference_level_offset_setting_list = ["0dB", "+5dB", "+10dB", "+15dB"]
     client.dynamic_volume = "Off"
@@ -257,13 +251,7 @@ async def test_reference_level_offset_agrees_with_switch_at_setup(
 async def test_reference_level_offset_unavailable_at_setup_when_dynamic_eq_off(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Same cross-check, the other way around.
-
-    Dynamic EQ off at setup means both the switch reports off and the
-    select is immediately unavailable - there's no window where they
-    could disagree, since they share the same underlying
-    receiver.dynamic_eq read.
-    """
+    """Same cross-check, with Dynamic EQ off at setup instead."""
     client.reference_level_offset = "0dB"
     client.reference_level_offset_setting_list = ["0dB", "+5dB", "+10dB", "+15dB"]
     client.dynamic_volume = "Off"

@@ -389,14 +389,10 @@ async def test_dimmer_refreshes_and_shows_new_state_immediately(
     async def _apply_dimmer_change(*args, **kwargs):
         client.dimmer = "Dark"
 
-    # side_effect must be the async function itself (not a sync lambda
-    # that merely returns a coroutine) - AsyncMock only awaits side_effect
-    # automatically when it's a coroutine function; a sync wrapper just
-    # creates an un-awaited coroutine that never actually runs. Installed
-    # after setup, not before: setup's own initial refresh would
-    # otherwise already flip dimmer to "Dark", so the action below
-    # would start at its expected final state and couldn't catch a
-    # stale-refresh regression.
+    # Must be an async function (AsyncMock only auto-awaits a coroutine
+    # function) and installed after setup (setup's own initial refresh
+    # would otherwise already flip dimmer to "Dark", masking a real
+    # stale-refresh regression).
     client.async_update.side_effect = _apply_dimmer_change
 
     await hass.services.async_call(
