@@ -30,7 +30,7 @@ async def test_setup_retries_when_device_not_found(
 
     with (
         patch(
-            "homeassistant.components.snooz.async_ble_device_from_address",
+            "homeassistant.components.snooz.async_last_service_info",
             return_value=None,
         ),
         patch(
