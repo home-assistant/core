@@ -1,18 +1,25 @@
 """Test the my-PV update platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.components.my_pv.coordinator import UPDATE_INTERVAL
+from homeassistant.components.update import (
+    ATTR_IN_PROGRESS,
+    ATTR_UPDATE_PERCENTAGE,
+    DOMAIN as UPDATE_DOMAIN,
+    SERVICE_INSTALL,
+)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_my_pv_client")
@@ -81,11 +88,12 @@ async def test_update_install(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test successful press of a update."""
 
     mock_my_pv_client.latest_firmware_version = "e0002201"
-    mock_my_pv_client.firmware_update_available = True
+    type(mock_my_pv_client).firmware_update_available = True
 
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.UPDATE]):
         mock_config_entry.add_to_hass(hass)
@@ -100,6 +108,43 @@ async def test_update_install(
         blocking=True,
     )
     mock_my_pv_client.update_firmware.assert_awaited_once_with()
+
+    type(mock_my_pv_client).firmware_version = PropertyMock(
+        side_effect=["e0002200", "e0002200", "e0002201"]
+    )
+    type(mock_my_pv_client).firmware_update_available = PropertyMock(
+        side_effect=[True, True, False]
+    )
+    type(mock_my_pv_client).firmware_update_progress = PropertyMock(
+        side_effect=[0, 50, None]
+    )
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.my_pv_ac_elwa_2_firmware")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_IN_PROGRESS)
+    assert state.attributes.get(ATTR_UPDATE_PERCENTAGE) == 0
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.my_pv_ac_elwa_2_firmware")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_IN_PROGRESS)
+    assert state.attributes.get(ATTR_UPDATE_PERCENTAGE) == 50
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.my_pv_ac_elwa_2_firmware")
+    assert state.state == STATE_OFF
+    assert not state.attributes.get(ATTR_IN_PROGRESS)
+    assert state.attributes.get(ATTR_UPDATE_PERCENTAGE) is None
 
 
 async def test_update_press_update_firmware_returns_false(
