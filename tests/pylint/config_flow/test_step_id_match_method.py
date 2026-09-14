@@ -81,8 +81,36 @@ from tests.pylint import assert_no_messages, walk_checker
         async def async_step_user() -> FlowResult:
             return await self.async_common_step()
         """,
-            "homeassistant.components.test.sensor",
+            "homeassistant.components.test.config_flow",
             id="using_common_step_from_user",
+        ),
+        pytest.param(
+            """
+        async def async_common_step() -> FlowResult:
+            return self.async_show_form(
+                step_id=some_function(),
+                data_schema=vol.Schema({
+                    vol.Required(CONF_HOST): str,
+                    vol.Optional(CONF_USERNAME): str,
+                }),
+            )
+        """,
+            "homeassistant.components.test.config_flow",
+            id="using_a_function",
+        ),
+        pytest.param(
+            """
+        async def async_common_step() -> FlowResult:
+            return self.async_show_form(
+                step_id=await some_function(),
+                data_schema=vol.Schema({
+                    vol.Required(CONF_HOST): str,
+                    vol.Optional(CONF_USERNAME): str,
+                }),
+            )
+        """,
+            "homeassistant.components.test.config_flow",
+            id="using_an_async_function",
         ),
     ],
 )
