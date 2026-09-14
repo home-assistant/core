@@ -1,0 +1,62 @@
+{
+  "endpoint": "https://apigw.tuyacn.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "TY智能多路电表",
+  "category": "zndb",
+  "product_id": "au1qr4dpyuqsz6vu",
+  "product_name": "TY智能多路电表",
+  "online": true,
+  "sub": false,
+  "time_zone": "+8:00",
+  "function": {},
+  "status_range": {
+    "phase_s1": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s2": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s3": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s4": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s5": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s6": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    }
+  },
+  "status": {
+    "phase_s1": "020F08FD00044C0000D20000320000DC5F00",
+    "phase_s2": "020F08FE0008980001A40000640001B86000",
+    "phase_s3": "020F08FF000CE40002760000960002946100",
+    "phase_s4": "020F09000011300003480000C80003706200",
+    "phase_s5": "020F090100157C00041A0000FA00044C6300",
+    "phase_s6": "020F09020019C80004EC00012C0005286300"
+  },
+  "set_up": false,
+  "support_local": true
+}
