@@ -701,10 +701,15 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Re-materialize repair issues when kept across a reload."""
         if findings == self._validation_findings:
             return
-        async_clear_validation_issues(self.hass, self._validation_issue_ids)
+        previous_issue_ids = self._validation_issue_ids
         self._validation_issue_ids = set()
         self._validation_findings = findings
+        # Recreate the current issues; async_get_or_create updates an existing issue in
+        # place, preserving its dismissal state. Only delete issues that no longer exist.
         self._async_create_validation_issues()
+        async_clear_validation_issues(
+            self.hass, previous_issue_ids - self._validation_issue_ids
+        )
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

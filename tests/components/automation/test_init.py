@@ -48,7 +48,11 @@ from homeassistant.exceptions import (
     ServiceValidationError,
     Unauthorized,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.automation import ValidationFinding, ValidationIssueReporter
 from homeassistant.helpers.condition import Condition
 from homeassistant.helpers.event import async_track_state_change_event
@@ -4820,6 +4824,64 @@ async def test_event_trigger_composite_device_id_refreshed_on_unchanged_reload(
 
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == issues_after_reload
+
+
+async def test_event_trigger_composite_device_id_refresh_preserves_dismissal(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
+    split_devices: tuple[dr.DeviceEntry, dr.DeviceEntry],
+) -> None:
+    """A dismissed repair stays dismissed when a refresh only changes placeholders.
+
+    The issue id is stable, so refreshing must update the issue in place rather than
+    clearing and recreating it, which would reset the user's dismissal.
+    """
+    config = {
+        automation.DOMAIN: {
+            "id": "composite_auto",
+            "alias": "Composite automation",
+            "triggers": {
+                "platform": "event",
+                "event_type": "test_event",
+                "event_data": {"device_id": COMPOSITE_ID},
+            },
+            "actions": {"action": "test.automation"},
+        }
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config)
+
+    issue = issue_registry.async_get_issue("homeassistant", COMPOSITE_ISSUE_ID)
+    assert issue is not None
+    assert "Split device 1" in issue.translation_placeholders["devices"]
+
+    # The user dismisses the repair.
+    ir.async_ignore_issue(hass, "homeassistant", COMPOSITE_ISSUE_ID, True)
+    dismissed_version = issue_registry.async_get_issue(
+        "homeassistant", COMPOSITE_ISSUE_ID
+    ).dismissed_version
+    assert dismissed_version is not None
+
+    # Rename a split device: the finding's placeholders change, but the issue id
+    # (keyed on the composite device id) does not, so the reload refreshes in place.
+    device_1 = split_devices[0]
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_registry._devices[device_1.id], name_by_user="Renamed device"
+    )
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    refreshed = issue_registry.async_get_issue("homeassistant", COMPOSITE_ISSUE_ID)
+    assert refreshed is not None
+    # The placeholders were updated in place ...
+    assert "Renamed device" in refreshed.translation_placeholders["devices"]
+    # ... without resetting the dismissal.
+    assert refreshed.dismissed_version == dismissed_version
 
 
 @pytest.mark.usefixtures("split_devices")
