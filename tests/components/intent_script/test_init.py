@@ -129,6 +129,7 @@ async def test_intent_script_forwards_device_id(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     assert calls[0].data["device_id"] == "assist_satellite.kitchen"
 
+
 async def test_intent_script_wait_response(hass: HomeAssistant) -> None:
     """Test intent scripts work."""
     calls = async_mock_service(hass, "test", "service")
