@@ -795,37 +795,11 @@ async def test_webostv_turn_on_trigger_area_restored_during_run(
     )
 
 
-@pytest.mark.parametrize(
-    "build_trigger",
-    [
-        pytest.param(
-            lambda device_id: {"trigger": LEGACY_TURN_ON, "device_id": device_id},
-            id="legacy",
-        ),
-        pytest.param(
-            lambda device_id: {
-                "trigger": TURN_ON_REQUESTED,
-                "target": {"device_id": device_id},
-            },
-            id="target",
-        ),
-        pytest.param(
-            lambda device_id: {
-                "platform": "device",
-                "domain": DOMAIN,
-                "device_id": device_id,
-                "type": LEGACY_TURN_ON,
-            },
-            id="device_automation",
-        ),
-    ],
-)
 @pytest.mark.usefixtures("client")
 async def test_webostv_turn_on_trigger_detached_during_run(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
-    build_trigger: Callable[[str], dict[str, Any]],
 ) -> None:
     """Test detaching a trigger while its action runs is deferred."""
     entry = await setup_webostv(hass)
@@ -849,7 +823,10 @@ async def test_webostv_turn_on_trigger_detached_during_run(
         {
             automation.DOMAIN: [
                 {
-                    "trigger": build_trigger(device.id),
+                    "trigger": {
+                        "trigger": TURN_ON_REQUESTED,
+                        "target": {"device_id": device.id},
+                    },
                     "action": {"service": "test.slow"},
                 },
             ],

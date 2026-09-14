@@ -90,9 +90,7 @@ def _async_get_run_state(hass: HomeAssistant) -> _TurnOnRunState:
 
 
 @callback
-def async_detach_turn_on_actions(
-    hass: HomeAssistant, unsubs: list[CALLBACK_TYPE]
-) -> None:
+def _async_detach_actions(hass: HomeAssistant, unsubs: list[CALLBACK_TYPE]) -> None:
     """Detach turn on actions once no run is iterating them."""
     state = _async_get_run_state(hass)
     if state.depth:
@@ -257,7 +255,7 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
     @callback
     def _detach_actions(self) -> None:
         """Detach the currently attached turn on actions."""
-        async_detach_turn_on_actions(self._hass, self._unsubs)
+        _async_detach_actions(self._hass, self._unsubs)
         self._unsubs = []
 
     @override
@@ -358,7 +356,8 @@ class LegacyTurnOnTrigger(Trigger):
         @callback
         def async_remove() -> None:
             """Remove the attached actions."""
-            async_detach_turn_on_actions(self._hass, unsubs)
+            for unsub in unsubs:
+                unsub()
             unsubs.clear()
 
         return async_remove
