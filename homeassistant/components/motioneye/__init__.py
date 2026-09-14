@@ -81,7 +81,7 @@ from .const import (
     WEB_HOOK_SENTINEL_VALUE,
 )
 from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
-from .media_source import MotionEyeMediaProxyView
+from .media_source import MotionEyeMediaProxyView, split_motioneye_device_identifier
 
 
 _LOGGER = logging.getLogger(__name__)
