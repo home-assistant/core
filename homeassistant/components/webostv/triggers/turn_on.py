@@ -235,8 +235,8 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
     @callback
     def async_apply_pending_update(self) -> None:
         """Apply a target update deferred during a turn on run."""
-        if self._pending_device_ids is None:
-            return
+        if TYPE_CHECKING:
+            assert self._pending_device_ids is not None
 
         device_ids = self._pending_device_ids
         self._pending_device_ids = None

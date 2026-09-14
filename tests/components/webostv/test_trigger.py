@@ -27,6 +27,7 @@ from tests.common import MockEntity, MockEntityPlatform
 
 TURN_ON_REQUESTED = "webostv.turn_on_requested"
 LEGACY_TURN_ON = "webostv.turn_on"
+AUTOMATION_ID = "automation.automation_0"
 
 
 @pytest.mark.parametrize(
@@ -844,9 +845,79 @@ async def test_webostv_turn_on_trigger_detached_during_run(
     await hass.services.async_call(
         "automation",
         "turn_off",
-        {"entity_id": "automation.automation_0", "stop_actions": False},
+        {"entity_id": AUTOMATION_ID, "stop_actions": False},
         blocking=True,
     )
 
     release.set()
     await asyncio.wait_for(task, timeout=5)
+
+
+@pytest.mark.usefixtures("client")
+async def test_webostv_turn_on_trigger_reattached_during_run(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test re-enabling an automation while its action runs stays consistent."""
+    entry = await setup_webostv(hass)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
+
+    started = asyncio.Event()
+    release = asyncio.Event()
+    runs = 0
+
+    async def slow_action(call: ServiceCall) -> None:
+        nonlocal runs
+        runs += 1
+        started.set()
+        await release.wait()
+
+    hass.services.async_register("test", "slow", slow_action)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "trigger": TURN_ON_REQUESTED,
+                        "target": {"device_id": device.id},
+                    },
+                    "action": {"service": "test.slow"},
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    release.set()
+    task = hass.async_create_task(
+        hass.services.async_call(
+            "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
+        )
+    )
+    await asyncio.wait_for(started.wait(), timeout=5)
+
+    await hass.services.async_call(
+        "automation",
+        "turn_off",
+        {"entity_id": AUTOMATION_ID, "stop_actions": False},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "automation", "turn_on", {"entity_id": AUTOMATION_ID}, blocking=True
+    )
+
+    await asyncio.wait_for(task, timeout=5)
+    await hass.async_block_till_done()
+    assert runs == 1
+
+    await hass.services.async_call(
+        "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    assert runs == 2
