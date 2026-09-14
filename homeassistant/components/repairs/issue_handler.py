@@ -75,7 +75,6 @@ class DeprecatedIssueIdDict[_VT](dict[str, _VT]):
     def get(self, key: str, default: _VT, /) -> _VT: ...
     @overload
     def get[_T](self, key: str, default: _T, /) -> _VT | _T: ...
-
     @override
     def get[_T](self, key: str, default: _T | None = None, /) -> _VT | _T | None:
         """Deprecation warning on issue_id key access."""
@@ -89,7 +88,6 @@ class DeprecatedIssueIdDict[_VT](dict[str, _VT]):
     def pop(self, key: str, default: _VT, /) -> _VT: ...
     @overload
     def pop[_T](self, key: str, default: _T, /) -> _VT | _T: ...
-
     @override
     def pop[_T](
         self, key: str, default: _T | _VT | _MISSING_ARG = _MISSING_ARG(), /
@@ -101,11 +99,19 @@ class DeprecatedIssueIdDict[_VT](dict[str, _VT]):
             return super().pop(key)
         return super().pop(key, default)
 
+    @overload
+    def setdefault(self, key: str, default: None = None, /) -> _VT | None: ...
+    @overload
+    def setdefault(self, key: str, default: _VT, /) -> _VT: ...
+    @overload
+    def setdefault[_T](self, key: str, default: _T, /) -> _VT | _T: ...
     @override
-    def setdefault(self, key: str, default: _VT) -> _VT:
+    def setdefault[_T](
+        self, key: str, default: _T | _VT | None = None, /
+    ) -> _VT | _T | None:
         if key == "issue_id":
             self._report_issue_id_usage("calls setdefault on")
-        return super().setdefault(key, default)
+        return super().setdefault(key, default)  # type: ignore[arg-type]
 
     def _report_issue_id_usage(self, method: str) -> None:
         report_usage(
