@@ -3296,7 +3296,7 @@ tonewinner-rs232==1.1.0
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2026.7
+total-connect-client==2026.9
 
 # homeassistant.components.tplink_omada
 tplink-omada-client==1.5.10
