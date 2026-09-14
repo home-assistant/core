@@ -25,8 +25,8 @@ async def test_entities(
     """Test the sensor entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "40580137858664_ems_40580137858664")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "40580137858664_ems_40580137858664"), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(

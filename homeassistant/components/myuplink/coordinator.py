@@ -2,7 +2,7 @@
 
 import asyncio.timeouts
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import override
 
@@ -22,7 +22,6 @@ class CoordinatorData:
     systems: list[System]
     devices: dict[str, Device]
     points: dict[str, dict[str, DevicePoint]]
-    time: datetime
 
 
 type MyUplinkConfigEntry = ConfigEntry[MyUplinkDataCoordinator]
@@ -75,5 +74,4 @@ class MyUplinkDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 systems=systems,
                 devices=devices,
                 points=points,
-                time=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
             )

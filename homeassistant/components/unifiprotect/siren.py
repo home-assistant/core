@@ -68,14 +68,13 @@ class ProtectSiren(SirenEntity):
         self.data = data
         self._siren_id = siren.id
         self._attr_unique_id = f"{siren.mac}_siren"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
-        nvr = data.api.bootstrap.nvr
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, siren.mac)},
             identifiers={(DOMAIN, siren.mac)},
             manufacturer=DEFAULT_BRAND,
             name=siren.name,
             model="Siren",
-            via_device=(DOMAIN, nvr.mac),
+            via_device_id=data.nvr_device_id,
         )
         self._siren_mac = siren.mac
         self._cancel_scheduled_off: CALLBACK_TYPE | None = None

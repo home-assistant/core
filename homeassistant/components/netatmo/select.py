@@ -9,17 +9,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_URL_ENERGY,
-    DOMAIN,
-    EVENT_TYPE_SCHEDULE,
-    MANUFACTURER,
-    NETATMO_CREATE_SELECT,
-)
+from .const import DOMAIN, EVENT_TYPE_SCHEDULE, NETATMO_CREATE_SELECT
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoHome
 from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -42,7 +38,7 @@ async def async_setup_entry(
 class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
     """Representation a Netatmo thermostat schedule selector."""
 
-    _attr_name = None
+    _attr_translation_key = "schedule"
 
     def __init__(self, netatmo_home: NetatmoHome) -> None:
         """Initialize the select entity."""
@@ -61,10 +57,6 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.home.entity_id)},
-            name=self.home.name,
-            manufacturer=MANUFACTURER,
-            model="Climate",
-            configuration_url=CONF_URL_ENERGY,
         )
 
         self._attr_unique_id = f"{self.home.entity_id}-schedule-select"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
@@ -130,3 +122,4 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         self._attr_options = [
             schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]
+        self.async_write_ha_state()

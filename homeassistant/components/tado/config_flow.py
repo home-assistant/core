@@ -5,10 +5,10 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from PyTado.exceptions import TadoException
 from PyTado.http import DeviceActivationStatus
 from PyTado.interface import Tado
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import (
@@ -18,7 +18,6 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
@@ -168,7 +167,8 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="timeout",
             )
-        del self.login_task
+        self.login_task = None
+        self.tado = None
         return await self.async_step_user()
 
     @override
@@ -210,22 +210,22 @@ class OptionsFlowHandler(OptionsFlow):
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return result
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_FALLBACK,
                     default=self.config_entry.options.get(
                         CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT
                     ),
-                ): vol.In(CONST_OVERLAY_TADO_OPTIONS),
+                ): probatio.In(CONST_OVERLAY_TADO_OPTIONS),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
-class CannotConnect(HomeAssistantError):
+class CannotConnect(Exception):
     """Error to indicate we cannot connect."""
 
 
-class TadoRateLimitExceeded(HomeAssistantError):
+class TadoRateLimitExceeded(Exception):
     """Error to indicate Tado API rate limit exceeded."""

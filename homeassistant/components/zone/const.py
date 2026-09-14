@@ -10,11 +10,10 @@ HOME_ZONE = "home"
 class ZoneEntityStateAttribute(StrEnum):
     """State attributes for zone entities."""
 
-    LATITUDE = "latitude"
-    LONGITUDE = "longitude"
     RADIUS = "radius"
     PASSIVE = "passive"
     PERSONS = "persons"
+    DEVICE_TRACKERS = "device_trackers"
     EDITABLE = "editable"
 
 

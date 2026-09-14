@@ -4,7 +4,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import (
@@ -25,7 +25,11 @@ from uiprotect.data import (
     Sensor,
     Viewer,
 )
-from uiprotect.data.public_devices import SensorFeatureCapability
+from uiprotect.data.public_devices import (
+    PublicCamera,
+    PublicDeviceModel,
+    SensorFeatureCapability,
+)
 from uiprotect.exceptions import GlobalAlarmManagerError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -47,7 +51,7 @@ from .entity import (
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
-from .utils import async_get_light_motion_current, async_ufp_instance_command
+from .utils import async_get_light_motion_current_public, async_ufp_instance_command
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -64,6 +68,8 @@ INFRARED_MODES = [
     {"id": IRLEDMode.ON.value, "name": "on"},
     {"id": IRLEDMode.AUTO_NO_LED.value, "name": "auto_filter_only"},
     {"id": IRLEDMode.CUSTOM.value, "name": "custom"},
+    {"id": IRLEDMode.CUSTOM_FILTER_ONLY.value, "name": "custom_filter_only"},
+    {"id": IRLEDMode.MANUAL.value, "name": "manual"},
     {"id": IRLEDMode.OFF.value, "name": "off"},
 ]
 
@@ -169,7 +175,7 @@ def _get_doorbell_current(obj: Camera) -> str | None:
 
 async def _set_light_mode(obj: Light, mode: str) -> None:
     lightmode, timing = LIGHT_MODE_TO_SETTINGS[mode]
-    await obj.set_light_settings(
+    await obj.set_light_mode_public(
         LightModeType(lightmode),
         enable_at=None if timing is None else LightModeEnableType(timing),
     )
@@ -186,15 +192,14 @@ async def _set_paired_camera(obj: Light | Sensor, camera_id: str) -> None:
 async def _set_doorbell_message(obj: Camera, message: str) -> None:
     if message.startswith(DoorbellMessageType.CUSTOM_MESSAGE.value):
         message = message.rsplit(":", maxsplit=1)[-1]
+        # reset_at=None keeps the message up until it is changed
         await obj.set_lcd_message_public(
-            DoorbellMessageType.CUSTOM_MESSAGE, text=message
+            DoorbellMessageType.CUSTOM_MESSAGE, text=message, reset_at=None
         )
     elif message == TYPE_EMPTY_VALUE:
-        # Public API has no endpoint to clear the LCD message; fall back to
-        # the non-deprecated legacy helper.
-        await obj.set_lcd_text(None)
+        await obj.set_lcd_message_public(None)
     else:
-        await obj.set_lcd_message_public(DoorbellMessageType(message))
+        await obj.set_lcd_message_public(DoorbellMessageType(message), reset_at=None)
 
 
 async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
@@ -217,6 +222,16 @@ _HDR_MODE_MAP = {
     "always": PublicHdrMode.ON,
     "off": PublicHdrMode.OFF,
 }
+_HDR_MODE_MAP_INVERSE = {v: k for k, v in _HDR_MODE_MAP.items()}
+
+
+def _get_hdr_mode_public(obj: PublicDeviceModel) -> str | None:
+    """Return the HDR option id from the public camera's ``hdr_type``.
+
+    ``hdr_type`` is non-optional on the public model; ``.get`` still yields
+    ``None`` for any value missing from the map.
+    """
+    return _HDR_MODE_MAP_INVERSE.get(cast(PublicCamera, obj).hdr_type)
 
 
 async def _set_hdr_mode(obj: Camera, mode: str) -> None:
@@ -282,7 +297,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_hdr",
         ufp_options=HDR_MODES,
-        ufp_value="hdr_mode_display",
+        ufp_public_value_fn=_get_hdr_mode_public,
         ufp_set_method_fn=_set_hdr_mode,
         ufp_perm=PermRequired.WRITE,
     ),
@@ -294,7 +309,7 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         translation_key="light_mode",
         entity_category=EntityCategory.CONFIG,
         ufp_options=MOTION_MODE_TO_LIGHT_MODE,
-        ufp_value_fn=async_get_light_motion_current,
+        ufp_public_value_fn=async_get_light_motion_current_public,
         ufp_set_method_fn=_set_light_mode,
         ufp_perm=PermRequired.WRITE,
     ),

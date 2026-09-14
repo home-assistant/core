@@ -90,8 +90,8 @@ async def test_device_info_sw_version_dict(
     with caplog.at_level(logging.WARNING, logger="homeassistant.helpers.frame"):
         await init_integration(hass, config_entry, [diffuser])
 
-    device_entry = device_registry.async_get_device(
-        identifiers={("rituals_perfume_genie", "lot123dict")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("rituals_perfume_genie", "lot123dict"), config_entry.entry_id
     )
     assert device_entry
     assert device_entry.sw_version == "5.2-rc15"

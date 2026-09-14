@@ -285,6 +285,58 @@ async def test_methods_with_config(hass: HomeAssistant) -> None:
     assert state.state == "5"
 
 
+async def test_negative_with_config(hass: HomeAssistant) -> None:
+    """Test increment, decrement, set, and reset methods with negative values."""
+    config = {
+        DOMAIN: {
+            "test": {
+                CONF_NAME: "Hello World",
+                CONF_INITIAL: -10,
+                CONF_STEP: 2,
+                CONF_MINIMUM: -10,
+                CONF_MAXIMUM: -2,
+            }
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    entity_id = "counter.test"
+
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -10
+
+    async_increment(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -8
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            VALUE: -4,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -4
+
+    async_decrement(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -6
+
+    async_reset(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -10
+
+
 async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(

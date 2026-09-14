@@ -13,7 +13,7 @@ from . import LLMTools
 class GetDateTimeTool(Tool):
     """Tool for getting the current date and time."""
 
-    name = "GetDateTime"
+    name = "llm__GetDateTime"
     description = "Provides the current date and time."
 
     @override

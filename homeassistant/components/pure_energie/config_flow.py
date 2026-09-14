@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from gridnet import Device, GridNet, GridNetConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -48,9 +48,9 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): TextSelector(),
+                    probatio.Required(CONF_HOST): TextSelector(),
                 }
             ),
             errors=errors or {},

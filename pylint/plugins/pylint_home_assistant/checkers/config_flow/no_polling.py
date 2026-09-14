@@ -52,7 +52,7 @@ class HassEnforceConfigFlowNoPollingChecker(BaseChecker):
     options = ()
 
     def visit_call(self, node: nodes.Call) -> None:
-        """Check for polling interval fields in vol.Required/Optional calls."""
+        """Check for polling interval fields in probatio.Required/Optional calls."""
         parsed = parse_module(node.root().name)
         if parsed is None or parsed.module != Module.CONFIG_FLOW:
             return
