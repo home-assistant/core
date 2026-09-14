@@ -190,6 +190,12 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
     ),
+    DeviceCategory.QCCDZ: (
+        SelectEntityDescription(
+            key=DPCode.WORK_MODE,
+            translation_key="charger_work_mode",
+        ),
+    ),
     DeviceCategory.QN: (
         SelectEntityDescription(
             key=DPCode.LEVEL,
@@ -352,6 +358,18 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.ZNJDQ: (
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            translation_key="relay_status",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            translation_key="light_mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
@@ -359,6 +377,9 @@ SELECTS[DeviceCategory.CZ] = SELECTS[DeviceCategory.KG]
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 SELECTS[DeviceCategory.DGHSXJ] = SELECTS[DeviceCategory.SP]
+
+# Video peephole camera / video intercom doorbell (duplicate of `sp`)
+SELECTS[DeviceCategory.KSDJML] = SELECTS[DeviceCategory.SP]
 
 # Power Socket (duplicate of `kg`)
 SELECTS[DeviceCategory.PC] = SELECTS[DeviceCategory.KG]

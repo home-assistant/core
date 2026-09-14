@@ -12,8 +12,13 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.ulid import ulid_now
 
 from ..const import DOMAIN, KNX_MODULE_KEY
+from ..repairs import async_create_entity_validation_issue
 from . import migration
 from .const import CONF_DATA
+from .entity_store_validation import (
+    EntityStoreValidationException,
+    validate_entity_data,
+)
 from .expose_controller import KNXExposeStoreConfigModel, KNXExposeStoreModel
 from .time_server import KNXTimeServerStoreModel
 
@@ -117,6 +122,28 @@ class KNXConfigStore:
     ) -> None:
         """Add platform controller."""
         self._platform_controllers[platform] = controller
+
+    @callback
+    def get_entity_configs(self, platform: Platform) -> KNXPlatformStoreModel:
+        """Return validated entity configurations for a platform.
+
+        Invalid configurations are reported as a repair issue and stay in
+        `self.data` so they aren't dropped from storage.
+        """
+        validated: KNXPlatformStoreModel = {}
+        invalid: list[str] = []
+        for unique_id, config in self.data["entities"].get(platform, {}).items():
+            try:
+                result = validate_entity_data(
+                    {CONF_PLATFORM: platform, CONF_DATA: config}
+                )
+            except EntityStoreValidationException:
+                invalid.append(unique_id)
+            else:
+                validated[unique_id] = result[CONF_DATA]
+        if invalid:
+            async_create_entity_validation_issue(self.hass, platform, invalid)
+        return validated
 
     async def create_entity(
         self, platform: Platform, data: dict[str, Any]

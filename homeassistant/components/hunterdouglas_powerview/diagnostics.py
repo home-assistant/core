@@ -11,7 +11,7 @@ from homeassistant.components.diagnostics import (
 from homeassistant.const import ATTR_CONFIGURATION_URL, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import REDACT_HUB_ADDRESS, REDACT_MAC_ADDRESS, REDACT_SERIAL_NUMBER
 from .model import PowerviewConfigEntry
@@ -43,7 +43,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: PowerviewConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: PowerviewConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     data = _async_get_diagnostics(hass, entry)
@@ -71,7 +71,9 @@ def _async_get_diagnostics(
 
 
 @callback
-def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str, Any]:
+def _async_device_as_dict(
+    hass: HomeAssistant, device: AnyDeviceEntry
+) -> dict[str, Any]:
     """Represent a Powerview device as a dictionary."""
 
     # Gather information how this device is represented in Home Assistant
