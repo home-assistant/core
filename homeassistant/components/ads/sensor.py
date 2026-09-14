@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -28,11 +28,11 @@ DEFAULT_NAME = "ADS sensor"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
-        vol.Optional(CONF_ADS_TYPE, default=AdsType.INT): vol.All(
-            vol.Coerce(AdsType),
-            vol.In(
+        probatio.Required(CONF_ADS_VAR): cv.string,
+        probatio.Optional(CONF_ADS_FACTOR): cv.positive_int,
+        probatio.Optional(CONF_ADS_TYPE, default=AdsType.INT): probatio.All(
+            probatio.Coerce(AdsType),
+            probatio.In(
                 [
                     AdsType.BOOL,
                     AdsType.BYTE,
@@ -49,10 +49,10 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
                 ]
             ),
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
