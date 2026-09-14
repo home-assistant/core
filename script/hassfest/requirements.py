@@ -527,6 +527,9 @@ def validate_custom_requirements(integration: Integration, config: Config) -> bo
 
     Returns if valid.
     """
+    if integration.core:
+        return True
+
     start_errors = len(integration.errors)
 
     core_requirements = _load_requirement_file(config.root / "requirements.txt")
