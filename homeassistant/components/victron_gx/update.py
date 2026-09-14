@@ -20,7 +20,7 @@ from .const import DOMAIN
 from .hub import VictronGxConfigEntry
 
 PARALLEL_UPDATES = 1
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 _FIRMWARE_UPDATE_URL = "https://www.victronenergy.com/blog/category/firmware-software/"
 
@@ -45,7 +45,7 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
-    _attr_translation_key = "venus_os_firmware"
+    _attr_title = "Venus OS"
 
     def __init__(self, entry: VictronGxConfigEntry) -> None:
         """Initialize the firmware update entity."""
