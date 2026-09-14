@@ -244,8 +244,12 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 device_name = device_name or raw_descriptor
             elif raw_name:
                 unique_id = raw_name
-                device_path = device_path or raw_name
                 device_name = raw_name
+                # Without a by-id link the resolved path is a bare
+                # /dev/input/eventN, which the kernel may hand to a different
+                # device after a reboot. Store no path so this entry keeps
+                # matching on the name the user configured.
+                device_path = None
             else:
                 return self.async_abort(reason="cannot_identify_device")
 
@@ -253,7 +257,9 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         # Build entry data
-        data: dict[str, Any] = {CONF_DEVICE_PATH: device_path}
+        data: dict[str, Any] = {}
+        if device_path:
+            data[CONF_DEVICE_PATH] = device_path
         if device_name:
             data[CONF_DEVICE_NAME] = device_name
         # Store original YAML descriptor for runtime matching

@@ -290,7 +290,32 @@ async def test_import_fallback_name_only(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == FAKE_DEVICE_NAME
-    assert result["data"][CONF_DEVICE_PATH] == FAKE_DEVICE_NAME
+    assert CONF_DEVICE_PATH not in result["data"]
+    assert result["data"][CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_name_only_discards_transient_path(hass: HomeAssistant) -> None:
+    """Test a name-only import stores no path when the device has no by-id link.
+
+    The resolved /dev/input/eventN is whatever the kernel assigned this boot and
+    can belong to an unrelated device after the next one, so storing it would
+    let it outrank the name the user actually configured.
+    """
+    with patch(
+        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
+        return_value=(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={"device_name": FAKE_DEVICE_NAME},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == FAKE_DEVICE_NAME
+    assert CONF_DEVICE_PATH not in result["data"]
+    assert result["data"][CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
 
 
 async def test_import_cannot_identify(hass: HomeAssistant) -> None:

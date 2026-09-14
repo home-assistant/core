@@ -460,9 +460,13 @@ class DeviceHandler:
         self._descriptor: str | None = None
 
     @property
-    def _device_path(self) -> str:
-        """The configured device path (by-id or raw)."""
-        return self.entry.data[CONF_DEVICE_PATH]
+    def _device_path(self) -> str | None:
+        """The configured device path (by-id or raw), if the entry has one.
+
+        Name-only YAML imports store no path, because the only path available
+        at import time is a transient /dev/input/eventN.
+        """
+        return self.entry.data.get(CONF_DEVICE_PATH)
 
     @property
     def _device_name_config(self) -> str | None:
