@@ -166,7 +166,7 @@ async def test_script_tool_does_not_overwrite_declared_device_id_field(
                     "mode": "single",
                     "max": 2,
                     "max_exceeded": "WARNING",
-                    "trace": {},
+                    "trace": {"stored_traces": 5},
                     "fields": {"device_id": {"selector": {"text": {}}}},
                 }
             )
