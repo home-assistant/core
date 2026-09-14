@@ -70,6 +70,12 @@
       }
     },
     "switch": {
+      "bypass": {
+        "name": "Break function"
+      },
+      "bypass_infinite": {
+        "name": "Break function never expires"
+      },
       "child_lock": {
         "name": "Child lock"
       },

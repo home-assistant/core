@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, create_autospec, patch
 
 from boschshcpy import (
     BatteryLevelService,
+    BypassService,
     PowerSwitchService,
     RoutingService,
     SHCBatteryDevice,
@@ -14,6 +15,7 @@ from boschshcpy import (
     SHCMicromoduleBlinds,
     SHCMicromoduleRelay,
     SHCPresenceSimulationSystem,
+    SHCShutterContact2,
     SHCShutterControl,
     SHCSmartPlug,
     SHCThermostat,
@@ -300,4 +302,26 @@ def presence_simulation_system_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.enabled = enabled
+    return device
+
+
+def shutter_contact2_device(
+    device_id: str = "hdm:ZigBee:shuttercontact1",
+    name: str = "Shutter contact",
+    bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
+    bypass_infinite: bool = False,
+) -> SHCShutterContact2:
+    """Build a minimal device double for the shutter_contacts2 bucket."""
+    device = create_autospec(SHCShutterContact2, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "SWD2"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.bypass = bypass
+    device.bypass_infinite = bypass_infinite
     return device
