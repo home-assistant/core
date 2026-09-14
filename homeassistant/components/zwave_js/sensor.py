@@ -1048,9 +1048,12 @@ class ZWaveListSensor(ZwaveSensor):
 
     @callback
     def _async_clear_unmapped_value(self) -> None:
-        """Clear the repair once values resolve after re-interview."""
-        if not self._unmapped_value_reported:
-            return
+        """Clear the repair once values resolve after re-interview.
+
+        Always attempts the delete (safe no-op when no issue exists) so a
+        freshly rediscovered entity instance clears a stale issue left by
+        the prior instance that was removed during metadata rediscovery.
+        """
         self._unmapped_value_reported = False
         if (issue_id := self._unmapped_issue_id) is not None:
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
