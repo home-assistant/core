@@ -31,85 +31,51 @@ PLATFORMS = [Platform.CLIMATE]
 async def async_migrate_entry(
     hass: HomeAssistant, entry: MitsubishiWfRacConfigEntry
 ) -> bool:
-    """Migrate old config entry."""
+    """Bring an entry of the custom component that used to own this domain up to date.
 
-    if entry.version == 1:
-        new_data = entry.data.copy()
-        new_options = {
-            CONF_HOST: new_data.pop(CONF_HOST),
-            CONF_AVAILABILITY_CHECK: False,
-            CONF_AVAILABILITY_RETRY_LIMIT: 3,
-        }
+    Core never wrote versions 1 to 6; they come from that custom component, and
+    an installation switching over brings its entries along. They need one
+    normalisation rather than a replay of that history, so any of them reaches
+    the same shape in a single step:
 
-        hass.config_entries.async_update_entry(
-            entry, data=new_data, options=new_options, version=2
-        )
-    if entry.version == 2:
-        # This step used to write an "availability_retry" key that nothing ever
-        # reads, and to reset CONF_AVAILABILITY_RETRY_LIMIT back to 3 over any
-        # value the user had picked. Both are gone; the version bump is all that
-        # is left. Entries that already ran the old step get the stale key
-        # cleaned up by the v3 -> v4 step below.
-        hass.config_entries.async_update_entry(entry, version=3)
-    if entry.version == 3:
-        new_options = dict(entry.options)
-        new_options.pop("availability_retry", None)
-        # The v1 -> v2 step above hard-set CONF_AVAILABILITY_CHECK to False at a
-        # time when the flag was dead code (see create_device_from_entry), so
-        # every entry predating v2 has been running with no retry tolerance at
-        # all: one failed poll marks the device unavailable. The WF-RAC module
-        # reassociates on its own roughly once an hour, which a 60s poll
-        # interval turns into a visible outage. Turn the check on, and lift
-        # limits below 2, which are equivalent to it being off (Device.
-        # _set_availability() needs limit-1 consecutive failures to tolerate).
-        new_options[CONF_AVAILABILITY_CHECK] = True
-        if new_options.get(CONF_AVAILABILITY_RETRY_LIMIT, 3) < 2:
-            new_options[CONF_AVAILABILITY_RETRY_LIMIT] = 3
+    - The host belongs in entry.data. It sat in options so it could be edited
+      there, which also meant the discovery helper that refreshes a moved unit
+      (_abort_if_unique_id_configured(updates=...)) merged the new address into
+      data, where setup never looked - so the address silently stayed stale.
+    - The availability toggle goes, along with a retry key nothing ever read.
+      The toggle was never a defensible choice: the module reassociates with
+      the network about once an hour, so some tolerance is always right, and
+      switching it off was arithmetically identical to a limit of 1. The limit
+      itself is a real choice on a weak link and stays, floored at what Device
+      enforces anyway.
+    - Entries added by hand carry no unique id, because the manual step checked
+      for a duplicate airco itself instead of registering one. Without it
+      zeroconf cannot recognise the entry, so a unit that moved was offered as
+      a new discovery. The module announces itself as <mac>.local and the airco
+      id is that same MAC, so this is the identity discovery already matches
+      on.
+    """
 
-        hass.config_entries.async_update_entry(entry, options=new_options, version=4)
-    if entry.version == 4:
-        # Drop the on/off toggle and put a floor under the retry limit. The
-        # toggle was never a defensible choice - the module's hourly
-        # reassociation makes some tolerance always right, and switching it off
-        # was arithmetically identical to a limit of 1. Raising the limit is a
-        # real choice on a weak link, so the number stays; only values below
-        # AVAILABILITY_FAILURE_LIMIT_MIN are lifted, which is what the v3 -> v4
-        # step above was already having to do by hand.
-        new_options = dict(entry.options)
-        new_options.pop(CONF_AVAILABILITY_CHECK, None)
-        new_options[CONF_AVAILABILITY_RETRY_LIMIT] = max(
+    if entry.version < 7:
+        data = dict(entry.data)
+        options = dict(entry.options)
+
+        if CONF_HOST in options:
+            data[CONF_HOST] = options.pop(CONF_HOST)
+
+        options.pop(CONF_AVAILABILITY_CHECK, None)
+        options.pop("availability_retry", None)
+        options[CONF_AVAILABILITY_RETRY_LIMIT] = max(
             AVAILABILITY_FAILURE_LIMIT_MIN,
-            new_options.get(
-                CONF_AVAILABILITY_RETRY_LIMIT, AVAILABILITY_FAILURE_LIMIT_MIN
-            ),
+            options.get(CONF_AVAILABILITY_RETRY_LIMIT, AVAILABILITY_FAILURE_LIMIT_MIN),
         )
 
-        hass.config_entries.async_update_entry(entry, options=new_options, version=5)
-    if entry.version == 5:
-        # Move the host back into entry.data, where connection-critical data
-        # belongs. It lived in options since v2 so it could be edited there,
-        # and that was the wrong home for a second reason: the discovery
-        # helper that refreshes a changed address
-        # (_abort_if_unique_id_configured(updates=...)) only ever merges into
-        # entry.data, so the refresh wrote a key setup never read and the
-        # address silently stayed stale.
-        new_data = dict(entry.data)
-        new_options = dict(entry.options)
-        if CONF_HOST in new_options:
-            new_data[CONF_HOST] = new_options.pop(CONF_HOST)
-
         hass.config_entries.async_update_entry(
-            entry, data=new_data, options=new_options, version=6
-        )
-    if entry.version == 6:
-        # Entries added by hand never got a unique id: the manual step checked
-        # for a duplicate airco itself instead of registering one. Without it
-        # zeroconf cannot recognise the entry, so a unit that moved was offered
-        # as a new discovery and its address was never refreshed. The module
-        # announces itself as <mac>.local and the airco id is that same MAC, so
-        # this is the identity discovery already matches on.
-        hass.config_entries.async_update_entry(
-            entry, unique_id=entry.data[CONF_AIRCO_ID].lower(), version=7
+            entry,
+            data=data,
+            options=options,
+            unique_id=data[CONF_AIRCO_ID].lower(),
+            version=7,
         )
 
     return True
@@ -165,8 +131,8 @@ async def create_device_from_entry(
     airco_id: str = entry.data[CONF_AIRCO_ID]
     # Only entries carried over from the custom component that used to own
     # this domain can name a limit; nothing offers to set one here. Floored in
-    # Device itself, so one that predates the v4 -> v5 migration cannot run
-    # with less tolerance than the module needs.
+    # Device itself as well as in the migration, so none of them runs with less
+    # tolerance than the module needs.
     availability_failure_limit: int = entry.options.get(
         CONF_AVAILABILITY_RETRY_LIMIT, AVAILABILITY_FAILURE_LIMIT_MIN
     )

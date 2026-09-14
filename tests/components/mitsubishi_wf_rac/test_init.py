@@ -86,7 +86,7 @@ async def test_remove_entry_releases_the_account_slot(
 async def test_migration_from_version_1(
     hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
-    """A v1 entry moves its host into options and gains retry tolerance.
+    """A v1 entry gains retry tolerance and keeps its host where setup reads it.
 
     Entries this old exist in the wild through the custom-component release of
     this integration, which shares this domain.
@@ -116,6 +116,34 @@ async def test_migration_from_version_1(
     assert CONF_HOST not in entry.options
     # v1 entries ran with no tolerance at all; the module reassociates hourly.
     assert entry.options["availability_retry_limit"] == 3
+
+
+async def test_migration_brings_the_host_back_into_data(
+    hass: HomeAssistant, mock_repository: AsyncMock
+) -> None:
+    """An entry that kept its host in options gets it back into data.
+
+    That is where versions 2 to 5 stored it, and where the discovery helper
+    refreshing a moved unit never wrote - so the address it merged into data
+    was the one setup read, and the edited one in options was not.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Living room",
+        data={k: v for k, v in ENTRY_DATA.items() if k != CONF_HOST},
+        options={**ENTRY_OPTIONS, CONF_HOST: HOST},
+        unique_id=AIRCO_ID,
+        version=5,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 7
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_HOST] == HOST
+    assert CONF_HOST not in entry.options
 
 
 async def test_migration_lifts_a_retry_limit_below_the_floor(
