@@ -262,7 +262,7 @@
     'object_id_base': 'VDDCR SoC Voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 3,
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -322,7 +322,7 @@
     'object_id_base': 'VDDCR Voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 3,
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -382,7 +382,7 @@
     'object_id_base': '+12V Voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 3,
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -442,7 +442,7 @@
     'object_id_base': '+5V Voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 3,
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -789,7 +789,7 @@
     'object_id_base': 'Vcore Voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 3,
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -1396,8 +1396,8 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU PCIe Tx Throughput',
-      'max_value': '374999000.0',
-      'min_value': '0.0',
+      'max_value': 374999.0,
+      'min_value': 1.0,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
     }),
@@ -1845,8 +1845,8 @@
       'attributes': ReadOnlyDict({
         <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
         <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU PCIe Tx Throughput',
-        'max_value': '374999000.0',
-        'min_value': '0.0',
+        'max_value': 374999.0,
+        'min_value': 1.0,
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
       }),
@@ -2239,8 +2239,8 @@
       'attributes': ReadOnlyDict({
         <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
         <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU PCIe Tx Throughput',
-        'max_value': '374999000.0',
-        'min_value': '0.0',
+        'max_value': 374999.0,
+        'min_value': 1.0,
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
       }),
