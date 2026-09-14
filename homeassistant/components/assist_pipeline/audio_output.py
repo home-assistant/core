@@ -48,6 +48,16 @@ class AudioOutputStream(Protocol):
         """Stream audio data."""
 
 
+class WritableAudioOutputStream(AudioOutputStream, Protocol):
+    """Audio stream interface used by pipeline response producers."""
+
+    async def async_write(self, data: bytes) -> None:
+        """Write an audio chunk."""
+
+    def async_close(self) -> None:
+        """Close the stream successfully."""
+
+
 @dataclass(slots=True)
 class PipelineAudioOutput:
     """Bounded, single-consumer audio stream produced by a pipeline."""
