@@ -36,10 +36,6 @@ from .const import (
     INFRARED_BRIGHTNESS,
     LIFX_CEILING_PRODUCT_IDS,
     LOGGER,
-)
-from .coordinator import FirmwareEffect, LIFXConfigEntry, LIFXUpdateCoordinator
-from .entity import LIFXEntity
-from .manager import (
     SERVICE_EFFECT_COLORLOOP,
     SERVICE_EFFECT_FLAME,
     SERVICE_EFFECT_MORPH,
@@ -47,8 +43,10 @@ from .manager import (
     SERVICE_EFFECT_PULSE,
     SERVICE_EFFECT_SKY,
     SERVICE_EFFECT_STOP,
-    LIFXManager,
 )
+from .coordinator import FirmwareEffect, LIFXConfigEntry, LIFXUpdateCoordinator
+from .entity import LIFXEntity
+from .manager import LIFXManager
 from .util import convert_8_to_16, convert_16_to_8, find_hsbk, lifx_features, merge_hsbk
 
 LIFX_STATE_SETTLE_DELAY = 0.3
