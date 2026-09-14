@@ -7,7 +7,6 @@ timeout so a command that never applied doesn't mask reality forever).
 """
 
 from collections.abc import Callable, Coroutine
-import time
 from typing import Any, override
 
 from denonavr.exceptions import DenonAvrError
@@ -45,7 +44,6 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
         # calls to one entity or calls split across platforms.
         self._action_lock = coordinator.lock
         self._pending_value: _T | None = None
-        self._pending_value_set_at: float | None = None
         self._pending_value_expiry_unsub: Callable[[], None] | None = None
 
     def _read_value(self) -> _T | None:
@@ -55,7 +53,6 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
     def _set_pending_value(self, value: _T) -> None:
         """Show a value optimistically and schedule its expiry."""
         self._pending_value = value
-        self._pending_value_set_at = time.monotonic()
         if self._pending_value_expiry_unsub is not None:
             self._pending_value_expiry_unsub()
         self._pending_value_expiry_unsub = async_call_later(
@@ -65,7 +62,6 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
     def _clear_pending_value(self) -> None:
         """Clear the pending override and cancel its scheduled expiry."""
         self._pending_value = None
-        self._pending_value_set_at = None
         if self._pending_value_expiry_unsub is not None:
             self._pending_value_expiry_unsub()
             self._pending_value_expiry_unsub = None
@@ -79,7 +75,6 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
         """
         self._pending_value_expiry_unsub = None
         self._pending_value = None
-        self._pending_value_set_at = None
         self.async_write_ha_state()
 
     @property

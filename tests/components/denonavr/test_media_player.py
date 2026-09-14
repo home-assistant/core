@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from denonavr.const import POWER_ON
 from denonavr.exceptions import (
@@ -146,7 +146,7 @@ async def test_setup_without_serial_number(
     )
 
 
-async def test_get_command(hass: HomeAssistant, client) -> None:
+async def test_get_command(hass: HomeAssistant, client: MagicMock) -> None:
     """Test generic command functionality."""
     await setup_denonavr(hass)
 
@@ -161,7 +161,7 @@ async def test_get_command(hass: HomeAssistant, client) -> None:
 
 
 async def test_dynamic_eq_attribute_updates_from_audyssey_coordinator(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """The dynamic_eq attribute refreshes when the Audyssey coordinator does.
 
@@ -186,7 +186,7 @@ async def test_dynamic_eq_attribute_updates_from_audyssey_coordinator(
 
 
 async def test_set_dynamic_eq_connectivity_error_marks_audyssey_unavailable(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """A connectivity failure here also affects the Audyssey coordinator.
 
@@ -211,7 +211,7 @@ async def test_set_dynamic_eq_connectivity_error_marks_audyssey_unavailable(
     assert entry.runtime_data.audyssey_coordinator.last_update_success is False
 
 
-async def test_dynamic_eq(hass: HomeAssistant, client) -> None:
+async def test_dynamic_eq(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that dynamic eq method works."""
     await setup_denonavr(hass)
 
@@ -232,7 +232,7 @@ async def test_dynamic_eq(hass: HomeAssistant, client) -> None:
     client.async_dynamic_eq_off.assert_called_once()
 
 
-async def test_update_audyssey(hass: HomeAssistant, client) -> None:
+async def test_update_audyssey(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that dynamic eq method works."""
     await setup_denonavr(hass)
 
@@ -257,7 +257,7 @@ async def test_update_audyssey(hass: HomeAssistant, client) -> None:
 
 
 async def test_update_audyssey_restores_availability(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """A successful call recovers Audyssey entities from a prior failure.
 
@@ -280,8 +280,34 @@ async def test_update_audyssey_restores_availability(
     assert entry.runtime_data.audyssey_coordinator.last_update_success is True
 
 
+async def test_update_audyssey_connectivity_error_marks_media_player_unavailable(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A connectivity failure here also affects the general coordinator.
+
+    This entity's own availability is tied to the general coordinator,
+    not the Audyssey one it's routed through here - without also
+    marking that one unavailable, a connectivity failure would leave
+    this entity looking available despite just confirming the
+    receiver itself is unreachable.
+    """
+    entry = await setup_denonavr(hass)
+    client.async_update_audyssey.side_effect = AvrNetworkError(
+        "Connection refused", "GetAudyssey"
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_AUDYSSEY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+    )
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.coordinator.last_update_success is False
+
+
 async def test_set_dynamic_eq_always_refreshes_audyssey(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Refreshes Audyssey after this action regardless of the option.
 

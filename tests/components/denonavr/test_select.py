@@ -382,6 +382,9 @@ async def test_dimmer_refreshes_and_shows_new_state_immediately(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Test that a stale immediate refresh doesn't revert a just-set value."""
+    await setup_denonavr(hass)
+    entity_id = _entity_id(hass, "dimmer")
+    assert client.dimmer == "Bright"
 
     async def _apply_dimmer_change(*args, **kwargs):
         client.dimmer = "Dark"
@@ -389,11 +392,12 @@ async def test_dimmer_refreshes_and_shows_new_state_immediately(
     # side_effect must be the async function itself (not a sync lambda
     # that merely returns a coroutine) - AsyncMock only awaits side_effect
     # automatically when it's a coroutine function; a sync wrapper just
-    # creates an un-awaited coroutine that never actually runs.
+    # creates an un-awaited coroutine that never actually runs. Installed
+    # after setup, not before: setup's own initial refresh would
+    # otherwise already flip dimmer to "Dark", so the action below
+    # would start at its expected final state and couldn't catch a
+    # stale-refresh regression.
     client.async_update.side_effect = _apply_dimmer_change
-
-    await setup_denonavr(hass)
-    entity_id = _entity_id(hass, "dimmer")
 
     await hass.services.async_call(
         SELECT_DOMAIN,

@@ -45,8 +45,6 @@ from .const import (
     ATTR_DYNAMIC_EQ,
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
-    CONF_UPDATE_AUDYSSEY,
-    DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
     TELNET_EVENTS,
 )
@@ -95,9 +93,6 @@ async def async_setup_entry(
     entities = []
     data = config_entry.runtime_data
     receiver = data.receiver
-    update_audyssey = config_entry.options.get(
-        CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
-    )
     for receiver_zone in receiver.zones.values():
         if config_entry.data.get(CONF_SERIAL_NUMBER) is not None:
             unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
@@ -110,7 +105,6 @@ async def async_setup_entry(
                 receiver_zone,
                 unique_id,
                 config_entry,
-                update_audyssey,
             )
         )
     _LOGGER.debug(
@@ -213,7 +207,6 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
         receiver: DenonAVR,
         unique_id: str,
         config_entry: DenonavrConfigEntry,
-        update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
         super().__init__(coordinator)
@@ -229,7 +222,6 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
         self._receiver = receiver
-        self._update_audyssey = update_audyssey
 
         self._supported_features_base = SUPPORT_DENON
         self._supported_features_base |= (
@@ -506,6 +498,12 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
         # already acquires the shared lock itself, so decorating this
         # too would deadlock.
         await self._audyssey_coordinator.async_refresh()
+        if not self._audyssey_coordinator.last_update_success:
+            # A connectivity failure here means the receiver itself is
+            # unreachable, not just Audyssey-specific - this entity's
+            # own availability (tied to the general coordinator) needs
+            # to reflect that too, not just the Audyssey one.
+            mark_unavailable(self.coordinator)
 
     @async_log_errors
     async def async_set_dynamic_eq(self, dynamic_eq: bool) -> None:
