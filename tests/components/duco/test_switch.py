@@ -152,7 +152,7 @@ async def test_identify_write_error(
     exception: Exception,
     match: str,
 ) -> None:
-    """Test identify write failures raise translated Home Assistant errors."""
+    """Test identify write failures report user-facing errors."""
     mock_duco_client.async_set_node_identify.side_effect = exception
 
     with pytest.raises(HomeAssistantError, match=match):
