@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.mqtt import valid_subscribe_topic
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -74,7 +74,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             prefix = prefix.removesuffix("/#")
             try:
                 valid_subscribe_topic(f"{prefix}/#")
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors["base"] = "invalid_discovery_topic"
                 bad_prefix = True
             else:
@@ -83,10 +83,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title="Tasmota", data=data)
 
         fields = {}
-        fields[vol.Optional(CONF_DISCOVERY_PREFIX, default=self._prefix)] = str
+        fields[probatio.Optional(CONF_DISCOVERY_PREFIX, default=self._prefix)] = str
 
         return self.async_show_form(
-            step_id="config", data_schema=vol.Schema(fields), errors=errors
+            step_id="config", data_schema=probatio.Schema(fields), errors=errors
         )
 
     async def async_step_confirm(

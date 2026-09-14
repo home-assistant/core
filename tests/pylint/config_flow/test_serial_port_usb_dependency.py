@@ -33,7 +33,7 @@ def test_serial_port_selector_with_usb_dependency(
     )
 
     code = """
-    vol.Schema({vol.Required(CONF_PORT): SerialPortSelector()})
+    probatio.Schema({probatio.Required(CONF_PORT): SerialPortSelector()})
     """
     root_node = astroid.parse(code, "homeassistant.components.my_device.config_flow")
     root_node.file = str(integration_dir / "config_flow.py")
@@ -47,7 +47,7 @@ def test_serial_port_selector_with_usb_dependency(
     [
         pytest.param(
             """
-        vol.Schema({vol.Required(CONF_HOST): TextSelector()})
+        probatio.Schema({probatio.Required(CONF_HOST): TextSelector()})
         """,
             "homeassistant.components.my_device.config_flow",
             id="other_selector",
@@ -98,9 +98,9 @@ def test_serial_port_selector_without_usb_dependency(
     integration_dir = _write_integration(tmp_path, "my_device", manifest)
 
     code = """
-    vol.Schema({
-        vol.Required(CONF_PORT): SerialPortSelector(),
-        vol.Optional(CONF_OTHER): SerialPortSelector(),
+    probatio.Schema({
+        probatio.Required(CONF_PORT): SerialPortSelector(),
+        probatio.Optional(CONF_OTHER): SerialPortSelector(),
     })
     """
     root_node = astroid.parse(code, "homeassistant.components.my_device.config_flow")

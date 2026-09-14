@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+import probatio
 from pynordpool import (
     Currency,
     NordPoolClient,
@@ -9,7 +10,6 @@ from pynordpool import (
     NordPoolError,
 )
 from pynordpool.const import AREAS
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CURRENCY
@@ -30,9 +30,9 @@ SELECT_AREAS = [
 ]
 SELECT_CURRENCY = [currency.value for currency in Currency]
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_AREAS, default=[]): SelectSelector(
+        probatio.Required(CONF_AREAS, default=[]): SelectSelector(
             SelectSelectorConfig(
                 options=SELECT_AREAS,
                 multiple=True,
@@ -40,7 +40,7 @@ DATA_SCHEMA = vol.Schema(
                 sort=True,
             )
         ),
-        vol.Required(CONF_CURRENCY, default="SEK"): SelectSelector(
+        probatio.Required(CONF_CURRENCY, default="SEK"): SelectSelector(
             SelectSelectorConfig(
                 options=SELECT_CURRENCY,
                 multiple=False,

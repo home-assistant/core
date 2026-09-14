@@ -24,8 +24,8 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Self, TypedDict, cast, override
 
 from async_interrupt import interrupt
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from . import data_entry_flow, loader
 from .const import (
@@ -3618,7 +3618,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         *,
         step_id: str | None = None,
-        data_schema: vol.Schema | None = None,
+        data_schema: probatio.Schema | None = None,
         errors: dict[str, str] | None = None,
         description_placeholders: Mapping[str, str] | None = None,
         last_step: bool | None = None,
