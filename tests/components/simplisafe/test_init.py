@@ -1,5 +1,6 @@
 """Define tests for SimpliSafe setup."""
 
+import copy
 from unittest.mock import AsyncMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -88,6 +89,7 @@ async def test_glass_break_device_class(
     system_v3: SystemV3,
 ) -> None:
     """Test the glass break binary sensor device class."""
+    system_v3.sensor_data = copy.deepcopy(system_v3.sensor_data)
     system_v3.sensor_data["glass"] = {
         "serial": "glass",
         "type": 6,
