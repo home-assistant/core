@@ -122,9 +122,10 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             self._username,
             error,
         )
+        storage_path = Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path
         try:
             self.api, challenged = await self.hass.async_add_executor_job(
-                self._login_without_stored_session
+                self._login_without_stored_session, storage_path
             )
         except PyiCloudFailedLoginException as retry_error:
             _LOGGER.error("Error logging into iCloud service: %s", retry_error)
@@ -142,12 +143,14 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             self.api = None
             return self._show_setup_form(user_input, {"base": "unknown"}, step_id)
 
-        # The login reached a challenge rather than failing, so the session it
-        # established is what the code has to go through.
+        # A login that ended in a challenge rather than a failure leaves a
+        # session that is what the code has to go through.
         self._forced_2fa = self._forced_2fa or challenged
         return None
 
-    def _login_without_stored_session(self) -> tuple[PyiCloudService, bool]:
+    def _login_without_stored_session(
+        self, storage_path: str
+    ) -> tuple[PyiCloudService, bool]:
         """Log in with the stored session discarded, in the executor.
 
         The service validates the stored session while it is constructed, so
@@ -158,7 +161,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         api = PyiCloudService(
             self._username,
             self._password,
-            Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
+            storage_path,
             True,
             None,
             self._with_family,
