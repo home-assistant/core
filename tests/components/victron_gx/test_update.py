@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from victron_mqtt import (
     FirmwareUpdateError,
     FirmwareUpdateErrorReason,
@@ -29,8 +30,10 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_ON,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -91,6 +94,7 @@ async def test_firmware_update_entity(
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_DEVICE_CLASS] == UpdateDeviceClass.FIRMWARE
+    assert update_entry.entity_category is EntityCategory.CONFIG
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v3.80~45"
     assert state.attributes[ATTR_LATEST_VERSION] == "v3.80~36"
     assert state.attributes[ATTR_IN_PROGRESS] is False
@@ -145,8 +149,8 @@ async def test_install_does_not_start_without_available_version() -> None:
     hub.install_firmware_update.assert_not_called()
 
 
-async def test_install_updates_progress_and_clears_failure() -> None:
-    """Test progress is published and cleared after a handled GX failure."""
+async def test_install_propagates_translated_failure_and_clears_progress() -> None:
+    """Test a GX failure is translated and install progress is cleared."""
     entity, hub = _create_update_entity()
     entity.hass = MagicMock()
     states: list[tuple[bool | None, int | float | None]] = []
@@ -164,9 +168,12 @@ async def test_install_updates_progress_and_clears_failure() -> None:
                 (entity.in_progress, entity.update_percentage)
             ),
         ),
+        pytest.raises(HomeAssistantError) as err,
     ):
         await entity.async_install(None, False)
 
+    assert err.value.translation_domain == "victron_gx"
+    assert err.value.translation_key == "error_during_update"
     assert states == [(True, None), (True, 25), (False, None)]
 
 

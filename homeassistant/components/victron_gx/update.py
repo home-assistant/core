@@ -1,7 +1,6 @@
 """Firmware updates for Victron GX devices."""
 
 from datetime import timedelta
-import logging
 from typing import Any, override
 
 from victron_mqtt import FirmwareUpdateError
@@ -11,14 +10,14 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .hub import VictronGxConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -39,6 +38,7 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
     """Represent the Venus OS firmware installed on a GX device."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
     _attr_release_url = _FIRMWARE_UPDATE_URL
     _attr_should_poll = True
@@ -99,10 +99,12 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
             self.async_write_ha_state()
 
         try:
-            try:
-                await self._hub.install_firmware_update(_async_update_progress)
-            except FirmwareUpdateError as err:
-                _LOGGER.warning("GX firmware installation failed: %s", err.reason)
+            await self._hub.install_firmware_update(_async_update_progress)
+        except FirmwareUpdateError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=err.reason.value,
+            ) from err
         finally:
             self._attr_in_progress = False
             self._attr_update_percentage = None
