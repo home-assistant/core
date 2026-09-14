@@ -413,6 +413,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_audio_glass_break",
         translation_key="glass_break_detected",
+        device_class=BinarySensorDeviceClass.GLASS_BREAK,
         ufp_required_field="can_detect_glass_break",
         ufp_public_value="is_glass_break_currently_detected",
         ufp_event_driven=True,
