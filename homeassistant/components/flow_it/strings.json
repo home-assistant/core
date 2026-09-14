@@ -37,6 +37,49 @@
     }
   },
   "entity": {
+    "sensor": {
+      "g4_filter_status": {
+        "name": "G4 filter status",
+        "state": {
+          "clean": "[%key:component::flow_it::entity::sensor::hepa_filter_status::state::clean%]",
+          "dirty_0": "[%key:component::flow_it::entity::sensor::hepa_filter_status::state::dirty_0%]",
+          "dirty_25": "[%key:component::flow_it::entity::sensor::hepa_filter_status::state::dirty_25%]",
+          "dirty_50": "[%key:component::flow_it::entity::sensor::hepa_filter_status::state::dirty_50%]",
+          "dirty_75": "[%key:component::flow_it::entity::sensor::hepa_filter_status::state::dirty_75%]"
+        }
+      },
+      "hepa_filter_status": {
+        "name": "HEPA filter status",
+        "state": {
+          "clean": "Clean",
+          "dirty_0": "0%",
+          "dirty_25": "25%",
+          "dirty_50": "50%",
+          "dirty_75": "75%"
+        }
+      },
+      "humidity_in": {
+        "name": "Indoor air humidity"
+      },
+      "humidity_out": {
+        "name": "Outdoor air humidity"
+      },
+      "iaq": {
+        "name": "Indoor air quality"
+      },
+      "pressure_in": {
+        "name": "Indoor air pressure"
+      },
+      "pressure_out": {
+        "name": "Outdoor air pressure"
+      },
+      "temperature_in": {
+        "name": "Indoor air temperature"
+      },
+      "temperature_out": {
+        "name": "Outdoor air temperature"
+      }
+    },
     "switch": {
       "flow_in": {
         "name": "Air intake"
