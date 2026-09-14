@@ -48,19 +48,6 @@ STEP_USER = vol.Schema(
 )
 
 
-def _normalized(user_input: dict[str, Any]) -> dict[str, Any]:
-    """Return config entry data with the host lowercased.
-
-    ModbusTcpParams itself already folds the host to lower case, so two
-    differently-cased spellings of the same host already share one
-    underlying connection. This normalizes the *config entry's own* stored
-    data instead, so _async_abort_entries_match() below - which compares
-    the raw stored strings, not a ModbusTcpParams - actually recognizes a
-    re-added entry spelling the host differently as the same link.
-    """
-    return {**user_input, CONF_HOST: user_input[CONF_HOST].lower()}
-
-
 class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a BLUETTI Modbus config flow."""
 
@@ -74,8 +61,7 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            data = _normalized(user_input)
-            errors, serial = await self._async_validate(data)
+            errors, serial = await self._async_validate(user_input)
             if not errors:
                 assert (
                     serial is not None
@@ -88,12 +74,12 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                 # entry, whether or not either side has a serial number.
                 self._async_abort_entries_match(
                     {
-                        CONF_HOST: data[CONF_HOST],
-                        CONF_PORT: data[CONF_PORT],
-                        CONF_UNIT_ID: data[CONF_UNIT_ID],
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_UNIT_ID: user_input[CONF_UNIT_ID],
                     }
                 )
-                return self.async_create_entry(title="Balco260", data=data)
+                return self.async_create_entry(title="Balco260", data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER, errors=errors
