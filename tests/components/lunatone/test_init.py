@@ -47,6 +47,13 @@ async def test_load_unload_config_entry(
     assert device_entry.configuration_url == BASE_URL
     assert device_entry.model == PRODUCT_NAME
 
+    for line_id in mock_lunatone_info.data.lines:
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{mock_config_entry.unique_id}-line{line_id}"),
+            mock_config_entry.entry_id,
+        )
+        assert device_entry is not None
+
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 

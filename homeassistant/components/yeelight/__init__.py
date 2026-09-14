@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 from yeelight import BulbException
 from yeelight.aio import AsyncBulb
 
@@ -58,56 +58,58 @@ _LOGGER = logging.getLogger(__name__)
 
 
 YEELIGHT_FLOW_TRANSITION_SCHEMA: VolDictType = {
-    vol.Optional(ATTR_COUNT, default=0): cv.positive_int,
-    vol.Optional(ATTR_ACTION, default=ACTION_RECOVER): vol.Any(
+    probatio.Optional(ATTR_COUNT, default=0): cv.positive_int,
+    probatio.Optional(ATTR_ACTION, default=ACTION_RECOVER): probatio.Any(
         ACTION_RECOVER, ACTION_OFF, ACTION_STAY
     ),
-    vol.Required(ATTR_TRANSITIONS): [
+    probatio.Required(ATTR_TRANSITIONS): [
         {
-            vol.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION): vol.All(
+            probatio.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION): probatio.All(
                 cv.ensure_list, [cv.positive_int]
             ),
-            vol.Exclusive(YEELIGHT_HSV_TRANSACTION, CONF_TRANSITION): vol.All(
+            probatio.Exclusive(YEELIGHT_HSV_TRANSACTION, CONF_TRANSITION): probatio.All(
                 cv.ensure_list, [cv.positive_int]
             ),
-            vol.Exclusive(YEELIGHT_TEMPERATURE_TRANSACTION, CONF_TRANSITION): vol.All(
-                cv.ensure_list, [cv.positive_int]
-            ),
-            vol.Exclusive(YEELIGHT_SLEEP_TRANSACTION, CONF_TRANSITION): vol.All(
-                cv.ensure_list, [cv.positive_int]
-            ),
+            probatio.Exclusive(
+                YEELIGHT_TEMPERATURE_TRANSACTION, CONF_TRANSITION
+            ): probatio.All(cv.ensure_list, [cv.positive_int]),
+            probatio.Exclusive(
+                YEELIGHT_SLEEP_TRANSACTION, CONF_TRANSITION
+            ): probatio.All(cv.ensure_list, [cv.positive_int]),
         }
     ],
 }
 
-DEVICE_SCHEMA = vol.Schema(
+DEVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
-        vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
-        vol.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
-        vol.Optional(CONF_NIGHTLIGHT_SWITCH_TYPE): vol.Any(
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
+        probatio.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
+        probatio.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
+        probatio.Optional(CONF_NIGHTLIGHT_SWITCH_TYPE): probatio.Any(
             NIGHTLIGHT_SWITCH_TYPE_LIGHT
         ),
-        vol.Optional(CONF_MODEL): cv.string,
+        probatio.Optional(CONF_MODEL): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-                vol.Optional(CONF_CUSTOM_EFFECTS): [
+                probatio.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+                probatio.Optional(CONF_CUSTOM_EFFECTS): [
                     {
-                        vol.Required(CONF_NAME): cv.string,
-                        vol.Required(CONF_FLOW_PARAMS): YEELIGHT_FLOW_TRANSITION_SCHEMA,
+                        probatio.Required(CONF_NAME): cv.string,
+                        probatio.Required(
+                            CONF_FLOW_PARAMS
+                        ): YEELIGHT_FLOW_TRANSITION_SCHEMA,
                     }
                 ],
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
