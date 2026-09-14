@@ -981,12 +981,7 @@ async def test_action_tool(
 async def test_action_tool_forwards_device_id(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Test that ActionTool forwards the calling device_id to the script.
-
-    Unlike IntentTool, which already receives device_id (see
-    test_assist_api above), scripts had no way to know which
-    device/satellite triggered the call.
-    """
+    """Test that ActionTool forwards the calling device_id to the script."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(
         hass,
@@ -1025,6 +1020,48 @@ async def test_action_tool_forwards_device_id(
         "script",
         "test_script",
         {"device_id": "abc123"},
+        context=llm_context.context,
+        blocking=True,
+        return_response=True,
+    )
+
+
+async def test_action_tool_does_not_overwrite_declared_device_id_field(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test that a script-declared device_id field is not overwritten."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script": {
+                    "sequence": [],
+                    "fields": {"device_id": {"selector": {"text": {}}}},
+                }
+            }
+        },
+    )
+    async_expose_entity(hass, "conversation", "script.test_script", True)
+
+    llm_context.device_id = "abc123"
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tool_input = llm.ToolInput(
+        tool_name="script__test_script",
+        tool_args={"device_id": "living_room_tablet"},
+    )
+
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call",
+        side_effect=hass.services.async_call,
+    ) as mock_service_call:
+        await api.async_call_tool(tool_input)
+
+    mock_service_call.assert_awaited_once_with(
+        "script",
+        "test_script",
+        {"device_id": "living_room_tablet"},
         context=llm_context.context,
         blocking=True,
         return_response=True,
