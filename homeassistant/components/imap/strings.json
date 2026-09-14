@@ -86,6 +86,9 @@
     "invalid_part_index": {
       "message": "Invalid part index."
     },
+    "search_failed": {
+      "message": "Searching for messages failed with \"{error}\"."
+    },
     "seen_failed": {
       "message": "Marking message as seen failed with \"{error}\"."
     }
@@ -203,6 +206,20 @@
         }
       },
       "name": "Move message"
+    },
+    "search": {
+      "description": "Searches for emails using the search command and returns matching UIDs.",
+      "fields": {
+        "entry": {
+          "description": "The IMAP config entry.",
+          "name": "Entry"
+        },
+        "search_command": {
+          "description": "The IMAP search command.",
+          "name": "Search command"
+        }
+      },
+      "name": "Search for messages"
     },
     "seen": {
       "description": "Marks an email as seen.",

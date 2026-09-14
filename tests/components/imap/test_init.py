@@ -915,8 +915,20 @@ async def test_enforce_polling(
     ],
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
+@pytest.mark.parametrize(
+    ("search_response", "search_service_response"),
+    [
+        (TEST_SEARCH_RESPONSE, ["1"]),
+        (EMPTY_SEARCH_RESPONSE, []),
+        (EMPTY_SEARCH_RESPONSE_ALT, []),
+    ],
+)
 async def test_services(
-    hass: HomeAssistant, mock_imap_protocol: MagicMock, message_parts: dict[str, Any]
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    message_parts: dict[str, Any],
+    search_response: tuple[str, list[bytes]],
+    search_service_response: list[str],
 ) -> None:
     """Test receiving a message successfully."""
     event_called = async_capture_events(hass, "imap_content")
@@ -947,6 +959,18 @@ async def test_services(
     assert data["uid"] == "1"
     assert data["entry_id"] == config_entry.entry_id
     assert data["parts"] == message_parts
+
+    # Test search service
+    mock_imap_protocol.reset_mock()
+    mock_imap_protocol.search.return_value = Response(*search_response)
+    data = {"entry": config_entry.entry_id, "search_command": "Unseen Undeleted"}
+    response = await hass.services.async_call(
+        DOMAIN, "search", data, blocking=True, return_response=True
+    )
+    mock_imap_protocol.search.assert_called_with(
+        "Unseen Undeleted", charset=MOCK_CONFIG[CONF_CHARSET]
+    )
+    assert response["uids"] == search_service_response
 
     # Test seen service
     data = {"entry": config_entry.entry_id, "uid": "1"}
@@ -1058,6 +1082,10 @@ async def test_services(
         "delete": ({"entry": config_entry.entry_id, "uid": "1"}, False),
         "fetch": ({"entry": config_entry.entry_id, "uid": "1"}, True),
         "fetch_part": ({"entry": config_entry.entry_id, "uid": "1", "part": "1"}, True),
+        "search": (
+            {"entry": config_entry.entry_id, "search_command": "Undeleted Unseen"},
+            True,
+        ),
     }
     patch_error_translation_key = {
         "seen": ("store", "seen_failed"),
@@ -1065,6 +1093,7 @@ async def test_services(
         "delete": ("store", "delete_failed"),
         "fetch": ("fetch", "fetch_failed"),
         "fetch_part": ("fetch", "fetch_failed"),
+        "search": ("search", "search_failed"),
     }
     for service, (data, response) in service_calls_response.items():
         with (
