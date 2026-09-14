@@ -1,9 +1,8 @@
 """Support for IKEA Tradfri lights."""
 
-from collections.abc import Callable
 from typing import Any, cast, override
 
-from pytradfri.command import Command
+from pytradfri.api.aiocoap_api import APIRequestProtocol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -54,7 +53,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
-        api: Callable[[Command | list[Command]], Any],
+        api: APIRequestProtocol,
         gateway_id: str,
     ) -> None:
         """Initialize a Light."""
