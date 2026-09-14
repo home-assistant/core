@@ -10,11 +10,13 @@ import time
 from unittest.mock import Mock, patch
 
 from b2sdk._internal.raw_simulator import BucketSimulator
+from b2sdk.v2 import FileVersion
 from b2sdk.v2.exception import B2Error
 import pytest
 
 from homeassistant.components.backblaze_b2.backup import (
     _parse_metadata,
+    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.backblaze_b2.const import (
@@ -160,6 +162,78 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
+
+
+async def test_cache_invalidation_during_id_search_keeps_iterating(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a delete during an in-flight ID search does not crash the search."""
+    agent = (await async_get_backup_agents(hass))[0]
+
+    class FakeVersion:
+        def __init__(self, file_name: str) -> None:
+            self.file_name = file_name
+
+    agent._all_files_cache = {
+        "testprefix/a.metadata.json": FakeVersion("testprefix/a.metadata.json"),
+        "testprefix/a.tar": FakeVersion("testprefix/a.tar"),
+        "testprefix/b.tar": FakeVersion("testprefix/b.tar"),
+    }
+    expiration = time.time() + 999.0
+    agent._all_files_cache_expiration = expiration
+
+    def invalidate_mid_search(
+        file_name: str,
+        file_version: FileVersion,
+        target_backup_id: str,
+        all_files_in_prefix: dict[str, FileVersion],
+    ) -> tuple[FileVersion | None, FileVersion | None]:
+        agent._invalidate_caches(
+            "other-id", "testprefix/b.tar", None, remove_files=True
+        )
+        return (None, None)
+
+    with patch.object(
+        agent, "_process_metadata_file_for_id_sync", invalidate_mid_search
+    ):
+        result = await agent._find_file_and_metadata_version_by_id("some-id")
+
+    assert result == (None, None)
+    assert "testprefix/b.tar" not in agent._all_files_cache
+    assert agent._all_files_cache_expiration == expiration
+
+
+async def test_invalidate_caches_removes_deleted_entries_from_valid_cache(
+    hass: HomeAssistant,
+) -> None:
+    """Test that removing files from a valid cache keeps the rest of it usable."""
+    agent = (await async_get_backup_agents(hass))[0]
+
+    class FakeVersion:
+        def __init__(self, file_name: str) -> None:
+            self.file_name = file_name
+
+    agent._all_files_cache = {
+        "testprefix/a.tar": FakeVersion("testprefix/a.tar"),
+        "testprefix/a.metadata.json": FakeVersion("testprefix/a.metadata.json"),
+        "testprefix/keep.tar": FakeVersion("testprefix/keep.tar"),
+    }
+    agent._backup_list_cache = {"kept-id": Mock(), "removed-id": Mock()}
+    expiration = time.time() + 999.0
+    agent._all_files_cache_expiration = expiration
+    agent._backup_list_cache_expiration = expiration
+
+    agent._invalidate_caches(
+        "removed-id",
+        "testprefix/a.tar",
+        "testprefix/a.metadata.json",
+        remove_files=True,
+    )
+
+    assert set(agent._all_files_cache) == {"testprefix/keep.tar"}
+    assert set(agent._backup_list_cache) == {"kept-id"}
+    assert agent._all_files_cache_expiration == expiration
+    assert agent._backup_list_cache_expiration == expiration
 
 
 async def test_agents_download(
