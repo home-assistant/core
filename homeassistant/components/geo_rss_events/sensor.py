@@ -10,7 +10,7 @@ import logging
 
 from georss_client import UPDATE_OK, UPDATE_OK_NO_DATA
 from georss_generic_client import GenericFeed
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -48,13 +48,17 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_URL): cv.string,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_CATEGORIES, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(
+        probatio.Required(CONF_URL): cv.string,
+        probatio.Optional(CONF_LATITUDE): cv.latitude,
+        probatio.Optional(CONF_LONGITUDE): cv.longitude,
+        probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): probatio.Coerce(
+            float
+        ),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_CATEGORIES, default=[]): probatio.All(
+            cv.ensure_list, [cv.string]
+        ),
+        probatio.Optional(
             CONF_UNIT_OF_MEASUREMENT, default=DEFAULT_UNIT_OF_MEASUREMENT
         ): cv.string,
     }

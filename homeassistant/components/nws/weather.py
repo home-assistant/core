@@ -3,8 +3,8 @@
 from functools import partial
 from typing import Any, Required, TypedDict, cast, override
 
+import probatio
 from pynws import SimpleNWS
-import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -109,7 +109,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         "get_forecasts_extra",
-        {vol.Required("type"): vol.In(("hourly", "twice_daily"))},
+        {probatio.Required("type"): probatio.In(("hourly", "twice_daily"))},
         "async_get_forecasts_extra_service",
         supports_response=SupportsResponse.ONLY,
     )

@@ -6,8 +6,8 @@ from copy import deepcopy
 from typing import TYPE_CHECKING
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 from zha.application.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
@@ -793,7 +793,7 @@ async def test_permit_with_install_code_fail(
 ) -> None:
     """Test permit service with install code."""
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
         )

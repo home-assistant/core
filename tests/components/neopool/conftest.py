@@ -83,6 +83,15 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "pH pump active": False,
     "pH acid pump active": False,
     "Filtration Pump": False,
+    "pH Acid Pump": False,
+    # Measurement / module "active" bits. The controller keeps measuring the
+    # probes regardless of filtration state, so these read True even though the
+    # filtration pump above is off.
+    "pH measurement active": True,
+    "Redox measurement active": True,
+    "Chlorine measurement active": True,
+    "Conductivity measurement active": True,
+    "HIDRO Module active": True,
     "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19,
     "MBF_PAR_HIDRO_COVER_ENABLE": 0x0000,
     "Pool Cover": 0,
@@ -196,6 +205,58 @@ def mock_config_entry_switch() -> MockConfigEntry:
             CONF_USE_AUX2: True,
             CONF_USE_AUX3: True,
             CONF_USE_AUX4: True,
+        },
+    )
+
+
+@pytest.fixture
+def mock_config_entry_binary_sensor() -> MockConfigEntry:
+    """Return a config entry with the options the binary_sensor platform gates on."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={
+            CONF_USE_LIGHT: True,
+            CONF_USE_COVER_SENSOR: True,
+            CONF_USE_AUX1: True,
+            CONF_USE_AUX2: True,
+            CONF_USE_AUX3: True,
+            CONF_USE_AUX4: True,
+        },
+    )
+
+
+@pytest.fixture
+def mock_config_entry_binary_sensor_no_options() -> MockConfigEntry:
+    """Return a config entry with every binary_sensor option disabled."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={
+            CONF_USE_LIGHT: False,
+            CONF_USE_COVER_SENSOR: False,
+            CONF_USE_AUX1: False,
+            CONF_USE_AUX2: False,
+            CONF_USE_AUX3: False,
+            CONF_USE_AUX4: False,
         },
     )
 

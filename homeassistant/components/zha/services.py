@@ -3,7 +3,7 @@
 import logging
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 from zha.application.const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
@@ -80,95 +80,97 @@ def _ensure_list_if_present[_T](value: _T | None) -> list[_T] | list[Any] | None
 
 
 SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
-    SERVICE_PERMIT: vol.Schema(
-        vol.All(
+    SERVICE_PERMIT: probatio.Schema(
+        probatio.All(
             cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
             SERVICE_PERMIT_PARAMS,
         )
     ),
-    IEEE_SERVICE: vol.Schema(
-        vol.All(
+    IEEE_SERVICE: probatio.Schema(
+        probatio.All(
             cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
-            {vol.Required(ATTR_IEEE): IEEE_SCHEMA},
+            {probatio.Required(ATTR_IEEE): IEEE_SCHEMA},
         )
     ),
-    SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: vol.Schema(
+    SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: probatio.Schema(
         {
-            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-            vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
-            vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
-            vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
-            vol.Required(ATTR_ATTRIBUTE): vol.Any(cv.positive_int, str),
-            vol.Required(ATTR_VALUE): vol.Any(int, cv.boolean, cv.string),
-            vol.Optional(ATTR_MANUFACTURER): vol.All(
-                vol.Coerce(int), vol.Range(min=-1)
+            probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+            probatio.Required(ATTR_ENDPOINT_ID): cv.positive_int,
+            probatio.Required(ATTR_CLUSTER_ID): cv.positive_int,
+            probatio.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
+            probatio.Required(ATTR_ATTRIBUTE): probatio.Any(cv.positive_int, str),
+            probatio.Required(ATTR_VALUE): probatio.Any(int, cv.boolean, cv.string),
+            probatio.Optional(ATTR_MANUFACTURER): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=-1)
             ),
         }
     ),
-    SERVICE_WARNING_DEVICE_SQUAWK: vol.Schema(
+    SERVICE_WARNING_DEVICE_SQUAWK: probatio.Schema(
         {
-            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-            vol.Optional(
+            probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+            probatio.Optional(
                 ATTR_WARNING_DEVICE_MODE, default=SquawkMode.Armed
             ): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(
                 ATTR_WARNING_DEVICE_STROBE, default=Strobe.Strobe
             ): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(
                 ATTR_LEVEL, default=SirenLevel.High_level_sound
             ): cv.positive_int,
         }
     ),
-    SERVICE_WARNING_DEVICE_WARN: vol.Schema(
+    SERVICE_WARNING_DEVICE_WARN: probatio.Schema(
         {
-            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-            vol.Optional(
+            probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+            probatio.Optional(
                 ATTR_WARNING_DEVICE_MODE, default=WarningMode.Emergency
             ): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(
                 ATTR_WARNING_DEVICE_STROBE, default=Strobe.Strobe
             ): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(
                 ATTR_LEVEL, default=SirenLevel.High_level_sound
             ): cv.positive_int,
-            vol.Optional(ATTR_WARNING_DEVICE_DURATION, default=5): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(ATTR_WARNING_DEVICE_DURATION, default=5): cv.positive_int,
+            probatio.Optional(
                 ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE, default=0x00
             ): cv.positive_int,
-            vol.Optional(
+            probatio.Optional(
                 ATTR_WARNING_DEVICE_STROBE_INTENSITY,
                 default=StrobeLevel.High_level_strobe,
             ): cv.positive_int,
         }
     ),
-    SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: vol.All(
-        vol.Schema(
+    SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: probatio.All(
+        probatio.Schema(
             {
-                vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-                vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
-                vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
-                vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
-                vol.Required(ATTR_COMMAND): cv.positive_int,
-                vol.Required(ATTR_COMMAND_TYPE): cv.string,
-                vol.Exclusive(ATTR_ARGS, "attrs_params"): _ensure_list_if_present,
-                vol.Exclusive(ATTR_PARAMS, "attrs_params"): dict,
-                vol.Optional(ATTR_MANUFACTURER): vol.All(
-                    vol.Coerce(int), vol.Range(min=-1)
+                probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+                probatio.Required(ATTR_ENDPOINT_ID): cv.positive_int,
+                probatio.Required(ATTR_CLUSTER_ID): cv.positive_int,
+                probatio.Optional(
+                    ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN
+                ): cv.string,
+                probatio.Required(ATTR_COMMAND): cv.positive_int,
+                probatio.Required(ATTR_COMMAND_TYPE): cv.string,
+                probatio.Exclusive(ATTR_ARGS, "attrs_params"): _ensure_list_if_present,
+                probatio.Exclusive(ATTR_PARAMS, "attrs_params"): dict,
+                probatio.Optional(ATTR_MANUFACTURER): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=-1)
                 ),
             }
         ),
         cv.deprecated(ATTR_ARGS),
         cv.has_at_least_one_key(ATTR_ARGS, ATTR_PARAMS),
     ),
-    SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND: vol.Schema(
+    SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND: probatio.Schema(
         {
-            vol.Required(ATTR_GROUP): cv.positive_int,
-            vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
-            vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
-            vol.Required(ATTR_COMMAND): cv.positive_int,
-            vol.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
-            vol.Optional(ATTR_MANUFACTURER): vol.All(
-                vol.Coerce(int), vol.Range(min=-1)
+            probatio.Required(ATTR_GROUP): cv.positive_int,
+            probatio.Required(ATTR_CLUSTER_ID): cv.positive_int,
+            probatio.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
+            probatio.Required(ATTR_COMMAND): cv.positive_int,
+            probatio.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
+            probatio.Optional(ATTR_MANUFACTURER): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=-1)
             ),
         }
     ),

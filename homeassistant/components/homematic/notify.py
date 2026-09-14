@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -25,11 +25,11 @@ from .const import (
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
-        vol.Required(ATTR_CHANNEL): vol.Coerce(int),
-        vol.Required(ATTR_PARAM): vol.All(cv.string, vol.Upper),
-        vol.Required(ATTR_VALUE): cv.match_all,
-        vol.Optional(ATTR_INTERFACE): cv.string,
+        probatio.Required(ATTR_ADDRESS): probatio.All(cv.string, probatio.Upper),
+        probatio.Required(ATTR_CHANNEL): probatio.Coerce(int),
+        probatio.Required(ATTR_PARAM): probatio.All(cv.string, probatio.Upper),
+        probatio.Required(ATTR_VALUE): cv.match_all,
+        probatio.Optional(ATTR_INTERFACE): cv.string,
     }
 )
 

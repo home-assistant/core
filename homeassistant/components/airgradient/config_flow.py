@@ -11,7 +11,7 @@ from airgradient import (
     ConfigurationControl,
 )
 from awesomeversion import AwesomeVersion, AwesomeVersionException
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -157,7 +157,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )
 

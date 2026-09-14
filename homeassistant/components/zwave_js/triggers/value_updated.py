@@ -4,7 +4,7 @@ from collections.abc import Callable
 import functools
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value, get_value_id_str
@@ -40,11 +40,11 @@ from ..const import (
     EVENT_VALUE_UPDATED,
 )
 from ..helpers import (
+    async_bypass_dynamic_config_validation,
     async_get_config_entry_from_node,
     async_get_nodes_from_targets,
     get_device_id,
 )
-from .trigger_helpers import async_bypass_dynamic_config_validation
 
 # Relative platform type should be <SUBMODULE_NAME>
 RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
@@ -56,21 +56,25 @@ ATTR_FROM = "from"
 ATTR_TO = "to"
 
 _OPTIONS_SCHEMA_DICT = {
-    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_COMMAND_CLASS): vol.All(
-        vol.Coerce(int), vol.In({cc.value: cc.name for cc in CommandClass})
+    probatio.Optional(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+    probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    probatio.Required(ATTR_COMMAND_CLASS): probatio.All(
+        probatio.Coerce(int), probatio.In({cc.value: cc.name for cc in CommandClass})
     ),
-    vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
-    vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
-    vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
-    vol.Optional(ATTR_FROM, default=MATCH_ALL): vol.Any(VALUE_SCHEMA, [VALUE_SCHEMA]),
-    vol.Optional(ATTR_TO, default=MATCH_ALL): vol.Any(VALUE_SCHEMA, [VALUE_SCHEMA]),
+    probatio.Required(ATTR_PROPERTY): probatio.Any(probatio.Coerce(int), cv.string),
+    probatio.Optional(ATTR_ENDPOINT): probatio.Coerce(int),
+    probatio.Optional(ATTR_PROPERTY_KEY): probatio.Any(probatio.Coerce(int), cv.string),
+    probatio.Optional(ATTR_FROM, default=MATCH_ALL): probatio.Any(
+        VALUE_SCHEMA, [VALUE_SCHEMA]
+    ),
+    probatio.Optional(ATTR_TO, default=MATCH_ALL): probatio.Any(
+        VALUE_SCHEMA, [VALUE_SCHEMA]
+    ),
 }
 
-_CONFIG_SCHEMA = vol.Schema(
+_CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS): vol.All(
+        probatio.Required(CONF_OPTIONS): probatio.All(
             _OPTIONS_SCHEMA_DICT,
             cv.has_at_least_one_key(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
         ),
@@ -89,7 +93,7 @@ async def async_validate_trigger_config(
         return config
 
     if not async_get_nodes_from_targets(hass, options):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
         )
     return config
@@ -170,6 +174,7 @@ async def async_attach_trigger(
             unsub()
         unsubs.clear()
 
+    @callback
     def _create_zwave_listeners() -> None:
         """Create Z-Wave JS listeners."""
         async_remove()
