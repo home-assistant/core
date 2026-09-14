@@ -1385,14 +1385,13 @@ async def test_energy_production_sensors(
             assert attr not in state.attributes
 
 
+@pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
 async def test_unmapped_enum_value_raises_repair(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    client,
-    climate_adc_t3000,
-    lock_id_lock_as_id150,
-    integration,
+    climate_adc_t3000: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test that an unmapped config parameter value creates a repair."""
     entity_id = "sensor.adc_t3000_power_source"
@@ -1440,14 +1439,13 @@ async def test_unmapped_enum_value_raises_repair(
     assert len(matching) == 1
 
 
+@pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
 async def test_unmapped_enum_value_cleared_after_mapped_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    client,
-    climate_adc_t3000,
-    lock_id_lock_as_id150,
-    integration,
+    climate_adc_t3000: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test that the repair is cleared when the value resolves to a mapped state."""
     entity_id = "sensor.adc_t3000_power_source"
