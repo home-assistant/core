@@ -131,6 +131,27 @@ async def test_script_tool_forwards_device_id(hass: HomeAssistant) -> None:
         return_response=True,
     )
 
+    # The script does not declare a device_id field, so an LLM-supplied
+    # value for it is not trusted over the real calling device_id.
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call",
+        side_effect=hass.services.async_call,
+    ) as mock_service_call:
+        await tool.async_call(
+            hass,
+            llm.ToolInput("script__test_script", {"beer": 1, "device_id": "spoofed"}),
+            llm_context,
+        )
+
+    mock_service_call.assert_awaited_once_with(
+        "script",
+        "test_script",
+        {"beer": 1, "device_id": "abc123"},
+        context=llm_context.context,
+        blocking=True,
+        return_response=True,
+    )
+
 
 async def test_script_tool_does_not_overwrite_declared_device_id_field(
     hass: HomeAssistant,
