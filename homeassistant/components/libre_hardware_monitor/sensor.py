@@ -7,6 +7,7 @@ from librehardwaremonitor_api.model import DeviceId, LibreHardwareMonitorSensorD
 from librehardwaremonitor_api.sensor_type import SensorType
 
 from homeassistant.components.sensor import (
+    UNIT_CONVERTERS,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -26,6 +27,24 @@ PARALLEL_UPDATES = 0
 
 STATE_MIN_VALUE = "min_value"
 STATE_MAX_VALUE = "max_value"
+
+DEVICE_CLASSES: dict[SensorType, SensorDeviceClass] = {
+    SensorType.VOLTAGE: SensorDeviceClass.VOLTAGE,
+    SensorType.CURRENT: SensorDeviceClass.CURRENT,
+    SensorType.POWER: SensorDeviceClass.POWER,
+    SensorType.CLOCK: SensorDeviceClass.FREQUENCY,
+    SensorType.FREQUENCY: SensorDeviceClass.FREQUENCY,
+    SensorType.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
+    SensorType.FLOW: SensorDeviceClass.VOLUME_FLOW_RATE,
+    SensorType.DATA: SensorDeviceClass.DATA_SIZE,
+    SensorType.SMALL_DATA: SensorDeviceClass.DATA_SIZE,
+    SensorType.THROUGHPUT: SensorDeviceClass.DATA_RATE,
+    SensorType.TIMESPAN: SensorDeviceClass.DURATION,
+    SensorType.ENERGY: SensorDeviceClass.ENERGY_STORAGE,
+    SensorType.NOISE: SensorDeviceClass.SOUND_PRESSURE,
+    SensorType.CONDUCTIVITY: SensorDeviceClass.CONDUCTIVITY,
+    SensorType.HUMIDITY: SensorDeviceClass.HUMIDITY,
+}
 
 
 async def async_setup_entry(
@@ -78,7 +97,19 @@ class LibreHardwareMonitorSensor(
         super().__init__(coordinator)
 
         self._attr_name: str = sensor_data.name
-        self._attr_device_class = self._map_device_class(sensor_data)
+
+        if sensor_data.type is None:
+            _LOGGER.debug("Missing type for sensor: %s", sensor_data.name)
+        elif device_class := DEVICE_CLASSES.get(sensor_data.type):
+            self._attr_device_class = device_class
+
+            if device_class is SensorDeviceClass.DATA_RATE:
+                self._attr_suggested_unit_of_measurement = (
+                    UnitOfDataRate.KILOBYTES_PER_SECOND
+                )
+            elif device_class is SensorDeviceClass.VOLTAGE:
+                # Device class default rounds voltages to whole volts
+                self._attr_suggested_display_precision = 3
 
         self._set_state(sensor_data)
         self._attr_unique_id: str = f"{entry_id}_{sensor_data.sensor_id}"
@@ -94,57 +125,33 @@ class LibreHardwareMonitorSensor(
 
     def _set_state(self, sensor_data: LibreHardwareMonitorSensorData) -> None:
         self._attr_native_value: str | None = sensor_data.value
-        self._attr_extra_state_attributes: dict[str, Any] = {
-            STATE_MIN_VALUE: sensor_data.min,
-            STATE_MAX_VALUE: sensor_data.max,
-        }
         self._attr_native_unit_of_measurement = sensor_data.unit
+        self._native_min_value = sensor_data.min
+        self._native_max_value = sensor_data.max
 
-        if sensor_data.type == SensorType.THROUGHPUT:
-            self._attr_suggested_unit_of_measurement = (
-                UnitOfDataRate.KILOBYTES_PER_SECOND
-            )
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return min and max values in the unit the state is reported in."""
+        return {
+            STATE_MIN_VALUE: self._value_in_state_unit(self._native_min_value),
+            STATE_MAX_VALUE: self._value_in_state_unit(self._native_max_value),
+        }
 
-    @staticmethod
-    def _map_device_class(
-        sensor_data: LibreHardwareMonitorSensorData,
-    ) -> SensorDeviceClass | None:
-        if sensor_data.type is None:
-            _LOGGER.warning("Missing type for sensor: %s", sensor_data.name)
-            return None
+    def _value_in_state_unit(self, native_value: str | None) -> str | float | None:
+        """Convert a native value to the unit the state is converted to."""
+        native_unit = self.native_unit_of_measurement
+        unit = self.unit_of_measurement
+        if (
+            native_value is None
+            or native_unit == unit
+            or (converter := UNIT_CONVERTERS.get(self.device_class)) is None
+            or native_unit not in converter.VALID_UNITS
+            or unit not in converter.VALID_UNITS
+        ):
+            return native_value
 
-        match sensor_data.type:
-            case SensorType.VOLTAGE:
-                return SensorDeviceClass.VOLTAGE
-            case SensorType.CURRENT:
-                return SensorDeviceClass.CURRENT
-            case SensorType.POWER:
-                return SensorDeviceClass.POWER
-            case SensorType.CLOCK | SensorType.FREQUENCY:
-                return SensorDeviceClass.FREQUENCY
-            case SensorType.TEMPERATURE:
-                return SensorDeviceClass.TEMPERATURE
-            case SensorType.FLOW:
-                return SensorDeviceClass.VOLUME_FLOW_RATE
-            case SensorType.FACTOR:
-                return SensorDeviceClass.POWER_FACTOR
-            case SensorType.DATA | SensorType.SMALL_DATA:
-                return SensorDeviceClass.DATA_SIZE
-            case SensorType.THROUGHPUT:
-                return SensorDeviceClass.DATA_RATE
-            case SensorType.TIMESPAN:
-                return SensorDeviceClass.DURATION
-            case SensorType.ENERGY:
-                return SensorDeviceClass.ENERGY
-            case SensorType.NOISE:
-                return SensorDeviceClass.SOUND_PRESSURE
-            case SensorType.CONDUCTIVITY:
-                return SensorDeviceClass.CONDUCTIVITY
-            case SensorType.HUMIDITY:
-                return SensorDeviceClass.HUMIDITY
-            # no matching HA sensor device classes for remaining types
-            case _:
-                return None
+        return converter.convert(float(native_value), native_unit, unit)
 
     @callback
     @override
