@@ -142,7 +142,6 @@ Every check has a code following the
 | `W7435` | [`home-assistant-json-fixture`](#w7435-home-assistant-json-fixture) | Use a JSON fixture helper instead of parsing a loaded fixture |
 | `W7436` | [`home-assistant-light-missing-color-mode`](#w7436-home-assistant-light-missing-color-mode) | Light entity sets supported color modes but does not report a `color_mode` |
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
-
 | `W7438` | [`home-assistant-step_id-match-method`](#w7438-home-assistant-step_id-match-method) | Config flow should use `step_id` parameter value same as the method it's in |
 
 ## `home_assistant_logger` checker
@@ -1054,4 +1053,4 @@ currently in.
 Check the `step_id` parameter for all calls to `async_show_form`,
 `async_external_step`, `async_show_progress` and `async_show_menu`.
 The `step_id` parameter should be same as the method it is in.
-For example: `step_id="user` should be used in `async_step_user`
+For example: `step_id="user"` should be used in `async_step_user`
