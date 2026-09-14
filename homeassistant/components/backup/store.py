@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 STORE_DELAY_SAVE = 30
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 7
+STORAGE_VERSION_MINOR = 8
 
 
 class StoredBackupData(TypedDict):
@@ -87,6 +87,9 @@ class _BackupStore(Store[StoredBackupData]):
                 for backup in data["backups"]:
                     backup["failed_addons"] = []
                     backup["failed_folders"] = []
+            # Version 1.8 does not change the data. The minor version was bumped
+            # so that stores written before the store was made private are
+            # rewritten once, with mode 0600, on the first load.
 
         # Note: We allow reading data with major version 2 in which the unused key
         # data["config"]["schedule"]["state"] will be removed. The bump to 2 is
