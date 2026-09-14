@@ -313,6 +313,19 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         return float(raw) if isinstance(raw, (int, float)) else None
 
     @override
+    async def async_added_to_hass(self) -> None:
+        """Clear transient write state, in case this entity is re-added.
+
+        An entity-ID change removes and then re-adds the same object, so
+        async_will_remove_from_hass leaves _removing set and a cancelled
+        pending value behind. Reset both here, else every later flush aborts
+        and the stale optimistic value stays visible.
+        """
+        self._removing = False
+        self._pending_value = None
+        await super().async_added_to_hass()
+
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cancel a pending write when removed, and stop any in-flight one."""
         self._removing = True
@@ -446,7 +459,10 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
                     self._report_write_failure(future, token, err)
                     resolved = True
                     return
-                if self._abort_if_removing(future):
+                if self._abort_if_removing(future):  # pragma: no cover
+                    # Removal cancels every tracked flush task, so a batch
+                    # waiting on the lock unwinds before it writes; this
+                    # post-write removal check is a defensive guard.
                     resolved = True
                     return
                 try:
