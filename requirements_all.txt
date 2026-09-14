@@ -233,7 +233,7 @@ aiobotocore==3.7.0
 aiocentriconnect==0.2.3
 
 # homeassistant.components.comelit
-aiocomelit==2.0.7
+aiocomelit==3.0.0
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.2.7
