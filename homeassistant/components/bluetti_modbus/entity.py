@@ -12,17 +12,7 @@ _MODEL_NAME = "Balco260"
 def bluetti_modbus_device_info(
     serial: str, sw_version: str | None = None
 ) -> DeviceInfo:
-    """Return device information for a BLUETTI Modbus device.
-
-    serial is entry.unique_id, not a fresh register read - the same value
-    confirmed at config-flow time, before this device would otherwise be
-    shown as a plain sensor.
-
-    sw_version is the raw ARM/DSP firmware values as reported (see
-    __init__.py's caller) - real values, not decoded into a version scheme
-    that isn't documented anywhere, but device identity rather than a
-    measurement, so it belongs here rather than as a sensor.
-    """
+    """Return device information for a BLUETTI Modbus device."""
     return DeviceInfo(
         identifiers={(DOMAIN, serial)},
         manufacturer="BLUETTI",
