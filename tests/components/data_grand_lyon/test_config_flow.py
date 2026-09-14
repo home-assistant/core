@@ -1,6 +1,6 @@
 """Test the Data Grand Lyon config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientConnectionError, ClientResponseError
 import pytest
@@ -12,6 +12,7 @@ from homeassistant.components.data_grand_lyon.const import (
     CONF_STATION_ID,
     CONF_STOP_ID,
     DOMAIN,
+    SUBENTRY_TYPE_LINE,
     SUBENTRY_TYPE_PARK_AND_RIDE,
     SUBENTRY_TYPE_STOP,
     SUBENTRY_TYPE_VELOV_STATION,
@@ -719,5 +720,178 @@ async def test_park_and_ride_subentry_picker_load_errors(
         context={"source": config_entries.SOURCE_USER},
     )
 
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+# Line subentry tests
+
+
+@pytest.mark.usefixtures("mock_tcl_client")
+async def test_line_subentry_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test adding a TCL line subentry."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_LINE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LINE: "C3"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Line C3"
+    assert result["data"] == {CONF_LINE: "C3"}
+
+
+@pytest.mark.usefixtures("mock_tcl_client")
+async def test_line_subentry_flow_custom_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a line code absent from the pictogram CSV is accepted."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_LINE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LINE: "ZI3"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_LINE: "ZI3"}
+
+
+@pytest.mark.parametrize(
+    "line_code",
+    [
+        pytest.param(" C3 ", id="padded"),
+        pytest.param("C3", id="exact"),
+    ],
+)
+@pytest.mark.usefixtures("mock_tcl_client")
+async def test_line_subentry_flow_trims_line_code(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    line_code: str,
+) -> None:
+    """Test a line code with surrounding whitespace is trimmed before use."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_LINE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LINE: line_code}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Line C3"
+    assert result["data"] == {CONF_LINE: "C3"}
+    assert result["unique_id"] == "line_C3"
+
+
+@pytest.mark.parametrize(
+    "line_code",
+    [
+        pytest.param("", id="empty"),
+        pytest.param("   ", id="whitespace_only"),
+    ],
+)
+@pytest.mark.usefixtures("mock_tcl_client")
+async def test_line_subentry_flow_rejects_empty_line_code(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    line_code: str,
+) -> None:
+    """Test an empty (or whitespace-only) line code re-renders the form with an error."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_LINE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LINE: line_code}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_LINE: "invalid_line"}
+
+
+@pytest.mark.usefixtures("mock_tcl_client")
+async def test_line_subentry_flow_already_configured(
+    hass: HomeAssistant,
+    mock_line_config_entry: MockConfigEntry,
+) -> None:
+    """Test adding a line that is already configured aborts."""
+    mock_line_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_line_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_line_config_entry.entry_id, SUBENTRY_TYPE_LINE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LINE: "C3"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        pytest.param(
+            ClientResponseError(Mock(), Mock(), status=401),
+            "invalid_auth",
+            id="invalid_auth",
+        ),
+        pytest.param(
+            ClientResponseError(Mock(), Mock(), status=500),
+            "cannot_connect",
+            id="cannot_connect_http",
+        ),
+        pytest.param(
+            ClientConnectionError("boom"), "cannot_connect", id="cannot_connect_client"
+        ),
+        pytest.param(TimeoutError, "cannot_connect", id="cannot_connect_timeout"),
+        pytest.param(Exception("boom"), "unknown", id="unknown"),
+    ],
+)
+async def test_line_subentry_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+    side_effect: Exception,
+    reason: str,
+) -> None:
+    """Test the line subentry flow aborts when the line list cannot be fetched."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_tcl_client.get_tcl_line_pictograms.side_effect = side_effect
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_LINE),
+        context={"source": config_entries.SOURCE_USER},
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason

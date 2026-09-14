@@ -32,6 +32,8 @@
       'version': 1,
     }),
     'coordinator_data': dict({
+      'alerts': dict({
+      }),
       'park_and_rides': dict({
       }),
       'stops': dict({
@@ -57,6 +59,85 @@
             'type': 'T',
           }),
         ]),
+      }),
+      'velov_stations': dict({
+      }),
+    }),
+  })
+# ---
+# name: test_config_entry_diagnostics_with_line
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'data_grand_lyon',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+        dict({
+          'data': dict({
+            'line': 'C3',
+          }),
+          'subentry_type': 'line',
+          'title': 'Line C3',
+          'unique_id': 'line_C3',
+        }),
+      ]),
+      'title': 'Data Grand Lyon',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'coordinator_data': dict({
+      'alerts': dict({
+        'line_1': list([
+          dict({
+            'cause': 'travaux',
+            'debut': '2026-04-01T07:00:00',
+            'fin': '2026-04-30T17:30:00',
+            'last_update_fme': '2026-04-10T09:15:00',
+            'ligne_cli': 'C3',
+            'ligne_com': 'C3',
+            'liste_objet': 'C3',
+            'message': 'Les arrêts de Gare St-Paul à Cordeliers ne sont plus desservis.',
+            'mode': 'Bus',
+            'n': 1,
+            'niveau_severite': 20,
+            'titre': 'Déviée dir. Cordeliers',
+            'type': 'Perturbation',
+            'type_objet': 'line',
+            'type_severite': 'SIGNIFICANT_DELAYS',
+          }),
+          dict({
+            'cause': 'événement',
+            'debut': '2026-03-01T04:30:00',
+            'fin': '2026-03-02T01:30:00',
+            'last_update_fme': '2026-03-01T09:15:00',
+            'ligne_cli': 'C3',
+            'ligne_com': 'C3',
+            'liste_objet': 'C3',
+            'message': 'Horaires prolongés.',
+            'mode': 'Bus',
+            'n': 2,
+            'niveau_severite': 30,
+            'titre': 'Fête de la Musique',
+            'type': 'Information',
+            'type_objet': 'line',
+            'type_severite': 'OTHER_EFFECT',
+          }),
+        ]),
+      }),
+      'park_and_rides': dict({
+      }),
+      'stops': dict({
       }),
       'velov_stations': dict({
       }),
@@ -95,6 +176,8 @@
       'version': 1,
     }),
     'coordinator_data': dict({
+      'alerts': dict({
+      }),
       'park_and_rides': dict({
         'park_1': dict({
           'capacite': 240,
@@ -148,6 +231,8 @@
       'version': 1,
     }),
     'coordinator_data': dict({
+      'alerts': dict({
+      }),
       'park_and_rides': dict({
       }),
       'stops': dict({
