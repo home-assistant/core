@@ -13,7 +13,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_ble_device
+from tests.components.bluetooth import (
+    generate_ble_device,
+    inject_bluetooth_service_info,
+)
 
 TEST_ADDRESS = "00:00:00:00:AB:CD"
 TEST_SNOOZ_LOCAL_NAME = "Snooz-ABCD"
@@ -118,29 +121,20 @@ async def create_mock_snooz_config_entry(
 ) -> MockConfigEntry:
     """Create a mock config entry."""
 
-    with (
-        patch(
-            "homeassistant.components.snooz.SnoozDevice", return_value=device
-        ) as mock_snooz_device,
-        patch(
-            "homeassistant.components.snooz.async_ble_device_from_address",
-            return_value=generate_ble_device(device.address, device.name),
-        ),
-        patch(
-            "homeassistant.components.snooz.async_last_service_info",
-            return_value=SNOOZ_SERVICE_INFO_NOT_PAIRING,
-        ),
-    ):
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            unique_id=TEST_ADDRESS,
-            data={CONF_ADDRESS: TEST_ADDRESS, CONF_TOKEN: TEST_PAIRING_TOKEN},
-        )
-        entry.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_ADDRESS,
+        data={CONF_ADDRESS: TEST_ADDRESS, CONF_TOKEN: TEST_PAIRING_TOKEN},
+    )
+    entry.add_to_hass(hass)
+    inject_bluetooth_service_info(hass, SNOOZ_SERVICE_INFO_NOT_PAIRING)
 
+    with patch(
+        "homeassistant.components.snooz.SnoozDevice", return_value=device
+    ) as mock_snooz_device:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         assert mock_snooz_device.call_args.args[1].password == TEST_PAIRING_TOKEN
 
-        return entry
+    return entry

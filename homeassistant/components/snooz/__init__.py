@@ -9,7 +9,6 @@ from pysnooz.device import SnoozDevice
 from homeassistant.components.bluetooth import (
     BluetoothReachabilityIntent,
     async_address_reachability_diagnostics,
-    async_ble_device_from_address,
     async_last_service_info,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
@@ -28,11 +27,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> boo
     # transitions info logs are verbose. Only enable warnings
     logging.getLogger("transitions.core").setLevel(logging.WARNING)
 
-    if (
-        (ble_device := async_ble_device_from_address(hass, address)) is None
-        or (service_info := async_last_service_info(hass, address)) is None
-        or (advertisement := parse_snooz_advertisement(service_info)) is None
-    ):
+    if (service_info := async_last_service_info(hass, address)) is None or (
+        advertisement := parse_snooz_advertisement(service_info)
+    ) is None:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_not_found",
@@ -46,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> boo
             },
         )
 
+    ble_device = service_info.device
     device = SnoozDevice(ble_device, replace(advertisement, password=token))
 
     entry.runtime_data = SnoozConfigurationData(ble_device, device, entry.title)
