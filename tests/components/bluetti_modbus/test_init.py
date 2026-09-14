@@ -12,6 +12,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import SERIAL
 
@@ -137,6 +138,25 @@ async def test_dead_link_fails_the_refresh(
     assert state.state != STATE_UNAVAILABLE
 
 
+async def test_exhausted_read_budget_fails_the_refresh_like_any_other_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The library's own read budget expiring is reported as a failed update."""
+    await _setup(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    with patch.object(
+        coordinator.device, "async_update_with_retry", side_effect=TimeoutError
+    ):
+        await _tick(hass, freezer)
+
+    assert coordinator.last_update_success is False
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_key == "communication_error"
+
+
 async def test_transient_busy_response_is_retried(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -156,7 +176,7 @@ async def test_transient_busy_response_is_retried(
     with patch.object(mock_modbus_unit, "read_holding_registers", busy_once):
         await _setup(hass, mock_config_entry)
 
-    assert attempts > 1  # the retry really happened
+    assert attempts > 1
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(VOLTAGE_ENTITY)
@@ -182,7 +202,7 @@ async def test_dead_link_on_the_retry_still_fails_the_refresh(
     with patch.object(mock_modbus_unit, "read_holding_registers", busy_then_dead):
         await _setup(hass, mock_config_entry)
 
-    assert attempts > 1  # the retry really happened
+    assert attempts > 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 

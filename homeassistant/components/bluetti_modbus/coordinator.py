@@ -52,7 +52,7 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """
         try:
             await self.device.async_update_with_retry()
-        except ModbusError as err:
+        except (ModbusError, TimeoutError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
