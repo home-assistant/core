@@ -149,26 +149,24 @@ class GreeAcClimateEntity(
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
-        if last_state is None or last_state.state in (
+        if last_state is not None and last_state.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
-            return
-
-        if last_state.state in self._attr_hvac_modes:
-            self._attr_hvac_mode = HVACMode(last_state.state)
-        if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
-            self._attr_fan_mode = fan_mode
-        if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
-            self._attr_target_temperature = float(
-                round(
-                    TemperatureConverter.convert(
-                        float(temperature),
-                        self.hass.config.units.temperature_unit,
-                        self.temperature_unit,
+            if last_state.state in self._attr_hvac_modes:
+                self._attr_hvac_mode = HVACMode(last_state.state)
+            if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
+                self._attr_fan_mode = fan_mode
+            if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
+                self._attr_target_temperature = float(
+                    round(
+                        TemperatureConverter.convert(
+                            float(temperature),
+                            self.hass.config.units.temperature_unit,
+                            self.temperature_unit,
+                        )
                     )
                 )
-            )
 
         current_mode = self._attr_hvac_mode
         if current_mode is not None and current_mode is not HVACMode.OFF:

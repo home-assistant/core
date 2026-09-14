@@ -669,6 +669,53 @@ async def test_last_active_mode_restored_on_restart_while_off(
     )
 
 
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_last_active_mode_restored_from_unavailable_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    platforms: list[Platform],
+) -> None:
+    """Test the last active mode survives a restart from an unavailable state.
+
+    The visible state carries nothing usable once it is unavailable, so the extra
+    restore data has to be read regardless of what the visible state says.
+    """
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(_CLIMATE_ENTITY_ID, STATE_UNAVAILABLE),
+                {"last_active_hvac_mode": HVACMode.DRY.value},
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.gree_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            power=False,
+            mode=GreeAcMode.DRY,
+            temperature=MIN_TEMP,
+            fan=GreeAcFanSpeed.AUTO,
+        ).get_raw_timings()
+    )
+
+
 @pytest.mark.parametrize("has_receiver", [True])
 @pytest.mark.usefixtures("init_integration")
 async def test_receiver_ignores_unconfigured_hvac_mode(
