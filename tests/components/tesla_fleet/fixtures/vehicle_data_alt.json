@@ -274,6 +274,17 @@
       "vehicle_self_test_progress": 0,
       "vehicle_self_test_requested": false,
       "webcam_available": true
+    },
+    "charge_schedule_data": {
+      "charge_schedules": [],
+      "timestamp": {
+        "seconds": 1788552190,
+        "nanos": 85000000
+      },
+      "charge_buffer": 6,
+      "max_num_charge_schedules": 100,
+      "next_schedule": false,
+      "show_schedule_complete_state": true
     }
   }
 }
