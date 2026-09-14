@@ -214,12 +214,10 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # while adding, and means nothing to a stored entry.
                 data_input.pop(CONF_FORCE_UPDATE, None)
 
-                # Named after the unit rather than asked for: config flows do
-                # not collect entry names, and renaming is Home Assistant's
-                # own. The last four characters of the airco id are enough to
-                # tell two units apart and to match one against the label on
-                # the module, while the whole id stays out of the device name
-                # and the entity id that people paste into issue reports.
+                # The last four characters of the airco id tell two units
+                # apart and match the label on the module, while the whole id
+                # stays out of the device name and the entity id that people
+                # paste into issue reports.
                 return self.async_create_entry(
                     title=f"WF-RAC {info[CONF_AIRCO_ID][-4:]}",
                     data=data_input,

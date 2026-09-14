@@ -382,37 +382,7 @@ class Device(DataUpdateCoordinator[Aircon]):
         # silently revert whatever that call had just changed.
         async with self._send_lock:
             try:
-                command = self._encode_command(params)
-                try:
-                    response = await self._api.send_airco_command(
-                        self._airco_id, command
-                    )
-                except WfRacWriteRefusedError:
-                    # Most likely another client's 60-second write lock - the
-                    # Smart M-Air app was used moments ago. Waiting it
-                    # out is the only thing that helps: our registration is
-                    # fine, so re-registering would just cost a request. One
-                    # retry, placed where the lock lapses rather than at a
-                    # guessed interval - a retry that lands inside the same
-                    # lock is a request spent on a refusal that was certain.
-                    await asyncio.sleep(await self._async_write_lock_delay())
-                    # Re-encoded, because that wait refreshed the state: the
-                    # frame is a full block, and the one built before the
-                    # refusal would revert what the other client wrote.
-                    response = await self._api.send_airco_command(
-                        self._airco_id, self._encode_command(params)
-                    )
-                except WfRacRegistrationError:
-                    # Our operator id is not in the airco's account table.
-                    # Re-register and try once more rather than losing the
-                    # command outright. If the table is full instead,
-                    # add_account() has already raised the repair issue.
-                    await self.add_account()
-                    response = await self._api.send_airco_command(
-                        self._airco_id, command
-                    )
-                new_airco = self._parser.translate_bytes(response)
-                self._airco = new_airco
+                self._airco = await self._send_command(params)
             except (WfRacError, KeyError, TypeError, ValueError) as ex:
                 _LOGGER.warning("Could not send airco data: %s", str(ex))
                 # The action that issued this command awaits it, so hand it
@@ -425,6 +395,40 @@ class Device(DataUpdateCoordinator[Aircon]):
                         "error": str(ex),
                     },
                 ) from ex
+
+    async def _send_command(self, params: dict[AirconCommands, Any]) -> Aircon:
+        """Encode, send and read back one command frame.
+
+        Separate from set_airco() so its error handling wraps a single
+        statement: everything in here answers to the same translated error.
+        """
+        command = self._encode_command(params)
+        try:
+            response = await self._api.send_airco_command(self._airco_id, command)
+        except WfRacWriteRefusedError:
+            # Most likely another client's 60-second write lock - the
+            # Smart M-Air app was used moments ago. Waiting it out is the only
+            # thing that helps: our registration is fine, so re-registering
+            # would just cost a request. One retry, placed where the lock
+            # lapses rather than at a guessed interval - a retry that lands
+            # inside the same lock is a request spent on a refusal that was
+            # certain.
+            await asyncio.sleep(await self._async_write_lock_delay())
+            # Re-encoded, because that wait refreshed the state: the frame is
+            # a full block, and the one built before the refusal would revert
+            # what the other client wrote.
+            response = await self._api.send_airco_command(
+                self._airco_id, self._encode_command(params)
+            )
+        except WfRacRegistrationError:
+            # Our operator id is not in the airco's account table. Re-register
+            # and try once more rather than losing the command outright. If
+            # the table is full instead, add_account() has already raised the
+            # repair issue.
+            await self.add_account()
+            response = await self._api.send_airco_command(self._airco_id, command)
+
+        return self._parser.translate_bytes(response)
 
     async def async_queue_command(self, params: dict[AirconCommands, Any]) -> None:
         """Queue an airco command, coalescing calls made close together.
