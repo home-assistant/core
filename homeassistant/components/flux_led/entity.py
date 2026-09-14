@@ -37,7 +37,7 @@ def _async_device_info(
         sw_version_str = f"{sw_version:0.2f}"
     else:
         sw_version_str = str(device.version_num)
-    device_info: DeviceInfo = {
+    device_info: DeviceInfo = {  # type: ignore[assignment]
         ATTR_IDENTIFIERS: {(DOMAIN, entry.entry_id)},
         ATTR_MANUFACTURER: "Zengge",
         ATTR_MODEL: device.model,
