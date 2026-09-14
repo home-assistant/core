@@ -44,6 +44,7 @@ type NewMetricCallback = Callable[
     [VictronVenusDevice, VictronVenusMetric, dr.DeviceInfo, str], None
 ]
 
+
 class Hub:
     """Victron MQTT Hub for managing communication and sensors."""
 
