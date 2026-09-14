@@ -419,9 +419,9 @@ class TrackerEntity(
     @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attr: dict[str, Any] = {
-            DeviceTrackerEntityStateAttribute.IN_ZONES: self.__in_zones or []
-        }
+        attr: dict[str, Any] = {}
+        if self.__in_zones is not None:
+            attr[DeviceTrackerEntityStateAttribute.IN_ZONES] = self.__in_zones
         attr.update(super().state_attributes)
 
         if self.latitude is not None and self.longitude is not None:
