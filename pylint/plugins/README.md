@@ -1215,7 +1215,7 @@ on config flows. Remove the attribute.
 
 ## `home-assistant-step_id-match-method` checker
 
-Detects config flows using a `step_id` parameter different than the method it's
+Detects config flows using a `step_id` parameter different than the method it is
 currently in.
 
 ### `W7443`: `home-assistant-step_id-match-method`
