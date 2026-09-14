@@ -672,6 +672,9 @@ class ActionTool(Tool):
                     floor = list(intent.find_floors(floor, floor_reg))[0].floor_id
                     tool_input.tool_args[field] = floor
 
+        if llm_context.device_id:
+            tool_input.tool_args["device_id"] = llm_context.device_id
+
         result = await hass.services.async_call(
             self._domain,
             self._action,
