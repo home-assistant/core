@@ -3612,7 +3612,10 @@ async def test_async_retry_migration_with_incorrect_state(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
 ) -> None:
-    """Test that we can recover from a migration error."""
+    """Test we can't use async_retry_migration.
+
+    With an entry that is not in the MIGRATION_ERROR state.
+    """
     entry = MockConfigEntry(domain="comp")
     entry.add_to_hass(hass)
 
