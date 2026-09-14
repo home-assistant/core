@@ -9,5 +9,5 @@
   "iot_class": "local_push",
   "loggers": ["tonewinner_rs232"],
   "quality_scale": "silver",
-  "requirements": ["tonewinner-rs232==1.1.0"]
+  "requirements": ["tonewinner-rs232==1.2.1"]
 }
