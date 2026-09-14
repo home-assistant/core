@@ -327,11 +327,10 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
-        if self.device_type == "NDB":
-            self._attr_motion_detection_enabled = False
-        # Other cameras have motion detection when monitoring.
+        if self.device.reachable is True:
+            self.device.mark_reachable()
         else:
-            self._attr_motion_detection_enabled = self.is_on
+            self.device.mark_unreachable()
 
         self.data_handler.events[self.device.entity_id] = self.process_events(
             self.device.events
