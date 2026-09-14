@@ -51,5 +51,4 @@ class BluettiModbusEntity(CoordinatorEntity[BluettiModbusDataUpdateCoordinator])
             entry.unique_id is not None
         )  # the config flow always sets it to the confirmed serial
         self._attr_unique_id = f"{entry.unique_id}_{field_name}"
-        self._attr_translation_key = field_name
         self._attr_device_info = entry.runtime_data.device_info
