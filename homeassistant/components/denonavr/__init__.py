@@ -33,6 +33,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import (
+    UNAVAILABLE_ON,
     DenonAvrDataUpdateCoordinator,
     async_refresh_audyssey,
     async_refresh_status,
@@ -128,7 +129,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     # failure here shouldn't block setup though, unlike the general
     # coordinator's. Skipped when Telnet and "Update Audyssey settings"
     # are both on: receiver.py's connection step already fetched this.
-    if not (use_telnet and update_audyssey):
+    if use_telnet and update_audyssey:
+        pass
+    elif use_telnet:
+        # force=True: Telnet is already connected by now (see above),
+        # but it only pushes Audyssey data on a change, never on
+        # connect, so async_refresh_audyssey's own Telnet-healthy skip
+        # would otherwise leave these entities unavailable indefinitely.
+        async with lock:
+            try:
+                await async_refresh_audyssey(receiver, force=True)
+            except UNAVAILABLE_ON:
+                audyssey_coordinator.last_update_success = False
+            else:
+                audyssey_coordinator.last_update_success = True
+        audyssey_coordinator.async_update_listeners()
+    else:
         await audyssey_coordinator.async_refresh()
 
     @callback

@@ -72,7 +72,7 @@ async def async_refresh_status(receiver: DenonAVR) -> None:
             )
 
 
-async def async_refresh_audyssey(receiver: DenonAVR) -> None:
+async def async_refresh_audyssey(receiver: DenonAVR, *, force: bool = False) -> None:
     """Refresh Audyssey settings for every configured zone.
 
     Each zone is its own object with its own cached Audyssey state
@@ -83,9 +83,13 @@ async def async_refresh_audyssey(receiver: DenonAVR) -> None:
 
     Skips the HTTP poll if Telnet is already healthy and keeping
     everything current, for the same reason and in the same
-    all-zones-at-once way as async_refresh_status's matching guard.
+    all-zones-at-once way as async_refresh_status's matching guard -
+    unless force=True: Telnet only pushes Audyssey data on a change,
+    never on connect, so the one-time initial fetch needs to bypass
+    this or these entities could start unavailable and stay that way
+    indefinitely.
     """
-    if receiver.telnet_connected and receiver.telnet_healthy:
+    if not force and receiver.telnet_connected and receiver.telnet_healthy:
         return
     for zone_receiver in receiver.zones.values():
         try:

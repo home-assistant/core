@@ -640,6 +640,37 @@ async def test_setup_skips_redundant_audyssey_refresh_with_telnet(
     assert client.async_update_audyssey.await_count == 1
 
 
+async def test_setup_forces_audyssey_fetch_with_telnet_but_no_polling(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """Setup still fetches Audyssey once when Telnet is on but polling is off.
+
+    Telnet only pushes Audyssey data on a change, never on connect, so
+    without forcing this fetch, async_refresh_audyssey's own Telnet-
+    healthy skip would leave these entities unavailable indefinitely -
+    receiver.py didn't fetch it either, since that's gated on the
+    polling option, not on Telnet being enabled.
+    """
+    client.telnet_connected = True
+    client.telnet_healthy = True
+    client.dynamic_eq = None
+    client.reference_level_offset = None
+
+    async def _populate(*_args: object, **_kwargs: object) -> None:
+        client.dynamic_eq = True
+        client.reference_level_offset = "0dB"
+
+    client.async_update_audyssey.side_effect = _populate
+
+    await setup_denonavr(
+        hass, options={CONF_USE_TELNET: True, CONF_UPDATE_AUDYSSEY: False}
+    )
+
+    assert client.async_update_audyssey.await_count == 1
+    entity_id = _entity_id(hass, "reference_level_offset")
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
 async def test_refresh_failure_does_not_fail_an_already_successful_action(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
