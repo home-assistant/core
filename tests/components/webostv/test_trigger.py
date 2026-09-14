@@ -729,3 +729,67 @@ async def test_webostv_turn_on_trigger_area_change_during_run(
             {"entity_id": ENTITY_ID},
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("client")
+async def test_webostv_turn_on_trigger_area_restored_during_run(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a target restored during a run does not apply a stale update."""
+    entry = await setup_webostv(hass)
+
+    area = area_registry.async_create("Living room")
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
+    device_registry.async_update_device(device.id, area_id=area.id)
+
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_action(call: ServiceCall) -> None:
+        started.set()
+        await release.wait()
+
+    hass.services.async_register("test", "slow", slow_action)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "trigger": TURN_ON_REQUESTED,
+                        "target": {"area_id": area.id},
+                    },
+                    "action": {"service": "test.slow"},
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    task = hass.async_create_task(
+        hass.services.async_call(
+            "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
+        )
+    )
+    await asyncio.wait_for(started.wait(), timeout=5)
+
+    device_registry.async_update_device(device.id, area_id=None)
+    device_registry.async_update_device(device.id, area_id=area.id)
+
+    release.set()
+    await asyncio.wait_for(task, timeout=5)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": ENTITY_ID},
+        blocking=True,
+    )

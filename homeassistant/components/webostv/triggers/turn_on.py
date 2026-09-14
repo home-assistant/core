@@ -200,7 +200,12 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
             if (entry := ent_reg.async_get(entity_id))
             and (entity_device_id := entry.device_id)
         )
-        if device_ids == self._device_ids:
+        latest_device_ids = (
+            self._device_ids
+            if self._pending_device_ids is None
+            else self._pending_device_ids
+        )
+        if device_ids == latest_device_ids:
             return
 
         state = _async_get_run_state(self._hass)
