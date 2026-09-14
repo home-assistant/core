@@ -87,9 +87,14 @@ class MotionEyeMediaProxyView(HomeAssistantView):
         path: str,
     ) -> web.Response:
         """Return saved media fetched with the authenticated motionEye session."""
-        entry = self.hass.config_entries.async_get_entry(config_id)
-        if not entry or entry.state is not ConfigEntryState.LOADED:
-            return web.Response(status=404)
+        
+    entry = self.hass.config_entries.async_get_entry(config_id)
+    if (
+        not entry
+        or entry.domain != DOMAIN
+        or entry.state is not ConfigEntryState.LOADED
+    ):
+        return web.Response(status=404)
 
         if kind not in MIME_TYPE_MAP:
             return web.Response(status=400)
