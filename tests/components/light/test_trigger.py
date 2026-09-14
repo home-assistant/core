@@ -5,16 +5,19 @@ from typing import Any
 import pytest
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light.trigger import TRIGGERS
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
     assert_trigger_ignores_limit_entities_with_wrong_unit,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_target_entities,
@@ -39,6 +42,14 @@ async def target_lights(hass: HomeAssistant) -> dict[str, list[str]]:
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _BRIGHTNESS_CROSSED_THRESHOLD = {
     "threshold": {"type": "above", "value": {"number": 50}}
+}
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "brightness_changed": TargetSupport.STANDARD,
+    "brightness_crossed_threshold": TargetSupport.STANDARD,
+    "turned_off": TargetSupport.STANDARD,
+    "turned_on": TargetSupport.STANDARD,
 }
 
 
@@ -71,6 +82,11 @@ async def test_light_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

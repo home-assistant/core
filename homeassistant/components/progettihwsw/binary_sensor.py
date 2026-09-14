@@ -38,6 +38,7 @@ async def async_setup_entry(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name="binary_sensor",
         update_method=async_update_data,
         update_interval=timedelta(seconds=DEFAULT_POLLING_INTERVAL_SEC),

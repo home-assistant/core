@@ -62,7 +62,7 @@
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
-      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 55.0,
+      <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 55.0,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.r_900',

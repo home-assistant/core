@@ -7,7 +7,7 @@ import logging
 from typing import override
 
 from openevsehttp.__main__ import OpenEVSE
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -44,6 +44,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from .const import DOMAIN, INTEGRATION_TITLE
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
@@ -51,6 +52,29 @@ from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+
+
+STATUS_OPTIONS: list[str] = [
+    "charging",
+    "connected",
+    "diode_check_failed",
+    "disabled",
+    "gfci_fault",
+    "gfci_self_test_failure",
+    "no_ground",
+    "not_connected",
+    "over_temperature",
+    "sleeping",
+    "stuck_relay",
+    "vent_required",
+]
+
+
+def _map_status(status: str | None) -> str | None:
+    """Map raw status string to enum option."""
+    if status is not None and (slug := slugify(status)) in STATUS_OPTIONS:
+        return slug
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -65,7 +89,9 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="status",
         translation_key="status",
-        value_fn=lambda ev: ev.status,
+        device_class=SensorDeviceClass.ENUM,
+        options=STATUS_OPTIONS,
+        value_fn=lambda ev: _map_status(ev.status),
     ),
     OpenEVSESensorDescription(
         key="service_level",
@@ -361,9 +387,9 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=["status"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_MONITORED_VARIABLES, default=["status"]): probatio.All(
+            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
         ),
     }
 )

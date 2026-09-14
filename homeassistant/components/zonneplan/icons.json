@@ -1,0 +1,43 @@
+{
+  "entity": {
+    "sensor": {
+      "current_electricity_price": {
+        "default": "mdi:cash-multiple"
+      },
+      "electricity_price_low_today_end_time": {
+        "default": "mdi:clock-end"
+      },
+      "electricity_price_low_today_start_time": {
+        "default": "mdi:clock-start"
+      },
+      "electricity_price_low_tomorrow_end_time": {
+        "default": "mdi:clock-end"
+      },
+      "electricity_price_low_tomorrow_start_time": {
+        "default": "mdi:clock-start"
+      },
+      "electricity_prices_tomorrow_status": {
+        "default": "mdi:calendar-clock",
+        "state": {
+          "available": "mdi:calendar-check",
+          "incoming": "mdi:calendar-clock"
+        }
+      },
+      "gas_price_today": {
+        "default": "mdi:cash-multiple"
+      },
+      "highest_electricity_price_today": {
+        "default": "mdi:cash-multiple"
+      },
+      "highest_electricity_price_tomorrow": {
+        "default": "mdi:cash-multiple"
+      },
+      "lowest_electricity_price_today": {
+        "default": "mdi:cash-multiple"
+      },
+      "lowest_electricity_price_tomorrow": {
+        "default": "mdi:cash-multiple"
+      }
+    }
+  }
+}

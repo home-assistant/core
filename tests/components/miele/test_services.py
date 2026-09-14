@@ -4,9 +4,9 @@ from datetime import timedelta
 from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientResponseError
+from probatio import MultipleInvalid
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from voluptuous import MultipleInvalid
 
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.components.miele.services import (
@@ -208,7 +208,7 @@ async def test_service_validation_errors(
     mock_miele_client.set_program.assert_not_called()
 
     # Test invalid program_id
-    with pytest.raises(MultipleInvalid, match="expected int for dictionary value"):
+    with pytest.raises(MultipleInvalid, match="expected int at"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_PROGRAM,

@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     DEGREE,
@@ -84,7 +84,7 @@ DEFAULT_MIN_VALUE = 0.0
 DEFAULT_MAX_VALUE = 100.0
 DEFAULT_STEP = 1.0
 
-DOMAIN = "number"
+DOMAIN: Final = "number"
 
 SERVICE_SET_VALUE = "set_value"
 
@@ -518,7 +518,9 @@ class NumberDeviceClass(StrEnum):
     """
 
 
-DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
+DEVICE_CLASSES_SCHEMA: Final = probatio.All(
+    probatio.Lower, probatio.Coerce(NumberDeviceClass)
+)
 DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.ABSOLUTE_HUMIDITY: {
         UnitOfDensity.GRAMS_PER_CUBIC_METER,

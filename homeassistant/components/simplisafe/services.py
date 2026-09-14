@@ -3,6 +3,7 @@
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any
 
+import probatio
 from simplipy.errors import SimplipyError
 from simplipy.system.v3 import (
     MAX_ALARM_DURATION,
@@ -16,14 +17,13 @@ from simplipy.system.v3 import (
     SystemV3,
     Volume,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.service import (
+    async_get_device_and_config_entry,
     async_register_admin_service,
     verify_domain_control,
 )
@@ -60,54 +60,58 @@ SERVICE_NAME_REMOVE_PIN = "remove_pin"
 SERVICE_NAME_SET_PIN = "set_pin"
 SERVICE_NAME_SET_SYSTEM_PROPERTIES = "set_system_properties"
 
-SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
+SERVICE_REMOVE_PIN_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
     }
 )
 
-SERVICE_SET_PIN_SCHEMA = vol.Schema(
+SERVICE_SET_PIN_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_PIN_LABEL): cv.string,
-        vol.Required(ATTR_PIN_VALUE): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_PIN_LABEL): cv.string,
+        probatio.Required(ATTR_PIN_VALUE): cv.string,
     },
 )
 
-SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.Schema(
+SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Optional(ATTR_ALARM_DURATION): vol.All(
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Optional(ATTR_ALARM_DURATION): probatio.All(
             cv.time_period,
             lambda value: value.total_seconds(),
-            vol.Range(min=MIN_ALARM_DURATION, max=MAX_ALARM_DURATION),
+            probatio.Range(min=MIN_ALARM_DURATION, max=MAX_ALARM_DURATION),
         ),
-        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
-        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
-        vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
+        probatio.Optional(ATTR_ALARM_VOLUME): probatio.All(
+            probatio.In(VOLUME_MAP), VOLUME_MAP.get
+        ),
+        probatio.Optional(ATTR_CHIME_VOLUME): probatio.All(
+            probatio.In(VOLUME_MAP), VOLUME_MAP.get
+        ),
+        probatio.Optional(ATTR_ENTRY_DELAY_AWAY): probatio.All(
             cv.time_period,
             lambda value: value.total_seconds(),
-            vol.Range(min=MIN_ENTRY_DELAY_AWAY, max=MAX_ENTRY_DELAY_AWAY),
+            probatio.Range(min=MIN_ENTRY_DELAY_AWAY, max=MAX_ENTRY_DELAY_AWAY),
         ),
-        vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
+        probatio.Optional(ATTR_ENTRY_DELAY_HOME): probatio.All(
             cv.time_period,
             lambda value: value.total_seconds(),
-            vol.Range(max=MAX_ENTRY_DELAY_HOME),
+            probatio.Range(max=MAX_ENTRY_DELAY_HOME),
         ),
-        vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
+        probatio.Optional(ATTR_EXIT_DELAY_AWAY): probatio.All(
             cv.time_period,
             lambda value: value.total_seconds(),
-            vol.Range(min=MIN_EXIT_DELAY_AWAY, max=MAX_EXIT_DELAY_AWAY),
+            probatio.Range(min=MIN_EXIT_DELAY_AWAY, max=MAX_EXIT_DELAY_AWAY),
         ),
-        vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
+        probatio.Optional(ATTR_EXIT_DELAY_HOME): probatio.All(
             cv.time_period,
             lambda value: value.total_seconds(),
-            vol.Range(max=MAX_EXIT_DELAY_HOME),
+            probatio.Range(max=MAX_EXIT_DELAY_HOME),
         ),
-        vol.Optional(ATTR_LIGHT): cv.boolean,
-        vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-            vol.In(VOLUME_MAP), VOLUME_MAP.get
+        probatio.Optional(ATTR_LIGHT): cv.boolean,
+        probatio.Optional(ATTR_VOICE_PROMPT_VOLUME): probatio.All(
+            probatio.In(VOLUME_MAP), VOLUME_MAP.get
         ),
     }
 )
@@ -135,39 +139,18 @@ def _async_get_system_for_service_call(call: ServiceCall) -> SystemType:
     if TYPE_CHECKING:
         assert alarm_control_panel_device_entry.via_device_id
 
-    if (
-        base_station_device_entry := device_registry.async_get(
-            alarm_control_panel_device_entry.via_device_id
-        )
-    ) is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="no_base_station",
-            translation_placeholders={"device_id": device_id},
-        )
+    config_entry: SimpliSafeConfigEntry
+    base_station_device_entry, config_entry = async_get_device_and_config_entry(
+        call.hass, DOMAIN, alarm_control_panel_device_entry.via_device_id
+    )
 
     [system_id_str] = [
         identity[1]
         for identity in base_station_device_entry.identifiers
         if identity[0] == DOMAIN
     ]
-    system_id = int(system_id_str)
 
-    entry: SimpliSafeConfigEntry | None
-    for entry_id in base_station_device_entry.config_entries:
-        if (
-            (entry := call.hass.config_entries.async_get_entry(entry_id)) is None
-            or entry.domain != DOMAIN
-            or entry.state is not ConfigEntryState.LOADED
-        ):
-            continue
-        return entry.runtime_data.systems[system_id]
-
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="no_system_for_device",
-        translation_placeholders={"device_id": device_id},
-    )
+    return config_entry.runtime_data.systems[int(system_id_str)]
 
 
 @callback

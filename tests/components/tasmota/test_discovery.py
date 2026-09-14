@@ -31,7 +31,9 @@ def _get_device_for_config_entry(
     connections: set[tuple[str, str]] | None = None,
 ) -> dr.DeviceEntry | None:
     """Return the device for a config entry matching identifiers or connections."""
-    for device in device_registry.devices.get_entries(identifiers, connections):
+    for device in device_registry.async_get_devices(
+        identifiers=identifiers, connections=connections
+    ):
         if device.config_entry_id == config_entry_id:
             return device
     return None
@@ -353,7 +355,7 @@ async def test_device_remove_multiple_config_entries_1(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
     assert tasmota_device_entry is not None
-    assert tasmota_device_entry.config_entries == {tasmota_entry.entry_id}
+    assert tasmota_device_entry.config_entry_id == tasmota_entry.entry_id
     mock_device_entry = _get_device_for_config_entry(
         device_registry,
         mock_entry.entry_id,
@@ -383,7 +385,7 @@ async def test_device_remove_multiple_config_entries_1(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
     assert device_entry is not None
-    assert device_entry.config_entries == {mock_entry.entry_id}
+    assert device_entry.config_entry_id == mock_entry.entry_id
 
 
 async def test_device_remove_multiple_config_entries_2(
@@ -426,7 +428,7 @@ async def test_device_remove_multiple_config_entries_2(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
     assert device_entry is not None
-    assert device_entry.config_entries == {tasmota_entry.entry_id}
+    assert device_entry.config_entry_id == tasmota_entry.entry_id
     assert other_device_entry.id != device_entry.id
 
     # Remove the other (non-Tasmota) device sharing the connection
@@ -444,7 +446,7 @@ async def test_device_remove_multiple_config_entries_2(
         hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device_entry is not None
-    assert device_entry.config_entries == {tasmota_entry.entry_id}
+    assert device_entry.config_entry_id == tasmota_entry.entry_id
     mqtt_mock.async_publish.assert_not_called()
 
     # Remove the other (non-Tasmota) device
