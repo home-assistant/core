@@ -2450,8 +2450,8 @@ class ConfigEntries:
     async def async_retry_migration(self, entry_id: str) -> None:
         """Retry migration for a config entry.
 
-        This should only be called from repairs flows that was
-        created to handle non-recoverable migration errors.
+        This is only intended for repair flows created to handle
+        non-recoverable migration errors.
         """
         entry = self.async_get_known_entry(entry_id)
         if entry.state is ConfigEntryState.MIGRATION_ERROR:
