@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import jwt
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
@@ -43,7 +43,7 @@ def mock_hass(hass: HomeAssistant) -> HomeAssistant:
 
 async def test_auth_manager_from_config_validates_config(mock_hass) -> None:
     """Test get auth providers."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         manager = await auth.auth_manager_from_config(
             mock_hass,
             [
@@ -84,7 +84,7 @@ async def test_auth_manager_from_config_validates_config(mock_hass) -> None:
 
 async def test_auth_manager_from_config_auth_modules(mock_hass) -> None:
     """Test get auth modules."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         manager = await auth.auth_manager_from_config(
             mock_hass,
             [

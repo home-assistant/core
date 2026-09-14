@@ -3,7 +3,7 @@
 import itertools
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
@@ -40,9 +40,9 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = EVENT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(EVENT_DOMAIN),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(EVENT_DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 

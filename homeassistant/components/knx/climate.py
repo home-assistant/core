@@ -554,7 +554,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
 
     @property
     @override
-    def fan_mode(self) -> str:
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
 
         fan_speed = self._device.current_fan_speed
@@ -563,6 +563,10 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             return self.fan_zero_mode
 
         if self._device.fan_speed_mode is FanSpeedMode.STEP:
+            # DPT 5.010 fits any 1-byte value (0-255), so a gateway may report
+            # a step beyond the configured fan_max_step
+            if fan_speed >= len(self._attr_fan_modes):
+                return None
             return self._attr_fan_modes[fan_speed]
 
         # Find the closest fan mode percentage

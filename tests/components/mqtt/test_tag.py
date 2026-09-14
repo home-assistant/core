@@ -650,14 +650,14 @@ async def test_cleanup_tag(
         identifiers={("mqtt", "helloworld")},
     )
     assert device_entry1 is not None
-    assert device_entry1.config_entries == {config_entry.entry_id}
+    assert device_entry1.config_entry_id == config_entry.entry_id
     mqtt_device_entry1 = _get_device_for_config_entry(
         device_registry,
         mqtt_entry.entry_id,
         identifiers={("mqtt", "helloworld")},
     )
     assert mqtt_device_entry1 is not None
-    assert mqtt_device_entry1.config_entries == {mqtt_entry.entry_id}
+    assert mqtt_device_entry1.config_entry_id == mqtt_entry.entry_id
     device_entry2 = device_registry.async_get_device_by_identifier(
         ("mqtt", "hejhopp"), mqtt_entry.entry_id
     )
@@ -680,7 +680,7 @@ async def test_cleanup_tag(
         identifiers={("mqtt", "helloworld")},
     )
     assert mqtt_device_entry1 is not None
-    assert mqtt_device_entry1.config_entries == {mqtt_entry.entry_id}
+    assert mqtt_device_entry1.config_entry_id == mqtt_entry.entry_id
     device_entry2 = device_registry.async_get_device_by_identifier(
         ("mqtt", "hejhopp"), mqtt_entry.entry_id
     )
