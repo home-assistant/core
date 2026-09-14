@@ -5,8 +5,8 @@ from enum import StrEnum
 import logging
 from typing import Final, Literal, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
@@ -54,6 +54,9 @@ class BinarySensorDeviceClass(StrEnum):
 
     # On means gas detected, Off means no gas (clear)
     GAS = "gas"
+
+    # On means glass break detected, Off means no glass break (clear)
+    GLASS_BREAK = "glass_break"
 
     # On means hot, Off means normal
     HEAT = "heat"
@@ -116,7 +119,9 @@ class BinarySensorDeviceClass(StrEnum):
     WINDOW = "window"
 
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass))
+DEVICE_CLASSES_SCHEMA = probatio.All(
+    probatio.Lower, probatio.Coerce(BinarySensorDeviceClass)
+)
 DEVICE_CLASSES = [cls.value for cls in BinarySensorDeviceClass]
 
 # mypy: disallow-any-generics
