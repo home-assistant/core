@@ -424,6 +424,17 @@ async def test_event_media_data(
         events[-1].data["media_content_id"]
         == f"media-source://motioneye/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/dir/one"
     )
+    # Verify the signed event file URL works without loading the media source.
+    client.async_get_media = AsyncMock(return_value=b"image")
+
+    response = await hass_client.get(events[-1].data["file_url"])
+
+    assert response.status == HTTPStatus.OK
+    assert response.content_type == "image/jpeg"
+    assert await response.read() == b"image"
+    client.async_get_media.assert_awaited_once_with(
+        TEST_CAMERA_ID, "/dir/two", image=True, preview=False
+    )
     # Test: Image storage.
     client.is_file_type_image = Mock(return_value=True)
     resp = await hass_client.post(
