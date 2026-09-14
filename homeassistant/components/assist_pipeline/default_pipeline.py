@@ -24,6 +24,7 @@ from homeassistant.helpers import (
 from homeassistant.util.hass_dict import HassKey
 
 from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadSpeexEnhancer
+from .audio_output import AudioOutputStream
 from .const import (
     ACKNOWLEDGE_PATH,
     BYTES_PER_CHUNK,
@@ -138,6 +139,12 @@ class _PipelineController(Protocol):
     def accept_wake_word(self, wake_word_phrase: str) -> None:
         """Apply the duplicate wake-up policy."""
 
+    @callback
+    def async_create_response_audio(
+        self, extension: str, content_type: str
+    ) -> AudioOutputStream:
+        """Create a controller-owned response audio stream."""
+
 
 @dataclass
 class _DefaultPipelineProcessor:
@@ -184,6 +191,11 @@ class _DefaultPipelineProcessor:
         if self.intent_agent is None:
             return None
         return self.intent_agent.supports_streaming
+
+    @property
+    def start_response_immediately(self) -> bool:
+        """Return whether response audio should be consumed at run start."""
+        return False
 
     @callback
     def invalidate(self) -> None:
