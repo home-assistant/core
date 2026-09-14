@@ -8,7 +8,7 @@ from homeassistant.components.device_automation import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_DEVICE_ID, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import (
@@ -22,6 +22,7 @@ from . import DOMAIN
 from .helpers import async_get_device_entry_by_device_id
 from .triggers.turn_on import (
     PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE,
+    async_detach_turn_on_actions,
     async_get_turn_on_description,
     async_get_turn_on_trigger,
 )
@@ -92,9 +93,16 @@ async def async_attach_trigger(
             ATTR_DEVICE_ID: device_id,
             "description": async_get_turn_on_description(hass, device_id),
         }
-        return PluggableAction.async_attach_trigger(
+        unsub = PluggableAction.async_attach_trigger(
             hass, async_get_turn_on_trigger(device_id), action, {"trigger": variables}
         )
+
+        @callback
+        def async_remove() -> None:
+            """Remove the attached action."""
+            async_detach_turn_on_actions(hass, [unsub])
+
+        return async_remove
 
     raise HomeAssistantError(
         translation_domain=DOMAIN,

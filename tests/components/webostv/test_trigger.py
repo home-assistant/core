@@ -793,3 +793,83 @@ async def test_webostv_turn_on_trigger_area_restored_during_run(
         {"entity_id": ENTITY_ID},
         blocking=True,
     )
+
+
+@pytest.mark.parametrize(
+    "build_trigger",
+    [
+        pytest.param(
+            lambda device_id: {"trigger": LEGACY_TURN_ON, "device_id": device_id},
+            id="legacy",
+        ),
+        pytest.param(
+            lambda device_id: {
+                "trigger": TURN_ON_REQUESTED,
+                "target": {"device_id": device_id},
+            },
+            id="target",
+        ),
+        pytest.param(
+            lambda device_id: {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device_id,
+                "type": LEGACY_TURN_ON,
+            },
+            id="device_automation",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("client")
+async def test_webostv_turn_on_trigger_detached_during_run(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
+    build_trigger: Callable[[str], dict[str, Any]],
+) -> None:
+    """Test detaching a trigger while its action runs is deferred."""
+    entry = await setup_webostv(hass)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
+
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_action(call: ServiceCall) -> None:
+        started.set()
+        await release.wait()
+
+    hass.services.async_register("test", "slow", slow_action)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": build_trigger(device.id),
+                    "action": {"service": "test.slow"},
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    task = hass.async_create_task(
+        hass.services.async_call(
+            "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
+        )
+    )
+    await asyncio.wait_for(started.wait(), timeout=5)
+
+    await hass.services.async_call(
+        "automation",
+        "turn_off",
+        {"entity_id": "automation.automation_0", "stop_actions": False},
+        blocking=True,
+    )
+
+    release.set()
+    await asyncio.wait_for(task, timeout=5)

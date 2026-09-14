@@ -78,6 +78,7 @@ class _TurnOnRunState:
 
     depth: int = 0
     pending: set[_TurnOnTargetTracker] = field(default_factory=set)
+    pending_detach: list[CALLBACK_TYPE] = field(default_factory=list)
 
 
 @callback
@@ -86,6 +87,20 @@ def _async_get_run_state(hass: HomeAssistant) -> _TurnOnRunState:
     if (state := hass.data.get(_RUN_STATE)) is None:
         state = hass.data[_RUN_STATE] = _TurnOnRunState()
     return state
+
+
+@callback
+def async_detach_turn_on_actions(
+    hass: HomeAssistant, unsubs: list[CALLBACK_TYPE]
+) -> None:
+    """Detach turn on actions once no run is iterating them."""
+    state = _async_get_run_state(hass)
+    if state.depth:
+        state.pending_detach.extend(unsubs)
+        return
+
+    for unsub in unsubs:
+        unsub()
 
 
 async def async_run_turn_on(
@@ -98,10 +113,13 @@ async def async_run_turn_on(
         await turn_on.async_run(hass, context)
     finally:
         state.depth -= 1
-        if not state.depth and state.pending:
+        if not state.depth:
             for tracker in list(state.pending):
                 tracker.async_apply_pending_update()
             state.pending.clear()
+            for unsub in state.pending_detach:
+                unsub()
+            state.pending_detach.clear()
 
 
 def async_get_turn_on_trigger(device_id: str) -> dict[str, str]:
@@ -239,9 +257,8 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
     @callback
     def _detach_actions(self) -> None:
         """Detach the currently attached turn on actions."""
-        for unsub in self._unsubs:
-            unsub()
-        self._unsubs.clear()
+        async_detach_turn_on_actions(self._hass, self._unsubs)
+        self._unsubs = []
 
     @override
     def _unsubscribe(self) -> None:
@@ -341,8 +358,7 @@ class LegacyTurnOnTrigger(Trigger):
         @callback
         def async_remove() -> None:
             """Remove the attached actions."""
-            for unsub in unsubs:
-                unsub()
+            async_detach_turn_on_actions(self._hass, unsubs)
             unsubs.clear()
 
         return async_remove
