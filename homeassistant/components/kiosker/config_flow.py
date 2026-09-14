@@ -13,7 +13,7 @@ from kiosker import (
     PingError,
     TLSVerificationError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
@@ -24,23 +24,23 @@ from .const import DEFAULT_SSL, DEFAULT_SSL_VERIFY, DOMAIN, PORT
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_API_TOKEN): str,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_SSL_VERIFY): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_API_TOKEN): str,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_SSL_VERIFY): bool,
     }
 )
-STEP_ZEROCONF_CONFIRM_DATA_SCHEMA = vol.Schema(
+STEP_ZEROCONF_CONFIRM_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_TOKEN): str,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_SSL_VERIFY): bool,
+        probatio.Required(CONF_API_TOKEN): str,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_SSL_VERIFY): bool,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_TOKEN): str,
+        probatio.Required(CONF_API_TOKEN): str,
     }
 )
 

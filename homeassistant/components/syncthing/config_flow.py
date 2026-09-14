@@ -3,7 +3,7 @@
 from typing import Any, override
 
 import aiosyncthing
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
@@ -12,11 +12,11 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_URL, DEFAULT_VERIFY_SSL, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL, default=DEFAULT_URL): str,
-        vol.Required(CONF_TOKEN): str,
-        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+        probatio.Required(CONF_URL, default=DEFAULT_URL): str,
+        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
 

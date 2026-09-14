@@ -3,8 +3,8 @@
 from collections.abc import Awaitable
 
 from modbus_connection import ModbusError
+import probatio
 from sofar_modbus.modern.enums import FeedinLimitationMode, PassiveModeTimeoutAction
-import voluptuous as vol
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -32,35 +32,39 @@ ATTR_LIMIT = "limit"
 ATTR_MAX_POWER = "max_power"
 ATTR_TIMEOUT = "timeout"
 
-_ENTRY_SCHEMA = vol.Schema({vol.Required(ATTR_CONFIG_ENTRY_ID): str})
+_ENTRY_SCHEMA = probatio.Schema({probatio.Required(ATTR_CONFIG_ENTRY_ID): str})
 
 # The selectors in services.yaml only bound the UI, not a scripted call.
-_POWER_RANGE = vol.All(int, vol.Range(min=-100000, max=100000))
+_POWER_RANGE = probatio.All(int, probatio.Range(min=-100000, max=100000))
 
 SET_FEED_IN_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
     {
-        vol.Required(ATTR_MODE): vol.In(
+        probatio.Required(ATTR_MODE): probatio.In(
             [mode.name.lower() for mode in FeedinLimitationMode]
         ),
         # Kept fractional so the multiple-of-100 check below sees the real
         # value; cv.positive_int would truncate 3000.9 into a valid 3000.
-        vol.Required(ATTR_MAX_POWER): vol.All(
-            vol.Coerce(float), vol.Range(min=0, max=100000)
+        probatio.Required(ATTR_MAX_POWER): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0, max=100000)
         ),
     }
 )
 
 SET_ACTIVE_POWER_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
     {
-        vol.Required(ATTR_ENABLED): cv.boolean,
-        vol.Required(ATTR_LIMIT): vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+        probatio.Required(ATTR_ENABLED): cv.boolean,
+        probatio.Required(ATTR_LIMIT): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0, max=100)
+        ),
     }
 )
 
 SET_PASSIVE_MODE_TIMEOUT_SCHEMA = _ENTRY_SCHEMA.extend(
     {
-        vol.Required(ATTR_TIMEOUT): vol.All(cv.positive_int, vol.Range(max=65535)),
-        vol.Required(ATTR_ACTION): vol.In(
+        probatio.Required(ATTR_TIMEOUT): probatio.All(
+            cv.positive_int, probatio.Range(max=65535)
+        ),
+        probatio.Required(ATTR_ACTION): probatio.In(
             [action.name.lower() for action in PassiveModeTimeoutAction]
         ),
     }
@@ -68,9 +72,9 @@ SET_PASSIVE_MODE_TIMEOUT_SCHEMA = _ENTRY_SCHEMA.extend(
 
 SET_PASSIVE_MODE_POWER_SCHEMA = _ENTRY_SCHEMA.extend(
     {
-        vol.Required(ATTR_GRID_POWER): _POWER_RANGE,
-        vol.Required(ATTR_BATTERY_POWER_MIN): _POWER_RANGE,
-        vol.Required(ATTR_BATTERY_POWER_MAX): _POWER_RANGE,
+        probatio.Required(ATTR_GRID_POWER): _POWER_RANGE,
+        probatio.Required(ATTR_BATTERY_POWER_MIN): _POWER_RANGE,
+        probatio.Required(ATTR_BATTERY_POWER_MAX): _POWER_RANGE,
     }
 )
 
