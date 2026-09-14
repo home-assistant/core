@@ -24,7 +24,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
-from . import split_motioneye_device_identifier
 from .const import DOMAIN
 from .coordinator import MotionEyeConfigEntry
 
@@ -41,6 +40,20 @@ MEDIA_CLASS_MAP = {
 _LOGGER = logging.getLogger(__name__)
 
 MEDIA_PROXY_URL = "/api/motioneye/media/{config_id}/{camera_id}/{kind}/{preview}/{path}"
+
+
+def split_motioneye_device_identifier(
+    identifier: tuple[str, str],
+) -> tuple[str, str, int] | None:
+    """Get the identifiers for a motionEye device."""
+    if len(identifier) != 2 or identifier[0] != DOMAIN or "_" not in identifier[1]:
+        return None
+    config_id, camera_id_str = identifier[1].split("_", 1)
+    try:
+        camera_id = int(camera_id_str)
+    except ValueError:
+        return None
+    return (DOMAIN, config_id, camera_id)
 
 
 def _encode_media_path(path: str) -> str:
