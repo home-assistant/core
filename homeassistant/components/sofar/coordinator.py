@@ -10,6 +10,7 @@ from modbus_connection import ModbusConnectionError, ModbusError
 from propcache.api import cached_property
 from sofar_modbus.model import UpdateReport
 from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus.tuning import LinkTuner, TimedUnit
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -34,6 +35,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         device: SofarInverter,
         poll: Callable[[], Awaitable[UpdateReport]],
         interval: timedelta,
+        tuner: LinkTuner,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -45,6 +47,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         )
         self.device = device
         self._poll = poll
+        self._tuner = tuner
         self._consecutive_failures: dict[str, int] = {}
 
     @cached_property
@@ -66,6 +69,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     async def _async_update_data(self) -> UpdateReport:
         try:
             report = await self._poll()
+            self._tuner.observe(report)
             report = await self._retry_failed(report)
             if not report.updated:
                 errors = list(report.failed.values())
@@ -128,6 +132,8 @@ class SofarRuntimeData:
     readings: SofarDataUpdateCoordinator
     settings: SofarDataUpdateCoordinator
     inverter_device_id: str
+    link: TimedUnit
+    tuner: LinkTuner
     wired_packs: set[int] = field(default_factory=set)
 
     @property
