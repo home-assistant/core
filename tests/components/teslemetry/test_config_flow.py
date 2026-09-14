@@ -2298,13 +2298,7 @@ async def test_reconfigure_updates_credentials_and_schedules_reload(
 async def test_reconfigure_unchanged_credentials_still_schedules_reload(
     hass: HomeAssistant,
 ) -> None:
-    """Reconfiguring with unchanged credentials still reloads the entry.
-
-    A gateway unreachable at setup falls back to cloud control; the user later
-    fixes their network and re-verifies the same host/password. Nothing changes
-    in the stored data, but local control must be re-enabled, so the reload has
-    to be scheduled regardless of whether the data changed.
-    """
+    """Reconfiguring with unchanged credentials still reloads the entry."""
     entry = await _setup_paired_account(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
 

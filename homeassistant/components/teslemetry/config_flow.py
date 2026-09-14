@@ -719,9 +719,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 subentry,
                 data_updates={CONF_HOST: host, CONF_PASSWORD: password},
             )
-            # Always reload, even when the credentials are unchanged: an earlier
-            # cloud fallback (gateway unreachable at setup) leaves local control
-            # off, and re-verifying the same credentials must re-enable it.
+            # Always reload, even when credentials are unchanged: an earlier
+            # local-control initialization failure leaves only the cloud API active,
+            # and successful re-verification must install the local-first router.
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return self.async_abort(reason="reconfigure_successful")
 
