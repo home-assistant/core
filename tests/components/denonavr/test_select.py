@@ -477,23 +477,51 @@ async def test_reference_level_offset_always_refreshes_after_change(
     assert client.async_update_audyssey.await_count == baseline_calls + 1
 
 
-async def test_coordinators_share_one_lock_not_a_receiver_keyed_one(
+async def test_coordinators_serialize_command_and_refresh(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """The action/refresh lock is a single shared object, not looked up.
+    """A select action and an Audyssey refresh on the shared lock don't overlap.
 
     denonavr's attrs classes define a field-based __eq__ without a
     matching __hash__, so real receiver instances are unhashable and
-    can't be dict/weak-ref keys - a receiver-keyed lookup would crash
-    in production while passing here, since this suite's mocks (unlike
-    the real class) are hashable by default. The lock must be created
-    once and passed through directly instead of derived from the
-    receiver.
+    can't be dict/weak-ref keys - a receiver-keyed lock would crash in
+    production. Exercising a command (dimmer, on the status
+    coordinator) concurrently with an Audyssey coordinator refresh
+    proves the one shared lock actually serializes them, rather than
+    just asserting the two lock objects are identical.
     """
     entry = await setup_denonavr(hass)
-    assert (
-        entry.runtime_data.coordinator.lock
-        is entry.runtime_data.audyssey_coordinator.lock
+    entity_id = _entity_id(hass, "dimmer")
+
+    call_order = []
+
+    async def _slow_dimmer_set(option: str) -> None:
+        call_order.append("start-dimmer")
+        await asyncio.sleep(0.05)
+        client.dimmer = option
+        call_order.append("end-dimmer")
+
+    async def _slow_audyssey_update() -> None:
+        call_order.append("start-audyssey")
+        await asyncio.sleep(0.05)
+        call_order.append("end-audyssey")
+
+    client.async_dimmer.side_effect = _slow_dimmer_set
+    client.async_update_audyssey.side_effect = _slow_audyssey_update
+
+    await asyncio.gather(
+        hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Dark"},
+            blocking=True,
+        ),
+        entry.runtime_data.audyssey_coordinator.async_refresh(),
+    )
+
+    assert call_order in (
+        ["start-dimmer", "end-dimmer", "start-audyssey", "end-audyssey"],
+        ["start-audyssey", "end-audyssey", "start-dimmer", "end-dimmer"],
     )
 
 

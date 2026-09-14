@@ -104,12 +104,9 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
             name=f"{DOMAIN}_{name}",
             config_entry=config_entry,
             update_interval=update_interval,
-            # immediate=False rather than the library default (True):
-            # the receiver needs a moment to settle after a command
-            # anyway, so a short wait before the post-action confirm is
-            # correct, not just tolerated - and it coalesces
-            # near-simultaneous actions into one shared refresh instead
-            # of a separate one each. See the const.py comment.
+            # immediate=False: the receiver needs a moment to settle
+            # before a post-action confirm reads back the right value,
+            # and this coalesces near-simultaneous actions into one refresh.
             request_refresh_debouncer=Debouncer(
                 hass,
                 _LOGGER,

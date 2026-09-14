@@ -6,7 +6,6 @@ from datetime import timedelta
 import logging
 
 from denonavr import DenonAVR
-from denonavr.const import ALL_TELNET_EVENTS
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,6 +17,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    AUDYSSEY_TELNET_EVENT,
     CONF_SHOW_ALL_SOURCES,
     CONF_UPDATE_AUDYSSEY,
     CONF_USE_TELNET,
@@ -31,7 +31,6 @@ from .const import (
     DEFAULT_ZONE2,
     DEFAULT_ZONE3,
     DOMAIN,
-    TELNET_EVENTS,
 )
 from .coordinator import DenonAvrDataUpdateCoordinator, async_refresh_status
 from .receiver import ConnectDenonAVR
@@ -157,13 +156,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
         while it's enabled, but the receiver stays updated via Telnet
         regardless, so Audyssey entities need a path independent of it.
         """
-        if event not in TELNET_EVENTS:
-            return
         audyssey_coordinator.async_update_listeners()
 
-    receiver.register_callback(ALL_TELNET_EVENTS, _telnet_notify_audyssey)
+    receiver.register_callback(AUDYSSEY_TELNET_EVENT, _telnet_notify_audyssey)
     entry.async_on_unload(
-        lambda: receiver.unregister_callback(ALL_TELNET_EVENTS, _telnet_notify_audyssey)
+        lambda: receiver.unregister_callback(
+            AUDYSSEY_TELNET_EVENT, _telnet_notify_audyssey
+        )
     )
 
     entry.runtime_data = DenonAvrData(
