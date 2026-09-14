@@ -5,7 +5,7 @@ from typing import Any, override
 
 import diematic_modbus
 from modbus_connection import ModbusError, ModbusTcpParams
-import voluptuous as vol
+import probatio as vol
 
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
