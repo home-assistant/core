@@ -1519,7 +1519,7 @@ class Entity(
         Called as the last step of a successful add: after the entity has its
         entity_id (and its registry entry, if it has a unique_id) and immediately
         before its state is written for the first time. Use it to subscribe to
-        to events, register update listeners and fetch initial data.
+        events, register update listeners and fetch initial data.
 
         Not called when adding the entity is aborted, e.g. because the entity is
         disabled or its entity_id or unique_id collides with an existint entity.
