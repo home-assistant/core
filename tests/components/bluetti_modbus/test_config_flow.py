@@ -94,7 +94,7 @@ async def test_user_flow_retries_a_transient_busy_response(
         )
         await hass.async_block_till_done()
 
-    assert attempts > 1  # the retry really happened
+    assert attempts > 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
