@@ -180,7 +180,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                     (unique_id := config_entry.unique_id) is not None
                 ) and unique_id in sites:
                     config_data[CONF_SITE_ID] = sites[unique_id].name
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         config_entry, data_updates=config_data
                     )
                 raise AbortFlow("unknown_site_id")
