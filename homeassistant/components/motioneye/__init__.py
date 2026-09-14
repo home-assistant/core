@@ -282,7 +282,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) ->
 
         hass.http.register_view(MotionEyeMediaProxyView(hass))
         hass.data[DOMAIN]["media_proxy_registered"] = True
-    
+
     client = create_motioneye_client(
         entry.data[CONF_URL],
         admin_username=entry.data.get(CONF_ADMIN_USERNAME),
