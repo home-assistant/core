@@ -387,6 +387,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
         if entry.data[CONF_USERNAME]:
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="reconfigure_user",
                 data_schema=self.add_suggested_values_to_schema(
@@ -441,6 +442,7 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
                 k=16,
             )
         )
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="add_topic",
             data_schema=self.add_suggested_values_to_schema(

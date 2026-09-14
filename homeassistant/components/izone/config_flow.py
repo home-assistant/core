@@ -183,6 +183,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         controllers_lines = "\n".join(
             f"- {candidate.uid} ({candidate.host})" for candidate in candidates
         )
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="select_controller",
             data_schema=selection_schema,
