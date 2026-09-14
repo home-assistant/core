@@ -28,7 +28,7 @@ class HassEnforceConfigEntryStepIdMatchMethodChecker(BaseChecker):
     name = "home_assistant_enforce_config_entry_step_id_match_method"
     priority = -1
     msgs = {
-        "W7434": (
+        "W7438": (
             (
                 "The step_id '%s' does not match the method name '%s'; "
                 "the step_id should match the method name after"
