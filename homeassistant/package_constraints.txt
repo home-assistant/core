@@ -38,7 +38,7 @@ go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
 habluetooth==7.0.0
 hass-nabucasa==2.7.0
-hassil==3.12.0
+hassil==3.12.1
 home-assistant-bluetooth==2.0.0
 home-assistant-frontend==20260826.7
 home-assistant-intents==2026.8.28
@@ -52,7 +52,7 @@ orjson==3.11.9
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==12.3.0
-probatio==0.12.0
+probatio==0.12.1
 propcache==0.5.2
 psutil-home-assistant==0.0.1
 PyJWT==2.13.0

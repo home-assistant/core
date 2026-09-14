@@ -5,7 +5,7 @@ from typing import Any, override
 
 from hlk_sw16 import create_hlk_sw16_connection
 from hlk_sw16.protocol import SW16Client
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -20,10 +20,10 @@ from .const import (
 )
 from .errors import CannotConnect
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
+        probatio.Required(CONF_HOST): str,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Coerce(int),
     }
 )
 

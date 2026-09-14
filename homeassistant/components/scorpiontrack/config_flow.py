@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyscorpiontrack import (
     ScorpionTrackClient,
     ScorpionTrackConnectionError,
@@ -10,7 +11,6 @@ from pyscorpiontrack import (
     ScorpionTrackShare,
     ScorpionTrackShareUnavailableError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -103,6 +103,6 @@ class ScorpionTrackConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure" if self.source == SOURCE_RECONFIGURE else "user",
-            data_schema=vol.Schema({vol.Required(CONF_SHARE_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_SHARE_TOKEN): str}),
             errors=errors,
         )

@@ -5,8 +5,8 @@ import json
 import logging
 from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -25,7 +25,7 @@ CONF_PAGE_ACCESS_TOKEN = "page_access_token"
 BASE_URL = "https://graph.facebook.com/v2.6/me/messages"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string}
+    {probatio.Required(CONF_PAGE_ACCESS_TOKEN): cv.string}
 )
 
 

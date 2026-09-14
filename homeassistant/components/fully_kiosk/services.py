@@ -1,6 +1,6 @@
 """Services for the Fully Kiosk Browser integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -77,11 +77,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             DOMAIN,
             service_name,
             service_handler,
-            schema=vol.Schema(
-                vol.All(
+            schema=probatio.Schema(
+                probatio.All(
                     {
-                        vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
-                        vol.Required(attrib): cv.string,
+                        probatio.Required(ATTR_DEVICE_ID): cv.ensure_list,
+                        probatio.Required(attrib): cv.string,
                     }
                 )
             ),
@@ -91,12 +91,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_CONFIG,
         _async_set_config,
-        schema=vol.Schema(
-            vol.All(
+        schema=probatio.Schema(
+            probatio.All(
                 {
-                    vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
-                    vol.Required(ATTR_KEY): cv.string,
-                    vol.Required(ATTR_VALUE): vol.Any(str, bool, int),
+                    probatio.Required(ATTR_DEVICE_ID): cv.ensure_list,
+                    probatio.Required(ATTR_KEY): cv.string,
+                    probatio.Required(ATTR_VALUE): probatio.Any(str, bool, int),
                 }
             )
         ),
