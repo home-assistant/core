@@ -21,13 +21,13 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import DummyDevice, entity_entries
+from .conftest import DummyDevice, SetDeviceAttribute, entity_entries
 from .const import TEST_DEVICE_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -322,6 +322,36 @@ async def test_ac_fan_speed_number_range_and_service_call(
         [("set_attribute", "fan_speed", 42)],
         device,
     )
+
+
+async def test_ac_fan_speed_unavailable_when_power_off(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    set_device_attribute: SetDeviceAttribute,
+) -> None:
+    """Test AC fan speed number is unavailable while the unit is powered off."""
+    device = _ac_device()
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_id = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_fan_speed"].entity_id
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    await set_device_attribute(device, ACAttributes.power, False)
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    await set_device_attribute(device, ACAttributes.power, True)
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    device.available = False
+    device.notify_update({"available": False})
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_number_set_value_raises_on_device_communication_error(
