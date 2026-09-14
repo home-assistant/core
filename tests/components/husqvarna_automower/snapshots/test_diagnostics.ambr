@@ -183,6 +183,7 @@
   dict({
     'data': dict({
       'auth_implementation': 'husqvarna_automower',
+      'legacy_work_area_cutting_height_cleanup': True,
       'token': dict({
         'access_token': '**REDACTED**',
         'expires_at': 1685919600.0,
