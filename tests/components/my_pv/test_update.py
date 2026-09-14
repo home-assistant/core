@@ -1,6 +1,6 @@
 """Test the my-PV update platform."""
 
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
@@ -109,15 +109,7 @@ async def test_update_install(
     )
     mock_my_pv_client.update_firmware.assert_awaited_once_with()
 
-    type(mock_my_pv_client).firmware_version = PropertyMock(
-        side_effect=["e0002200", "e0002200", "e0002201"]
-    )
-    type(mock_my_pv_client).firmware_update_available = PropertyMock(
-        side_effect=[True, True, False]
-    )
-    type(mock_my_pv_client).firmware_update_progress = PropertyMock(
-        side_effect=[0, 50, None]
-    )
+    mock_my_pv_client.firmware_update_progress = 0
 
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
@@ -128,6 +120,8 @@ async def test_update_install(
     assert state.attributes.get(ATTR_IN_PROGRESS)
     assert state.attributes.get(ATTR_UPDATE_PERCENTAGE) == 0
 
+    mock_my_pv_client.firmware_update_progress = 50
+
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -136,6 +130,10 @@ async def test_update_install(
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_IN_PROGRESS)
     assert state.attributes.get(ATTR_UPDATE_PERCENTAGE) == 50
+
+    mock_my_pv_client.firmware_version = "e0002201"
+    mock_my_pv_client.firmware_update_available = False
+    mock_my_pv_client.firmware_update_progress = None
 
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)

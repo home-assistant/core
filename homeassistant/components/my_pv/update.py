@@ -9,7 +9,7 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -67,6 +67,30 @@ class MyPVFirmwareUpdate(MyPVBaseEntity, UpdateEntity):
         self._attr_installed_version = self.coordinator.device.firmware_version
         self._attr_latest_version = self.coordinator.device.latest_firmware_version
 
+    @property
+    @override
+    def installed_version(self) -> str | None:
+        """Version installed and in use."""
+        return self.coordinator.device.firmware_version
+
+    @property
+    @override
+    def in_progress(self) -> bool | None:
+        """Update installation progress."""
+        return self.update_percentage is not None
+
+    @property
+    @override
+    def latest_version(self) -> str | None:
+        """Latest version available for install."""
+        return self.coordinator.device.latest_firmware_version
+
+    @property
+    @override
+    def update_percentage(self) -> int | float | None:
+        """Update installation progress."""
+        return self.coordinator.device.firmware_update_progress
+
     @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -89,21 +113,3 @@ class MyPVFirmwareUpdate(MyPVBaseEntity, UpdateEntity):
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         """Return True if latest_version is newer than installed_version."""
         return self.coordinator.device.firmware_update_available
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_installed_version = self.coordinator.device.firmware_version
-        self._attr_latest_version = self.coordinator.device.latest_firmware_version
-
-        if (
-            update_progress := self.coordinator.device.firmware_update_progress
-        ) is not None:
-            self._attr_in_progress = True
-            self._attr_update_percentage = update_progress
-        else:
-            self._attr_in_progress = False
-            self._attr_update_percentage = None
-
-        self.async_write_ha_state()
