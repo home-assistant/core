@@ -1,12 +1,15 @@
 """Tests for the Backup integration's utility functions."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable, Coroutine
 import dataclasses
 import hashlib
+from io import BytesIO
+import json
 import os
 from pathlib import Path
 import tarfile
+from typing import Any
 from unittest.mock import Mock, patch
 
 import nacl.bindings.crypto_secretstream as nss
@@ -709,6 +712,145 @@ async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> No
     # 5 x 10240 byte of padding
     assert len(encrypted_output1) == len(encrypted_backup_data) + 51200
     assert encrypted_output1[: len(encrypted_backup_data)] != encrypted_backup_data
+
+
+def _make_inner_tar(name: str, content: bytes) -> bytes:
+    """Create a gzip compressed inner tar with a single file."""
+    buf = BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+        info = tarfile.TarInfo(name)
+        info.size = len(content)
+        tar.addfile(info, BytesIO(content))
+    return buf.getvalue()
+
+
+def _make_outer_tar(protected: bool, inner_tars: dict[str, bytes]) -> bytes:
+    """Create an outer backup tar with backup.json and the given inner tars."""
+    metadata = json.dumps(
+        {
+            "compressed": True,
+            "date": "2025-01-14T15:03:28.535961-05:00",
+            "homeassistant": {"exclude_database": True, "version": "2025.2.0.dev0"},
+            "name": "test",
+            "protected": protected,
+            "slug": "c0cb53bd",
+            "type": "partial",
+            "version": 2,
+            "addons": [],
+        }
+    ).encode()
+    buf = BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
+        info = tarfile.TarInfo("./backup.json")
+        info.size = len(metadata)
+        tar.addfile(info, BytesIO(metadata))
+        for name, content in inner_tars.items():
+            info = tarfile.TarInfo(name)
+            info.size = len(content)
+            tar.addfile(info, BytesIO(content))
+    return buf.getvalue()
+
+
+async def _read_stream(stream: AsyncIterator[bytes]) -> bytes:
+    """Read a stream to a bytes object."""
+    output = b""
+    async for chunk in stream:
+        output += chunk
+    return output
+
+
+async def test_cipher_backup_streamer_supervisor_tar(hass: HomeAssistant) -> None:
+    """Test supervisor.tar.gz is encrypted and decrypted like the other inner tars.
+
+    Supervisor stores mount and registry config in supervisor.tar.gz, which is not
+    reflected in the backup metadata. Other unknown inner tars are dropped.
+    """
+    homeassistant_tar = _make_inner_tar("data/config.yaml", b"homeassistant")
+    supervisor_tar = _make_inner_tar("mounts.json", b"supervisor")
+    unknown_tar = _make_inner_tar("data/unknown", b"unknown")
+    decrypted_backup_data = _make_outer_tar(
+        False,
+        {
+            "homeassistant.tar.gz": homeassistant_tar,
+            "supervisor.tar.gz": supervisor_tar,
+            "unknown.tar.gz": unknown_tar,
+        },
+    )
+    backup = AgentBackup(
+        addons=[],
+        backup_id="1234",
+        date="2024-12-02T07:23:58.261875-05:00",
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0.dev0",
+        name="test",
+        protected=False,
+        size=len(decrypted_backup_data),
+    )
+
+    def open_backup_factory(
+        data: bytes,
+    ) -> Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]]:
+        async def send_backup() -> AsyncIterator[bytes]:
+            for i in range(0, len(data), 1024):
+                yield data[i : i + 1024]
+
+        async def open_backup() -> AsyncIterator[bytes]:
+            return send_backup()
+
+        return open_backup
+
+    encryptor = EncryptedBackupStreamer(
+        hass, backup, open_backup_factory(decrypted_backup_data), "hunter2"
+    )
+    encrypted_output = await _read_stream(await encryptor.open_stream())
+    await encryptor.wait()
+
+    encrypted_members: list[str] = []
+    with securetar.SecureTarArchive(
+        fileobj=BytesIO(encrypted_output),
+        mode="r",
+        streaming=True,
+        password="hunter2",
+    ) as archive:
+        for obj in archive.tar:
+            encrypted_members.append(obj.name)
+            if obj.name != "supervisor.tar.gz":
+                continue
+            # Decryption only succeeds if the inner tar was encrypted
+            with archive.extract_tar(obj) as decrypted:
+                data = b""
+                while chunk := decrypted.read(1024):
+                    data += chunk
+                assert data == supervisor_tar
+    assert encrypted_members == [
+        "./backup.json",
+        "homeassistant.tar.gz",
+        "supervisor.tar.gz",
+    ]
+
+    decryptor = DecryptedBackupStreamer(
+        hass,
+        dataclasses.replace(backup, protected=True, size=len(encrypted_output)),
+        open_backup_factory(encrypted_output),
+        "hunter2",
+    )
+    decrypted_output = await _read_stream(await decryptor.open_stream())
+    await decryptor.wait()
+
+    with tarfile.open(fileobj=BytesIO(decrypted_output), mode="r") as tar:
+        members = {obj.name: obj for obj in tar if obj.isfile()}
+        assert set(members) == {
+            "./backup.json",
+            "homeassistant.tar.gz",
+            "supervisor.tar.gz",
+        }
+        assert tar.extractfile(members["supervisor.tar.gz"]).read() == supervisor_tar
+        assert tar.extractfile(members["homeassistant.tar.gz"]).read() == (
+            homeassistant_tar
+        )
 
 
 async def test_encrypted_backup_streamer_error(hass: HomeAssistant) -> None:
