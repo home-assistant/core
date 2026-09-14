@@ -109,4 +109,4 @@ rules:
   inject-websession:
     status: exempt
     comment: No external connections.
-  strict-typing: todo
+  strict-typing: done

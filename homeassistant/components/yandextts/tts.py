@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.tts import (
     CONF_LANG,
@@ -72,12 +72,20 @@ DEFAULT_SPEED = 1
 
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-        vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODECS),
-        vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORT_VOICES),
-        vol.Optional(CONF_EMOTION, default=DEFAULT_EMOTION): vol.In(SUPPORTED_EMOTION),
-        vol.Optional(CONF_SPEED, default=DEFAULT_SPEED): vol.Range(
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(
+            SUPPORT_LANGUAGES
+        ),
+        probatio.Optional(CONF_CODEC, default=DEFAULT_CODEC): probatio.In(
+            SUPPORT_CODECS
+        ),
+        probatio.Optional(CONF_VOICE, default=DEFAULT_VOICE): probatio.In(
+            SUPPORT_VOICES
+        ),
+        probatio.Optional(CONF_EMOTION, default=DEFAULT_EMOTION): probatio.In(
+            SUPPORTED_EMOTION
+        ),
+        probatio.Optional(CONF_SPEED, default=DEFAULT_SPEED): probatio.Range(
             min=MIN_SPEED, max=MAX_SPEED
         ),
     }

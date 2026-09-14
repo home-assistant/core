@@ -30,7 +30,7 @@ async def test_coordinator(
 ) -> None:
     """Test the Trafikverket Camera coordinator."""
     aioclient_mock.get(
-        "https://www.testurl.com/test_photo.jpg?type=fullsize", content=b"0123456789"
+        "https://www.testurl.com/test_photo_fullsize.jpg", content=b"0123456789"
     )
 
     entry = MockConfigEntry(

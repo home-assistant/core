@@ -1,6 +1,5 @@
 """Test the NUT switch platform."""
 
-import json
 from unittest.mock import AsyncMock
 
 import pytest
@@ -19,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .util import async_init_integration
 
-from tests.common import async_load_fixture
+from tests.common import async_load_json_object_fixture
 
 
 @pytest.mark.parametrize(
@@ -83,7 +82,7 @@ async def test_switch_pdu_dynamic_outlets(
         list_commands_return_value[command] = command
 
     ups_fixture = f"{model}.json"
-    list_vars = json.loads(await async_load_fixture(hass, ups_fixture, DOMAIN))
+    list_vars = await async_load_json_object_fixture(hass, ups_fixture, DOMAIN)
 
     run_command = AsyncMock()
 

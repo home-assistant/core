@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any, override
 
 import aiosomecomfort
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -24,10 +24,10 @@ from .const import (
     DOMAIN,
 )
 
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -102,12 +102,12 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         data_schema = {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
+            probatio.Required(CONF_USERNAME): str,
+            probatio.Required(CONF_PASSWORD): str,
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data_schema),
+            data_schema=probatio.Schema(data_schema),
             errors=errors,
         )
 
@@ -146,15 +146,15 @@ class HoneywellOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_COOL_AWAY_TEMPERATURE,
                         default=self.config_entry.options.get(
                             CONF_COOL_AWAY_TEMPERATURE, DEFAULT_COOL_AWAY_TEMPERATURE
                         ),
                     ): int,
-                    vol.Required(
+                    probatio.Required(
                         CONF_HEAT_AWAY_TEMPERATURE,
                         default=self.config_entry.options.get(
                             CONF_HEAT_AWAY_TEMPERATURE, DEFAULT_HEAT_AWAY_TEMPERATURE

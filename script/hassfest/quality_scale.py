@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.const import Platform
 from homeassistant.exceptions import HomeAssistantError
@@ -118,7 +118,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "aemet",
     "aftership",
     "agent_dvr",
-    "airly",
     "airq",
     "airthings",
     "airthings_ble",
@@ -233,7 +232,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "compensation",
     "concord232",
     "control4",
-    "coolmaster",
     "cppm_tracker",
     "cpuspeed",
     "crownstone",
@@ -264,7 +262,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "dlink",
     "dlna_dmr",
     "dlna_dms",
-    "dnsip",
     "dominos",
     "doods",
     "doorbird",
@@ -281,7 +278,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "dweet",
     "dynalite",
     "eafm",
-    "easyenergy",
     "ebox",
     "ebusd",
     "ecoal_boiler",
@@ -575,7 +571,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "meteo_france",
     "meteoalarm",
     "meteoclimatic",
-    "metoffice",
     "mfi",
     "microbees",
     "microsoft",
@@ -883,7 +878,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "tasmota",
     "tautulli",
     "tcp",
-    "technove",
     "ted5000",
     "telegram",
     "tellduslive",
@@ -959,7 +953,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "viaggiatreno",
     "vilfo",
     "vivotek",
-    "vizio",
     "vlc_telnet",
     "voicerss",
     "voip",
@@ -983,7 +976,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "withings",
     "wiz",
     "wmspro",
-    "wolflink",
     "workday",
     "worldclock",
     "worldtidesinfo",
@@ -1041,7 +1033,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "aemet",
     "aftership",
     "agent_dvr",
-    "airly",
     "airnow",
     "airq",
     "airthings",
@@ -1193,7 +1184,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "dlink",
     "dlna_dmr",
     "dlna_dms",
-    "dnsip",
     "dominos",
     "doods",
     "doorbird",
@@ -1210,7 +1200,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "dweet",
     "dynalite",
     "eafm",
-    "easyenergy",
     "ebox",
     "ebusd",
     "ecoal_boiler",
@@ -1519,7 +1508,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "meteo_france",
     "meteoalarm",
     "meteoclimatic",
-    "metoffice",
     "mfi",
     "microbees",
     "microsoft",
@@ -1664,7 +1652,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "prosegur",
     "prowl",
     "proximity",
-    "proxmoxve",
     "prusalink",
     "ps4",
     "pulseaudio_loopback",
@@ -1845,7 +1832,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "tasmota",
     "tautulli",
     "tcp",
-    "technove",
     "ted5000",
     "telegram",
     "tellduslive",
@@ -1924,7 +1910,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "viaggiatreno",
     "vilfo",
     "vivotek",
-    "vizio",
     "vlc_telnet",
     "voicerss",
     "voip",
@@ -1950,7 +1935,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "withings",
     "wiz",
     "wmspro",
-    "wolflink",
     "workday",
     "worldclock",
     "worldtidesinfo",
@@ -2044,6 +2028,7 @@ NO_QUALITY_SCALE = [
     "logbook",
     "logger",
     "lovelace",
+    "map_tiles",
     "media_source",
     "moisture",
     "motion",
@@ -2076,22 +2061,22 @@ NO_QUALITY_SCALE = [
     "zone",
 ]
 
-SCHEMA = vol.Schema(
+SCHEMA = probatio.Schema(
     {
-        vol.Required("rules"): vol.Schema(
+        probatio.Required("rules"): probatio.Schema(
             {
-                vol.Required(rule.name): vol.Any(
-                    vol.In(["todo", "done"]),
-                    vol.Schema(
+                probatio.Required(rule.name): probatio.Any(
+                    probatio.In(["todo", "done"]),
+                    probatio.Schema(
                         {
-                            vol.Required("status"): vol.In(["todo", "done"]),
-                            vol.Required("comment"): str,
+                            probatio.Required("status"): probatio.In(["todo", "done"]),
+                            probatio.Required("comment"): str,
                         }
                     ),
-                    vol.Schema(
+                    probatio.Schema(
                         {
-                            vol.Required("status"): "exempt",
-                            vol.Required("comment"): str,
+                            probatio.Required("status"): "exempt",
+                            probatio.Required("comment"): str,
                         }
                     ),
                 )
@@ -2198,7 +2183,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
 
     try:
         SCHEMA(data)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         integration.add_error(
             "quality_scale", f"Invalid {name}: {humanize_error(data, err)}"
         )
