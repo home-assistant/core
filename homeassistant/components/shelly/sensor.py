@@ -1739,6 +1739,7 @@ RPC_SENSORS: Final = {
         translation_key="storage_free_space",
         value=lambda status, _: status / 1024 / 1024,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=0,
         entity_category=EntityCategory.DIAGNOSTIC,
