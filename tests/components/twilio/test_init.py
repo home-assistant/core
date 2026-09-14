@@ -50,12 +50,12 @@ async def test_config_flow_registers_webhook(
 
 async def test_setup_creates_client_in_executor(hass: HomeAssistant) -> None:
     """Test the YAML setup creates the Twilio client off the event loop."""
-    client_thread: threading.Thread | None = None
+    client_thread_id: int | None = None
 
     class TestClient:
         def __init__(self, account_sid, auth_token) -> None:
-            nonlocal client_thread
-            client_thread = threading.current_thread()
+            nonlocal client_thread_id
+            client_thread_id = threading.get_ident()
 
     with patch("homeassistant.components.twilio.Client", TestClient):
         assert await async_setup_component(
@@ -70,4 +70,4 @@ async def test_setup_creates_client_in_executor(hass: HomeAssistant) -> None:
         )
 
     assert isinstance(hass.data[twilio.DATA_TWILIO], TestClient)
-    assert client_thread is not threading.main_thread()
+    assert client_thread_id != hass.loop_thread_id
