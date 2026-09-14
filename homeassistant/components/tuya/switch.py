@@ -894,6 +894,19 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             translation_key="switch",
         ),
     ),
+    DeviceCategory.ZNJDQ: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.ZNJXS: (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
@@ -919,6 +932,9 @@ SWITCHES[DeviceCategory.CZ] = SWITCHES[DeviceCategory.PC]
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 SWITCHES[DeviceCategory.DGHSXJ] = SWITCHES[DeviceCategory.SP]
+
+# Video peephole camera / video intercom doorbell (duplicate of `sp`)
+SWITCHES[DeviceCategory.KSDJML] = SWITCHES[DeviceCategory.SP]
 
 
 async def async_setup_entry(

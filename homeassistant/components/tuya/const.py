@@ -509,6 +509,11 @@ class DeviceCategory(StrEnum):
 
     See https://github.com/orgs/home-assistant/discussions/329
     """
+    KSDJML = "ksdjml"
+    """Video peephole camera / video intercom doorbell (undocumented)
+
+    see https://github.com/home-assistant/core/issues/182051
+    """
     MBD = "mbd"
     """Unknown light product
 
@@ -574,6 +579,8 @@ class DeviceCategory(StrEnum):
     """Tank Level Sensor (undocumented)"""
     ZNNBQ = "znnbq"
     """VESKA-micro inverter (undocumented)"""
+    ZNJDQ = "znjdq"
+    """Circuit breaker (undocumented)"""
     ZWJCY = "zwjcy"
     """Soil sensor - plant monitor (undocumented)"""
     ZNJXS = "znjxs"
@@ -639,6 +646,8 @@ class DPCode(StrEnum):
     CH2O_VALUE = "ch2o_value"
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
+    CHARGE_CUR_SET = "charge_cur_set"
+    CHARGE_ENERGY_ONCE = "charge_energy_once"
     CHARGE_STATE = "charge_state"
     CHILD_LOCK = "child_lock"  # Child lock
     CISTERN = "cistern"

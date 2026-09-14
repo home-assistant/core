@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 from yolink.const import ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -51,7 +51,7 @@ FLEX_BUTTONS_2 = {
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): vol.In(FLEX_BUTTONS_4)}
+    {probatio.Required(CONF_TYPE): probatio.In(FLEX_BUTTONS_4)}
 )
 
 # YoLink Remotes YS3604/YS3614, Switch YS5708/YS5709
