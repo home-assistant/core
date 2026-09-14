@@ -15,7 +15,7 @@ from habitron_client import (
     get_host_ip,
     test_connection,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components import network
@@ -391,9 +391,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=default_host): str,
+                    probatio.Required(CONF_HOST, default=default_host): str,
                 }
             ),
             errors=errors,
