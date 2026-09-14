@@ -5,7 +5,7 @@ import json
 from typing import Any, override
 
 from mvg import MvgApi, MvgApiError, TransportType
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
@@ -62,24 +62,24 @@ PRODUCTS_SELECTOR = SelectSelector(
     SelectSelectorConfig(options=ALL_PRODUCTS, multiple=True)
 )
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_STATION): str,
-        vol.Optional(CONF_PRODUCTS, default=list): PRODUCTS_SELECTOR,
+        probatio.Required(CONF_STATION): str,
+        probatio.Optional(CONF_PRODUCTS, default=list): PRODUCTS_SELECTOR,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DESTINATIONS, default=DEFAULT_DESTINATIONS): TextSelector(
+        probatio.Optional(
+            CONF_DESTINATIONS, default=DEFAULT_DESTINATIONS
+        ): TextSelector(TextSelectorConfig(multiple=True)),
+        probatio.Optional(CONF_LINES, default=DEFAULT_LINES): TextSelector(
             TextSelectorConfig(multiple=True)
         ),
-        vol.Optional(CONF_LINES, default=DEFAULT_LINES): TextSelector(
-            TextSelectorConfig(multiple=True)
-        ),
-        vol.Optional(CONF_PRODUCTS, default=list): PRODUCTS_SELECTOR,
-        vol.Optional(CONF_TIMEOFFSET, default=DEFAULT_TIMEOFFSET): cv.positive_int,
-        vol.Optional(CONF_NUMBER, default=DEFAULT_NUMBER): cv.positive_int,
+        probatio.Optional(CONF_PRODUCTS, default=list): PRODUCTS_SELECTOR,
+        probatio.Optional(CONF_TIMEOFFSET, default=DEFAULT_TIMEOFFSET): cv.positive_int,
+        probatio.Optional(CONF_NUMBER, default=DEFAULT_NUMBER): cv.positive_int,
     }
 )
 
@@ -159,9 +159,9 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="select",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_STATION_ID): SelectSelector(
+                    probatio.Required(CONF_STATION_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(

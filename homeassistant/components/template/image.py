@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.image import (
     DOMAIN as IMAGE_DOMAIN,
@@ -43,10 +43,10 @@ _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
     attributes=ImageEntityStateAttribute
 )
 
-IMAGE_YAML_SCHEMA = vol.Schema(
+IMAGE_YAML_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL): cv.template,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 ).extend(
     make_template_entity_common_schema(
@@ -55,10 +55,10 @@ IMAGE_YAML_SCHEMA = vol.Schema(
 )
 
 
-IMAGE_CONFIG_ENTRY_SCHEMA = vol.Schema(
+IMAGE_CONFIG_ENTRY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL): cv.template,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 ).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 

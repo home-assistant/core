@@ -6,7 +6,7 @@ import logging
 from typing import Any, override
 
 from mvg import MvgApi, MvgApiError, TransportType
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -53,16 +53,16 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_NEXT_DEPARTURE): [
+        probatio.Required(CONF_NEXT_DEPARTURE): [
             {
-                vol.Required(CONF_STATION): cv.string,
-                vol.Optional(CONF_DESTINATIONS, default=[""]): cv.ensure_list_csv,
-                vol.Optional(CONF_DIRECTIONS): cv.ensure_list_csv,
-                vol.Optional(CONF_LINES, default=[""]): cv.ensure_list_csv,
-                vol.Optional(CONF_PRODUCTS): cv.ensure_list_csv,
-                vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
-                vol.Optional(CONF_NUMBER, default=1): cv.positive_int,
-                vol.Optional(CONF_NAME): cv.string,
+                probatio.Required(CONF_STATION): cv.string,
+                probatio.Optional(CONF_DESTINATIONS, default=[""]): cv.ensure_list_csv,
+                probatio.Optional(CONF_DIRECTIONS): cv.ensure_list_csv,
+                probatio.Optional(CONF_LINES, default=[""]): cv.ensure_list_csv,
+                probatio.Optional(CONF_PRODUCTS): cv.ensure_list_csv,
+                probatio.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
+                probatio.Optional(CONF_NUMBER, default=1): cv.positive_int,
+                probatio.Optional(CONF_NAME): cv.string,
             }
         ]
     }

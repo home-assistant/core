@@ -10,8 +10,8 @@ from itertools import groupby
 import logging
 from typing import Any, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute
@@ -56,7 +56,7 @@ INTENT_RESPOND = "HassRespond"
 INTENT_BROADCAST = "HassBroadcast"
 INTENT_GET_TEMPERATURE = "HassClimateGetTemperature"
 
-SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
+SLOT_SCHEMA = probatio.Schema({}, extra=probatio.ALLOW_EXTRA)
 
 DATA_KEY: HassKey[dict[str, IntentHandler]] = HassKey("intent")
 
@@ -138,7 +138,7 @@ async def async_handle(
     try:
         _LOGGER.info("Triggering intent handler %s", handler)
         result = await handler.async_handle(intent)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         _LOGGER.warning("Received invalid slot info for %s: %s", intent_type, err)
         raise InvalidSlotInfo(f"Received invalid slot info for {intent_type}") from err
     except IntentError:
@@ -843,15 +843,15 @@ class IntentHandler:
         return self._slot_schema(slots)  # type: ignore[no-any-return]
 
     @cached_property
-    def _slot_schema(self) -> vol.Schema:
+    def _slot_schema(self) -> probatio.Schema:
         """Create validation schema for slots."""
         assert self.slot_schema is not None
-        return vol.Schema(
+        return probatio.Schema(
             {
                 key: SLOT_SCHEMA.extend({"value": validator})
                 for key, validator in self.slot_schema.items()
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
@@ -868,7 +868,7 @@ def non_empty_string(value: Any) -> str:
     """Coerce value to string and fail if string is empty or whitespace."""
     value_str = cv.string(value)
     if not value_str.strip():
-        raise vol.Invalid("string value is empty")
+        raise probatio.Invalid("string value is empty")
 
     return value_str
 
@@ -883,7 +883,7 @@ class IntentSlotInfo:
     description: str | None = None
     """Human readable description of the slot."""
 
-    value_schema: VolSchemaType | Callable[[Any], Any] = vol.Any
+    value_schema: VolSchemaType | Callable[[Any], Any] = probatio.Any
     """Validator for the slot."""
 
 
@@ -947,16 +947,20 @@ class DynamicServiceIntentHandler(IntentHandler):
     def slot_schema(self) -> dict:
         """Return a slot schema."""
         domain_validator = (
-            vol.In(list(self.required_domains)) if self.required_domains else cv.string
+            probatio.In(list(self.required_domains))
+            if self.required_domains
+            else cv.string
         )
         slot_schema = {
-            vol.Any("name", "area", "floor"): non_empty_string,
-            vol.Optional("domain"): vol.All(cv.ensure_list, [domain_validator]),
+            probatio.Any("name", "area", "floor"): non_empty_string,
+            probatio.Optional("domain"): probatio.All(
+                cv.ensure_list, [domain_validator]
+            ),
         }
         if self.device_classes:
-            # The typical way to match enums is with vol.Coerce, but we build a
+            # The typical way to match enums is with probatio.Coerce, but we build a
             # flat list to make the API simpler to describe programmatically
-            flattened_device_classes = vol.In(
+            flattened_device_classes = probatio.In(
                 [
                     device_class.value
                     for device_class_enum in self.device_classes
@@ -965,7 +969,7 @@ class DynamicServiceIntentHandler(IntentHandler):
             )
             slot_schema.update(
                 {
-                    vol.Optional("device_class"): vol.All(
+                    probatio.Optional("device_class"): probatio.All(
                         cv.ensure_list,
                         [flattened_device_classes],
                     )
@@ -974,15 +978,15 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         slot_schema.update(
             {
-                vol.Optional("preferred_area_id"): cv.string,
-                vol.Optional("preferred_floor_id"): cv.string,
+                probatio.Optional("preferred_area_id"): cv.string,
+                probatio.Optional("preferred_floor_id"): cv.string,
             }
         )
 
         if self.required_slots:
             slot_schema.update(
                 {
-                    vol.Required(
+                    probatio.Required(
                         key, description=slot_info.description
                     ): slot_info.value_schema
                     for key, slot_info in self.required_slots.items()
@@ -992,7 +996,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         if self.optional_slots:
             slot_schema.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         key, description=slot_info.description
                     ): slot_info.value_schema
                     for key, slot_info in self.optional_slots.items()

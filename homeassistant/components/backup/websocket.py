@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -41,7 +41,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "backup/info"})
+@websocket_api.websocket_command({probatio.Required("type"): "backup/info"})
 @websocket_api.async_response
 async def handle_info(
     hass: HomeAssistant,
@@ -79,8 +79,8 @@ async def handle_info(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "backup/details",
-        vol.Required("backup_id"): str,
+        probatio.Required("type"): "backup/details",
+        probatio.Required("backup_id"): str,
     }
 )
 @websocket_api.async_response
@@ -107,8 +107,8 @@ async def handle_details(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "backup/delete",
-        vol.Required("backup_id"): str,
+        probatio.Required("type"): "backup/delete",
+        probatio.Required("backup_id"): str,
     }
 )
 @websocket_api.async_response
@@ -132,14 +132,14 @@ async def handle_delete(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "backup/restore",
-        vol.Required("backup_id"): str,
-        vol.Required("agent_id"): str,
-        vol.Optional("password"): str,
-        vol.Optional("restore_addons"): [str],
-        vol.Optional("restore_database", default=True): bool,
-        vol.Optional("restore_folders"): [vol.Coerce(Folder)],
-        vol.Optional("restore_homeassistant", default=True): bool,
+        probatio.Required("type"): "backup/restore",
+        probatio.Required("backup_id"): str,
+        probatio.Required("agent_id"): str,
+        probatio.Optional("password"): str,
+        probatio.Optional("restore_addons"): [str],
+        probatio.Optional("restore_database", default=True): bool,
+        probatio.Optional("restore_folders"): [probatio.Coerce(Folder)],
+        probatio.Optional("restore_homeassistant", default=True): bool,
     }
 )
 @websocket_api.async_response
@@ -170,10 +170,10 @@ async def handle_restore(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "backup/can_decrypt_on_download",
-        vol.Required("backup_id"): str,
-        vol.Required("agent_id"): str,
-        vol.Required("password"): str,
+        probatio.Required("type"): "backup/can_decrypt_on_download",
+        probatio.Required("backup_id"): str,
+        probatio.Required("agent_id"): str,
+        probatio.Required("password"): str,
     }
 )
 @websocket_api.async_response
@@ -204,15 +204,15 @@ async def handle_can_decrypt_on_download(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "backup/generate",
-        vol.Required("agent_ids"): [str],
-        vol.Optional("include_addons"): [str],
-        vol.Optional("include_all_addons", default=False): bool,
-        vol.Optional("include_database", default=True): bool,
-        vol.Optional("include_folders"): [vol.Coerce(Folder)],
-        vol.Optional("include_homeassistant", default=True): bool,
-        vol.Optional("name"): vol.Any(str, None),
-        vol.Optional("password"): vol.Any(str, None),
+        probatio.Required("type"): "backup/generate",
+        probatio.Required("agent_ids"): [str],
+        probatio.Optional("include_addons"): [str],
+        probatio.Optional("include_all_addons", default=False): bool,
+        probatio.Optional("include_database", default=True): bool,
+        probatio.Optional("include_folders"): [probatio.Coerce(Folder)],
+        probatio.Optional("include_homeassistant", default=True): bool,
+        probatio.Optional("name"): probatio.Any(str, None),
+        probatio.Optional("password"): probatio.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -239,7 +239,7 @@ async def handle_create(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "backup/generate_with_automatic_settings",
+        probatio.Required("type"): "backup/generate_with_automatic_settings",
     }
 )
 @websocket_api.async_response
@@ -266,7 +266,7 @@ async def handle_create_with_automatic_settings(
 
 
 @websocket_api.ws_require_user(only_supervisor=True)
-@websocket_api.websocket_command({vol.Required("type"): "backup/start"})
+@websocket_api.websocket_command({probatio.Required("type"): "backup/start"})
 @websocket_api.async_response
 async def handle_backup_start(
     hass: HomeAssistant,
@@ -287,7 +287,7 @@ async def handle_backup_start(
 
 
 @websocket_api.ws_require_user(only_supervisor=True)
-@websocket_api.websocket_command({vol.Required("type"): "backup/end"})
+@websocket_api.websocket_command({probatio.Required("type"): "backup/end"})
 @websocket_api.async_response
 async def handle_backup_end(
     hass: HomeAssistant,
@@ -308,7 +308,7 @@ async def handle_backup_end(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "backup/agents/info"})
+@websocket_api.websocket_command({probatio.Required("type"): "backup/agents/info"})
 @websocket_api.async_response
 async def backup_agents_info(
     hass: HomeAssistant,
@@ -329,7 +329,7 @@ async def backup_agents_info(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "backup/config/info"})
+@websocket_api.websocket_command({probatio.Required("type"): "backup/config/info"})
 @websocket_api.async_response
 async def handle_config_info(
     hass: HomeAssistant,
@@ -359,22 +359,22 @@ async def handle_config_info(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "backup/config/update",
-        vol.Optional("agents"): vol.Schema(
+        probatio.Required("type"): "backup/config/update",
+        probatio.Optional("agents"): probatio.Schema(
             {
                 str: {
-                    vol.Optional("protected"): bool,
-                    vol.Optional("retention"): vol.Any(
-                        vol.Schema(
+                    probatio.Optional("protected"): bool,
+                    probatio.Optional("retention"): probatio.Any(
+                        probatio.Schema(
                             {
                                 # Note: We can't use cv.positive_int
                                 # because it allows 0 even
                                 # though 0 is not positive.
-                                vol.Optional("copies"): vol.Any(
-                                    vol.All(int, vol.Range(min=1)), None
+                                probatio.Optional("copies"): probatio.Any(
+                                    probatio.All(int, probatio.Range(min=1)), None
                                 ),
-                                vol.Optional("days"): vol.Any(
-                                    vol.All(int, vol.Range(min=1)), None
+                                probatio.Optional("days"): probatio.Any(
+                                    probatio.All(int, probatio.Range(min=1)), None
                                 ),
                             },
                         ),
@@ -383,39 +383,43 @@ async def handle_config_info(
                 }
             }
         ),
-        vol.Optional("automatic_backups_configured"): bool,
-        vol.Optional("create_backup"): vol.Schema(
+        probatio.Optional("automatic_backups_configured"): bool,
+        probatio.Optional("create_backup"): probatio.Schema(
             {
-                vol.Optional("agent_ids"): vol.All([str], vol.Unique()),
-                vol.Optional("include_addons"): vol.Any(
-                    vol.All([str], vol.Unique()), None
+                probatio.Optional("agent_ids"): probatio.All([str], probatio.Unique()),
+                probatio.Optional("include_addons"): probatio.Any(
+                    probatio.All([str], probatio.Unique()), None
                 ),
-                vol.Optional("include_all_addons"): bool,
-                vol.Optional("include_database"): bool,
-                vol.Optional("include_folders"): vol.Any(
-                    vol.All([vol.Coerce(Folder)], vol.Unique()), None
+                probatio.Optional("include_all_addons"): bool,
+                probatio.Optional("include_database"): bool,
+                probatio.Optional("include_folders"): probatio.Any(
+                    probatio.All([probatio.Coerce(Folder)], probatio.Unique()), None
                 ),
-                vol.Optional("name"): vol.Any(str, None),
-                vol.Optional("password"): vol.Any(str, None),
+                probatio.Optional("name"): probatio.Any(str, None),
+                probatio.Optional("password"): probatio.Any(str, None),
             },
         ),
-        vol.Optional("retention"): vol.Schema(
+        probatio.Optional("retention"): probatio.Schema(
             {
                 # Note: We can't use cv.positive_int because it allows 0 even
                 # though 0 is not positive.
-                vol.Optional("copies"): vol.Any(vol.All(int, vol.Range(min=1)), None),
-                vol.Optional("days"): vol.Any(vol.All(int, vol.Range(min=1)), None),
+                probatio.Optional("copies"): probatio.Any(
+                    probatio.All(int, probatio.Range(min=1)), None
+                ),
+                probatio.Optional("days"): probatio.Any(
+                    probatio.All(int, probatio.Range(min=1)), None
+                ),
             },
         ),
-        vol.Optional("schedule"): vol.Schema(
+        probatio.Optional("schedule"): probatio.Schema(
             {
-                vol.Optional("days"): vol.Any(
-                    vol.All([vol.Coerce(Day)], vol.Unique()),
+                probatio.Optional("days"): probatio.Any(
+                    probatio.All([probatio.Coerce(Day)], probatio.Unique()),
                 ),
-                vol.Optional("recurrence"): vol.All(
-                    str, vol.Coerce(ScheduleRecurrence)
+                probatio.Optional("recurrence"): probatio.All(
+                    str, probatio.Coerce(ScheduleRecurrence)
                 ),
-                vol.Optional("time"): vol.Any(cv.time, None),
+                probatio.Optional("time"): probatio.Any(cv.time, None),
             }
         ),
     }
@@ -435,7 +439,7 @@ def handle_config_update(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "backup/subscribe_events"})
+@websocket_api.websocket_command({probatio.Required("type"): "backup/subscribe_events"})
 @websocket_api.async_response
 async def handle_subscribe_events(
     hass: HomeAssistant,

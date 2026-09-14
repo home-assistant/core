@@ -3,7 +3,7 @@
 import logging
 from typing import Self, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.button import SERVICE_PRESS, ButtonEntity
 from homeassistant.const import (
@@ -26,26 +26,26 @@ DOMAIN = "input_button"
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_ICON): cv.icon,
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional(CONF_ICON): cv.icon,
 }
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.Any(
+            probatio.Any(
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_ICON): cv.icon,
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_ICON): cv.icon,
                 },
                 None,
             )
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
+RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -53,7 +53,7 @@ STORAGE_VERSION = 1
 class InputButtonStorageCollection(collection.DictStorageCollection):
     """Input button collection stored in storage."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
+    CREATE_UPDATE_SCHEMA = probatio.Schema(STORAGE_FIELDS)
 
     @override
     async def _process_create_data(self, data: dict) -> dict[str, str]:

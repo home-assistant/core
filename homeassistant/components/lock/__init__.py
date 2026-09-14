@@ -7,8 +7,8 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -42,7 +42,7 @@ CONF_DEFAULT_CODE = "default_code"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 LOCK_SERVICE_SCHEMA = cv.make_entity_service_schema(
-    {vol.Optional(ATTR_CODE): cv.string}
+    {probatio.Optional(ATTR_CODE): cv.string}
 )
 
 

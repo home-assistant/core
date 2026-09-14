@@ -230,7 +230,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_auto',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_auto',
     'unit_of_measurement': None,
@@ -240,7 +240,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ continuous rotation',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_continuous_rotation',
@@ -383,7 +382,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_left_down',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_left_down',
     'unit_of_measurement': None,
@@ -393,7 +392,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ left down',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_left_down',
@@ -434,7 +432,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_left_up',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_left_up',
     'unit_of_measurement': None,
@@ -444,7 +442,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ left up',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_left_up',
@@ -536,7 +533,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_right_down',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_right_down',
     'unit_of_measurement': None,
@@ -546,7 +543,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ right down',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_right_down',
@@ -587,7 +583,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_right_up',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_right_up',
     'unit_of_measurement': None,
@@ -597,7 +593,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ right up',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_right_up',
@@ -739,7 +734,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_zoom_in',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_zoom_in',
     'unit_of_measurement': None,
@@ -749,7 +744,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ zoom in',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_zoom_in',
@@ -790,7 +784,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_zoom_out',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_zoom_out',
     'unit_of_measurement': None,
@@ -800,7 +794,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ zoom out',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_zoom_out',

@@ -756,6 +756,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "bitvis": {
+      "name": "Bitvis Power Hub",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "bizkaibus": {
       "name": "Bizkaibus",
       "integration_type": "hub",
@@ -6068,9 +6074,10 @@
     },
     "rejseplanen": {
       "name": "Rejseplanen",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "remember_the_milk": {
       "name": "Remember The Milk",
@@ -8218,6 +8225,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "willow": {
+      "name": "Willow",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "wirelesstag": {
       "name": "Wireless Sensor Tags",
