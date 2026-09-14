@@ -93,7 +93,7 @@ async def test_update_install(
     """Test successful press of a update."""
 
     mock_my_pv_client.latest_firmware_version = "e0002201"
-    type(mock_my_pv_client).firmware_update_available = True
+    mock_my_pv_client.firmware_update_available = True
 
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.UPDATE]):
         mock_config_entry.add_to_hass(hass)
