@@ -16,6 +16,7 @@ from deebot_client.exceptions import (
     DeviceVerificationRequiredError,
     InvalidAuthenticationError,
 )
+from deebot_client.models import AccountCredentials
 from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 from deebot_client.util.continents import get_continent
@@ -27,12 +28,14 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util.ssl import get_default_no_verify_context
 
 from .const import (
+    CONF_CREDENTIALS,
     CONF_OVERRIDE_MQTT_URL,
     CONF_OVERRIDE_REST_URL,
     CONF_VERIFY_MQTT_CERTIFICATE,
@@ -41,12 +44,30 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _stored_account_credentials(config: Mapping[str, Any]) -> AccountCredentials | None:
+    """Return persisted account credentials so the password login can be skipped.
+
+    When the Authenticator holds account credentials it renews portal tokens
+    silently via ``login_with_account()``, which does not re-trigger Ecovacs'
+    device-verification flow.
+    """
+    stored = config.get(CONF_CREDENTIALS)
+    if not stored or "access_token" not in stored:
+        return None
+    return AccountCredentials(
+        access_token=stored["access_token"],
+        user_id=stored["user_id"],
+    )
+
+
 class EcovacsController:
     """Ecovacs controller."""
 
-    def __init__(self, hass: HomeAssistant, config: Mapping[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize controller."""
         self._hass = hass
+        self._entry = entry
+        config: Mapping[str, Any] = entry.data
         self._devices: list[Device] = []
         self._legacy_devices: list[VacBot] = []
         rest_url = config.get(CONF_OVERRIDE_REST_URL)
@@ -54,6 +75,7 @@ class EcovacsController:
         country = config[CONF_COUNTRY]
         self._continent = get_continent(country)
 
+        stored = _stored_account_credentials(config)
         self._authenticator = Authenticator(
             create_rest_config(
                 aiohttp_client.async_get_clientsession(self._hass),
@@ -63,8 +85,16 @@ class EcovacsController:
             ),
             config[CONF_USERNAME],
             md5(config[CONF_PASSWORD]),
+            account_credentials=stored,
         )
         self._api_client = ApiClient(self._authenticator)
+
+        # Persist account credentials for reuse across restarts.
+        self._unsub_account_credentials = (
+            self._authenticator.subscribe_account_credentials(
+                self._async_persist_account_credentials
+            )
+        )
 
         mqtt_url = config.get(CONF_OVERRIDE_MQTT_URL)
         ssl_context: UndefinedType | ssl.SSLContext = UNDEFINED
@@ -81,6 +111,17 @@ class EcovacsController:
         self._mqtt_client: MqttClient | None = None
 
         self._added_legacy_entities: set[str] = set()
+
+    async def _async_persist_account_credentials(
+        self, account: AccountCredentials,
+    ) -> None:
+        """Persist account credentials so restarts skip the password login."""
+        data = {"access_token": account.access_token, "user_id": account.user_id}
+        if self._entry.data.get(CONF_CREDENTIALS) != data:
+            self._hass.config_entries.async_update_entry(
+                self._entry,
+                data={**self._entry.data, CONF_CREDENTIALS: data},
+            )
 
     async def initialize(self) -> None:
         """Init controller."""
@@ -135,6 +176,7 @@ class EcovacsController:
 
     async def teardown(self) -> None:
         """Disconnect controller."""
+        self._unsub_account_credentials()
         for device in self._devices:
             await device.teardown()
         for legacy_device in self._legacy_devices:
