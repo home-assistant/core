@@ -1522,7 +1522,7 @@ class Entity(
         events, register update listeners and fetch initial data.
 
         Not called when adding the entity is aborted, e.g. because the entity is
-        disabled or its entity_id or unique_id collides with an existint entity.
+        disabled or its entity_id or unique_id collides with an existing entity.
 
         To be extended by integrations.
         """
