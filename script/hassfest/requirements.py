@@ -398,7 +398,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     # Check if we are doing format-only validation.
     if not config.requirements:
         for integration in integrations.values():
-            if validate_requirements_format(integration):
+            if validate_requirements_format(integration) and not integration.core:
                 validate_custom_requirements(integration, config)
         return
 
@@ -527,9 +527,6 @@ def validate_custom_requirements(integration: Integration, config: Config) -> bo
 
     Returns if valid.
     """
-    if integration.core:
-        return True
-
     start_errors = len(integration.errors)
 
     core_requirements = _load_requirement_file(config.root / "requirements.txt")
