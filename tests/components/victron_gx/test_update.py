@@ -87,6 +87,24 @@ async def test_firmware_update_entity(
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
 
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/State",
+        '{"value": 1002}',
+    )
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/Progress",
+        '{"value": 25}',
+    )
+    await finalize_injection(victron_hub)
+    await async_update_entity(hass, update_entry.entity_id)
+
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 25
+
 
 async def test_install_firmware_update_service(
     hass: HomeAssistant,
@@ -164,39 +182,3 @@ async def test_install_propagates_translated_failure_and_clears_progress(
     assert state is not None
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
-
-
-async def test_update_refreshes_install_progress(
-    hass: HomeAssistant,
-    init_integration_with_update: tuple[VictronVenusHub, MockConfigEntry],
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test polling refreshes progress from the library snapshot."""
-    victron_hub, config_entry = init_integration_with_update
-    await _async_inject_firmware_versions(hass, victron_hub, "v3.60", "v3.70")
-    await inject_message(
-        victron_hub,
-        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/State",
-        '{"value": 1002}',
-    )
-    await inject_message(
-        victron_hub,
-        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/Progress",
-        '{"value": 25}',
-    )
-    await finalize_injection(victron_hub)
-    await hass.async_block_till_done()
-    update_entry = next(
-        entry
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, config_entry.entry_id
-        )
-        if entry.domain == UPDATE_DOMAIN
-    )
-
-    await async_update_entity(hass, update_entry.entity_id)
-
-    state = hass.states.get(update_entry.entity_id)
-    assert state is not None
-    assert state.attributes[ATTR_IN_PROGRESS] is True
-    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 25
