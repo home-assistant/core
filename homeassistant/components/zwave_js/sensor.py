@@ -1019,17 +1019,16 @@ class ZWaveListSensor(ZwaveSensor):
     @callback
     def _async_report_unmapped_value(self, raw_value: str) -> None:
         """Raise a repair when the device reports a value not in its interview metadata."""
-        if self.device_entry is None:
+        if (device := self.device_entry) is None:
             return
-        device_name = (
-            self.device_entry.name_by_user or self.device_entry.name or "Unknown device"
-        )
+        issue_id = f"unmapped_enum_value.{device.id}.{self.info.primary_value.value_id}"
+        device_name = device.name_by_user or device.name or "Unknown device"
         ir.async_create_issue(
             self.hass,
             DOMAIN,
-            self._unmapped_issue_id,
+            issue_id,
             data={
-                "device_id": self.device_entry.id,
+                "device_id": device.id,
                 "device_name": device_name,
                 "entity_id": self.entity_id,
                 "raw_value": raw_value,
