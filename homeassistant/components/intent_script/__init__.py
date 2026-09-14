@@ -185,6 +185,8 @@ class ScriptIntentHandler(intent.IntentHandler):
         slots: dict[str, Any] = {
             key: value["value"] for key, value in intent_slots.items()
         }
+        if intent_obj.device_id:
+            slots["device_id"] = intent_obj.device_id
 
         _LOGGER.debug(
             "Intent named %s received with slots: %s",
