@@ -13,6 +13,7 @@ from habitron_client import (
     async_build_hub,
     discover_smarthubs,
     get_host_ip,
+    normalise_mac,
     test_connection,
 )
 import probatio
@@ -271,7 +272,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
     async def _async_abort_if_host_configured(
-        self, host: str
+        self, host: str, *, unique_id: str
     ) -> config_entries.ConfigFlowResult | None:
         """Abort when this address is already configured under another identity.
 
@@ -292,8 +293,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         while a user flow does not -- adding an ignored hub by hand is how
         un-ignoring works.
         """
+        # Only an entry that carries no MAC identity can be this hub under an
+        # older id. One keyed by a *different* MAC is a different hub: the
+        # address it stores may simply be what DHCP has since handed this one,
+        # and matching on that would abort the new hub and rewrite the old
+        # entry onto a device that is not its own.
         entry = await self._async_matching_entry(
-            list(self._async_current_entries()), host
+            [
+                entry
+                for entry in self._async_current_entries()
+                if normalise_mac(entry.unique_id or "") in (None, unique_id)
+            ],
+            host,
         )
         if entry is None:
             return None
@@ -344,7 +355,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: await self._async_stored_host(host_str)},
             reload_on_update=False,
         )
-        if (result := await self._async_abort_if_host_configured(host_str)) is not None:
+        if (
+            result := await self._async_abort_if_host_configured(
+                host_str, unique_id=unique_id
+            )
+        ) is not None:
             return result
 
         self.context["title_placeholders"] = {"name": host_str}
@@ -447,7 +462,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         reload_on_update=False,
                     )
                     if (
-                        result := await self._async_abort_if_host_configured(host_input)
+                        result := await self._async_abort_if_host_configured(
+                            host_input, unique_id=unique_id
+                        )
                     ) is not None:
                         return result
                     return self.async_create_entry(title=info["title"], data=user_input)

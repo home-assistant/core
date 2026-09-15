@@ -1550,6 +1550,41 @@ async def test_user_flow_matches_a_migrated_entry_by_its_address(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+async def test_user_flow_adds_a_different_hub_at_a_recycled_address(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_hub_mac: AsyncMock,
+) -> None:
+    """An address DHCP handed to another hub must not match the old entry.
+
+    The host fallback is there for an entry carried over from the custom
+    integration, which has no MAC identity yet. An entry that already carries
+    one is identified by it -- matching it on the address as well would abort
+    the new hub and rewrite the old entry onto a device that is not its own.
+    """
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_UID,  # hub A, already keyed by its MAC
+        data={CONF_HOST: MOCK_HOST},
+    ).add_to_hass(hass)
+
+    # Hub B answers at the address hub A used to have.
+    mock_hub_mac.return_value = "112233445566"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+
 @pytest.mark.parametrize(
     ("stored_id", "stored_host", "source"),
     [
