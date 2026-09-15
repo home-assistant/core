@@ -53,6 +53,7 @@ BUTTON_DESCRIPTIONS: tuple[OpenThermButtonEntityDescription, ...] = (
         key="restart_button",
         device_class=ButtonDeviceClass.RESTART,
         device_description=GATEWAY_DEVICE_DESCRIPTION,
+        entity_category=EntityCategory.CONFIG,
         action=lambda hub: hub.gateway.set_mode(gw_vars.OTGW_MODE_RESET),
     ),
 )
@@ -74,7 +75,6 @@ async def async_setup_entry(
 class OpenThermButton(OpenThermEntity, ButtonEntity):
     """Representation of an OpenTherm button."""
 
-    _attr_entity_category = EntityCategory.CONFIG
     entity_description: OpenThermButtonEntityDescription
 
     @override
