@@ -1444,8 +1444,12 @@ class DefaultAgent(ConversationEntity):
         else:
             response_key = error_key
 
+        # Most languages translate only some of the errors, so prefer their own
+        # generic one over the English default a missing key would otherwise give
         response_str = (
-            lang_intents.error_responses.get(response_key) or _DEFAULT_ERROR_TEXT
+            lang_intents.error_responses.get(response_key)
+            or lang_intents.error_responses.get(ErrorKey.NO_INTENT.value)
+            or _DEFAULT_ERROR_TEXT
         )
         response_template = template.Template(response_str, self.hass)
 
@@ -1810,12 +1814,18 @@ def _get_no_target_response(
     return _NO_TARGET_ERRORS[kind, scope, exposed_only], args
 
 
+# Not an ErrorKey yet, so languages without it fall back to their own generic
+# error. Naming which constraint was ambiguous needs a response per constraint.
+_DUPLICATE_TARGETS = "duplicate_targets"
+
+
 def _get_duplicate_response(
     name: str | None, constraints: intent.MatchTargetsConstraints
-) -> tuple[ErrorKey, dict[str, Any]]:
-    """Return the error for a name matching more entities than could be acted on."""
+) -> tuple[ErrorKey | str, dict[str, Any]]:
+    """Return the error for a match ambiguous between more entities than can be used."""
     if not name:
-        return ErrorKey.NO_INTENT, {}
+        # Nothing was named, so all the answer can say is that several matched
+        return _DUPLICATE_TARGETS, {}
 
     if constraints.area_name:
         return ErrorKey.DUPLICATE_ENTITIES_IN_AREA, {
@@ -1834,7 +1844,7 @@ def _get_duplicate_response(
 
 def _get_match_error_response(
     match_error: intent.MatchFailedError,
-) -> tuple[ErrorKey, dict[str, Any]]:
+) -> tuple[ErrorKey | str, dict[str, Any]]:
     """Return key and template arguments for error when target matching fails."""
     constraints, result = match_error.constraints, match_error.result
     reason = result.no_match_reason
@@ -1876,8 +1886,6 @@ def _get_match_error_response(
             return _get_duplicate_response(result.no_match_name, constraints)
 
         case intent.MatchFailedReason.MULTIPLE_TARGETS:
-            # Without a name there is no wording for "several matched, pick one":
-            # every duplicate response is about a name. Needs a new response.
             return _get_duplicate_response(constraints.name, constraints)
 
     assert_never(reason)

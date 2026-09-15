@@ -6,6 +6,7 @@ import tempfile
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from hassil.intents import Intents
 from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 from home_assistant_intents import ErrorKey
 import pytest
@@ -26,6 +27,7 @@ from homeassistant.components.conversation.chat_log import (
 )
 from homeassistant.components.conversation.default_agent import (
     METADATA_CUSTOM_SENTENCE,
+    LanguageIntents,
     _get_match_error_response,
 )
 from homeassistant.components.conversation.models import ConversationInput
@@ -1101,6 +1103,51 @@ def test_match_error_response_names_the_failed_constraint(
     )
 
     assert _get_match_error_response(match_error) == (expected_key, expected_args)
+
+
+def test_match_error_response_multiple_targets_without_name() -> None:
+    """Test an ambiguous match with nothing named still reports the ambiguity.
+
+    Several single_target callers constrain only a domain or device class, so
+    there is no name to say which one was meant.
+    """
+    match_error = intent.MatchFailedError(
+        result=intent.MatchTargetsResult(
+            False, intent.MatchFailedReason.MULTIPLE_TARGETS
+        ),
+        constraints=intent.MatchTargetsConstraints(
+            area_name="kitchen", domains={"climate"}
+        ),
+    )
+
+    assert _get_match_error_response(match_error) == ("duplicate_targets", {})
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_error_text_prefers_the_language_over_english(
+    hass: HomeAssistant,
+) -> None:
+    """Test a language that translates only some errors still answers in itself.
+
+    Most languages translate a subset of the errors, and a missing one used to
+    fall through to English no matter what language was being spoken.
+    """
+    generic = "Ho sento, no entenc això"
+    lang_intents = LanguageIntents(
+        intents=Intents.from_dict({"language": "ca", "intents": {}}),
+        intents_dict={},
+        intent_responses={},
+        error_responses={ErrorKey.NO_INTENT.value: generic},
+        language_variant="ca",
+    )
+    agent = conversation.async_get_agent(hass)
+
+    assert (
+        agent._get_error_text(
+            ErrorKey.NO_ENTITY_EXPOSED, lang_intents, entity="test light"
+        )
+        == generic
+    )
 
 
 @pytest.mark.usefixtures("init_components")
