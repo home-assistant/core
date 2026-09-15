@@ -1045,6 +1045,11 @@ ZEROCONF = {
             "domain": "technove",
         },
     ],
+    "_tewke-coap._udp.local.": [
+        {
+            "domain": "tewke",
+        },
+    ],
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
