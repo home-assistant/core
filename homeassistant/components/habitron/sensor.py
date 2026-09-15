@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from habitron_client import BusMember, Logic, Module, Router, SmartHub
+from habitron_client import BusMember, Logic, Module
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,19 +24,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import HabitronConfigEntry, HbtnCoordinator
+from .entity import HabitronEntity, HbtnOwner
 
 PARALLEL_UPDATES = 0
-
-# What a sensor can belong to. The three carry no common base in the library,
-# but every one of them owns a uid and lists of bus members, which is all an
-# entity needs -- so the platform serves all three from one class.
-type HbtnOwner = Module | Router | SmartHub
 
 # Stable, language-independent enum keys ordered by the hub's raw finger value
 # (1..10). Localized labels live in strings.json under
@@ -54,11 +47,6 @@ _FINGER_KEYS: tuple[str, ...] = (
     "right_ring",
     "right_pinky",
 )
-
-
-def _device_info(uid: str) -> DeviceInfo:
-    """Link an entity to its Habitron module device via ``(DOMAIN, uid)``."""
-    return DeviceInfo(identifiers={(DOMAIN, uid)})
 
 
 def _ekey_user_value(module: Module, idx: int) -> str | None:
@@ -208,33 +196,6 @@ async def async_setup_entry(
         async_add_entities(new_devices)
 
 
-class HbtnSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
-    """Base representation of a Habitron sensor."""
-
-    _attr_has_entity_name = True
-    _attr_state_class: SensorStateClass | None = SensorStateClass.MEASUREMENT
-
-    def __init__(
-        self,
-        module: HbtnOwner,
-        sensor: BusMember,
-        coord: HbtnCoordinator,
-        idx: int,
-    ) -> None:
-        """Initialize a Habitron sensor, pass coordinator to CoordinatorEntity."""
-        super().__init__(coord, context=idx)
-        self.idx = idx
-        self._module: HbtnOwner = module
-        self._sensor_idx = sensor.nmbr
-        self._attr_name = sensor.name
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return information to link this entity with the correct device."""
-        return _device_info(self._module.uid)
-
-
 @dataclass(frozen=True, kw_only=True)
 class HbtnSensorEntityDescription(SensorEntityDescription):
     """Habitron-specific sensor description.
@@ -269,7 +230,7 @@ class HbtnSensorEntityDescription(SensorEntityDescription):
     numbered: bool = False
 
 
-class HbtnDescribedSensor(HbtnSensor):
+class HbtnDescribedSensor(HabitronEntity, SensorEntity):
     """Generic Habitron sensor driven by a ``HbtnSensorEntityDescription``."""
 
     entity_description: HbtnSensorEntityDescription
@@ -299,8 +260,7 @@ class HbtnDescribedSensor(HbtnSensor):
             self._attr_unique_id = f"{self._attr_unique_id}_{sensor.nmbr}"
         # State class comes from the description; text/enum sensors carry None.
         # Unlike ``options``, which SensorEntity reads off the description on
-        # its own, this needs an explicit assignment: the class-level default
-        # above would otherwise shadow the description's value.
+        # its own, this needs an explicit assignment.
         self._attr_state_class = description.state_class
         if description.translated_name:
             # Let the translation_key (not the bus name) drive the display name.
@@ -568,7 +528,6 @@ MEMORY_DESCRIPTION = HbtnSensorEntityDescription(
     translation_key="memory_usage",
     native_unit_of_measurement=PERCENTAGE,
     state_class=SensorStateClass.MEASUREMENT,
-    icon="mdi:memory",
     # Host health of the machine the hub runs on, like the CPU readings below
     # -- not a building-automation measurement anyone automates on.
     entity_category=EntityCategory.DIAGNOSTIC,
@@ -582,7 +541,6 @@ DISK_DESCRIPTION = HbtnSensorEntityDescription(
     translation_key="disk_usage",
     native_unit_of_measurement=PERCENTAGE,
     state_class=SensorStateClass.MEASUREMENT,
-    icon="mdi:harddisk",
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,
@@ -594,7 +552,6 @@ CPU_LOAD_DESCRIPTION = HbtnSensorEntityDescription(
     translation_key="cpu_load",
     native_unit_of_measurement=PERCENTAGE,
     state_class=SensorStateClass.MEASUREMENT,
-    icon="mdi:timer-alert-outline",
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,
@@ -607,7 +564,6 @@ CPU_FREQUENCY_DESCRIPTION = HbtnSensorEntityDescription(
     device_class=SensorDeviceClass.FREQUENCY,
     native_unit_of_measurement=UnitOfFrequency.MEGAHERTZ,
     state_class=SensorStateClass.MEASUREMENT,
-    icon="mdi:clock-fast",
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,

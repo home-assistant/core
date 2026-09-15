@@ -7,6 +7,12 @@
       "analog_sensor": {
         "default": "mdi:chart-bell-curve-cumulative"
       },
+      "cpu_load": {
+        "default": "mdi:timer-alert-outline"
+      },
+      "disk_usage": {
+        "default": "mdi:harddisk"
+      },
       "ekey_finger": {
         "default": "mdi:fingerprint"
       },
@@ -15,6 +21,9 @@
       },
       "logic_state": {
         "default": "mdi:counter"
+      },
+      "memory_usage": {
+        "default": "mdi:memory"
       },
       "module_status": {
         "default": "mdi:lan-disconnect",

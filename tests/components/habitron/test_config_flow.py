@@ -87,6 +87,40 @@ async def test_user_flow_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_user_flow_recovers_after_an_error(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """The form stays usable after a failure: fix the address, get an entry.
+
+    Showing the error is only half of it -- what matters to the user is that the
+    same flow still leads somewhere once the hub answers, without starting over.
+    """
+    mock_habitron_client.return_value = (False, "")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_CONFIG_DATA,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_habitron_client.return_value = (True, MOCK_NAME)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_CONFIG_DATA,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_NAME
+    assert result["data"] == MOCK_CONFIG_DATA
+
+
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     setup_homeassistant: None,
@@ -986,7 +1020,11 @@ async def test_ssdp_discovery_confirm_cannot_connect_retries(
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
 ) -> None:
-    """A briefly-offline discovered hub re-shows the confirm form to retry."""
+    """A briefly-offline discovered hub re-shows the confirm form, and the retry works.
+
+    Re-showing the form is only useful if submitting it again reaches the hub;
+    stopping at the error would leave that half untested.
+    """
     discovery = SsdpServiceInfo(
         ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
         ssdp_st="urn:habitron-com:device:SmartHub:1",
@@ -1011,6 +1049,14 @@ async def test_ssdp_discovery_confirm_cannot_connect_retries(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    # The hub answers now: the same flow carries on to an entry.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: MOCK_HOST}
 
 
 @pytest.mark.parametrize("error", [HostNotFound])
