@@ -10,7 +10,7 @@ from aiohue.v2.models.room import Room
 from aiohue.v2.models.scene import Scene as HueScene, ScenePut as HueScenePut
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartSceneState
 from aiohue.v2.models.zone import Zone
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
 from homeassistant.core import HomeAssistant, callback
@@ -87,15 +87,15 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_ACTIVATE_SCENE,
         {
-            vol.Optional(ATTR_DYNAMIC): vol.Coerce(bool),
-            vol.Optional(ATTR_SPEED): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Optional(ATTR_DYNAMIC): probatio.Coerce(bool),
+            probatio.Optional(ATTR_SPEED): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             ),
-            vol.Optional(ATTR_TRANSITION): vol.All(
-                vol.Coerce(float), vol.Range(min=0, max=3600)
+            probatio.Optional(ATTR_TRANSITION): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=0, max=3600)
             ),
-            vol.Optional(ATTR_BRIGHTNESS): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=255)
+            probatio.Optional(ATTR_BRIGHTNESS): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=255)
             ),
         },
         "_async_activate",

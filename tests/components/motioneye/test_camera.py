@@ -24,8 +24,8 @@ from motioneye_client.const import (
     KEY_TEXT_OVERLAY_TIMESTAMP,
     KEY_VIDEO_STREAMING,
 )
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.camera import async_get_image, async_get_mjpeg_stream
 from homeassistant.components.motioneye import get_motioneye_device_identifier
@@ -166,17 +166,21 @@ async def test_setup_camera_new_data_camera_removed(
 
     await hass.async_block_till_done()
     assert hass.states.get(TEST_CAMERA_ENTITY_ID)
-    assert device_registry.async_get_device(identifiers={TEST_CAMERA_DEVICE_IDENTIFIER})
+    assert device_registry.async_get_device_by_identifier(
+        TEST_CAMERA_DEVICE_IDENTIFIER, config_entry.entry_id
+    )
 
     client.async_get_cameras = AsyncMock(return_value={KEY_CAMERAS: []})
     async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
-    assert not device_registry.async_get_device(
-        identifiers={TEST_CAMERA_DEVICE_IDENTIFIER}
+    assert not device_registry.async_get_device_by_identifier(
+        TEST_CAMERA_DEVICE_IDENTIFIER, config_entry.entry_id
     )
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, old_device_id)})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, old_device_id), config_entry.entry_id
+    )
     assert not entity_registry.async_get_entity_id(
         DOMAIN, "camera", old_entity_unique_id
     )
@@ -330,9 +334,11 @@ async def test_device_info(
 
     device_identifier = get_motioneye_device_identifier(entry.entry_id, TEST_CAMERA_ID)
 
-    device = device_registry.async_get_device(identifiers={device_identifier})
+    device = device_registry.async_get_device_by_identifier(
+        device_identifier, entry.entry_id
+    )
     assert device
-    assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
+    assert device.config_entry_id == TEST_CONFIG_ENTRY_ID
     assert device.identifiers == {device_identifier}
     assert device.manufacturer == MOTIONEYE_MANUFACTURER
     assert device.model == MOTIONEYE_MANUFACTURER
@@ -406,7 +412,7 @@ async def test_set_text_overlay_bad_extra_key(hass: HomeAssistant) -> None:
     await setup_mock_motioneye_config_entry(hass, client=client)
 
     data = {ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID, "extra_key": "foo"}
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
 
 
@@ -421,7 +427,7 @@ async def test_set_text_overlay_bad_entity_identifier(hass: HomeAssistant) -> No
     }
 
     client.reset_mock()
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
 
 
@@ -429,7 +435,7 @@ async def test_set_text_overlay_bad_empty(hass: HomeAssistant) -> None:
     """Test text overlay with incorrect input data."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, {})
 
 
@@ -439,7 +445,7 @@ async def test_set_text_overlay_bad_no_left_or_right(hass: HomeAssistant) -> Non
     await setup_mock_motioneye_config_entry(hass, client=client)
 
     data = {ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID}
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
 
 

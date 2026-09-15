@@ -1,6 +1,6 @@
 """Services for Bang & Olufsen integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -13,7 +13,7 @@ from .const import BEOLINK_JOIN_SOURCES, DOMAIN
 def async_setup_services(hass: HomeAssistant) -> None:
     """Home Assistant services."""
 
-    jid_regex = vol.Match(
+    jid_regex = probatio.Match(
         r"(^\d{4})[.](\d{7})[.](\d{8})(@products\.bang-olufsen\.com)$"
     )
 
@@ -23,8 +23,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "beolink_join",
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Optional("beolink_jid"): jid_regex,
-            vol.Optional("source_id"): vol.In(BEOLINK_JOIN_SOURCES),
+            probatio.Optional("beolink_jid"): jid_regex,
+            probatio.Optional("source_id"): probatio.In(BEOLINK_JOIN_SOURCES),
         },
         func="async_beolink_join",
     )
@@ -35,12 +35,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "beolink_expand",
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Exclusive("all_discovered", "devices", ""): cv.boolean,
-            vol.Exclusive(
+            probatio.Exclusive("all_discovered", "devices", ""): cv.boolean,
+            probatio.Exclusive(
                 "beolink_jids",
                 "devices",
                 "Define either specific Beolink JIDs or all discovered",
-            ): vol.All(
+            ): probatio.All(
                 cv.ensure_list,
                 [jid_regex],
             ),
@@ -54,7 +54,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "beolink_unexpand",
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required("beolink_jids"): vol.All(
+            probatio.Required("beolink_jids"): probatio.All(
                 cv.ensure_list,
                 [jid_regex],
             ),

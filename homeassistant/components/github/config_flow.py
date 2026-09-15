@@ -11,7 +11,7 @@ from aiogithubapi import (
     GitHubLoginOauthModel,
 )
 from aiogithubapi.const import OAUTH_USER_LOGIN
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -227,9 +227,9 @@ class RepositoryFlowHandler(ConfigSubentryFlow):
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_REPOSITORY): SelectSelector(
+                        probatio.Required(CONF_REPOSITORY): SelectSelector(
                             SelectSelectorConfig(sort=True, options=repositories)
                         ),
                     }

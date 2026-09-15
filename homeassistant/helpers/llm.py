@@ -5,9 +5,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field as dc_field
 from typing import Any, override
 
+import probatio
 import slugify as unicode_slug
-import voluptuous as vol
-from voluptuous_openapi import UNSUPPORTED, convert
 
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -34,7 +33,7 @@ from .deprecation import deprecated_function
 from .singleton import singleton
 
 ACTION_PARAMETERS_CACHE: HassKey[
-    dict[str, dict[str, tuple[str | None, vol.Schema]]]
+    dict[str, dict[str, tuple[str | None, probatio.Schema]]]
 ] = HassKey("llm_action_parameters_cache")
 
 APIS_CACHE: HassKey[dict[str, API]] = HassKey("llm_apis")
@@ -49,7 +48,7 @@ DATE_TIME_PROMPT = (
 
 DEFAULT_INSTRUCTIONS_PROMPT = """You are a voice assistant for Home Assistant.
 Answer questions about the world truthfully.
-Answer in plain text. Keep it simple and to the point.
+Respond simply and to the point in plain text.
 """
 
 
@@ -160,7 +159,7 @@ class Tool:
 
     name: str
     description: str | None = None
-    parameters: vol.Schema = vol.Schema({})
+    parameters: probatio.Schema = probatio.Schema({})
 
     @abstractmethod
     async def async_call(
@@ -230,8 +229,10 @@ class IntentTool(Tool):
     ) -> None:
         """Init the class."""
         self.name = name
+        self.intent_type = intent_handler.intent_type
         self.description = (
-            intent_handler.description or f"Execute Home Assistant {self.name} intent"
+            intent_handler.description
+            or f"Execute Home Assistant {self.intent_type} intent"
         )
         self.extra_slots = None
         if not (slot_schema := intent_handler.slot_schema):
@@ -245,7 +246,7 @@ class IntentTool(Tool):
                 extra_slots.add(field)
                 del slot_schema[field]
 
-        self.parameters = vol.Schema(slot_schema)
+        self.parameters = probatio.Schema(slot_schema)
         if extra_slots:
             self.extra_slots = extra_slots
 
@@ -264,7 +265,9 @@ class IntentTool(Tool):
             floor: fr.FloorEntry | None = None
             if device:
                 area_reg = ar.async_get(hass)
-                if device.area_id and (area := area_reg.async_get_area(device.area_id)):
+                if (
+                    device_area_id := dr.async_get_effective_area_id(hass, device)
+                ) and (area := area_reg.async_get_area(device_area_id)):
                     if area.floor_id:
                         floor_reg = fr.async_get(hass)
                         floor = floor_reg.async_get_floor(area.floor_id)
@@ -279,7 +282,7 @@ class IntentTool(Tool):
         intent_response = await intent.async_handle(
             hass=hass,
             platform=llm_context.platform,
-            intent_type=self.name,
+            intent_type=self.intent_type,
             slots=slots,
             text_input=None,
             context=llm_context.context,
@@ -412,7 +415,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "boolean"}
 
     if not isinstance(schema, selector.Selector):
-        return UNSUPPORTED
+        return probatio.UNSUPPORTED
 
     if isinstance(schema, selector.BackupLocationSelector):
         return {"type": "string", "pattern": "^(?:\\/backup|\\w+)$"}
@@ -430,10 +433,10 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         }
 
     if isinstance(schema, selector.ConditionSelector):
-        return convert(cv.CONDITIONS_SCHEMA)
+        return probatio.to_openapi(cv.CONDITIONS_SCHEMA)
 
     if isinstance(schema, selector.ConstantSelector):
-        return convert(vol.Schema(schema.config["value"]))
+        return probatio.to_openapi(probatio.Schema(schema.config["value"]))
 
     result: dict[str, Any]
     if isinstance(schema, selector.ColorTempSelector):
@@ -460,7 +463,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "format": "date-time"}
 
     if isinstance(schema, selector.DurationSelector):
-        return convert(cv.time_period_dict)
+        return probatio.to_openapi(cv.time_period_dict)
 
     if isinstance(schema, selector.EntitySelector):
         if schema.config.get("multiple"):
@@ -474,10 +477,10 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "format": "RFC 5646"}
 
     if isinstance(schema, selector.LocationSelector):
-        return convert(schema.DATA_SCHEMA)
+        return probatio.to_openapi(schema.DATA_SCHEMA)
 
     if isinstance(schema, selector.MediaSelector):
-        item_schema = convert(schema.DATA_SCHEMA)
+        item_schema = probatio.to_openapi(schema.DATA_SCHEMA)
         # Media selector allows multiple when configured
         if schema.config.get("multiple"):
             return {
@@ -500,7 +503,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
             properties = {}
             required = []
             for field, field_schema in fields.items():
-                properties[field] = convert(
+                properties[field] = probatio.to_openapi(
                     selector.selector(field_schema["selector"]),
                     custom_serializer=selector_serializer,
                 )
@@ -532,7 +535,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "enum": options}
 
     if isinstance(schema, selector.TargetSelector):
-        return convert(cv.TARGET_FIELDS)
+        return probatio.to_openapi(cv.TARGET_FIELDS)
 
     if isinstance(schema, selector.TemplateSelector):
         return {"type": "string", "format": "jinja2"}
@@ -551,10 +554,10 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
 
 def _get_cached_action_parameters(
     hass: HomeAssistant, domain: str, action: str
-) -> tuple[str | None, vol.Schema]:
+) -> tuple[str | None, probatio.Schema]:
     """Get action description and schema."""
     description = None
-    parameters = vol.Schema({})
+    parameters = probatio.Schema({})
 
     parameters_cache = hass.data.get(ACTION_PARAMETERS_CACHE)
 
@@ -587,24 +590,24 @@ def _get_cached_action_parameters(
         hass, domain, action
     ):
         description = action_desc.get("description")
-        schema: dict[vol.Marker, Any] = {}
+        schema: dict[probatio.Marker, Any] = {}
         fields = action_desc.get("fields", {})
 
         for field, config in fields.items():
             field_description = config.get("description")
             if not field_description:
                 field_description = config.get("name")
-            key: vol.Marker
+            key: probatio.Marker
             if config.get("required"):
-                key = vol.Required(field, description=field_description)
+                key = probatio.Required(field, description=field_description)
             else:
-                key = vol.Optional(field, description=field_description)
+                key = probatio.Optional(field, description=field_description)
             if "selector" in config:
                 schema[key] = selector.selector(config["selector"])
             else:
                 schema[key] = cv.string
 
-        parameters = vol.Schema(schema)
+        parameters = probatio.Schema(schema)
 
         parameters_cache.setdefault(domain, {})[action] = (description, parameters)
 

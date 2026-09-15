@@ -14,6 +14,9 @@ ATTR_STATE_MESSAGE = "state_message"
 ATTR_STATE_REASON = "state_reason"
 ATTR_URI_SUPPORTED = "uri_supported"
 
+# Printers waking from sleep can take well over pyipp's own default
+REQUEST_TIMEOUT = 30
+
 # Config Keys
 CONF_BASE_PATH = "base_path"
 CONF_SERIAL = "serial"

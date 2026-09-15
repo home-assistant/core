@@ -112,6 +112,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.protocol = "rtsp"
     host_mock.channels = [0]
     host_mock.stream_channels = [0]
+    host_mock.sub_channels.return_value = {None}
     host_mock.num_cameras = 1
     host_mock.new_devices = False
     host_mock.sw_version_update_required = False
@@ -200,6 +201,14 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.hub_visitor_tone_id.return_value = 1
     host_mock.recording_packing_time_list = ["30 Minutes", "60 Minutes"]
     host_mock.recording_packing_time = "60 Minutes"
+    host_mock.work_mode_battery_list.return_value = ["custom", "smart", "power_saving"]
+    host_mock.work_mode_battery.return_value = "custom"
+    host_mock.work_mode_powered_list.return_value = [
+        "alarm_based",
+        "continuous",
+        "custom",
+    ]
+    host_mock.work_mode_powered.return_value = "continuous"
 
     # Baichuan
     host_mock.baichuan = MagicMock()

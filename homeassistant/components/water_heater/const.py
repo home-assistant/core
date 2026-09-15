@@ -1,8 +1,11 @@
 """Support for water heater devices."""
 
 from enum import StrEnum
+from typing import Final
 
-DOMAIN = "water_heater"
+from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+
+DOMAIN: Final = "water_heater"
 
 
 class WaterHeaterCapabilityAttribute(StrEnum):
@@ -14,11 +17,18 @@ class WaterHeaterCapabilityAttribute(StrEnum):
     OPERATION_LIST = "operation_list"
 
 
-class WaterHeaterStateAttribute(StrEnum):
+class WaterHeaterStateAttribute(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "TEMPERATURE": ("ClimateEntityStateAttribute.TARGET_TEMPERATURE", "2027.3.0"),
+    },
+):
     """State attributes for water heater entities."""
 
     CURRENT_TEMPERATURE = "current_temperature"
-    TEMPERATURE = "temperature"
+    TARGET_TEMPERATURE = "temperature"
+    TEMPERATURE = "temperature"  # Deprecated, replaced with TARGET_TEMPERATURE
     TARGET_TEMP_HIGH = "target_temp_high"
     TARGET_TEMP_LOW = "target_temp_low"
     OPERATION_MODE = "operation_mode"

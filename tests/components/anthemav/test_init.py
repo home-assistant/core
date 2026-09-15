@@ -44,10 +44,17 @@ async def test_device_registry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the device registry entry, including the network MAC connection."""
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:01")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:01"), init_integration.entry_id
     )
+    assert device_entry
     assert device_entry == snapshot
+
+    zone_2_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:01_2"), init_integration.entry_id
+    )
+    assert zone_2_device_entry
+    assert zone_2_device_entry.via_device_id == device_entry.id
 
 
 @pytest.mark.parametrize("error", [OSError, DeviceError])

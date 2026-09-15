@@ -5,7 +5,8 @@ from collections.abc import Mapping
 from datetime import timedelta
 from typing import TypeVar, cast, override
 
-from aiocomelit.api import ComelitCommonApi, ComeliteSerialBridgeApi, ComelitVedoApi
+from aiocomelit import ComeliteSerialBridgeApi, ComelitVedoApi
+from aiocomelit.api import ComelitHttpApi
 from aiocomelit.const import (
     ALARM_AREA,
     ALARM_ZONE,
@@ -51,7 +52,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
 
     _hw_version: str
     config_entry: ComelitConfigEntry
-    api: ComelitCommonApi
+    api: ComelitHttpApi
 
     def __init__(
         self, hass: HomeAssistant, entry: ComelitConfigEntry, device: str, host: str
@@ -153,10 +154,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
                     (DOMAIN, identifier), self.config_entry.entry_id
                 )
                 if device:
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
 
 
 class ComelitSerialBridge(ComelitBaseCoordinator[T]):

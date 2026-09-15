@@ -519,6 +519,22 @@ async def test_discover_all_endpoints(
     mock_service.discover_all.assert_awaited_once()
 
 
+async def test_scan(
+    hass: HomeAssistant,
+    mock_pizone_create_discovery: tuple[AsyncMock, Mock],
+) -> None:
+    """User Search broadcasts on an already-running service, not discover_all."""
+    _, mock_service = mock_pizone_create_discovery
+
+    await izone_discovery.async_ensure_discovery(hass)
+    mock_service.scan.reset_mock()
+
+    await izone_discovery.async_scan(hass)
+
+    mock_service.scan.assert_awaited_once()
+    mock_service.discover_all.assert_not_called()
+
+
 async def test_discover_endpoint_by_uid(
     hass: HomeAssistant,
     mock_pizone_create_discovery: tuple[AsyncMock, Mock],
