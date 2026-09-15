@@ -71,6 +71,7 @@ MAX_LINE_SIZE: Final = 24570
 
 _HAS_IPV6 = hasattr(socket, "AF_INET6")
 DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
+_WILDCARD_ADDRESSES: Final = frozenset({"0.0.0.0", "::"})
 
 
 @dataclass(slots=True)
@@ -120,6 +121,60 @@ def make_server(
     )
 
 
+def _resolve_hosts(hosts: list[str]) -> list[tuple[str, int, tuple[Any, ...]]]:
+    """Resolve hosts to (host, family, sockaddr) like create_server() does."""
+    resolved: list[tuple[str, int, tuple[Any, ...]]] = []
+    for host in hosts:
+        try:
+            infos = socket.getaddrinfo(
+                host,
+                None,
+                type=socket.SOCK_STREAM,
+                proto=socket.IPPROTO_TCP,
+                flags=socket.AI_PASSIVE,
+            )
+        except (OSError, UnicodeError) as err:
+            raise HomeAssistantError(
+                f"Cannot resolve listen address {host!r}: {err}"
+            ) from err
+        resolved.extend((host, family, sockaddr) for family, _, _, _, sockaddr in infos)
+    return resolved
+
+
+async def async_verify_hosts_distinct(hass: HomeAssistant, hosts: list[str]) -> None:
+    """Verify the configured hosts can all listen on the same port.
+
+    Sockets of one address family conflict on a port when one of them is
+    bound to the wildcard address. The server binds with
+    ``SO_REUSEADDR``, which lets such sockets bind alongside each other while
+    only one of them can listen, so the conflict would surface only once the
+    server starts serving. Checking the resolved addresses catches it up
+    front and without touching the configured port.
+
+    Raises ``HomeAssistantError`` naming the conflicting hosts, or if a host
+    cannot be resolved.
+    """
+    resolved = await hass.async_add_executor_job(_resolve_hosts, hosts)
+    # Keyed by the full sockaddr: the same IPv6 link-local address on two
+    # interfaces (differing scope ID) binds two distinct endpoints.
+    seen: dict[int, dict[tuple[Any, ...], str]] = {}
+    for host, family, sockaddr in resolved:
+        family_seen = seen.setdefault(family, {})
+        if sockaddr in family_seen:
+            # create_server() binds each resolved endpoint only once.
+            continue
+        if family_seen and (
+            sockaddr[0] in _WILDCARD_ADDRESSES
+            or any(seen_addr[0] in _WILDCARD_ADDRESSES for seen_addr in family_seen)
+        ):
+            conflicting = next(iter(family_seen.values()))
+            raise HomeAssistantError(
+                f"Listen addresses {conflicting!r} and {host!r} overlap:"
+                " both cannot listen on the same port"
+            )
+        family_seen[sockaddr] = host
+
+
 async def async_verify_can_bind(hass: HomeAssistant, conf: ConfData) -> None:
     """Verify a server for ``conf`` can be created and its address bound.
 
@@ -131,6 +186,7 @@ async def async_verify_can_bind(hass: HomeAssistant, conf: ConfData) -> None:
     Raises ``HomeAssistantError`` if the SSL configuration is unusable or the
     configured address cannot be bound.
     """
+    await async_verify_hosts_distinct(hass, conf.get(CONF_SERVER_HOST, DEFAULT_BIND))
     server = make_server(hass, conf)
     try:
         await server.async_bind()
