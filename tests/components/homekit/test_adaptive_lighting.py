@@ -51,16 +51,14 @@ def test_tlv_encode_splits_long_values() -> None:
     """A value longer than 255 bytes is split across repeated entries."""
     assert tlv_encode(0x01, b"\x02") == b"\x01\x01\x02"
     assert (
-        tlv_encode(0x09, b"\xaa" * 256)
-        == b"\x09\xff" + b"\xaa" * 255 + b"\x09\x01\xaa"
+        tlv_encode(0x09, b"\xaa" * 256) == b"\x09\xff" + b"\xaa" * 255 + b"\x09\x01\xaa"
     )
 
 
 def test_tlv_list_uses_the_empty_delimiter() -> None:
     """Repeated entries are separated by a zero length TLV, as HAP expects."""
     assert (
-        tlv_encode_list(0x01, [b"\xaa", b"\xbb"])
-        == b"\x01\x01\xaa\x00\x00\x01\x01\xbb"
+        tlv_encode_list(0x01, [b"\xaa", b"\xbb"]) == b"\x01\x01\xaa\x00\x00\x01\x01\xbb"
     )
     assert tlv_encode_list(0x01, []) == b"\x01\x00"
 
@@ -74,7 +72,7 @@ def test_tlv_decode_rejoins_split_values() -> None:
 def test_supported_transition_configuration() -> None:
     """Brightness and colour temperature are advertised with their iids."""
     encoded = base64.b64decode(supported_transition_configuration(2, 4))
-    assert encoded == bytes.fromhex("0106010102020101" "0000" "0106010104020102")
+    assert encoded == bytes.fromhex("010601010202010100000106010104020102")
 
 
 def test_parse_real_transition_control_write() -> None:
