@@ -192,11 +192,7 @@ class MatchFailedError(IntentError):
 
     @override
     def __str__(self) -> str:
-        """Return why matching failed, in English.
-
-        Reaches conversation agents and the REST API as the error they report,
-        so it must read as a sentence. Use repr() for the full state.
-        """
+        """Return why matching failed."""
         return _match_failure_message(self.result, self.constraints)
 
     @override
@@ -371,9 +367,7 @@ _MATCH_FAILURE_REASONS: dict[MatchFailedReason, str] = {
     MatchFailedReason.ASSISTANT: "No matching entities are exposed to the assistant",
     MatchFailedReason.INVALID_AREA: "The area does not exist",
     MatchFailedReason.INVALID_FLOOR: "The floor does not exist",
-    MatchFailedReason.DUPLICATE_NAME: (
-        "Multiple entities share the name and could not be told apart"
-    ),
+    MatchFailedReason.DUPLICATE_NAME: ("Multiple entities share the name"),
     MatchFailedReason.MULTIPLE_TARGETS: (
         "Multiple entities matched, but a single target is required"
     ),

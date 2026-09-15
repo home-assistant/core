@@ -1738,8 +1738,7 @@ def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str
     return ErrorKey.NO_INTENT, {}
 
 
-# Each combination of what was asked for and where it was asked for has its own
-# message, so no failure has to fall back to a vague one.
+# Map to errors in home-assistant-intents
 _NO_TARGET_ERRORS: dict[tuple[str, str, bool], ErrorKey] = {
     ("entity", "", False): ErrorKey.NO_ENTITY,
     ("entity", "", True): ErrorKey.NO_ENTITY_EXPOSED,
