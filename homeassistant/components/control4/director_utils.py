@@ -2,6 +2,7 @@
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
@@ -12,6 +13,35 @@ from homeassistant.core import HomeAssistant
 from .const import Control4ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def _with_token_refresh[T](
+    hass: HomeAssistant,
+    entry: Control4ConfigEntry,
+    call: Callable[[], Coroutine[Any, Any, T]],
+) -> T:
+    """Call `call`, refreshing the director token once on BadToken.
+
+    Concurrent callers serialize on the entry's token_refresh_lock. Each one
+    retries once after acquiring it, in case another caller already refreshed
+    the token while this one waited, so only the first caller through the
+    lock actually calls refresh_tokens().
+    """
+    try:
+        return await call()
+    except BadToken:
+        pass
+
+    async with entry.runtime_data.token_refresh_lock:
+        try:
+            return await call()
+        except BadToken:
+            _LOGGER.debug("Updating Control4 director token")
+            from . import refresh_tokens  # noqa: PLC0415
+
+            await refresh_tokens(hass, entry)
+
+    return await call()
 
 
 async def _get_entry_variables(entry: Control4ConfigEntry, item_id: int) -> dict:
@@ -30,14 +60,9 @@ async def director_get_entry_variables(
     hass: HomeAssistant, entry: Control4ConfigEntry, item_id: int
 ) -> dict:
     """Retrieve variable data for Control4 entity."""
-    try:
-        return await _get_entry_variables(entry, item_id)
-    except BadToken:
-        _LOGGER.debug("Updating Control4 director token")
-        from . import refresh_tokens  # noqa: PLC0415
-
-        await refresh_tokens(hass, entry)
-        return await _get_entry_variables(entry, item_id)
+    return await _with_token_refresh(
+        hass, entry, lambda: _get_entry_variables(entry, item_id)
+    )
 
 
 async def gather_entry_variables(
@@ -65,11 +90,6 @@ async def update_variables_for_config_entry(
     hass: HomeAssistant, entry: Control4ConfigEntry, variable_names: set[str]
 ) -> dict[int, dict[str, Any]]:
     """Retrieve data from the Control4 director."""
-    try:
-        return await _update_variables_for_config_entry(entry, variable_names)
-    except BadToken:
-        _LOGGER.debug("Updating Control4 director token")
-        from . import refresh_tokens  # noqa: PLC0415
-
-        await refresh_tokens(hass, entry)
-        return await _update_variables_for_config_entry(entry, variable_names)
+    return await _with_token_refresh(
+        hass, entry, lambda: _update_variables_for_config_entry(entry, variable_names)
+    )

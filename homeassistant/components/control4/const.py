@@ -1,5 +1,6 @@
 """Constants for the Control4 integration."""
 
+import asyncio
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -32,6 +33,8 @@ class Control4RuntimeData:
     ui_configuration: dict[str, Any] | None = None
     cancel_token_refresh_callback: CALLBACK_TYPE | None = None
     cancel_periodic_resync_callback: CALLBACK_TYPE | None = None
+    token_refresh_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    resync_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
 type Control4ConfigEntry = ConfigEntry[Control4RuntimeData]

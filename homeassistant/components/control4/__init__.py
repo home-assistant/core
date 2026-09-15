@@ -97,6 +97,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
             runtime_data.cancel_token_refresh_callback()
         if runtime_data.cancel_periodic_resync_callback is not None:
             runtime_data.cancel_periodic_resync_callback()
+            # A retried setup reuses this same runtime_data (see refresh_tokens()),
+            # and only reschedules this timer when this is None.
+            runtime_data.cancel_periodic_resync_callback = None
         raise
 
     # All pieces gathered - fill in the rest of runtime_data now that we have them.
@@ -125,6 +128,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) ->
     if runtime_data.cancel_periodic_resync_callback is not None:
         _LOGGER.debug("Cancelling periodic resync poll for config entry unload")
         runtime_data.cancel_periodic_resync_callback()
+        # A reload reuses this same runtime_data (see refresh_tokens()), and
+        # only reschedules this timer when this is None.
+        runtime_data.cancel_periodic_resync_callback = None
     return unload_ok
 
 
@@ -248,7 +254,12 @@ async def _periodic_resync(
     hass: HomeAssistant, entry: Control4ConfigEntry, _now: datetime
 ) -> None:
     """Safety-net poll to catch any WebSocket push events that were missed."""
-    await _resync_items(hass, entry)
+    resync_lock = entry.runtime_data.resync_lock
+    if resync_lock.locked():
+        _LOGGER.debug("Skipping periodic Control4 resync: previous pass still running")
+        return
+    async with resync_lock:
+        await _resync_items(hass, entry)
 
 
 class C4WebsocketConnectionTracker:
@@ -265,7 +276,8 @@ class C4WebsocketConnectionTracker:
         if not self._was_disconnected:
             return
         _LOGGER.info("WebSocket connection to Control4 re-established")
-        await _resync_items(self.hass, self.entry)
+        async with self.entry.runtime_data.resync_lock:
+            await _resync_items(self.hass, self.entry)
         self._was_disconnected = False
 
     async def disconnect_callback(self) -> None:
