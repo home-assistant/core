@@ -24,6 +24,7 @@ from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     ATTR_UPNP_UDN,
@@ -34,6 +35,7 @@ from .const import (
     MOCK_CONFIG_DATA,
     MOCK_HOST,
     MOCK_HOST_HOSTNAME,
+    MOCK_MAC,
     MOCK_NAME,
     MOCK_SERIAL,
     MOCK_UDN,
@@ -1548,6 +1550,51 @@ async def test_user_flow_matches_a_migrated_entry_by_its_address(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_user_flow_recognises_a_migrated_entry_that_also_moved(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    device_registry: dr.DeviceRegistry,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """A carried-over entry whose address changed is still the same hub.
+
+    It has not adopted its MAC yet, so the unique-id check does not know it,
+    and the address it stores is stale -- which is usually *why* it is sitting
+    in a setup retry. With neither matcher seeing it, the hub would be added a
+    second time, and the old entry could never adopt the MAC that would resolve
+    the duplicate: it cannot reach the hub at all. Its hub device carries the
+    MAC, and that survives the move.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="HBT-123456",  # a serial, as the custom integration falls back to
+        data={CONF_HOST: "192.168.1.99"},  # the address it had before the move
+    )
+    entry.add_to_hass(hass)
+    # Registered the way the custom integration does it, in the hub's own
+    # notation -- the registry normalises it, and the flow looks it up with the
+    # bare uid.
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MOCK_MAC)},
+        identifiers={(DOMAIN, "HBT-123456")},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.data[CONF_HOST] == MOCK_HOST
 
 
 async def test_user_flow_adds_a_different_hub_at_a_recycled_address(

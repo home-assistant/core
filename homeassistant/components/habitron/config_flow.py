@@ -22,6 +22,7 @@ from homeassistant import config_entries, exceptions
 from homeassistant.components import network
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import CONF_DEFAULT_HOST, DOMAIN
@@ -271,6 +272,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if entry.state is config_entries.ConfigEntryState.SETUP_RETRY:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
+    def _async_entry_by_hub_device(
+        self, unique_id: str
+    ) -> config_entries.ConfigEntry | None:
+        """Return the entry whose hub device carries this MAC, if any.
+
+        A carried-over entry keeps its older id until a successful setup adopts
+        the MAC -- and its stored address can be stale, which is usually the
+        very reason it never got that far. Neither the unique id nor the address
+        finds it then, and the hub would be configured a second time while the
+        old entry stays unable to ever adopt the identity that would resolve the
+        duplicate. The device it registered still knows: the hub device carries
+        the MAC as a connection, and that survives any move.
+        """
+        # The uid is the bare address; the registry normalises a MAC connection
+        # itself, so it matches whichever notation the device was registered with.
+        devices = dr.async_get(self.hass).async_get_devices(
+            connections={(dr.CONNECTION_NETWORK_MAC, unique_id)}
+        )
+        # A connection is unique within a config entry but not across them, so
+        # the lookup is deliberately entry-agnostic and the owners are collected
+        # from whatever it finds.
+        owners = {device.config_entry_id for device in devices}
+        return next(
+            (
+                entry
+                for entry in self._async_current_entries()
+                if entry.entry_id in owners
+            ),
+            None,
+        )
+
     async def _async_abort_if_host_configured(
         self, host: str, *, unique_id: str
     ) -> config_entries.ConfigFlowResult | None:
@@ -293,16 +325,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         while a user flow does not -- adding an ignored hub by hand is how
         un-ignoring works.
         """
+        # The hub's own device is the strongest witness and needs no address at
+        # all, so it is asked first.
+        entry = self._async_entry_by_hub_device(unique_id)
+
         # Only an entry that carries no MAC identity can be this hub under an
         # older id. One keyed by a *different* MAC is a different hub: the
         # address it stores may simply be what DHCP has since handed this one,
         # and matching on that would abort the new hub and rewrite the old
         # entry onto a device that is not its own.
-        entry = await self._async_matching_entry(
+        entry = entry or await self._async_matching_entry(
             [
-                entry
-                for entry in self._async_current_entries()
-                if normalise_mac(entry.unique_id or "") in (None, unique_id)
+                candidate
+                for candidate in self._async_current_entries()
+                if normalise_mac(candidate.unique_id or "") in (None, unique_id)
             ],
             host,
         )
