@@ -57,7 +57,7 @@ async def _async_migrate_entity_unique_ids(
     """Drop the redundant `tuya.` prefix from entity unique IDs.
 
     Old format: `tuya.{device_id}{key}`, new format: `{device_id}.{key}`.
-    Added in 2026.10, can be removed in 2027.4.
+    Added in 2026.10.
     """
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
