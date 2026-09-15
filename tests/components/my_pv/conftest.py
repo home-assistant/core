@@ -18,6 +18,48 @@ SETUP_CONFIGURATION = {
 
 COMMAND_CONFIGURATION = {"reboot_device": {"type": "any"}}
 
+DATA_CONFIGURATION = {
+    "cur_eth_mode": {
+        "options": {"0": "LAN", "1": "WLAN", "2": "AP"},
+        "type": "enumeration",
+    },
+    "freq": {"type": "number", "unit": "Hz"},
+    "power": {"type": "number", "unit": "W"},
+    "screen_mode_flag": {
+        "options": {
+            "0": "Standby",
+            "1": "Heat",
+            "2": "Boost",
+            "3": "Heating finished",
+            "4": "No connection / Disabled",
+            "5": "Error",
+            "6": "Block active",
+        },
+        "type": "enumeration",
+    },
+    "temp1": {"type": "number", "unit": "°C"},
+    "temp2": {"type": "number", "unit": "°C"},
+    "temp3": {"type": "number", "unit": "°C"},
+    "temp4": {"type": "number", "unit": "°C"},
+    "temp_ps": {"type": "number", "unit": "°C"},
+    "uptime": {"type": "number", "unit": "h"},
+    "volt_mains": {"type": "number", "unit": "V"},
+}
+
+DATA_VALUE = {
+    "cur_eth_mode": "0",
+    "freq": 49.965,
+    "power": 3445,
+    "screen_mode_flag": "4",
+    "temp1": 12.3,
+    "temp2": 23.4,
+    "temp3": 34.5,
+    "temp4": 45.6,
+    "temp_ps": 56.7,
+    "uptime": 2,
+    "volt_mains": 238,
+}
+
 
 def _setup_configuration_lookup(key):
     return SETUP_CONFIGURATION.get(key)
@@ -25,6 +67,10 @@ def _setup_configuration_lookup(key):
 
 def _command_configuration_lookup(key):
     return COMMAND_CONFIGURATION.get(key)
+
+
+def _data_value_lookup(key):
+    return DATA_VALUE.get(key)
 
 
 @pytest.fixture
@@ -77,14 +123,17 @@ def mock_my_pv_client() -> Generator[AsyncMock]:
         client.setup_uri = "http://127.0.0.1/"
         client.hardware_version = "v1.5A"
         client.firmware_version = "e0002200"
+        client.connected = True
+        client.is_on = True
         client.current_temperature = 54.3
         client.target_temperature = 62.1
         client.get_setup_configuration = Mock(side_effect=_setup_configuration_lookup)
         client.get_command_configuration = Mock(
             side_effect=_command_configuration_lookup
         )
-        client.connected = True
-        client.is_on = True
         client.send_command = AsyncMock(return_value=True)
+        client.get_data_configurations = Mock(return_value=DATA_CONFIGURATION)
+        client.get_data_value = Mock(side_effect=_data_value_lookup)
+        client.supports_data = Mock(side_effect=DATA_CONFIGURATION.__contains__)
 
         yield client
