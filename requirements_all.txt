@@ -2168,7 +2168,7 @@ pycync==0.5.0
 pydaikin==2.19.1
 
 # homeassistant.components.danfoss_air
-pydanfossair==0.1.0
+pydanfossair==1.0.0
 
 # homeassistant.components.deako
 pydeako==0.6.0
