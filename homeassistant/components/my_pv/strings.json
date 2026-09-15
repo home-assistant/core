@@ -50,7 +50,7 @@
   "entity": {
     "select": {
       "bstmode": {
-        "name": "Boost Mode",
+        "name": "Boost mode",
         "state": {
           "0": "[%key:common::state::off%]",
           "1": "[%key:common::state::on%]",
