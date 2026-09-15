@@ -6,8 +6,6 @@ plugins use:
 https://github.com/homebridge/HAP-NodeJS/blob/latest/src/lib/controller/AdaptiveLightingController.ts
 """
 
-from __future__ import annotations
-
 import base64
 from dataclasses import dataclass
 from datetime import timedelta
@@ -142,7 +140,12 @@ def tlv_decode(buffer: bytes) -> list[tuple[int, bytes]]:
         length = buffer[index + 1]
         value = buffer[index + 2 : index + 2 + length]
         index += 2 + length
-        if entries and entries[-1][0] == tag and entries[-1][1] and len(entries[-1][1]) % 255 == 0:
+        if (
+            entries
+            and entries[-1][0] == tag
+            and entries[-1][1]
+            and len(entries[-1][1]) % 255 == 0
+        ):
             entries[-1] = (tag, entries[-1][1] + value)
         else:
             entries.append((tag, value))
@@ -289,12 +292,20 @@ def interpolate(transition: ActiveTransition, now_millis: int) -> float | None:
         upper = transition.curve[index + 1]
         lower_bound_time_offset += lower.transition_time
         if offset >= lower_bound_time_offset:
-            if offset <= lower_bound_time_offset + lower.duration + upper.transition_time:
+            if (
+                offset
+                <= lower_bound_time_offset + lower.duration + upper.transition_time
+            ):
                 transition_offset = offset - lower_bound_time_offset
                 if lower.duration and transition_offset <= lower.duration:
                     return lower.temperature
-                percentage = (transition_offset - lower.duration) / upper.transition_time
-                return lower.temperature + (upper.temperature - lower.temperature) * percentage
+                percentage = (
+                    transition_offset - lower.duration
+                ) / upper.transition_time
+                return (
+                    lower.temperature
+                    + (upper.temperature - lower.temperature) * percentage
+                )
         lower_bound_time_offset += lower.duration
     return None
 
@@ -371,7 +382,8 @@ def _get_store(hass: HomeAssistant) -> _TransitionStore:
     """Return the shared store, creating it on first use."""
     if DATA_STORE not in hass.data:
         hass.data[DATA_STORE] = _TransitionStore(hass)
-    return hass.data[DATA_STORE]
+    store: _TransitionStore = hass.data[DATA_STORE]
+    return store
 
 
 class AdaptiveLightingController:
@@ -402,7 +414,9 @@ class AdaptiveLightingController:
                 self.char_color_temp.to_HAP()["iid"],
             )
         )
-        self.char_active_count = service.get_characteristic(CHAR_ACTIVE_TRANSITION_COUNT)
+        self.char_active_count = service.get_characteristic(
+            CHAR_ACTIVE_TRANSITION_COUNT
+        )
         self.char_active_count.set_value(0)
         self.char_control = service.get_characteristic(CHAR_TRANSITION_CONTROL)
         self.char_control.setter_callback = self._handle_transition_control_write
@@ -424,8 +438,10 @@ class AdaptiveLightingController:
 
         try:
             transition = parse_transition_control(value)
-        except (ValueError, struct.error, IndexError):
-            _LOGGER.exception("%s: could not parse the transition schedule", self.entity_id)
+        except ValueError, struct.error, IndexError:
+            _LOGGER.exception(
+                "%s: could not parse the transition schedule", self.entity_id
+            )
             return
 
         if transition is None:
@@ -474,7 +490,7 @@ class AdaptiveLightingController:
             return
         try:
             transition = _transition_from_dict(stored)
-        except (KeyError, TypeError, ValueError):
+        except KeyError, TypeError, ValueError:
             _LOGGER.warning("%s: stored transition is unreadable", self.entity_id)
             await _get_store(self.hass).async_set(self.entity_id, None)
             return
@@ -554,7 +570,8 @@ class AdaptiveLightingController:
         mireds = round(temperature)
         properties = self.char_color_temp.properties
         mireds = min(
-            properties.get("maxValue", 500), max(properties.get("minValue", 140), mireds)
+            properties.get("maxValue", 500),
+            max(properties.get("minValue", 140), mireds),
         )
 
         state = self.hass.states.get(self.entity_id)
@@ -592,8 +609,12 @@ class AdaptiveLightingController:
         for index in range(len(transition.curve) - 1):
             lower = transition.curve[index]
             accumulated += lower.transition_time
-            if offset >= accumulated and offset <= (
-                accumulated + lower.duration + transition.curve[index + 1].transition_time
+            if (
+                accumulated
+                <= offset
+                <= accumulated
+                + lower.duration
+                + transition.curve[index + 1].transition_time
             ):
                 return lower
             accumulated += lower.duration
