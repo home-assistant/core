@@ -1,6 +1,7 @@
 """Schema for KNX entity link configuration store."""
 
 import probatio
+from xknx.telegram.address import parse_device_group_address
 
 from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.core import split_entity_id
@@ -60,6 +61,19 @@ def link_platform_for_entity(entity_id: str) -> Platform | None:
     return platform if platform in LINK_SCHEMA_FOR_PLATFORM else None
 
 
+def _prefix_knx_path(exc: probatio.Invalid) -> probatio.Invalid:
+    """Restore the full config path on errors raised by a platform schema.
+
+    The platform schema validates the `knx` section on its own, so its error paths are
+    relative to it. The frontend matches paths against config keys, so they need the
+    `data.knx` prefix to point at the offending field.
+    """
+    errors = exc.errors if isinstance(exc, probatio.MultipleInvalid) else [exc]
+    for error in errors:
+        error.prepend([CONF_DATA, CONF_KNX])
+    return exc
+
+
 def _validate_platform_schema(config: dict) -> dict:
     """Validate the KNX section against the schema of the entity's platform."""
     entity_id = config[CONF_ENTITY_ID]
@@ -69,9 +83,12 @@ def _validate_platform_schema(config: dict) -> dict:
             f"Entity links are not supported for {entity_id}",
             path=[CONF_ENTITY_ID],
         )
-    config[CONF_DATA][CONF_KNX] = LINK_SCHEMA_FOR_PLATFORM[platform](
-        config[CONF_DATA][CONF_KNX]
-    )
+    try:
+        config[CONF_DATA][CONF_KNX] = LINK_SCHEMA_FOR_PLATFORM[platform](
+            config[CONF_DATA][CONF_KNX]
+        )
+    except probatio.Invalid as err:
+        raise _prefix_knx_path(err) from None
     return config
 
 
@@ -79,9 +96,14 @@ def _validate_distinct_gas(config: dict) -> dict:
     """Status and command group addresses must differ (no self-loop)."""
     knx_config = config[CONF_DATA][CONF_KNX]
     command = knx_config[CONF_GA_COMMAND]
-    commands = {command[CONF_GA_STATE], *command[CONF_GA_PASSIVE]}
-    commands.discard(None)
-    if knx_config[CONF_GA_STATUS][CONF_GA_WRITE] in commands:
+    # compare parsed addresses: "1/2/3", "1/515" and 2563 are the same group address
+    commands = {
+        parse_device_group_address(address)
+        for address in (command[CONF_GA_STATE], *command[CONF_GA_PASSIVE])
+        if address is not None
+    }
+    status = knx_config[CONF_GA_STATUS][CONF_GA_WRITE]
+    if status is not None and parse_device_group_address(status) in commands:
         raise probatio.Invalid(
             "status and command group addresses must differ",
             path=[CONF_DATA, CONF_KNX, CONF_GA_COMMAND],

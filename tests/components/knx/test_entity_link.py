@@ -2,6 +2,8 @@
 
 from typing import Any
 
+import pytest
+
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -274,6 +276,26 @@ async def test_switch_link_follows_entity_rename(
     hass.states.async_set(_ENTITY_ID, STATE_OFF)
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
+
+
+async def test_invalid_stored_link_does_not_break_setup(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test one unusable stored link is skipped instead of failing the whole setup."""
+    hass.states.async_set(_ENTITY_ID, STATE_OFF)
+    await knx.setup_integration(
+        config_store_fixture="config_store_entity_link_invalid.json"
+    )
+    assert "Invalid KNX entity link configuration for switch.broken" in caplog.text
+
+    # the valid link is still set up
+    await knx.assert_write(_STATUS_GA, False)
+    turn_on = async_mock_service(hass, "switch", SERVICE_TURN_ON)
+    await knx.receive_write(_COMMAND_GA, True)
+    await hass.async_block_till_done()
+    assert len(turn_on) == 1
 
 
 async def test_switch_link_rejects_self_loop(

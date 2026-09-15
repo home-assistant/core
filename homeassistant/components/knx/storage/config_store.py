@@ -5,7 +5,7 @@ import logging
 from typing import Any, Final, TypedDict, override
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PLATFORM, Platform
+from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
@@ -19,6 +19,7 @@ from .entity_link_controller import (
     KNXEntityLinkStoreConfigModel,
     KNXEntityLinkStoreModel,
 )
+from .entity_link_schema import validate_entity_link_data
 from .entity_store_validation import (
     EntityStoreValidationException,
     validate_entity_data,
@@ -288,6 +289,28 @@ class KNXConfigStore:
         return self.data["entity_links"]
 
     @callback
+    def get_validated_entity_links(self) -> KNXEntityLinkStoreModel:
+        """Return the entity links that still validate, for runtime setup.
+
+        Invalid configurations are skipped and stay in `self.data` so they aren't
+        dropped from storage and can still be corrected in the UI.
+        """
+        validated: KNXEntityLinkStoreModel = {}
+        for entity_id, link_config in self.data["entity_links"].items():
+            try:
+                result = validate_entity_link_data(
+                    {CONF_ENTITY_ID: entity_id, CONF_DATA: link_config}
+                )
+            except EntityStoreValidationException:
+                _LOGGER.error(
+                    "Invalid KNX entity link configuration for %s. It was not set up",
+                    entity_id,
+                )
+            else:
+                validated[entity_id] = result[CONF_DATA]
+        return validated
+
+    @callback
     def get_entity_link_config(self, entity_id: str) -> KNXEntityLinkStoreConfigModel:
         """Return the configuration of a single KNX entity link."""
         return self.data["entity_links"].get(
@@ -336,6 +359,12 @@ class KNXConfigStore:
         old_entity_id = event.data["old_entity_id"]  # type: ignore[typeddict-item]
         new_entity_id = event.data["entity_id"]
         link_config = self.data["entity_links"].pop(old_entity_id)
+        if new_entity_id in self.data["entity_links"]:
+            # only reachable for a link whose entity is gone; the registry refuses to
+            # rename onto a registered entity_id
+            _LOGGER.warning(
+                "Replacing orphaned KNX entity link configuration for %s", new_entity_id
+            )
         self.data["entity_links"][new_entity_id] = link_config
 
         # the registry rejects a domain change, so the link platform stays valid
