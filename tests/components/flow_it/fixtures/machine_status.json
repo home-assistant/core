@@ -6,10 +6,10 @@
   "data": {
     "event": "update",
     "sensors": {
-      "Sin": { "pressure": 1.0, "temperature": 293.15, "humidity": 50.0 },
-      "Sout": { "pressure": 1.0, "temperature": 293.15, "humidity": 50.0 },
-      "Iin": { "pressure": 1.0, "temperature": 293.15, "humidity": 50.0 },
-      "Iout": { "pressure": 1.0, "temperature": 293.15, "humidity": 50.0 }
+      "Sin": { "pressure": 1.0, "temperature": 293.15, "humidity": 0.5 },
+      "Sout": { "pressure": 1.0, "temperature": 293.15, "humidity": 0.5 },
+      "Iin": { "pressure": 1.0, "temperature": 293.15, "humidity": 0.5 },
+      "Iout": { "pressure": 1.0, "temperature": 293.15, "humidity": 0.5 }
     },
     "mode": {
       "speed": "2",
@@ -20,14 +20,14 @@
       "iaq": 100,
       "temperatureIn": 293.15,
       "temperatureOut": 293.15,
-      "humidityIn": 50.0,
-      "humidityOut": 50.0,
+      "humidityIn": 0.5,
+      "humidityOut": 0.5,
       "pressureIn": 1.0,
       "pressureOut": 1.0,
       "bypassOn": false
     },
     "filter": {
-      "hepa": { "status": 0, "changed": 0 },
+      "hepa": { "status": 4, "changed": 0 },
       "g4": { "status": 0, "changed": 0 }
     },
     "alert": {
