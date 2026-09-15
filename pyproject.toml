@@ -79,7 +79,7 @@ dependencies = [
   "urllib3>=2.0",
   "uv==0.12.10",
   "probatio==0.12.1",
-  "yarl==1.24.5",
+  "yarl==1.25.1",
   "webrtc-models==0.3.0",
   "zeroconf==0.151.3",
 ]
