@@ -58,8 +58,14 @@
   },
   "entity": {
     "sensor": {
+      "absolute_energy": { "name": "Absolute energy" },
+      "absolute_power": { "name": "Absolute power" },
       "active_power": { "name": "Active power" },
+      "active_power_export": { "name": "Power feed-in" },
+      "active_power_import": { "name": "Power consumption" },
       "active_power_phase": { "name": "Active power {phase}" },
+      "apparent_power_export": { "name": "Apparent power feed-in" },
+      "apparent_power_import": { "name": "Apparent power consumption" },
       "current_phase": { "name": "Current {phase}" },
       "export_tariff_1": { "name": "Feed-in tariff 1" },
       "export_tariff_2": { "name": "Feed-in tariff 2" },
@@ -68,7 +74,16 @@
       "import_tariff_1": { "name": "Consumption tariff 1" },
       "import_tariff_2": { "name": "Consumption tariff 2" },
       "import_total": { "name": "Total consumption" },
+      "maximum_demand": { "name": "Maximum demand" },
       "power_factor_phase": { "name": "Power factor {phase}" },
+      "reactive_energy_export": { "name": "Reactive energy feed-in" },
+      "reactive_energy_import": { "name": "Reactive energy consumption" },
+      "reactive_energy_quadrant_1": { "name": "Reactive energy quadrant I" },
+      "reactive_energy_quadrant_2": { "name": "Reactive energy quadrant II" },
+      "reactive_energy_quadrant_3": { "name": "Reactive energy quadrant III" },
+      "reactive_energy_quadrant_4": { "name": "Reactive energy quadrant IV" },
+      "reactive_power_export": { "name": "Reactive power feed-in" },
+      "reactive_power_import": { "name": "Reactive power consumption" },
       "ssid": { "name": "SSID" },
       "voltage_phase": { "name": "Voltage {phase}" }
     }
