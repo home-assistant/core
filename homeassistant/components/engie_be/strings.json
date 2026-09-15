@@ -21,14 +21,14 @@
       },
       "user": {
         "data": {
+          "email": "[%key:common::config_flow::data::email%]",
           "mfa_method": "Two-factor authentication method",
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "Email address"
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
+          "email": "Your ENGIE Belgium account email address.",
           "mfa_method": "Choose how you want to receive your verification code.",
-          "password": "Your ENGIE Belgium account password.",
-          "username": "Your ENGIE Belgium account email address."
+          "password": "Your ENGIE Belgium account password."
         },
         "description": "Enter your ENGIE Belgium credentials and two-factor authentication method. **A dedicated ENGIE account is required**: signing into the same account from engie.be or the ENGIE Smart App appears to revoke the integration's session and force you to re-authenticate. Create a separate user via the [ENGIE user management page]({user_management_url}). New accounts have 2FA enabled by default."
       }

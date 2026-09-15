@@ -24,11 +24,11 @@ from homeassistant.components.engie_be.const import (
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 
 from tests.common import MockConfigEntry
 
-USERNAME = "user@example.com"
+EMAIL = "user@example.com"
 PASSWORD = "hunter2"
 BAN = "000000000001"
 BAN_2 = "000000000002"
@@ -148,10 +148,10 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title=USERNAME,
-        unique_id=USERNAME.lower(),
+        title=EMAIL,
+        unique_id=EMAIL.lower(),
         data={
-            CONF_USERNAME: USERNAME,
+            CONF_EMAIL: EMAIL,
             CONF_MFA_METHOD: "sms",
             CONF_ACCESS_TOKEN: "access-token",
             CONF_REFRESH_TOKEN: "refresh-token",
@@ -160,15 +160,22 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_engie_client() -> Generator[MagicMock]:
-    """Mock the EngieBeClient class constructed during config entry setup."""
-    with patch(
-        "homeassistant.components.engie_be.EngieBeClient", autospec=True
-    ) as mock_client_class:
+def mock_engie_client(mock_auth_flow: MagicMock) -> Generator[MagicMock]:
+    """Mock the EngieBeClient class constructed by the integration and config flow."""
+    with (
+        patch(
+            "homeassistant.components.engie_be.EngieBeClient", autospec=True
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.engie_be.config_flow.EngieBeClient",
+            new=mock_client_class,
+        ),
+    ):
         client = mock_client_class.return_value
         client.async_get_customer_account_relations.return_value = build_relations()
         client.async_get_prices.return_value = build_prices()
         client.async_get_service_point.side_effect = build_service_point
+        client.async_start_authentication.return_value = mock_auth_flow
         yield mock_client_class
 
 
@@ -180,17 +187,6 @@ def mock_auth_flow() -> MagicMock:
         return_value=("new-access-token", "new-refresh-token")
     )
     return auth_flow
-
-
-@pytest.fixture
-def mock_config_flow_client(mock_auth_flow: MagicMock) -> Generator[MagicMock]:
-    """Mock the EngieBeClient constructed by the config flow."""
-    with patch(
-        "homeassistant.components.engie_be.config_flow.EngieBeClient", autospec=True
-    ) as mock_client_class:
-        client = mock_client_class.return_value
-        client.async_start_authentication.return_value = mock_auth_flow
-        yield client
 
 
 @pytest.fixture

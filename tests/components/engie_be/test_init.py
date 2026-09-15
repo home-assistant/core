@@ -290,7 +290,7 @@ async def test_token_refresh_persists_tokens(
     listener.assert_called_once()
     assert mock_config_entry.data["access_token"] == "rotated-access"
     assert mock_config_entry.data["refresh_token"] == "rotated-refresh"
-    assert mock_config_entry.data["username"] == "user@example.com"
+    assert mock_config_entry.data["email"] == "user@example.com"
     assert mock_config_entry.data["mfa_method"] == "sms"
 
 

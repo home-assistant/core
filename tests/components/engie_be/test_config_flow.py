@@ -12,17 +12,17 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.engie_be.const import CONF_MFA_METHOD, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .conftest import PASSWORD, USERNAME
+from .conftest import EMAIL, PASSWORD
 
 from tests.common import MockConfigEntry
 
 USER_INPUT = {
-    CONF_USERNAME: USERNAME,
+    CONF_EMAIL: EMAIL,
     CONF_PASSWORD: PASSWORD,
     CONF_MFA_METHOD: "sms",
 }
@@ -30,11 +30,11 @@ USER_INPUT = {
 
 async def test_full_flow(
     hass: HomeAssistant,
-    mock_config_flow_client: MagicMock,
+    mock_engie_client: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the full user config flow."""
-    mock_config_flow_client.subject = "auth0|alice@example.com"
+    mock_engie_client.return_value.subject = "auth0|alice@example.com"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -52,7 +52,9 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mfa"
 
-    call_kwargs = mock_config_flow_client.async_start_authentication.call_args.kwargs
+    call_kwargs = (
+        mock_engie_client.return_value.async_start_authentication.call_args.kwargs
+    )
     assert call_kwargs["auth_session"] is sentinel_session
     assert call_kwargs["auth_session"] is not async_get_clientsession(hass)
 
@@ -60,8 +62,8 @@ async def test_full_flow(
         result["flow_id"], {"code": "123456"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == USERNAME
-    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["title"] == EMAIL
+    assert result["data"][CONF_EMAIL] == EMAIL
     assert result["data"]["access_token"] == "new-access-token"
     assert result["data"]["refresh_token"] == "new-refresh-token"
     assert CONF_PASSWORD not in result["data"]
@@ -83,18 +85,18 @@ async def test_full_flow(
 )
 async def test_user_step_errors(
     hass: HomeAssistant,
-    mock_config_flow_client: MagicMock,
+    mock_engie_client: MagicMock,
     mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
     """Test recoverable errors on the user step."""
-    mock_config_flow_client.subject = "auth0|test-account"
+    mock_engie_client.return_value.subject = "auth0|test-account"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_config_flow_client.async_start_authentication.side_effect = exception
+    mock_engie_client.return_value.async_start_authentication.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
@@ -102,7 +104,7 @@ async def test_user_step_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
 
-    mock_config_flow_client.async_start_authentication.side_effect = None
+    mock_engie_client.return_value.async_start_authentication.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
@@ -127,14 +129,14 @@ async def test_user_step_errors(
 )
 async def test_mfa_submit_errors_recovery(
     hass: HomeAssistant,
-    mock_config_flow_client: MagicMock,
+    mock_engie_client: MagicMock,
     mock_auth_flow: MagicMock,
     mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
     """Test recoverable errors on the MFA submit step."""
-    mock_config_flow_client.subject = "auth0|test-account"
+    mock_engie_client.return_value.subject = "auth0|test-account"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -162,11 +164,11 @@ async def test_mfa_submit_errors_recovery(
 
 async def test_already_configured(
     hass: HomeAssistant,
-    mock_config_flow_client: MagicMock,
+    mock_engie_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test aborting when the JWT subject is already configured."""
-    mock_config_flow_client.subject = "auth0|user@example.com"
+    mock_engie_client.return_value.subject = "auth0|user@example.com"
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry, unique_id="auth0|user@example.com"
@@ -190,12 +192,12 @@ async def test_already_configured(
 
 async def test_two_accounts_get_distinct_entries(
     hass: HomeAssistant,
-    mock_config_flow_client: MagicMock,
+    mock_engie_client: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that two distinct JWT subjects create two distinct entries."""
     for subject in ("auth0|alice@example.com", "auth0|bob@example.com"):
-        mock_config_flow_client.subject = subject
+        mock_engie_client.return_value.subject = subject
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -218,10 +220,10 @@ async def test_two_accounts_get_distinct_entries(
 
 
 async def test_jwt_subject_missing_shows_form_error(
-    hass: HomeAssistant, mock_config_flow_client: MagicMock
+    hass: HomeAssistant, mock_engie_client: MagicMock
 ) -> None:
     """Test that a missing JWT subject shows a form error on the MFA step."""
-    mock_config_flow_client.subject = None
+    mock_engie_client.return_value.subject = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

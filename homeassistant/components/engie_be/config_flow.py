@@ -14,7 +14,7 @@ from aioengiebelgium import (
 import probatio as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -36,7 +36,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._username: str | None = None
+        self._email: str | None = None
         self._password: str | None = None
         self._mfa_method: MfaMethod = MfaMethod.SMS
         self._auth_flow: AuthFlow | None = None
@@ -46,7 +46,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any]
     ) -> dict[str, str]:
         """Start authentication with ENGIE Belgium and return any form errors."""
-        self._username = user_input[CONF_USERNAME]
+        self._email = user_input[CONF_EMAIL]
         self._password = user_input[CONF_PASSWORD]
         self._mfa_method = MfaMethod(user_input[CONF_MFA_METHOD])
 
@@ -55,7 +55,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._client = client
         try:
             self._auth_flow = await client.async_start_authentication(
-                self._username,
+                self._email,
                 self._password,
                 self._mfa_method,
                 auth_session=session,
@@ -101,7 +101,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_EMAIL): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(
                         CONF_MFA_METHOD, default=MfaMethod.SMS.value
@@ -118,7 +118,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the MFA code entry step."""
         errors: dict[str, str] = {}
 
-        if user_input is not None and self._username is not None:
+        if user_input is not None and self._email is not None:
             errors, tokens = await self._async_submit_mfa(user_input["code"])
             if not errors and tokens is not None:
                 access_token, refresh_token = tokens
@@ -133,9 +133,9 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(subject)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=self._username,
+                    title=self._email,
                     data={
-                        CONF_USERNAME: self._username,
+                        CONF_EMAIL: self._email,
                         CONF_MFA_METHOD: self._mfa_method.value,
                         CONF_ACCESS_TOKEN: access_token,
                         CONF_REFRESH_TOKEN: refresh_token,
