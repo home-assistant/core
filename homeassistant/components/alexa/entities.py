@@ -15,6 +15,7 @@ from homeassistant.components import (
     light,
     media_player,
     remote,
+    sensor,
     switch,
     vacuum,
     valve,
@@ -76,6 +77,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_NAME,
+    PERCENTAGE,
     EntityStateAttribute,
     UnitOfTemperature,
     __version__,
@@ -98,6 +100,7 @@ from .capabilities import (
     AlexaEndpointHealth,
     AlexaEqualizerController,
     AlexaEventDetectionSensor,
+    AlexaHumiditySensor,
     AlexaInputController,
     AlexaLockController,
     AlexaModeController,
@@ -933,19 +936,36 @@ class SensorCapabilities(AlexaEntity):
     @override
     def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
-        # although there are other kinds of sensors, all but temperature
-        # sensors are currently ignored.
+        # Only temperature and humidity sensors are exposed; other sensor
+        # kinds have no matching Alexa interface. TEMPERATURE_SENSOR is
+        # defined for endpoints reporting temperature only, so a
+        # humidity-only endpoint falls back to OTHER.
+        if (
+            self.entity.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+            == sensor.SensorDeviceClass.HUMIDITY
+        ):
+            return [DisplayCategory.OTHER]
         return [DisplayCategory.TEMPERATURE_SENSOR]
 
     @override
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
         attrs = self.entity.attributes
+        has_capability = False
         if attrs.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) in {
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.CELSIUS,
         }:
             yield AlexaTemperatureSensor(self.hass, self.entity)
+            has_capability = True
+        if (
+            attrs.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) == PERCENTAGE
+            and attrs.get(EntityStateAttribute.DEVICE_CLASS)
+            == sensor.SensorDeviceClass.HUMIDITY
+        ):
+            yield AlexaHumiditySensor(self.hass, self.entity)
+            has_capability = True
+        if has_capability:
             yield AlexaEndpointHealth(self.hass, self.entity)
             yield Alexa(self.entity)
 
