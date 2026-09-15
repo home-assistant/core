@@ -191,6 +191,26 @@ async def test_remove_config_entry_device_without_wifi(
     assert not await async_remove_config_entry_device(hass, entry, tracked_device)
 
 
+async def test_remove_config_entry_device_when_not_loaded(
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing a device from an unloaded config entry is rejected."""
+    entry = configure_integration(hass)
+    tracked_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, CONNECTED_STATIONS[0].mac_address)},
+    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert not hasattr(entry, "runtime_data")
+    assert not await async_remove_config_entry_device(hass, entry, tracked_device)
+
+
 @pytest.mark.parametrize(
     "device", ["mock_device", "mock_repeater_device", "mock_ipv6_device"]
 )

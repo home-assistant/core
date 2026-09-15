@@ -187,7 +187,10 @@ async def async_remove_config_entry_device(
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Allow removing an absent tracked Wi-Fi client from the config entry."""
-    if not isinstance(device_entry, dr.DeviceEntry):
+    if (
+        not isinstance(device_entry, dr.DeviceEntry)
+        or config_entry.state is not ConfigEntryState.LOADED
+    ):
         return False
 
     device = config_entry.runtime_data.device
