@@ -1,0 +1,48 @@
+{
+  "entity": {
+    "sensor": {
+      "active_energy": {
+        "default": "mdi:pulse"
+      },
+      "active_power": {
+        "default": "mdi:flash"
+      },
+      "capacitive_reactive_energy": {
+        "default": "mdi:alpha-e-circle-outline"
+      },
+      "capacitive_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "inductive_reactive_energy": {
+        "default": "mdi:alpha-e-circle-outline"
+      },
+      "inductive_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "phase_angle": {
+        "default": "mdi:angle-acute"
+      },
+      "thd_current": {
+        "default": "mdi:chart-bubble"
+      },
+      "thd_current_fundamental": {
+        "default": "mdi:vector-point"
+      },
+      "thd_current_harmonic": {
+        "default": "mdi:sine-wave"
+      },
+      "thd_voltage": {
+        "default": "mdi:chart-bubble"
+      },
+      "thd_voltage_fundamental": {
+        "default": "mdi:vector-point"
+      },
+      "thd_voltage_harmonic": {
+        "default": "mdi:sine-wave"
+      },
+      "voltage": {
+        "default": "mdi:sine-wave"
+      }
+    }
+  }
+}
