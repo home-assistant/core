@@ -8,11 +8,10 @@ from .models import EntityUsageDataCache, EntityUsagePredictions
 
 DOMAIN = "usage_prediction"
 
-# Entities returned per time category when a client does not ask for a specific number
-DEFAULT_NUM_RESULTS = 8
+DEFAULT_LIMIT = 8
 
-# Most a client can ask for, and how many entities per time category are predicted and cached
-MAX_NUM_RESULTS = 50
+# Predicted and cached at the maximum so any requested limit is served from the cache
+MAX_LIMIT = 50
 
 DATA_CACHE: HassKey[
     dict[str, asyncio.Task[EntityUsagePredictions] | EntityUsageDataCache]

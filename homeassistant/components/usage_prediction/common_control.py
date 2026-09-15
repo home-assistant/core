@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
-from .const import MAX_NUM_RESULTS
+from .const import MAX_LIMIT
 from .models import EntityUsagePredictions
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,16 +105,12 @@ async def async_predict_common_control(
     )
 
     return EntityUsagePredictions(
-        morning=[
-            ent_id for (ent_id, _) in results["morning"].most_common(MAX_NUM_RESULTS)
-        ],
+        morning=[ent_id for (ent_id, _) in results["morning"].most_common(MAX_LIMIT)],
         afternoon=[
-            ent_id for (ent_id, _) in results["afternoon"].most_common(MAX_NUM_RESULTS)
+            ent_id for (ent_id, _) in results["afternoon"].most_common(MAX_LIMIT)
         ],
-        evening=[
-            ent_id for (ent_id, _) in results["evening"].most_common(MAX_NUM_RESULTS)
-        ],
-        night=[ent_id for (ent_id, _) in results["night"].most_common(MAX_NUM_RESULTS)],
+        evening=[ent_id for (ent_id, _) in results["evening"].most_common(MAX_LIMIT)],
+        night=[ent_id for (ent_id, _) in results["night"].most_common(MAX_LIMIT)],
     )
 
 

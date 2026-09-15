@@ -11,6 +11,7 @@ from homeassistant.components.usage_prediction.common_control import (
     async_predict_common_control,
     time_category,
 )
+from homeassistant.components.usage_prediction.const import DEFAULT_LIMIT
 from homeassistant.components.usage_prediction.models import EntityUsagePredictions
 from homeassistant.const import EVENT_CALL_SERVICE
 from homeassistant.core import Context, HomeAssistant
@@ -292,8 +293,8 @@ async def test_old_events_excluded(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("recorder_mock")
-async def test_entities_limit(hass: HomeAssistant) -> None:
-    """Test that only top entities are returned per time category."""
+async def test_entities_capped_at_max_limit(hass: HomeAssistant) -> None:
+    """Test that only the top entities up to the maximum limit are predicted."""
     user_id = str(uuid.uuid4())
 
     hass.states.async_set("light.most_used", "off")
@@ -336,7 +337,7 @@ async def test_entities_limit(hass: HomeAssistant) -> None:
     with (
         freeze_time("2023-07-02 10:00:00"),
         patch(
-            "homeassistant.components.usage_prediction.common_control.MAX_NUM_RESULTS",
+            "homeassistant.components.usage_prediction.common_control.MAX_LIMIT",
             5,
         ),
     ):  # Next day, so events are recent
@@ -353,6 +354,39 @@ async def test_entities_limit(hass: HomeAssistant) -> None:
     assert results.morning == []
     assert results.afternoon == []
     assert results.evening == []
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_more_than_default_limit_predicted(hass: HomeAssistant) -> None:
+    """Test more entities are predicted than a client gets by default."""
+    user_id = str(uuid.uuid4())
+    entity_ids = [f"light.light_{index}" for index in range(DEFAULT_LIMIT + 2)]
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "off")
+
+    with freeze_time("2023-07-01 08:00:00"):
+        # Distinct counts so the expected order is deterministic
+        for count, entity_id in enumerate(reversed(entity_ids), start=1):
+            for _ in range(count):
+                hass.bus.async_fire(
+                    EVENT_CALL_SERVICE,
+                    {
+                        "domain": "light",
+                        "service": "toggle",
+                        "service_data": {"entity_id": entity_id},
+                    },
+                    context=Context(user_id=user_id),
+                )
+                await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    with freeze_time("2023-07-02 10:00:00"):  # Next day, so events are recent
+        results = await async_predict_common_control(hass, user_id)
+
+    # 08:00 UTC = 00:00 local = night
+    assert results.night == entity_ids
 
 
 @pytest.mark.usefixtures("recorder_mock")
