@@ -245,6 +245,16 @@ async def _resync_items(hass: HomeAssistant, entry: Control4ConfigEntry) -> None
         except TimeoutError, client_exceptions.ClientError, C4Exception:
             _LOGGER.warning("Failed to resync item %s", item_id)
             continue
+        if not item_attributes:
+            # An item the Director no longer recognizes (removed, offline)
+            # returns no variables at all; sending this through unchanged
+            # would mark it available again without changing its stale
+            # cached attributes, same as director_get_entry_variables()
+            # returning {} is already treated as "no data" during setup.
+            _LOGGER.warning(
+                "Resync for item %s returned no data, leaving unavailable", item_id
+            )
+            continue
         message = {
             "evtName": "OnDataToUI",
             "iddevice": item_id,

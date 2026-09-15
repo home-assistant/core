@@ -435,6 +435,42 @@ async def test_cover_reconnect_resyncs_state(
     "mock_cover_update_variables",
     "init_integration",
 )
+async def test_reconnect_resync_with_no_data_stays_unavailable(
+    hass: HomeAssistant,
+    mock_c4_websocket: MagicMock,
+    mock_cover_variables: dict,
+) -> None:
+    """A resync that returns no data for an item must not mark it available.
+
+    The Director returning no variables at all for an item (removed,
+    offline) previously still produced a synthesized OnDataToUI message,
+    which _update_callback treats as "available" regardless of whether
+    its data is empty - restoring stale cached attributes under a
+    falsely-available state instead of leaving the entity unavailable.
+    """
+    await mock_c4_websocket.disconnect_callback()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_cover_variables[234].clear()
+
+    await mock_c4_websocket.connect_callback()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_cover_update_variables",
+    "init_integration",
+)
 async def test_cover_periodic_resync(
     hass: HomeAssistant,
     mock_cover_variables: dict,
