@@ -220,14 +220,10 @@ class Control4Climate(Control4Entity, ClimateEntity):
     @override
     def hvac_modes(self) -> list[HVACMode]:
         """Returns HVAC modes."""
-        c4modes_str = self._extra_state_attributes.get(ATTR_HVAC_MODES_LIST, "")
-        if not c4modes_str:
-            # Some thermostats never report this variable at all; fall back
-            # to the modes every Control4 thermostat is documented to
-            # support instead of leaving only "off" selectable.
-            return [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
         active_modes = []
-        for mode in c4modes_str.split(","):
+        c4modes_str = self._extra_state_attributes.get(ATTR_HVAC_MODES_LIST, "")
+        c4modes = c4modes_str.split(",") if c4modes_str else []
+        for mode in c4modes:
             if mode in HVAC_MODES and HVAC_MODES[mode] not in active_modes:
                 active_modes.append(HVAC_MODES[mode])
         if len(active_modes) == 0:
