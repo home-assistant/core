@@ -26,6 +26,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -139,6 +140,13 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             self._update_from_upnp()
         else:
             self._attr_state = MediaPlayerState.OFF
+            if (state := await self.async_get_last_state()) is not None:
+                self._attr_supported_features |= (
+                    state.attributes.get(
+                        ATTR_SUPPORTED_FEATURES, MediaPlayerEntityFeature(0)
+                    )
+                    & ~MediaPlayerEntityFeature.TURN_ON
+                )
 
     @override
     async def async_will_remove_from_hass(self) -> None:
