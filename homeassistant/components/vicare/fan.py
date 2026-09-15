@@ -121,6 +121,7 @@ class ViCareFan(ViCareEntity, FanEntity):
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_translation_key = "ventilation"
     _attributes: dict[str, Any] = {}
+    _standby: bool = False
 
     def __init__(
         self,
@@ -170,6 +171,12 @@ class ViCareFan(ViCareEntity, FanEntity):
                     self._api.getActiveVentilationMode()
                 )
 
+            if VentilationQuickmode.STANDBY in self._attributes["vicare_quickmodes"]:
+                with suppress(PyViCareNotSupportedFeatureError):
+                    self._standby = self._api.getVentilationQuickmode(
+                        VentilationQuickmode.STANDBY
+                    )
+
             with suppress(PyViCareNotSupportedFeatureError):
                 level = filter_state(self._api.getVentilationLevel())
             if level is not None and level in ORDERED_NAMED_FAN_SPEEDS:
@@ -183,9 +190,7 @@ class ViCareFan(ViCareEntity, FanEntity):
     @override
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
-        if VentilationQuickmode.STANDBY in self._attributes[
-            "vicare_quickmodes"
-        ] and self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+        if self._standby:
             return False
 
         return self.percentage is not None and self.percentage > 0
@@ -199,9 +204,7 @@ class ViCareFan(ViCareEntity, FanEntity):
     @override
     def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
-        if VentilationQuickmode.STANDBY in self._attributes[
-            "vicare_quickmodes"
-        ] and self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+        if self._standby:
             return "mdi:fan-off"
         if hasattr(self, "_attr_preset_mode"):
             if self._attr_preset_mode == VentilationMode.VENTILATION:
