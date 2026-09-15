@@ -381,6 +381,22 @@ def _normalize_connections_validator(
             raise ValueError(f"Invalid mac address format: {value}")
 
 
+def _report_deprecated_config_entries_property(
+    instance: object, name: str, *replacements: str
+) -> None:
+    """Report use of a deprecated multi-config-entry compatibility property."""
+    class_name = type(instance).__name__
+    replacement = " and ".join(f"`{class_name}.{field}`" for field in replacements)
+    report_usage(
+        f"accesses `{class_name}.{name}`, which is deprecated because a device "
+        f"belongs to a single config entry; use {replacement} instead",
+        breaks_in_ha_version="2027.10.0",
+        core_behavior=ReportBehavior.ERROR,
+        core_integration_behavior=ReportBehavior.ERROR,
+        custom_integration_behavior=ReportBehavior.LOG,
+    )
+
+
 @attr.s(frozen=True, slots=True)
 class BaseDeviceEntry:
     """Base class for device registry entries."""
@@ -400,13 +416,27 @@ class BaseDeviceEntry:
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @property
+    def _config_entries(self) -> set[str]:
+        """Return the config entries this device belongs to, without reporting."""
+        return {self.config_entry_id}
+
+    @property
+    def _config_entries_subentries(self) -> dict[str, set[str | None]]:
+        """Return the config subentries this device belongs to, without reporting."""
+        return {self.config_entry_id: {self.config_subentry_id}}
+
+    @property
     def config_entries(self) -> set[str]:
         """Return the config entries this device belongs to.
 
         Deprecated compatibility shim: a device now belongs to a single config
-        entry, available as config_entry_id.
+        entry, available as config_entry_id. It can be removed in HA Core 2027.10.
         """
-        return {self.config_entry_id}
+        if not self.is_composite_device:
+            _report_deprecated_config_entries_property(
+                self, "config_entries", "config_entry_id"
+            )
+        return self._config_entries
 
     @property
     def config_entries_subentries(self) -> dict[str, set[str | None]]:
@@ -414,8 +444,16 @@ class BaseDeviceEntry:
 
         Deprecated compatibility shim: a device now belongs to a single config
         entry and subentry, available as config_entry_id and config_subentry_id.
+        It can be removed in HA Core 2027.10.
         """
-        return {self.config_entry_id: {self.config_subentry_id}}
+        if not self.is_composite_device:
+            _report_deprecated_config_entries_property(
+                self,
+                "config_entries_subentries",
+                "config_entry_id",
+                "config_subentry_id",
+            )
+        return self._config_entries_subentries
 
     @property
     def primary_config_entry(self) -> str:
@@ -423,8 +461,23 @@ class BaseDeviceEntry:
 
         Deprecated compatibility shim: a device now belongs to a single config
         entry, available as config_entry_id, which is its primary config entry.
+        It can be removed in HA Core 2027.10.
         """
+        if not self.is_composite_device:
+            _report_deprecated_config_entries_property(
+                self, "primary_config_entry", "config_entry_id"
+            )
         return self.config_entry_id
+
+    @property
+    def is_composite_device(self) -> bool:
+        """Return if this entry is a restored composite device.
+
+        A restored composite is synthesized by async_get for a pre-migration
+        composite device id and never stored; a plain main or child device is
+        never a composite.
+        """
+        return False
 
     @property
     def disabled(self) -> bool:
@@ -501,30 +554,32 @@ class DeviceEntry(BaseDeviceEntry):
 
     @property
     @override
-    def config_entries(self) -> set[str]:
-        """Return the config entries this device belongs to.
-
-        Deprecated compatibility shim: a device now belongs to a single config
-        entry, available as config_entry_id.
-        """
+    def _config_entries(self) -> set[str]:
+        """Return the config entries this device belongs to, without reporting."""
         if self._composite_subentries is not None:
             return set(self._composite_subentries)
         return {self.config_entry_id}
 
     @property
     @override
-    def config_entries_subentries(self) -> dict[str, set[str | None]]:
-        """Return the config subentries this device belongs to.
-
-        Deprecated compatibility shim: a device now belongs to a single config
-        entry and subentry, available as config_entry_id and config_subentry_id.
-        """
+    def _config_entries_subentries(self) -> dict[str, set[str | None]]:
+        """Return the config subentries this device belongs to, without reporting."""
         if self._composite_subentries is not None:
             return {
                 entry_id: set(subentries)
                 for entry_id, subentries in self._composite_subentries.items()
             }
         return {self.config_entry_id: {self.config_subentry_id}}
+
+    @property
+    @override
+    def is_composite_device(self) -> bool:
+        """Return if this entry is a restored composite device.
+
+        A restored composite is synthesized by async_get for a pre-migration
+        composite device id and never stored.
+        """
+        return self._composite_subentries is not None
 
     @property
     @override
@@ -539,10 +594,10 @@ class DeviceEntry(BaseDeviceEntry):
             # config_entries and config_entries_subentries are deprecated and kept for
             # backwards compatibility, they can be removed in HA Core 2027.8. They use the
             # compatibility properties so a restored composite reports its merged entries.
-            "config_entries": list(self.config_entries),
+            "config_entries": list(self._config_entries),
             "config_entries_subentries": {
                 entry_id: list(subentries)
-                for entry_id, subentries in self.config_entries_subentries.items()
+                for entry_id, subentries in self._config_entries_subentries.items()
             },
             "config_entry_id": self.config_entry_id,
             "config_subentry_id": self.config_subentry_id,
@@ -561,7 +616,8 @@ class DeviceEntry(BaseDeviceEntry):
             "name_by_user": self.name_by_user,
             "name": self.name,
             "parent_device_id": None,
-            "primary_config_entry": self.primary_config_entry,
+            # primary_config_entry is deprecated, it can be removed in HA Core 2027.10.
+            "primary_config_entry": self.config_entry_id,
             "serial_number": self.serial_number,
             "sw_version": self.sw_version,
             "via_device_id": self.via_device_id,
@@ -594,7 +650,9 @@ class DeviceEntry(BaseDeviceEntry):
                 "name_by_user": self.name_by_user,
                 "name": self.name,
                 "has_composite_identifiers": (self.has_composite_identifiers),
-                "primary_config_entry": self.primary_config_entry,
+                # primary_config_entry is deprecated, it can be removed in HA Core
+                # 2027.10.
+                "primary_config_entry": self.config_entry_id,
                 "serial_number": self.serial_number,
                 "sw_version": self.sw_version,
                 "via_device_id": self.via_device_id,
@@ -756,16 +814,24 @@ class DeletedDeviceEntry:
     def config_entries(self) -> set[str]:
         """Return the config entries this device belonged to.
 
-        Deprecated compatibility shim; empty for orphaned deleted devices.
+        Deprecated compatibility shim; empty for orphaned deleted devices. It can be
+        removed in HA Core 2027.10.
         """
+        _report_deprecated_config_entries_property(
+            self, "config_entries", "config_entry_id"
+        )
         return {self.config_entry_id} if self.config_entry_id is not None else set()
 
     @property
     def config_entries_subentries(self) -> dict[str, set[str | None]]:
         """Return the config subentries this device belonged to.
 
-        Deprecated compatibility shim; empty for orphaned deleted devices.
+        Deprecated compatibility shim; empty for orphaned deleted devices. It can be
+        removed in HA Core 2027.10.
         """
+        _report_deprecated_config_entries_property(
+            self, "config_entries_subentries", "config_entry_id", "config_subentry_id"
+        )
         if self.config_entry_id is None:
             return {}
         return {self.config_entry_id: {self.config_subentry_id}}
@@ -4573,26 +4639,80 @@ def async_get_device_id_by_identifier(
     return device.id
 
 
+@overload
+def async_get_device_and_config_entry_for_domain(
+    hass: HomeAssistant,
+    device_id: str,
+    *,
+    domain: str,
+    include_child_devices: Literal[False],
+    include_main_devices: bool = True,
+) -> tuple[DeviceEntry | None, ConfigEntry | None]: ...
+
+
+@overload
+def async_get_device_and_config_entry_for_domain(
+    hass: HomeAssistant,
+    device_id: str,
+    *,
+    domain: str,
+    include_child_devices: Literal[True] = True,
+    include_main_devices: Literal[False],
+) -> tuple[ChildDeviceEntry | None, ConfigEntry | None]: ...
+
+
+@overload
+def async_get_device_and_config_entry_for_domain(
+    hass: HomeAssistant,
+    device_id: str,
+    *,
+    domain: str,
+    include_child_devices: Literal[True] = True,
+    include_main_devices: Literal[True] = True,
+) -> tuple[AnyDeviceEntry | None, ConfigEntry | None]: ...
+
+
 @callback
 def async_get_device_and_config_entry_for_domain(
-    hass: HomeAssistant, device_id: str, *, domain: str
-) -> tuple[DeviceEntry | None, ConfigEntry | None]:
+    hass: HomeAssistant,
+    device_id: str,
+    *,
+    domain: str,
+    include_child_devices: bool = True,
+    include_main_devices: bool = True,
+) -> tuple[AnyDeviceEntry | None, ConfigEntry | None]:
     """Get the device and the config entry of the domain owning it.
 
-    Returns (None, None) for an unknown device id or if the device is a child
-    device, and (device, None) when no config entry of the domain owns the
-    device. A returned pair is consistent: for a pre-migration composite
-    device id, the device is the domain's split device, not the composite; if
-    several splits belong to config entries of the domain, which pair is
-    returned is undefined. When no split matches the domain, the restored
-    composite is returned as the device.
+    Returns (None, None) for an unknown device id, and (device, None) when no
+    config entry of the domain owns the device.
+
+    With include_child_devices=False a child-device id resolves to None.
+
+    With include_main_devices=False a main-device id resolves to None. A
+    composite-device id then resolves to None as well, because both the splits
+    of a composite and the restored composite itself are main devices.
+
+    A returned pair is consistent: for a pre-migration composite device id, the
+    device is the domain's split device, not the composite; if several splits
+    belong to config entries of the domain, which pair is returned is undefined.
+    When no split matches the domain, the restored composite is returned as the
+    device.
     """
     registry = async_get(hass)
-    if (device := registry._devices.get(device_id)) is not None:  # noqa: SLF001
+    device: AnyDeviceEntry | None = None
+    if include_main_devices:
+        device = registry._devices.get(device_id)  # noqa: SLF001
+    if device is None and include_child_devices:
+        device = registry.async_get(
+            device_id, include_main_devices=False, include_composite_devices=False
+        )
+    if device is not None:
         config_entry = hass.config_entries.async_get_entry(device.config_entry_id)
         if config_entry is not None and config_entry.domain == domain:
             return device, config_entry
         return device, None
+    if not include_main_devices:
+        return None, None
     for split in registry.async_get_devices_for_composite_device_id(device_id):
         config_entry = hass.config_entries.async_get_entry(split.config_entry_id)
         if config_entry is not None and config_entry.domain == domain:

@@ -3,8 +3,8 @@
 from datetime import timedelta
 from typing import override
 
+import probatio
 from pyetherscan import get_balance
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -22,10 +22,10 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_TOKEN_ADDRESS): cv.string,
+        probatio.Required(CONF_ADDRESS): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_TOKEN): cv.string,
+        probatio.Optional(CONF_TOKEN_ADDRESS): cv.string,
     }
 )
 
