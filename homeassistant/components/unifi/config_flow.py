@@ -106,7 +106,9 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.sites = await self._async_update_sites(self.config)
                 return await self.async_step_site()
         else:
-            host = self.config.get(CONF_HOST, await _async_discover_unifi(self.hass))
+            host = self.config.get(CONF_HOST)
+            if not host:
+                host = await _async_discover_unifi(self.hass)
             if not host:
                 host = DEFAULT_HOST
             data_schema = self._build_form_schema(
