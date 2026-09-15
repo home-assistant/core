@@ -7,9 +7,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pyControl4.error_handling import BadToken
 import pytest
 
-from homeassistant.components.control4.const import WEBSOCKET_RESYNC_INTERVAL_SEC
+from homeassistant.components.control4 import RefreshTokensObject
+from homeassistant.components.control4.const import (
+    WEBSOCKET_RESYNC_INTERVAL_SEC,
+    ReentrantAsyncLock,
+)
 from homeassistant.components.control4.director_utils import (
     director_get_entry_variables,
+    gather_entry_variables,
     to_bool,
 )
 from homeassistant.const import Platform
@@ -88,6 +93,90 @@ async def test_concurrent_bad_token_only_refreshes_once(
             timeout=5,
         )
         mock_refresh.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
+async def test_scheduled_refresh_skips_when_lock_already_held(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A scheduled refresh must not race a BadToken-triggered one held by another task."""
+    await setup_integration(hass, mock_config_entry)
+
+    lock = mock_config_entry.runtime_data.token_refresh_lock
+    holder_has_lock = asyncio.Event()
+    release_holder = asyncio.Event()
+
+    async def _hold_lock() -> None:
+        async with lock:
+            holder_has_lock.set()
+            await release_holder.wait()
+
+    holder_task = hass.async_create_task(_hold_lock(), "test lock holder")
+    await holder_has_lock.wait()
+
+    with patch(
+        "homeassistant.components.control4.refresh_tokens", new=AsyncMock()
+    ) as mock_refresh:
+        obj = RefreshTokensObject(hass, mock_config_entry)
+        await obj.refresh_tokens(dt_util.utcnow())
+        mock_refresh.assert_not_called()
+
+    release_holder.set()
+    await holder_task
+
+
+async def test_reentrant_async_lock_allows_same_task_reentry() -> None:
+    """The same task can safely re-acquire the lock without deadlocking."""
+
+    async def _nested_reentry(lock: ReentrantAsyncLock) -> None:
+        async with lock, lock:
+            pass
+
+    await asyncio.wait_for(_nested_reentry(ReentrantAsyncLock()), timeout=2)
+
+
+async def test_reentrant_async_lock_blocks_different_tasks() -> None:
+    """A different task must still wait for the lock to be released."""
+    lock = ReentrantAsyncLock()
+    order = []
+
+    async def _holder() -> None:
+        async with lock:
+            order.append("holder-acquired")
+            await asyncio.sleep(0.05)
+            order.append("holder-released")
+
+    async def _waiter() -> None:
+        await asyncio.sleep(0.01)
+        async with lock:
+            order.append("waiter-acquired")
+
+    await asyncio.wait_for(asyncio.gather(_holder(), _waiter()), timeout=2)
+    assert order == ["holder-acquired", "holder-released", "waiter-acquired"]
+
+
+@pytest.mark.usefixtures("mock_c4_account")
+async def test_gather_entry_variables_isolates_per_item_failures(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_director: MagicMock,
+) -> None:
+    """One item's fetch failure doesn't prevent the others from loading."""
+    await setup_integration(hass, mock_config_entry)
+
+    async def _get_item_variables(item_id: int) -> list[dict]:
+        if item_id == 100:
+            raise TimeoutError("device unreachable")
+        return [{"varName": "Level", "value": 50}]
+
+    mock_c4_director.get_item_variables = AsyncMock(side_effect=_get_item_variables)
+
+    result = await gather_entry_variables(hass, mock_config_entry, [100, 200, 300])
+
+    assert result[100] == {}
+    assert result[200] == {"Level": 50}
+    assert result[300] == {"Level": 50}
 
 
 @pytest.mark.parametrize(

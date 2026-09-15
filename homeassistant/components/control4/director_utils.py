@@ -83,9 +83,19 @@ async def gather_entry_variables(
 ) -> dict[int, dict]:
     """Retrieve variable data for multiple Control4 entities concurrently."""
     results = await asyncio.gather(
-        *(director_get_entry_variables(hass, entry, item_id) for item_id in item_ids)
+        *(director_get_entry_variables(hass, entry, item_id) for item_id in item_ids),
+        return_exceptions=True,
     )
-    return dict(zip(item_ids, results, strict=True))
+    variables_by_id: dict[int, dict] = {}
+    for item_id, result in zip(item_ids, results, strict=True):
+        if isinstance(result, BaseException):
+            _LOGGER.warning(
+                "Failed to fetch initial variables for item %s: %s", item_id, result
+            )
+            variables_by_id[item_id] = {}
+        else:
+            variables_by_id[item_id] = result
+    return variables_by_id
 
 
 async def _update_variables_for_config_entry(
