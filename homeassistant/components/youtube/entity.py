@@ -1,6 +1,6 @@
 """Entity representing a YouTube channel."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -40,6 +40,12 @@ class YouTubeChannelEntity(CoordinatorEntity[YouTubeDataUpdateCoordinator]):
         )
 
     @property
-    def _channel_data(self) -> dict[str, Any] | None:
-        """Return the channel data, None when the channel is not available."""
-        return self.coordinator.data.get(self._channel_id)
+    @override
+    def available(self) -> bool:
+        """Return if the entity is available."""
+        return super().available and self._channel_id in self.coordinator.data
+
+    @property
+    def _channel_data(self) -> Any:
+        """Return the channel data."""
+        return self.coordinator.data[self._channel_id]

@@ -222,7 +222,9 @@ async def test_migration(
     subentry = next(iter(entry.subentries.values()))
     assert subentry.subentry_type == SUBENTRY_TYPE_CHANNEL
     assert subentry.unique_id == CHANNEL_ID
-    assert subentry.title == "Google for Developers"
+    # Entry titles are userland: the migrated subentry keeps the device
+    # name, even though the channel was renamed on YouTube since.
+    assert subentry.title == "Google Developers Channel"
     assert subentry.data == {CONF_CHANNEL_ID: CHANNEL_ID}
 
     migrated_device = device_registry.async_get_device_by_identifier(

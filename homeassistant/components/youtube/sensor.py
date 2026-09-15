@@ -137,10 +137,8 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return if the entity is available."""
-        return (
-            super().available
-            and self._channel_data is not None
-            and self.entity_description.available_fn(self._channel_data)
+        return super().available and self.entity_description.available_fn(
+            self._channel_data
         )
 
     @property

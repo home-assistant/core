@@ -12,13 +12,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .api import AsyncConfigEntryAuth
-from .const import (
-    ATTR_TITLE,
-    CONF_CHANNEL_ID,
-    CONF_CHANNELS,
-    DOMAIN,
-    SUBENTRY_TYPE_CHANNEL,
-)
+from .const import CONF_CHANNEL_ID, CONF_CHANNELS, DOMAIN, SUBENTRY_TYPE_CHANNEL
 from .coordinator import YouTubeConfigEntry, YouTubeDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -33,12 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> b
 
     coordinator = YouTubeDataUpdateCoordinator(hass, entry, auth)
     await coordinator.async_config_entry_first_refresh()
-
-    data = coordinator.data
-    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL):
-        channel = data.get(subentry.data[CONF_CHANNEL_ID])
-        if channel is not None and (title := channel[ATTR_TITLE]) != subentry.title:
-            hass.config_entries.async_update_subentry(entry, subentry, title=title)
 
     entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
