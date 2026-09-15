@@ -8,6 +8,8 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import IntFlag
 from functools import partial
+import hashlib
+from http import HTTPStatus
 import logging
 import os
 from random import SystemRandom
@@ -879,6 +881,17 @@ class CameraView(HomeAssistantView):
         raise NotImplementedError
 
 
+def _etag_matches(request: web.Request, etag: str) -> bool:
+    """Check a request's If-None-Match header against an ETag."""
+    if not (header := request.headers.get(hdrs.IF_NONE_MATCH)):
+        return False
+    if header.strip() == "*":
+        return True
+    return any(
+        candidate.strip().removeprefix("W/") == etag for candidate in header.split(",")
+    )
+
+
 class CameraImageView(CameraView):
     """Camera view to serve an image."""
 
@@ -900,7 +913,17 @@ class CameraImageView(CameraView):
         except (HomeAssistantError, ValueError) as ex:
             raise web.HTTPInternalServerError from ex
 
-        return web.Response(body=image.content, content_type=image.content_type)
+        etag = f'"{hashlib.sha256(image.content).hexdigest()}"'
+        if _etag_matches(request, etag):
+            return web.Response(
+                status=HTTPStatus.NOT_MODIFIED, headers={hdrs.ETAG: etag}
+            )
+
+        return web.Response(
+            body=image.content,
+            content_type=image.content_type,
+            headers={hdrs.ETAG: etag},
+        )
 
 
 class CameraMjpegStream(CameraView):
