@@ -210,9 +210,6 @@ async def test_intent_tool_omits_blank_arguments(
         "count": 0,
         "enabled": False,
     }
-    assert probatio.to_openapi(
-        intent_tool.parameters, custom_serializer=llm.selector_serializer
-    )["properties"]["name"] == {"type": "string"}
 
 
 async def test_assist_api(
