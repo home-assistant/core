@@ -14,6 +14,7 @@ from boschshcpy import (
     SHCThermostat,
     ThermostatService,
 )
+from boschshcpy.services_impl import ValveTappetService
 import pytest
 
 from homeassistant.components.bosch_shc.const import (
@@ -138,6 +139,8 @@ def thermostat_device(
     device_id: str = "hdm:ZigBee:thermostat1",
     name: str = "Thermostat",
     child_lock: ThermostatService.State = ThermostatService.State.OFF,
+    position: int = 50,
+    valvestate: ValveTappetService.State = ValveTappetService.State.VALVE_ADAPTION_SUCCESSFUL,
 ) -> SHCThermostat:
     """Build a minimal device double for the thermostats/roomthermostats/wallthermostats buckets."""
     device = create_autospec(SHCThermostat, instance=True, spec_set=True)
@@ -151,6 +154,8 @@ def thermostat_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.child_lock = child_lock
+    device.position = position
+    device.valvestate = valvestate
     return device
 
 
