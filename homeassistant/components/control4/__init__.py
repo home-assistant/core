@@ -222,7 +222,7 @@ async def _resync_items(hass: HomeAssistant, entry: Control4ConfigEntry) -> None
     for item_id, callbacks in list(item_callbacks.items()):
         try:
             item_attributes = await director_get_entry_variables(hass, entry, item_id)
-        except (TimeoutError, client_exceptions.ClientError, C4Exception):
+        except TimeoutError, client_exceptions.ClientError, C4Exception:
             _LOGGER.warning("Failed to resync item %s", item_id)
             continue
         message = {

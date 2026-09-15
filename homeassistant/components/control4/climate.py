@@ -147,7 +147,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         humidity = self._extra_state_attributes.get(ATTR_HUMIDITY)
         try:
             return float(humidity) if humidity is not None else None
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
 
     @property

@@ -129,7 +129,7 @@ class Control4Light(Control4Entity, LightEntity):
     def _to_float(value: Any) -> float | None:
         try:
             return float(value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
     @property
@@ -184,7 +184,7 @@ class Control4Light(Control4Entity, LightEntity):
             return 0
         try:
             return max(0, int(float(transition) * 1000))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return 0
 
     @override
