@@ -1,15 +1,15 @@
 """The EARN-E P1 Meter integration."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from earn_e_p1 import DEFAULT_PORT, EarnEP1Listener
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_SERIAL, DOMAIN
+from .const import CONF_SERIAL, EARN_E_P1_DATA
 from .coordinator import EarnEP1Coordinator
+from .models import EarnEP1Data
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -22,8 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
     serial = entry.data[CONF_SERIAL]
     mac = entry.data.get(CONF_MAC)
 
-    # Get or create shared listener
-    if DOMAIN not in hass.data:
+    if (data := hass.data.get(EARN_E_P1_DATA)) is None:
         listener = EarnEP1Listener()
         try:
             await listener.start()
@@ -31,10 +30,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
             raise ConfigEntryNotReady(
                 f"Cannot start UDP listener on port {DEFAULT_PORT}: {err}"
             ) from err
-        hass.data[DOMAIN] = listener
+        data = hass.data[EARN_E_P1_DATA] = EarnEP1Data(listener)
 
-    listener = hass.data[DOMAIN]
-    coordinator = EarnEP1Coordinator(hass, entry, host, serial, listener, mac)
+    # Claim the listener before the first await, so that another entry
+    # unloading while this one sets up cannot stop it from under us.
+    data.entries.add(entry.entry_id)
+
+    async def _release_listener() -> None:
+        """Stop the shared listener once the last entry has released it."""
+        data.entries.discard(entry.entry_id)
+        if not data.entries:
+            del hass.data[EARN_E_P1_DATA]
+            await data.listener.stop()
+
+    entry.async_on_unload(_release_listener)
+
+    coordinator = EarnEP1Coordinator(hass, entry, host, serial, data.listener, mac)
     coordinator.start()
 
     entry.runtime_data = coordinator
@@ -47,14 +58,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         entry.runtime_data.stop()
-
-        # Stop shared listener if no other entries are loaded
-        other_loaded = any(
-            e.state is ConfigEntryState.LOADED and e.entry_id != entry.entry_id
-            for e in hass.config_entries.async_entries(DOMAIN)
-        )
-        if not other_loaded:
-            await hass.data[DOMAIN].stop()
-            hass.data.pop(DOMAIN)
 
     return unload_ok
