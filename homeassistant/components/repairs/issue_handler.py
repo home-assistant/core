@@ -8,7 +8,7 @@ from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.frame import report_usage
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 
 from .const import DOMAIN
@@ -63,6 +63,7 @@ class RepairsFlowManager(
             _context |= {"issue_id": data["issue_id"]}
             report_usage(
                 "initiates a repair flow by passing `issue_id` via `data` rather than `context`",
+                core_behavior=ReportBehavior.LOG,
                 breaks_in_ha_version="2028.10.0",
                 integration_domain=handler,
             )
