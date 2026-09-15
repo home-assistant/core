@@ -192,7 +192,9 @@ async def async_remove_config_entry_device(
     entity_registry = er.async_get(hass)
     tracker_macs = {
         dr.format_mac(entity.unique_id.removeprefix(f"{device.serial_number}_"))
-        for entity in er.async_entries_for_device(entity_registry, device_entry.id)
+        for entity in er.async_entries_for_device(
+            entity_registry, device_entry.id, include_disabled_entities=True
+        )
         if entity.config_entry_id == config_entry.entry_id
         and entity.domain == Platform.DEVICE_TRACKER
         and entity.platform == DOMAIN

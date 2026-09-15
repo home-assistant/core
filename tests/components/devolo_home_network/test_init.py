@@ -104,6 +104,9 @@ async def test_remove_config_entry_device(
     coordinator = entry.runtime_data.coordinators[CONNECTED_WIFI_CLIENTS]
     coordinator.async_set_updated_data({})
     assert CONNECTED_STATIONS[0].mac_address in entry.runtime_data.tracked_wifi_clients
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
     assert await async_remove_config_entry_device(hass, entry, tracked_device)
     assert (
         CONNECTED_STATIONS[0].mac_address not in entry.runtime_data.tracked_wifi_clients
