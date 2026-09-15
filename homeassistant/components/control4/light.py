@@ -147,7 +147,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return whether this light is on."""
         attrs = self._extra_state_attributes
         for key in (
@@ -158,8 +158,9 @@ class Control4Light(Control4Entity, LightEntity):
         ):
             if key in attrs:
                 value = self._to_float(attrs[key])
-                return value is not None and value > 0
-        return False
+                if value is not None:
+                    return value > 0
+        return None
 
     @property
     @override
