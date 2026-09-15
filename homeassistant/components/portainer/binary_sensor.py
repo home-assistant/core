@@ -24,6 +24,7 @@ from .entity import (
     PortainerStackData,
     PortainerStackEntity,
 )
+from .util import async_add_entities_by_subentry
 
 PARALLEL_UPDATES = 0
 
@@ -90,46 +91,67 @@ async def async_setup_entry(
 
     def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
         """Add new endpoint binary sensors."""
-        async_add_entities(
-            PortainerEndpointSensor(
-                coordinator,
-                entity_description,
-                endpoint,
-            )
-            for entity_description in ENDPOINT_SENSORS
-            for endpoint in endpoints
-            if entity_description.state_fn(endpoint)
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerEndpointSensor(
+                        coordinator,
+                        entity_description,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for entity_description in ENDPOINT_SENSORS
+                for endpoint in endpoints
+                if entity_description.state_fn(endpoint)
+            ),
         )
 
     def _async_add_new_containers(
         containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
     ) -> None:
         """Add new container binary sensors."""
-        async_add_entities(
-            PortainerContainerSensor(
-                coordinator,
-                entity_description,
-                container,
-                endpoint,
-            )
-            for (endpoint, container) in containers
-            for entity_description in CONTAINER_SENSORS
-            if entity_description.state_fn(container)
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerContainerSensor(
+                        coordinator,
+                        entity_description,
+                        container,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, container) in containers
+                for entity_description in CONTAINER_SENSORS
+                if entity_description.state_fn(container)
+            ),
         )
 
     def _async_add_new_stacks(
         stacks: list[tuple[PortainerCoordinatorData, PortainerStackData]],
     ) -> None:
         """Add new stack sensors."""
-        async_add_entities(
-            PortainerStackSensor(
-                coordinator,
-                entity_description,
-                stack,
-                endpoint,
-            )
-            for (endpoint, stack) in stacks
-            for entity_description in STACK_SENSORS
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerStackSensor(
+                        coordinator,
+                        entity_description,
+                        stack,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, stack) in stacks
+                for entity_description in STACK_SENSORS
+            ),
         )
 
     coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)
