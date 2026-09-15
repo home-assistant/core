@@ -1205,6 +1205,42 @@ async def test_the_store_is_flushed_before_the_other_routers_are_asked(
     assert saved_when_asked == [True]
 
 
+async def test_the_other_routers_are_read_with_the_lock_released(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Refreshing the other routers' repair issues holds up nobody.
+
+    Each read can wait for a network timeout, and by then everything the
+    dataset lock protects has been written; other dataset writers and the
+    config flow must not queue behind those reads.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    thread_entry = next(
+        entry
+        for entry in hass.config_entries.async_loaded_entries("otbr")
+        if entry.entry_id != otbr_config_entry_multipan
+    )
+    locked_when_asked: list[bool] = []
+
+    async def record_and_answer() -> bytes:
+        locked_when_asked.append(async_get_dataset_lock(hass).locked())
+        return DATASET_CH16
+
+    with patch.object(
+        thread_entry.runtime_data,
+        "get_active_dataset_tlvs",
+        side_effect=record_and_answer,
+    ):
+        await call_migrate(
+            hass, dataset=TARGET, config_entry=otbr_config_entry_multipan
+        )
+
+    assert locked_when_asked == [False]
+
+
 async def test_migration_reports_a_discarded_store_write(
     hass: HomeAssistant,
     otbr_config_entry_multipan: str,
