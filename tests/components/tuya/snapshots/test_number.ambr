@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_duration',
-    'unique_id': 'tuya.iks13mcaiyie3rryjb2ocalarm_time',
+    'unique_id': 'iks13mcaiyie3rryjb2oc.alarm_time',
     'unit_of_measurement': 's',
   })
 # ---
@@ -98,7 +98,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'irrigation_duration',
-    'unique_id': 'tuya.73ov8i8iedtylkzrqzkfscountdown',
+    'unique_id': '73ov8i8iedtylkzrqzkfs.countdown',
     'unit_of_measurement': 's',
   })
 # ---
@@ -159,7 +159,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
-    'unique_id': 'tuya.bfpewgk8r6fhmissdyzbvolume_set',
+    'unique_id': 'bfpewgk8r6fhmissdyzb.volume_set',
     'unit_of_measurement': '',
   })
 # ---
@@ -219,7 +219,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_correction',
-    'unique_id': 'tuya.zgiyrxflahjowpcckwtemp_correction',
+    'unique_id': 'zgiyrxflahjowpcckw.temp_correction',
     'unit_of_measurement': '',
   })
 # ---
@@ -279,7 +279,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_delay',
-    'unique_id': 'tuya.rirsc4vhpbv2whkp2gwalarm_delay_time',
+    'unique_id': 'rirsc4vhpbv2whkp2gw.alarm_delay_time',
     'unit_of_measurement': 's',
   })
 # ---
@@ -340,7 +340,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'arm_delay',
-    'unique_id': 'tuya.rirsc4vhpbv2whkp2gwdelay_set',
+    'unique_id': 'rirsc4vhpbv2whkp2gw.delay_set',
     'unit_of_measurement': 's',
   })
 # ---
@@ -401,7 +401,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'siren_duration',
-    'unique_id': 'tuya.rirsc4vhpbv2whkp2gwalarm_time',
+    'unique_id': 'rirsc4vhpbv2whkp2gw.alarm_time',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -462,7 +462,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsbasic_device_volume',
+    'unique_id': 'fjdyw5ld2f5f5ddsps.basic_device_volume',
     'unit_of_measurement': '',
   })
 # ---
@@ -522,7 +522,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feed',
-    'unique_id': 'tuya.igkrtodqg14xvfxlqswwcmanual_feed',
+    'unique_id': 'igkrtodqg14xvfxlqswwc.manual_feed',
     'unit_of_measurement': '',
   })
 # ---
@@ -582,7 +582,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voice_times',
-    'unique_id': 'tuya.igkrtodqg14xvfxlqswwcvoice_times',
+    'unique_id': 'igkrtodqg14xvfxlqswwc.voice_times',
     'unit_of_measurement': '',
   })
 # ---
@@ -642,7 +642,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_backup_reserve',
-    'unique_id': 'tuya.gbq8kiahk57ct0bpncjynxbackup_reserve',
+    'unique_id': 'gbq8kiahk57ct0bpncjynx.backup_reserve',
     'unit_of_measurement': '%',
   })
 # ---
@@ -702,7 +702,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'inverter_output_power_limit',
-    'unique_id': 'tuya.gbq8kiahk57ct0bpncjynxoutput_power_limit',
+    'unique_id': 'gbq8kiahk57ct0bpncjynx.output_power_limit',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -763,7 +763,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feed',
-    'unique_id': 'tuya.iomszlsve0yyzkfwqswwcmanual_feed',
+    'unique_id': 'iomszlsve0yyzkfwqswwc.manual_feed',
     'unit_of_measurement': '',
   })
 # ---
@@ -823,7 +823,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_current',
-    'unique_id': 'tuya.lr7th3bpx7masmsdzdccqcharge_cur_set',
+    'unique_id': 'lr7th3bpx7masmsdzdccq.charge_cur_set',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -884,7 +884,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'irrigation_duration',
-    'unique_id': 'tuya.ggimpv4dqzkfscountdown',
+    'unique_id': 'ggimpv4dqzkfs.countdown',
     'unit_of_measurement': 's',
   })
 # ---
@@ -945,7 +945,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cook_temperature',
-    'unique_id': 'tuya.yybgnzr3ztwscook_temperature',
+    'unique_id': 'yybgnzr3ztws.cook_temperature',
     'unit_of_measurement': '℃',
   })
 # ---
@@ -1005,7 +1005,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_cook_temperature',
-    'unique_id': 'tuya.yybgnzr3ztwscook_temperature_2',
+    'unique_id': 'yybgnzr3ztws.cook_temperature_2',
     'unit_of_measurement': '℃',
   })
 # ---
@@ -1065,7 +1065,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': 'tuya.ol8xwtcj42eg18bdbrnztemp_set',
+    'unique_id': 'ol8xwtcj42eg18bdbrnz.temp_set',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1126,7 +1126,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_maximum',
-    'unique_id': 'tuya.snbu4b3vekhywztwqgcwymax_set',
+    'unique_id': 'snbu4b3vekhywztwqgcwy.max_set',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1186,7 +1186,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_minimum',
-    'unique_id': 'tuya.snbu4b3vekhywztwqgcwymini_set',
+    'unique_id': 'snbu4b3vekhywztwqgcwy.mini_set',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1246,7 +1246,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'installation_height',
-    'unique_id': 'tuya.snbu4b3vekhywztwqgcwyinstallation_height',
+    'unique_id': 'snbu4b3vekhywztwqgcwy.installation_height',
     'unit_of_measurement': 'm',
   })
 # ---
@@ -1307,7 +1307,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'maximum_liquid_depth',
-    'unique_id': 'tuya.snbu4b3vekhywztwqgcwyliquid_depth_max',
+    'unique_id': 'snbu4b3vekhywztwqgcwy.liquid_depth_max',
     'unit_of_measurement': 'm',
   })
 # ---
@@ -1368,7 +1368,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'far_detection',
-    'unique_id': 'tuya.kxwleaa2sphfar_detection',
+    'unique_id': 'kxwleaa2sph.far_detection',
     'unit_of_measurement': 'cm',
   })
 # ---
@@ -1429,7 +1429,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'near_detection',
-    'unique_id': 'tuya.kxwleaa2sphnear_detection',
+    'unique_id': 'kxwleaa2sph.near_detection',
     'unit_of_measurement': 'cm',
   })
 # ---
@@ -1490,7 +1490,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensitivity',
-    'unique_id': 'tuya.kxwleaa2sphsensitivity',
+    'unique_id': 'kxwleaa2sph.sensitivity',
     'unit_of_measurement': 'x',
   })
 # ---
@@ -1550,7 +1550,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_set',
+    'unique_id': 'zuqudhznfzttizpgbrnz.temp_set',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1611,7 +1611,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_irrigation_duration',
-    'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_1',
+    'unique_id': 'cijerqyssiwrf7deqzkfs.countdown_1',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -1672,7 +1672,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_irrigation_duration',
-    'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_2',
+    'unique_id': 'cijerqyssiwrf7deqzkfs.countdown_2',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -1733,7 +1733,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_irrigation_duration',
-    'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_3',
+    'unique_id': 'cijerqyssiwrf7deqzkfs.countdown_3',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -1794,7 +1794,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_irrigation_duration',
-    'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_4',
+    'unique_id': 'cijerqyssiwrf7deqzkfs.countdown_4',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -1855,7 +1855,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_irrigation_duration',
-    'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_5',
+    'unique_id': 'cijerqyssiwrf7deqzkfs.countdown_5',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -1916,7 +1916,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_irrigation_duration',
-    'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_6',
+    'unique_id': 'cijerqyssiwrf7deqzkfs.countdown_6',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -1977,7 +1977,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_irrigation_duration',
-    'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_7',
+    'unique_id': 'cijerqyssiwrf7deqzkfs.countdown_7',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -2038,7 +2038,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_irrigation_duration',
-    'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_8',
+    'unique_id': 'cijerqyssiwrf7deqzkfs.countdown_8',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -2099,7 +2099,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_correction',
-    'unique_id': 'tuya.dn7cjik6kwtemp_correction',
+    'unique_id': 'dn7cjik6kw.temp_correction',
     'unit_of_measurement': '℃',
   })
 # ---
@@ -2159,7 +2159,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'delay_clean_time',
-    'unique_id': 'tuya.yohkwjjdjlzludd3psmdelay_clean_time',
+    'unique_id': 'yohkwjjdjlzludd3psm.delay_clean_time',
     'unit_of_measurement': 's',
   })
 # ---
@@ -2220,7 +2220,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': 'tuya.addr6y4u8gb43nl8brnztemp_set',
+    'unique_id': 'addr6y4u8gb43nl8brnz.temp_set',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2281,7 +2281,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
-    'unique_id': 'tuya.i6xywcsymer1kmb6psbasic_device_volume',
+    'unique_id': 'i6xywcsymer1kmb6ps.basic_device_volume',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2341,7 +2341,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_delay',
-    'unique_id': 'tuya.2pxfek1jjrtctiyglamalarm_delay_time',
+    'unique_id': '2pxfek1jjrtctiyglam.alarm_delay_time',
     'unit_of_measurement': 's',
   })
 # ---
@@ -2402,7 +2402,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'arm_delay',
-    'unique_id': 'tuya.2pxfek1jjrtctiyglamdelay_set',
+    'unique_id': '2pxfek1jjrtctiyglam.delay_set',
     'unit_of_measurement': 's',
   })
 # ---
@@ -2463,7 +2463,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'siren_duration',
-    'unique_id': 'tuya.2pxfek1jjrtctiyglamalarm_time',
+    'unique_id': '2pxfek1jjrtctiyglam.alarm_time',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -2524,7 +2524,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'delay_clean_time',
-    'unique_id': 'tuya.nyriu7sjgj9oruzmpsmdelay_clean_time',
+    'unique_id': 'nyriu7sjgj9oruzmpsm.delay_clean_time',
     'unit_of_measurement': 's',
   })
 # ---
@@ -2585,7 +2585,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_maximum',
-    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwymax_set',
+    'unique_id': 'fbya6s6rhaoyvl8hqgcwy.max_set',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2645,7 +2645,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_minimum',
-    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwymini_set',
+    'unique_id': 'fbya6s6rhaoyvl8hqgcwy.mini_set',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2705,7 +2705,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'installation_height',
-    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwyinstallation_height',
+    'unique_id': 'fbya6s6rhaoyvl8hqgcwy.installation_height',
     'unit_of_measurement': 'm',
   })
 # ---
@@ -2766,7 +2766,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'maximum_liquid_depth',
-    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwyliquid_depth_max',
+    'unique_id': 'fbya6s6rhaoyvl8hqgcwy.liquid_depth_max',
     'unit_of_measurement': 'm',
   })
 # ---
@@ -2827,7 +2827,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'video_brightness',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsipc_bright',
+    'unique_id': 'xihygtyd0d1faknkps.ipc_bright',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2887,7 +2887,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'video_contrast',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsipc_contrast',
+    'unique_id': 'xihygtyd0d1faknkps.ipc_contrast',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2947,7 +2947,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'video_sharpness',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsipc_sharp',
+    'unique_id': 'xihygtyd0d1faknkps.ipc_sharp',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3007,7 +3007,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time',
-    'unique_id': 'tuya.okwwus27jhqqe2mijbgsalarm_time',
+    'unique_id': 'okwwus27jhqqe2mijbgs.alarm_time',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -3067,7 +3067,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time',
-    'unique_id': 'tuya.kjr0pqg7eunn4vlujbgsalarm_time',
+    'unique_id': 'kjr0pqg7eunn4vlujbgs.alarm_time',
     'unit_of_measurement': '',
   })
 # ---
@@ -3127,7 +3127,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_correction',
-    'unique_id': 'tuya.sb3zdertrw50bgogkwtemp_correction',
+    'unique_id': 'sb3zdertrw50bgogkw.temp_correction',
     'unit_of_measurement': '摄氏度',
   })
 # ---
@@ -3187,7 +3187,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'irrigation_duration',
-    'unique_id': 'tuya.bl5cuqxnqzkfscountdown',
+    'unique_id': 'bl5cuqxnqzkfs.countdown',
     'unit_of_measurement': 's',
   })
 # ---
@@ -3248,7 +3248,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'irrigation_duration',
-    'unique_id': 'tuya.n8b7ineqe0tuidckqzkfscountdown',
+    'unique_id': 'n8b7ineqe0tuidckqzkfs.countdown',
     'unit_of_measurement': 's',
   })
 # ---
@@ -3309,7 +3309,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
-    'unique_id': 'tuya.ri7eegdifufzdi54dyzbvolume_set',
+    'unique_id': 'ri7eegdifufzdi54dyzb.volume_set',
     'unit_of_measurement': '',
   })
 # ---
@@ -3369,7 +3369,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cook_temperature',
-    'unique_id': 'tuya.hyda5jsihokacvaqjzmcook_temperature',
+    'unique_id': 'hyda5jsihokacvaqjzm.cook_temperature',
     'unit_of_measurement': '℃',
   })
 # ---
@@ -3429,7 +3429,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cook_time',
-    'unique_id': 'tuya.hyda5jsihokacvaqjzmcook_time',
+    'unique_id': 'hyda5jsihokacvaqjzm.cook_time',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -3489,7 +3489,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'irrigation_duration',
-    'unique_id': 'tuya.tskafaotnfigad6oqzkfscountdown',
+    'unique_id': 'tskafaotnfigad6oqzkfs.countdown',
     'unit_of_measurement': 's',
   })
 # ---
@@ -3550,7 +3550,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
-    'unique_id': 'tuya.zrrraytdoanz33rldsvolume_set',
+    'unique_id': 'zrrraytdoanz33rlds.volume_set',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3610,7 +3610,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'irrigation_duration',
-    'unique_id': 'tuya.kx8dncf1qzkfscountdown',
+    'unique_id': 'kx8dncf1qzkfs.countdown',
     'unit_of_measurement': 's',
   })
 # ---
@@ -3671,7 +3671,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
-    'unique_id': 'tuya.c9nbmrweturkgqktdyzbvolume_set',
+    'unique_id': 'c9nbmrweturkgqktdyzb.volume_set',
     'unit_of_measurement': '',
   })
 # ---
@@ -3731,7 +3731,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_correction',
-    'unique_id': 'tuya.j6mn1t4ut5end6ifkwtemp_correction',
+    'unique_id': 'j6mn1t4ut5end6ifkw.temp_correction',
     'unit_of_measurement': '℃',
   })
 # ---

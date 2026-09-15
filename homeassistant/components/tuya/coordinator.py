@@ -16,7 +16,7 @@ from tuya_sharing import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
 from .const import (
@@ -149,10 +149,34 @@ class DeviceListener(SharingDeviceListener):
         """Register device with Home Assistant."""
         TUYA_QUIRKS_REGISTRY.initialise_device_quirk(device)
 
-        device_registry.async_get_or_create(
+        device_entry = device_registry.async_get_or_create(
             config_entry_id=self._entry.entry_id,
             **get_device_info(device),
         )
+        self._async_migrate_entity_unique_ids(device, device_entry)
+
+    @callback
+    def _async_migrate_entity_unique_ids(
+        self, device: CustomerDevice, device_entry: dr.DeviceEntry
+    ) -> None:
+        """Migrate entity unique IDs away from the redundant `tuya.` prefix.
+
+        Old format: `tuya.{device_id}{key}`, new format: `{device_id}.{key}`.
+        Added in 2026.10, can be removed in 2027.4.
+        """
+        entity_registry = er.async_get(self.hass)
+        old_prefix = f"{DOMAIN}.{device.id}"
+        for entity_entry in er.async_entries_for_device(
+            entity_registry, device_entry.id, include_disabled_entities=True
+        ):
+            if not entity_entry.unique_id.startswith(old_prefix):
+                continue
+            new_unique_id = device.id
+            if old_suffix := entity_entry.unique_id.removeprefix(old_prefix):
+                new_unique_id = f"{device.id}.{old_suffix}"
+            entity_registry.async_update_entity(
+                entity_entry.entity_id, new_unique_id=new_unique_id
+            )
 
     def remove_device(self, device_id: str) -> None:
         """Handle device removal event."""

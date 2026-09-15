@@ -57,7 +57,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'numbered_button',
-    'unique_id': 'tuya.fvywp3b5mu4zay8lgkxwswitch_mode1',
+    'unique_id': 'fvywp3b5mu4zay8lgkxw.switch_mode1',
     'unit_of_measurement': None,
   })
 # ---
@@ -118,7 +118,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'numbered_button',
-    'unique_id': 'tuya.fvywp3b5mu4zay8lgkxwswitch_mode2',
+    'unique_id': 'fvywp3b5mu4zay8lgkxw.switch_mode2',
     'unit_of_measurement': None,
   })
 # ---
@@ -180,7 +180,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'numbered_button',
-    'unique_id': 'tuya.g5uso5ajgkxwswitch_mode1',
+    'unique_id': 'g5uso5ajgkxw.switch_mode1',
     'unit_of_measurement': None,
   })
 # ---
@@ -241,7 +241,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_message',
-    'unique_id': 'tuya.svjjuwykgijjedurpsalarm_message',
+    'unique_id': 'svjjuwykgijjedurps.alarm_message',
     'unit_of_measurement': None,
   })
 # ---
@@ -300,7 +300,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_message',
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsalarm_message',
+    'unique_id': 'fjdyw5ld2f5f5ddsps.alarm_message',
     'unit_of_measurement': None,
   })
 # ---
@@ -359,7 +359,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_picture',
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsdoorbell_pic',
+    'unique_id': 'fjdyw5ld2f5f5ddsps.doorbell_pic',
     'unit_of_measurement': None,
   })
 # ---
@@ -418,7 +418,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_message',
-    'unique_id': 'tuya.o4hpbl5uarjfbzhepsalarm_message',
+    'unique_id': 'o4hpbl5uarjfbzheps.alarm_message',
     'unit_of_measurement': None,
   })
 # ---
@@ -477,7 +477,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_picture',
-    'unique_id': 'tuya.o4hpbl5uarjfbzhepsdoorbell_pic',
+    'unique_id': 'o4hpbl5uarjfbzheps.doorbell_pic',
     'unit_of_measurement': None,
   })
 # ---
@@ -536,7 +536,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_message',
-    'unique_id': 'tuya.53fnjncm3jywuaznpsalarm_message',
+    'unique_id': '53fnjncm3jywuaznps.alarm_message',
     'unit_of_measurement': None,
   })
 # ---
@@ -595,7 +595,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_message',
-    'unique_id': 'tuya.qt0o5jlatiqf2rscpsalarm_message',
+    'unique_id': 'qt0o5jlatiqf2rscps.alarm_message',
     'unit_of_measurement': None,
   })
 # ---
@@ -654,7 +654,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_picture',
-    'unique_id': 'tuya.qt0o5jlatiqf2rscpsdoorbell_pic',
+    'unique_id': 'qt0o5jlatiqf2rscps.doorbell_pic',
     'unit_of_measurement': None,
   })
 # ---
@@ -713,7 +713,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_message',
-    'unique_id': 'tuya.i6xywcsymer1kmb6psalarm_message',
+    'unique_id': 'i6xywcsymer1kmb6ps.alarm_message',
     'unit_of_measurement': None,
   })
 # ---
@@ -772,7 +772,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_picture',
-    'unique_id': 'tuya.i6xywcsymer1kmb6psdoorbell_pic',
+    'unique_id': 'i6xywcsymer1kmb6ps.doorbell_pic',
     'unit_of_measurement': None,
   })
 # ---
@@ -831,7 +831,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_message',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsalarm_message',
+    'unique_id': 'xihygtyd0d1faknkps.alarm_message',
     'unit_of_measurement': None,
   })
 # ---
