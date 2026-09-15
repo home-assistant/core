@@ -144,6 +144,7 @@ async def test_a_setpoint_between_two_halves_is_rounded_not_truncated(
     assert _sent_command(mock_repository).PresetTemp == sent
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_temperature_outside_the_units_range_is_refused(
     hass: HomeAssistant,
 ) -> None:

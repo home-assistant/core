@@ -401,7 +401,7 @@ class InvalidHost(KnownError):
 
 
 class HostAlreadyConfigured(KnownError):
-    """Error to indicate there is an duplicate hostname."""
+    """Error to indicate there is a duplicate hostname."""
 
     error_name = "host_already_configured"
     applies_to_field = CONF_HOST

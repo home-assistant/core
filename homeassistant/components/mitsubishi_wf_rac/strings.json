@@ -32,7 +32,7 @@
           "host": "The local IP address of the airco's wireless module. A changed address is picked up when the module announces itself again; give the module a fixed address in your router, or correct it here if it does not.",
           "port": "The port the module's local API listens on. Leave this at 51443 unless your module announces a different one."
         },
-        "description": "Please fill in the correct information to add the Airco Manually",
+        "description": "Enter the connection details of the airco you want to add.",
         "title": "WF-RAC AC connection info"
       }
     }

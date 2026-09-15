@@ -240,12 +240,8 @@ class AircoClimate(WfRacEntity, ClimateEntity):
                 },
             )
 
-        # Home Assistant validates the advertised range but not the step, so a
-        # value between two halves arrives here intact - and the frame would
-        # truncate it, turning 21.4 into 21.0 rather than the 21.5 it is
-        # nearer to. Rounded rather than refused: the unit cannot hold it
-        # either way, and an automation that has always sent tenths should not
-        # start failing over it.
+        # Nothing validates the step on the way in, and the frame truncates:
+        # rounded here, 21.4 reaches the unit as 21.5 rather than 21.0.
         opts: dict[AirconCommands, Any] = {
             AirconCommands.PresetTemp: round(set_temp * 2) / 2
         }
