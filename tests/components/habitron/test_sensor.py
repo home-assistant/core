@@ -163,7 +163,9 @@ def test_no_description_carries_a_static_icon() -> None:
 def test_every_icon_translation_key_exists() -> None:
     """Each icons.json sensor key belongs to a description that asks for it."""
     icons = json.loads(
-        (Path(habitron_sensor.__file__).parent / "icons.json").read_text(encoding="utf-8")
+        (Path(habitron_sensor.__file__).parent / "icons.json").read_text(
+            encoding="utf-8"
+        )
     )
     described = {
         value.translation_key
