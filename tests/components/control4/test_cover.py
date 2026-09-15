@@ -1,12 +1,14 @@
 """Test Control4 Cover."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.control4.const import WEBSOCKET_RESYNC_INTERVAL_SEC
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -20,10 +22,11 @@ from homeassistant.components.cover import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "cover.test_controller_living_room_shade"
 
@@ -382,4 +385,32 @@ async def test_cover_reconnect_resyncs_state(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_CURRENT_POSITION] == 10
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_cover_update_variables",
+    "init_integration",
+)
+async def test_cover_periodic_resync(
+    hass: HomeAssistant,
+    mock_cover_variables: dict,
+) -> None:
+    """Cover re-fetches and resyncs state on the periodic safety-net poll."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_POSITION] == 50
+
+    mock_cover_variables[234]["Level"] = 10
+    mock_cover_variables[234]["Fully Closed"] = False
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=WEBSOCKET_RESYNC_INTERVAL_SEC)
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
     assert state.attributes[ATTR_CURRENT_POSITION] == 10

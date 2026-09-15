@@ -1,5 +1,7 @@
 """The Control4 integration."""
 
+from datetime import datetime, timedelta
+import functools
 import logging
 import random
 from typing import Any
@@ -20,13 +22,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 from .const import (
     CONF_CONTROLLER_UNIQUE_ID,
     DOMAIN,
     RETRY_BACKOFF_MAX_SEC,
     SCHEDULE_REFRESH_ADVANCE_SEC,
+    WEBSOCKET_RESYNC_INTERVAL_SEC,
     Control4ConfigEntry,
     Control4RuntimeData,
 )
@@ -87,6 +90,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
         await runtime_data.websocket.sio_disconnect()
         if runtime_data.cancel_token_refresh_callback is not None:
             runtime_data.cancel_token_refresh_callback()
+        if runtime_data.cancel_periodic_resync_callback is not None:
+            runtime_data.cancel_periodic_resync_callback()
         raise
 
     # All pieces gathered - fill in the rest of runtime_data now that we have them.
@@ -112,6 +117,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) ->
     if runtime_data.cancel_token_refresh_callback is not None:
         _LOGGER.debug("Cancelling scheduled token refresh for config entry unload")
         runtime_data.cancel_token_refresh_callback()
+    if runtime_data.cancel_periodic_resync_callback is not None:
+        _LOGGER.debug("Cancelling periodic resync poll for config entry unload")
+        runtime_data.cancel_periodic_resync_callback()
     return unload_ok
 
 
@@ -186,6 +194,11 @@ async def refresh_tokens(
             account=account, director=director, websocket=websocket
         )
         entry.runtime_data = runtime_data
+        runtime_data.cancel_periodic_resync_callback = async_track_time_interval(
+            hass,
+            functools.partial(_periodic_resync, hass, entry),
+            timedelta(seconds=WEBSOCKET_RESYNC_INTERVAL_SEC),
+        )
 
     try:
         await websocket.sio_connect(director.director_bearer_token)
@@ -203,6 +216,31 @@ async def refresh_tokens(
     return runtime_data
 
 
+async def _resync_items(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
+    """Re-fetch and push current variable state for every WebSocket-subscribed item."""
+    item_callbacks = entry.runtime_data.websocket.item_callbacks
+    for item_id, callbacks in list(item_callbacks.items()):
+        try:
+            item_attributes = await director_get_entry_variables(hass, entry, item_id)
+        except (TimeoutError, client_exceptions.ClientError, C4Exception):
+            _LOGGER.warning("Failed to resync item %s", item_id)
+            continue
+        message = {
+            "evtName": "OnDataToUI",
+            "iddevice": item_id,
+            "data": item_attributes,
+        }
+        for callback in list(callbacks):
+            await callback(item_id, message)
+
+
+async def _periodic_resync(
+    hass: HomeAssistant, entry: Control4ConfigEntry, _now: datetime
+) -> None:
+    """Safety-net poll to catch any WebSocket push events that were missed."""
+    await _resync_items(hass, entry)
+
+
 class C4WebsocketConnectionTracker:
     """Refresh entity states on WebSocket reconnect and mark entities unavailable on disconnect."""
 
@@ -217,24 +255,7 @@ class C4WebsocketConnectionTracker:
         if not self._was_disconnected:
             return
         _LOGGER.info("WebSocket connection to Control4 re-established")
-        item_callbacks = self.entry.runtime_data.websocket.item_callbacks
-        for item_id, callbacks in list(item_callbacks.items()):
-            try:
-                item_attributes = await director_get_entry_variables(
-                    self.hass, self.entry, item_id
-                )
-            except (TimeoutError, client_exceptions.ClientError, C4Exception):
-                _LOGGER.warning(
-                    "Failed to refresh item %s after WebSocket reconnect", item_id
-                )
-                continue
-            message = {
-                "evtName": "OnDataToUI",
-                "iddevice": item_id,
-                "data": item_attributes,
-            }
-            for callback in list(callbacks):
-                await callback(item_id, message)
+        await _resync_items(self.hass, self.entry)
         self._was_disconnected = False
 
     async def disconnect_callback(self) -> None:

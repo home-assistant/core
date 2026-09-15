@@ -31,6 +31,7 @@ class Control4RuntimeData:
     director_all_items: list[dict[str, Any]] = field(default_factory=list)
     ui_configuration: dict[str, Any] | None = None
     cancel_token_refresh_callback: CALLBACK_TYPE | None = None
+    cancel_periodic_resync_callback: CALLBACK_TYPE | None = None
 
 
 type Control4ConfigEntry = ConfigEntry[Control4RuntimeData]
@@ -43,3 +44,4 @@ RETRY_BACKOFF_MAX_SEC = 30
 SCHEDULE_REFRESH_ADVANCE_SEC = 300
 
 DEFAULT_SCAN_INTERVAL = 5
+WEBSOCKET_RESYNC_INTERVAL_SEC = 60
