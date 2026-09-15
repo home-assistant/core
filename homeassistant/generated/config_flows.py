@@ -835,6 +835,7 @@ FLOWS = {
         "transmission",
         "triggercmd",
         "trmnl",
+        "tsun",
         "tuya",
         "twentemilieu",
         "twilio",
