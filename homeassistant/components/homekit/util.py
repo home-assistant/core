@@ -152,7 +152,7 @@ VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 BASIC_INFO_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_NAME): cv.string,
-        probatio.Optional(CONF_ADAPTIVE_LIGHTING, default=False): cv.boolean,
+        probatio.Optional(CONF_ADAPTIVE_LIGHTING): cv.boolean,
         probatio.Optional(CONF_MIN_COLOR_TEMP_KELVIN): cv.positive_int,
         probatio.Optional(CONF_MAX_COLOR_TEMP_KELVIN): cv.positive_int,
         probatio.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
