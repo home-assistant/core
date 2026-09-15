@@ -1,4 +1,4 @@
-"""Constants for the GridX integration."""
+"""Constants for the gridX integration."""
 
 from datetime import timedelta
 import logging
@@ -8,14 +8,9 @@ DOMAIN: Final = "gridx"
 
 LOGGER = logging.getLogger(__package__)
 
-API_BASE_URL: Final = "https://api.gridx.de"
+# The gridX cloud publishes a new live snapshot roughly once a minute; polling
+# faster only produces duplicate values against a third-party service.
+LIVE_UPDATE_INTERVAL: Final = timedelta(seconds=60)
 
-# Only the E.ON Home realm remains; the Viessmann realm was shut down end of 2025.
-LOGIN_URL: Final = "https://gridx.eu.auth0.com/oauth/token"
-LOGIN_GRANT_TYPE: Final = "http://auth0.com/oauth/grant-type/password-realm"
-LOGIN_AUDIENCE: Final = "my.gridx"
-LOGIN_CLIENT_ID: Final = "mG0Phmo7DmnvAqO7p6B0WOYBODppY3cc"
-LOGIN_SCOPE: Final = "email openid offline_access"
-LOGIN_REALM: Final = "eon-home-authentication-db"
-
-LIVE_UPDATE_INTERVAL = timedelta(seconds=30)
+# Per-request timeout; the cloud fans out to every system of the account.
+HTTP_TIMEOUT: Final = 20

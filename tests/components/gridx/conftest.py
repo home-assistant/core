@@ -1,55 +1,59 @@
-"""Common fixtures for the GridX integration tests."""
+"""Fixtures for the gridX tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
+from gridx_connector import GridXSystem
 import pytest
+
+from homeassistant.components.gridx.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 USERNAME = "test@example.com"
 PASSWORD = "test-password"
-
-MOCK_LIVE_DATA = {
-    "photovoltaic": 1512,
-    "consumption": 600,
-    "grid": -59,
-    "production": 1512,
-    "selfConsumption": 1453,
-    "selfConsumptionRate": 0.96,
-    "selfSufficiencyRate": 1.0,
-    "selfSupply": 600,
-    "totalConsumption": 600,
-    "directConsumptionHousehold": 600,
-    "directConsumptionHeatPump": 0,
-    "directConsumptionEV": 0,
-    "directConsumptionHeater": 0,
-    "directConsumptionRate": 0.397,
-    "gridMeterReadingNegative": 14081760000,
-    "gridMeterReadingPositive": 7393320000,
-    "measuredAt": "2024-05-08T09:42:18Z",
-    "battery": {
-        "capacity": 10000,
-        "nominalCapacity": 10000,
-        "power": -853,
-        "remainingCharge": 7700,
-        "stateOfCharge": 0.77,
-    },
-}
+SYSTEM_ID = "11111111-1111-1111-1111-111111111111"
 
 
 @pytest.fixture
-def mock_gridx_connector() -> Generator[MagicMock]:
-    """Mock GridboxConnector so tests never hit the real network."""
-    connector = MagicMock()
-    connector.retrieve_live_data = AsyncMock(return_value=[MOCK_LIVE_DATA])
-    connector.close = AsyncMock()
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.gridx.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
-    with (
-        patch(
-            "homeassistant.components.gridx.config_flow._validate_credentials",
-        ),
-        patch(
-            "homeassistant.components.gridx.async_create_connector",
-            AsyncMock(return_value=connector),
-        ),
-    ):
+
+@pytest.fixture
+def mock_connector() -> Generator[AsyncMock]:
+    """Mock the gridx-connector library."""
+    with patch(
+        "homeassistant.components.gridx.coordinator.AsyncGridboxConnector",
+        autospec=True,
+    ) as mock_class:
+        connector = mock_class.return_value
+        connector.systems = {
+            SYSTEM_ID: GridXSystem(
+                id=SYSTEM_ID,
+                name="Home",
+                manufacturer="gridX",
+                model="gridBox",
+                serial_number="GB-1",
+            )
+        }
+        connector.get_live_data.return_value = {
+            SYSTEM_ID: load_json_object_fixture("live.json", DOMAIN)
+        }
         yield connector
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=USERNAME,
+        unique_id=USERNAME,
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )

@@ -1,125 +1,99 @@
-"""Tests for the GridX integration setup."""
+"""Tests for the gridX integration setup."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import timedelta
+from unittest.mock import AsyncMock
 
-import httpx
+from freezegun.api import FrozenDateTimeFactory
+from gridx_connector import (
+    GridXAuthenticationError,
+    GridXConnectionError,
+    GridXResponseError,
+)
 import pytest
 
-from homeassistant.components.gridx.const import DOMAIN
+from homeassistant.components.gridx.const import LIVE_UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .conftest import PASSWORD, USERNAME
+from . import setup_integration
 
-from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return a mock GridX config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-        title=USERNAME,
-        unique_id=USERNAME.lower(),
-    )
-    entry.add_to_hass(hass)
-    return entry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_setup_permission_error(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+@pytest.mark.usefixtures("mock_connector")
+async def test_load_unload_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """PermissionError during connector creation raises ConfigEntryAuthFailed."""
-    with patch(
-        "homeassistant.components.gridx.async_create_connector",
-        AsyncMock(side_effect=PermissionError("unauthorized")),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    """Test the entry loads and unloads."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_setup_http_status_401(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """HTTPStatusError with 401 raises ConfigEntryAuthFailed."""
-    response = MagicMock()
-    response.status_code = 401
-    err = httpx.HTTPStatusError(
-        "401 Unauthorized", request=MagicMock(), response=response
-    )
-    with patch(
-        "homeassistant.components.gridx.async_create_connector",
-        AsyncMock(side_effect=err),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_setup_http_status_500(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """HTTPStatusError with 500 raises ConfigEntryNotReady."""
-    response = MagicMock()
-    response.status_code = 500
-    err = httpx.HTTPStatusError(
-        "500 Internal Server Error", request=MagicMock(), response=response
-    )
-    with patch(
-        "homeassistant.components.gridx.async_create_connector",
-        AsyncMock(side_effect=err),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_http_error(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """httpx.HTTPError raises ConfigEntryNotReady."""
-    with patch(
-        "homeassistant.components.gridx.async_create_connector",
-        AsyncMock(side_effect=httpx.HTTPError("connection failed")),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_runtime_error(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """RuntimeError during connector creation raises ConfigEntryNotReady."""
-    with patch(
-        "homeassistant.components.gridx.async_create_connector",
-        AsyncMock(side_effect=RuntimeError("unexpected")),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_first_refresh_failure_closes_connector(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_gridx_connector: MagicMock,
-) -> None:
-    """The connector is closed when the first coordinator refresh fails."""
-    mock_gridx_connector.retrieve_live_data = AsyncMock(
-        side_effect=httpx.HTTPError("connection failed")
-    )
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    mock_gridx_connector.close.assert_awaited_once()
+
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (GridXAuthenticationError("denied"), ConfigEntryState.SETUP_ERROR),
+        (GridXConnectionError("offline"), ConfigEntryState.SETUP_RETRY),
+        (GridXResponseError("HTTP 500", 500), ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_setup_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connector: AsyncMock,
+    exception: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test setup errors map to the right entry state."""
+    mock_connector.initialize.side_effect = exception
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is state
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [GridXConnectionError("offline"), GridXResponseError("HTTP 500", 500)],
+)
+async def test_update_failure_makes_entities_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connector: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test a failed refresh after setup marks entities unavailable."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("sensor.home_pv_power").state == "1512"
+
+    mock_connector.get_live_data.side_effect = exception
+    freezer.tick(LIVE_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.home_pv_power").state == STATE_UNAVAILABLE
+
+    mock_connector.get_live_data.side_effect = None
+    freezer.tick(LIVE_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.home_pv_power").state == "1512"
+
+
+async def test_auth_failure_on_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connector: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test rejected credentials after setup mark entities unavailable."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_connector.get_live_data.side_effect = GridXAuthenticationError("denied")
+    freezer.tick(LIVE_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.home_pv_power").state == STATE_UNAVAILABLE

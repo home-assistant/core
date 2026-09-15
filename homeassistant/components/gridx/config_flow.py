@@ -1,59 +1,26 @@
-"""Config flow for the GridX integration."""
+"""Config flow for the gridX integration."""
 
 from typing import Any, override
 
-import httpx
+from gridx_connector import GridXAuthenticationError, GridXError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.httpx_client import create_async_httpx_client
 
-from .client import async_create_connector, build_connector_config
-from .const import API_BASE_URL, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
+from .coordinator import create_connector
 
-UNEXPECTED_AUTH_ERRORS = (RuntimeError, TypeError, ValueError)
-
-
-class _NoSystemsFoundError(Exception):
-    """Raised when authentication succeeds but no GridX systems are found."""
-
-
-async def _validate_credentials(
-    hass: HomeAssistant,
-    username: str,
-    password: str,
-) -> None:
-    """Attempt authentication and a live data fetch.
-
-    Raises:
-        PermissionError: On authentication failure.
-        ConnectionError: On network / timeout issues.
-        httpx.HTTPError: On HTTP errors from the underlying client.
-    """
-    config = build_connector_config(username, password)
-    httpx_client = create_async_httpx_client(
-        hass,
-        auto_cleanup=False,
-        base_url=API_BASE_URL,
-    )
-    try:
-        connector = await async_create_connector(config, httpx_client)
-    except Exception:
-        await httpx_client.aclose()
-        raise
-    try:
-        data = await connector.retrieve_live_data()
-    finally:
-        await connector.close()
-
-    if not data:
-        raise _NoSystemsFoundError
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
 class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for GridX."""
+    """Handle a config flow for gridX."""
 
     VERSION = 1
 
@@ -67,46 +34,34 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username: str = user_input[CONF_USERNAME]
             password: str = user_input[CONF_PASSWORD]
-
-            await self.async_set_unique_id(username.lower())
-            self._abort_if_unique_id_configured()
-
+            connector = create_connector(self.hass, username, password)
             try:
-                await _validate_credentials(self.hass, username, password)
-            except PermissionError:
+                await connector.initialize()
+            except GridXAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except httpx.HTTPStatusError as err:
-                status = err.response.status_code if err.response else None
-                errors["base"] = (
-                    "invalid_auth" if status in (401, 403) else "cannot_connect"
-                )
-            except httpx.HTTPError:
+            except GridXError:
                 errors["base"] = "cannot_connect"
-            except ConnectionError, TimeoutError, OSError:
-                errors["base"] = "cannot_connect"
-            except _NoSystemsFoundError:
-                errors["base"] = "no_systems"
-            except UNEXPECTED_AUTH_ERRORS:
-                LOGGER.exception("Unexpected error during GridX credential validation")
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(
-                    title=username,
-                    data={
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    },
-                )
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-            }
-        )
+                if not connector.systems:
+                    errors["base"] = "no_systems"
+                else:
+                    await self.async_set_unique_id(username.lower())
+                    self._abort_if_unique_id_configured(
+                        updates={CONF_PASSWORD: password}
+                    )
+                    return self.async_create_entry(
+                        title=username,
+                        data={
+                            CONF_USERNAME: username,
+                            CONF_PASSWORD: password,
+                        },
+                    )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=schema,
+            data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )

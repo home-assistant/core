@@ -6,7 +6,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_systems": "No GridX systems found for this account. Please verify that your account has at least one GridBox configured in the GridX app.",
+      "no_systems": "No gridX systems found for this account. Please verify that your account has at least one gridBox configured in the gridX app.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -16,10 +16,10 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "password": "Your GridX app password",
-          "username": "Your email address from the GridX app"
+          "password": "The password of your gridX (E.ON Home) account",
+          "username": "The email address of your gridX (E.ON Home) account"
         },
-        "title": "Connect to GridX"
+        "title": "Connect to gridX"
       }
     }
   },
@@ -27,12 +27,6 @@
     "sensor": {
       "battery_capacity": {
         "name": "Battery capacity"
-      },
-      "battery_charge": {
-        "name": "Battery charge"
-      },
-      "battery_discharge": {
-        "name": "Battery discharge"
       },
       "battery_power": {
         "name": "Battery power"
@@ -44,19 +38,19 @@
         "name": "Battery state of charge"
       },
       "consumption": {
-        "name": "Consumption"
+        "name": "Consumption power"
       },
       "direct_consumption_ev": {
-        "name": "Direct consumption EV"
+        "name": "EV direct consumption power"
       },
       "direct_consumption_heat_pump": {
-        "name": "Direct consumption heat pump"
+        "name": "Heat pump direct consumption power"
       },
       "direct_consumption_heater": {
-        "name": "Direct consumption heater"
+        "name": "Heater direct consumption power"
       },
       "direct_consumption_household": {
-        "name": "Direct consumption household"
+        "name": "Household direct consumption power"
       },
       "direct_consumption_rate": {
         "name": "Direct consumption rate"
@@ -95,37 +89,34 @@
         "name": "PV power"
       },
       "production": {
-        "name": "Production"
+        "name": "Production power"
       },
       "self_consumption": {
-        "name": "Self consumption"
+        "name": "Self-consumption power"
       },
       "self_consumption_rate": {
-        "name": "Self consumption rate"
+        "name": "Self-consumption rate"
       },
       "self_sufficiency_rate": {
-        "name": "Self sufficiency rate"
+        "name": "Self-sufficiency rate"
       },
       "self_supply": {
-        "name": "Self supply"
+        "name": "Self-supply power"
       },
       "total_consumption": {
-        "name": "Total consumption"
+        "name": "Total consumption power"
       }
     }
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Unable to connect to GridX."
+      "message": "Unable to connect to gridX."
     },
     "invalid_auth": {
       "message": "Authentication failed. Please check your credentials."
     },
-    "no_data": {
-      "message": "GridX returned no data."
-    },
     "update_failed": {
-      "message": "Error fetching GridX data: {error}"
+      "message": "Error fetching gridX data: {error}"
     }
   }
 }
