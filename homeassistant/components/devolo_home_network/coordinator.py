@@ -231,6 +231,7 @@ class DevoloWifiConnectedStationsGetCoordinator(
             name=name,
             update_interval=update_interval,
         )
+        self.tracked_wifi_clients: set[str] = set()
         self.update_method = self.async_get_wifi_connected_station
 
     async def async_get_wifi_connected_station(self) -> dict[str, ConnectedStationInfo]:
