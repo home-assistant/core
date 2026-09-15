@@ -1,5 +1,6 @@
 """Config Flow for Teslemetry integration."""
 
+from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Mapping
 import logging
@@ -50,6 +51,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowHandler, FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -229,65 +231,30 @@ class OAuth2FlowHandler(
         return await self.async_step_user()
 
 
-class VehicleSubentryFlowHandler(ConfigSubentryFlow):
-    """Add local Bluetooth control to one of the account's vehicles."""
+class VehiclePairingFlow[_ResultT: FlowResult[Any, Any]](
+    FlowHandler[Any, _ResultT, Any], ABC
+):
+    """Find a vehicle over Bluetooth and approve Home Assistant's virtual key on it."""
+
+    # Steps return each subclass's own result type, which the checker cannot resolve.
+    # pylint: disable=home-assistant-return-type
 
     def __init__(self) -> None:
-        """Initialize the vehicle subentry flow."""
+        """Initialize the pairing state."""
         self._vin: str | None = None
-        self._title: str | None = None
         self._address: str | None = None
         self._vehicle: VehicleBluetooth | None = None
         self._pair_task: asyncio.Task[None] | None = None
         self._pair_error: dict[str, str] = {}
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Select an account vehicle to add over Bluetooth, then pair it."""
-        if not async_scanner_count(self.hass, connectable=True):
-            return self.async_abort(reason="bluetooth_not_available")
-        entry = self._get_entry()
-        if entry.state is not ConfigEntryState.LOADED:
-            return self.async_abort(reason="entry_not_loaded")
-        already_added = {
-            subentry.data[CONF_VIN]
-            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
-            if CONF_VIN in subentry.data
-        }
-        choices = {
-            vehicle.vin: vehicle.device["name"] or vehicle.vin
-            for vehicle in entry.runtime_data.vehicles
-            if vehicle.vin not in already_added
-        }
-        if not choices:
-            return self.async_abort(reason="no_vehicles")
-
-        if user_input is not None:
-            self._vin = user_input[CONF_VIN]
-            self._title = choices[self._vin]
-            return await self.async_step_scan()
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_VIN): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                SelectOptionDict(value=vin, label=name)
-                                for vin, name in choices.items()
-                            ],
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    )
-                }
-            ),
-        )
+    @callback
+    @abstractmethod
+    def _async_finish_pairing(self) -> _ResultT:
+        """Finish the flow once the virtual key is on the vehicle's whitelist."""
 
     async def async_step_scan(
         self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
+    ) -> _ResultT:
         """Find the vehicle over Bluetooth and connect to it."""
         if TYPE_CHECKING:
             assert self._vin is not None
@@ -335,7 +302,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
 
     async def async_step_pair(
         self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
+    ) -> _ResultT:
         """Check whether the virtual key is already whitelisted on the vehicle."""
         if TYPE_CHECKING:
             assert self._vehicle is not None
@@ -352,19 +319,12 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                 errors={"base": "cannot_connect"},
                 description_placeholders={"vin": self._vin or ""},
             )
-        if TYPE_CHECKING:
-            assert self._address is not None
-            assert self._vin is not None
         await self._async_disconnect()
-        return self.async_create_entry(
-            title=self._title or self._vin,
-            data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
-            unique_id=self._vin,
-        )
+        return self._async_finish_pairing()
 
     async def async_step_instructions(
         self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
+    ) -> _ResultT:
         """Ask the user to approve the virtual key on the vehicle touchscreen."""
         if user_input is not None:
             return await self.async_step_authorize()
@@ -378,7 +338,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
 
     async def async_step_authorize(
         self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
+    ) -> _ResultT:
         """Add the virtual key to the vehicle while showing pairing progress."""
         if self._pair_task is None:
             if TYPE_CHECKING:
@@ -437,6 +397,74 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             self._pair_task.cancel()
         if self._vehicle is not None:
             self.hass.async_create_task(self._async_disconnect())
+
+
+class VehicleSubentryFlowHandler(
+    VehiclePairingFlow[SubentryFlowResult], ConfigSubentryFlow
+):
+    """Add local Bluetooth control to one of the account's vehicles."""
+
+    def __init__(self) -> None:
+        """Initialize the vehicle subentry flow."""
+        super().__init__()
+        self._title: str | None = None
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Select an account vehicle to add over Bluetooth, then pair it."""
+        if not async_scanner_count(self.hass, connectable=True):
+            return self.async_abort(reason="bluetooth_not_available")
+        entry = self._get_entry()
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+        already_added = {
+            subentry.data[CONF_VIN]
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+            if CONF_VIN in subentry.data
+        }
+        choices = {
+            vehicle.vin: vehicle.device["name"] or vehicle.vin
+            for vehicle in entry.runtime_data.vehicles
+            if vehicle.vin not in already_added
+        }
+        if not choices:
+            return self.async_abort(reason="no_vehicles")
+
+        if user_input is not None:
+            self._vin = user_input[CONF_VIN]
+            self._title = choices[self._vin]
+            return await self.async_step_scan()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_VIN): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=vin, label=name)
+                                for vin, name in choices.items()
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    )
+                }
+            ),
+        )
+
+    @callback
+    @override
+    def _async_finish_pairing(self) -> SubentryFlowResult:
+        """Add the vehicle's Bluetooth subentry once its key is whitelisted."""
+        if TYPE_CHECKING:
+            assert self._address is not None
+            assert self._vin is not None
+        return self.async_create_entry(
+            title=self._title or self._vin,
+            data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
+            unique_id=self._vin,
+        )
 
 
 class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):

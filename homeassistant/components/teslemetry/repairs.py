@@ -1,15 +1,19 @@
 """Repairs for the Teslemetry integration."""
 
+from typing import Any, override
+
+from homeassistant.components.bluetooth import async_scanner_count
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
     RepairsFlowResult,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from . import TeslemetryConfigEntry
-from .const import VEHICLE_ISSUE_LEARN_MORE
+from .config_flow import VehiclePairingFlow
+from .const import ISSUE_TYPE_BLE_KEY_REJECTED, VEHICLE_ISSUE_LEARN_MORE
 
 
 class VehicleMetadataRepairFlow(RepairsFlow):
@@ -56,12 +60,41 @@ class VehicleMetadataRepairFlow(RepairsFlow):
         )
 
 
+class BluetoothKeyRepairFlow(VehiclePairingFlow[RepairsFlowResult], RepairsFlow):
+    """Re-approve Home Assistant's Bluetooth key on a vehicle that rejected it."""
+
+    def __init__(self, vin: str) -> None:
+        """Create flow."""
+        super().__init__()
+        self._vin = vin
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> RepairsFlowResult:
+        """Start re-pairing by finding the vehicle over Bluetooth."""
+        if not async_scanner_count(self.hass, connectable=True):
+            return self.async_abort(reason="bluetooth_not_available")
+        return await self.async_step_scan()
+
+    @callback
+    @override
+    def _async_finish_pairing(self) -> RepairsFlowResult:
+        """Resolve the repair once the key is back on the vehicle's whitelist."""
+        return self.async_create_entry(data={})
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
+    if (
+        data is not None
+        and data.get("issue_type") == ISSUE_TYPE_BLE_KEY_REJECTED
+        and isinstance(vin := data.get("vin"), str)
+    ):
+        return BluetoothKeyRepairFlow(vin)
     if (
         data is not None
         and isinstance(entry_id := data.get("entry_id"), str)

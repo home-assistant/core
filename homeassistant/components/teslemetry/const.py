@@ -57,6 +57,8 @@ VEHICLE_ISSUE_LEARN_MORE: dict[str, str | None] = {
     "streaming_toggle": None,
 }
 
+ISSUE_TYPE_BLE_KEY_REJECTED = "ble_key_rejected"
+
 
 class TeslemetryState(StrEnum):
     """Teslemetry Vehicle States."""
