@@ -156,10 +156,7 @@ def _async_cleanup_stale_devices(
     the router's current module list.
     """
     keep_uids: set[str] = {coordinator.uid, coordinator.router.uid}
-    keep_uids.update(
-        getattr(module, "uid", "") for module in coordinator.router.modules
-    )
-    keep_uids.discard("")
+    keep_uids.update(module.uid for module in coordinator.router.modules)
 
     dev_reg = dr.async_get(hass)
     for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):

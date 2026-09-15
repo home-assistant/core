@@ -26,14 +26,6 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(
-    enable_custom_integrations: None,
-) -> None:
-    """Enable Habitron as a custom integration in every test."""
-    return
-
-
-@pytest.fixture(autouse=True)
 def mock_hub_mac() -> Generator[AsyncMock]:
     """Report a MAC unless a test says otherwise.
 
