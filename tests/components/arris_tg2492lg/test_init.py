@@ -2,19 +2,27 @@
 
 from unittest.mock import MagicMock
 
-from aiohttp import ClientConnectionError, ClientResponseError
+from aiohttp import ClientConnectionError
 from arris_tg2492lg.exception import InvalidCredentialError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.arris_tg2492lg.const import DOMAIN
+from homeassistant.components.arris_tg2492lg.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_PLATFORM,
+    STATE_HOME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from .conftest import http_error
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 YAML_CONFIG = {
     DEVICE_TRACKER_DOMAIN: {
@@ -24,8 +32,18 @@ YAML_CONFIG = {
 }
 
 LOGIN_ERRORS: list[tuple[Exception, ConfigEntryState]] = [
-    (ClientResponseError(None, None, status=401), ConfigEntryState.SETUP_ERROR),
+    (http_error(401), ConfigEntryState.SETUP_ERROR),
     (InvalidCredentialError(), ConfigEntryState.SETUP_ERROR),
+]
+
+REFRESH_CONNECTION_ERRORS: list[Exception] = [
+    ClientConnectionError(),
+    http_error(500),
+]
+
+REFRESH_AUTH_ERRORS: list[Exception] = [
+    http_error(401),
+    InvalidCredentialError(),
 ]
 
 
@@ -85,6 +103,70 @@ async def test_setup_entry_invalid_auth(
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_connect_box")
+@pytest.mark.parametrize(
+    "error",
+    REFRESH_CONNECTION_ERRORS,
+    ids=["connection_error", "http_500"],
+)
+async def test_refresh_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connect_box: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    error: Exception,
+) -> None:
+    """Test a refresh failure keeps the entry loaded and marks entities unavailable."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    mock_connect_box.async_get_connected_devices.side_effect = error
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_connect_box")
+@pytest.mark.parametrize(
+    "error",
+    REFRESH_AUTH_ERRORS,
+    ids=["http_401", "invalid_credential"],
+)
+async def test_refresh_invalid_auth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connect_box: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    error: Exception,
+) -> None:
+    """Test a refresh auth failure keeps the entry loaded and starts a reauth flow."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_connect_box.async_get_connected_devices.side_effect = error
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
 @pytest.mark.usefixtures("mock_connect_box", "mock_device_tracker_conf")
 async def test_yaml_import(
     hass: HomeAssistant,
@@ -131,9 +213,7 @@ async def test_yaml_import_invalid_auth(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test importing YAML config creates an issue on invalid auth."""
-    mock_connect_box.async_login.side_effect = ClientResponseError(
-        None, None, status=401
-    )
+    mock_connect_box.async_login.side_effect = http_error(401)
 
     assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, YAML_CONFIG)
     await hass.async_block_till_done()
