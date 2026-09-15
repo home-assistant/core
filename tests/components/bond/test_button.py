@@ -1,6 +1,7 @@
 """Tests for the Bond button device."""
 
 from bond_async import Action, DeviceType
+import pytest
 
 from homeassistant.components.bond.button import STEP_SIZE
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -274,3 +275,132 @@ async def test_preset_does_not_trigger_stop_button(hass: HomeAssistant) -> None:
 
     assert hass.states.get("button.name_1_preset")
     assert not hass.states.get("button.name_1_stop_actions")
+
+
+@pytest.mark.parametrize(
+    ("props", "actions", "disabled_by"),
+    [
+        pytest.param(
+            {"trust_state": False},
+            [Action.TOGGLE_POWER, Action.TURN_ON, Action.TURN_OFF],
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="untrusted-absolute-power",
+        ),
+        pytest.param(
+            {},
+            [Action.TOGGLE_POWER, Action.TURN_ON, Action.TURN_OFF],
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="default-untrusted-absolute-power",
+        ),
+        pytest.param(
+            {"trust_state": False},
+            [Action.TOGGLE_POWER],
+            None,
+            id="untrusted-toggle-only",
+        ),
+        pytest.param(
+            {"trust_state": True}, [Action.TOGGLE_POWER], None, id="trusted-toggle-only"
+        ),
+    ],
+)
+async def test_toggle_power_registration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    props: dict[str, bool],
+    actions: list[str],
+    disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Raw toggle keeps its identity and is opt-in alongside absolute controls."""
+    await setup_platform(
+        hass,
+        BUTTON_DOMAIN,
+        {
+            "name": "Test fan",
+            "type": DeviceType.CEILING_FAN,
+            "actions": [*actions, Action.STOP],
+        },
+        bond_device_id="test-device-id",
+        props=props,
+    )
+
+    entity = entity_registry.entities["button.test_fan_toggle_power"]
+    assert entity.unique_id == "ZXXX12345_test-device-id_togglepower"
+    assert (entity_registry.async_get("button.test_fan_stop_actions") is None) == (
+        disabled_by is not None
+    )
+    assert entity.disabled_by is disabled_by
+    assert (hass.states.get(entity.entity_id) is None) == (disabled_by is not None)
+
+
+@pytest.mark.parametrize(
+    ("props", "actions", "bond_id"),
+    [
+        pytest.param(
+            {"trust_state": True},
+            [Action.TOGGLE_POWER, Action.TURN_ON, Action.TURN_OFF],
+            "ZXXX12345",
+            id="trusted-absolute-power",
+        ),
+        pytest.param(
+            {"trust_state": False},
+            [Action.TURN_ON, Action.TURN_OFF],
+            "ZXXX12345",
+            id="raw-toggle-unsupported",
+        ),
+        pytest.param(
+            {},
+            [Action.TOGGLE_POWER, Action.TURN_ON, Action.TURN_OFF],
+            "KXXX12345",
+            id="smart-by-bond",
+        ),
+    ],
+)
+async def test_toggle_power_not_registered(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    props: dict[str, bool],
+    actions: list[str],
+    bond_id: str,
+) -> None:
+    """Trusted absolute controls and unsupported raw actions remain excluded."""
+    await setup_platform(
+        hass,
+        BUTTON_DOMAIN,
+        {"name": "Test fan", "type": DeviceType.CEILING_FAN, "actions": actions},
+        props=props,
+        bond_version={"bondid": bond_id},
+    )
+
+    assert entity_registry.async_get("button.test_fan_toggle_power") is None
+    assert not hass.states.async_all(BUTTON_DOMAIN)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("power", [0, 1])
+async def test_toggle_power_ignores_assumed_state(
+    hass: HomeAssistant, power: int
+) -> None:
+    """An enabled raw toggle sends TogglePower regardless of the cached power."""
+    await setup_platform(
+        hass,
+        BUTTON_DOMAIN,
+        {
+            "name": "Test fan",
+            "type": DeviceType.CEILING_FAN,
+            "actions": [Action.TOGGLE_POWER, Action.TURN_ON, Action.TURN_OFF],
+        },
+        bond_device_id="test-device-id",
+        props={"trust_state": False},
+        state={"power": power},
+    )
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.test_fan_toggle_power"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with("test-device-id", Action(Action.TOGGLE_POWER))
