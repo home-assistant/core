@@ -649,6 +649,9 @@
     "device_communication_error": {
       "message": "Device communication error occurred for {device}"
     },
+    "device_connection_timeout_error": {
+      "message": "Device communication timeout error occurred for {device}"
+    },
     "device_not_found": {
       "message": "{device} not found while configuring device automation triggers"
     },

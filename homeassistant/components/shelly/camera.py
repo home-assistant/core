@@ -4,7 +4,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, override
 from urllib.parse import quote
 
-from aioshelly.exceptions import DeviceConnectionError, HttpCallError, InvalidAuthError
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    DeviceConnectionTimeoutError,
+    HttpCallError,
+    InvalidAuthError,
+)
 
 from homeassistant.components.camera import (
     Camera,
@@ -147,6 +152,14 @@ class ShellyCameraEntity(ShellyRpcAttributeEntity, Camera):
 
         try:
             return await self.coordinator.device.camera_get_image(self._id)
+        except DeviceConnectionTimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_connection_timeout_error",
+                translation_placeholders={
+                    "device": self.coordinator.name,
+                },
+            ) from err
         except DeviceConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
