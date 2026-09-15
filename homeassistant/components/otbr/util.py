@@ -285,9 +285,19 @@ class OTBRData:
         """Set the pending operational dataset in TLVS format.
 
         Refused while a pending dataset is in place; the wrapper turns that
-        refusal into the error that says so.
+        refusal into the error that says so. A border router that registers
+        the dataset with the Thread leader (ot-br-posix#3582) also refuses
+        one it cannot deliver -- it is not attached, or the leader rejected
+        the dataset -- with a conflict, which the library reports as
+        ThreadNetworkActiveError; this endpoint uses that status for
+        nothing else.
         """
-        await self.api.set_pending_dataset_tlvs(dataset)
+        try:
+            await self.api.set_pending_dataset_tlvs(dataset)
+        except python_otbr_api.ThreadNetworkActiveError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="pending_dataset_refused"
+            ) from exc
 
     @_handle_otbr_error
     async def set_channel(
