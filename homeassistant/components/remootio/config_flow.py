@@ -5,6 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pyremootio import (
     RemootioAuthenticationError,
     RemootioClient,
@@ -12,7 +13,6 @@ from pyremootio import (
     RemootioCryptoError,
     RemootioTimeoutError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -37,26 +37,26 @@ _LOGGER = logging.getLogger(__name__)
 
 _PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
-        vol.Required(CONF_API_SECRET_KEY): _PASSWORD_SELECTOR,
-        vol.Required(CONF_API_AUTH_KEY): _PASSWORD_SELECTOR,
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_API_SECRET_KEY): _PASSWORD_SELECTOR,
+        probatio.Required(CONF_API_AUTH_KEY): _PASSWORD_SELECTOR,
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_SECRET_KEY): _PASSWORD_SELECTOR,
-        vol.Required(CONF_API_AUTH_KEY): _PASSWORD_SELECTOR,
+        probatio.Required(CONF_API_SECRET_KEY): _PASSWORD_SELECTOR,
+        probatio.Required(CONF_API_AUTH_KEY): _PASSWORD_SELECTOR,
     }
 )
 
-STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
-        vol.Optional(CONF_API_SECRET_KEY): _PASSWORD_SELECTOR,
-        vol.Optional(CONF_API_AUTH_KEY): _PASSWORD_SELECTOR,
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Optional(CONF_API_SECRET_KEY): _PASSWORD_SELECTOR,
+        probatio.Optional(CONF_API_AUTH_KEY): _PASSWORD_SELECTOR,
     }
 )
 
