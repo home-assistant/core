@@ -1093,6 +1093,74 @@ class AlexaTemperatureSensor(AlexaCapability):
         return {"value": temp_float, "scale": API_TEMP_UNITS[UnitOfTemperature(unit)]}
 
 
+class AlexaHumiditySensor(AlexaCapability):
+    """Implements Alexa.HumiditySensor.
+
+    https://developer.amazon.com/docs/device-apis/alexa-humiditysensor.html
+    """
+
+    supported_locales = {
+        "ar-SA",
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "es-US",
+        "fr-CA",
+        "fr-FR",
+        "hi-IN",
+        "it-IT",
+        "ja-JP",
+        "pt-BR",
+    }
+
+    def __init__(self, hass: HomeAssistant, entity: State) -> None:
+        """Initialize the entity."""
+        super().__init__(entity)
+        self.hass = hass
+
+    @override
+    def name(self) -> str:
+        """Return the Alexa API name of this interface."""
+        return "Alexa.HumiditySensor"
+
+    @override
+    def properties_supported(self) -> list[dict[str, str]]:
+        """Return what properties this entity supports."""
+        return [{"name": "relativeHumidity"}]
+
+    @override
+    def properties_proactively_reported(self) -> bool:
+        """Return True if properties asynchronously reported."""
+        return True
+
+    @override
+    def properties_retrievable(self) -> bool:
+        """Return True if properties can be retrieved."""
+        return True
+
+    @override
+    def get_property(self, name: str) -> Any:
+        """Read and return a property."""
+        if name != "relativeHumidity":
+            raise UnsupportedProperty(name)
+
+        value = self.entity.state
+        if value is None or value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return None
+        try:
+            return {"value": float(value)}
+        except ValueError:
+            _LOGGER.warning(
+                "Invalid humidity value %s for %s", value, self.entity.entity_id
+            )
+            return None
+
+
 class AlexaContactSensor(AlexaCapability):
     """Implements Alexa.ContactSensor.
 

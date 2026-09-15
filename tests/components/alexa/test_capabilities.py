@@ -23,7 +23,9 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     STATE_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -1350,6 +1352,35 @@ async def test_temperature_sensor_water_heater(hass: HomeAssistant) -> None:
     properties = await reported_properties(hass, "water_heater.boyler")
     properties.assert_equal(
         "Alexa.TemperatureSensor", "temperature", {"value": 34.0, "scale": "CELSIUS"}
+    )
+
+
+async def test_humidity_sensor_sensor(hass: HomeAssistant) -> None:
+    """Test HumiditySensor reports sensor humidity correctly."""
+    for bad_value in (STATE_UNKNOWN, STATE_UNAVAILABLE, "not-number"):
+        hass.states.async_set(
+            "sensor.humidity_living_room",
+            bad_value,
+            {
+                ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+                ATTR_DEVICE_CLASS: "humidity",
+            },
+        )
+
+        properties = await reported_properties(hass, "sensor.humidity_living_room")
+        properties.assert_not_has_property("Alexa.HumiditySensor", "relativeHumidity")
+
+    hass.states.async_set(
+        "sensor.humidity_living_room",
+        "59",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            ATTR_DEVICE_CLASS: "humidity",
+        },
+    )
+    properties = await reported_properties(hass, "sensor.humidity_living_room")
+    properties.assert_equal(
+        "Alexa.HumiditySensor", "relativeHumidity", {"value": 59.0}
     )
 
 
