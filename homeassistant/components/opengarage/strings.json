@@ -46,5 +46,17 @@
         "name": "Openings"
       }
     }
+  },
+  "services": {
+    "reset_wifi": {
+      "description": "Resets the device to access-point mode for Wi-Fi configuration. The device goes offline until its Wi-Fi is reconfigured. Requires administrator access.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The OpenGarage device to reset.",
+          "name": "Device"
+        }
+      },
+      "name": "Reset Wi-Fi"
+    }
   }
 }
