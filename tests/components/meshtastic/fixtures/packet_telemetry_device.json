@@ -1,0 +1,26 @@
+{
+  "from": 2864434397,
+  "to": 4294967295,
+  "fromId": "!aabbccdd",
+  "toId": "^all",
+  "channel": 0,
+  "id": 305441744,
+  "rxTime": 1757300360,
+  "rxSnr": 5.0,
+  "rxRssi": -88,
+  "hopLimit": 3,
+  "hopStart": 3,
+  "decoded": {
+    "portnum": "TELEMETRY_APP",
+    "telemetry": {
+      "time": 1757300359,
+      "deviceMetrics": {
+        "batteryLevel": 55,
+        "voltage": 3.81,
+        "channelUtilization": 12.5,
+        "airUtilTx": 1.2,
+        "uptimeSeconds": 99912
+      }
+    }
+  }
+}
