@@ -4,7 +4,6 @@ import abc
 import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
-import logging
 from typing import Any, Protocol
 
 import probatio
@@ -14,8 +13,6 @@ from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
-
-_LOGGER = logging.getLogger(__name__)
 
 TRIGGERS: HassKey[dict[str, str]] = HassKey("triggers")
 

@@ -2,7 +2,6 @@
 
 from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta
-import logging
 from typing import TYPE_CHECKING, Any, ClassVar, Final, Protocol, cast, override
 
 import probatio
@@ -52,9 +51,6 @@ from .models import (
     TriggerConfig,
     TriggerNotTriggeredReporter,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
 
 ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_FIRST: Final = "first"
