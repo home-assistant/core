@@ -281,10 +281,12 @@ class C4WebsocketConnectionTracker:
         if not self._was_disconnected:
             return
         _LOGGER.info("WebSocket connection to Control4 re-established")
-        # Reset first: a nested reconnect (BadToken -> sio_connect) must see
-        # this as False and return above, not re-enter resync_lock and deadlock.
         self._was_disconnected = False
-        async with self.entry.runtime_data.resync_lock:
+        resync_lock = self.entry.runtime_data.resync_lock
+        if resync_lock.locked():
+            # An in-progress resync (possibly this same call, re-entered) covers this.
+            return
+        async with resync_lock:
             await _resync_items(self.hass, self.entry)
 
     async def disconnect_callback(self) -> None:
