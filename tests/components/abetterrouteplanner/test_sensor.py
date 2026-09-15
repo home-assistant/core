@@ -392,7 +392,7 @@ def _set_two_make_displays(
         pytest.param("soh", Metric.SOH, 92.0, id="soh"),
     ],
 )
-async def test_diagnostic_telemetry_sensors_moved_out_of_diagnostic(
+async def test_telemetry_sensors_have_no_entity_category(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
@@ -401,7 +401,7 @@ async def test_diagnostic_telemetry_sensors_moved_out_of_diagnostic(
     metric: Metric,
     value: float,
 ) -> None:
-    """Four telemetry sensors no longer carry ``EntityCategory.DIAGNOSTIC``."""
+    """These four sensors are primary vehicle data, not diagnostics."""
     await _setup_integration(hass, config_entry_with_vehicles)
     fake_stream.fire_frame(
         MOCK_VEHICLE_ID, Telemetry(**{metric.value: build_metric_value(value)})
@@ -420,7 +420,7 @@ async def test_diagnostic_telemetry_sensors_moved_out_of_diagnostic(
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
-async def test_calibrated_ref_cons_renamed_to_short_form(
+async def test_calibrated_ref_cons_uses_short_display_name(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
