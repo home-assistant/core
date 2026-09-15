@@ -51,6 +51,6 @@ class VelbusSelect(VelbusEntity, SelectEntity):
 
     @property
     @override
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the selected option."""
         return self._channel.get_selected_program()
