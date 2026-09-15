@@ -21,6 +21,8 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
@@ -702,3 +704,65 @@ async def test_one_silent_device_does_not_affect_others(
     assert chatty_state is not None
     assert silent_state.state == STATE_UNAVAILABLE
     assert chatty_state.state == STATE_OFF
+
+
+async def test_h612f_color_temp_range(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """H612F should advertise 2800-9000K, not default 2000-9000K."""
+    _, _device = await setup_light(hass, mock_govee_api, sku="H612F")
+
+    light = hass.states.get("light.H612F")
+    assert light is not None
+    assert light.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2800
+    assert light.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
+
+
+async def test_unknown_model_uses_default_color_temp_range(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Unknown models should fall back to 2000-9000K."""
+    _, _device = await setup_light(hass, mock_govee_api, sku="H9999")
+    light = hass.states.get("light.H9999")
+    assert light is not None
+    assert light.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2000
+    assert light.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
+
+
+async def test_color_temp_clamped_to_device_floor(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Setting color temp below device floor should clamp, not silently fail."""
+    _, device = await setup_light(hass, mock_govee_api, sku="H612F")
+
+    light = hass.states.get("light.H612F")
+    assert light is not None
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {"entity_id": light.entity_id, ATTR_COLOR_TEMP_KELVIN: 2000},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_govee_api.set_color.assert_awaited_with(device, rgb=None, temperature=2800)
+
+
+async def test_color_temp_within_range_not_clamped(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    _, device = await setup_light(hass, mock_govee_api, sku="H612F")
+
+    light = hass.states.get("light.H612F")
+    assert light is not None
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {"entity_id": light.entity_id, ATTR_COLOR_TEMP_KELVIN: 4000},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_govee_api.set_color.assert_awaited_with(device, rgb=None, temperature=4000)

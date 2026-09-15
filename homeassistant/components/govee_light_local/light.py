@@ -28,6 +28,15 @@ _LOGGER = logging.getLogger(__name__)
 
 _NONE_SCENE = "none"
 
+# Per-model color temperature ranges (min_kelvin, max_kelvin).
+# The Govee LAN API does not advertise per-device ranges; the generic
+# documentation says 2000-9000K but actual hardware floors vary.
+# Add entries as community members report measured values.
+MODEL_COLOR_TEMP_RANGES: dict[str, tuple[int, int]] = {
+    "H612F": (2800, 9000),
+}
+DEFAULT_COLOR_TEMP_RANGE = (2000, 9000)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -89,8 +98,11 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
                 color_modes.add(ColorMode.RGB)
             if GoveeLightFeatures.COLOR_KELVIN_TEMPERATURE & capabilities.features:
                 color_modes.add(ColorMode.COLOR_TEMP)
-                self._attr_max_color_temp_kelvin = 9000
-                self._attr_min_color_temp_kelvin = 2000
+                min_k, max_k = MODEL_COLOR_TEMP_RANGES.get(
+                    device.sku, DEFAULT_COLOR_TEMP_RANGE
+                )
+                self._attr_min_color_temp_kelvin = min_k
+                self._attr_max_color_temp_kelvin = max_k
             if GoveeLightFeatures.BRIGHTNESS & capabilities.features:
                 color_modes.add(ColorMode.BRIGHTNESS)
 
@@ -189,8 +201,20 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_effect = None
             self._last_color_state = None
-            temperature: float = kwargs[ATTR_COLOR_TEMP_KELVIN]
-            await self.coordinator.set_temperature(self._device, int(temperature))
+            temperature = int(kwargs[ATTR_COLOR_TEMP_KELVIN])
+            clamped = max(
+                self._attr_min_color_temp_kelvin,
+                min(self._attr_max_color_temp_kelvin, temperature),
+            )
+            if clamped != temperature:
+                _LOGGER.debug(
+                    "Clamped color_temp_kelvin from %d to %d for %s (model %s)",
+                    temperature,
+                    clamped,
+                    self.entity_id,
+                    self._device.sku,
+                )
+            await self.coordinator.set_temperature(self._device, clamped)
         elif ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
             if effect and self._attr_effect_list and effect in self._attr_effect_list:
