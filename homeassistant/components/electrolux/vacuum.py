@@ -311,6 +311,9 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
 
     def _get_current_mode(self) -> str | None:
         raw_mode = self._appliance_data.get_current_mode()
+        if raw_mode is None:
+            return None
+
         mode = ELECTROLUX_TO_HA_FAN_MODES.get(raw_mode)
         if mode is None:
             _LOGGER.warning("Unmapped RVC mode found: %s", raw_mode)
@@ -409,7 +412,17 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
             self.coordinator.client, self._appliance_id
         )
 
-        last_seen_segments = self.last_seen_segments or []
+        if self.last_seen_segments is None:
+            return
 
-        if set(segments) != set(last_seen_segments):
+        if not _is_same_segments(segments, self.last_seen_segments):
             self.async_create_segments_issue()
+
+
+def _is_same_segments(
+    segments: list[Segment], last_seen_segments: list[Segment]
+) -> bool:
+    """Check if the current segments are the same as the last seen segments based on the IDs."""
+    segment_ids = {segment.id for segment in segments}
+    last_seen_segment_ids = {segment.id for segment in last_seen_segments}
+    return segment_ids == last_seen_segment_ids
