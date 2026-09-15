@@ -6,7 +6,7 @@ from typing import Any, Final, TypedDict, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ulid import ulid_now
@@ -303,6 +303,47 @@ class KNXConfigStore:
             self.hass, knx_module.xknx, entity_id, link_config
         )
         self.data["entity_links"][entity_id] = link_config
+        await self._store.async_save(self.data)
+
+    @callback
+    def async_track_entity_link_renames(self) -> None:
+        """Follow entity_id renames so links keep pointing at their entity.
+
+        Links are keyed by entity_id, so without this a rename would leave the stored
+        config orphaned and incoming command telegrams would go nowhere.
+        """
+
+        @callback
+        def _is_link_rename(data: er.EventEntityRegistryUpdatedData) -> bool:
+            return (
+                data["action"] == "update"
+                and (old_entity_id := data.get("old_entity_id")) is not None
+                and old_entity_id in self.data["entity_links"]
+            )
+
+        self.config_entry.async_on_unload(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._async_entity_link_renamed,
+                event_filter=_is_link_rename,
+            )
+        )
+
+    async def _async_entity_link_renamed(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Move an entity link to the new entity_id of its target."""
+        old_entity_id = event.data["old_entity_id"]  # type: ignore[typeddict-item]
+        new_entity_id = event.data["entity_id"]
+        link_config = self.data["entity_links"].pop(old_entity_id)
+        self.data["entity_links"][new_entity_id] = link_config
+
+        # the registry rejects a domain change, so the link platform stays valid
+        knx_module = self.hass.data[KNX_MODULE_KEY]
+        knx_module.ui_entity_link_controller.remove_link(old_entity_id)
+        knx_module.ui_entity_link_controller.update_link(
+            self.hass, knx_module.xknx, new_entity_id, link_config
+        )
         await self._store.async_save(self.data)
 
     async def delete_entity_link(self, entity_id: str) -> None:

@@ -141,6 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     knx_module.ui_entity_link_controller.start(
         hass, knx_module.xknx, knx_module.config_store.get_entity_links()
     )
+    knx_module.config_store.async_track_entity_link_renames()
     if CONF_KNX_EXPOSE in config:
         knx_module.yaml_exposures.extend(
             create_combined_knx_exposure(hass, knx_module.xknx, config[CONF_KNX_EXPOSE])
