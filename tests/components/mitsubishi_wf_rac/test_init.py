@@ -76,6 +76,14 @@ async def test_device_registry_entry(
     [
         pytest.param({}, id="no firmware sections at all"),
         pytest.param({"mcu": "200", "wireless": None}, id="sections of another shape"),
+        pytest.param(
+            {
+                "firmType": None,
+                "mcu": {"firmVer": None},
+                "wireless": {"firmVer": ""},
+            },
+            id="sections that carry no revision",
+        ),
     ],
 )
 async def test_a_firmware_version_it_cannot_read_does_not_cost_the_poll(

@@ -53,11 +53,16 @@ POLL_TIMEOUT = 2 * REQUEST_TIMEOUT + MIN_TIME_BETWEEN_REQUESTS + timedelta(secon
 AVAILABILITY_FAILURE_LIMIT_MIN = 3
 
 
+def _revision(value: Any) -> str:
+    """One firmware string of a status answer, or "unknown" where none came."""
+    return str(value) if value else "unknown"
+
+
 def _firmware_version(section: Any) -> str:
     """The firmVer of one section of a status answer, or "unknown"."""
     if not isinstance(section, dict):
         return "unknown"
-    return str(section.get("firmVer", "unknown"))
+    return _revision(section.get("firmVer"))
 
 
 def result_code(answer: Any) -> int | None:
@@ -222,7 +227,7 @@ class Device(DataUpdateCoordinator[Aircon]):
         # Never allowed to fail the poll: revisions differ in which of these
         # sub-keys they send, and the strings only decorate the registry.
         self._firmware = (
-            f"{response.get('firmType', 'unknown')}, "
+            f"{_revision(response.get('firmType'))}, "
             f"mcu: {_firmware_version(response.get('mcu'))}, "
             f"wireless: {_firmware_version(response.get('wireless'))}"
         )
