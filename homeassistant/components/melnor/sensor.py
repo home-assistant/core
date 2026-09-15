@@ -157,15 +157,6 @@ class MelnorZoneSensorEntity(MelnorZoneEntity, SensorEntity):
 
     entity_description: MelnorZoneSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: MelnorDataUpdateCoordinator,
-        entity_description: MelnorZoneSensorEntityDescription,
-        valve: Valve,
-    ) -> None:
-        """Initialize a sensor for a Melnor device."""
-        super().__init__(coordinator, entity_description, valve)
-
     @property
     @override
     def native_value(self) -> StateType:
