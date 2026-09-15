@@ -35,6 +35,7 @@ _TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
     "paused_mowing": TargetSupport.STANDARD,
     "started_mowing": TargetSupport.STANDARD,
     "started_returning": TargetSupport.STANDARD,
+    "became_idle": TargetSupport.STANDARD,
 }
 
 
@@ -46,6 +47,7 @@ _TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
         ("lawn_mower.paused_mowing", {}, True, True),
         ("lawn_mower.started_mowing", {}, True, True),
         ("lawn_mower.started_returning", {}, True, True),
+        ("lawn_mower.became_idle", {}, True, True),
     ],
 )
 async def test_lawn_mower_trigger_options_validation(
@@ -101,6 +103,11 @@ def test_trigger_target_support() -> None:
             trigger="lawn_mower.started_returning",
             target_states=[LawnMowerActivity.RETURNING],
             other_states=other_states(LawnMowerActivity.RETURNING),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.became_idle",
+            target_states=[LawnMowerActivity.IDLE],
+            other_states=other_states(LawnMowerActivity.IDLE),
         ),
     ],
 )
@@ -159,6 +166,11 @@ async def test_lawn_mower_state_trigger_behavior_each(
             target_states=[LawnMowerActivity.RETURNING],
             other_states=other_states(LawnMowerActivity.RETURNING),
         ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.became_idle",
+            target_states=[LawnMowerActivity.IDLE],
+            other_states=other_states(LawnMowerActivity.IDLE),
+        ),
     ],
 )
 async def test_lawn_mower_state_trigger_behavior_first(
@@ -215,6 +227,11 @@ async def test_lawn_mower_state_trigger_behavior_first(
             trigger="lawn_mower.started_returning",
             target_states=[LawnMowerActivity.RETURNING],
             other_states=other_states(LawnMowerActivity.RETURNING),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.became_idle",
+            target_states=[LawnMowerActivity.IDLE],
+            other_states=other_states(LawnMowerActivity.IDLE),
         ),
     ],
 )

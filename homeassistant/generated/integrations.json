@@ -669,6 +669,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "axle_energy": {
+      "name": "Axle Energy",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "backblaze_b2": {
       "name": "Backblaze B2",
       "integration_type": "service",
@@ -755,6 +761,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "bitvis": {
+      "name": "Bitvis Power Hub",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "bizkaibus": {
       "name": "Bizkaibus",
@@ -1300,6 +1312,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "de_dietrich": {
+      "name": "De Dietrich",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "deako": {
       "name": "Deako",
       "integration_type": "hub",
@@ -1438,8 +1456,8 @@
     },
     "discogs": {
       "name": "Discogs",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "discord": {
@@ -3341,6 +3359,12 @@
     "indevolt": {
       "name": "Indevolt",
       "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "indi_allsky": {
+      "name": "INDI Allsky",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6068,9 +6092,10 @@
     },
     "rejseplanen": {
       "name": "Rejseplanen",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "remember_the_milk": {
       "name": "Remember The Milk",
