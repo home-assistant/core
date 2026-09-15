@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "DemoCon"
+  },
+  "slug": "democon",
+  "is_public": true,
+  "date_from": "2026-09-15",
+  "date_to": "2026-09-17",
+  "timezone": "Asia/Manila",
+  "locale": "en",
+  "locales": ["en"]
+}

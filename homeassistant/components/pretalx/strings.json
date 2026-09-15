@@ -1,0 +1,28 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "event_not_found": "No event was found with this slug on this pretalx instance."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "event": "Event slug",
+          "url": "URL"
+        },
+        "data_description": {
+          "event": "The short slug that identifies the event, as found in its schedule address.",
+          "url": "The base URL of the pretalx instance that hosts the event."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to fetch data from pretalx. See the debug log for additional details."
+    }
+  }
+}

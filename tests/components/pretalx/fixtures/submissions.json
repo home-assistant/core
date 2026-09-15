@@ -1,0 +1,127 @@
+{
+  "count": 6,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "code": "AAA111",
+      "title": "Opening Keynote",
+      "speakers": [{ "code": "SPK001", "name": "Alice Adams" }],
+      "state": "confirmed",
+      "abstract": "Welcome to DemoCon and a look at the year ahead.",
+      "description": "Longer description of the opening keynote.",
+      "duration": 60,
+      "slots": [
+        {
+          "id": 1001,
+          "room": {
+            "id": 131,
+            "name": { "en": "Magenta Room" }
+          },
+          "start": "2026-09-15T09:00:00+08:00",
+          "end": "2026-09-15T10:00:00+08:00",
+          "description": null,
+          "duration": 60
+        }
+      ]
+    },
+    {
+      "code": "BBB222",
+      "title": "Lightning Talks",
+      "speakers": [
+        { "code": "SPK002", "name": "Bob Brown" },
+        { "code": "SPK003", "name": "Carol Clark" }
+      ],
+      "state": "confirmed",
+      "abstract": "A series of five-minute talks from the community.",
+      "description": "Longer description of the lightning talks.",
+      "duration": 60,
+      "slots": [
+        {
+          "id": 1002,
+          "room": {
+            "id": 130,
+            "name": { "en": "Khaki Room" }
+          },
+          "start": "2026-09-15T10:00:00+08:00",
+          "end": "2026-09-15T11:00:00+08:00",
+          "description": null,
+          "duration": 60
+        }
+      ]
+    },
+    {
+      "code": "CCC333",
+      "title": "Closing Session",
+      "speakers": [{ "code": "SPK004", "name": "Dan Davis" }],
+      "state": "confirmed",
+      "abstract": "Wrapping up DemoCon.",
+      "description": "Longer description of the closing session.",
+      "duration": 60,
+      "slots": [
+        {
+          "id": 1003,
+          "room": {
+            "id": 131,
+            "name": { "en": "Magenta Room" }
+          },
+          "start": "2026-09-16T16:00:00+08:00",
+          "end": "2026-09-16T17:00:00+08:00",
+          "description": null,
+          "duration": 60
+        }
+      ]
+    },
+    {
+      "code": "DDD444",
+      "title": "Unscheduled Talk",
+      "speakers": [{ "code": "SPK005", "name": "Erin Evans" }],
+      "state": "confirmed",
+      "abstract": "This talk is confirmed but not scheduled yet.",
+      "description": "Longer description.",
+      "duration": 30,
+      "slots": []
+    },
+    {
+      "code": "EEE555",
+      "title": "Talk Without Room",
+      "speakers": [{ "code": "SPK006", "name": "Frank Foster" }],
+      "state": "confirmed",
+      "abstract": "This talk has a slot without a room assignment.",
+      "description": "Longer description.",
+      "duration": 30,
+      "slots": [
+        {
+          "id": 1005,
+          "room": null,
+          "start": null,
+          "end": null,
+          "description": null,
+          "duration": 30
+        }
+      ]
+    },
+    {
+      "code": "FFF666",
+      "title": "Workshop",
+      "speakers": [],
+      "state": "confirmed",
+      "abstract": "",
+      "description": "",
+      "duration": 90,
+      "slots": [
+        {
+          "id": 1006,
+          "room": {
+            "id": 999,
+            "name": { "de": "Violet Room" }
+          },
+          "start": "2026-09-16T13:00:00+08:00",
+          "end": "2026-09-16T14:30:00+08:00",
+          "description": null,
+          "duration": 90
+        }
+      ]
+    }
+  ]
+}

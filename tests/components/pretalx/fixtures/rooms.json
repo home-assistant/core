@@ -1,0 +1,33 @@
+{
+  "count": 2,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 131,
+      "name": {
+        "en": "Magenta Room"
+      },
+      "description": {
+        "en": "Building Pink, left of the main entrance."
+      },
+      "uuid": "b61e7836-9355-5208-b287-693b3705fb7e",
+      "guid": null,
+      "capacity": 200,
+      "position": 0,
+      "hidden": false
+    },
+    {
+      "id": 130,
+      "name": {
+        "en": "Khaki Room"
+      },
+      "description": {},
+      "uuid": "5a870750-02a7-5a92-8f4c-1e0f1a2b3c4d",
+      "guid": null,
+      "capacity": null,
+      "position": 1,
+      "hidden": false
+    }
+  ]
+}

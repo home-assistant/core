@@ -1,0 +1,10 @@
+{
+  "domain": "pretalx",
+  "name": "pretalx",
+  "codeowners": ["@joostlek"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pretalx",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze"
+}

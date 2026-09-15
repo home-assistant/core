@@ -624,6 +624,7 @@ FLOWS = {
         "powerfox_local",
         "powerwall",
         "prana",
+        "pretalx",
         "private_ble_device",
         "probe_plus",
         "profiler",

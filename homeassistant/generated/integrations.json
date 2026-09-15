@@ -5700,6 +5700,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "pretalx": {
+      "name": "pretalx",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "private_ble_device": {
       "name": "Private BLE Device",
       "integration_type": "device",

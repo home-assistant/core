@@ -1463,6 +1463,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
 /homeassistant/components/prana/ @prana-dev-official
 /tests/components/prana/ @prana-dev-official
+/homeassistant/components/pretalx/ @joostlek
+/tests/components/pretalx/ @joostlek
 /homeassistant/components/private_ble_device/ @Jc2k
 /tests/components/private_ble_device/ @Jc2k
 /homeassistant/components/probe_plus/ @pantherale0

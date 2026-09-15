@@ -1,0 +1,232 @@
+# serializer version: 1
+# name: test_entities[calendar.democon_khaki_room-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.democon_khaki_room',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Khaki Room',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Khaki Room',
+    'platform': 'pretalx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01J000000000000000000000EV_130',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[calendar.democon_khaki_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '''
+        Bob Brown, Carol Clark
+        
+        A series of five-minute talks from the community.
+      ''',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2026-09-14 20:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DemoCon Khaki Room',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: 'Khaki Room',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Lightning Talks',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2026-09-14 19:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.democon_khaki_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[calendar.democon_magenta_room-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.democon_magenta_room',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Magenta Room',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Magenta Room',
+    'platform': 'pretalx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01J000000000000000000000EV_131',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[calendar.democon_magenta_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '''
+        Alice Adams
+        
+        Welcome to DemoCon and a look at the year ahead.
+      ''',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2026-09-14 19:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DemoCon Magenta Room',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: 'Magenta Room',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Opening Keynote',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2026-09-14 18:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.democon_magenta_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[calendar.democon_violet_room-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.democon_violet_room',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Violet Room',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Violet Room',
+    'platform': 'pretalx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01J000000000000000000000EV_999',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[calendar.democon_violet_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2026-09-15 23:30:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DemoCon Violet Room',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: 'Violet Room',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Workshop',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2026-09-15 22:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.democon_violet_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_get_events
+  dict({
+    'calendar.democon_khaki_room': dict({
+      'events': list([
+        dict({
+          'description': '''
+            Bob Brown, Carol Clark
+            
+            A series of five-minute talks from the community.
+          ''',
+          'end': '2026-09-14T20:00:00-07:00',
+          'location': 'Khaki Room',
+          'start': '2026-09-14T19:00:00-07:00',
+          'summary': 'Lightning Talks',
+        }),
+      ]),
+    }),
+    'calendar.democon_magenta_room': dict({
+      'events': list([
+        dict({
+          'description': '''
+            Alice Adams
+            
+            Welcome to DemoCon and a look at the year ahead.
+          ''',
+          'end': '2026-09-14T19:00:00-07:00',
+          'location': 'Magenta Room',
+          'start': '2026-09-14T18:00:00-07:00',
+          'summary': 'Opening Keynote',
+        }),
+        dict({
+          'description': '''
+            Dan Davis
+            
+            Wrapping up DemoCon.
+          ''',
+          'end': '2026-09-16T02:00:00-07:00',
+          'location': 'Magenta Room',
+          'start': '2026-09-16T01:00:00-07:00',
+          'summary': 'Closing Session',
+        }),
+      ]),
+    }),
+    'calendar.democon_violet_room': dict({
+      'events': list([
+        dict({
+          'end': '2026-09-15T23:30:00-07:00',
+          'location': 'Violet Room',
+          'start': '2026-09-15T22:00:00-07:00',
+          'summary': 'Workshop',
+        }),
+      ]),
+    }),
+  })
+# ---
