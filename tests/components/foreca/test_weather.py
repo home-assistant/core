@@ -73,7 +73,7 @@ async def test_forecast_without_a_time_is_dropped(
     mocked_method: str,
     undated: list[DailyForecast] | list[HourlyForecast],
 ) -> None:
-    """Test an entry the API returns without a date or time is left out."""
+    """Test that a forecast entry without a date or time is left out."""
     getattr(mock_foreca_client, mocked_method).return_value = undated
     with patch("homeassistant.components.foreca.PLATFORMS", [Platform.WEATHER]):
         await init_integration(hass, mock_config_entry)
