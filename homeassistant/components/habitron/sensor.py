@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from habitron_client import BusMember, Logic, Module
+from habitron_client import BusMember, Logic, Module, Router, SmartHub
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -33,6 +33,11 @@ from .coordinator import HabitronConfigEntry, HbtnCoordinator
 
 PARALLEL_UPDATES = 0
 
+# What a sensor can belong to. The three carry no common base in the library,
+# but every one of them owns a uid and lists of bus members, which is all an
+# entity needs -- so the platform serves all three from one class.
+type HbtnOwner = Module | Router | SmartHub
+
 # Stable, language-independent enum keys ordered by the hub's raw finger value
 # (1..10). Localized labels live in strings.json under
 # ``entity.sensor.ekey_finger_name.state`` — the state itself carries no display
@@ -56,7 +61,7 @@ def _device_info(uid: str) -> DeviceInfo:
     return DeviceInfo(identifiers={(DOMAIN, uid)})
 
 
-def _ekey_user_value(module: Any, idx: int) -> str | None:
+def _ekey_user_value(module: Module, idx: int) -> str | None:
     """Translate a raw ekey identifier value into a user-name string.
 
     Raw 0 means "no current user"; reporting that as unknown matches the finger
@@ -74,7 +79,7 @@ def _ekey_user_value(module: Any, idx: int) -> str | None:
     return "Unknown"
 
 
-def _ekey_finger_value(module: Any, idx: int) -> str | None:
+def _ekey_finger_value(module: Module, idx: int) -> str | None:
     """Translate a raw ekey finger value into a stable finger-key string."""
     id_val = int(module.sensors[idx].value or 0)
     if id_val in range(1, 11):
@@ -123,8 +128,8 @@ async def async_setup_entry(
     new_devices: list[SensorEntity] = []
 
     def add_described(
-        owner: Any,
-        member: Any,
+        owner: HbtnOwner,
+        member: BusMember,
         descriptions: tuple[HbtnSensorEntityDescription, ...],
         initial_area_id: str | None = None,
         *,
@@ -211,7 +216,7 @@ class HbtnSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
 
     def __init__(
         self,
-        module: Module,
+        module: HbtnOwner,
         sensor: BusMember,
         coord: HbtnCoordinator,
         idx: int,
@@ -219,7 +224,7 @@ class HbtnSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
         """Initialize a Habitron sensor, pass coordinator to CoordinatorEntity."""
         super().__init__(coord, context=idx)
         self.idx = idx
-        self._module: Module = module
+        self._module: HbtnOwner = module
         self._sensor_idx = sensor.nmbr
         self._attr_name = sensor.name
 
@@ -228,13 +233,6 @@ class HbtnSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return information to link this entity with the correct device."""
         return _device_info(self._module.uid)
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self._module.sensors[self._sensor_idx].value
-        self.async_write_ha_state()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -265,7 +263,7 @@ class HbtnSensorEntityDescription(SensorEntityDescription):
     """
 
     value_fn: Callable[[Any, int], Any]
-    subscribe_fn: Callable[[Any, int], Any] | None = None
+    subscribe_fn: Callable[[Any, int], BusMember] | None = None
     diag_check: bool = False
     translated_name: bool = False
     numbered: bool = False
@@ -278,9 +276,9 @@ class HbtnDescribedSensor(HbtnSensor):
 
     def __init__(
         self,
-        module: Any,
-        sensor: Any,
-        coord: Any,
+        module: HbtnOwner,
+        sensor: BusMember,
+        coord: HbtnCoordinator,
         idx: int,
         description: HbtnSensorEntityDescription,
         initial_area_id: str | None = None,

@@ -33,7 +33,6 @@ from homeassistant.components.habitron.sensor import (
     WIND_PEAK_DESCRIPTION,
     HbtnDescribedSensor,
     HbtnHostSensor,
-    HbtnSensor,
     HbtnSensorEntityDescription,
     LogicSensor,
     async_setup_entry,
@@ -342,28 +341,18 @@ def test_finger_name_sensor_sets_options() -> None:
     assert "left_pinky" in entity.options
 
 
-def test_hbtnsensor_base_init_and_update() -> None:
-    """Base HbtnSensor stores module, unique_id, name and reads from sensors."""
+def test_shared_base_names_the_member_and_links_the_device() -> None:
+    """What the shared base contributes: the member's name and the device link.
+
+    Exercised through a described sensor, the only shape the platform builds.
+    The base carries no unique_id and is never instantiated on its own, so
+    testing it directly would pin behaviour nothing ships.
+    """
     mod = _make_module()
-    mod.sensors[0] = _make_value(23.5)
     desc = _make_sensor_descriptor(name="Temperature", type_=1)
     coord = MagicMock(spec=DataUpdateCoordinator)
-    entity = HbtnSensor(mod, desc, coord, 5)
-    entity.async_write_ha_state = MagicMock()
-    # The base class no longer names anything; the description does.
-    assert entity.unique_id is None
+    entity = HbtnDescribedSensor(mod, desc, coord, 5, HUMIDITY_DESCRIPTION)
     assert entity._attr_name == "Temperature"
-    assert entity._attr_state_class is SensorStateClass.MEASUREMENT
-    entity._handle_coordinator_update()
-    assert entity._attr_native_value == 23.5
-
-
-def test_hbtnsensor_device_info_links_module() -> None:
-    """HbtnSensor.device_info points at the module uid."""
-    mod = _make_module()
-    desc = _make_sensor_descriptor()
-    coord = MagicMock(spec=DataUpdateCoordinator)
-    entity = HbtnSensor(mod, desc, coord, 0)
     assert ("habitron", "MOD-1") in entity.device_info["identifiers"]
 
 
