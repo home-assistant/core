@@ -1,0 +1,45 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        },
+        "data_description": {
+          "email": "The email address used to sign in to the Ecobulles mobile app.",
+          "password": "The password used to sign in to the Ecobulles mobile app."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "co2_injection_time": {
+        "name": "CO2 injection time"
+      },
+      "water_usage": {
+        "name": "Water usage"
+      }
+    }
+  },
+  "exceptions": {
+    "api_payload_incomplete": {
+      "message": "Ecobulles returned incomplete usage data."
+    },
+    "cannot_connect": {
+      "message": "Failed to connect to Ecobulles."
+    },
+    "update_error": {
+      "message": "Unexpected error while updating Ecobulles: {error}"
+    }
+  }
+}
