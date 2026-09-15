@@ -391,6 +391,20 @@ class BaseAutomationEntity(ToggleEntity, ABC):
     ) -> None:
         """Refresh repair issues when kept across a reload with unchanged config."""
 
+    @property
+    def validation_issue_ids(self) -> set[tuple[str, str]]:
+        """Return the repair issue IDs this entity has materialized."""
+        return set()
+
+    @callback
+    def async_detach_validation_issues(self) -> set[tuple[str, str]]:
+        """Detach and return the entity's validation issue IDs.
+
+        Used when the entity is removed as part of a reload that may recreate the
+        same stable issue IDs on a replacement entity.
+        """
+        return set()
+
 
 class UnavailableAutomationEntity(BaseAutomationEntity):
     """A non-functional automation entity with its state set to unavailable.
@@ -714,6 +728,20 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         async_clear_validation_issues(
             self.hass, previous_issue_ids - self._validation_issue_ids
         )
+
+    @property
+    @override
+    def validation_issue_ids(self) -> set[tuple[str, str]]:
+        """Return the repair issue IDs this entity has materialized."""
+        return self._validation_issue_ids
+
+    @override
+    @callback
+    def async_detach_validation_issues(self) -> set[tuple[str, str]]:
+        """Detach and return the entity's validation issue IDs."""
+        issue_ids = self._validation_issue_ids
+        self._validation_issue_ids = set()
+        return issue_ids
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -1244,13 +1272,23 @@ async def _async_process_config(
             automation_configs[config_idx].validation_findings
         )
 
-    # Remove automations which have changed config or no longer exist
-    tasks = [
-        automation.async_remove()
+    # Remove automations which have changed config or no longer exist. Detach their
+    # repair issue IDs first so async_will_remove_from_hass does not delete a repair a
+    # replacement entity recreates with the same stable ID (which would reset its
+    # dismissal); issues without a new owner are cleared below.
+    removed_automations = [
+        automation
         for idx, automation in enumerate(automations)
         if idx not in automation_matches
     ]
-    await asyncio.gather(*tasks)
+    previous_issue_ids = {
+        issue_id
+        for automation in removed_automations
+        for issue_id in automation.async_detach_validation_issues()
+    }
+    await asyncio.gather(
+        *(automation.async_remove() for automation in removed_automations)
+    )
 
     # Create automations which have changed config or have been added
     updated_automation_configs = [
@@ -1260,6 +1298,13 @@ async def _async_process_config(
     ]
     entities = await _create_automation_entities(hass, updated_automation_configs)
     await component.async_add_entities(entities)
+
+    # Delete repairs whose owning automation is gone, keeping those a replacement
+    # entity recreated (async_get_or_create preserves their dismissal).
+    current_issue_ids = {
+        issue_id for entity in entities for issue_id in entity.validation_issue_ids
+    }
+    async_clear_validation_issues(hass, previous_issue_ids - current_issue_ids)
 
 
 def _automation_matches_config(
@@ -1296,10 +1341,20 @@ async def _async_process_single_config(
         )
         return
 
+    # Detach the removed automation's repair issue IDs so async_will_remove_from_hass
+    # does not delete a repair a replacement recreates with the same stable ID (which
+    # would reset its dismissal); issues without a new owner are cleared below.
+    previous_issue_ids: set[tuple[str, str]] = set()
     if automation:
+        previous_issue_ids = automation.async_detach_validation_issues()
         await automation.async_remove()
     entities = await _create_automation_entities(hass, automation_configs)
     await component.async_add_entities(entities)
+
+    current_issue_ids = {
+        issue_id for entity in entities for issue_id in entity.validation_issue_ids
+    }
+    async_clear_validation_issues(hass, previous_issue_ids - current_issue_ids)
 
 
 async def _async_process_if(

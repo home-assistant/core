@@ -4883,6 +4883,61 @@ async def test_event_trigger_composite_device_id_refresh_preserves_dismissal(
 
 
 @pytest.mark.usefixtures("split_devices")
+async def test_event_trigger_composite_device_id_replacement_preserves_dismissal(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A dismissed repair stays dismissed when an unrelated change replaces the entity.
+
+    An unrelated config change (here the run mode) makes the automation fail the reload
+    match, so the old entity is removed and a replacement is created. The composite
+    finding and its stable issue id are unchanged, so the repair must be updated in
+    place rather than deleted and recreated, which would reset the user's dismissal.
+    """
+    config = {
+        automation.DOMAIN: {
+            "id": "composite_auto",
+            "alias": "Composite automation",
+            "mode": "single",
+            "triggers": {
+                "platform": "event",
+                "event_type": "test_event",
+                "event_data": {"device_id": COMPOSITE_ID},
+            },
+            "actions": {"action": "test.automation"},
+        }
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config)
+
+    assert (
+        issue_registry.async_get_issue("homeassistant", COMPOSITE_ISSUE_ID) is not None
+    )
+
+    # The user dismisses the repair.
+    ir.async_ignore_issue(hass, "homeassistant", COMPOSITE_ISSUE_ID, True)
+    dismissed_version = issue_registry.async_get_issue(
+        "homeassistant", COMPOSITE_ISSUE_ID
+    ).dismissed_version
+    assert dismissed_version is not None
+
+    # An unrelated change to the run mode makes the automation fail the reload match,
+    # so the entity is replaced rather than reused.
+    reloaded_config = {
+        automation.DOMAIN: {**config[automation.DOMAIN], "mode": "queued"}
+    }
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=reloaded_config,
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    replaced = issue_registry.async_get_issue("homeassistant", COMPOSITE_ISSUE_ID)
+    assert replaced is not None
+    assert replaced.dismissed_version == dismissed_version
+
+
+@pytest.mark.usefixtures("split_devices")
 async def test_event_trigger_composite_device_id_idless_no_edit(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
