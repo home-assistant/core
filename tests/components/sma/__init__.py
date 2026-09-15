@@ -22,6 +22,11 @@ MOCK_DEVICE = DeviceInfo(
     sw_version="1.0.0",
 )
 
+# SMA protocol tag ids for the "operating_status_general" sensor's raw_value,
+# mirroring homeassistant.components.sma.switch._OPERATING_STATUS_OFF_TAG.
+OPERATING_STATUS_OFF_TAG = 303
+OPERATING_STATUS_ACTIVATED_TAG = 569
+
 
 MOCK_USER_INPUT = {
     CONF_HOST: "1.1.1.1",

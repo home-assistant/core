@@ -66,12 +66,25 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "inverter_enabled": {
+        "name": "Inverter enabled"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Could not connect to SMA device"
     },
     "invalid_auth": {
       "message": "Invalid authentication for SMA device"
+    },
+    "modbus_action_failed": {
+      "message": "Modbus action failed for control {control} with value {value}"
+    },
+    "modbus_write_failed": {
+      "message": "Modbus write failed for control {control} with value {value}"
     }
   },
   "selector": {
