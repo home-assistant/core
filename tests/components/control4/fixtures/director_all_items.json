@@ -45,5 +45,35 @@
     "manufacturer": "Lutron",
     "roomName": "Living Room",
     "model": "QSWS2-1BRLI"
+  },
+  {
+    "id": 345,
+    "name": "Living Room Light",
+    "type": 7,
+    "proxy": "dimmer",
+    "parentId": 678,
+    "categories": ["lights"]
+  },
+  {
+    "id": 678,
+    "name": "Test Controller",
+    "manufacturer": "Lutron",
+    "roomName": "Living Room",
+    "model": "RA2"
+  },
+  {
+    "id": 346,
+    "name": "Kitchen Switch",
+    "type": 7,
+    "proxy": "switch",
+    "parentId": 679,
+    "categories": ["lights"]
+  },
+  {
+    "id": 679,
+    "name": "Test Controller",
+    "manufacturer": "Lutron",
+    "roomName": "Kitchen",
+    "model": "RA2-Switch"
   }
 ]
