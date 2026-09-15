@@ -55,8 +55,8 @@
           "0": "[%key:common::state::off%]",
           "1": "[%key:common::state::on%]",
           "3": "Relay",
-          "4": "SELV-Relay",
-          "5": "AUX-Relay"
+          "4": "SELV relay",
+          "5": "AUX relay"
         }
       }
     }
