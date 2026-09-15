@@ -1,0 +1,66 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_charge_energy": { "default": "mdi:counter" },
+      "battery_charge_power": { "default": "mdi:battery-arrow-up-outline" },
+      "battery_current": { "default": "mdi:current-dc" },
+      "battery_current_charge_energy": { "default": "mdi:counter" },
+      "battery_current_discharge_energy": { "default": "mdi:counter" },
+      "battery_discharge_energy": { "default": "mdi:counter" },
+      "battery_discharge_power": { "default": "mdi:battery-arrow-down" },
+      "battery_health": {
+        "default": "mdi:battery-heart",
+        "state": {
+          "fault": "mdi:battery-alert",
+          "off": "mdi:battery-off",
+          "ok": "mdi:battery-check",
+          "warning": "mdi:battery-alert-variant"
+        }
+      },
+      "battery_state_of_charge": { "default": "mdi:home-battery" },
+      "battery_temperature_max": { "default": "mdi:thermometer-high" },
+      "battery_temperature_min": { "default": "mdi:thermometer-low" },
+      "bms_operating_status": {
+        "default": "mdi:integrated-circuit-chip",
+        "state": {
+          "battery_wait": "mdi:battery-clock",
+          "device_fault": "mdi:alert-circle-outline",
+          "off": "mdi:power-off",
+          "standby": "mdi:power-standby",
+          "waiting": "mdi:timer-sand"
+        }
+      },
+      "dc_current_0": { "default": "mdi:current-dc" },
+      "dc_current_1": { "default": "mdi:current-dc" },
+      "dc_current_2": { "default": "mdi:current-dc" },
+      "dc_energy_total_0": { "default": "mdi:counter" },
+      "dc_energy_total_1": { "default": "mdi:counter" },
+      "dc_energy_total_2": { "default": "mdi:counter" },
+      "dc_power_0": { "default": "mdi:solar-panel" },
+      "dc_power_1": { "default": "mdi:solar-panel" },
+      "dc_power_2": { "default": "mdi:solar-panel" },
+      "dc_voltage_0": { "default": "mdi:current-dc" },
+      "dc_voltage_1": { "default": "mdi:current-dc" },
+      "dc_voltage_2": { "default": "mdi:current-dc" },
+      "grid_export_energy": { "default": "mdi:transmission-tower-export" },
+      "grid_export_power": { "default": "mdi:transmission-tower-export" },
+      "grid_frequency": { "default": "mdi:waveform" },
+      "grid_import_energy": { "default": "mdi:transmission-tower-import" },
+      "grid_import_power": { "default": "mdi:transmission-tower-import" },
+      "insulation_residual_current": { "default": "mdi:current-ac" },
+      "insulation_resistance": { "default": "mdi:resistor" },
+      "power_factor": { "default": "mdi:math-cos" },
+      "power_factor_eei": { "default": "mdi:math-cos" },
+      "pv_energy_total": { "default": "mdi:counter" },
+      "pv_power": { "default": "mdi:solar-power" },
+      "system_status": {
+        "default": "mdi:information-outline",
+        "state": {
+          "error": "mdi:alert-circle-outline",
+          "ok": "mdi:check-circle-outline",
+          "warning": "mdi:alert-outline"
+        }
+      }
+    }
+  }
+}
