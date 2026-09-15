@@ -54,9 +54,9 @@
         "state": {
           "0": "Off",
           "1": "On",
-          "3": "Relais",
-          "4": "SELV-Relais",
-          "5": "AUX-Relais"
+          "3": "Relay",
+          "4": "SELV relay",
+          "5": "AUX relay"
         }
       }
     }
