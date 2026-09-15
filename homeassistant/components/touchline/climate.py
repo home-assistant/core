@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any, NamedTuple
+from typing import Any, Final, NamedTuple
 
 from pytouchline_extended import PyTouchline
-import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_NONE,
     PRESET_SLEEP,
@@ -48,7 +46,7 @@ TOUCHLINE_HA_PRESETS = {
     for preset, settings in PRESET_MODES.items()
 }
 
-PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA: Final = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(
