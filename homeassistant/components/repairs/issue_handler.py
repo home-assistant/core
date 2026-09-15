@@ -64,7 +64,7 @@ class RepairsFlowManager(
             report_usage(
                 "initiates a repair flow by passing `issue_id` via `data` rather than `context`",
                 core_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2028.10.0",
+                breaks_in_ha_version="2027.10.0",
                 integration_domain=handler,
             )
         if "issue_id" in _context:
