@@ -40,6 +40,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._password: str | None = None
         self._mfa_method: MfaMethod = MfaMethod.SMS
         self._auth_flow: AuthFlow | None = None
+        self._client: EngieBeClient | None = None
 
     async def _async_start_authentication(
         self, user_input: dict[str, Any]
@@ -51,6 +52,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         session = async_create_clientsession(self.hass)
         client = EngieBeClient(session=session)
+        self._client = client
         try:
             self._auth_flow = await client.async_start_authentication(
                 self._username,
@@ -91,9 +93,6 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
-            self._abort_if_unique_id_configured()
-
             errors = await self._async_start_authentication(user_input)
             if not errors:
                 return await self.async_step_mfa()
@@ -123,6 +122,16 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors, tokens = await self._async_submit_mfa(user_input["code"])
             if not errors and tokens is not None:
                 access_token, refresh_token = tokens
+                assert self._client is not None
+                subject = self._client.subject
+                if subject is None:
+                    return self.async_show_form(
+                        step_id="mfa",
+                        data_schema=_CODE_SCHEMA,
+                        errors={"base": "invalid_auth"},
+                    )
+                await self.async_set_unique_id(subject)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=self._username,
                     data={
