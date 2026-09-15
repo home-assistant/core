@@ -1299,6 +1299,10 @@
     }
   },
   "issues": {
+    "ble_key_rejected": {
+      "description": "{vehicle} has stopped accepting commands over its local Bluetooth key, so Home Assistant is sending commands through the cloud instead. This usually means the key was removed from the vehicle's Locks screen.\n\nTo re-pair the key, delete the Bluetooth vehicle entry for {vehicle} from the Teslemetry integration, then select **Add local vehicle** to add it again. This issue clears once a command succeeds over Bluetooth.",
+      "title": "Re-pair the Bluetooth key for {vehicle}"
+    },
     "key": {
       "fix_flow": {
         "error": {
