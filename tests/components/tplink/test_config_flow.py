@@ -2318,6 +2318,15 @@ async def test_reconfigure(
     mock_connect: AsyncMock,
 ) -> None:
     """Test reconfigure flow."""
+    new_ip = "127.0.0.99"
+    device = _mocked_device(
+        device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
+        credentials_hash=CREDENTIALS_HASH_KLAP,
+        ip_address=new_ip,
+    )
+    mock_discovery["mock_devices"][new_ip] = device
+    mock_connect["mock_devices"][new_ip] = device
+
     result = await mock_added_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
@@ -2326,12 +2335,14 @@ async def test_reconfigure(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: IP_ADDRESS,
+            CONF_HOST: new_ip,
         },
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert mock_added_config_entry.data[CONF_HOST] == new_ip
+    await hass.async_block_till_done()
 
 
 async def test_reconfigure_auth_discovered(
@@ -2355,7 +2366,7 @@ async def test_reconfigure_auth_discovered(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_HOST: "WRONG_IP",
+                CONF_HOST: IP_ADDRESS,
             },
         )
 
