@@ -169,6 +169,18 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @callback
+    def _options_or_raise(self) -> list[str]:
+        """Return the options, raise ServiceValidationError if there are none."""
+        if not (options := self.options):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_options",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        return options
+
+    @final
+    @callback
     def _valid_option_or_raise(self, option: str) -> None:
         """Raise ServiceValidationError on invalid option."""
         options = self.options
@@ -235,9 +247,9 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Offset current index."""
         current_index = 0
         current_option = self.current_option
-        options = self.options
-        if current_option is not None and current_option in self.options:
-            current_index = self.options.index(current_option)
+        options = self._options_or_raise()
+        if current_option is not None and current_option in options:
+            current_index = options.index(current_option)
 
         new_index = current_index + offset
         if cycle:
@@ -252,6 +264,6 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     async def _async_select_index(self, idx: int) -> None:
         """Select new option by index."""
-        options = self.options
+        options = self._options_or_raise()
         new_index = idx % len(options)
         await self.async_select_option(options[new_index])
