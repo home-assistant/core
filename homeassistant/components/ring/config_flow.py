@@ -5,8 +5,8 @@ import logging
 from typing import Any, override
 import uuid
 
+import probatio
 from ring_doorbell import Auth, AuthenticationError, Requires2FAError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -32,12 +32,12 @@ from .const import CONF_2FA, CONF_CONFIG_ENTRY_MINOR_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
 
-STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
 
 UNKNOWN_RING_ACCOUNT = "unknown_ring_account"
 
@@ -152,7 +152,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="2fa",
-            data_schema=vol.Schema({vol.Required(CONF_2FA): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_2FA): str}),
         )
 
     async def async_step_reauth(
