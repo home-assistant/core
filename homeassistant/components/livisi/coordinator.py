@@ -116,6 +116,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[LivisiDevice]]):
 
     async def async_get_devices(self) -> list[LivisiDevice]:
         """Set the discovered devices list."""
+        reachability_generations = self._reachability_generations.copy()
         devices = await self.aiolivisi.async_get_devices()
         device_ids = {device.id for device in devices}
         unreachable_devices = {
@@ -124,7 +125,10 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[LivisiDevice]]):
         for device_id in unreachable_devices:
             self._async_dispatch_reachability(device_id, False)
         for device_id in (self._unreachable_devices - unreachable_devices) & device_ids:
-            self._async_dispatch_reachability(device_id, True)
+            if self._reachability_generations[device_id] == (
+                reachability_generations.get(device_id)
+            ):
+                self._async_dispatch_reachability(device_id, True)
         return devices
 
     async def async_get_device_state(self, capability: str, key: str) -> Any | None:

@@ -443,6 +443,73 @@ async def test_state_read_failure_recovery(
     await hass.async_block_till_done()
 
 
+async def test_unreachable_event_during_refresh(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test an unreachable event takes precedence over an older device poll."""
+    refresh_started = asyncio.Event()
+    finish_refresh = asyncio.Event()
+
+    connection = MagicMock(spec=LivisiConnection)
+    connection.controller = CONTROLLER
+    connection.async_get_devices.return_value = [DEVICES[1]]
+    connection.async_get_value.return_value = True
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.livisi.coordinator.livisi_connect",
+        return_value=connection,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    switch_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, "switch-device"
+    )
+    assert switch_id is not None
+
+    async def delayed_get_devices() -> list[LivisiDevice]:
+        refresh_started.set()
+        await finish_refresh.wait()
+        return [DEVICES[1]]
+
+    connection.async_get_devices.side_effect = delayed_get_devices
+    refresh = hass.async_create_task(config_entry.runtime_data.async_refresh())
+    await refresh_started.wait()
+
+    config_entry.runtime_data.on_data(
+        LivisiWebsocketEvent(
+            namespace="core.RWE",
+            type=LIVISI_EVENT_STATE_CHANGED,
+            source="switch-device",
+            timestamp=None,
+            properties={"isReachable": False},
+        )
+    )
+    assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
+
+    state_read_count = connection.async_get_value.await_count
+    finish_refresh.set()
+    await refresh
+    await hass.async_block_till_done()
+
+    assert connection.async_get_value.await_count == state_read_count
+    assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
+
+    connection.async_get_devices.side_effect = None
+    connection.async_get_devices.return_value = [DEVICES[1]]
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert connection.async_get_value.await_count == state_read_count + 1
+    assert not hass.states.is_state(switch_id, STATE_UNAVAILABLE)
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_new_unreachable_event_wins_over_recovery(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
