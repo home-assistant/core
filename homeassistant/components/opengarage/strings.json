@@ -24,6 +24,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "obstruction": {
+        "name": "Obstruction"
+      },
       "vehicle": {
         "name": "Vehicle"
       }
@@ -36,6 +39,11 @@
     "lock": {
       "lock": {
         "name": "Remote control lock"
+      }
+    },
+    "sensor": {
+      "openings": {
+        "name": "Openings"
       }
     }
   }
