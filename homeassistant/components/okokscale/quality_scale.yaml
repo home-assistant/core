@@ -22,7 +22,7 @@ rules:
     status: exempt
     comment: This integration does not have any triggers.
   entity-event-setup:
-    status: exempt
+    status: done
     comment: Subscriptions are handled by the PassiveBluetoothProcessorEntity base class.
   entity-unique-id: done
   has-entity-name: done
@@ -98,4 +98,4 @@ rules:
   inject-websession:
     status: exempt
     comment: This integration uses a Bluetooth connection, and no web sessions.
-  strict-typing: done
+  strict-typing: todo
