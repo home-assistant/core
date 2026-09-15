@@ -742,8 +742,9 @@ class ConfigEntry[_DataT = Any]:
         is scheduled. An actual cancellation is re-raised.
 
         Returns:
-            tuple[_SetupErrorReason, bool]: The error reason and whether a retry was scheduled, in which
-                case the caller must return without setting a state.
+            tuple[_SetupErrorReason, bool]:
+                The error reason and whether a retry was scheduled, in which case
+                the caller must return without setting a state.
         """
         logger = self.logger
 
