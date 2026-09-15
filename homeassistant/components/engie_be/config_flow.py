@@ -11,7 +11,7 @@ from aioengiebelgium import (
     EngieBeMfaError,
     MfaMethod,
 )
-import voluptuous as vol
+import probatio as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
