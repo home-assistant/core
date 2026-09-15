@@ -91,6 +91,11 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
     async def async_update_value(self) -> bool:
         """Update the entity value and return whether the read succeeded."""
 
+    async def _async_update_initial_value(self) -> None:
+        """Read the initial value and track failures for recovery."""
+        if not await self.async_update_value():
+            self.coordinator.mark_device_unreachable(self._device_id)
+
     @callback
     def update_reachability(self, is_reachable: bool, generation: int) -> None:
         """Update the reachability of the device."""

@@ -107,7 +107,7 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
 
         await super().async_added_to_hass()
 
-        await self.async_update_value()
+        await self._async_update_initial_value()
 
         target_temperature_property = (
             SETPOINT_TEMPERATURE if self.coordinator.is_avatar else POINT_TEMPERATURE
