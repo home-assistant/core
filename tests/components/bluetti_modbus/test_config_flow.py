@@ -3,10 +3,16 @@
 from typing import Any
 from unittest.mock import patch
 
+from bluetti_modbus_lib.devices.getter import get_device
 from modbus_connection import AcknowledgeError, ModbusTimeoutError
+from modbus_connection.exceptions import IllegalDataAddressError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
-from homeassistant.components.bluetti_modbus.const import CONF_UNIT_ID, DOMAIN
+from homeassistant.components.bluetti_modbus.const import (
+    CONF_UNIT_ID,
+    DEVICE_TYPE_BALCO260,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -166,13 +172,17 @@ async def test_user_flow_probe_timeout_surfaces_cannot_connect(
 
 
 async def test_user_flow_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
 ) -> None:
-    """Setting up the same host, port and unit id twice aborts."""
+    """Setting up the same host, port and unit id twice aborts, before any probe."""
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry, unique_id="another-device"
     )
+    # Offline: a probe would fail with cannot_connect, so it must not happen.
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("offline"))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -183,6 +193,24 @@ async def test_user_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_probes_only_the_fields_setup_reads(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A register setup leaves out of its read plan is not read by the probe either."""
+    fault = get_device(DEVICE_TYPE_BALCO260).get_field("d_inverter_fault")
+    assert fault is not None
+    mock_modbus_unit.fail_read(fault.address, IllegalDataAddressError())
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input()
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_rejects_the_same_serial_at_a_different_endpoint(
