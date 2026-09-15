@@ -766,3 +766,24 @@ async def test_color_temp_within_range_not_clamped(
     await hass.async_block_till_done()
 
     mock_govee_api.set_color.assert_awaited_with(device, rgb=None, temperature=4000)
+
+async def test_color_temp_clamped_to_device_ceiling(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Setting color temp above device ceiling should clamp to max."""
+    _, device = await setup_light(hass, mock_govee_api, sku="H612F")
+
+    light = hass.states.get("light.H612F")
+    assert light is not None
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {"entity_id": light.entity_id, ATTR_COLOR_TEMP_KELVIN: 10000},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_govee_api.set_color.assert_awaited_with(
+        device, rgb=None, temperature=9000
+    )
