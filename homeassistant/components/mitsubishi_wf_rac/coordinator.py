@@ -192,7 +192,6 @@ class Device(DataUpdateCoordinator[Aircon]):
         Holds the send lock across the request and the state write, so a
         command cannot snapshot state this poll is about to replace.
         """
-        self._poll_counted = False
         async with self._send_lock:
             return await self._async_fetch_state()
 
@@ -481,6 +480,9 @@ class Device(DataUpdateCoordinator[Aircon]):
             )
             return self._airco
 
+        # The poll starts here, not in update(): the count has to hold for
+        # exactly one poll, whoever else calls that method.
+        self._poll_counted = False
         try:
             async with asyncio.timeout(POLL_TIMEOUT.total_seconds()):
                 answered = await self.update()

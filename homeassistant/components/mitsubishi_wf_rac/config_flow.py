@@ -7,7 +7,7 @@ from typing import Any, override
 from uuid import uuid4
 
 import probatio
-from pywfrac import Repository, WfRacError
+from pywfrac import RESULT_CODES, Repository, WfRacError
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -153,6 +153,13 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise CannotConnect(reason="registration answered without a result code")
         if code == 2:
             raise TooManyDevicesRegistered
+        # Every other code the library knows says the registration did not
+        # happen, so the form says so rather than storing an entry that cannot
+        # poll. A code the library does not know is taken as a success: it is
+        # not established that every firmware answers one with 0, and refusing
+        # setup over that would leave those units unusable.
+        if code != 0 and code in RESULT_CODES:
+            raise CannotConnect(reason=RESULT_CODES[code])
 
         return data
 

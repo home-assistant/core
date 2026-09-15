@@ -158,6 +158,58 @@ async def test_user_flow_registration_answer_without_a_result_code(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(429, id="rate limited"),
+        pytest.param(10, id="internal error"),
+        pytest.param(99, id="not confirmed in time"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_a_registration_the_module_declined_stays_in_the_form(
+    hass: HomeAssistant, mock_repository: AsyncMock, code: int
+) -> None:
+    """None of these registered anything, so there is nothing to set up.
+
+    Storing an entry for them would leave a device that cannot poll and a
+    user with nowhere to see why, where the form can say it outright.
+    """
+    mock_repository.update_account_info.return_value = {"result": code}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_a_registration_code_the_library_does_not_know_is_accepted(
+    hass: HomeAssistant, mock_repository: AsyncMock
+) -> None:
+    """The benefit of the doubt, deliberately.
+
+    It is not established that every firmware answers a successful
+    registration with 0, and refusing setup over a code nobody has seen would
+    leave those units unusable - the wrong way round for a guess.
+    """
+    mock_repository.update_account_info.return_value = {"result": 7}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_user_flow_registration_refused(
     hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:
