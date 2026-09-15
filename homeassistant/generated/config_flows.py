@@ -656,6 +656,7 @@ FLOWS = {
         "radio_browser",
         "radiotherm",
         "rainbird",
+        "rainbowminer",
         "rainforest_eagle",
         "rainforest_raven",
         "rainmachine",
