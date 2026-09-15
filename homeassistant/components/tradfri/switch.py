@@ -1,6 +1,6 @@
 """Support for IKEA Tradfri switches."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 
@@ -51,10 +51,10 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
             gateway_id=gateway_id,
         )
 
-        device_control = self._device.socket_control
-        assert device_control  # socket_control is ensured when creating the entity
-        self._device_control = device_control
-        self._device_data = device_control.sockets[0]
+        if TYPE_CHECKING:
+            assert self._device.socket_control is not None
+        self._device_control = self._device.socket_control
+        self._device_data = self._device_control.sockets[0]
 
     @override
     def _refresh(self) -> None:

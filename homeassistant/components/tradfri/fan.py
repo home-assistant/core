@@ -1,6 +1,6 @@
 """Represent an air purifier."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 
@@ -78,12 +78,10 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
             gateway_id=gateway_id,
         )
 
-        device_control = self._device.air_purifier_control
-        assert (
-            device_control
-        )  # air_purifier_control is ensured when creating the entity
-        self._device_control = device_control
-        self._device_data = device_control.air_purifiers[0]
+        if TYPE_CHECKING:
+            assert self._device.air_purifier_control is not None
+        self._device_control = self._device.air_purifier_control
+        self._device_data = self._device_control.air_purifiers[0]
 
     @override
     def _refresh(self) -> None:

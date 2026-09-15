@@ -1,6 +1,6 @@
 """Support for IKEA Tradfri lights."""
 
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 
@@ -63,10 +63,10 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
             gateway_id=gateway_id,
         )
 
-        device_control = self._device.light_control
-        assert device_control  # light_control is ensured when creating the entity
-        self._device_control = device_control
-        self._device_data = device_control.lights[0]
+        if TYPE_CHECKING:
+            assert self._device.light_control is not None
+        self._device_control = self._device.light_control
+        self._device_data = self._device_control.lights[0]
 
         self._attr_unique_id = f"light-{gateway_id}-{self._device_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._hs_color = None

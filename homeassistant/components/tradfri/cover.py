@@ -1,6 +1,6 @@
 """Support for IKEA Tradfri covers."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 
@@ -51,10 +51,10 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
             gateway_id=gateway_id,
         )
 
-        device_control = self._device.blind_control
-        assert device_control  # blind_control is ensured when creating the entity
-        self._device_control = device_control
-        self._device_data = device_control.blinds[0]
+        if TYPE_CHECKING:
+            assert self._device.blind_control is not None
+        self._device_control = self._device.blind_control
+        self._device_data = self._device_control.blinds[0]
 
     @override
     def _refresh(self) -> None:
