@@ -86,14 +86,22 @@ async def test_display_failure_degrades_only_that_vehicle(
     assert by_id[MOCK_VEHICLE_ID_2].manufacturer == "Rivian"
 
 
-async def test_unexpected_display_error_degrades_and_warns(
+@pytest.mark.parametrize(
+    "display_error",
+    [
+        pytest.param(AbrpAuthError("HTTP 401"), id="auth_error"),
+        pytest.param(ValueError("boom"), id="unexpected_error"),
+    ],
+)
+async def test_display_error_degrades_and_warns(
     client: AbrpClient,
     mock_abrp_client: AsyncMock,
     caplog: pytest.LogCaptureFixture,
+    display_error: Exception,
 ) -> None:
-    """An unexpected (non-aioabrp) display error degrades the vehicle and WARNs."""
+    """An auth rejection or unexpected display error degrades the vehicle and WARNs."""
     caplog.set_level(logging.WARNING)
-    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = ValueError("boom")
+    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = display_error
 
     paired = await async_fetch_garage(client)
 

@@ -70,7 +70,8 @@ async def async_fetch_garage(
     paired: list[tuple[AbrpVehicle, VehicleModelDisplay | None]] = []
     for raw, result in zip(raw_vehicles, results, strict=True):
         if isinstance(result, AbrpAuthError):
-            _LOGGER.debug(
+            # Not fatal: the display lookup authenticates separately from the garage.
+            _LOGGER.warning(
                 "Display metadata for typecode %s rejected (%s); the device "
                 "falls back to the raw typecode",
                 raw.vehicle_model,
