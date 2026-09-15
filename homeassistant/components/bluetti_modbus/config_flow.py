@@ -2,7 +2,6 @@
 
 from typing import Any, override
 
-from bluetti_modbus_lib.devices.getter import get_device
 from modbus_connection import ModbusError, ModbusTcpParams
 import probatio
 
@@ -17,13 +16,8 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from .const import (
-    CONF_UNIT_ID,
-    DEFAULT_PORT,
-    DEFAULT_UNIT_ID,
-    DEVICE_TYPE_BALCO260,
-    DOMAIN,
-)
+from .const import CONF_UNIT_ID, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN
+from .device import restricted_device
 
 STEP_USER = probatio.Schema(
     {
@@ -61,6 +55,15 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # A link some entry already owns is rejected before the device is
+            # probed, so a duplicate aborts even while the device is offline.
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                    CONF_UNIT_ID: user_input[CONF_UNIT_ID],
+                }
+            )
             errors, serial = await self._async_validate(user_input)
             if not errors:
                 assert (
@@ -70,15 +73,6 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                 # link (moved to a new address, for example).
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_configured()
-                # Always checked too: this exact link claimed by some other
-                # entry, whether or not either side has a serial number.
-                self._async_abort_entries_match(
-                    {
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
-                        CONF_UNIT_ID: user_input[CONF_UNIT_ID],
-                    }
-                )
                 return self.async_create_entry(title="Balco260", data=user_input)
 
         return self.async_show_form(
@@ -98,10 +92,7 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             async with async_get_temporary_unit(
                 self.hass, params, data[CONF_UNIT_ID]
             ) as unit:
-                device = get_device(DEVICE_TYPE_BALCO260, unit)
-                assert (
-                    device is not None
-                )  # DEVICE_TYPE_BALCO260 is always a known device type
+                device = restricted_device(unit)
                 await device.async_update_with_retry()
         except HomeAssistantError:
             # The address is already claimed by another entry with different

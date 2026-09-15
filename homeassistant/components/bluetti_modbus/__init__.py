@@ -6,7 +6,6 @@ which shares one connection per device between everything talking to it, and
 hands that unit to the ``bluetti-modbus`` library.
 """
 
-from bluetti_modbus_lib.devices.getter import get_device
 from modbus_connection import ModbusTcpParams
 
 from homeassistant.components.modbus import async_get_unit
@@ -15,12 +14,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_UNIT_ID, DEVICE_TYPE_BALCO260, DOMAIN, EXCLUDED_FIELDS
+from .const import CONF_UNIT_ID, DOMAIN
 from .coordinator import (
     BluettiModbusConfigEntry,
     BluettiModbusDataUpdateCoordinator,
     BluettiModbusRuntimeData,
 )
+from .device import restricted_device
 from .entity import bluetti_modbus_device_info
 
 PLATFORMS = [Platform.SENSOR]
@@ -42,16 +42,7 @@ async def async_setup_entry(
             translation_placeholders={"error": str(err)},
         ) from err
 
-    device = get_device(DEVICE_TYPE_BALCO260, unit)
-    assert device is not None  # DEVICE_TYPE_BALCO260 is always a known device type
-
-    # These fields belong on other platforms once they exist (see
-    # EXCLUDED_FIELDS); narrowing the read plan here, not just entity
-    # creation, keeps the coordinator from polling registers nothing reads.
-    device.restrict_fields(
-        name for name in device.field_names() if name not in EXCLUDED_FIELDS
-    )
-
+    device = restricted_device(unit)
     coordinator = BluettiModbusDataUpdateCoordinator(hass, entry, device)
     await coordinator.async_config_entry_first_refresh()
 
