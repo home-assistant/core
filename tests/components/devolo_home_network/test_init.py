@@ -1,6 +1,6 @@
 """Test the devolo Home Network integration setup."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from devolo_plc_api.exceptions.device import DeviceNotFound
 import pytest
@@ -16,6 +16,10 @@ from homeassistant.components.devolo_home_network.const import (
     CONNECTED_WIFI_CLIENTS,
     DOMAIN,
 )
+from homeassistant.components.devolo_home_network.coordinator import (
+    DevoloHomeNetworkData,
+    DevoloWifiConnectedStationsGetCoordinator,
+)
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -29,6 +33,8 @@ from homeassistant.helpers.entity_platform import async_get_platforms
 from . import configure_integration
 from .const import CONNECTED_STATIONS, IP
 from .mock import MockDevice
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_device")
@@ -102,15 +108,35 @@ async def test_remove_config_entry_device(
     assert not await async_remove_config_entry_device(hass, entry, tracked_device)
 
     coordinator = entry.runtime_data.coordinators[CONNECTED_WIFI_CLIENTS]
+    assert isinstance(coordinator, DevoloWifiConnectedStationsGetCoordinator)
     coordinator.async_set_updated_data({})
-    assert CONNECTED_STATIONS[0].mac_address in entry.runtime_data.tracked_wifi_clients
+    assert CONNECTED_STATIONS[0].mac_address in coordinator.tracked_wifi_clients
     entity_registry.async_update_entity(
         entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
-    assert await async_remove_config_entry_device(hass, entry, tracked_device)
-    assert (
-        CONNECTED_STATIONS[0].mac_address not in entry.runtime_data.tracked_wifi_clients
+
+    other_coordinator = MagicMock()
+    other_coordinator.data = {CONNECTED_STATIONS[0].mac_address: CONNECTED_STATIONS[0]}
+    other_coordinator.last_update_success = True
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="other-entry",
+        state=ConfigEntryState.LOADED,
+        unique_id="other-device",
     )
+    other_entry.runtime_data = DevoloHomeNetworkData(
+        device=mock_device,
+        coordinators={CONNECTED_WIFI_CLIENTS: other_coordinator},
+    )
+    other_entry.add_to_hass(hass)
+
+    assert not await async_remove_config_entry_device(hass, entry, tracked_device)
+    other_coordinator.data = {}
+    other_coordinator.last_update_success = False
+    assert not await async_remove_config_entry_device(hass, entry, tracked_device)
+    other_coordinator.last_update_success = True
+    assert await async_remove_config_entry_device(hass, entry, tracked_device)
+    assert CONNECTED_STATIONS[0].mac_address not in coordinator.tracked_wifi_clients
 
     device_registry.async_remove_device(tracked_device.id)
     await hass.async_block_till_done()

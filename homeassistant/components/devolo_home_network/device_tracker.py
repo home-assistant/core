@@ -1,6 +1,6 @@
 """Platform for device tracker integration."""
 
-from typing import override
+from typing import cast, override
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import ConnectedStationInfo
@@ -16,7 +16,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONNECTED_WIFI_CLIENTS, DOMAIN, WIFI_APTYPE, WIFI_BANDS
-from .coordinator import DevoloDataUpdateCoordinator, DevoloHomeNetworkConfigEntry
+from .coordinator import (
+    DevoloDataUpdateCoordinator,
+    DevoloHomeNetworkConfigEntry,
+    DevoloWifiConnectedStationsGetCoordinator,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -32,7 +36,11 @@ async def async_setup_entry(
         str, DevoloDataUpdateCoordinator[dict[str, ConnectedStationInfo]]
     ] = entry.runtime_data.coordinators
     registry = er.async_get(hass)
-    tracked = entry.runtime_data.tracked_wifi_clients
+    coordinator = cast(
+        DevoloWifiConnectedStationsGetCoordinator,
+        coordinators[CONNECTED_WIFI_CLIENTS],
+    )
+    tracked = coordinator.tracked_wifi_clients
 
     @callback
     def new_device_callback() -> None:

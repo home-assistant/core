@@ -1,13 +1,14 @@
 """The devolo Home Network integration."""
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from devolo_plc_api import Device
 from devolo_plc_api.exceptions.device import DeviceNotFound
 from yarl import URL
 
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -45,6 +46,21 @@ from .coordinator import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _wifi_client_is_active_or_unknown(
+    hass: HomeAssistant, tracked_macs: set[str]
+) -> bool:
+    """Return whether a client is active or any Wi-Fi device is unavailable."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.state is not ConfigEntryState.LOADED:
+            continue
+        if coordinator := entry.runtime_data.coordinators.get(CONNECTED_WIFI_CLIENTS):
+            if not coordinator.last_update_success or not tracked_macs.isdisjoint(
+                dr.format_mac(mac) for mac in coordinator.data
+            ):
+                return True
+    return False
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: DevoloHomeNetworkConfigEntry
 ) -> bool:
@@ -68,9 +84,7 @@ async def async_setup_entry(
             translation_placeholders={"ip_address": entry.data[CONF_IP_ADDRESS]},
         ) from err
 
-    entry.runtime_data = DevoloHomeNetworkData(
-        device=device, coordinators={}, tracked_wifi_clients=set()
-    )
+    entry.runtime_data = DevoloHomeNetworkData(device=device, coordinators={})
 
     async def disconnect(event: Event) -> None:
         """Disconnect from device."""
@@ -183,6 +197,7 @@ async def async_remove_config_entry_device(
     coordinator = config_entry.runtime_data.coordinators.get(CONNECTED_WIFI_CLIENTS)
     if coordinator is None:
         return False
+    wifi_coordinator = cast(DevoloWifiConnectedStationsGetCoordinator, coordinator)
 
     tracked_macs = {
         value
@@ -202,13 +217,12 @@ async def async_remove_config_entry_device(
     if not tracked_macs.intersection(tracker_macs):
         return False
 
-    active_client_macs = {dr.format_mac(mac) for mac in coordinator.data}
-    if not tracked_macs.isdisjoint(active_client_macs):
+    if _wifi_client_is_active_or_unknown(hass, tracked_macs):
         return False
 
-    for mac in tuple(config_entry.runtime_data.tracked_wifi_clients):
+    for mac in tuple(wifi_coordinator.tracked_wifi_clients):
         if dr.format_mac(mac) in tracked_macs:
-            config_entry.runtime_data.tracked_wifi_clients.discard(mac)
+            wifi_coordinator.tracked_wifi_clients.discard(mac)
     return True
 
 
