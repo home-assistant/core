@@ -951,11 +951,11 @@ class SensorCapabilities(AlexaEntity):
         }:
             yield AlexaTemperatureSensor(self.hass, self.entity)
             has_capability = True
-        if attrs.get(
-            EntityStateAttribute.UNIT_OF_MEASUREMENT
-        ) == PERCENTAGE and attrs.get(
-            EntityStateAttribute.DEVICE_CLASS
-        ) == sensor.SensorDeviceClass.HUMIDITY:
+        if (
+            attrs.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) == PERCENTAGE
+            and attrs.get(EntityStateAttribute.DEVICE_CLASS)
+            == sensor.SensorDeviceClass.HUMIDITY
+        ):
             yield AlexaHumiditySensor(self.hass, self.entity)
             has_capability = True
         if has_capability:

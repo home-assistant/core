@@ -2712,9 +2712,7 @@ async def test_humidity_sensor(hass: HomeAssistant) -> None:
     assert {"name": "relativeHumidity"} in properties["supported"]
 
     properties = await reported_properties(hass, "sensor#test_humidity")
-    properties.assert_equal(
-        "Alexa.HumiditySensor", "relativeHumidity", {"value": 59.0}
-    )
+    properties.assert_equal("Alexa.HumiditySensor", "relativeHumidity", {"value": 59.0})
 
 
 async def test_battery_percentage_sensor_not_exposed_as_humidity(
