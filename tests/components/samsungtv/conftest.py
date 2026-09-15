@@ -235,16 +235,16 @@ def remote_websocket_fixture() -> Generator[Mock]:
         remote_websocket.ws_event_callback = ws_event_callback
 
     async def _send_commands(commands: list[SamsungTVCommand]):
-        if (
-            len(commands) == 1
-            and isinstance(commands[0], ChannelEmitCommand)
-            and commands[0].params["event"] == "ed.installedApp.get"
-            and remote_websocket.app_list_data is not None
-        ):
-            remote_websocket.raise_mock_ws_event_callback(
-                ED_INSTALLED_APP_EVENT,
-                remote_websocket.app_list_data,
-            )
+        if remote_websocket.app_list_data is None:
+            return
+        if not (len(commands) == 1 and isinstance(commands[0], ChannelEmitCommand)):
+            return
+        if commands[0].params["event"] != "ed.installedApp.get":
+            return
+        remote_websocket.raise_mock_ws_event_callback(
+            ED_INSTALLED_APP_EVENT,
+            remote_websocket.app_list_data,
+        )
 
     def _mock_ws_event_callback(event: str, response: Any):
         if remote_websocket.ws_event_callback:
