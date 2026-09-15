@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["aioaxlevpp==0.1.0"]
+  "requirements": ["aioaxlevpp==0.1.1"]
 }
