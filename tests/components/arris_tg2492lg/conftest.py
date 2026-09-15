@@ -3,8 +3,10 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from aiohttp import ClientResponseError, RequestInfo
 from arris_tg2492lg import Device
 import pytest
+from yarl import URL
 
 from homeassistant.components.arris_tg2492lg.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -35,6 +37,18 @@ MOCK_DEVICES: list[Device] = [
 ]
 
 LATE_DEVICE = _create_device("33:44:55:66:77:88", "my-desktop", "192.168.178.20", True)
+
+
+def http_error(status: int) -> ClientResponseError:
+    """Create a ClientResponseError with valid request info."""
+    url = URL("http://192.168.178.1/")
+    return ClientResponseError(
+        request_info=RequestInfo(method="GET", url=url, headers=None, real_url=url),
+        status=status,
+        message="Error",
+        headers=None,
+        history=None,
+    )
 
 
 @pytest.fixture

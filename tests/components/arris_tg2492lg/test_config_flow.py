@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import MagicMock
 
-from aiohttp import ClientConnectionError, ClientResponseError
+from aiohttp import ClientConnectionError
 from arris_tg2492lg.exception import InvalidCredentialError
 import pytest
 
@@ -12,6 +12,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .conftest import http_error
 
 from tests.common import MockConfigEntry
 
@@ -31,10 +33,7 @@ CONNECT_ERRORS: list[tuple[dict[str, Any], str]] = [
         {"side_effect": ClientConnectionError()},
         "cannot_connect",
     ),
-    (
-        {"side_effect": ClientResponseError(None, None, status=401)},
-        "invalid_auth",
-    ),
+    ({"side_effect": http_error(401)}, "invalid_auth"),
     ({"side_effect": InvalidCredentialError()}, "invalid_auth"),
 ]
 
