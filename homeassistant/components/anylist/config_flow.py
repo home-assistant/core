@@ -1,5 +1,6 @@
 """Config flow for the AnyList integration."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 from typing import Any, override
@@ -128,7 +129,9 @@ class AnyListConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauthentication."""
         return await self.async_step_reauth_confirm()
 

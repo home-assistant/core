@@ -1,9 +1,9 @@
 """Todo platform for AnyList."""
 
-from typing import TYPE_CHECKING, cast, override
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Protocol, cast, override
 
 from aioanylist import AnyListError
-from aioanylist.proto import ListItem, ShoppingList
 
 from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
@@ -24,7 +24,33 @@ from .coordinator import AnyListConfigEntry, AnyListDataUpdateCoordinator
 PARALLEL_UPDATES = 0
 
 
-def _convert_item(item: ListItem) -> TodoItem:
+class _AnyListItem(Protocol):
+    """Fields used from an AnyList protobuf list item."""
+
+    @property
+    def identifier(self) -> str: ...
+
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def checked(self) -> bool: ...
+
+    @property
+    def details(self) -> str: ...
+
+
+class _AnyListShoppingList(Protocol):
+    """Fields used from an AnyList protobuf shopping list."""
+
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def items(self) -> Iterable[_AnyListItem]: ...
+
+
+def _convert_item(item: _AnyListItem) -> TodoItem:
     """Convert an AnyList item to a Home Assistant todo item."""
     return TodoItem(
         uid=str(item.identifier),
@@ -115,7 +141,7 @@ class AnyListTodoListEntity(
         self._attr_name = self.shopping_list.name
 
     @property
-    def shopping_list(self) -> ShoppingList:
+    def shopping_list(self) -> _AnyListShoppingList:
         """Return the backing AnyList shopping list."""
         return self.coordinator.data.shopping_lists[self._list_id]
 
