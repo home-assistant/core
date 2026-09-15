@@ -12,9 +12,9 @@ from kiosker import (
     ScreensaverState,
     TLSVerificationError,
 )
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.kiosker.const import (
     ATTR_BACKGROUND,
@@ -197,7 +197,7 @@ async def test_schema_rejects_invalid_input(
     )
     assert device is not None
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             service,

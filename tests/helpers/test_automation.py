@@ -4,8 +4,8 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import Mock
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.const import CONF_CONDITION, CONF_PLATFORM
 from homeassistant.core import (
@@ -105,12 +105,12 @@ def test_relative_description_key(relative_key: str, absolute_key: str) -> None:
                 "extra_field": "extra_value",
             },
             {
-                vol.Required("entity"): str,
-                vol.Optional("from"): str,
-                vol.Optional("to"): str,
-                vol.Optional("for"): dict,
-                vol.Optional("attribute"): str,
-                vol.Optional("value_template"): str,
+                probatio.Required("entity"): str,
+                probatio.Optional("from"): str,
+                probatio.Optional("to"): str,
+                probatio.Optional("for"): dict,
+                probatio.Optional("attribute"): str,
+                probatio.Optional("value_template"): str,
             },
             {
                 "platform": "test",
@@ -203,7 +203,7 @@ async def test_move_schema_fields_to_options(
 )
 async def test_move_options_fields_to_top_level(config, expected_config) -> None:
     """Test moving options fields to top-level."""
-    base_schema = vol.Schema({vol.Required("platform"): str})
+    base_schema = probatio.Schema({probatio.Required("platform"): str})
     original_config = config.copy()
     assert move_options_fields_to_top_level(config, base_schema) == expected_config
     assert config == original_config  # Ensure original config is not modified

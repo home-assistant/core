@@ -366,6 +366,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/date/ @home-assistant/core
 /homeassistant/components/datetime/ @home-assistant/core
 /tests/components/datetime/ @home-assistant/core
+/homeassistant/components/de_dietrich/ @DaanVervacke
+/tests/components/de_dietrich/ @DaanVervacke
 /homeassistant/components/deako/ @sebirdman @balake @deakolights
 /tests/components/deako/ @sebirdman @balake @deakolights
 /homeassistant/components/debugpy/ @frenck
@@ -403,6 +405,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/diagnostics/ @home-assistant/core
 /homeassistant/components/digital_ocean/ @fabaff
 /homeassistant/components/discogs/ @thibmaek
+/tests/components/discogs/ @thibmaek
 /homeassistant/components/discord/ @tkdrob
 /tests/components/discord/ @tkdrob
 /homeassistant/components/discovergy/ @jpbede
@@ -823,8 +826,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/hue/ @marcelveldt
 /homeassistant/components/hue_ble/ @flip-dots
 /tests/components/hue_ble/ @flip-dots
-/homeassistant/components/huisbaasje/ @dennisschroer
-/tests/components/huisbaasje/ @dennisschroer
+/homeassistant/components/huisbaasje/ @dennisschroer @DieEneSchrodinger
+/tests/components/huisbaasje/ @dennisschroer @DieEneSchrodinger
 /homeassistant/components/humidifier/ @home-assistant/core @Shulyaka
 /tests/components/humidifier/ @home-assistant/core @Shulyaka
 /homeassistant/components/humidity/ @home-assistant/core
@@ -1161,8 +1164,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
-/homeassistant/components/midea/ @chemelli74 @rokam @caibinqing
-/tests/components/midea/ @chemelli74 @rokam @caibinqing
+/homeassistant/components/midea/ @chemelli74 @rokam
+/tests/components/midea/ @chemelli74 @rokam
 /homeassistant/components/miele/ @astrandb
 /tests/components/miele/ @astrandb
 /homeassistant/components/mikrotik/ @engrbm87 @chemelli74
@@ -2054,8 +2057,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvo/ @thomasddn
 /tests/components/volvo/ @thomasddn
-/homeassistant/components/wake_on_lan/ @ntilley905
-/tests/components/wake_on_lan/ @ntilley905
 /homeassistant/components/wake_word/ @home-assistant/core @synesthesiam
 /tests/components/wake_word/ @home-assistant/core @synesthesiam
 /homeassistant/components/wallbox/ @hesselonline
