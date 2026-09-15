@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the concord232 server.",
+          "port": "The port the concord232 server listens on."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring Concord232 using YAML is being removed but the concord232 server at {host}:{port} could not be reached while importing your existing configuration.\n\nMake sure the server is running, restart Home Assistant to try again, or remove the Concord232 YAML configuration from your configuration.yaml file and add the integration manually.",
+      "title": "YAML import failed"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "code": "Alarm code",
+          "mode": "Arm home mode"
+        },
+        "data_description": {
+          "code": "Code stored for the panel: it is sent when disarming, filled in automatically when a command does not provide one, and commands that do provide a code must match it. Leave empty to arm without a code and send no code on disarm.",
+          "mode": "Whether arming in home mode sounds the exit chime."
+        }
+      }
+    }
+  },
+  "selector": {
+    "arm_home_mode": {
+      "options": {
+        "audible": "Audible",
+        "silent": "Silent"
+      }
+    }
+  }
+}
