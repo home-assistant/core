@@ -833,6 +833,7 @@ async def test_pipeline_run_delegates_to_processor(
     processor = Mock(
         response_audio=None,
         supports_streaming_response=False,
+        start_response_immediately=False,
         async_validate=AsyncMock(),
         async_execute=AsyncMock(),
         invalidate=Mock(),
@@ -898,6 +899,32 @@ async def test_text_only_run_does_not_start_debug_recording_thread(
     await run.end()
 
     assert not any(tmp_path.iterdir())
+
+
+async def test_pipeline_run_unregisters_when_end_callback_fails(
+    hass: HomeAssistant,
+    init_components,
+) -> None:
+    """Test a run is unregistered when its run-end callback fails."""
+
+    def event_callback(event: assist_pipeline.PipelineEvent) -> None:
+        if event.type is PipelineEventType.RUN_END:
+            raise RuntimeError("event callback failed")
+
+    run = assist_pipeline.pipeline.PipelineRun(
+        hass,
+        context=Context(),
+        pipeline=assist_pipeline.pipeline.async_get_pipeline(hass),
+        start_stage=assist_pipeline.PipelineStage.INTENT,
+        end_stage=assist_pipeline.PipelineStage.INTENT,
+        event_callback=event_callback,
+    )
+    run.start(conversation_id="mock-ulid", device_id=None, satellite_id=None)
+
+    with pytest.raises(RuntimeError, match="event callback failed"):
+        await run.end()
+
+    assert not run._registered
 
 
 async def test_tts_audio_output(
