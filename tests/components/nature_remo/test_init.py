@@ -38,7 +38,9 @@ async def test_energy_only_hub_is_registered(
     device-scoped entity is ever created for it; without eager registration
     its hub device would be missing.
     """
-    hub = device_registry.async_get_device(identifiers={(DOMAIN, "device-remoe-1")})
+    hub = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "device-remoe-1"), init_integration.entry_id
+    )
     assert hub is not None
     assert hub.manufacturer == "Nature"
     assert hub.model == "Remo-E-lite"
@@ -60,16 +62,20 @@ async def test_appliance_links_to_its_hub(
     exposes no entities for are not registered at all, so a fresh install
     shows no empty devices.
     """
-    hub = device_registry.async_get_device(identifiers={(DOMAIN, "device-remoe-1")})
-    meter = device_registry.async_get_device(
-        identifiers={(DOMAIN, "appliance-meter-1")}
+    hub = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "device-remoe-1"), init_integration.entry_id
+    )
+    meter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "appliance-meter-1"), init_integration.entry_id
     )
     assert hub is not None
     assert meter is not None
     assert meter.via_device_id == hub.id
 
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "appliance-ac-1")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "appliance-ac-1"), init_integration.entry_id
+        )
         is None
     )
 
@@ -117,8 +123,8 @@ async def test_appliance_rename_reaches_the_device_registry(
     The device would otherwise keep the nickname it happened to have when
     its first entity was created.
     """
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "appliance-meter-1")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "appliance-meter-1"), init_integration.entry_id
     )
     assert device is not None
     assert device.name == "Smart meter"
@@ -131,8 +137,8 @@ async def test_appliance_rename_reaches_the_device_registry(
     ]
     await async_poll(hass, freezer)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "appliance-meter-1")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "appliance-meter-1"), init_integration.entry_id
     )
     assert device is not None
     assert device.name == "Grid meter"
