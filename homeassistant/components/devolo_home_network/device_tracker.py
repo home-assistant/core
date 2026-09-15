@@ -32,7 +32,7 @@ async def async_setup_entry(
         str, DevoloDataUpdateCoordinator[dict[str, ConnectedStationInfo]]
     ] = entry.runtime_data.coordinators
     registry = er.async_get(hass)
-    tracked = set()
+    tracked = entry.runtime_data.tracked_wifi_clients
 
     @callback
     def new_device_callback() -> None:

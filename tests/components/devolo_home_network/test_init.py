@@ -9,7 +9,13 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.devolo_home_network.const import DOMAIN
+from homeassistant.components.devolo_home_network import (
+    async_remove_config_entry_device,
+)
+from homeassistant.components.devolo_home_network.const import (
+    CONNECTED_WIFI_CLIENTS,
+    DOMAIN,
+)
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -17,11 +23,11 @@ from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import async_get_platforms
 
 from . import configure_integration
-from .const import IP
+from .const import CONNECTED_STATIONS, IP
 from .mock import MockDevice
 
 
@@ -63,6 +69,97 @@ async def test_hass_stop(hass: HomeAssistant, mock_device: MockDevice) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     mock_device.async_disconnect.assert_called_once()
+
+
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing an absent tracked client and rediscovering it later."""
+    entry = configure_integration(hass)
+    tracked_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, CONNECTED_STATIONS[0].mac_address)},
+    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = (
+        f"{DEVICE_TRACKER_DOMAIN}."
+        f"{CONNECTED_STATIONS[0].mac_address.lower().replace(':', '_')}"
+    )
+    tracker_entry = entity_registry.async_get(entity_id)
+    assert tracker_entry is not None
+    assert tracker_entry.device_id == tracked_device.id
+
+    configured_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.serial_number), entry.entry_id
+    )
+    assert configured_device is not None
+    assert not await async_remove_config_entry_device(hass, entry, configured_device)
+    assert not await async_remove_config_entry_device(hass, entry, tracked_device)
+
+    coordinator = entry.runtime_data.coordinators[CONNECTED_WIFI_CLIENTS]
+    coordinator.async_set_updated_data({})
+    assert CONNECTED_STATIONS[0].mac_address in entry.runtime_data.tracked_wifi_clients
+    assert await async_remove_config_entry_device(hass, entry, tracked_device)
+    assert (
+        CONNECTED_STATIONS[0].mac_address not in entry.runtime_data.tracked_wifi_clients
+    )
+
+    device_registry.async_remove_device(tracked_device.id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entity_id) is None
+
+    coordinator.async_set_updated_data(
+        {CONNECTED_STATIONS[0].mac_address: CONNECTED_STATIONS[0]}
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entity_id) is not None
+
+
+async def test_remove_config_entry_device_rejects_unrelated_device(
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing a device without a tracked Wi-Fi MAC is rejected."""
+    entry = configure_integration(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    unrelated_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("other_integration", "unrelated")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:5E:00:53:02")},
+    )
+    assert not await async_remove_config_entry_device(hass, entry, unrelated_device)
+
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "child")},
+        parent_device_id=unrelated_device.id,
+    )
+    assert not await async_remove_config_entry_device(hass, entry, child_device)
+
+
+async def test_remove_config_entry_device_without_wifi(
+    hass: HomeAssistant,
+    mock_nonwifi_device: MockDevice,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing a tracked device from a non-Wi-Fi entry is rejected."""
+    entry = configure_integration(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    tracked_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, CONNECTED_STATIONS[0].mac_address)},
+    )
+    assert not await async_remove_config_entry_device(hass, entry, tracked_device)
 
 
 @pytest.mark.parametrize(

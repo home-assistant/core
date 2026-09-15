@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import (
@@ -68,7 +68,9 @@ async def async_setup_entry(
             translation_placeholders={"ip_address": entry.data[CONF_IP_ADDRESS]},
         ) from err
 
-    entry.runtime_data = DevoloHomeNetworkData(device=device, coordinators={})
+    entry.runtime_data = DevoloHomeNetworkData(
+        device=device, coordinators={}, tracked_wifi_clients=set()
+    )
 
     async def disconnect(event: Event) -> None:
         """Disconnect from device."""
@@ -163,6 +165,49 @@ async def async_unload_entry(
         await device.async_disconnect()
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: DevoloHomeNetworkConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Allow removing an absent tracked Wi-Fi client from the config entry."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        return False
+
+    device = config_entry.runtime_data.device
+    if (DOMAIN, str(device.serial_number)) in device_entry.identifiers:
+        return False
+
+    coordinator = config_entry.runtime_data.coordinators.get(CONNECTED_WIFI_CLIENTS)
+    if coordinator is None:
+        return False
+
+    tracked_macs = {
+        value
+        for connection_type, value in device_entry.connections
+        if connection_type == dr.CONNECTION_NETWORK_MAC
+    }
+    entity_registry = er.async_get(hass)
+    tracker_macs = {
+        dr.format_mac(entity.unique_id.removeprefix(f"{device.serial_number}_"))
+        for entity in er.async_entries_for_device(entity_registry, device_entry.id)
+        if entity.config_entry_id == config_entry.entry_id
+        and entity.domain == Platform.DEVICE_TRACKER
+        and entity.platform == DOMAIN
+    }
+    if not tracked_macs.intersection(tracker_macs):
+        return False
+
+    active_client_macs = {dr.format_mac(mac) for mac in coordinator.data}
+    if not tracked_macs.isdisjoint(active_client_macs):
+        return False
+
+    for mac in tuple(config_entry.runtime_data.tracked_wifi_clients):
+        if dr.format_mac(mac) in tracked_macs:
+            config_entry.runtime_data.tracked_wifi_clients.discard(mac)
+    return True
 
 
 @callback

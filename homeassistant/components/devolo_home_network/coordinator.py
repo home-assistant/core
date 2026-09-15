@@ -306,3 +306,4 @@ class DevoloHomeNetworkData:
 
     device: Device
     coordinators: dict[str, DevoloDataUpdateCoordinator[Any]]
+    tracked_wifi_clients: set[str]
