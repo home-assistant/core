@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from aionatureremo import NatureRemoAuthError, NatureRemoClient, NatureRemoError, User
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
@@ -14,7 +14,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_TOKEN_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
+STEP_TOKEN_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_TOKEN): str})
 TOKEN_URL_PLACEHOLDERS = {"token_url": "https://home.nature.global/"}
 
 
