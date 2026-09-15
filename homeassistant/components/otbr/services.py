@@ -600,28 +600,31 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
         # below, which talk to the other routers: what the store holds must
         # not depend on how long they take to answer, or whether they do.
         await store.async_save()
-        # The repair issues describe the credentials the network is adopting,
-        # the same way the create and set-network paths report them, and they
-        # describe them for every router the pending dataset reaches, not only
-        # the one it was handed to.
-        await update_issues(call.hass, data, migrated_tlvs)
-        await _async_refresh_issues_on_the_mesh(
-            call.hass, entry, source_xpan, migrated_tlvs
+
+    # Everything the lock protects is written. The repair issues describe the
+    # credentials the network is adopting, the same way the create and
+    # set-network paths report them, and they describe them for every router
+    # the pending dataset reaches, not only the one it was handed to -- which
+    # means reading each of those routers, up to a timeout apiece. Nothing
+    # else should wait on that.
+    await update_issues(call.hass, data, migrated_tlvs)
+    await _async_refresh_issues_on_the_mesh(
+        call.hass, entry, source_xpan, migrated_tlvs
+    )
+    if result is DatasetAddResult.DISCARDED:
+        # Newer credentials for this network were stored while the router
+        # was being written to. The mesh is migrating to the dataset above
+        # and cannot be called back, so say so rather than report a success
+        # Home Assistant cannot back up.
+        #
+        # Reported after the bookkeeping above on purpose: it describes
+        # which network is being adopted rather than with which
+        # credentials, so it is right either way and must still run --
+        # in particular the preferred pointer, which this action's own
+        # default target reads.
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="dataset_discarded"
         )
-        if result is DatasetAddResult.DISCARDED:
-            # Newer credentials for this network were stored while the router
-            # was being written to. The mesh is migrating to the dataset above
-            # and cannot be called back, so say so rather than report a success
-            # Home Assistant cannot back up.
-            #
-            # Reported after the bookkeeping above on purpose: it describes
-            # which network is being adopted rather than with which
-            # credentials, so it is right either way and must still run --
-            # in particular the preferred pointer, which this action's own
-            # default target reads.
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="dataset_discarded"
-            )
 
     name_item = pending[MeshcopTLVType.NETWORKNAME]
     if TYPE_CHECKING:
