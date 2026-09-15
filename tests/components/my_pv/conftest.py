@@ -13,10 +13,16 @@ from . import ELWA2_SERIAL_NUMBER
 from tests.common import MockConfigEntry
 
 SETUP_CONFIGURATION = {
-    "ww1target": {"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+    "bstmode": {
+        "type": "enumeration",
+        "options": {"0": "Off", "1": "On", "3": "Relais"},
+    },
+    "ww1target": {"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0},
 }
 
 COMMAND_CONFIGURATION = {"reboot_device": {"type": "any"}}
+
+SETUP_VALUE = {"bstmode": "0"}
 
 
 def _setup_configuration_lookup(key):
@@ -25,6 +31,10 @@ def _setup_configuration_lookup(key):
 
 def _command_configuration_lookup(key):
     return COMMAND_CONFIGURATION.get(key)
+
+
+def _setup_value_lookup(key):
+    return SETUP_VALUE.get(key)
 
 
 @pytest.fixture
@@ -79,7 +89,10 @@ def mock_my_pv_client() -> Generator[AsyncMock]:
         client.firmware_version = "e0002200"
         client.current_temperature = 54.3
         client.target_temperature = 62.1
+        client.get_setup_configurations = Mock(return_value=SETUP_CONFIGURATION)
         client.get_setup_configuration = Mock(side_effect=_setup_configuration_lookup)
+        client.get_setup_value = Mock(side_effect=_setup_value_lookup)
+        client.set_setup_value = AsyncMock()
         client.get_command_configuration = Mock(
             side_effect=_command_configuration_lookup
         )
