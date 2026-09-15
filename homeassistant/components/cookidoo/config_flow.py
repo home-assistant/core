@@ -8,6 +8,7 @@ from typing import Any, override
 from cookidoo_api import (
     CookidooAuthData,
     CookidooAuthException,
+    CookidooParseException,
     CookidooRequestException,
     get_country_options,
     get_localization_options,
@@ -256,7 +257,8 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             self.user_uuid = user_info.id
             if language_input:
                 await cookidoo.get_additional_items()
-        except CookidooRequestException:
+        except CookidooRequestException, CookidooParseException:
+            # login() scrapes the CIAM login page, so it can also fail to parse it
             errors["base"] = "cannot_connect"
         except CookidooAuthException:
             errors["base"] = "invalid_auth"
