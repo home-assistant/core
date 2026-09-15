@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from devolo_plc_api.exceptions.device import DeviceNotFound
+from devolo_plc_api.exceptions.device import DeviceNotFound, DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -205,6 +205,115 @@ async def test_remove_client_connected_to_other_access_point(
     )
     second_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device.id)
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert device_registry.async_get(device.id) is not None
+
+
+async def test_remove_client_with_unreachable_access_point(
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an access point that cannot be set up blocks removal."""
+    assert await async_setup_component(hass, "config", {})
+    entity_id = (
+        f"{DEVICE_TRACKER_DOMAIN}.{STATION.mac_address.lower().replace(':', '_')}"
+    )
+    entry = configure_integration(hass)
+    # A tracker only gets a device if the MAC is already known to Home Assistant
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, STATION.mac_address)},
+    )
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    freezer.tick(SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    tracker = entity_registry.async_get(entity_id)
+    assert tracker is not None
+    device = device_registry.async_get(tracker.device_id)
+    assert device is not None
+
+    # Emulate the client disconnecting from the only reachable access point
+    mock_device.device.async_get_wifi_connected_station = AsyncMock(
+        return_value=NO_CONNECTED_STATIONS
+    )
+    freezer.tick(SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: IP_ALT, CONF_PASSWORD: "test"},
+        unique_id="1234567891",
+    )
+    second_entry.add_to_hass(hass)
+    with patch.object(mock_device, "async_connect", side_effect=DeviceNotFound(IP_ALT)):
+        await hass.config_entries.async_setup(second_entry.entry_id)
+        await hass.async_block_till_done()
+    assert second_entry.state is ConfigEntryState.SETUP_RETRY
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device.id)
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert device_registry.async_get(device.id) is not None
+
+
+async def test_remove_client_with_failing_coordinator(
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an access point with outdated client data blocks removal."""
+    assert await async_setup_component(hass, "config", {})
+    entity_id = (
+        f"{DEVICE_TRACKER_DOMAIN}.{STATION.mac_address.lower().replace(':', '_')}"
+    )
+    entry = configure_integration(hass)
+    # A tracker only gets a device if the MAC is already known to Home Assistant
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, STATION.mac_address)},
+    )
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    freezer.tick(SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    tracker = entity_registry.async_get(entity_id)
+    assert tracker is not None
+    device = device_registry.async_get(tracker.device_id)
+    assert device is not None
+
+    # Emulate the client disconnecting
+    mock_device.device.async_get_wifi_connected_station = AsyncMock(
+        return_value=NO_CONNECTED_STATIONS
+    )
+    freezer.tick(SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Emulate the access point becoming unavailable, which keeps the last data
+    mock_device.device.async_get_wifi_connected_station = AsyncMock(
+        side_effect=DeviceUnavailable
+    )
+    freezer.tick(SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)

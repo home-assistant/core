@@ -174,16 +174,22 @@ async def async_remove_config_entry_device(
         for connection_type, mac in device_entry.connections
         if connection_type == dr.CONNECTION_NETWORK_MAC
     }
-    # A client roaming between access points is not stale, so all of them are asked
-    entries: list[DevoloHomeNetworkConfigEntry] = (
-        hass.config_entries.async_loaded_entries(DOMAIN)
+    # A client roaming between access points is not stale, so all of them are asked.
+    # An access point that cannot be queried might hold the client, so it blocks.
+    entries: list[DevoloHomeNetworkConfigEntry] = hass.config_entries.async_entries(
+        DOMAIN, include_ignore=False, include_disabled=False
     )
-    connected_macs = {
-        dr.format_mac(mac)
-        for entry in entries
-        if (coordinator := entry.runtime_data.coordinators.get(CONNECTED_WIFI_CLIENTS))
-        for mac in coordinator.data
-    }
+    connected_macs: set[str] = set()
+    for entry in entries:
+        if entry.state is not ConfigEntryState.LOADED:
+            return False
+        coordinator = entry.runtime_data.coordinators.get(CONNECTED_WIFI_CLIENTS)
+        if coordinator is None:
+            continue
+        if not coordinator.last_update_success:
+            return False
+        connected_macs.update(dr.format_mac(mac) for mac in coordinator.data)
+
     return bool(client_macs) and client_macs.isdisjoint(connected_macs)
 
 
