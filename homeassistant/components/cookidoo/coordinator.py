@@ -11,6 +11,7 @@ from cookidoo_api import (
     CookidooAuthException,
     CookidooException,
     CookidooIngredientItem,
+    CookidooParseException,
     CookidooRequestException,
     CookidooSubscription,
     CookidooUserInfo,
@@ -87,7 +88,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                     CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
                 },
             ) from e
-        except CookidooException as e:
+        except CookidooParseException as e:
             # login() scrapes the CIAM login page, so it can also fail to parse it
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -114,7 +115,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                         CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
                     },
                 ) from exc
-            except CookidooException as exc:
+            except (CookidooRequestException, CookidooParseException) as exc:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="setup_request_exception",
