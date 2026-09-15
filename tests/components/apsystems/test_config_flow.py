@@ -19,9 +19,15 @@ async def test_form_create_success(
 ) -> None:
     """Test we handle creatinw with success."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_IP_ADDRESS: "127.0.0.1",
         },
     )
@@ -36,9 +42,15 @@ async def test_form_create_success_custom_port(
 ) -> None:
     """Test we handle creating with custom port with success."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_IP_ADDRESS: "127.0.0.1",
             CONF_PORT: 8042,
         },
@@ -57,9 +69,15 @@ async def test_form_cannot_connect_and_recover(
 
     mock_apsystems.get_device_info.side_effect = TimeoutError
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_IP_ADDRESS: "127.0.0.2",
         },
     )
@@ -88,9 +106,15 @@ async def test_form_cannot_connect_and_recover_custom_port(
 
     mock_apsystems.get_device_info.side_effect = TimeoutError
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_IP_ADDRESS: "127.0.0.2", CONF_PORT: 8042},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_IP_ADDRESS: "127.0.0.2", CONF_PORT: 8042},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -116,9 +140,15 @@ async def test_form_unique_id_already_configured(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_IP_ADDRESS: "127.0.0.2",
         },
     )

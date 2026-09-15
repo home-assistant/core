@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'hostname_battery',
+    'unique_id': 'uuid_battery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -90,7 +90,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_time_remaining',
-    'unique_id': 'hostname_battery_time_remaining',
+    'unique_id': 'uuid_battery_time_remaining',
     'unit_of_measurement': None,
   })
 # ---
@@ -141,7 +141,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boot_time',
-    'unique_id': 'hostname_boot_time',
+    'unique_id': 'uuid_boot_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -197,7 +197,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_power_core',
-    'unique_id': 'hostname_cpu_power_core_0',
+    'unique_id': 'uuid_cpu_power_core_0',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -254,7 +254,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_power_package',
-    'unique_id': 'hostname_cpu_power_package',
+    'unique_id': 'uuid_cpu_power_package',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -311,7 +311,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_speed',
-    'unique_id': 'hostname_cpu_speed',
+    'unique_id': 'uuid_cpu_speed',
     'unit_of_measurement': <UnitOfFrequency.GIGAHERTZ: 'GHz'>,
   })
 # ---
@@ -369,7 +369,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_temperature',
-    'unique_id': 'hostname_cpu_temperature',
+    'unique_id': 'uuid_cpu_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -427,7 +427,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_voltage',
-    'unique_id': 'hostname_cpu_voltage',
+    'unique_id': 'uuid_cpu_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -485,7 +485,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_refresh_rate',
-    'unique_id': 'hostname_display_abc123_refresh_rate',
+    'unique_id': 'uuid_display_abc123_refresh_rate',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -540,7 +540,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_resolution_x',
-    'unique_id': 'hostname_display_abc123_resolution_x',
+    'unique_id': 'uuid_display_abc123_resolution_x',
     'unit_of_measurement': 'px',
   })
 # ---
@@ -594,7 +594,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'display_resolution_y',
-    'unique_id': 'hostname_display_abc123_resolution_y',
+    'unique_id': 'uuid_display_abc123_resolution_y',
     'unit_of_measurement': 'px',
   })
 # ---
@@ -648,7 +648,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'displays_connected',
-    'unique_id': 'hostname_displays_connected',
+    'unique_id': 'uuid_displays_connected',
     'unit_of_measurement': None,
   })
 # ---
@@ -699,7 +699,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kernel',
-    'unique_id': 'hostname_kernel',
+    'unique_id': 'uuid_kernel',
     'unit_of_measurement': None,
   })
 # ---
@@ -749,7 +749,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'version_latest',
-    'unique_id': 'hostname_version_latest',
+    'unique_id': 'uuid_version_latest',
     'unit_of_measurement': None,
   })
 # ---
@@ -804,7 +804,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load',
-    'unique_id': 'hostname_processes_load',
+    'unique_id': 'uuid_processes_load',
     'unit_of_measurement': '%',
   })
 # ---
@@ -861,7 +861,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'processes_load_cpu',
-    'unique_id': 'hostname_processes_load_cpu_0',
+    'unique_id': 'uuid_processes_load_cpu_0',
     'unit_of_measurement': '%',
   })
 # ---
@@ -918,7 +918,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_free',
-    'unique_id': 'hostname_memory_free',
+    'unique_id': 'uuid_memory_free',
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
@@ -976,7 +976,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_used_percentage',
-    'unique_id': 'hostname_memory_used_percentage',
+    'unique_id': 'uuid_memory_used_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1033,7 +1033,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_used',
-    'unique_id': 'hostname_memory_used',
+    'unique_id': 'uuid_memory_used',
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
@@ -1091,7 +1091,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'space_used',
-    'unique_id': 'hostname_filesystem_mountpoint',
+    'unique_id': 'uuid_filesystem_mountpoint',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1148,7 +1148,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_core_clock_speed',
-    'unique_id': 'hostname_gpu_abc123_core_clock_speed',
+    'unique_id': 'uuid_gpu_abc123_core_clock_speed',
     'unit_of_measurement': <UnitOfFrequency.MEGAHERTZ: 'MHz'>,
   })
 # ---
@@ -1203,7 +1203,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_fan_speed',
-    'unique_id': 'hostname_gpu_abc123_fan_speed',
+    'unique_id': 'uuid_gpu_abc123_fan_speed',
     'unit_of_measurement': 'rpm',
   })
 # ---
@@ -1260,7 +1260,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_clock_speed',
-    'unique_id': 'hostname_gpu_abc123_memory_clock_speed',
+    'unique_id': 'uuid_gpu_abc123_memory_clock_speed',
     'unit_of_measurement': <UnitOfFrequency.MEGAHERTZ: 'MHz'>,
   })
 # ---
@@ -1318,7 +1318,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_free',
-    'unique_id': 'hostname_gpu_abc123_memory_free',
+    'unique_id': 'uuid_gpu_abc123_memory_free',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1376,7 +1376,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_used_percentage',
-    'unique_id': 'hostname_gpu_abc123_memory_used_percentage',
+    'unique_id': 'uuid_gpu_abc123_memory_used_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1433,7 +1433,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_memory_used',
-    'unique_id': 'hostname_gpu_abc123_memory_used',
+    'unique_id': 'uuid_gpu_abc123_memory_used',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1488,7 +1488,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_power_usage',
-    'unique_id': 'hostname_gpu_abc123_power_usage',
+    'unique_id': 'uuid_gpu_abc123_power_usage',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1545,7 +1545,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_temperature',
-    'unique_id': 'hostname_gpu_abc123_temperature',
+    'unique_id': 'uuid_gpu_abc123_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1603,7 +1603,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gpu_usage_percentage',
-    'unique_id': 'hostname_gpu_abc123_usage_percentage',
+    'unique_id': 'uuid_gpu_abc123_usage_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1655,7 +1655,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'os',
-    'unique_id': 'hostname_os',
+    'unique_id': 'uuid_os',
     'unit_of_measurement': None,
   })
 # ---
@@ -1710,7 +1710,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_usage',
-    'unique_id': 'hostname_power_usage',
+    'unique_id': 'uuid_power_usage',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1765,7 +1765,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'processes',
-    'unique_id': 'hostname_processes_count',
+    'unique_id': 'uuid_processes_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -1816,7 +1816,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'version',
-    'unique_id': 'hostname_version',
+    'unique_id': 'uuid_version',
     'unit_of_measurement': None,
   })
 # ---

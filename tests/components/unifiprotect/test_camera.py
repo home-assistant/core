@@ -1,10 +1,12 @@
 """Test the UniFi Protect camera platform."""
 
+from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 import pytest
+from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     AiPort,
     Camera as ProtectCamera,
@@ -130,6 +132,7 @@ async def test_doorbell_setup(
 
 async def test_first_active_quality_is_default(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     camera_all: ProtectCamera,
     issue_registry: ir.IssueRegistry,
@@ -150,7 +153,6 @@ async def test_first_active_quality_is_default(
         == camera_all.channels[1].rtsps_no_srtp_url
     )
 
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(_channel_entity_id(camera_all, 0)) is None
     assert entity_registry.async_get(_channel_entity_id(camera_all, 2)) is None
     assert (
@@ -285,9 +287,18 @@ async def test_camera_not_in_public_bootstrap(
 
 
 async def test_streams_unavailable(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera_all: ProtectCamera
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera_all: ProtectCamera,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A camera the library leaves unprimed (no streams) has no stream source."""
+    """A camera whose RTSPS streams could not be read has no stream source.
+
+    An unreadable stream state is not "no streams": it must log a warning
+    instead of raising the enable-stream repair, which could offer to create a
+    stream that already exists on the console.
+    """
 
     async def _prime_streamless() -> Any:
         pb = ufp.api.public_bootstrap
@@ -302,6 +313,10 @@ async def test_streams_unavailable(
 
     high_id = _channel_entity_id(camera_all, 0)
     assert await async_get_stream_source(hass, high_id) is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, f"rtsp_disabled_{camera_all.id}") is None
+    )
+    assert "Could not read RTSPS streams" in caplog.text
 
 
 async def test_public_bootstrap_failure_not_ready(
@@ -393,7 +408,10 @@ async def test_aiport_no_camera_entities(
 
 
 async def test_public_only_camera(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
 ) -> None:
     """A public-only camera builds a working entity with degraded diagnostics."""
     # This camera is intentionally kept out of the private bootstrap; wire the
@@ -422,16 +440,20 @@ async def test_public_only_camera(
     # diagnostics have no public equivalent and degrade to None
     assert state.attributes["fps"] is None
 
-    # device identity degrades to name-only; the NVR link is omitted (resolving
-    # the NVR identity publicly is wired with the config-mode setup)
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, public.mac)}
+    # device identity degrades to name-only, but the NVR link still resolves
+    # from the public bootstrap
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, public.mac), ufp.entry.entry_id
     )
     assert device is not None
-    assert device.via_device_id is None
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ufp.api.public_bootstrap.nvr.mac), ufp.entry.entry_id
+    )
+    assert nvr_device is not None
+    assert device.via_device_id == nvr_device.id
     assert device.name == camera.display_name
     assert device.model == camera.type
+    assert device.model_id == camera.type
 
     assert (
         await async_get_stream_source(hass, entity_id)
@@ -825,7 +847,7 @@ async def test_public_only_streamless_camera_gets_repair(
     for channel in camera.channels:
         channel._api = ufp.api
     public = make_public_camera(camera)
-    public.rtsps_streams = None
+    public.rtsps_streams = RTSPSStreams()
 
     async def _prime_public_only() -> Any:
         pb = ufp.api.public_bootstrap
@@ -1077,3 +1099,40 @@ async def test_unadopted_camera_not_enumerated_from_public_frame(
 
     # still excluded, exactly like the startup enumeration
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+
+
+async def test_public_only_camera_end_to_end(
+    hass: HomeAssistant,
+    camera: ProtectCamera,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A public-only entry with a camera in the bootstrap creates a working entity.
+
+    Exercises the real public-only setup path (not the generic ``ufp`` fixture
+    used by the other tests here), proving cameras and the alarm panel coexist
+    under ``PUBLIC_ONLY_PLATFORMS``.
+    """
+    ufp_public_only.api.base_url = "https://1.1.1.1"
+    # The stream-building test helper reads the private ``rtsps_url`` property,
+    # which needs a client with a bootstrap; keep that off the public client.
+    channel_api = Mock()
+    for channel in camera.channels:
+        channel._api = channel_api
+    public = make_public_camera(camera)
+    public.rtsps_streams = public_rtsps_for(camera)
+    ufp_public_only.api.public_bootstrap.cameras = {camera.id: public}
+    ufp_public_only.api.get_public_api_camera_snapshot = AsyncMock()
+
+    await setup_public_only()
+
+    assert ufp_public_only.entry.state is ConfigEntryState.LOADED
+    high_id = f"camera.{camera.name}_high_resolution_channel".replace(" ", "_").lower()
+    state = hass.states.get(high_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert (
+        await async_get_stream_source(hass, high_id)
+        == camera.channels[0].rtsps_no_srtp_url
+    )
+    assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL.value)) == 1

@@ -277,11 +277,11 @@ async def test_if_fires_on_button_event(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for press trigger firing."""
-    await _async_setup_lutron_with_picos(hass)
+    config_entry_id = await _async_setup_lutron_with_picos(hass)
 
     device = MOCK_BUTTON_DEVICES[0]
-    dr_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, device["serial"])}
+    dr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device["serial"]), config_entry_id
     )
     device_id = dr_device.id
 
@@ -330,11 +330,11 @@ async def test_if_fires_on_long_press_button_event(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for long_press trigger firing on a QSX bridge."""
-    await _async_setup_lutron_with_picos(hass, MockQSXBridge)
+    config_entry_id = await _async_setup_lutron_with_picos(hass, MockQSXBridge)
 
     device = MOCK_BUTTON_DEVICES[0]
-    dr_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, device["serial"])}
+    dr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device["serial"]), config_entry_id
     )
     device_id = dr_device.id
 
@@ -413,10 +413,10 @@ async def test_if_fires_on_button_event_without_lip(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for press trigger firing on a device that does not support lip."""
-    await _async_setup_lutron_with_picos(hass)
+    config_entry_id = await _async_setup_lutron_with_picos(hass)
     device = MOCK_BUTTON_DEVICES[1]
-    dr_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, device["serial"])}
+    dr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device["serial"]), config_entry_id
     )
     device_id = dr_device.id
     assert await async_setup_component(
@@ -602,8 +602,8 @@ async def test_if_fires_on_button_event_late_setup(
     await hass.async_block_till_done()
 
     device = MOCK_BUTTON_DEVICES[0]
-    dr_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, device["serial"])}
+    dr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device["serial"]), config_entry_id
     )
     device_id = dr_device.id
 

@@ -16,8 +16,8 @@ from typing import Any, Final, final, override
 
 from aiohttp import hdrs, web
 import attr
+import probatio
 from propcache.api import cached_property, under_cached_property
-import voluptuous as vol
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import websocket_api
@@ -129,17 +129,17 @@ _RND: Final = SystemRandom()
 
 MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 
-CAMERA_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.template}
+CAMERA_SERVICE_SNAPSHOT: VolDictType = {probatio.Required(ATTR_FILENAME): cv.template}
 
 CAMERA_SERVICE_PLAY_STREAM: VolDictType = {
-    vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(MP_DOMAIN),
-    vol.Optional(ATTR_FORMAT, default="hls"): vol.In(OUTPUT_FORMATS),
+    probatio.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(MP_DOMAIN),
+    probatio.Optional(ATTR_FORMAT, default="hls"): probatio.In(OUTPUT_FORMATS),
 }
 
 CAMERA_SERVICE_RECORD: VolDictType = {
-    vol.Required(CONF_FILENAME): cv.template,
-    vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
-    vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
+    probatio.Required(CONF_FILENAME): cv.template,
+    probatio.Optional(CONF_DURATION, default=30): probatio.Coerce(int),
+    probatio.Optional(CONF_LOOKBACK, default=0): probatio.Coerce(int),
 }
 
 
@@ -231,7 +231,7 @@ async def _async_get_stream_image(
     height: int | None = None,
     wait_for_next_keyframe: bool = False,
 ) -> bytes | None:
-    if (provider := camera._webrtc_provider) and (  # noqa: SLF001
+    if (provider := camera.webrtc_provider) and (
         image := await provider.async_get_image(camera, width=width, height=height)
     ) is not None:
         return image
@@ -407,6 +407,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
+async def _async_call_webrtc_provider(
+    coro: Coroutine[Any, Any, None], description: str, entity_id: str
+) -> None:
+    """Await a WebRTC provider callback without letting exceptions propagate.
+
+    Provider callbacks can do I/O and must not break camera setup or removal.
+    """
+    try:
+        await coro
+    except HomeAssistantError as ex:
+        _LOGGER.error("Error %s %s: %s", description, entity_id, ex)
+    except Exception:
+        _LOGGER.exception("Unexpected error %s %s", description, entity_id)
+
+
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "brand",
     "frame_interval",
@@ -513,6 +528,12 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (stream := self.stream) and not stream.available:
             return False
         return super().available
+
+    @final
+    @property
+    def webrtc_provider(self) -> CameraWebRTCProvider | None:
+        """Return the WebRTC provider."""
+        return self._webrtc_provider
 
     async def async_create_stream(self) -> Stream | None:
         """Create a Stream for stream_source."""
@@ -683,6 +704,18 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.__supports_stream = self.supported_features & CameraEntityFeature.STREAM
         await self.async_refresh_providers(write_state=False)
 
+    @override
+    async def async_internal_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self._webrtc_provider:
+            await _async_call_webrtc_provider(
+                self._webrtc_provider.async_unregister_camera(self),
+                "unregistering WebRTC provider for",
+                self.entity_id,
+            )
+            self._webrtc_provider = None
+        await super().async_internal_will_remove_from_hass()
+
     async def async_refresh_providers(self, *, write_state: bool = True) -> None:
         """Determine if any of the registered providers are suitable for this entity.
 
@@ -699,11 +732,27 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 async_get_supported_provider
             )
 
-        if old_provider != new_provider:
-            self._webrtc_provider = new_provider
-            self._invalidate_camera_capabilities_cache()
-            if write_state:
-                self.async_write_ha_state()
+        if old_provider == new_provider:
+            return
+
+        if old_provider:
+            await _async_call_webrtc_provider(
+                old_provider.async_unregister_camera(self),
+                "unregistering WebRTC provider for",
+                self.entity_id,
+            )
+
+        if new_provider:
+            await _async_call_webrtc_provider(
+                new_provider.async_register_camera(self),
+                "registering WebRTC provider for",
+                self.entity_id,
+            )
+
+        self._webrtc_provider = new_provider
+        self._invalidate_camera_capabilities_cache()
+        if write_state:
+            self.async_write_ha_state()
 
     async def _async_get_supported_webrtc_provider[_T](
         self, fn: Callable[[HomeAssistant, Camera], Coroutine[None, None, _T | None]]
@@ -885,8 +934,8 @@ class CameraMjpegStream(CameraView):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "camera/capabilities",
-        vol.Required("entity_id"): cv.entity_id,
+        probatio.Required("type"): "camera/capabilities",
+        probatio.Required("entity_id"): cv.entity_id,
     }
 )
 @websocket_api.async_response
@@ -903,9 +952,9 @@ async def ws_camera_capabilities(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "camera/stream",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Optional("format", default="hls"): vol.In(OUTPUT_FORMATS),
+        probatio.Required("type"): "camera/stream",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Optional("format", default="hls"): probatio.In(OUTPUT_FORMATS),
     }
 )
 @websocket_api.async_response
@@ -932,7 +981,10 @@ async def ws_camera_stream(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "camera/get_prefs", vol.Required("entity_id"): cv.entity_id}
+    {
+        probatio.Required("type"): "camera/get_prefs",
+        probatio.Required("entity_id"): cv.entity_id,
+    }
 )
 @websocket_api.async_response
 async def websocket_get_prefs(
@@ -945,10 +997,10 @@ async def websocket_get_prefs(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "camera/update_prefs",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Optional(PREF_PRELOAD_STREAM): bool,
-        vol.Optional(PREF_ORIENTATION): vol.Coerce(Orientation),
+        probatio.Required("type"): "camera/update_prefs",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Optional(PREF_PRELOAD_STREAM): bool,
+        probatio.Optional(PREF_ORIENTATION): probatio.Coerce(Orientation),
     }
 )
 @websocket_api.require_admin
@@ -969,6 +1021,14 @@ async def websocket_update_prefs(
         _LOGGER.error("Error setting camera preferences: %s", ex)
         connection.send_error(msg["id"], "update_failed", str(ex))
     else:
+        if (camera := hass.data[DATA_COMPONENT].get_entity(entity_id)) and (
+            provider := camera.webrtc_provider
+        ):
+            await _async_call_webrtc_provider(
+                provider.async_on_camera_prefs_update(camera),
+                "notifying WebRTC provider of preferences update for",
+                entity_id,
+            )
         connection.send_result(msg["id"], entity_prefs)
 
 

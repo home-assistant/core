@@ -3,13 +3,13 @@
 import logging
 from typing import Any, override
 
+import probatio
 from python_open_router import (
     Model,
     OpenRouterClient,
     OpenRouterError,
     SupportedParameter,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -25,7 +25,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
-    BooleanSelector,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -47,7 +46,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenRouter."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @classmethod
     @callback
@@ -86,9 +85,9 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    probatio.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -147,7 +146,7 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
+            if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
             if self._is_new:
                 return self.async_create_entry(
@@ -188,16 +187,16 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_MODEL, default=self.options.get(CONF_MODEL)
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=options, mode=SelectSelectorMode.DROPDOWN, sort=True
                         ),
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PROMPT,
                         description={
                             "suggested_value": self.options.get(
@@ -206,7 +205,7 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                             )
                         },
                     ): TemplateSelector(),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LLM_HASS_API,
                         default=self.options.get(
                             CONF_LLM_HASS_API,
@@ -215,13 +214,28 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                     ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_WEB_SEARCH,
                         default=self.options.get(
                             CONF_WEB_SEARCH,
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_WEB_SEARCH],
                         ),
-                    ): BooleanSelector(),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                "off",
+                                "plugin",
+                                "tool",
+                                "tool_native",
+                                "tool_exa",
+                                "tool_firecrawl",
+                                "tool_parallel",
+                                "tool_perplexity",
+                            ],
+                            translation_key="web_search_modes",
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
                 }
             ),
         )
@@ -288,9 +302,9 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_MODEL, default=self.options.get(CONF_MODEL)
                     ): SelectSelector(
                         SelectSelectorConfig(

@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiohue.v1 as aiohue_v1
 import aiohue.v2 as aiohue_v2
 from aiohue.v2.controllers.events import EventType
+from aiohue.v2.scene_activity import SceneActivityTracker
 import pytest
 
 from homeassistant.components import hue
@@ -62,6 +63,8 @@ def create_mock_bridge(hass: HomeAssistant, api_version: int = 1) -> Mock:
             bridge.config_entry.runtime_data = bridge
         if bridge.api_version == 2:
             await async_setup_devices(bridge)
+            bridge.scene_activity_tracker = SceneActivityTracker(bridge.api.scenes)
+            bridge.scene_activity_tracker.start()
         return True
 
     bridge.async_initialize_bridge = async_initialize_bridge
@@ -128,6 +131,8 @@ def create_mock_api_v1() -> Mock:
         software_version="1935144040",
     )
     api.config.name = "Home"
+    # aiohue exposes the bridge id as both `bridge_id` and `bridgeid`
+    api.config.bridgeid = api.config.bridge_id
 
     api.lights = aiohue_v1.Lights(logger, {}, mock_request)
     api.groups = aiohue_v1.Groups(logger, {}, mock_request)

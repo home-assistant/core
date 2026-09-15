@@ -1,0 +1,14 @@
+{
+  "id": 281092,
+  "nickname": "test@example.com",
+  "avatar": "https://sunsynk-s3.s3.eu-west-2.amazonaws.com/avatar/20210126155052363929.png",
+  "gender": 1,
+  "mobile": null,
+  "createAt": "2022-10-03T15:39:04Z",
+  "type": null,
+  "tempUnit": "\u2103",
+  "company": null,
+  "userSrc": "sunsynk",
+  "email": "test@example.com",
+  "sex": 1
+}

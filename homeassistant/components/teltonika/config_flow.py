@@ -4,8 +4,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
@@ -20,12 +20,12 @@ from .util import get_url_variants
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
 )
 
@@ -171,10 +171,10 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates=user_input,
                 )
 
-        reauth_schema = vol.Schema(
+        reauth_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_USERNAME): str,
+                probatio.Required(CONF_PASSWORD): str,
             }
         )
 
@@ -235,18 +235,17 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             # unauthorized endpoint. Match existing entries by MAC so it
             # aborts without asking for credentials again.
             device_reg = dr.async_get(self.hass)
-            if existing := device_reg.async_get_device(
+            for device in device_reg.async_get_devices(
                 connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
             ):
-                for entry_id in existing.config_entries:
-                    entry = self.hass.config_entries.async_get_entry(entry_id)
-                    if (
-                        entry is not None
-                        and entry.domain == DOMAIN
-                        and entry.unique_id is not None
-                    ):
-                        device_id = entry.unique_id
-                        break
+                entry = self.hass.config_entries.async_get_entry(device.config_entry_id)
+                if (
+                    entry is not None
+                    and entry.domain == DOMAIN
+                    and entry.unique_id is not None
+                ):
+                    device_id = entry.unique_id
+                    break
 
         # Use the MAC as a placeholder unique_id when nothing matched, so
         # parallel DHCP advertisements don't both reach dhcp_confirm.
@@ -307,10 +306,10 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="dhcp_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

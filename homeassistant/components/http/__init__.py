@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import Any, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import (
@@ -17,7 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.http import (  # noqa: F401
     KEY_ALLOW_CONFIGURED_CORS,
     KEY_AUTHENTICATED,
@@ -34,14 +33,7 @@ from homeassistant.setup import (
 )
 from homeassistant.util.async_ import create_eager_task
 
-from .config import (
-    _DEFAULT_CONFIG,
-    ConfData,
-    HTTPConfigStore,
-    async_get_and_load_store,
-    async_load_config,
-    default_server_port,
-)
+from .config import async_get_and_load_store, async_load_config
 from .const import (  # noqa: F401
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
@@ -67,6 +59,7 @@ from .const import (  # noqa: F401
 from .decorators import require_admin  # noqa: F401
 from .server import (
     DEFAULT_BIND,
+    HassioHTTPConfigView,
     HomeAssistantHTTP,  # noqa: F401
     HomeAssistantRequest,  # noqa: F401
     StaticPathConfig,  # noqa: F401
@@ -77,38 +70,43 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 DEFAULT_DEVELOPMENT: Final = "0"
 
-HTTP_SCHEMA: Final = vol.All(
+HTTP_SCHEMA: Final = probatio.All(
     cv.deprecated(CONF_BASE_URL),
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Optional(CONF_SERVER_HOST): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
+            probatio.Optional(CONF_SERVER_HOST): probatio.All(
+                cv.ensure_list, probatio.Length(min=1), [cv.string]
             ),
-            vol.Optional(CONF_SERVER_PORT, default=default_server_port): cv.port,
-            vol.Optional(CONF_BASE_URL): cv.string,
-            vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
-            vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
-            vol.Optional(CONF_SSL_KEY): cv.isfile,
-            vol.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): vol.All(
+            # No default: the YAML migration needs to tell an explicitly
+            # configured port apart from an omitted one, which it keeps on the
+            # previous default port instead of the Supervisor default.
+            probatio.Optional(CONF_SERVER_PORT): cv.port,
+            probatio.Optional(CONF_BASE_URL): cv.string,
+            probatio.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+            probatio.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
+            probatio.Optional(CONF_SSL_KEY): cv.isfile,
+            probatio.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): probatio.All(
                 cv.ensure_list, [cv.string]
             ),
-            vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
-            vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
+            probatio.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
+            probatio.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): probatio.All(
                 cv.ensure_list, [ip_network]
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
-            ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
-            vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
-            vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
+            ): probatio.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
+            probatio.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
+            probatio.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): probatio.In(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
-            vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
+            probatio.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
         }
     ),
 )
 
-CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: HTTP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA: Final = probatio.Schema(
+    {DOMAIN: HTTP_SCHEMA}, extra=probatio.ALLOW_EXTRA
+)
 
 
 class ApiConfig:
@@ -126,63 +124,6 @@ class ApiConfig:
         self.host = host
         self.port = port
         self.use_ssl = use_ssl
-
-
-async def _async_fallback_config(
-    hass: HomeAssistant,
-    store: HTTPConfigStore,
-    conf: ConfData,
-    err: HomeAssistantError | OSError,
-) -> ConfData:
-    """Return the next config to try after ``conf`` could not be applied.
-
-    Implements the fallback chain pending -> stable -> default config, where
-    the last step is only taken in recovery mode. Raises when there is no
-    (acceptable) fallback left, failing setup: on a normal boot this
-    activates recovery mode, in recovery mode it makes the failure visible
-    to the outside (e.g. the Supervisor rolls back a Core update whose API
-    does not come up).
-    """
-    if store.revert_deadline is not None:
-        # An unconfirmed pending config is under trial and cannot even be
-        # applied, so it is known to be bad: revert to the stable config
-        # right away and continue this same start with it, instead of
-        # waiting out the trial window and restarting.
-        _LOGGER.error(
-            "The new HTTP configuration could not be applied, reverting to "
-            "the previous configuration: %s",
-            err,
-        )
-        await store.async_abort_trial()
-        return store.stable
-
-    if (
-        # In normal mode, fail setup so recovery mode can take over with a
-        # reachable configuration.
-        not hass.config.recovery_mode
-        # The chain is exhausted; nothing left to fall back to.
-        or conf is _DEFAULT_CONFIG
-        # With peer certificate verification configured, connections must
-        # never be accepted without a verified client certificate; there is
-        # no acceptable fallback config.
-        or CONF_SSL_PEER_CERTIFICATE in conf
-    ):
-        # An unusable SSL configuration already carries a descriptive
-        # HomeAssistantError.
-        if isinstance(err, HomeAssistantError):
-            raise err
-        raise HomeAssistantError(
-            f"Failed to create HTTP server at port {conf[CONF_SERVER_PORT]}: {err}"
-        ) from err
-
-    # The config cannot be applied in recovery mode; fall back to the
-    # default config so the recovery UI stays reachable.
-    _LOGGER.error(
-        "The HTTP configuration could not be applied in recovery mode, "
-        "falling back to the default configuration: %s",
-        err,
-    )
-    return _DEFAULT_CONFIG
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -224,7 +165,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except (HomeAssistantError, OSError) as err:
             store = await async_get_and_load_store(hass)
             trial_reverted = store.revert_deadline is not None
-            conf = await _async_fallback_config(hass, store, conf, err)
+            conf = await store.async_get_fallback_config(err)
             server = make_server(hass, conf, supervisor_unix_socket_path)
             continue
         if trial_reverted:
@@ -248,18 +189,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # or the recovery boot cannot bind the same address again.
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
 
-    if CONF_SERVER_HOST in conf and is_hassio(hass):
-        issue_id = "server_host_deprecated_hassio"
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            breaks_in_ha_version="2026.6.0",
-            is_fixable=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key=issue_id,
-        )
-
     server_host = conf.get(CONF_SERVER_HOST, DEFAULT_BIND)
     server_port = conf[CONF_SERVER_PORT]
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
@@ -280,6 +209,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_when_setup_or_start(hass, "frontend", start_server)
 
     if server.supervisor_unix_socket_path is not None:
+        # Let Supervisor pull its connection parameters over the socket instead
+        # of relying on the hassio integration having pushed them first.
+        server.register_view(HassioHTTPConfigView)
 
         async def start_supervisor_unix_socket(*_: Any) -> None:
             """Start the Unix socket after the Supervisor user is available."""

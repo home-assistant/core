@@ -1,10 +1,10 @@
 """Tests for the llm helpers."""
 
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
@@ -143,6 +143,75 @@ async def test_call_tool_no_existing(
         )
 
 
+async def test_call_non_intent_tool_preserves_blank_arguments(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test blank arguments are preserved for non-intent tools."""
+    tool_args = {"name": "", "response": " ", "other": None}
+    tool = MagicMock(spec=llm.Tool)
+    tool.name = "test_tool"
+    tool.async_call = AsyncMock(return_value={"tool_args": tool_args})
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    result = await instance.async_call_tool(llm.ToolInput(tool.name, tool_args))
+
+    assert result == {"tool_args": tool_args}
+    assert tool.async_call.await_args.args[1].tool_args is tool_args
+
+
+@pytest.mark.parametrize("namespaced", [False, True])
+async def test_intent_tool_omits_blank_arguments(
+    hass: HomeAssistant, llm_context: llm.LLMContext, namespaced: bool
+) -> None:
+    """Test direct and namespaced intent tools omit blank arguments."""
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "test_intent"
+        slot_schema = {
+            probatio.Optional("name"): intent.non_empty_string,
+            probatio.Optional("response"): cv.string,
+            probatio.Optional("count"): probatio.Coerce(int),
+            probatio.Optional("enabled"): cv.boolean,
+        }
+
+    intent_tool = llm.IntentTool("test_intent", MyIntentHandler())
+    tool: llm.Tool = (
+        llm.NamespacedTool("test_api", intent_tool) if namespaced else intent_tool
+    )
+    tool_args = {
+        "name": "",
+        "response": " \t",
+        "other": None,
+        "count": 0,
+        "enabled": False,
+    }
+    tool_input = llm.ToolInput(tool.name, tool_args)
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+    intent_response = intent.IntentResponse("*")
+
+    with patch(
+        "homeassistant.helpers.intent.async_handle", return_value=intent_response
+    ) as mock_intent_handle:
+        await instance.async_call_tool(tool_input)
+
+    assert mock_intent_handle.await_args.kwargs["slots"] == {
+        "count": {"value": 0},
+        "enabled": {"value": False},
+    }
+    assert tool_input.tool_args is tool_args
+    assert tool_args == {
+        "name": "",
+        "response": " \t",
+        "other": None,
+        "count": 0,
+        "enabled": False,
+    }
+
+
 async def test_assist_api(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -161,10 +230,10 @@ async def test_assist_api(
         device_id=None,
     )
     schema = {
-        vol.Optional("area"): cv.string,
-        vol.Optional("floor"): cv.string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Optional("area"): cv.string,
+        probatio.Optional("floor"): cv.string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
 
     class MyIntentHandler(intent.IntentHandler):
@@ -176,10 +245,10 @@ async def test_assist_api(
     tool = llm.IntentTool("test_intent", intent_handler)
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
-    assert tool.parameters == vol.Schema(
+    assert tool.parameters == probatio.Schema(
         {
-            vol.Optional("area"): cv.string,
-            vol.Optional("floor"): cv.string,
+            probatio.Optional("area"): cv.string,
+            probatio.Optional("floor"): cv.string,
             # No preferred_area_id, preferred_floor_id
         }
     )
@@ -316,14 +385,14 @@ async def test_assist_api_get_timer_tools(
     assert await async_setup_component(hass, "intent", {})
     api = await llm.async_get_api(hass, "assist", llm_context)
 
-    assert "HassStartTimer" not in [tool.name for tool in api.tools]
+    assert "intent__HassStartTimer" not in [tool.name for tool in api.tools]
 
     llm_context.device_id = "test_device"
 
     async_register_timer_handler(hass, "test_device", lambda *args: None)
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert "HassStartTimer" in [tool.name for tool in api.tools]
+    assert "intent__HassStartTimer" in [tool.name for tool in api.tools]
 
 
 async def test_assist_api_description(
@@ -670,7 +739,7 @@ Static Context: An overview of the areas and the devices in this smart home:
 """
     first_part_prompt = (
         "When controlling Home Assistant always call the intent tools. "
-        "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
+        "Use intent__HassTurnOn to lock and intent__HassTurnOff to unlock a lock. "
         "When controlling a device, prefer passing just name and domain. "
         "When controlling an area, prefer passing just area name and domain."
     )
@@ -683,7 +752,7 @@ Static Context: An overview of the areas and the devices in this smart home:
     dynamic_context_prompt = (
         "You ARE equipped to answer questions about the"
         " current state of\nthe home using the"
-        " `GetLiveContext` tool. This is a primary"
+        " `homeassistant__GetLiveContext` tool. This is a primary"
         " function. Do not state you lack the\n"
         "functionality if the question requires live"
         " data.\nIf the user asks about device"
@@ -695,7 +764,7 @@ Static Context: An overview of the areas and the devices in this smart home:
         ' "What mode is the thermostat in?", "What'
         ' is the temperature outside?"):\n'
         "    1.  Recognize this requires live data.\n"
-        "    2.  You MUST call `GetLiveContext`. This"
+        "    2.  You MUST call `homeassistant__GetLiveContext`. This"
         " tool will provide the needed real-time"
         " information (like temperature from the local"
         " weather, lock status, etc.).\n"
@@ -715,10 +784,10 @@ Static Context: An overview of the areas and the devices in this smart home:
 {no_timer_prompt}"""
     )
 
-    # Verify that the GetLiveContext tool returns the same results
+    # Verify that the homeassistant__GetLiveContext tool returns the same results
     # as the exposed_entities_prompt
     result = await api.async_call_tool(
-        llm.ToolInput(tool_name="GetLiveContext", tool_args={})
+        llm.ToolInput(tool_name="homeassistant__GetLiveContext", tool_args={})
     )
     assert result == {
         "success": True,
@@ -845,31 +914,31 @@ async def test_action_tool(
     assert len(tools) == 2
 
     tool = tools[0]
-    assert tool.name == "test_script"
+    assert tool.name == "script__test_script"
     assert (
         tool.description
         == "This is a test script. Aliases: ['script alias', 'script name']"
     )
     schema = {
-        vol.Required("beer", description="Number of beers"): cv.string,
-        vol.Optional("wine"): selector.NumberSelector({"min": 0, "max": 3}),
-        vol.Optional("where"): selector.AreaSelector(),
-        vol.Optional("area_list"): selector.AreaSelector({"multiple": True}),
-        vol.Optional("floor"): selector.FloorSelector(),
-        vol.Optional("floor_list"): selector.FloorSelector({"multiple": True}),
-        vol.Optional("extra_field"): selector.AreaSelector(),
+        probatio.Required("beer", description="Number of beers"): cv.string,
+        probatio.Optional("wine"): selector.NumberSelector({"min": 0, "max": 3}),
+        probatio.Optional("where"): selector.AreaSelector(),
+        probatio.Optional("area_list"): selector.AreaSelector({"multiple": True}),
+        probatio.Optional("floor"): selector.FloorSelector(),
+        probatio.Optional("floor_list"): selector.FloorSelector({"multiple": True}),
+        probatio.Optional("extra_field"): selector.AreaSelector(),
     }
     assert tool.parameters.schema == schema
 
     # The parameter cache stores the base description; ScriptTool appends aliases.
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
-        "test_script": ("This is a test script", vol.Schema(schema)),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
+        "test_script": ("This is a test script", probatio.Schema(schema)),
+        "script_with_no_fields": ("This is another test script", probatio.Schema({})),
     }
 
     # Test script with response
     tool_input = llm.ToolInput(
-        tool_name="test_script",
+        tool_name="script__test_script",
         tool_args={
             "beer": "3",
             "wine": 0,
@@ -908,7 +977,7 @@ async def test_action_tool(
 
     # Test script with no response
     tool_input = llm.ToolInput(
-        tool_name="script_with_no_fields",
+        tool_name="script__script_with_no_fields",
         tool_args={},
     )
 
@@ -964,17 +1033,17 @@ async def test_action_tool(
     assert len(tools) == 2
 
     tool = tools[0]
-    assert tool.name == "test_script"
+    assert tool.name == "script__test_script"
     assert (
         tool.description
         == "This is a new test script. Aliases: ['script alias', 'script name']"
     )
-    schema = {vol.Required("beer", description="Number of beers"): cv.string}
+    schema = {probatio.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
-        "test_script": ("This is a new test script", vol.Schema(schema)),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
+        "test_script": ("This is a new test script", probatio.Schema(schema)),
+        "script_with_no_fields": ("This is another test script", probatio.Schema({})),
     }
 
 
@@ -1073,7 +1142,7 @@ async def test_selector_serializer(
             "seconds": {"type": "number"},
             "milliseconds": {"type": "number"},
         },
-        "required": [],
+        "additionalProperties": False,
     }
     assert selector_serializer(selector.EntitySelector()) == {
         "type": "string",
@@ -1109,6 +1178,7 @@ async def test_selector_serializer(
             "radius": {"type": "number"},
         },
         "required": ["latitude", "longitude"],
+        "additionalProperties": False,
     }
     assert selector_serializer(selector.MediaSelector()) == {
         "type": "object",
@@ -1119,6 +1189,7 @@ async def test_selector_serializer(
             "metadata": {"type": "object", "additionalProperties": True},
         },
         "required": ["media_content_id", "media_content_type"],
+        "additionalProperties": False,
     }
     assert selector_serializer(selector.MediaSelector({"multiple": True})) == {
         "type": "array",
@@ -1131,6 +1202,7 @@ async def test_selector_serializer(
                 "metadata": {"type": "object", "additionalProperties": True},
             },
             "required": ["media_content_id", "media_content_type"],
+            "additionalProperties": False,
         },
     }
     assert selector_serializer(selector.NumberSelector({"mode": "box"})) == {
@@ -1231,7 +1303,7 @@ async def test_selector_serializer(
             "floor_id": {"items": {"type": "string"}, "type": "array"},
             "label_id": {"items": {"type": "string"}, "type": "array"},
         },
-        "required": [],
+        "additionalProperties": False,
     }
 
     assert selector_serializer(selector.TemplateSelector()) == {
@@ -1269,8 +1341,11 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    # GetLiveContext is always offered; it reports when nothing is exposed.
-    assert [tool.name for tool in api.tools] == ["GetLiveContext", "GetDateTime"]
+    # homeassistant__GetLiveContext is always offered; it reports when nothing is exposed.
+    assert [tool.name for tool in api.tools] == [
+        "homeassistant__GetLiveContext",
+        "llm__GetDateTime",
+    ]
 
 
 async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:

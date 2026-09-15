@@ -95,7 +95,12 @@ async def async_setup_entry(
     """Set up NZBGet sensor based on a config entry."""
     coordinator = entry.runtime_data
     entities = [
-        NZBGetSensor(coordinator, entry.entry_id, entry.data[CONF_NAME], description)
+        NZBGetSensor(
+            coordinator,
+            entry.entry_id,
+            entry.data.get(CONF_NAME, entry.title),
+            description,
+        )
         for description in SENSOR_TYPES
     ]
 

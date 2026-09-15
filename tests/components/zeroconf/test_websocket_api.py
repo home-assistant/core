@@ -21,6 +21,14 @@ from homeassistant.setup import async_setup_component
 
 from tests.typing import WebSocketGenerator
 
+PROPERTIES = {
+    "md": "HASS Bridge W9DN",
+    "pv": "1.0",
+    "id": "11:8E:DB:5B:5C:C5",
+    "c#": "12",
+    "s#": "1",
+}
+
 
 async def test_subscribe_discovery(
     hass: HomeAssistant,
@@ -62,7 +70,7 @@ async def test_subscribe_discovery(
                 socket.inet_aton("127.0.0.1"),
             ),
             DNSText(
-                "foo2.local.",
+                "foo2._fakeservice._tcp.local.",
                 const._TYPE_TXT,
                 const._CLASS_IN,
                 const._DNS_HOST_TTL,
@@ -87,7 +95,7 @@ async def test_subscribe_discovery(
                 "foo3.local.",
             ),
             DNSText(
-                "foo3.local.",
+                "foo3._fakeservice._tcp.local.",
                 const._TYPE_TXT,
                 const._CLASS_IN,
                 const._DNS_HOST_TTL,
@@ -122,7 +130,7 @@ async def test_subscribe_discovery(
                 "ip_addresses": ["127.0.0.1"],
                 "name": "foo2._fakeservice._tcp.local.",
                 "port": 1234,
-                "properties": {},
+                "properties": PROPERTIES,
                 "type": "_fakeservice._tcp.local.",
             }
         ]
@@ -152,7 +160,7 @@ async def test_subscribe_discovery(
                 "ip_addresses": ["127.0.0.1"],
                 "name": "foo3._fakeservice._tcp.local.",
                 "port": 1234,
-                "properties": {},
+                "properties": PROPERTIES,
                 "type": "_fakeservice._tcp.local.",
             }
         ]
@@ -166,7 +174,7 @@ async def test_subscribe_discovery(
                 "ip_addresses": ["127.0.0.1"],
                 "name": "foo3._fakeservice._tcp.local.",
                 "port": 1234,
-                "properties": {},
+                "properties": PROPERTIES,
                 "type": "_fakeservice._tcp.local.",
             }
         ]

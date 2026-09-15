@@ -44,6 +44,7 @@ from .const import (
     MOCK_ALBUM_ASSETS,
     MOCK_FAVORITE_ASSETS,
     MOCK_PEOPLE_ASSETS,
+    MOCK_SEARCH_ASSETS,
     MOCK_TAGS_ASSETS,
 )
 
@@ -81,6 +82,7 @@ def mock_immich_albums() -> AsyncMock:
     """Mock the Immich server."""
     mock = AsyncMock(spec=ImmichAlbums)
     mock.async_get_all_albums.return_value = [ALBUM_DATA]
+    mock.async_get_album_info.return_value = ALBUM_DATA
     mock.async_add_assets_to_album.return_value = [
         ImmichAddAssetsToAlbumResponse.from_dict(
             {"id": "abcdef-0123456789", "success": True}
@@ -150,6 +152,7 @@ def mock_immich_people() -> AsyncMock:
             }
         ),
     ]
+    mock.async_get_person_by_id.return_value = mock.async_get_all_people.return_value[0]
     mock.async_get_person_thumbnail.return_value = b"yyyy"
     return mock
 
@@ -162,6 +165,7 @@ def mock_immich_search() -> AsyncMock:
     mock.async_get_all_by_album_ids.return_value = MOCK_ALBUM_ASSETS
     mock.async_get_all_by_person_ids.return_value = MOCK_PEOPLE_ASSETS
     mock.async_get_all_by_tag_ids.return_value = MOCK_TAGS_ASSETS
+    mock.async_smart_search.return_value = MOCK_SEARCH_ASSETS
     return mock
 
 
@@ -255,6 +259,7 @@ def mock_immich_tags() -> AsyncMock:
             },
         ),
     ]
+    mock.async_get_tag_by_id.return_value = mock.async_get_all_tags.return_value[0]
     return mock
 
 

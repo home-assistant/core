@@ -34,12 +34,12 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    _LOGGER,
     ATTR_REMAINING,
     DEFAULT_ATTEMPTS,
     DOMAIN,
     IDENTIFY_WAVEFORM,
     LIFX_128ZONE_CEILING_PRODUCT_IDS,
+    LOGGER,
     MAX_ATTEMPTS_PER_UPDATE_REQUEST_MESSAGE,
     MAX_UPDATE_TIME,
     MESSAGE_RETRIES,
@@ -108,14 +108,14 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=config_entry,
             name=f"{config_entry.title} ({self.device.ip_addr})",
             update_interval=timedelta(seconds=LIGHT_UPDATE_INTERVAL),
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change
             request_refresh_debouncer=Debouncer(
-                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+                hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
 

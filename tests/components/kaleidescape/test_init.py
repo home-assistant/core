@@ -61,11 +61,13 @@ async def test_disconnect_on_hass_stop(
     assert mock_device.disconnect.call_count == 1
 
 
-@pytest.mark.usefixtures("mock_device", "mock_integration")
-async def test_device(device_registry: dr.DeviceRegistry) -> None:
+@pytest.mark.usefixtures("mock_device")
+async def test_device(
+    device_registry: dr.DeviceRegistry, mock_integration: MockConfigEntry
+) -> None:
     """Test device."""
-    device = device_registry.async_get_device(
-        identifiers={("kaleidescape", MOCK_SERIAL)}
+    device = device_registry.async_get_device_by_identifier(
+        ("kaleidescape", MOCK_SERIAL), mock_integration.entry_id
     )
     assert device is not None
     assert device.identifiers == {("kaleidescape", MOCK_SERIAL)}
