@@ -1,5 +1,6 @@
 """Provides data updates from the Control4 controller for platforms."""
 
+import asyncio
 from collections import defaultdict
 import logging
 from typing import Any
@@ -37,6 +38,16 @@ async def director_get_entry_variables(
 
         await refresh_tokens(hass, entry)
         return await _get_entry_variables(entry, item_id)
+
+
+async def gather_entry_variables(
+    hass: HomeAssistant, entry: Control4ConfigEntry, item_ids: list[int]
+) -> dict[int, dict]:
+    """Retrieve variable data for multiple Control4 entities concurrently."""
+    results = await asyncio.gather(
+        *(director_get_entry_variables(hass, entry, item_id) for item_id in item_ids)
+    )
+    return dict(zip(item_ids, results, strict=True))
 
 
 async def _update_variables_for_config_entry(

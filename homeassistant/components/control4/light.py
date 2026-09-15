@@ -18,7 +18,7 @@ from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from . import get_items_of_category
 from .const import CONTROL4_ENTITY_TYPE, Control4ConfigEntry, Control4RuntimeData
-from .director_utils import director_get_entry_variables
+from .director_utils import gather_entry_variables
 from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ async def async_setup_entry(
     entry_data = entry.runtime_data
     items_of_category = await get_items_of_category(hass, entry, CONTROL4_CATEGORY)
 
-    entity_list = []
+    pending = []
     for item in items_of_category:
         try:
             if not (
@@ -62,23 +62,36 @@ async def async_setup_entry(
                 "Unknown device properties received from Control4: %s", item
             )
             continue
-        item_attributes = await director_get_entry_variables(hass, entry, item_id)
+
+        pending.append(
+            {
+                "name": item_name,
+                "idx": item_id,
+                "device_name": item_device_name,
+                "device_manufacturer": item_manufacturer,
+                "device_model": item_model,
+                "device_parent_id": item_parent_id,
+                "device_area": item_area,
+            }
+        )
+
+    item_attributes_by_id = await gather_entry_variables(
+        hass, entry, [item["idx"] for item in pending]
+    )
+
+    entity_list = []
+    for item in pending:
+        item_attributes = item_attributes_by_id[item["idx"]]
         if not item_attributes:
-            _LOGGER.debug("Skipping light %s: no initial variables", item_name)
+            _LOGGER.debug("Skipping light %s: no initial variables", item["name"])
             continue
 
         entity_list.append(
             Control4Light(
                 entry_data,
                 entry,
-                item_name,
-                item_id,
-                item_device_name,
-                item_manufacturer,
-                item_model,
-                item_parent_id,
-                item_area,
-                item_attributes,
+                device_attributes=item_attributes,
+                **item,
             )
         )
 
