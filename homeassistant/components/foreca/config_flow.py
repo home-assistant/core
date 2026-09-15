@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyforeca import (
     ForecaApiClient,
     ForecaAuthError,
@@ -10,7 +11,6 @@ from pyforeca import (
     Location,
     format_location,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -93,7 +93,7 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 
@@ -137,9 +137,9 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="location",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_LOCATION,
                         default={
                             CONF_LATITUDE: self.hass.config.latitude,
