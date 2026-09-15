@@ -9,12 +9,7 @@ from typing import Any
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
-from pyControl4.error_handling import (
-    BadCredentials,
-    C4Exception,
-    InvalidCategory,
-    Unauthorized,
-)
+from pyControl4.error_handling import BadCredentials, C4Exception, InvalidCategory
 from pyControl4.websocket import C4Websocket
 
 from homeassistant.const import (
@@ -162,7 +157,7 @@ async def refresh_tokens(
         await account.get_account_bearer_token()
     except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
-    except (BadCredentials, Unauthorized) as err:
+    except BadCredentials as err:
         raise ConfigEntryAuthFailed(err) from err
 
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
@@ -172,8 +167,6 @@ async def refresh_tokens(
         )
     except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
-    except (BadCredentials, Unauthorized) as err:
-        raise ConfigEntryAuthFailed(err) from err
 
     no_verify_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
     director = C4Director(
