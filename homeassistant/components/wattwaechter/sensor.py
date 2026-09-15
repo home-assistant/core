@@ -278,7 +278,9 @@ CUMULATIVE_ENERGY_UNITS: dict[str, SensorDeviceClass] = {
 }
 
 # OBIS groups 0.x.y and 96.x.y carry device metadata such as serial numbers
-# or manufacturer identification, not measurements.
+# or manufacturer identification — nothing to observe or automate on, so no
+# entities are created for them. The raw values remain available in the
+# diagnostics download.
 METADATA_OBIS_PREFIXES = ("0.", "96.")
 
 
@@ -338,7 +340,7 @@ async def async_setup_entry(
                     obis_code=obis_code,
                 )
             )
-        else:
+        elif not obis_code.startswith(METADATA_OBIS_PREFIXES):
             entities.append(
                 WattwaechterGenericObisSensor(coordinator, obis_code, obis_value)
             )
@@ -394,14 +396,9 @@ class WattwaechterGenericObisSensor(WattwaechterEntity, SensorEntity):
         self._obis_code = obis_code
         self._attr_unique_id = f"{coordinator.device_id}_{obis_code}"
         self._attr_name = obis_value.name or f"OBIS {obis_code}"
-        is_metadata = obis_code.startswith(METADATA_OBIS_PREFIXES)
-        if is_metadata:
-            self._attr_entity_category = EntityCategory.DIAGNOSTIC
         if isinstance(obis_value.value, str):
             return
         self._attr_native_unit_of_measurement = obis_value.unit or None
-        if is_metadata:
-            return
         if (
             device_class := CUMULATIVE_ENERGY_UNITS.get(obis_value.unit)
         ) and _is_cumulative_register(obis_code):
