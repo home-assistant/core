@@ -27,6 +27,30 @@ ORALB_SERVICE_INFO = BluetoothServiceInfo(
 )
 
 
+# Same brush as ORALB_SERVICE_INFO, running with a session duration of
+# 130 s (byte 5 = 2 min, byte 6 = 10 s).
+ORALB_HIGH_DURATION_SERVICE_INFO = BluetoothServiceInfo(
+    name="78:DB:2F:C2:48:BE",
+    address="78:DB:2F:C2:48:BE",
+    rssi=-63,
+    manufacturer_data={220: b"\x02\x01\x08\x03\x00\x02\x0a\x01\x01\x00\x04"},
+    service_uuids=[],
+    service_data={},
+    source="local",
+)
+
+# The same brush after a new session has started: the duration counter has
+# dropped to 5 s (byte 5 = 0 min, byte 6 = 5 s).
+ORALB_LOW_DURATION_SERVICE_INFO = BluetoothServiceInfo(
+    name="78:DB:2F:C2:48:BE",
+    address="78:DB:2F:C2:48:BE",
+    rssi=-63,
+    manufacturer_data={220: b"\x02\x01\x08\x03\x00\x00\x05\x01\x01\x00\x04"},
+    service_uuids=[],
+    service_data={},
+    source="local",
+)
+
 ORALB_IO_SERIES_4_SERVICE_INFO = BluetoothServiceInfo(
     name="GXB772CD\x00\x00\x00\x00\x00\x00\x00\x00\x00",
     address="78:DB:2F:C2:48:BE",
