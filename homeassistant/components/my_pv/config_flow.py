@@ -5,7 +5,7 @@ from typing import Any, Final, override
 
 from my_pv import MyPVLocalDevice
 from my_pv.exceptions import MyPVAuthenticationError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
@@ -23,14 +23,14 @@ from .const import DOMAIN
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-HOST_SCHEMA: Final = vol.Schema(
+HOST_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_HOST): TextSelector(),
     }
 )
-AUTH_SCHEMA: Final = vol.Schema(
+AUTH_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }

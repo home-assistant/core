@@ -35,6 +35,9 @@
       "audio_input": {
         "default": "mdi:audio-input-stereo-minijack"
       },
+      "maximum_volume": {
+        "default": "mdi:volume-high"
+      },
       "streaming_source": {
         "default": "mdi:cast-audio"
       },

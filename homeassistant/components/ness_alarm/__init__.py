@@ -4,7 +4,7 @@ import logging
 from typing import NamedTuple
 
 from nessclient import ArmingMode, ArmingState, Client
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -52,34 +52,34 @@ class ZoneChangedData(NamedTuple):
     state: bool
 
 
-ZONE_SCHEMA = vol.Schema(
+ZONE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ZONE_NAME): cv.string,
-        vol.Required(CONF_ZONE_ID): cv.positive_int,
-        vol.Optional(
+        probatio.Required(CONF_ZONE_NAME): cv.string,
+        probatio.Required(CONF_ZONE_ID): cv.positive_int,
+        probatio.Optional(
             CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE
         ): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     }
 )
 
 # YAML configuration is deprecated but supported for import
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PORT): cv.port,
-                vol.Optional(
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Required(CONF_PORT): cv.port,
+                probatio.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.positive_time_period,
-                vol.Optional(CONF_ZONES, default=[]): vol.All(
+                probatio.Optional(CONF_ZONES, default=[]): probatio.All(
                     cv.ensure_list, [ZONE_SCHEMA]
                 ),
-                vol.Optional(CONF_INFER_ARMING_STATE, default=False): cv.boolean,
+                probatio.Optional(CONF_INFER_ARMING_STATE, default=False): cv.boolean,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
