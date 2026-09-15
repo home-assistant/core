@@ -69,7 +69,7 @@ class RepairsFlowManager(
         if "issue_id" in _context:
             # interim compatibility fallback for custom integrations that may expect
             # "issue_id" in user_input of async_step_init
-            data = (data or {}).update({"issue_id": _context["issue_id"]})
+            data = {**(data or {}), "issue_id": _context["issue_id"]}
         return await super().async_init(handler, context=_context, data=data)
 
     @override
