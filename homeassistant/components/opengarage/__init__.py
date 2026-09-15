@@ -9,7 +9,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_DEVICE_KEY
 from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.COVER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenGarageConfigEntry) -> bool:

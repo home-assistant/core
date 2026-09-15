@@ -27,6 +27,16 @@
       "vehicle": {
         "name": "Vehicle"
       }
+    },
+    "light": {
+      "light": {
+        "name": "Light"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "Remote control lock"
+      }
     }
   }
 }
