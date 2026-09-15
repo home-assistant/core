@@ -403,6 +403,7 @@ FLOWS = {
         "justnimbus",
         "jvc_projector",
         "kaco_modbus",
+        "kaco_rs485",
         "kaleidescape",
         "karakeep",
         "keenetic_ndms2",
