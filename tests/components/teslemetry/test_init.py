@@ -2263,7 +2263,8 @@ async def test_ble_key_rejected_raises_repair(
         assert issue.translation_key == ISSUE_TYPE_BLE_KEY_REJECTED
         assert issue.translation_placeholders == {"vehicle": "Test"}
         assert issue.severity is ir.IssueSeverity.WARNING
-        assert not issue.is_fixable
+        assert issue.is_fixable
+        assert issue.data == {"issue_type": ISSUE_TYPE_BLE_KEY_REJECTED, "vin": VIN}
 
 
 async def test_ble_key_rejected_repair_clears_on_bluetooth_success(

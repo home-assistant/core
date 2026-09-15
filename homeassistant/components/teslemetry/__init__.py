@@ -362,10 +362,11 @@ async def _async_resolve_vehicle_api(
                     hass,
                     DOMAIN,
                     issue_id,
-                    is_fixable=False,
+                    is_fixable=True,
                     severity=ir.IssueSeverity.WARNING,
                     translation_key=ISSUE_TYPE_BLE_KEY_REJECTED,
                     translation_placeholders={"vehicle": vehicle_name},
+                    data={"issue_type": ISSUE_TYPE_BLE_KEY_REJECTED, "vin": vin},
                 )
         # Always fail over: the cloud signs with its own key, so it can still succeed.
         return True
