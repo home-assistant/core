@@ -1,16 +1,24 @@
 """Tests for the Nature Remo sensor platform."""
 
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from aionatureremo import Appliance, Device, NatureRemoConnectionError
+from aionatureremo import (
+    Appliance,
+    Device,
+    NatureRemoConnectionError,
+    NatureRemoRateLimitError,
+)
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nature_remo.const import DOMAIN
+from homeassistant.components.nature_remo.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import async_poll
 
@@ -44,6 +52,69 @@ async def test_sensors_unavailable_on_update_failure(
     state = hass.states.get("sensor.living_remo_temperature")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_rate_limit_defers_the_next_poll_until_the_reset(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A 429 naming a reset time skips the polls the API would reject anyway."""
+    # The next poll runs one interval from now; a reset two intervals past
+    # that leaves exactly one regular poll inside the rate-limited window.
+    reset = dt_util.utcnow() + 3 * UPDATE_INTERVAL
+    mock_client.get_appliances.side_effect = NatureRemoRateLimitError(
+        429, "limited", reset=int(reset.timestamp())
+    )
+    await async_poll(hass, freezer)
+
+    state = hass.states.get("sensor.living_remo_temperature")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    polls = mock_client.get_devices.call_count
+
+    await async_poll(hass, freezer)
+    assert mock_client.get_devices.call_count == polls
+
+    await async_poll(hass, freezer)
+    assert mock_client.get_devices.call_count == polls + 1
+
+
+@pytest.mark.parametrize(
+    "reset_offset",
+    [None, -UPDATE_INTERVAL],
+    ids=["no_reset", "past_reset"],
+)
+async def test_rate_limit_without_a_usable_reset_keeps_polling(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    reset_offset: timedelta | None,
+) -> None:
+    """A 429 without a future reset is an ordinary failed poll.
+
+    A reset already behind us must not become the next update interval:
+    a zero or negative delay would poll in a tight loop.
+    """
+    reset = (
+        int((dt_util.utcnow() + reset_offset).timestamp())
+        if reset_offset is not None
+        else None
+    )
+    mock_client.get_appliances.side_effect = NatureRemoRateLimitError(
+        429, "limited", reset=reset
+    )
+    await async_poll(hass, freezer)
+
+    state = hass.states.get("sensor.living_remo_temperature")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    polls = mock_client.get_devices.call_count
+
+    await async_poll(hass, freezer)
+    assert mock_client.get_devices.call_count == polls + 1
 
 
 async def test_offline_device_sensors_unavailable(

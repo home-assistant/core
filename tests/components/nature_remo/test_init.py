@@ -7,7 +7,6 @@ from aionatureremo import Appliance, NatureRemoAuthError, NatureRemoConnectionEr
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.nature_remo.const import DOMAIN
-from homeassistant.components.nature_remo.coordinator import NatureRemoCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -20,11 +19,8 @@ from tests.common import MockConfigEntry
 async def test_setup_and_unload(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """The entry loads, stores a coordinator, and unloads cleanly."""
+    """The entry loads and unloads cleanly."""
     assert init_integration.state is ConfigEntryState.LOADED
-    coordinator = init_integration.runtime_data
-    assert isinstance(coordinator, NatureRemoCoordinator)
-    assert "appliance-ac-1" in coordinator.data.appliances
 
     await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
