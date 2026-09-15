@@ -433,6 +433,23 @@ async def test_media_proxy_movie_preview(
     )
 
 
+async def test_media_proxy_rejects_non_ascii_path(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test rejecting a malformed non-ASCII encoded media path."""
+    client = create_mock_motioneye_client()
+    config = await setup_mock_motioneye_config_entry(hass, client=client)
+    await async_get_media_source(hass)
+
+    client_session = await hass_client()
+    response = await client_session.get(
+        f"/api/motioneye/media/{config.entry_id}/1/images/0/ż"
+    )
+
+    assert response.status == 400
+    client.async_get_media.assert_not_awaited()
+
+
 async def test_async_resolve_media_success(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
