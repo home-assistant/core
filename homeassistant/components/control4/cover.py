@@ -49,7 +49,6 @@ async def async_setup_entry(
                 continue
             item_name = str(item["name"])
             item_id = item["id"]
-            item_area = item.get("roomName")
             item_parent_id = item["parentId"]
 
             item_manufacturer = None
@@ -76,7 +75,6 @@ async def async_setup_entry(
                 "device_manufacturer": item_manufacturer,
                 "device_model": item_model,
                 "device_id": item_parent_id,
-                "device_area": item_area,
             }
         )
 

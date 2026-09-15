@@ -83,7 +83,6 @@ async def async_setup_entry(
             if item["type"] == CONTROL4_ENTITY_TYPE and item["proxy"] in CONTROL4_PROXY:
                 item_name = item["name"]
                 item_id = item["id"]
-                item_area = item.get("roomName")
                 item_parent_id = item["parentId"]
 
                 item_manufacturer = None
@@ -112,7 +111,6 @@ async def async_setup_entry(
                 "device_manufacturer": item_manufacturer,
                 "device_model": item_model,
                 "device_id": item_parent_id,
-                "device_area": item_area,
             }
         )
 

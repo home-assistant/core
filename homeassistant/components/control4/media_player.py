@@ -207,7 +207,6 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
             device_manufacturer=None,
             device_model=None,
             device_id=room_id,
-            device_area=None,
         )
         self._attr_entity_registry_enabled_default = not room_hidden
         self._id_to_parent = id_to_parent

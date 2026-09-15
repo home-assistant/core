@@ -47,7 +47,6 @@ async def async_setup_entry(
                 continue
             item_name = str(item["name"])
             item_id = item["id"]
-            item_area = item.get("roomName")
             item_parent_id = item["parentId"]
             item_manufacturer = None
             item_device_name = None
@@ -71,7 +70,6 @@ async def async_setup_entry(
                 "device_manufacturer": item_manufacturer,
                 "device_model": item_model,
                 "device_parent_id": item_parent_id,
-                "device_area": item_area,
             }
         )
 
@@ -111,7 +109,6 @@ class Control4Light(Control4Entity, LightEntity):
         device_manufacturer: str | None,
         device_model: str | None,
         device_parent_id: int,
-        device_area: str | None,
         device_attributes: dict[str, Any],
     ) -> None:
         """Initialize."""
@@ -124,7 +121,6 @@ class Control4Light(Control4Entity, LightEntity):
             device_manufacturer,
             device_model,
             device_parent_id,
-            device_area,
             device_attributes,
         )
         self._attr_supported_color_modes = (

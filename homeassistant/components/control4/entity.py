@@ -33,7 +33,6 @@ class Control4Entity(Entity):
         device_manufacturer: str | None,
         device_model: str | None,
         device_id: int,
-        device_area: str | None,
         device_attributes: dict[str, Any],
     ) -> None:
         """Initialize a Control4 entity."""
@@ -47,7 +46,6 @@ class Control4Entity(Entity):
         self._device_name = device_name
         self._device_manufacturer = device_manufacturer
         self._device_model = device_model
-        self._device_area = device_area
         self._extra_state_attributes: dict[str, Any] = device_attributes
 
     @property
@@ -64,7 +62,6 @@ class Control4Entity(Entity):
                 (DOMAIN, self.entry_data.controller_unique_id),
                 config_entry_id=self.entry.entry_id,
             ),
-            suggested_area=self._device_area,
         )
 
     @override
@@ -130,7 +127,6 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
         device_manufacturer: str | None,
         device_model: str | None,
         device_id: int,
-        device_area: str | None,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -142,7 +138,6 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
         self._device_name = device_name
         self._device_manufacturer = device_manufacturer
         self._device_model = device_model
-        self._device_area = device_area
 
     @property
     @override
@@ -158,5 +153,4 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
                 (DOMAIN, self.entry_data.controller_unique_id),
                 config_entry_id=self.coordinator.config_entry.entry_id,
             ),
-            suggested_area=self._device_area,
         )
