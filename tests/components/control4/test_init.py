@@ -10,6 +10,7 @@ import pytest
 from homeassistant.components.control4.const import WEBSOCKET_RESYNC_INTERVAL_SEC
 from homeassistant.components.control4.director_utils import (
     director_get_entry_variables,
+    to_bool,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -91,3 +92,29 @@ async def test_concurrent_bad_token_only_refreshes_once(
             timeout=5,
         )
         mock_refresh.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (True, True),
+        (False, False),
+        ("true", True),
+        ("True", True),
+        ("TRUE", True),
+        ("1", True),
+        ("false", False),
+        ("False", False),
+        ("FALSE", False),
+        ("0", False),
+        (" true ", True),
+        ("garbage", None),
+        ("", None),
+        (None, None),
+        (1, True),
+        (0, False),
+    ],
+)
+def test_to_bool(value: object, expected: bool | None) -> None:
+    """to_bool normalizes both real booleans and Control4's string encoding."""
+    assert to_bool(value) is expected

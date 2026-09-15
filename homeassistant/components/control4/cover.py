@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import get_items_of_category
 from .const import CONTROL4_ENTITY_TYPE, Control4ConfigEntry
-from .director_utils import gather_entry_variables
+from .director_utils import gather_entry_variables, to_bool
 from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,9 +135,11 @@ class Control4Cover(Control4Entity, CoverEntity):
     def is_closed(self) -> bool | None:
         """Return whether cover is closed."""
         if (
-            fully_closed := self._extra_state_attributes.get(CONTROL4_FULLY_CLOSED)
+            fully_closed := to_bool(
+                self._extra_state_attributes.get(CONTROL4_FULLY_CLOSED)
+            )
         ) is not None:
-            return bool(fully_closed)
+            return fully_closed
         position = self.current_cover_position
         if position is None:
             return None
@@ -147,19 +149,13 @@ class Control4Cover(Control4Entity, CoverEntity):
     @override
     def is_closing(self) -> bool | None:
         """Return whether cover is closing."""
-        closing = self._extra_state_attributes.get(CONTROL4_CLOSING)
-        if closing is None:
-            return None
-        return bool(closing)
+        return to_bool(self._extra_state_attributes.get(CONTROL4_CLOSING))
 
     @property
     @override
     def is_opening(self) -> bool | None:
         """Return whether cover is opening."""
-        opening = self._extra_state_attributes.get(CONTROL4_OPENING)
-        if opening is None:
-            return None
-        return bool(opening)
+        return to_bool(self._extra_state_attributes.get(CONTROL4_OPENING))
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:

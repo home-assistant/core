@@ -363,6 +363,45 @@ async def test_cover_push_update(
     "mock_cover_update_variables",
     "init_integration",
 )
+async def test_cover_push_update_with_string_encoded_booleans(
+    hass: HomeAssistant,
+    mock_c4_websocket: MagicMock,
+) -> None:
+    """A push carrying "Fully Closed"/"Closing"/"Opening" as strings isn't misread as truthy.
+
+    The wire format for these fields over WebSocket push hasn't been
+    confirmed (unlike numeric fields, which are known to arrive as
+    strings), so this exercises the defensive parsing for the case where
+    it does: bool("False") is True in plain Python, which would make a
+    cover falsely report itself as closing/closed.
+    """
+    callback = mock_c4_websocket.item_callbacks[234][0]
+    await callback(
+        234,
+        {
+            "evtName": "OnDataToUI",
+            "data": {
+                "Fully Closed": "False",
+                "Closing": "false",
+                "Opening": "false",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    # Every field says "not doing that", all as strings; a naive bool(str)
+    # would treat every one of them as truthy and report CLOSING or CLOSED.
+    assert state.state == CoverState.OPEN
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_cover_update_variables",
+    "init_integration",
+)
 async def test_cover_reconnect_resyncs_state(
     hass: HomeAssistant,
     mock_c4_websocket: MagicMock,

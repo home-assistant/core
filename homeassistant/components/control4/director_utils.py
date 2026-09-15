@@ -14,6 +14,32 @@ from .const import Control4ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+_TRUE_STRINGS = {"true", "1"}
+_FALSE_STRINGS = {"false", "0"}
+
+
+def to_bool(value: Any) -> bool | None:
+    """Normalize a Control4 boolean-ish variable that may arrive as a string.
+
+    Numeric Control4 variables (e.g. LIGHT_LEVEL) are known to arrive as
+    strings over the wire; boolean-ish ones (Fully Closed, IS_MUTED, ...)
+    haven't been confirmed either way, so this treats a string the same
+    way a real bool would be, rather than assuming str(value) is always
+    truthy like a bare `bool(value)` would.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in _TRUE_STRINGS:
+            return True
+        if normalized in _FALSE_STRINGS:
+            return False
+        return None
+    if value is None:
+        return None
+    return bool(value)
+
 
 async def _with_token_refresh[T](
     hass: HomeAssistant,
