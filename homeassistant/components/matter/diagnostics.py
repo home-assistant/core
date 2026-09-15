@@ -53,7 +53,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: MatterConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: MatterConfigEntry, device: dr.AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     matter = get_matter(hass)

@@ -1,8 +1,10 @@
 """Support for Shelly cameras."""
 
 from dataclasses import dataclass
-from typing import Final, override
+from typing import TYPE_CHECKING, Final, override
 from urllib.parse import quote
+
+from aioshelly.exceptions import DeviceConnectionError, HttpCallError, InvalidAuthError
 
 from homeassistant.components.camera import (
     Camera,
@@ -11,8 +13,10 @@ from homeassistant.components.camera import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
@@ -37,6 +41,7 @@ RPC_CAMERA_ENTITIES: Final = {
         stream=0,
         translation_key="stream",
         translation_placeholders={"stream_id": "0"},
+        removal_condition=lambda config, _, key: not config[key]["rtsp"]["enable"],
     ),
     "stream_1": RpcCameraEntityDescription(
         key="camera",
@@ -44,6 +49,7 @@ RPC_CAMERA_ENTITIES: Final = {
         translation_key="stream",
         translation_placeholders={"stream_id": "1"},
         entity_registry_enabled_default=False,
+        removal_condition=lambda config, _, key: not config[key]["rtsp"]["enable"],
     ),
 }
 
@@ -94,8 +100,7 @@ class ShellyCameraEntity(ShellyRpcAttributeEntity, Camera):
         if not available:
             return False
 
-        config = self.coordinator.device.config[self.key]
-        return not self.status["privacy"] and config["rtsp"]["enable"]
+        return not self.status["privacy"]
 
     @override
     @property
@@ -133,7 +138,31 @@ class ShellyCameraEntity(ShellyRpcAttributeEntity, Camera):
         return f"rtsp://{host}/stream/{self.entity_description.stream}"
 
     @override
-    @property
-    def use_stream_for_stills(self) -> bool:
-        """Use the RTSP stream to generate still images."""
-        return True
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Return a still image from the camera snapshot endpoint."""
+        if TYPE_CHECKING:
+            assert self._id is not None
+
+        try:
+            return await self.coordinator.device.camera_get_image(self._id)
+        except DeviceConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_communication_error",
+                translation_placeholders={
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except HttpCallError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="http_call_error",
+                translation_placeholders={
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except InvalidAuthError:
+            await self.coordinator.async_shutdown_device_and_start_reauth()
+            return None

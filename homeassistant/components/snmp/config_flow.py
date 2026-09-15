@@ -3,11 +3,11 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import ObjectIdentity, get_cmd
 from pysnmp.proto import errind
 from pysnmp.smi.error import WrongValueError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
@@ -49,35 +49,35 @@ _LOGGER = logging.getLogger(__name__)
 
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_BASEOID): str,
-        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(
-            list(SNMP_VERSIONS)
+        probatio.Required(CONF_HOST): str,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_BASEOID): str,
+        probatio.Optional(CONF_VERSION, default=DEFAULT_VERSION): probatio.In(
+            SNMP_VERSIONS
         ),
     }
 )
 
-STEP_V1_V2C_DATA_SCHEMA = vol.Schema(
+STEP_V1_V2C_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): PASSWORD_SELECTOR,
+        probatio.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): PASSWORD_SELECTOR,
     }
 )
 
-STEP_V3_DATA_SCHEMA = vol.Schema(
+STEP_V3_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Optional(CONF_AUTH_KEY): PASSWORD_SELECTOR,
-        vol.Optional(CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL): vol.In(
-            list(MAP_AUTH_PROTOCOLS)
-        ),
-        vol.Optional(CONF_PRIV_KEY): PASSWORD_SELECTOR,
-        vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
-            list(MAP_PRIV_PROTOCOLS)
-        ),
-        vol.Optional(CONF_CONTEXT_NAME): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Optional(CONF_AUTH_KEY): PASSWORD_SELECTOR,
+        probatio.Optional(
+            CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL
+        ): probatio.In(MAP_AUTH_PROTOCOLS),
+        probatio.Optional(CONF_PRIV_KEY): PASSWORD_SELECTOR,
+        probatio.Optional(
+            CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL
+        ): probatio.In(MAP_PRIV_PROTOCOLS),
+        probatio.Optional(CONF_CONTEXT_NAME): str,
     }
 )
 

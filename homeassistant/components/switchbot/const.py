@@ -47,6 +47,7 @@ class SupportedModels(StrEnum):
     HUB3 = "hub3"
     LOCK_LITE = "lock_lite"
     LOCK_ULTRA = "lock_ultra"
+    LOCK_ULTRA_MAX = "lock_ultra_max"
     AIR_PURIFIER_JP = "air_purifier_jp"
     AIR_PURIFIER_US = "air_purifier_us"
     AIR_PURIFIER_TABLE_JP = "air_purifier_table_jp"
@@ -72,6 +73,7 @@ class SupportedModels(StrEnum):
     LOCK_PRO_WIFI = "lock_pro_wifi"
     WEATHER_STATION = "weather_station"
     STANDING_FAN = "standing_fan"
+    UNIVERSAL_REMOTE = "universal_remote"
     CANDLE_WARMER_LAMP = "candle_warmer_lamp"
     RGBIC_NEON_ROPE_LIGHT = "rgbic_neon_rope_light"
     RGBIC_NEON_WIRE_ROPE_LIGHT = "rgbic_neon_wire_rope_light"
@@ -101,6 +103,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.K10_PRO_COMBO_VACUUM: SupportedModels.K10_PRO_COMBO_VACUUM,
     SwitchbotModel.LOCK_LITE: SupportedModels.LOCK_LITE,
     SwitchbotModel.LOCK_ULTRA: SupportedModels.LOCK_ULTRA,
+    SwitchbotModel.LOCK_ULTRA_MAX: SupportedModels.LOCK_ULTRA_MAX,
     SwitchbotModel.AIR_PURIFIER_JP: SupportedModels.AIR_PURIFIER_JP,
     SwitchbotModel.AIR_PURIFIER_US: SupportedModels.AIR_PURIFIER_US,
     SwitchbotModel.AIR_PURIFIER_TABLE_JP: SupportedModels.AIR_PURIFIER_TABLE_JP,
@@ -125,6 +128,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.LOCK_VISION: SupportedModels.LOCK_VISION,
     SwitchbotModel.LOCK_PRO_WIFI: SupportedModels.LOCK_PRO_WIFI,
     SwitchbotModel.STANDING_FAN: SupportedModels.STANDING_FAN,
+    SwitchbotModel.UNIVERSAL_REMOTE: SupportedModels.UNIVERSAL_REMOTE,
     SwitchbotModel.CANDLE_WARMER_LAMP: SupportedModels.CANDLE_WARMER_LAMP,
     SwitchbotModel.RGBIC_NEON_ROPE_LIGHT: SupportedModels.RGBIC_NEON_ROPE_LIGHT,
     SwitchbotModel.RGBIC_NEON_WIRE_ROPE_LIGHT: (
@@ -159,6 +163,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.LOCK_PRO,
     SwitchbotModel.LOCK_LITE,
     SwitchbotModel.LOCK_ULTRA,
+    SwitchbotModel.LOCK_ULTRA_MAX,
     SwitchbotModel.AIR_PURIFIER_JP,
     SwitchbotModel.AIR_PURIFIER_US,
     SwitchbotModel.AIR_PURIFIER_TABLE_JP,
@@ -193,6 +198,7 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.RELAY_SWITCH_1: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.LOCK_LITE: switchbot.SwitchbotLock,
     SwitchbotModel.LOCK_ULTRA: switchbot.SwitchbotLock,
+    SwitchbotModel.LOCK_ULTRA_MAX: switchbot.SwitchbotLock,
     SwitchbotModel.AIR_PURIFIER_JP: switchbot.SwitchbotAirPurifier,
     SwitchbotModel.AIR_PURIFIER_US: switchbot.SwitchbotAirPurifier,
     SwitchbotModel.AIR_PURIFIER_TABLE_JP: switchbot.SwitchbotAirPurifier,
@@ -242,6 +248,14 @@ CONF_KEY_ID = "key_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
 CONF_LOCK_NIGHTLATCH = "lock_force_nightlatch"
 CONF_CURTAIN_SPEED = "curtain_speed"
+
+# Roller shade motor modes, exposed as cover speeds
+ROLLER_SHADE_SPEED_PERFORMANCE = "performance"
+ROLLER_SHADE_SPEED_QUIET = "quiet"
+ROLLER_SHADE_SPEED_TO_MODE = {
+    ROLLER_SHADE_SPEED_PERFORMANCE: 0,
+    ROLLER_SHADE_SPEED_QUIET: 1,
+}
 
 AIRPURIFIER_BASIC_MODELS = {
     SwitchbotModel.AIR_PURIFIER_JP,

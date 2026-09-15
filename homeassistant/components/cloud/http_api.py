@@ -15,10 +15,10 @@ from typing import Any, Concatenate, cast
 import aiohttp
 from aiohttp import web
 import attr
-from hass_nabucasa import AlreadyConnectedError, Cloud, auth
+from hass_nabucasa import AlreadyConnectedError, AutoLoginController, Cloud, auth
 from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice_data import TTS_VOICES
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.alexa import (
@@ -31,11 +31,15 @@ from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.system_health import get_info as get_system_health_info
+from homeassistant.components.websocket_api import ERR_NOT_FOUND
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.loader import (
     async_get_custom_components,
     async_get_loaded_integration,
@@ -45,11 +49,12 @@ from homeassistant.util.location import async_detect_location_info
 from homeassistant.util.package import async_get_installed_packages
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
-from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
     DATA_CLOUD,
     DATA_CLOUD_LOG_HANDLER,
+    DATA_PENDING_AUTO_LOGIN,
+    DOMAIN,
     EVENT_CLOUD_EVENT,
     LOGIN_MFA_TIMEOUT,
     ONBOARDING_ITEMS,
@@ -66,10 +71,13 @@ from .const import (
     VOICE_STYLE_SEPERATOR,
 )
 from .google_config import CLOUD_GOOGLE
+from .models import auto_login_failure_key
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
 
 _LOGGER = logging.getLogger(__name__)
+
+_NO_PENDING_AUTO_LOGIN = "no_pending_auto_login"
 
 
 _CLOUD_ERRORS: dict[
@@ -108,6 +116,10 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_webrtc_ice_servers)
     websocket_api.async_register_command(hass, websocket_cloud_onboarding_postpone)
     websocket_api.async_register_command(hass, websocket_cloud_onboarding_complete)
+    websocket_api.async_register_command(hass, websocket_subscribe_cloud_events)
+    websocket_api.async_register_command(hass, websocket_attempt_auto_login_now)
+    websocket_api.async_register_command(hass, websocket_resend_auto_login_confirm)
+    websocket_api.async_register_command(hass, websocket_cancel_auto_login)
 
     websocket_api.async_register_command(hass, google_assistant_get)
     websocket_api.async_register_command(hass, google_assistant_list)
@@ -123,6 +135,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.http.register_view(CloudLoginView)
     hass.http.register_view(CloudLogoutView)
     hass.http.register_view(CloudRegisterView)
+    hass.http.register_view(CloudRegisterAutoLoginView)
     hass.http.register_view(CloudResendConfirmView)
     hass.http.register_view(CloudForgotPasswordView)
     hass.http.register_view(DownloadSupportPackageView)
@@ -140,6 +153,7 @@ def async_setup(hass: HomeAssistant) -> None:
                 HTTPStatus.BAD_REQUEST,
                 "An account with the given email already exists.",
             ),
+            auth.AlreadyLoggedIn: (HTTPStatus.BAD_REQUEST, "Already logged in."),
             auth.Unauthenticated: (HTTPStatus.UNAUTHORIZED, "Authentication failed."),
             auth.PasswordChangeRequired: (
                 HTTPStatus.BAD_REQUEST,
@@ -265,13 +279,13 @@ class CloudLoginView(HomeAssistantView):
 
     @_handle_cloud_errors
     @RequestDataValidator(
-        vol.Schema(
-            vol.All(
+        probatio.Schema(
+            probatio.All(
                 {
-                    vol.Required("email"): str,
-                    vol.Optional("check_connection", default=False): bool,
-                    vol.Exclusive("password", "login"): str,
-                    vol.Exclusive("code", "login"): str,
+                    probatio.Required("email"): str,
+                    probatio.Optional("check_connection", default=False): bool,
+                    probatio.Exclusive("password", "login"): str,
+                    probatio.Exclusive("code", "login"): str,
                 },
                 cv.has_at_least_one_key("password", "code"),
             )
@@ -301,7 +315,7 @@ class CloudLoginView(HomeAssistantView):
                 ):
                     raise MFAExpiredOrNotStarted
 
-                # Voluptuous should ensure that code is not None because password is
+                # Probatio should ensure that code is not None because password is
                 assert code is not None
 
                 await cloud.login_verify_totp(
@@ -318,13 +332,7 @@ class CloudLoginView(HomeAssistantView):
             self._mfa_tokens_set_time = time.time()
             raise
 
-        if "assist_pipeline" in hass.config.components:
-            new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
-        else:
-            new_cloud_pipeline_id = None
-
-        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
-        return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
+        return self.json({"success": True})
 
 
 class CloudLogoutView(HomeAssistantView):
@@ -351,6 +359,32 @@ class CloudLogoutView(HomeAssistantView):
         return self.json_message("ok")
 
 
+async def _async_location_client_metadata(
+    hass: HomeAssistant,
+) -> dict[str, str] | None:
+    """Detect location info to attach as registration client metadata."""
+    client_metadata = None
+
+    if (
+        location_info := await async_detect_location_info(async_get_clientsession(hass))
+    ) and location_info.country_code is not None:
+        client_metadata = {"NC_COUNTRY_CODE": location_info.country_code}
+        if location_info.region_code is not None:
+            client_metadata["NC_REGION_CODE"] = location_info.region_code
+        if location_info.zip_code is not None:
+            client_metadata["NC_ZIP_CODE"] = location_info.zip_code
+
+    return client_metadata
+
+
+_REGISTER_SCHEMA = probatio.Schema(
+    {
+        probatio.Required("email"): str,
+        probatio.Required("password"): probatio.All(str, probatio.Length(min=6)),
+    }
+)
+
+
 class CloudRegisterView(HomeAssistantView):
     """Register on the Home Assistant cloud."""
 
@@ -359,34 +393,42 @@ class CloudRegisterView(HomeAssistantView):
 
     @require_admin
     @_handle_cloud_errors
-    @RequestDataValidator(
-        vol.Schema(
-            {
-                vol.Required("email"): str,
-                vol.Required("password"): vol.All(str, vol.Length(min=6)),
-            }
-        )
-    )
+    @RequestDataValidator(_REGISTER_SCHEMA)
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle registration request."""
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
 
-        client_metadata = None
-
-        if (
-            location_info := await async_detect_location_info(
-                async_get_clientsession(hass)
-            )
-        ) and location_info.country_code is not None:
-            client_metadata = {"NC_COUNTRY_CODE": location_info.country_code}
-            if location_info.region_code is not None:
-                client_metadata["NC_REGION_CODE"] = location_info.region_code
-            if location_info.zip_code is not None:
-                client_metadata["NC_ZIP_CODE"] = location_info.zip_code
+        client_metadata = await _async_location_client_metadata(hass)
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_register(
+                data["email"],
+                data["password"],
+                client_metadata=client_metadata,
+            )
+
+        return self.json_message("ok")
+
+
+class CloudRegisterAutoLoginView(HomeAssistantView):
+    """Register on the Home Assistant cloud and log in once confirmed."""
+
+    url = "/api/cloud/register_auto_login"
+    name = "api:cloud:register_auto_login"
+
+    @require_admin
+    @_handle_cloud_errors
+    @RequestDataValidator(_REGISTER_SCHEMA)
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+        """Handle registration with auto-login request."""
+        hass = request.app[KEY_HASS]
+        cloud = hass.data[DATA_CLOUD]
+
+        client_metadata = await _async_location_client_metadata(hass)
+
+        async with asyncio.timeout(REQUEST_TIMEOUT):
+            hass.data[DATA_PENDING_AUTO_LOGIN] = await cloud.register_and_auto_login(
                 data["email"],
                 data["password"],
                 client_metadata=client_metadata,
@@ -403,7 +445,7 @@ class CloudResendConfirmView(HomeAssistantView):
 
     @require_admin
     @_handle_cloud_errors
-    @RequestDataValidator(vol.Schema({vol.Required("email"): str}))
+    @RequestDataValidator(probatio.Schema({probatio.Required("email"): str}))
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle resending confirm email code request."""
         hass = request.app[KEY_HASS]
@@ -427,7 +469,7 @@ class CloudForgotPasswordView(HomeAssistantView):
         return await self._post(request)
 
     @_handle_cloud_errors
-    @RequestDataValidator(vol.Schema({vol.Required("email"): str}))
+    @RequestDataValidator(probatio.Schema({probatio.Required("email"): str}))
     async def _post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle forgot password request."""
         hass = request.app[KEY_HASS]
@@ -675,8 +717,26 @@ class DownloadSupportPackageView(HomeAssistantView):
         )
 
 
+@callback
+def _async_auto_login_controller(hass: HomeAssistant) -> AutoLoginController | None:
+    """Return the controls of a retry loop that is still running."""
+    controller = hass.data[DATA_PENDING_AUTO_LOGIN]
+    return controller if controller is not None and controller.active else None
+
+
+@callback
+def _async_clear_pending_auto_login(hass: HomeAssistant) -> None:
+    """Cancel and forget a pending auto-login, telling subscribers it is gone."""
+    if (controller := hass.data[DATA_PENDING_AUTO_LOGIN]) is None:
+        return
+
+    hass.data[DATA_PENDING_AUTO_LOGIN] = None
+    controller.cancel()
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "auto_login_cancelled"})
+
+
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "cloud/remove_data"})
+@websocket_api.websocket_command({probatio.Required("type"): "cloud/remove_data"})
 @websocket_api.async_response
 async def websocket_cloud_remove_data(
     hass: HomeAssistant,
@@ -696,13 +756,16 @@ async def websocket_cloud_remove_data(
         )
         return
 
+    # Cancel first, so an auto-login cannot land while the data is being wiped.
+    _async_clear_pending_auto_login(hass)
+
     await cloud.remove_data()
     await cloud.client.prefs.async_erase_config()
 
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-@websocket_api.websocket_command({vol.Required("type"): "cloud/status"})
+@websocket_api.websocket_command({probatio.Required("type"): "cloud/status"})
 @websocket_api.async_response
 async def websocket_cloud_status(
     hass: HomeAssistant,
@@ -714,9 +777,116 @@ async def websocket_cloud_status(
     Async friendly.
     """
     cloud = hass.data[DATA_CLOUD]
-    connection.send_message(
-        websocket_api.result_message(msg["id"], await _account_data(hass, cloud))
+    data = await _account_data(hass, cloud)
+
+    # Only admins are shown the email of a pending registration.
+    if (
+        not cloud.is_logged_in
+        and connection.user.is_admin
+        and (controller := hass.data[DATA_PENDING_AUTO_LOGIN])
+    ):
+        data["auto_login"] = {
+            "email": controller.email,
+            "failed": auto_login_failure_key(controller.failed_reason),
+        }
+
+    connection.send_message(websocket_api.result_message(msg["id"], data))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({probatio.Required("type"): "cloud/subscribe_events"})
+@callback
+def websocket_subscribe_cloud_events(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Subscribe to cloud events."""
+
+    @callback
+    def on_event(event: Mapping[str, Any]) -> None:
+        connection.send_message(websocket_api.event_message(msg["id"], event))
+
+    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
+        hass, EVENT_CLOUD_EVENT, on_event
     )
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "cloud/attempt_auto_login_now"}
+)
+@callback
+def websocket_attempt_auto_login_now(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Attempt a pending auto-login now instead of waiting for the backoff."""
+    if (controller := _async_auto_login_controller(hass)) is None:
+        connection.send_error(
+            msg["id"],
+            ERR_NOT_FOUND,
+            "There is no pending auto-login.",
+            translation_domain=DOMAIN,
+            translation_key=_NO_PENDING_AUTO_LOGIN,
+        )
+        return
+
+    controller.attempt_now()
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "cloud/resend_auto_login_confirm"}
+)
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def websocket_resend_auto_login_confirm(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Resend the confirmation email for a pending auto-login."""
+    if (controller := _async_auto_login_controller(hass)) is None:
+        connection.send_error(
+            msg["id"],
+            ERR_NOT_FOUND,
+            "There is no pending auto-login.",
+            translation_domain=DOMAIN,
+            translation_key=_NO_PENDING_AUTO_LOGIN,
+        )
+        return
+
+    async with asyncio.timeout(REQUEST_TIMEOUT):
+        await controller.resend()
+
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({probatio.Required("type"): "cloud/cancel_auto_login"})
+@callback
+def websocket_cancel_auto_login(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Cancel a pending auto-login after registration."""
+    if hass.data[DATA_PENDING_AUTO_LOGIN] is None:
+        connection.send_error(
+            msg["id"],
+            ERR_NOT_FOUND,
+            "There is no pending auto-login.",
+            translation_domain=DOMAIN,
+            translation_key=_NO_PENDING_AUTO_LOGIN,
+        )
+        return
+
+    _async_clear_pending_auto_login(hass)
+    connection.send_result(msg["id"])
 
 
 def _require_cloud_login(
@@ -753,7 +923,7 @@ def _require_cloud_login(
 
 @websocket_api.require_admin
 @_require_cloud_login
-@websocket_api.websocket_command({vol.Required("type"): "cloud/subscription"})
+@websocket_api.websocket_command({probatio.Required("type"): "cloud/subscription"})
 @websocket_api.async_response
 async def websocket_subscription(
     hass: HomeAssistant,
@@ -780,14 +950,14 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
     if not style:
         style = None
     if language not in TTS_VOICES:
-        raise vol.Invalid(f"Invalid language {language}")
+        raise probatio.Invalid(f"Invalid language {language}")
     if voice not in (language_info := TTS_VOICES[language]):
-        raise vol.Invalid(f"Invalid voice {voice} for language {language}")
+        raise probatio.Invalid(f"Invalid voice {voice} for language {language}")
     voice_info = language_info[voice]
     if style and (
         isinstance(voice_info, str) or style not in voice_info.get("variants", [])
     ):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Invalid style {style} for voice {voice} in language {language}"
         )
     return value
@@ -797,16 +967,16 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "cloud/update_prefs",
-        vol.Optional(PREF_ALEXA_REPORT_STATE): bool,
-        vol.Optional(PREF_ENABLE_ALEXA): bool,
-        vol.Optional(PREF_ENABLE_CLOUD_ICE_SERVERS): bool,
-        vol.Optional(PREF_ENABLE_GOOGLE): bool,
-        vol.Optional(PREF_GOOGLE_REPORT_STATE): bool,
-        vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
-        vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
-        vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
-            vol.Coerce(tuple), validate_language_voice
+        probatio.Required("type"): "cloud/update_prefs",
+        probatio.Optional(PREF_ALEXA_REPORT_STATE): bool,
+        probatio.Optional(PREF_ENABLE_ALEXA): bool,
+        probatio.Optional(PREF_ENABLE_CLOUD_ICE_SERVERS): bool,
+        probatio.Optional(PREF_ENABLE_GOOGLE): bool,
+        probatio.Optional(PREF_GOOGLE_REPORT_STATE): bool,
+        probatio.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): probatio.Any(None, str),
+        probatio.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
+        probatio.Optional(PREF_TTS_DEFAULT_VOICE): probatio.All(
+            probatio.Coerce(tuple), validate_language_voice
         ),
     }
 )
@@ -855,7 +1025,9 @@ async def websocket_update_prefs(
 
 @websocket_api.require_admin
 @_require_cloud_login
-@websocket_api.websocket_command({vol.Required("type"): "cloud/onboarding/postpone"})
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "cloud/onboarding/postpone"}
+)
 @websocket_api.async_response
 @_ws_handle_cloud_errors
 async def websocket_cloud_onboarding_postpone(
@@ -874,8 +1046,8 @@ async def websocket_cloud_onboarding_postpone(
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "cloud/onboarding/complete",
-        vol.Required("items"): [vol.In(ONBOARDING_ITEMS)],
+        probatio.Required("type"): "cloud/onboarding/complete",
+        probatio.Required("items"): [probatio.In(ONBOARDING_ITEMS)],
     }
 )
 @websocket_api.async_response
@@ -899,8 +1071,8 @@ async def websocket_cloud_onboarding_complete(
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "cloud/cloudhook/create",
-        vol.Required("webhook_id"): str,
+        probatio.Required("type"): "cloud/cloudhook/create",
+        probatio.Required("webhook_id"): str,
     }
 )
 @websocket_api.async_response
@@ -920,8 +1092,8 @@ async def websocket_hook_create(
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "cloud/cloudhook/delete",
-        vol.Required("webhook_id"): str,
+        probatio.Required("type"): "cloud/cloudhook/delete",
+        probatio.Required("webhook_id"): str,
     }
 )
 @websocket_api.async_response
@@ -945,6 +1117,7 @@ async def _account_data(
     assert hass.config.api
     if not cloud.is_logged_in:
         return {
+            "auto_login": None,
             "logged_in": False,
             "cloud": STATE_DISCONNECTED,
             "http_use_ssl": hass.config.api.use_ssl,
@@ -973,6 +1146,7 @@ async def _account_data(
     return {
         "alexa_entities": client.alexa_user_config["filter"].config,
         "alexa_registered": alexa_config.authorized,
+        "auto_login": None,
         "cloud": cloud.iot.state,
         "cloud_last_disconnect_reason": cloud_last_disconnect_reason,
         "email": claims["email"],
@@ -1110,7 +1284,7 @@ async def google_assistant_list(
     {
         "type": "cloud/google_assistant/entities/update",
         "entity_id": str,
-        vol.Optional(PREF_DISABLE_2FA): bool,
+        probatio.Optional(PREF_DISABLE_2FA): bool,
     }
 )
 @websocket_api.async_response
@@ -1259,7 +1433,7 @@ def tts_info(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "cloud/webrtc/ice_servers",
+        probatio.Required("type"): "cloud/webrtc/ice_servers",
     }
 )
 @_require_cloud_login

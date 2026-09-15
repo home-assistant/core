@@ -7,7 +7,7 @@ from fritzconnection.core.exceptions import (
     FritzServiceError,
 )
 from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -20,19 +20,19 @@ from .const import DOMAIN, LOGGER
 from .coordinator import FritzConfigEntry
 
 SERVICE_SET_GUEST_WIFI_PW = "set_guest_wifi_password"
-SERVICE_SCHEMA_SET_GUEST_WIFI_PW = vol.Schema(
+SERVICE_SCHEMA_SET_GUEST_WIFI_PW = probatio.Schema(
     {
-        vol.Required("device_id"): str,
-        vol.Optional("password"): vol.Length(min=8, max=63),
-        vol.Optional("length"): vol.Range(min=8, max=63),
+        probatio.Required("device_id"): str,
+        probatio.Optional("password"): probatio.Length(min=8, max=63),
+        probatio.Optional("length"): probatio.Range(min=8, max=63),
     }
 )
 SERVICE_DIAL = "dial"
-SERVICE_SCHEMA_DIAL = vol.Schema(
+SERVICE_SCHEMA_DIAL = probatio.Schema(
     {
-        vol.Required("device_id"): str,
-        vol.Required("number"): str,
-        vol.Required("max_ring_seconds"): vol.Range(min=1, max=300),
+        probatio.Required("device_id"): str,
+        probatio.Required("number"): str,
+        probatio.Required("max_ring_seconds"): probatio.Range(min=1, max=300),
     }
 )
 
