@@ -4,6 +4,7 @@ from dataclasses import replace
 from unittest.mock import AsyncMock
 
 from aionatureremo import Appliance, NatureRemoAuthError, NatureRemoConnectionError
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.nature_remo.const import DOMAIN
 from homeassistant.components.nature_remo.coordinator import NatureRemoCoordinator
@@ -11,7 +12,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import async_poll
+from . import async_poll
 
 from tests.common import MockConfigEntry
 
@@ -113,6 +114,7 @@ async def test_appliance_rename_reaches_the_device_registry(
     mock_client: AsyncMock,
     appliances: list[Appliance],
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A nickname edited in the Nature app propagates on the next poll.
 
@@ -131,7 +133,7 @@ async def test_appliance_rename_reaches_the_device_registry(
         else appliance
         for appliance in appliances
     ]
-    await async_poll(hass)
+    await async_poll(hass, freezer)
 
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, "appliance-meter-1")}

@@ -1,20 +1,24 @@
 """Tests for the Nature Remo sensor platform."""
 
 from dataclasses import replace
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aionatureremo import Appliance, Device, NatureRemoConnectionError
+from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.nature_remo.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
-from .conftest import async_poll, load_json_fixture
+from . import async_poll
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 
 
 async def test_all_entities(
@@ -31,12 +35,11 @@ async def test_sensors_unavailable_on_update_failure(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A failed poll marks sensors unavailable."""
     mock_client.get_devices.side_effect = NatureRemoConnectionError("refused")
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
-    await hass.async_block_till_done()
+    await async_poll(hass, freezer)
 
     state = hass.states.get("sensor.living_remo_temperature")
     assert state is not None
@@ -76,12 +79,13 @@ async def test_sensors_unavailable_when_the_hub_disappears(
     init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     devices: list[Device],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A hub the API stops reporting leaves its sensors unavailable."""
     mock_client.get_devices.return_value = [
         device for device in devices if device.id != "device-remo3-1"
     ]
-    await async_poll(hass)
+    await async_poll(hass, freezer)
 
     state = hass.states.get("sensor.living_remo_temperature")
     assert state is not None
@@ -93,6 +97,7 @@ async def test_smart_meter_follows_the_hub_reading_it(
     init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     devices: list[Device],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A meter goes unavailable while its Remo E reports itself offline.
 
@@ -106,7 +111,7 @@ async def test_smart_meter_follows_the_hub_reading_it(
         replace(device, online=False) if device.id == "device-remoe-1" else device
         for device in devices
     ]
-    await async_poll(hass)
+    await async_poll(hass, freezer)
 
     assert hass.states.get("sensor.smart_meter_power").state == STATE_UNAVAILABLE
 
@@ -116,6 +121,7 @@ async def test_smart_meter_unavailable_when_its_hub_disappears(
     init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     devices: list[Device],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A meter whose hub drops out of the account stops reporting.
 
@@ -125,7 +131,7 @@ async def test_smart_meter_unavailable_when_its_hub_disappears(
     mock_client.get_devices.return_value = [
         device for device in devices if device.id != "device-remoe-1"
     ]
-    await async_poll(hass)
+    await async_poll(hass, freezer)
 
     assert hass.states.get("sensor.smart_meter_power").state == STATE_UNAVAILABLE
 
@@ -135,6 +141,7 @@ async def test_smart_meter_reading_dropout_is_unknown(
     init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     appliances: list[Appliance],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A meter that stops publishing properties reads unknown, not stale."""
     mock_client.get_appliances.return_value = [
@@ -143,7 +150,7 @@ async def test_smart_meter_reading_dropout_is_unknown(
         else appliance
         for appliance in appliances
     ]
-    await async_poll(hass)
+    await async_poll(hass, freezer)
 
     assert hass.states.get("sensor.smart_meter_power").state == STATE_UNKNOWN
 
@@ -153,8 +160,8 @@ async def test_smart_meter_without_reverse_direction(
     mock_config_entry: MockConfigEntry,
     mock_client: AsyncMock,
 ) -> None:
-    """A meter without EPC 227 (no solar) gets no sold-energy sensor."""
-    payloads = load_json_fixture("appliances.json")
+    """A meter without EPC 227 (no solar) gets no exported-energy sensor."""
+    payloads = await async_load_json_array_fixture(hass, "appliances.json", DOMAIN)
     for payload in payloads:
         if payload["id"] == "appliance-meter-1":
             payload["smart_meter"]["echonetlite_properties"] = [

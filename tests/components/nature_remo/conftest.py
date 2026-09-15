@@ -3,48 +3,34 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from datetime import timedelta
-import json
-from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from aionatureremo import Appliance, Device, NatureRemoClient, RateLimit, User
 import pytest
 
-from homeassistant.components.nature_remo.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.nature_remo.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-FIXTURES = Path(__file__).parent / "fixtures"
-
-
-def load_json_fixture(name: str) -> list[dict[str, object]]:
-    """Load a JSON fixture file."""
-    return json.loads((FIXTURES / name).read_text())
-
-
-async def async_poll(hass: HomeAssistant, times: int = 1) -> None:
-    """Run `times` real coordinator polls, settling the event loop after each."""
-    for _ in range(times):
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + UPDATE_INTERVAL + timedelta(seconds=1)
-        )
-        await hass.async_block_till_done()
+from tests.common import MockConfigEntry, load_json_array_fixture
 
 
 @pytest.fixture
 def devices() -> list[Device]:
     """Devices parsed from the fixture payload."""
-    return [Device.from_dict(item) for item in load_json_fixture("devices.json")]
+    return [
+        Device.from_dict(item)
+        for item in load_json_array_fixture("devices.json", DOMAIN)
+    ]
 
 
 @pytest.fixture
 def appliances() -> list[Appliance]:
     """Appliances parsed from the fixture payload."""
-    return [Appliance.from_dict(item) for item in load_json_fixture("appliances.json")]
+    return [
+        Appliance.from_dict(item)
+        for item in load_json_array_fixture("appliances.json", DOMAIN)
+    ]
 
 
 @pytest.fixture
