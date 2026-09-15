@@ -363,14 +363,15 @@ async def test_entity_unique_id_migration(
 ) -> None:
     """Ensure entity unique IDs are migrated to the new format."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    assert mock_config_entry.minor_version == 2
     assert entity_registry.async_get(entity_id).unique_id == new_unique_id
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Restore the old unique ID, then reload to trigger the migration
+    # Restore the pre-migration state, then reload to trigger the migration
     entity_registry.async_update_entity(entity_id, new_unique_id=old_unique_id)
-    assert entity_registry.async_get(entity_id).unique_id == old_unique_id
+    hass.config_entries.async_update_entry(mock_config_entry, minor_version=1)
 
     with patch(
         "homeassistant.components.tuya.coordinator.Manager", return_value=mock_manager
@@ -378,7 +379,49 @@ async def test_entity_unique_id_migration(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entity_registry.async_get(entity_id).unique_id == new_unique_id
+    assert mock_config_entry.minor_version == 2
+    entry = entity_registry.async_get(entity_id)
+    assert entry.unique_id == new_unique_id
+    assert entry.previous_unique_id == old_unique_id
+
+
+@pytest.mark.parametrize("mock_device_code", ["mcs_8yhypbo7"])
+async def test_entity_unique_id_migration_conflict(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Ensure a stale entity holding the new unique ID does not break migration."""
+    entity_id = "sensor.boite_aux_lettres_arriere_battery"
+    old_unique_id = "tuya.7obpyhy8scmbattery_percentage"
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Simulate a downgrade: the migrated entity is left behind, and the
+    # old-format entity is recreated alongside it
+    migrated = entity_registry.async_get(entity_id)
+    stale = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        old_unique_id,
+        config_entry=mock_config_entry,
+        device_id=migrated.device_id,
+    )
+    hass.config_entries.async_update_entry(mock_config_entry, minor_version=1)
+
+    with patch(
+        "homeassistant.components.tuya.coordinator.Manager", return_value=mock_manager
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.minor_version == 2
+    assert entity_registry.async_get(entity_id).unique_id == migrated.unique_id
+    assert entity_registry.async_get(stale.entity_id).unique_id == old_unique_id
 
 
 async def test_fixtures_valid(hass: HomeAssistant) -> None:
