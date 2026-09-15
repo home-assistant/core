@@ -15,15 +15,23 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_WEBHOOK_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import NoURLAvailableError
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_WEBHOOK_SECRET, DOMAIN
 
-CREDENTIALS_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
+SECRET_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
+
+CREDENTIALS_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): SECRET_SELECTOR})
 
 
-# The secret is optional: without it the integration still polls, it just
-# cannot verify pushes, so it refuses them.
-STEP_WEBHOOK_SCHEMA = probatio.Schema({probatio.Optional(CONF_WEBHOOK_SECRET): str})
+# Optional: without a secret the integration polls and registers no webhook.
+STEP_WEBHOOK_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_WEBHOOK_SECRET): SECRET_SELECTOR}
+)
 
 
 class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -54,7 +62,7 @@ class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Prompt for host and API key, then verify them."""
+        """Prompt for the API key, then verify it."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
