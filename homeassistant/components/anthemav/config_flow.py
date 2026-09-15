@@ -38,14 +38,24 @@ async def connect_device(user_input: dict[str, Any]) -> Connection:
     # the explicit reconnect() below can still hang: a receiver that's
     # unreachable without an immediate refusal (e.g. powered off, no RST/ICMP)
     # leaves the underlying TCP connect with no timeout of its own.
-    async with asyncio.timeout(CONNECT_TIMEOUT_SECONDS):
-        avr = await anthemav.Connection.create(
-            host=user_input[CONF_HOST],
-            port=user_input[CONF_PORT],
-            auto_reconnect=False,
-        )
-        await avr.reconnect()
-    await avr.protocol.wait_for_device_initialised(DEVICE_TIMEOUT_SECONDS)
+    avr: Connection | None = None
+    try:
+        async with asyncio.timeout(CONNECT_TIMEOUT_SECONDS):
+            avr = await anthemav.Connection.create(
+                host=user_input[CONF_HOST],
+                port=user_input[CONF_PORT],
+                auto_reconnect=False,
+            )
+            await avr.reconnect()
+        await avr.protocol.wait_for_device_initialised(DEVICE_TIMEOUT_SECONDS)
+    except Exception:
+        # avr was created but something after that failed (reconnect timed
+        # out, or the device didn't report its info in time) — the caller
+        # never gets a reference back on a raised exception, so it can't
+        # close this itself.
+        if avr is not None:
+            avr.close()
+        raise
     return avr
 
 

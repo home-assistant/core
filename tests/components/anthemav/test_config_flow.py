@@ -127,6 +127,44 @@ async def test_form_connect_hangs(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+async def test_form_reconnect_timeout_closes_connection(
+    hass: HomeAssistant,
+    mock_connection_create: AsyncMock,
+    mock_anthemav: AsyncMock,
+) -> None:
+    """Test a partially created AVR is closed when reconnect() times out."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    async def _hang(*args: Any, **kwargs: Any) -> None:
+        await asyncio.sleep(3600)
+
+    with (
+        patch(
+            "homeassistant.components.anthemav.config_flow.CONNECT_TIMEOUT_SECONDS",
+            0.01,
+        ),
+        patch.object(mock_anthemav, "reconnect", side_effect=_hang),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "port": 14999,
+            },
+        )
+
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+    # Connection.create() already succeeded before reconnect() timed out —
+    # connect_device() must close it itself, since the caller's own avr
+    # never gets assigned when the helper raises.
+    mock_anthemav.close.assert_called_once()
+
+
 async def test_device_already_configured(
     hass: HomeAssistant,
     mock_connection_create: AsyncMock,
