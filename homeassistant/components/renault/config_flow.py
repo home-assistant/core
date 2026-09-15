@@ -5,9 +5,9 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
+import probatio
 from renault_api.const import AVAILABLE_LOCALES
 from renault_api.gigya.exceptions import GigyaException
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -20,14 +20,18 @@ from .renault_hub import RenaultHub
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(RenaultConfigurationKeys.LOCALE): vol.In(AVAILABLE_LOCALES.keys()),
-        vol.Required(RenaultConfigurationKeys.USERNAME): str,
-        vol.Required(RenaultConfigurationKeys.PASSWORD): str,
+        probatio.Required(RenaultConfigurationKeys.LOCALE): probatio.In(
+            AVAILABLE_LOCALES.keys()
+        ),
+        probatio.Required(RenaultConfigurationKeys.USERNAME): str,
+        probatio.Required(RenaultConfigurationKeys.PASSWORD): str,
     }
 )
-REAUTH_SCHEMA = vol.Schema({vol.Required(RenaultConfigurationKeys.PASSWORD): str})
+REAUTH_SCHEMA = probatio.Schema(
+    {probatio.Required(RenaultConfigurationKeys.PASSWORD): str}
+)
 
 
 class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -119,11 +123,11 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="kamereon",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID): vol.In(
-                        accounts
-                    )
+                    probatio.Required(
+                        RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID
+                    ): probatio.In(accounts)
                 }
             ),
         )
