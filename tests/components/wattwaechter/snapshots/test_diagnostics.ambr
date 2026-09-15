@@ -93,11 +93,12 @@
           'unit': 'kvarh',
           'value': 101.532,
         }),
-        '96.1.0': dict({
-          'name': 'Serial Number',
+        '94.91.0': dict({
+          'name': 'Status Word',
           'unit': '',
-          'value': '0a014845480000123456',
+          'value': '0x0182',
         }),
+        '96.1.0': '**REDACTED**',
       }),
     }),
     'system': dict({

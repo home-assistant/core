@@ -100,6 +100,13 @@ async def test_minimal_meter_data(
             "var",
             id="unmapped_unit_no_statistics",
         ),
+        pytest.param(
+            "94.91.0",
+            None,
+            None,
+            None,
+            id="string_value_plain_sensor",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_client", "entity_registry_enabled_by_default")
