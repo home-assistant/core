@@ -10,16 +10,32 @@ from pysnmp.proto.rfc1902 import OctetString
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.snmp.const import DOMAIN
 from homeassistant.components.snmp.device_tracker import (
     SnmpTrackerEntity,
     async_setup_scanner,
 )
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml import dump
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, patch_yaml_files
+
+MAC = "00:11:22:33:44:55"
+LEGACY_ENTITY_ID = "device_tracker.00_11_22_33_44_55"
+
+
+def _known_devices(*macs: str) -> dict[str, str]:
+    """Return a patched known_devices.yaml that tracks the given MACs."""
+    return {
+        YAML_DEVICES: dump(
+            {mac: {"name": mac, "mac": mac, "track": True} for mac in macs}
+        )
+    }
 
 
 @pytest.fixture
@@ -63,14 +79,15 @@ def mock_get_cmd():
 
 
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
-async def test_device_tracker_setup_with_legacy_state(
+async def test_device_tracker_legacy_state_is_not_an_enable_signal(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test setup of SNMP device tracker with legacy state (migration).
+    """Test that a leftover legacy state does not enable an entity.
 
-    When a device was previously tracked via known_devices.yaml and has a
-    pre-existing state, it should be enabled by default after migration.
+    The legacy YAML tracker writes its states only after this entry has been set
+    up, so such a state is not a sign that the device was tracked; known_devices.yaml
+    is. This entry is not an import either, so its entities stay disabled.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -82,28 +99,63 @@ async def test_device_tracker_setup_with_legacy_state(
     )
     entry.add_to_hass(hass)
 
-    # Simulate a legacy tracked device with existing state
-    hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
+    hass.states.async_set(LEGACY_ENTITY_ID, STATE_HOME)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
-    )
+    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+    assert entity_id == LEGACY_ENTITY_ID
 
-    assert entity_id is not None
-
-    # Entity should be enabled because it was migrated from a legacy state
     ent_entry = entity_registry.async_get(entity_id)
     assert ent_entry is not None
+    assert ent_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+    # The stale state is removed so the new entity keeps its unsuffixed entity_id
+    assert hass.states.get(LEGACY_ENTITY_ID) is None
+
+
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+async def test_yaml_migration_keeps_entity_enabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Migrate a YAML device tracker without disabling its entity.
+
+    Exercises the path an upgrading user actually takes: the legacy platform in
+    configuration.yaml is set up, which triggers the import flow, which sets up the
+    config entry. The legacy integration only writes the states of the devices it
+    tracks after that point, so known_devices.yaml is what keeps them enabled.
+    """
+    config = {
+        DEVICE_TRACKER_DOMAIN: {
+            CONF_PLATFORM: "snmp",
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "community": "public",
+        }
+    }
+
+    with patch_yaml_files(_known_devices(MAC)):
+        assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, config)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].source == SOURCE_IMPORT
+
+    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+    assert entity_id == LEGACY_ENTITY_ID
+
+    ent_entry = entity_registry.async_get(entity_id)
+    assert ent_entry is not None
+
+    # A migrated entity that ends up disabled silently breaks the presence
+    # automations of the user who is upgrading.
     assert ent_entry.disabled_by is None
 
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_HOME
-    assert state.attributes["mac"] == "00:11:22:33:44:55"
-    assert state.attributes["ip"] == "192.168.1.1"
+    # The entity must be live, not merely enabled in the registry
+    assert hass.states.get(LEGACY_ENTITY_ID) is not None
 
 
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
@@ -154,6 +206,7 @@ async def test_device_tracker_update(
     """Test update of SNMP device tracker."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        source=SOURCE_IMPORT,
         data={
             "host": "192.168.1.1",
             "baseoid": "1.3.6.1.2.1.4.22.1.6",
@@ -161,9 +214,6 @@ async def test_device_tracker_update(
         },
     )
     entry.add_to_hass(hass)
-
-    # Simulate mac1 as a legacy tracked device
-    hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
 
     mac1 = binascii.unhexlify("001122334455")
     mac2 = binascii.unhexlify("aabbccddeeff")
@@ -183,8 +233,10 @@ async def test_device_tracker_update(
 
     mock_walk.side_effect = mock_walk_1
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    # mac1 was tracked by the legacy YAML configuration
+    with patch_yaml_files(_known_devices(mac1_str)):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     entity_id_1 = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, mac1_str
@@ -199,7 +251,7 @@ async def test_device_tracker_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # mac2 is a newly discovered device (no legacy state) → disabled
+    # mac2 is not tracked by the legacy YAML configuration, so it is a new device
     entity_id_2 = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, mac2_str
     )
@@ -265,6 +317,7 @@ async def test_device_tracker_name_resolves_to_mac_address(
     """Test that the entity name resolves to the expected MAC address format."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        source=SOURCE_IMPORT,
         data={
             "host": "192.168.1.1",
             "baseoid": "1.3.6.1.2.1.4.22.1.6",
@@ -273,11 +326,10 @@ async def test_device_tracker_name_resolves_to_mac_address(
     )
     entry.add_to_hass(hass)
 
-    # Enable entity by setting legacy state
-    hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    # The device was tracked by the legacy YAML configuration
+    with patch_yaml_files(_known_devices(MAC)):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
@@ -297,7 +349,8 @@ async def test_device_tracker_enabled_if_device_exists(
 ) -> None:
     """Test that an entity is enabled if its device already exists in the registry.
 
-    This verifies the 'or super().entity_registry_enabled_default' logic.
+    ScannerEntity only enables new entities when a device with the same MAC is
+    already known to Home Assistant.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -473,9 +526,14 @@ async def test_device_tracker_update_empty_data(
 
 @pytest.fixture
 def mock_coordinator_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Create a mock SNMP config entry for coordinator tests."""
+    """Create a mock SNMP config entry for coordinator tests.
+
+    The entry mimics a migration, so the devices listed in known_devices.yaml are
+    enabled and the tests can assert on live entities.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
+        source=SOURCE_IMPORT,
         data={
             "host": "192.168.1.1",
             "baseoid": "1.3.6.1.2.1.4.22.1.6",
@@ -513,11 +571,8 @@ async def test_mac_normalization(
     async def mock_walk(*args, **kwargs):
         yield None, None, None, [(oid, OctetString(input_bytes))]
 
-    # Enable the entity by simulating a legacy state
-    entity_slug = expected_mac.replace(":", "_").lower()
-    hass.states.async_set(f"device_tracker.{entity_slug}", STATE_HOME)
-
     with (
+        patch_yaml_files(_known_devices(expected_mac)),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -573,10 +628,8 @@ async def test_ip_extraction(
     async def mock_walk(*args, **kwargs):
         yield None, None, None, [(oid, OctetString(mac_bytes))]
 
-    # Enable entity
-    hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
-
     with (
+        patch_yaml_files(_known_devices(mac_str)),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -618,10 +671,8 @@ async def test_ip_extraction_oid_too_short(
     async def mock_walk(*args, **kwargs):
         yield None, None, None, [(oid, OctetString(mac_bytes))]
 
-    # Enable entity
-    hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
-
     with (
+        patch_yaml_files(_known_devices(MAC)),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -639,9 +690,7 @@ async def test_ip_extraction_oid_too_short(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
-    )
+    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
     assert entity_id is not None
 
     state = hass.states.get(entity_id)
@@ -686,9 +735,8 @@ async def test_walk_errindication(
             async for item in mock_walk_error(*args, **kwargs):
                 yield item
 
-    hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
-
     with (
+        patch_yaml_files(_known_devices(MAC)),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk_side_effect,
@@ -820,10 +868,8 @@ async def test_walk_end_of_mib(
         yield None, None, None, [(oid1, OctetString(mac1_bytes))]
         yield None, None, None, [(oid2, OctetString(mac2_bytes))]
 
-    hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
-    hass.states.async_set("device_tracker.aa_bb_cc_dd_ee_ff", STATE_HOME)
-
     with (
+        patch_yaml_files(_known_devices(MAC)),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,

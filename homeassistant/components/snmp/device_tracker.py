@@ -1,5 +1,6 @@
 """Support for fetching WiFi associations through SNMP."""
 
+import binascii
 import logging
 from typing import override
 
@@ -10,7 +11,12 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     ScannerEntity,
 )
-from homeassistant.components.device_tracker.legacy import AsyncSeeCallback
+from homeassistant.components.device_tracker.const import DEFAULT_CONSIDER_HOME
+from homeassistant.components.device_tracker.legacy import (
+    YAML_DEVICES,
+    AsyncSeeCallback,
+    async_load_config,
+)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
@@ -32,7 +38,7 @@ from .const import (
     DEFAULT_COMMUNITY,
     DOMAIN,
 )
-from .coordinator import SnmpUpdateCoordinator
+from .coordinator import SnmpUpdateCoordinator, normalize_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +51,36 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         probatio.Inclusive(CONF_PRIV_KEY, "keys"): cv.string,
     }
 )
+
+
+def _legacy_tracked_mac(mac: str | None) -> str | None:
+    """Return the canonical MAC of a tracker from known_devices.yaml."""
+    if not mac:
+        return None
+    try:
+        # The legacy integration stored the value the device returned, so turn it
+        # back into bytes and normalize it like the coordinator does.
+        raw = binascii.unhexlify("".join(char for char in mac if char.isalnum()))
+    except ValueError:
+        return None
+    return normalize_mac(raw)
+
+
+async def _async_legacy_tracked_macs(hass: HomeAssistant) -> set[str]:
+    """Return the MACs the legacy YAML configuration was tracking.
+
+    The legacy integration registers no entities and adds the states of the
+    devices it tracks only after this entry has been set up, so known_devices.yaml
+    is the only record of which devices the user had enabled before the migration.
+    """
+    devices = await async_load_config(
+        hass.config.path(YAML_DEVICES), hass, DEFAULT_CONSIDER_HOME
+    )
+    return {
+        normalized
+        for device in devices
+        if device.track and (normalized := _legacy_tracked_mac(device.mac))
+    }
 
 
 async def async_setup_scanner(
@@ -106,8 +142,19 @@ async def async_setup_entry(
             )
             hass.states.async_remove(reg_entry.entity_id)
 
+    # Only the devices the legacy YAML configuration was tracking are enabled, so an
+    # upgrade does not disable the presence automations of the user. Anything else,
+    # including a device seen for the first time after the migration, keeps the
+    # disabled by default behaviour of the other router integrations.
+    legacy_macs: set[str] = set()
+    if entry.source == SOURCE_IMPORT:
+        legacy_macs = await _async_legacy_tracked_macs(hass)
+
     if initial_macs:
-        async_add_entities(SnmpTrackerEntity(coordinator, mac) for mac in initial_macs)
+        async_add_entities(
+            SnmpTrackerEntity(coordinator, mac, was_tracked=mac in legacy_macs)
+            for mac in initial_macs
+        )
 
     tracked_macs = set(initial_macs)
 
@@ -121,17 +168,16 @@ async def async_setup_entry(
         for mac in coordinator.data:
             # Discovery of a brand new device.
             if mac not in tracked_macs:
-                # 1. Determine if the entity should be enabled by default
-                entity_slug = mac.replace(":", "_").lower()
-                legacy_id = f"{DEVICE_TRACKER_DOMAIN}.{entity_slug}"
-                default_enabled = False
+                # The legacy tracker keeps writing the state of the trackers it
+                # loaded from known_devices.yaml, which would take the entity_id of
+                # the entity we are about to add.
+                legacy_id = f"{DEVICE_TRACKER_DOMAIN}.{mac.replace(':', '_').lower()}"
                 if not ent_reg.async_get(legacy_id) and hass.states.get(legacy_id):
                     hass.states.async_remove(legacy_id)
-                    default_enabled = True
 
                 tracked_macs.add(mac)
                 new_entities.append(
-                    SnmpTrackerEntity(coordinator, mac, default_enabled)
+                    SnmpTrackerEntity(coordinator, mac, was_tracked=mac in legacy_macs)
                 )
 
         if new_entities:
@@ -148,14 +194,15 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
         self,
         coordinator: SnmpUpdateCoordinator,
         mac: str,
-        default_enabled: bool = False,
+        *,
+        was_tracked: bool = False,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_mac_address = mac
-        self._attr_entity_registry_enabled_default = default_enabled
         self._attr_name = mac.replace(":", "_")
         self._attr_ip_address = coordinator.data.get(mac) if coordinator.data else None
+        self._was_tracked = was_tracked
 
     @property
     @override
@@ -180,8 +227,13 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
     @property
     @override
     def entity_registry_enabled_default(self) -> bool:
-        """Return if entity is enabled by default."""
-        return (
-            self._attr_entity_registry_enabled_default
-            or super().entity_registry_enabled_default
-        )
+        """Return if the entity is enabled by default.
+
+        A device that the legacy YAML configuration was tracking keeps the default
+        Entity behaviour, so the migration does not silently disable the presence
+        automations of the user. Any other device uses the ScannerEntity behaviour:
+        enabled only when a device with the same MAC is already known.
+        """
+        if self._was_tracked:
+            return True
+        return super().entity_registry_enabled_default

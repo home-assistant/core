@@ -40,6 +40,24 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def normalize_mac(value: bytes) -> str | None:
+    """Return the MAC address in the canonical colon separated format.
+
+    Routers report MAC addresses either as raw bytes or as text in one of the
+    usual formats, so both are accepted. Returns None if the value does not
+    describe a 6 byte MAC address.
+    """
+    if len(value) == 6:
+        mac = binascii.hexlify(value).decode("utf-8")
+    else:
+        mac = value.decode("utf-8", "ignore")
+
+    mac = "".join(char for char in mac if char.isalnum()).lower()
+    if len(mac) != 12 or not all(char in "0123456789abcdef" for char in mac):
+        return None
+    return ":".join(mac[i : i + 2] for i in range(0, 12, 2))
+
+
 class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     """Class to manage fetching the list of MAC addresses from the router."""
 
@@ -194,19 +212,10 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                 for oid, value in res:
                     try:
                         octets = value.asOctets()
-                        if len(octets) == 6:
-                            mac = binascii.hexlify(octets).decode("utf-8")
-                        else:
-                            mac = octets.decode("utf-8", "ignore")
-
-                        # Normalize: remove non-hex chars, lowercase, and re-format
-                        mac = "".join(c for c in mac if c.isalnum()).lower()
-                        if len(mac) != 12 or not all(
-                            c in "0123456789abcdef" for c in mac
-                        ):
-                            continue
-                        mac = ":".join([mac[i : i + 2] for i in range(0, 12, 2)])
                     except AttributeError, UnicodeDecodeError:
+                        continue
+
+                    if (mac := normalize_mac(octets)) is None:
                         continue
 
                     # Extract IP address from OID suffix (last 4 parts)
