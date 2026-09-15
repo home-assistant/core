@@ -6,6 +6,7 @@ import logging
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
+import attr
 import probatio
 import pytest
 
