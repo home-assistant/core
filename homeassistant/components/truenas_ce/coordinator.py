@@ -1275,50 +1275,115 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._prune_stale_app_stats(set())
             return
 
-        if not self._app_stats_sub_id or not await self.api.is_subscribed(
-            self._app_stats_sub_id
-        ):
-            _LOGGER.debug(
-                "get_app_stats: no active subscription, re-entering start_app_stats"
-            )
-            await self.start_app_stats()
-            if not self._app_stats_sub_id:
-                if not self.api.connected():
-                    # Connection dropped between the connected() check above
-                    # and here (e.g. during is_subscribed()/start_app_stats()'s
-                    # own awaits) -- the poll's other jobs already surface
-                    # "TrueNAS disconnected" via their own connected() guards,
-                    # so raising the subscription-specific message below would
-                    # misattribute the actual root cause. Logged at DEBUG so a
-                    # genuine resubscribe bug that happens to coincide with a
-                    # disconnect isn't entirely untraceable.
-                    _LOGGER.debug(
-                        "app.stats resubscribe left no sub_id while disconnected; "
-                        "skipping app_stats_unavailable for this poll"
-                    )
-                    return
-                # start_app_stats()/_subscribe_to_app_stats() only log
-                # internally and never raise, so this is the one place a
-                # failed resubscribe attempt becomes visible: raise so
-                # entity-unavailable/log-when-unavailable can mark the
-                # app_stats entities unavailable instead of serving a frozen
-                # last-good snapshot forever. Folds in the stashed root cause
-                # (an exception object chains as the traceback's cause; a
-                # plain reason string, e.g. "no sub_id/queue returned", is
-                # just placed in the message) so the one ERROR line _run_job
-                # logs for this isn't a generic, unexplained failure.
-                cause = self._app_stats_subscribe_error
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="app_stats_unavailable",
-                    translation_placeholders={"host": self.host, "error": str(cause)},
-                ) from (cause if isinstance(cause, BaseException) else None)
+        sub_id = await self._ensure_app_stats_subscription()
+        if sub_id is None:
+            return
 
-        messages = await self.api.get_subscription_events(self._app_stats_sub_id)
+        messages = await self._read_app_stats_events(sub_id)
+        if messages is None:
+            return
         self._process_app_stats_messages(messages)
 
         current_app_names = self._collect_current_app_names()
         self._prune_stale_app_stats(current_app_names)
+
+    async def _ensure_app_stats_subscription(self) -> str | None:
+        """Ensure the app.stats subscription is active, resubscribing if needed.
+
+        Returns the subscription id once it's confirmed active, or None if
+        get_app_stats() should silently skip this poll cycle (the connection
+        dropped during resubscribe -- already surfaced by the poll's other
+        jobs via their own connected() guards, so raising here too would
+        misattribute the actual root cause).
+
+        Raises UpdateFailed on a genuine, non-connection resubscribe failure
+        so entity-unavailable/log-when-unavailable can mark the app_stats
+        entities unavailable instead of serving a frozen last-good snapshot
+        forever.
+        """
+        if self._app_stats_sub_id and await self.api.is_subscribed(
+            self._app_stats_sub_id
+        ):
+            return self._app_stats_sub_id
+
+        _LOGGER.debug(
+            "get_app_stats: no active subscription, re-entering start_app_stats"
+        )
+        # Existing sub missing or inactive; re-enters start_app_stats.
+        await self.start_app_stats()
+        if self._app_stats_sub_id:
+            return self._app_stats_sub_id
+        if not self.api.connected():
+            # Connection dropped between the connected() check above and
+            # here (e.g. during is_subscribed()/start_app_stats()'s own
+            # awaits) -- the poll's other jobs already surface "TrueNAS
+            # disconnected" via their own connected() guards, so raising the
+            # subscription-specific message below would misattribute the
+            # actual root cause. Logged at DEBUG so a genuine resubscribe
+            # bug that happens to coincide with a disconnect isn't entirely
+            # untraceable.
+            _LOGGER.debug(
+                "app.stats resubscribe left no sub_id while disconnected; "
+                "skipping app_stats_unavailable for this poll"
+            )
+            return None
+        # start_app_stats()/_subscribe_to_app_stats() only log internally
+        # and never raise, so this is the one place a failed resubscribe
+        # attempt becomes visible: raise so entity-unavailable/log-when-
+        # unavailable can mark the app_stats entities unavailable instead of
+        # serving a frozen last-good snapshot forever. Folds in the stashed
+        # root cause (an exception object chains as the traceback's cause; a
+        # plain reason string, e.g. "no sub_id/queue returned", is just
+        # placed in the message) so the one ERROR line _run_job logs for
+        # this isn't a generic, unexplained failure.
+        cause = self._app_stats_subscribe_error
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="app_stats_unavailable",
+            translation_placeholders={"host": self.host, "error": str(cause)},
+        ) from (cause if isinstance(cause, BaseException) else None)
+
+    async def _read_app_stats_events(self, sub_id: str) -> list[dict[str, Any]] | None:
+        """Read buffered app.stats events, or None on a connection-attributed failure.
+
+        "Connection-attributed" covers both this call's own initial
+        reconnect attempt failing and a connection exception/drop during the
+        read itself.
+
+        Raises UpdateFailed on a genuine read failure so entity-unavailable/
+        log-when-unavailable can mark the app_stats entities unavailable
+        instead of serving a frozen last-good snapshot forever.
+        """
+        messages, error, is_connection_error = await self.api.get_subscription_events(
+            sub_id
+        )
+        if not error:
+            return messages
+        if is_connection_error:
+            # Same "misattributed root cause" case as
+            # _ensure_app_stats_subscription()'s resubscribe branch: a
+            # connection drop during this call's own connect attempt/read is
+            # already surfaced by the poll's other jobs via their own
+            # connected() guards. is_connection_error is call-local (decided
+            # by get_subscription_events() itself, not re-derived here from
+            # self.api.connected() -- that shared state can be flipped by a
+            # concurrent sibling job for reasons that have nothing to do
+            # with THIS call's own error, which would misclassify an
+            # unrelated application-level failure, e.g. a permission error,
+            # as a connection issue and silently drop it).
+            return None
+        # get_subscription_events() returns [] on both "no new events" and
+        # "the read itself failed"; its own returned error (not
+        # self.api.error -- get_app_stats runs concurrently with ~19 other
+        # jobs sharing this TrueNASAPI instance inside asyncio.gather, so
+        # that shared attribute can be overwritten by a sibling job's own
+        # call before this one returns) is what lets a genuine failure
+        # surface here instead of being read as a routine empty poll.
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="app_stats_unavailable",
+            translation_placeholders={"host": self.host, "error": error},
+        )
 
     def _process_app_stats_messages(self, messages: list[dict[str, Any]]) -> None:
         """Append/update app_stats entries from buffered WebSocket messages."""
