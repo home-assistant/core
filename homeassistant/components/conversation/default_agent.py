@@ -1761,20 +1761,41 @@ _NO_TARGET_ERRORS: dict[tuple[str, str, bool], ErrorKey] = {
 }
 
 
+# The failing constraint is what the message should be about. Anything else the
+# caller happened to set would name the wrong thing: a DOMAIN failure alongside a
+# name means no entity of that domain exists, not that nothing has that name.
+_NO_TARGET_SUBJECTS: dict[intent.MatchFailedReason, tuple[str, ...]] = {
+    intent.MatchFailedReason.NAME: ("entity",),
+    intent.MatchFailedReason.AREA: ("entity", "device_class", "domain"),
+    intent.MatchFailedReason.FLOOR: ("entity", "device_class", "domain"),
+    intent.MatchFailedReason.DOMAIN: ("device_class", "domain"),
+    intent.MatchFailedReason.DEVICE_CLASS: ("device_class", "domain"),
+    intent.MatchFailedReason.ASSISTANT: ("entity", "device_class", "domain"),
+}
+
+
 def _get_no_target_response(
-    constraints: intent.MatchTargetsConstraints, *, exposed_only: bool
+    constraints: intent.MatchTargetsConstraints,
+    subjects: tuple[str, ...],
+    *,
+    exposed_only: bool,
 ) -> tuple[ErrorKey, dict[str, Any]]:
-    """Return the error naming what was asked for as precisely as the constraints allow."""
-    args: dict[str, Any]
+    """Return the error naming the failed constraint, scoped to an area or floor."""
+    available: dict[str, dict[str, Any]] = {}
     if constraints.name:
-        kind, args = "entity", {"entity": constraints.name}
-    elif constraints.device_classes:
-        kind = "device_class"
-        args = {"device_class": next(iter(constraints.device_classes))}
-    elif constraints.domains:
-        kind, args = "domain", {"domain": next(iter(constraints.domains))}
+        available["entity"] = {"entity": constraints.name}
+    if constraints.device_classes:
+        available["device_class"] = {
+            "device_class": next(iter(constraints.device_classes))
+        }
+    if constraints.domains:
+        available["domain"] = {"domain": next(iter(constraints.domains))}
+
+    for kind in subjects:
+        if (args := available.get(kind)) is not None:
+            break
     else:
-        # Nothing was named, so there is nothing to name back
+        # The constraint that failed was not set, so there is nothing to name
         return ErrorKey.NO_INTENT, {}
 
     if constraints.area_name:
@@ -1827,11 +1848,13 @@ def _get_match_error_response(
             | intent.MatchFailedReason.FLOOR
             | intent.MatchFailedReason.DOMAIN
             | intent.MatchFailedReason.DEVICE_CLASS
+            | intent.MatchFailedReason.ASSISTANT
         ):
-            return _get_no_target_response(constraints, exposed_only=False)
-
-        case intent.MatchFailedReason.ASSISTANT:
-            return _get_no_target_response(constraints, exposed_only=True)
+            return _get_no_target_response(
+                constraints,
+                _NO_TARGET_SUBJECTS[reason],
+                exposed_only=reason is intent.MatchFailedReason.ASSISTANT,
+            )
 
         case intent.MatchFailedReason.INVALID_AREA:
             return ErrorKey.NO_AREA, {"area": result.no_match_name}
@@ -1853,6 +1876,8 @@ def _get_match_error_response(
             return _get_duplicate_response(result.no_match_name, constraints)
 
         case intent.MatchFailedReason.MULTIPLE_TARGETS:
+            # Without a name there is no wording for "several matched, pick one":
+            # every duplicate response is about a name. Needs a new response.
             return _get_duplicate_response(constraints.name, constraints)
 
     assert_never(reason)

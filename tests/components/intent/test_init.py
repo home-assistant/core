@@ -179,8 +179,7 @@ async def test_http_handle_intent_match_failure(
 
     # The API speaks the failure, so it must be a sentence and not a repr
     assert data["speech"]["plain"]["speech"] == (
-        "Multiple entities share the name and could not be told apart"
-        " (given name 'Garage Door')"
+        "Multiple entities share the name (given name 'Garage Door')"
     )
 
 

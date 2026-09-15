@@ -1039,7 +1039,7 @@ async def test_error_device_in_other_area(
 def test_match_error_response_never_falls_back(
     reason: intent.MatchFailedReason,
 ) -> None:
-    """Test every failure keeps its own message when a target was named.
+    """Test every failure keeps its own message when the constraint was set.
 
     A reason with no branch used to reach the generic "couldn't understand"
     error, which says nothing about what was actually wrong.
@@ -1047,13 +1047,60 @@ def test_match_error_response_never_falls_back(
     match_error = intent.MatchFailedError(
         result=intent.MatchTargetsResult(False, reason, no_match_name="test light"),
         constraints=intent.MatchTargetsConstraints(
-            name="test light", area_name="kitchen", states={"on"}
+            name="test light",
+            area_name="kitchen",
+            domains={"light"},
+            device_classes={"garage"},
+            states={"on"},
         ),
     )
 
     error_key, _error_args = _get_match_error_response(match_error)
 
     assert error_key is not ErrorKey.NO_INTENT
+
+
+@pytest.mark.parametrize(
+    ("reason", "expected_key", "expected_args"),
+    [
+        pytest.param(
+            intent.MatchFailedReason.NAME,
+            ErrorKey.NO_ENTITY,
+            {"entity": "test light"},
+            id="name",
+        ),
+        pytest.param(
+            intent.MatchFailedReason.DOMAIN,
+            ErrorKey.NO_DOMAIN,
+            {"domain": "light"},
+            id="domain",
+        ),
+        pytest.param(
+            intent.MatchFailedReason.ASSISTANT,
+            ErrorKey.NO_ENTITY_EXPOSED,
+            {"entity": "test light"},
+            id="assistant",
+        ),
+    ],
+)
+def test_match_error_response_names_the_failed_constraint(
+    reason: intent.MatchFailedReason,
+    expected_key: ErrorKey,
+    expected_args: dict[str, str],
+) -> None:
+    """Test the reason picks the subject, not whichever constraint was set first.
+
+    A domain failure alongside a name means no entity of that domain exists, so
+    saying nothing is called that name would be wrong.
+    """
+    match_error = intent.MatchFailedError(
+        result=intent.MatchTargetsResult(False, reason),
+        constraints=intent.MatchTargetsConstraints(
+            name="test light", domains={"light"}
+        ),
+    )
+
+    assert _get_match_error_response(match_error) == (expected_key, expected_args)
 
 
 @pytest.mark.usefixtures("init_components")
