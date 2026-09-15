@@ -6,7 +6,7 @@ import logging
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.client import XboxLiveClient
 
-from homeassistant.config_entries import ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry, ConfigSubentryDataWithId
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -65,14 +65,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    subentries = _subentry_snapshot(entry)
+
+    async def _async_update_listener(
+        hass: HomeAssistant, entry: XboxConfigEntry
+    ) -> None:
+        """Reload only when the subentries change, not on a token refresh."""
+        if subentries != _subentry_snapshot(entry):
+            hass.config_entries.async_schedule_reload(entry.entry_id)
+
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: XboxConfigEntry) -> None:
-    """Handle update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+def _subentry_snapshot(
+    entry: XboxConfigEntry,
+) -> dict[str, ConfigSubentryDataWithId]:
+    """Return a snapshot of the entry's subentries by value.
+
+    ConfigSubentry instances are mutated in place when a subentry is updated,
+    so the objects themselves cannot be compared against a previous state.
+    """
+    return {
+        subentry_id: subentry.as_dict()
+        for subentry_id, subentry in entry.subentries.items()
+    }
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
