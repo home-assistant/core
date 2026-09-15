@@ -79,7 +79,9 @@ STEP_CAMERA_AUTH_DATA_SCHEMA = probatio.Schema(
     }
 )
 
-STEP_OPTIONS_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_USE_STREAM_FOR_STILLS): bool})
+STEP_OPTIONS_DATA_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_USE_STREAM_FOR_STILLS): bool}
+)
 
 
 class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
