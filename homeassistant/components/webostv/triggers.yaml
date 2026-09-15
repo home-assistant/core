@@ -1,0 +1,7 @@
+turn_on_requested:
+  target:
+    entity:
+      - domain: media_player
+        integration: webostv
+    device:
+      - integration: webostv
