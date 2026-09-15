@@ -10,7 +10,7 @@ from . import artifact, github_api, integrations, rules
 from .models import PullRequest, Results
 
 MAX_CHANGED_LINES = 4000
-MAX_CHANGED_FILES = 300
+MAX_CHANGED_FILES = 50
 
 
 @dataclass(slots=True, frozen=True)

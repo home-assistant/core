@@ -3,25 +3,32 @@ name: quality-scale-reviewer
 description: >
   Reviews pull requests that touch an integration against the Integration
   Quality Scale rules the integration declares as `done` or `exempt` in its
-  `quality_scale.yaml`. Triggered by completion of the deterministic workflow,
-  which uploads the PR metadata and diff, the touched domains, and the rules
-  index and documentation as an artifact. Selects the rules to check from the
-  rules index, the PR diff, and `quality_scale.yaml`, then applies the
-  repository's `ha-quality-scale-verify` skill to each selected rule and posts
-  each violation as an inline review comment on the offending changed line.
-  Pull requests above the size limit are not reviewed; a comment states that.
+  `quality_scale.yaml`. Triggered by completion of the trigger workflow, which
+  runs on pull request events. The `prepare` job resolves the pull request,
+  collects its metadata and diff, the touched domains, and the rules index and
+  documentation, and hands them to the agent as an artifact. Selects the rules
+  to check from the rules index, the PR diff, and `quality_scale.yaml`, then
+  applies the repository's `ha-quality-scale-verify` skill to each selected
+  rule and posts each violation as an inline review comment on the offending
+  changed line. Pull requests above the size limit are not reviewed; a comment
+  states that.
 intent: >
   Pull requests that break a quality scale rule their integration claims to
   satisfy receive an inline review comment naming the rule on the offending
   changed line before a human reviews them.
 on:
   workflow_run:
-    workflows: ["Quality scale reviewer (deterministic)"]
+    workflows: ["Quality scale reviewer (trigger)"]
     types: [completed]
-  # On workflow_run the actor is the PR author, so the default role gate
-  # (admin/maintainer/write) skips every PR from an outside contributor — which is
-  # exactly who this review is for. The job is read-only and its single safe-output
-  # is a review comment on the PR recorded in the trusted upstream artifact.
+  workflow_dispatch:
+    inputs:
+      pull_request_number:
+        description: "Pull request number to (re-)review"
+        required: true
+        type: number
+  # The default roles [admin, maintainer, write] would not allow this to run for
+  # outside contributors. The only write is the safe-output review comment, so it
+  # is safe to allow "all".
   roles: all
 permissions:
   contents: read
@@ -59,43 +66,85 @@ safe-outputs:
     - prepare
 jobs:
   prepare:
-    # The deterministic stage uploads an artifact for every non-draft PR event;
-    # its `skip` flag is true when the PR is too long or touches no integration
-    # with a quality scale, which is our cue to skip the (token-spending) agent.
-    # Recover the PR number to comment on either way. No artifact exists when
-    # the deterministic job was skipped for a draft PR.
-    if: github.event.workflow_run.conclusion == 'success'
+    # Resolves the pull request from `workflow_run.head_sha` (or the dispatch
+    # input), runs the collection script on the trusted checkout, and hands the
+    # results to the agent job as an artifact. `skip` is true when no single
+    # open, non-draft pull request matches, or when the pull request is too
+    # long or touches no integration with a quality scale, which skips the
+    # (token-spending) agent.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
-      actions: read
       contents: read
       pull-requests: write # To comment on PRs that are too long to review
     outputs:
       skip: ${{ steps.prepare.outputs.skip }}
       pr_number: ${{ steps.prepare.outputs.pr_number }}
     steps:
-      - name: Download deterministic artifact
-        id: download
-        continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: Check out the default branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          name: quality-scale-reviewer-deterministic
-          path: /tmp/deterministic
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Resolve skip flags and PR number from the artifact
-        id: prepare
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Resolve the pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PR_NUMBER: ${{ inputs.pull_request_number }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
         run: |
-          RESULTS=/tmp/deterministic/results.json
-          if [ ! -f "${RESULTS}" ]; then
+          set -euo pipefail
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "pr_number=${INPUT_PR_NUMBER}" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          MATCHES=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${HEAD_SHA}/pulls" \
+            | jq -c --arg sha "${HEAD_SHA}" --arg repo "${HEAD_REPO}" \
+              '[.[] | select(.state == "open" and .head.sha == $sha and .head.repo.full_name == $repo and .draft == false) | .number]')
+          COUNT=$(jq 'length' <<< "${MATCHES}")
+          if [ "${COUNT}" -ne 1 ]; then
+            echo "Expected one open, non-draft pull request for ${HEAD_REPO}@${HEAD_SHA}, found ${COUNT}: ${MATCHES}"
             echo "skip=true" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
+          echo "pr_number=$(jq '.[0]' <<< "${MATCHES}")" >> "${GITHUB_OUTPUT}"
+      - name: Set up Python
+        if: steps.pr.outputs.skip != 'true'
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: ".python-version"
+          check-latest: true
+      - name: Install script dependencies
+        if: steps.pr.outputs.skip != 'true'
+        run: pip install -r script/quality_scale_review/requirements.txt
+      - name: Collect pull request data and quality scale rules
+        if: steps.pr.outputs.skip != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+        run: |
+          python -m script.quality_scale_review \
+            --pr-number "${PR_NUMBER}" \
+            --output deterministic
+      - name: Resolve skip flags from the results
+        id: prepare
+        env:
+          PR_SKIP: ${{ steps.pr.outputs.skip }}
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+        run: |
+          set -euo pipefail
+          if [ "${PR_SKIP}" = "true" ]; then
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          RESULTS=deterministic/results.json
           {
             echo "skip=$(jq -r '.skip' "${RESULTS}")"
             echo "too_long=$(jq -r '.too_long' "${RESULTS}")"
             echo "skip_reason=$(jq -r '.skip_reason' "${RESULTS}")"
-            echo "pr_number=$(jq -r '.pr_number' "${RESULTS}")"
+            echo "pr_number=${PR_NUMBER}"
           } >> "${GITHUB_OUTPUT}"
       - name: Comment that the pull request is too long to review
         if: steps.prepare.outputs.too_long == 'true'
@@ -115,8 +164,16 @@ jobs:
           ## Quality scale review
 
           ⏭️ The automated Integration Quality Scale review was skipped: this pull request ${SKIP_REASON}."
+      - name: Upload deterministic artifact
+        if: steps.prepare.outputs.skip != 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: quality-scale-reviewer-deterministic
+          path: deterministic
+          if-no-files-found: error
+          retention-days: 7
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.id }}
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.pull_request_number }}
   cancel-in-progress: true
 steps:
   - name: Download deterministic artifact
@@ -124,8 +181,6 @@ steps:
     with:
       name: quality-scale-reviewer-deterministic
       path: /tmp/gh-aw/agent
-      run-id: ${{ github.event.workflow_run.id }}
-      github-token: ${{ secrets.GITHUB_TOKEN }}
   - name: Check out the pull request head
     env:
       PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}

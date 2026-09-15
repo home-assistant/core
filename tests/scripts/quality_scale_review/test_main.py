@@ -89,7 +89,7 @@ def test_reason_reads_as_a_sentence_about_the_pull_request() -> None:
     """The reason is rendered after "this pull request" in the posted comment."""
     decision = decide_skip(_pull_request(5000, 0, 10), ["peblar"])
     assert decision.reason == (
-        "changes 5000 lines in 10 files, above the limit of 4000 lines and 300 files"
+        "changes 5000 lines in 10 files, above the limit of 4000 lines and 50 files"
     )
 
 
