@@ -382,6 +382,14 @@ async def test_climate_missing_variables(
     assert state.state == HVACMode.HEAT
     assert state.attributes.get("current_temperature") is None
     assert state.attributes.get("current_humidity") is None
+    # HVAC_MODES_LIST is also missing here; the current mode (Heat) must
+    # still be selectable rather than falling back to off-only.
+    assert set(state.attributes["hvac_modes"]) == {
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.HEAT_COOL,
+    }
     assert state.attributes["temperature"] == 68.0
 
 
