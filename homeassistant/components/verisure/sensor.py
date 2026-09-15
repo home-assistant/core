@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -38,6 +38,8 @@ async def async_setup_entry(
         for serial_number, values in coordinator.data["climate"].items()
         if values.get("humidityEnabled")
     )
+
+    sensors.append(VerisureArmStatus(coordinator))
 
     async_add_entities(sensors)
 
@@ -139,3 +141,44 @@ class VerisureHygrometer(
             and self.serial_number in self.coordinator.data["climate"]
             and "humidityValue" in self.coordinator.data["climate"][self.serial_number]
         )
+
+
+class VerisureArmStatus(CoordinatorEntity[VerisureDataUpdateCoordinator], SensorEntity):
+    """Whether Verisure currently requires force to arm.
+
+    Backed by an arm-state dry run, run when a door/window state changes or
+    otherwise at least once per DRY_RUN_FALLBACK_INTERVAL.
+    """
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
+    _attr_options = ["ready", "bypass_needed"]
+    _attr_translation_key = "arm_status"
+
+    @property
+    @override
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return f"{self.coordinator.config_entry.data[CONF_GIID]}_arm_status"
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this entity."""
+        return DeviceInfo(
+            name="Verisure Alarm",
+            manufacturer="Verisure",
+            model="VBox",
+            identifiers={(DOMAIN, self.coordinator.config_entry.data[CONF_GIID])},
+            configuration_url="https://mypages.verisure.com",
+        )
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return whether arming currently requires force."""
+        force_arm_required = self.coordinator.data["force_arm_required"]
+        if force_arm_required is None:
+            return None
+        return "bypass_needed" if force_arm_required else "ready"
