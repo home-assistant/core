@@ -1,5 +1,7 @@
 """Test KNX config store."""
 
+import dataclasses
+import json
 from typing import Any
 
 import pytest
@@ -11,8 +13,26 @@ from homeassistant.components.knx.const import (
 )
 from homeassistant.components.knx.storage.config_store import (
     STORAGE_KEY as KNX_CONFIG_STORAGE_KEY,
+    to_storage_dict,
 )
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.components.knx.storage.const import CONF_DATA
+from homeassistant.components.knx.storage.entity_store_schema import (
+    BinarySensorKnxConfig,
+    DateKnxConfig,
+    DatetimeKnxConfig,
+    NotifyKnxConfig,
+    NumberKnxConfig,
+    SceneKnxConfig,
+    SensorKnxConfig,
+    SwitchKnxConfig,
+    TextKnxConfig,
+    TimeKnxConfig,
+)
+from homeassistant.components.knx.storage.entity_store_validation import (
+    validate_entity_data,
+)
+from homeassistant.components.knx.storage.serialize import get_serialized_schema
+from homeassistant.const import CONF_PLATFORM, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
@@ -724,3 +744,180 @@ async def test_migration_2_1_to_2_4(
         hass, "config_store_binarysensor.json", "knx"
     )
     assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data
+
+
+TYPED_CONFIG_CASES = [
+    pytest.param(
+        Platform.SWITCH,
+        SwitchKnxConfig,
+        {"ga_switch": {"write": "1/2/3"}},
+        {
+            "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+            "invert": False,
+            "respond_to_read": False,
+            "sync_state": True,
+        },
+        id="switch",
+    ),
+    pytest.param(
+        Platform.DATE,
+        DateKnxConfig,
+        {
+            "ga_date": {"write": "1/2/3", "passive": ["1/2/4"]},
+            "sync_state": "expire 60",
+        },
+        {
+            "ga_date": {"write": "1/2/3", "state": None, "passive": ["1/2/4"]},
+            "respond_to_read": False,
+            "sync_state": "expire 60",
+        },
+        id="date",
+    ),
+    pytest.param(
+        Platform.DATETIME,
+        DatetimeKnxConfig,
+        {"ga_datetime": {"write": "1/2/3", "state": "1/2/4"}, "respond_to_read": True},
+        {
+            "ga_datetime": {"write": "1/2/3", "state": "1/2/4", "passive": []},
+            "respond_to_read": True,
+            "sync_state": True,
+        },
+        id="datetime",
+    ),
+    pytest.param(
+        Platform.TIME,
+        TimeKnxConfig,
+        {"ga_time": {"write": "1/2/3"}},
+        {
+            "ga_time": {"write": "1/2/3", "state": None, "passive": []},
+            "respond_to_read": False,
+            "sync_state": True,
+        },
+        id="time",
+    ),
+    pytest.param(
+        Platform.NOTIFY,
+        NotifyKnxConfig,
+        {"ga_send": {"write": "1/2/3", "dpt": "16.000"}},
+        {"ga_send": {"write": "1/2/3", "dpt": "16.000"}},
+        id="notify",
+    ),
+    pytest.param(
+        Platform.SCENE,
+        SceneKnxConfig,
+        {"ga_scene": {"write": "1/2/3"}, "scene_number": 4.0},
+        {"ga_scene": {"write": "1/2/3"}, "scene_number": 4},
+        id="scene",
+    ),
+    pytest.param(
+        Platform.BINARY_SENSOR,
+        BinarySensorKnxConfig,
+        {"ga_sensor": {"state": "1/2/3"}, "context_timeout": 1.5},
+        {
+            "ga_sensor": {"state": "1/2/3", "passive": []},
+            "invert": False,
+            "ignore_internal_state": False,
+            "context_timeout": 1.5,
+            "reset_after": None,
+            "sync_state": True,
+        },
+        id="binary_sensor",
+    ),
+    pytest.param(
+        Platform.SENSOR,
+        SensorKnxConfig,
+        {"ga_sensor": {"state": "1/2/3", "dpt": "9.001"}, "sync_state": False},
+        {
+            "ga_sensor": {"state": "1/2/3", "passive": [], "dpt": "9.001"},
+            "unit_of_measurement": None,
+            "device_class": None,
+            "state_class": None,
+            "always_callback": False,
+            "sync_state": False,
+        },
+        id="sensor",
+    ),
+    pytest.param(
+        Platform.NUMBER,
+        NumberKnxConfig,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "9.001"}, "max": 50},
+        {
+            "ga_sensor": {
+                "write": "1/2/3",
+                "state": None,
+                "passive": [],
+                "dpt": "9.001",
+            },
+            "respond_to_read": False,
+            "mode": "auto",
+            "min": None,
+            "max": 50,
+            "step": None,
+            "unit_of_measurement": None,
+            "device_class": None,
+            "sync_state": True,
+        },
+        id="number",
+    ),
+    pytest.param(
+        Platform.TEXT,
+        TextKnxConfig,
+        {"ga_text": {"write": "1/2/3", "dpt": "16.000"}},
+        {
+            "ga_text": {
+                "write": "1/2/3",
+                "state": None,
+                "passive": [],
+                "dpt": "16.000",
+            },
+            "mode": "text",
+            "respond_to_read": False,
+            "sync_state": True,
+        },
+        id="text",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("platform", "config_type", "knx_input", "knx_stored"), TYPED_CONFIG_CASES
+)
+def test_typed_config_storage_roundtrip(
+    platform: Platform,
+    config_type: type,
+    knx_input: dict[str, Any],
+    knx_stored: dict[str, Any],
+) -> None:
+    """Test typed configs render to the stored shape and load back unchanged."""
+    entity_input = {"name": "test"}
+    validated = validate_entity_data(
+        {CONF_PLATFORM: platform, CONF_DATA: {"entity": entity_input, "knx": knx_input}}
+    )[CONF_DATA]
+    assert isinstance(validated[DOMAIN], config_type)
+
+    stored = to_storage_dict(validated)
+    assert stored["knx"] == knx_stored
+    assert json.loads(json.dumps(stored)) == stored  # storage is JSON
+
+    reloaded = validate_entity_data({CONF_PLATFORM: platform, CONF_DATA: stored})[
+        CONF_DATA
+    ]
+    assert reloaded[DOMAIN] == validated[DOMAIN]
+    assert to_storage_dict(reloaded) == stored
+
+
+@pytest.mark.parametrize(
+    ("platform", "config_type", "knx_input", "knx_stored"), TYPED_CONFIG_CASES
+)
+def test_typed_config_field_order_is_ui_order(
+    platform: Platform,
+    config_type: type,
+    knx_input: dict[str, Any],
+    knx_stored: dict[str, Any],
+) -> None:
+    """Test the serialized schema lists fields in dataclass declaration order."""
+    serialized = get_serialized_schema(platform)
+    assert serialized is not None
+    assert [field["name"] for field in serialized] == [
+        field.name for field in dataclasses.fields(config_type)
+    ]
