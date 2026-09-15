@@ -67,12 +67,12 @@ async def test_diagnostic_entities_disabled_by_default(
     [
         pytest.param(
             614,
-            "sensor.de_dietrich_circuit_a_room_temperature",
+            "sensor.de_dietrich_heating_circuit_a_room_temperature",
             id="circuit_a",
         ),
         pytest.param(
             616,
-            "sensor.de_dietrich_circuit_b_room_temperature",
+            "sensor.de_dietrich_heating_circuit_b_room_temperature",
             id="circuit_b",
         ),
     ],
@@ -146,7 +146,7 @@ async def test_sensor_partial_update_failure(
     mock_connection: MockModbusConnection,
 ) -> None:
     """Test a failed circuit becomes unavailable while other readings update."""
-    circuit_id = "sensor.de_dietrich_circuit_a_room_temperature"
+    circuit_id = "sensor.de_dietrich_heating_circuit_a_room_temperature"
     outdoor_id = "sensor.de_dietrich_outdoor_temperature"
     assert hass.states.get(circuit_id).state == "21.0"
     assert hass.states.get(outdoor_id).state == "5.0"

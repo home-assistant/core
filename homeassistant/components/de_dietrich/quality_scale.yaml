@@ -68,8 +68,8 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices:
-    status: exempt
-    comment: A config entry maps to a single boiler, so no devices are added dynamically.
+    status: done
+    comment: A detected heating circuit or hot-water bundle is exposed as a ChildDeviceInfo for that circuit or hot water on the boiler device, so each detected bundle becomes its own child device.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done

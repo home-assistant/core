@@ -21,11 +21,20 @@ _LOGGER = logging.getLogger(__name__)
 type DeDietrichConfigEntry = ConfigEntry[DeDietrichDataUpdateCoordinator]
 
 
+CHILD_COMPONENT_DEVICE_NAMES: dict[str, str] = {
+    "hot_water": "Hot water",
+    "circuit_a": "Heating circuit A",
+    "circuit_b": "Heating circuit B",
+    "circuit_c": "Heating circuit C",
+}
+
+
 class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     """Class to manage fetching De Dietrich data."""
 
     config_entry: DeDietrichConfigEntry
     device: Diematic | DiematicISystem
+    parent_device_id: str
 
     def __init__(
         self,
@@ -42,6 +51,7 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.device = device
+        self.parent_device_id = ""
 
     @override
     async def _async_setup(self) -> None:
@@ -56,7 +66,7 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     @cached_property
     def device_info(self) -> dr.DeviceInfo:
-        """Return device information."""
+        """Return main boiler device information."""
         device = self.device
         sw_version = (
             device.identity.software_version
@@ -67,6 +77,20 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             identifiers={(DOMAIN, self.config_entry.entry_id)},
             manufacturer=ATTR_MANUFACTURER,
             sw_version=str(sw_version) if sw_version is not None else None,
+        )
+
+    def child_device_info(self, component: str) -> dr.ChildDeviceInfo | None:
+        """Return a ChildDeviceInfo for a detected component, or None for bundles that did not answer the latest poll."""
+        if component not in CHILD_COMPONENT_DEVICE_NAMES:
+            return None
+        if component not in self.data.updated:
+            return None
+        if component == "circuit_c" and not isinstance(self.device, DiematicISystem):
+            return None
+        return dr.ChildDeviceInfo(
+            identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{component}")},
+            parent_device_id=self.parent_device_id,
+            name=CHILD_COMPONENT_DEVICE_NAMES[component],
         )
 
     @override
