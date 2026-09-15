@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, Control4ConfigEntry, Control4RuntimeData
-from .director_utils import to_bool, update_variables_for_config_entry
+from .director_utils import update_variables_for_config_entry
 from .entity import Control4CoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -260,11 +260,11 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
         while current_source:
             current_data = self.coordinator.data.get(current_source, None)
             if current_data:
-                if to_bool(current_data.get(CONTROL4_PLAYING)):
+                if current_data.get(CONTROL4_PLAYING, None):
                     return MediaPlayerState.PLAYING
-                if to_bool(current_data.get(CONTROL4_PAUSED)):
+                if current_data.get(CONTROL4_PAUSED, None):
                     return MediaPlayerState.PAUSED
-                if to_bool(current_data.get(CONTROL4_STOPPED)):
+                if current_data.get(CONTROL4_STOPPED, None):
                     return MediaPlayerState.ON
                 state = current_data.get(CONTROL4_SOURCE_STATE, None)
                 if isinstance(state, str):
@@ -295,7 +295,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
         if source_state := self._get_current_source_state():
             return source_state
 
-        if to_bool(self.coordinator.data[self._idx][CONTROL4_POWER_STATE]):
+        if self.coordinator.data[self._idx][CONTROL4_POWER_STATE]:
             return MediaPlayerState.ON
 
         return MediaPlayerState.IDLE
@@ -361,7 +361,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
     @override
     def is_volume_muted(self) -> bool | None:
         """Check if the volume is muted."""
-        return to_bool(self.coordinator.data[self._idx][CONTROL4_MUTED_STATE])
+        return bool(self.coordinator.data[self._idx][CONTROL4_MUTED_STATE])
 
     @override
     async def async_select_source(self, source: str) -> None:
