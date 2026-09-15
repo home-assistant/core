@@ -155,9 +155,13 @@ async def async_setup_entry(
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: DevoloHomeNetworkConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Allow removing a Wi-Fi client that is not connected to any access point."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
+
     if config_entry.state is not ConfigEntryState.LOADED:
         return False
 
