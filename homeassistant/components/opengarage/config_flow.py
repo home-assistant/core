@@ -48,7 +48,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if not {"name", "mac"} <= status.keys():
         raise CannotConnect
 
-    return {"title": status.get("name"), "unique_id": format_mac(status["mac"])}
+    return {"title": status["name"], "unique_id": format_mac(status["mac"])}
 
 
 class OpenGarageConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -72,8 +72,6 @@ class OpenGarageConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -90,7 +88,3 @@ class OpenGarageConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

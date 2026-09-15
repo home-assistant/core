@@ -20,7 +20,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
+
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 async def _simulate_door_state(
@@ -47,7 +49,6 @@ async def _simulate_door_state(
 async def test_cover_position(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
-    init_integration: MockConfigEntry,
     door_state: int,
     expected_state: str,
     expected_position: int,
@@ -63,7 +64,6 @@ async def test_cover_position(
 async def test_cover_position_during_transition(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
-    init_integration: MockConfigEntry,
 ) -> None:
     """Test that current_cover_position is None during opening/closing transition."""
     await _simulate_door_state(hass, mock_opengarage, 0)
@@ -99,7 +99,6 @@ async def test_cover_position_during_transition(
 async def test_toggle_cover(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
-    init_integration: MockConfigEntry,
     initial_door_state: int,
     initial_state: str,
     initial_position: int,
@@ -136,7 +135,6 @@ async def test_toggle_cover(
 async def test_toggle_does_not_reuse_stale_close_direction(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
-    init_integration: MockConfigEntry,
 ) -> None:
     """Test toggle direction is derived from position, not a stale cached direction.
 
@@ -216,7 +214,6 @@ async def test_toggle_does_not_reuse_stale_close_direction(
 async def test_cover_command(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
-    init_integration: MockConfigEntry,
     initial_door_state: int,
     service: str,
     final_door_state: int,
@@ -245,7 +242,6 @@ async def test_cover_command(
     assert state.attributes[ATTR_CURRENT_POSITION] == final_position
 
 
-@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("door", "expected", "position"),
     [
@@ -272,7 +268,6 @@ async def test_reported_states(
     assert state.attributes.get(ATTR_CURRENT_POSITION) == position
 
 
-@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("service", "method"),
     [
@@ -292,9 +287,14 @@ async def test_stopped_commands(
     mock_opengarage.push_button.assert_not_called()
 
 
-@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    "door", [pytest.param(0, id="closed"), pytest.param(5, id="unknown")]
+    ("door", "service", "method"),
+    [
+        pytest.param(0, SERVICE_OPEN_COVER, "push_open_button", id="open_closed"),
+        pytest.param(5, SERVICE_OPEN_COVER, "push_open_button", id="open_unknown"),
+        pytest.param(1, SERVICE_CLOSE_COVER, "push_close_button", id="close_open"),
+        pytest.param(5, SERVICE_CLOSE_COVER, "push_close_button", id="close_unknown"),
+    ],
 )
 @pytest.mark.parametrize(
     "result",
@@ -306,23 +306,27 @@ async def test_stopped_commands(
     ],
 )
 async def test_command_result_failure(
-    hass: HomeAssistant, mock_opengarage: MagicMock, door: int, result: int | str | None
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    door: int,
+    service: str,
+    method: str,
+    result: int | str | None,
 ) -> None:
     """Failed commands restore the reported state, including unknown."""
     await _simulate_door_state(hass, mock_opengarage, door)
     before = hass.states.get("cover.garage_abcdef").state
-    mock_opengarage.push_open_button.return_value = result
+    getattr(mock_opengarage, method).return_value = result
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
+            service,
             {ATTR_ENTITY_ID: "cover.garage_abcdef"},
             blocking=True,
         )
     assert hass.states.get("cover.garage_abcdef").state == before
 
 
-@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     "error",
     [
@@ -345,7 +349,6 @@ async def test_command_exception(
     assert hass.states.get("cover.garage_abcdef").state == STATE_CLOSED
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_movement_timeout(
     hass: HomeAssistant, mock_opengarage: MagicMock
 ) -> None:
