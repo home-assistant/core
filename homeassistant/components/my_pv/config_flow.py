@@ -219,7 +219,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an authentication error."""
-        _LOGGER.debug("Reauthentication needed for my-PV device")
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
