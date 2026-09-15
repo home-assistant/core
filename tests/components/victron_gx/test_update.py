@@ -31,7 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import async_update_entity
 
 from .const import MOCK_INSTALLATION_ID
 
@@ -70,7 +69,6 @@ async def test_firmware_update_entity(
 
     entity = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     update_entry = next(entry for entry in entity if entry.domain == UPDATE_DOMAIN)
-    await async_update_entity(hass, update_entry.entity_id)
 
     state = hass.states.get(update_entry.entity_id)
     assert state is not None
@@ -98,7 +96,7 @@ async def test_firmware_update_entity(
         '{"value": 25}',
     )
     await finalize_injection(victron_hub)
-    await async_update_entity(hass, update_entry.entity_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get(update_entry.entity_id)
     assert state is not None
@@ -121,7 +119,6 @@ async def test_install_firmware_update_service(
         )
         if entry.domain == UPDATE_DOMAIN
     )
-    await async_update_entity(hass, update_entry.entity_id)
 
     with patch.object(
         config_entry.runtime_data,
@@ -155,7 +152,6 @@ async def test_install_propagates_translated_failure_and_clears_progress(
         )
         if entry.domain == UPDATE_DOMAIN
     )
-    await async_update_entity(hass, update_entry.entity_id)
 
     with (
         patch.object(
