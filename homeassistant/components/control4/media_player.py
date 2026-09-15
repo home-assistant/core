@@ -290,7 +290,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
 
     @property
     @override
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return whether this room is on or idle."""
 
         if source_state := self._get_current_source_state():
@@ -303,7 +303,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
 
     @property
     @override
-    def source(self):
+    def source(self) -> str | None:
         """Get the current source."""
         current_source = self._get_current_playing_device_id()
         if not current_source or current_source not in self._sources:
@@ -326,7 +326,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
 
     @property
     @override
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | str | None:
         """Get current content type if available."""
         current_source = self._get_current_playing_device_id()
         if not current_source:
@@ -336,7 +336,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
         return MediaType.MUSIC
 
     @override
-    async def async_media_play_pause(self):
+    async def async_media_play_pause(self) -> None:
         """If possible, toggle the current play/pause state.
 
         Not every source supports play/pause.
@@ -354,13 +354,13 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
 
     @property
     @override
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Get the volume level."""
         return self.coordinator.data[self._idx][CONTROL4_VOLUME_STATE] / 100
 
     @property
     @override
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Check if the volume is muted."""
         return bool(self.coordinator.data[self._idx][CONTROL4_MUTED_STATE])
 
@@ -381,13 +381,13 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
         await self.coordinator.async_request_refresh()
 
     @override
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off the room."""
         await self._create_api_object().set_room_off()
         await self.coordinator.async_request_refresh()
 
     @override
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the room."""
         if mute:
             await self._create_api_object().set_mute_on()
@@ -396,37 +396,37 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
         await self.coordinator.async_request_refresh()
 
     @override
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set room volume, 0-1 scale."""
         await self._create_api_object().set_volume(int(volume * 100))
         await self.coordinator.async_request_refresh()
 
     @override
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Increase the volume by 1."""
         await self._create_api_object().set_increment_volume()
         await self.coordinator.async_request_refresh()
 
     @override
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Decrease the volume by 1."""
         await self._create_api_object().set_decrement_volume()
         await self.coordinator.async_request_refresh()
 
     @override
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Issue a pause command."""
         await self._create_api_object().set_pause()
         await self.coordinator.async_request_refresh()
 
     @override
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Issue a play command."""
         await self._create_api_object().set_play()
         await self.coordinator.async_request_refresh()
 
     @override
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Issue a stop command."""
         await self._create_api_object().set_stop()
         await self.coordinator.async_request_refresh()
