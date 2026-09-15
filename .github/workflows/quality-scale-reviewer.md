@@ -100,9 +100,9 @@ jobs:
             echo "pr_number=${INPUT_PR_NUMBER}" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
-          MATCHES=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${HEAD_SHA}/pulls" \
-            | jq -c --arg sha "${HEAD_SHA}" --arg repo "${HEAD_REPO}" \
-              '[.[] | select(.state == "open" and .head.sha == $sha and .head.repo.full_name == $repo and .draft == false) | .number]')
+          MATCHES=$(gh api "repos/${HEAD_REPO}/commits/${HEAD_SHA}/pulls" \
+            | jq -c --arg sha "${HEAD_SHA}" --arg repo "${HEAD_REPO}" --arg base "${GITHUB_REPOSITORY}" \
+              '[.[] | select(.state == "open" and .base.repo.full_name == $base and .head.sha == $sha and .head.repo.full_name == $repo and .draft == false) | .number]')
           COUNT=$(jq 'length' <<< "${MATCHES}")
           if [ "${COUNT}" -ne 1 ]; then
             echo "Expected one open, non-draft pull request for ${HEAD_REPO}@${HEAD_SHA}, found ${COUNT}: ${MATCHES}"
