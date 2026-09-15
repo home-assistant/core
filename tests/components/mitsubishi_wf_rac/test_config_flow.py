@@ -189,14 +189,17 @@ async def test_a_registration_the_module_declined_stays_in_the_form(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_a_registration_code_the_library_does_not_know_is_accepted(
-    hass: HomeAssistant, mock_repository: AsyncMock
+async def test_a_registration_code_the_library_does_not_know_is_logged(
+    hass: HomeAssistant,
+    mock_repository: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """The benefit of the doubt, deliberately.
+    """The benefit of the doubt, deliberately - but not in silence.
 
-    It is not established that every firmware answers a successful
-    registration with 0, and refusing setup over a code nobody has seen would
-    leave those units unusable - the wrong way round for a guess.
+    The firmware we can read maps its handler onto 0/1/2/11/12 and nothing
+    else, so this is a branch nobody has seen. Refusing setup over it would
+    leave a unit that answers it unusable, which is the wrong way round for a
+    guess; the log line is the evidence that does not exist yet.
     """
     mock_repository.update_account_info.return_value = {"result": 7}
 
@@ -208,6 +211,7 @@ async def test_a_registration_code_the_library_does_not_know_is_accepted(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "answered the registration with result 7" in caplog.text
 
 
 async def test_user_flow_registration_refused(

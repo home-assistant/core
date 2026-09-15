@@ -155,11 +155,22 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise TooManyDevicesRegistered
         # Every other code the library knows says the registration did not
         # happen, so the form says so rather than storing an entry that cannot
-        # poll. A code the library does not know is taken as a success: it is
-        # not established that every firmware answers one with 0, and refusing
-        # setup over that would leave those units unusable.
+        # poll.
         if code != 0 and code in RESULT_CODES:
             raise CannotConnect(reason=RESULT_CODES[code])
+        if code != 0:
+            # Not refused: the handler of the firmware we can read maps its
+            # return value onto 0/1/2/11/12 and nothing else, so this is a
+            # branch we have never seen. Taking it for a failure would leave a
+            # unit that answers it unusable, so it is logged and let through -
+            # and the log line is the evidence we do not have yet.
+            _LOGGER.warning(
+                "Airco [%s] answered the registration with result %s, which is "
+                "not a code this integration knows. Setup continues. Please "
+                "report this together with the module's firmware version",
+                data[CONF_AIRCO_ID],
+                code,
+            )
 
         return data
 
