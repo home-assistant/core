@@ -755,6 +755,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/hdmi_cec/ @inytar
 /tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
+/homeassistant/components/heiman_home/ @heimanhome
+/tests/components/heiman_home/ @heimanhome
 /homeassistant/components/hegel/ @boazca
 /tests/components/hegel/ @boazca
 /homeassistant/components/helty/ @ebaschiera
