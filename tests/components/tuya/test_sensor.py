@@ -206,7 +206,7 @@ async def test_delta_report_sensor(
             (
                 "Incompatible unit invalid_uom replaced by entity description "
                 "unit kWh for device class energy in sensor entity "
-                "tuya.fcdadqsiax2gvnt0qldadd_ele; use a quirk "
+                "fcdadqsiax2gvnt0qld.add_ele; use a quirk "
                 "(https://github.com/home-assistant-libs/tuya-device-handlers) "
                 "to override"
             ),
@@ -218,7 +218,7 @@ async def test_delta_report_sensor(
             "invalid_uom",
             (
                 "Device class temperature ignored for incompatible unit invalid_uom "
-                "in sensor entity tuya.rzt2knqamsxjp8f9ycjjhtemp_current"
+                "in sensor entity rzt2knqamsxjp8f9ycjjh.temp_current"
             ),
         ),
         (
@@ -228,7 +228,7 @@ async def test_delta_report_sensor(
             "invalid_uom",
             (
                 "Device class pressure ignored for incompatible unit invalid_uom "
-                "in sensor entity tuya.ai9swgb6tyinbwbxjxqatmospheric_pressture"
+                "in sensor entity ai9swgb6tyinbwbxjxq.atmospheric_pressture"
             ),
         ),
     ],
@@ -322,5 +322,5 @@ async def test_temp_unit_convert_sensor_invalid(
     assert state.attributes.get("unit_of_measurement") == ""
     assert (
         "Device class temperature ignored for incompatible unit  in "
-        "sensor entity tuya.zuqudhznfzttizpgbrnztemp_current"
+        "sensor entity zuqudhznfzttizpgbrnz.temp_current"
     ) in caplog.text

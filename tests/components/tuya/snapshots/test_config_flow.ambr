@@ -18,7 +18,7 @@
     }),
     'domain': 'tuya',
     'entry_id': <ANY>,
-    'minor_version': 1,
+    'minor_version': 2,
     'options': dict({
     }),
     'pref_disable_new_entities': False,
@@ -52,7 +52,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'tuya',
-    'minor_version': 1,
+    'minor_version': 2,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -73,7 +73,7 @@
       }),
       'domain': 'tuya',
       'entry_id': <ANY>,
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
