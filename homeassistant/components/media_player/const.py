@@ -3,6 +3,8 @@
 from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING, Final
 
+import probatio
+
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
 from homeassistant.util.hass_dict import HassKey
 
@@ -216,3 +218,19 @@ class MediaPlayerEntityFeature(IntFlag):
     MEDIA_ANNOUNCE = 1048576
     MEDIA_ENQUEUE = 2097152
     SEARCH_MEDIA = 4194304
+
+
+class MediaPlayerDeviceClass(StrEnum):
+    """Device class for media players."""
+
+    TV = "tv"
+    SPEAKER = "speaker"
+    RECEIVER = "receiver"
+    PROJECTOR = "projector"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(
+    probatio.Lower, probatio.Coerce(MediaPlayerDeviceClass)
+)
+
+DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]

@@ -1,5 +1,6 @@
 """Provide common notify constants."""
 
+from enum import IntFlag
 import logging
 from typing import TYPE_CHECKING, Final
 
@@ -45,3 +46,9 @@ NOTIFY_SERVICE_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_DATA): dict,
     }
 )
+
+
+class NotifyEntityFeature(IntFlag):
+    """Supported features of a notify entity."""
+
+    TITLE = 1

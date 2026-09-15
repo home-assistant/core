@@ -1,7 +1,6 @@
 """Component to interface with locks that can be controlled remotely."""
 
 from datetime import timedelta
-from enum import IntFlag
 import functools as ft
 import logging
 import re
@@ -25,7 +24,13 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
-from .const import DATA_COMPONENT, DOMAIN, LockEntityStateAttribute, LockState
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    LockEntityFeature,
+    LockEntityStateAttribute,
+    LockState,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,12 +47,6 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 LOCK_SERVICE_SCHEMA = cv.make_entity_service_schema(
     {probatio.Optional(ATTR_CODE): cv.string}
 )
-
-
-class LockEntityFeature(IntFlag):
-    """Supported features of the lock entity."""
-
-    OPEN = 1
 
 
 PROP_TO_ATTR = {

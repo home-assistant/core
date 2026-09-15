@@ -2,7 +2,6 @@
 
 from collections.abc import Iterable
 from datetime import timedelta
-from enum import IntFlag
 import functools as ft
 import logging
 from typing import Any, final, override
@@ -24,7 +23,12 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_COMPONENT, DOMAIN, RemoteEntityStateAttribute
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    RemoteEntityFeature,
+    RemoteEntityStateAttribute,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,14 +58,6 @@ SERVICE_SYNC = "sync"
 DEFAULT_NUM_REPEATS = 1
 DEFAULT_DELAY_SECS = 0.4
 DEFAULT_HOLD_SECS = 0
-
-
-class RemoteEntityFeature(IntFlag):
-    """Supported features of the remote entity."""
-
-    LEARN_COMMAND = 1
-    DELETE_COMMAND = 2
-    ACTIVITY = 4
 
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = cv.make_entity_service_schema(

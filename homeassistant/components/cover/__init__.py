@@ -39,6 +39,8 @@ from .const import (
     ATTR_SPEED,
     ATTR_TILT_POSITION,
     DATA_COMPONENT,
+    DEVICE_CLASSES,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     INTENT_CLOSE_COVER,
     INTENT_OPEN_COVER,
@@ -57,8 +59,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=15)
 
-DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(CoverDeviceClass))
-DEVICE_CLASSES = [cls.value for cls in CoverDeviceClass]
 
 # mypy: disallow-any-generics
 

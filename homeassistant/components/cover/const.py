@@ -3,6 +3,8 @@
 from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING, Final
 
+import probatio
+
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
@@ -77,3 +79,8 @@ class CoverDeviceClass(StrEnum):
     SHADE = "shade"
     SHUTTER = "shutter"
     WINDOW = "window"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(CoverDeviceClass))
+
+DEVICE_CLASSES = [cls.value for cls in CoverDeviceClass]

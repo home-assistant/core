@@ -1,7 +1,6 @@
 """Support for water heater devices."""
 
 from datetime import timedelta
-from enum import IntFlag
 import functools as ft
 import logging
 from typing import Any, final, override
@@ -33,6 +32,7 @@ from .const import (
     DATA_COMPONENT,
     DOMAIN,
     WaterHeaterCapabilityAttribute,
+    WaterHeaterEntityFeature,
     WaterHeaterStateAttribute,
 )
 
@@ -54,15 +54,6 @@ STATE_PERFORMANCE = "performance"
 STATE_HIGH_DEMAND = "high_demand"
 STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
-
-
-class WaterHeaterEntityFeature(IntFlag):
-    """Supported features of the water heater entity."""
-
-    TARGET_TEMPERATURE = 1
-    OPERATION_MODE = 2
-    AWAY_MODE = 4
-    ON_OFF = 8
 
 
 ATTR_MAX_TEMP = "max_temp"

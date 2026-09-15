@@ -11,3 +11,16 @@ class ImageProcessingEntityStateAttribute(StrEnum):
 
     FACES = "faces"
     TOTAL_FACES = "total_faces"
+
+
+class ImageProcessingDeviceClass(StrEnum):
+    """Device class for image processing entities."""
+
+    # Automatic license plate recognition
+    ALPR = "alpr"
+
+    # Face
+    FACE = "face"
+
+    # OCR
+    OCR = "ocr"

@@ -1,6 +1,6 @@
 """Constants for the lock entity platform."""
 
-from enum import StrEnum
+from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
@@ -32,3 +32,9 @@ class LockState(StrEnum):
     UNLOCKING = "unlocking"
     LOCKED = "locked"
     UNLOCKED = "unlocked"
+
+
+class LockEntityFeature(IntFlag):
+    """Supported features of the lock entity."""
+
+    OPEN = 1

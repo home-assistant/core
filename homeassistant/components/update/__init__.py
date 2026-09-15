@@ -1,7 +1,6 @@
 """Component to allow for providing device or service updates."""
 
 from datetime import timedelta
-from enum import StrEnum
 from functools import lru_cache
 import logging
 from typing import Any, Final, final, override
@@ -40,9 +39,11 @@ from .const import (  # noqa: F401
     ATTR_UPDATE_PERCENTAGE,
     ATTR_VERSION,
     DATA_COMPONENT,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     SERVICE_INSTALL,
     SERVICE_SKIP,
+    UpdateDeviceClass,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
 )
@@ -53,15 +54,6 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(minutes=15)
-
-
-class UpdateDeviceClass(StrEnum):
-    """Device class for update."""
-
-    FIRMWARE = "firmware"
-
-
-DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(UpdateDeviceClass))
 
 
 __all__ = [

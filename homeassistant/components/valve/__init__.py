@@ -24,6 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
     DATA_COMPONENT,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     ValveDeviceClass,
     ValveEntityFeature,
@@ -43,9 +44,6 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=15)
-
-
-DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(ValveDeviceClass))
 
 
 ATTR_POSITION = "position"

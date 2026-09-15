@@ -3,6 +3,8 @@
 from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING, Final
 
+import probatio
+
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
@@ -71,3 +73,19 @@ class HumidifierEntityFeature(IntFlag):
     """Supported features of the humidifier entity."""
 
     MODES = 1
+
+
+class HumidifierDeviceClass(StrEnum):
+    """Device class for humidifiers."""
+
+    HUMIDIFIER = "humidifier"
+    DEHUMIDIFIER = "dehumidifier"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(
+    probatio.Lower, probatio.Coerce(HumidifierDeviceClass)
+)
+
+# DEVICE_CLASSES below is deprecated as of 2021.12
+# use the HumidifierDeviceClass enum instead.
+DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]
