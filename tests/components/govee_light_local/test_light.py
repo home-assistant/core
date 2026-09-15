@@ -786,6 +786,4 @@ async def test_color_temp_clamped_to_device_ceiling(
     )
     await hass.async_block_till_done()
 
-    mock_govee_api.set_color.assert_awaited_with(
-        device, rgb=None, temperature=9000
-    )
+    mock_govee_api.set_color.assert_awaited_with(device, rgb=None, temperature=9000)
