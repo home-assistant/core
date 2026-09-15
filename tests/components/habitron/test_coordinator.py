@@ -6,6 +6,7 @@ These tests cover that span -- the setup path, the poll path, and the identity
 rules that only Home Assistant can apply.
 """
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from habitron_client import (
@@ -59,7 +60,7 @@ def _ready(hass: HomeAssistant, entry=None) -> HbtnCoordinator:
 
 
 @pytest.fixture
-def mock_refresh():
+def mock_refresh() -> Generator[tuple[AsyncMock, AsyncMock]]:
     """Stub both refresh calls the poll makes."""
     with (
         patch(
@@ -70,7 +71,9 @@ def mock_refresh():
         yield bus, host
 
 
-async def test_update_returns_the_status_crc(hass: HomeAssistant, mock_refresh) -> None:
+async def test_update_returns_the_status_crc(
+    hass: HomeAssistant, mock_refresh: tuple[AsyncMock, AsyncMock]
+) -> None:
     """The CRC is the change-detection key the coordinator hands back."""
     bus, host = mock_refresh
     coord = _ready(hass)
@@ -80,7 +83,7 @@ async def test_update_returns_the_status_crc(hass: HomeAssistant, mock_refresh) 
 
 
 async def test_update_feeds_the_previous_crc_back(
-    hass: HomeAssistant, mock_refresh
+    hass: HomeAssistant, mock_refresh: tuple[AsyncMock, AsyncMock]
 ) -> None:
     """An unchanged bus must be able to skip the module re-parse."""
     bus, _ = mock_refresh
@@ -101,7 +104,7 @@ async def test_update_feeds_the_previous_crc_back(
 )
 async def test_update_translates_poll_failures(
     hass: HomeAssistant,
-    mock_refresh,
+    mock_refresh: tuple[AsyncMock, AsyncMock],
     side_effect: Exception,
     expected_key: str,
 ) -> None:
@@ -119,7 +122,9 @@ async def test_update_translates_poll_failures(
     [HabitronError("protocol glitch"), OSError("socket gone"), TimeoutError("slow")],
 )
 async def test_host_readings_never_fail_the_tick(
-    hass: HomeAssistant, mock_refresh, raised: Exception
+    hass: HomeAssistant,
+    mock_refresh: tuple[AsyncMock, AsyncMock],
+    raised: Exception,
 ) -> None:
     """Host readings are non-essential.
 
@@ -132,10 +137,38 @@ async def test_host_readings_never_fail_the_tick(
     assert await coord._async_update_data() == 4711
 
 
+@pytest.mark.parametrize(
+    "raised",
+    [HabitronError("protocol glitch"), OSError("socket gone"), TimeoutError("slow")],
+)
+async def test_failed_host_poll_marks_the_readings_stale(
+    hass: HomeAssistant,
+    mock_refresh: tuple[AsyncMock, AsyncMock],
+    raised: Exception,
+) -> None:
+    """A swallowed host error is still recorded, and cleared once one answers.
+
+    Keeping the last CPU/memory/disk values is only defensible while something
+    says they are no longer live -- ``SmartHub.host_valid`` cannot, it only ever
+    turns true.
+    """
+    _, host = mock_refresh
+    coord = _ready(hass)
+    assert coord.host_readings_ok is True
+
+    host.side_effect = raised
+    await coord._async_update_data()
+    assert coord.host_readings_ok is False
+
+    host.side_effect = None
+    await coord._async_update_data()
+    assert coord.host_readings_ok is True
+
+
 async def test_router_system_error_raises_and_clears_a_repair_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mock_refresh,
+    mock_refresh: tuple[AsyncMock, AsyncMock],
 ) -> None:
     """An active fault is ERROR severity and names the hub.
 
@@ -160,7 +193,7 @@ async def test_router_system_error_raises_and_clears_a_repair_issue(
 async def test_router_issue_is_cleared_on_unload(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mock_refresh,
+    mock_refresh: tuple[AsyncMock, AsyncMock],
 ) -> None:
     """Without this an entry removed while faulty leaves a stale warning.
 

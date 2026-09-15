@@ -32,6 +32,7 @@ from homeassistant.components.habitron.sensor import (
     WIND_DESCRIPTION,
     WIND_PEAK_DESCRIPTION,
     HbtnDescribedSensor,
+    HbtnHostSensor,
     HbtnSensor,
     HbtnSensorEntityDescription,
     LogicSensor,
@@ -926,6 +927,34 @@ async def test_analog_input_created_for_module_type_beyond_hardcoded_set(
         entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
         is not None
     )
+
+
+@pytest.mark.parametrize(
+    ("readings_ok", "expected"),
+    [pytest.param(True, True, id="fresh"), pytest.param(False, False, id="stale")],
+)
+def test_host_sensor_unavailable_while_the_hub_stays_silent(
+    readings_ok: bool, expected: bool
+) -> None:
+    """A hub reading reports itself unavailable once its poll stops answering.
+
+    The host poll swallows its errors so a hiccup cannot take the bus entities
+    down with it; the cost is that the last CPU/memory/disk value would stand
+    forever, looking live. Only these entities follow the host poll -- a bus
+    sensor built from the same class is untouched by it.
+    """
+    coord = MagicMock(spec=DataUpdateCoordinator)
+    coord.host_readings_ok = readings_ok
+    coord.last_update_success = True
+    hub = SmartHub(diags=[Diagnostic(name="CPU load", nmbr=0, type=10, value=42.0)])
+
+    host_entity = HbtnHostSensor(hub, hub.diags[0], coord, 0, CPU_LOAD_DESCRIPTION)
+    assert host_entity.available is expected
+
+    bus_entity = HbtnDescribedSensor(
+        _make_module(), _make_sensor_descriptor(type_=1), coord, 0, HUMIDITY_DESCRIPTION
+    )
+    assert bus_entity.available is True
 
 
 async def test_host_readings_unknown_until_first_hub_answer() -> None:

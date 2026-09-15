@@ -117,6 +117,14 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
         # unchanged bus skips the module re-parse.
         self.crc = 0
 
+        # Whether the last host poll answered. The hub's own readings are
+        # refreshed separately and their errors are swallowed (see
+        # ``_async_update_host``), so without this they would keep reporting
+        # their last value indefinitely, indistinguishable from a live one.
+        # ``SmartHub.host_valid`` cannot say this: it means "a host poll has
+        # ever succeeded" and never goes back to false.
+        self.host_readings_ok = True
+
         # Integration version reported to the hub. Resolved from the loader in
         # ``_async_setup`` (core manifests carry no version, so it stays 0.0.0
         # there).
@@ -410,6 +418,10 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
         next tick refreshes them. Genuine connectivity loss still surfaces
         through the bus refresh above.
 
+        The failure is recorded in ``host_readings_ok`` so the hub's own
+        entities can report themselves unavailable: keeping the last values is
+        only defensible while something says they are no longer live.
+
         A hub platform that reports no host readings is skipped inside
         ``async_refresh_hub`` without a wire round trip.
         """
@@ -419,6 +431,9 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
             )
         except (HabitronError, OSError, TimeoutError) as err:
             _LOGGER.debug("SmartHub host readings skipped: %s", err)
+            self.host_readings_ok = False
+        else:
+            self.host_readings_ok = True
 
     def async_clear_router_issue(self) -> None:
         """Delete this entry's router repair issue on unload.

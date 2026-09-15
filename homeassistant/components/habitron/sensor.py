@@ -127,11 +127,13 @@ async def async_setup_entry(
         member: Any,
         descriptions: tuple[HbtnSensorEntityDescription, ...],
         initial_area_id: str | None = None,
+        *,
+        entity_class: type[HbtnDescribedSensor] = HbtnDescribedSensor,
     ) -> None:
         """Create one entity per description for this bus member."""
         for description in descriptions:
             new_devices.append(
-                HbtnDescribedSensor(
+                entity_class(
                     owner,
                     member,
                     hbtn_cord,
@@ -142,9 +144,19 @@ async def async_setup_entry(
             )
 
     for smhub_sensor in smhub.sensors:
-        add_described(smhub, smhub_sensor, HUB_SENSORS.get(smhub_sensor.name, ()))
+        add_described(
+            smhub,
+            smhub_sensor,
+            HUB_SENSORS.get(smhub_sensor.name, ()),
+            entity_class=HbtnHostSensor,
+        )
     for smhub_diag in smhub.diags:
-        add_described(smhub, smhub_diag, HUB_DIAGS.get(smhub_diag.name, ()))
+        add_described(
+            smhub,
+            smhub_diag,
+            HUB_DIAGS.get(smhub_diag.name, ()),
+            entity_class=HbtnHostSensor,
+        )
 
     for hbt_module in hbtn_rt.modules:
         # The library only populates ``analogins`` for modules that have analog
@@ -340,6 +352,24 @@ class HbtnDescribedSensor(HbtnSensor):
             self._module, self._sensor_idx
         )
         self.async_write_ha_state()
+
+
+class HbtnHostSensor(HbtnDescribedSensor):
+    """A reading of the hub itself rather than of the bus.
+
+    Host readings are polled apart from the bus status and their errors are
+    swallowed, so that a hub-diagnostics hiccup cannot mark every bus entity
+    unavailable. That trade only holds while the readings say when they stopped
+    being live: ``SmartHub.host_valid`` means "a poll has ever succeeded" and
+    never goes back to false, so CPU, memory and disk would otherwise keep
+    reporting their last value indefinitely, indistinguishable from a fresh one.
+    """
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Whether the hub answered the most recent host poll."""
+        return super().available and self.coordinator.host_readings_ok
 
 
 class LogicSensor(HbtnDescribedSensor):
