@@ -6,12 +6,25 @@ from typing import Any, override
 import probatio
 from zhong_hong_hvac.hub import ZhongHongGateway
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import (
+    ALL_FAN_MODES,
+    CONF_FAN_MODES,
     CONF_GATEWAY_ADDRESS,
     DEFAULT_GATEWAY_ADDRESS,
     DEFAULT_PORT,
@@ -26,6 +39,22 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(
             CONF_GATEWAY_ADDRESS, default=DEFAULT_GATEWAY_ADDRESS
         ): cv.positive_int,
+    }
+)
+
+OPTIONS_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_FAN_MODES): probatio.All(
+            SelectSelector(
+                SelectSelectorConfig(
+                    options=ALL_FAN_MODES,
+                    multiple=True,
+                    mode=SelectSelectorMode.LIST,
+                    translation_key="fan_modes",
+                )
+            ),
+            probatio.Length(min=1),
+        )
     }
 )
 
@@ -65,6 +94,13 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ZhongHong."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Return the options flow."""
+        return ZhongHongOptionsFlow()
 
     @override
     async def async_step_user(
@@ -120,3 +156,33 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=error)
 
         return self.async_create_entry(title=import_data[CONF_HOST], data=import_data)
+
+
+class ZhongHongOptionsFlow(OptionsFlowWithReload):
+    """Handle the ZhongHong options.
+
+    The fan speeds live here because the protocol has no way to ask a unit
+    which of its five speeds it actually has: a three-speed unit is not
+    telling one that simply never ran at the other two apart. They are named
+    by hand so the ones a unit does not have can be dropped, rather than
+    offered and left to do nothing when picked.
+    """
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user name the fan speeds their air conditioners have."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA,
+                {
+                    CONF_FAN_MODES: self.config_entry.options.get(
+                        CONF_FAN_MODES, ALL_FAN_MODES
+                    )
+                },
+            ),
+        )

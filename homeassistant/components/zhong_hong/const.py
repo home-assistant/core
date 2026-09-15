@@ -16,6 +16,11 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_GATEWAY_ADDRESS: Final = "gateway_address"
 
+# The fan speeds the air conditioners behind a gateway have, chosen in the
+# options. Kept for the whole entry: the units behind one gateway are usually
+# the same model, so they share the speeds.
+CONF_FAN_MODES: Final = "fan_modes"
+
 FAN_MEDIUM_LOW: Final = "medium_low"
 FAN_MEDIUM_HIGH: Final = "medium_high"
 

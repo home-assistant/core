@@ -25,6 +25,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.zhong_hong.const import (
     ALL_FAN_MODES,
+    CONF_FAN_MODES,
+    CONF_GATEWAY_ADDRESS,
+    DEFAULT_GATEWAY_ADDRESS,
+    DEFAULT_PORT,
     DOMAIN,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
@@ -33,6 +37,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
+    CONF_HOST,
+    CONF_PORT,
     STATE_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -43,7 +49,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
 
 from . import setup_integration
-from .conftest import DEVICE_ADDRESS, ENTITY_ID, FakeGateway, build_status
+from .conftest import DEVICE_ADDRESS, ENTITY_ID, HOST, FakeGateway, build_status
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -630,3 +636,36 @@ async def test_every_fan_mode_has_a_name(
         FAN_MEDIUM_HIGH: None,
         FAN_HIGH: "High",
     }
+
+
+async def test_an_entity_offers_the_fan_modes_set_for_its_gateway(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+) -> None:
+    """Test an air conditioner offers the fan speeds chosen for its gateway.
+
+    Not the five it can address, but the ones the options were narrowed to.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_GATEWAY_ADDRESS: DEFAULT_GATEWAY_ADDRESS,
+        },
+        options={CONF_FAN_MODES: [FAN_LOW, FAN_HIGH]},
+    )
+    await setup_integration(hass, entry)
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODES] == [FAN_LOW, FAN_HIGH]
+
+
+async def test_an_entity_without_options_offers_every_fan_mode(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an air conditioner offers all five speeds until the options narrow them."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODES] == ALL_FAN_MODES
