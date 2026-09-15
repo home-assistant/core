@@ -28,7 +28,7 @@ USER_INPUT = {CONF_HOST: HOST, CONF_PORT: PORT}
 
 
 def _discovery_info(
-    port: int = PORT, host: str = HOST, airco_id: str = AIRCO_ID
+    port: int | None = PORT, host: str = HOST, airco_id: str = AIRCO_ID
 ) -> ZeroconfServiceInfo:
     return ZeroconfServiceInfo(
         ip_address=host,
@@ -330,6 +330,73 @@ async def test_a_port_corrected_in_the_form_is_not_second_guessed(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
     assert mock_repository.get_airco_id.await_count == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_the_form_suggests_the_port_that_answered(
+    hass: HomeAssistant, mock_repository: AsyncMock
+) -> None:
+    """A fallback that worked must not be undone by the next submission.
+
+    Registration is a second request and can fail on its own. The form comes
+    back with the port the query actually answered on, so confirming it does
+    not walk the dead announced port and the fallback all over again.
+    """
+    mock_repository.get_airco_id.side_effect = [
+        WfRacConnectionError("x"),
+        AIRCO_ID,
+        AIRCO_ID,
+    ]
+    mock_repository.update_account_info.return_value = {"result": 2}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info(port=5353)
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PORT: 5353}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "too_many_devices_registered"
+    suggested = {
+        key.schema: key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    }
+    assert suggested[CONF_PORT] == DEFAULT_PORT
+
+    # Clearing the field falls back to the schema default, which has to be
+    # that same port rather than the announced one.
+    mock_repository.update_account_info.return_value = {"result": 0}
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_PORT] == DEFAULT_PORT
+    # Two queries for the first submission, one for the second: the dead port
+    # is not walked again.
+    assert mock_repository.get_airco_id.await_count == 3
+
+
+@pytest.mark.usefixtures("mock_repository", "mock_setup_entry")
+async def test_an_announcement_without_a_port_offers_the_fixed_one(
+    hass: HomeAssistant,
+) -> None:
+    """The port is fixed in the firmware, so a missing one is not a blocker.
+
+    Taken as None it left the field without a value behind it: clearing it
+    submitted nothing at all, and the form came back with neither an error
+    nor any progress.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info(port=None)
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_PORT] == DEFAULT_PORT
 
 
 @pytest.mark.usefixtures("mock_repository", "mock_setup_entry")

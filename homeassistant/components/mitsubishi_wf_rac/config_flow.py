@@ -197,12 +197,18 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_create_common(
         self,
         step_id: str,
-        data_schema: probatio.Schema,
+        build_schema: Callable[[], probatio.Schema],
         user_input: dict[str, Any] | None = None,
         description_placeholders: dict[str, str] | None = None,
         allow_port_fallback: bool = False,
     ) -> ConfigFlowResult:
-        """Create a new entry."""
+        """Create a new entry.
+
+        The schema is built twice: a submission can leave the values it was
+        checked against behind, and a form shown again has to suggest those
+        rather than the ones that did not work.
+        """
+        data_schema = build_schema()
         errors: dict[str, str] = {}
         description_placeholders = description_placeholders or {}
 
@@ -248,7 +254,7 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id=step_id,
-            data_schema=data_schema,
+            data_schema=build_schema(),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -286,18 +292,21 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_HOST] = self._discovery_info[CONF_HOST]
             user_input.setdefault(CONF_PORT, self._discovery_info[CONF_PORT])
 
-        field = partial(self._field, user_input)
-        data_schema = probatio.Schema(
-            {
-                field(
-                    CONF_PORT, probatio.Optional, self._discovery_info[CONF_PORT]
-                ): cv.port,
-            }
-        )
+        def build_schema() -> probatio.Schema:
+            # Both halves of the field follow the port the flow is working
+            # with: after a fallback, clearing the field has to land on the
+            # port that answered rather than back on the announced one.
+            port = (user_input or self._discovery_info)[CONF_PORT]
+            field = partial(self._field, user_input)
+            return probatio.Schema(
+                {
+                    field(CONF_PORT, probatio.Optional, port): cv.port,
+                }
+            )
 
         return await self._async_create_common(
             step_id="discovery_confirm",
-            data_schema=data_schema,
+            build_schema=build_schema,
             user_input=user_input,
             description_placeholders=description_placeholders,
             # A port corrected in the form is a decision, not an announcement.
@@ -311,17 +320,18 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle adding device manually."""
 
-        field = partial(self._field, user_input)
-        data_schema = probatio.Schema(
-            {
-                field(CONF_HOST, probatio.Required): cv.string,
-                field(CONF_PORT, probatio.Optional, DEFAULT_PORT): cv.port,
-                field(CONF_FORCE_UPDATE, probatio.Optional, False): cv.boolean,
-            }
-        )
+        def build_schema() -> probatio.Schema:
+            field = partial(self._field, user_input)
+            return probatio.Schema(
+                {
+                    field(CONF_HOST, probatio.Required): cv.string,
+                    field(CONF_PORT, probatio.Optional, DEFAULT_PORT): cv.port,
+                    field(CONF_FORCE_UPDATE, probatio.Optional, False): cv.boolean,
+                }
+            )
 
         return await self._async_create_common(
-            step_id="user", data_schema=data_schema, user_input=user_input
+            step_id="user", build_schema=build_schema, user_input=user_input
         )
 
     @override
@@ -333,7 +343,10 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         local_name = discovery_info.hostname.rstrip(".")
         node_name = local_name.removesuffix(".local")
         host = discovery_info.host
-        port = discovery_info.port
+        # An announcement without a port is still this module: the port is
+        # fixed in the firmware, and a form field with nothing behind it
+        # cannot be filled in or cleared.
+        port = discovery_info.port or DEFAULT_PORT
 
         _LOGGER.debug(
             "zeroconf discovery: hostname=%r, host=%r, port=%r",

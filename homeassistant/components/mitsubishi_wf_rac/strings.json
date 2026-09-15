@@ -16,7 +16,7 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "port": "The port the module announced. It is normally 51443 - correct it here if the value above looks different."
+          "port": "The port to reach the module on. It is normally 51443 - correct it here if the announced value above looks different."
         },
         "description": "The airco with id: {id}, IP: {host} and port: {port} was discovered. The port is normally 51443 — correct it below if it looks different.",
         "title": "Discovered WF-RAC airco"
