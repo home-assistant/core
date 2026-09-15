@@ -161,7 +161,7 @@
         'orientation_shift': 180.0,
         'progress': 40,
         'type': 'systematic',
-        'use_global_cutting_height': True,
+        'use_global_cutting_height': False,
       }),
       '654321': dict({
         'current_orientation': None,
@@ -174,7 +174,7 @@
         'orientation_shift': None,
         'progress': None,
         'type': 'random',
-        'use_global_cutting_height': True,
+        'use_global_cutting_height': False,
       }),
     }),
   })
@@ -183,6 +183,7 @@
   dict({
     'data': dict({
       'auth_implementation': 'husqvarna_automower',
+      'legacy_work_area_cutting_height_cleanup': True,
       'token': dict({
         'access_token': '**REDACTED**',
         'expires_at': 1685919600.0,
