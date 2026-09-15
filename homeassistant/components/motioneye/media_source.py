@@ -1,6 +1,6 @@
 """motionEye Media Source Implementation."""
 
-from base64 import urlsafe_b64decode, urlsafe_b64encode
+from base64 import b64decode, urlsafe_b64encode
 from binascii import Error
 from datetime import timedelta
 import logging
@@ -113,7 +113,9 @@ class MotionEyeMediaProxyView(HomeAssistantView):
             return web.Response(status=400)
 
         try:
-            media_path = urlsafe_b64decode(path.encode("ascii")).decode("utf-8")
+            media_path = b64decode(
+                path.encode("ascii"), altchars=b"-_", validate=True
+            ).decode("utf-8")
             camera = int(camera_id)
         except Error, UnicodeDecodeError, UnicodeEncodeError, ValueError:
             return web.Response(status=400)
