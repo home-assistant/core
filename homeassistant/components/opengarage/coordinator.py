@@ -1,15 +1,18 @@
 """The OpenGarage integration."""
 
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 from typing import override
 
+import aiohttp
 import opengarage
 from opengarage.errors import OpenGarageError
 from opengarage.state import NormalizedState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -57,3 +60,17 @@ class OpenGarageDataUpdateCoordinator(DataUpdateCoordinator[NormalizedState]):
                 "Unable to connect to OpenGarage device"
             )
         return data
+
+    async def async_command(
+        self, command: Callable[[], Awaitable[int | None]], *, allow_noop: bool = False
+    ) -> None:
+        """Execute a public command and translate failures into action errors."""
+        try:
+            result = await command()
+        except (OpenGarageError, aiohttp.ClientError, TimeoutError) as err:
+            raise HomeAssistantError("Unable to control OpenGarage device") from err
+        if result == 1 or (allow_noop and result is None):
+            return
+        if result == 2:
+            raise HomeAssistantError("OpenGarage device key is incorrect")
+        raise HomeAssistantError(f"OpenGarage command failed: {result}")

@@ -1,8 +1,9 @@
 """Test OpenGarage cover entity."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
+import aiohttp
 from opengarage.state import normalize_state
 import pytest
 
@@ -16,6 +17,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_CLOSED, STATE_OPEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -241,3 +243,124 @@ async def test_cover_command(
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == final_state
     assert state.attributes[ATTR_CURRENT_POSITION] == final_position
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("door", "expected", "position"),
+    [
+        pytest.param(0, "closed", 0, id="closed"),
+        pytest.param(1, "open", 100, id="open"),
+        pytest.param(2, "open", None, id="stopped"),
+        pytest.param(3, "closing", None, id="closing"),
+        pytest.param(4, "opening", None, id="opening"),
+        pytest.param(5, "unknown", None, id="unknown"),
+        pytest.param(99, "unknown", None, id="unsupported"),
+    ],
+)
+async def test_reported_states(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    door: int,
+    expected: str,
+    position: int | None,
+) -> None:
+    """Keep partial openings distinct from the fully open endpoint."""
+    await _simulate_door_state(hass, mock_opengarage, door)
+    state = hass.states.get("cover.garage_abcdef")
+    assert state.state == expected
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == position
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        pytest.param(SERVICE_OPEN_COVER, "push_open_button", id="open"),
+        pytest.param(SERVICE_CLOSE_COVER, "push_close_button", id="close"),
+    ],
+)
+async def test_stopped_commands(
+    hass: HomeAssistant, mock_opengarage: MagicMock, service: str, method: str
+) -> None:
+    """Allow both directional commands from a stopped door."""
+    await _simulate_door_state(hass, mock_opengarage, 2)
+    await hass.services.async_call(
+        COVER_DOMAIN, service, {ATTR_ENTITY_ID: "cover.garage_abcdef"}, blocking=True
+    )
+    getattr(mock_opengarage, method).assert_awaited_once_with()
+    mock_opengarage.push_button.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "door", [pytest.param(0, id="closed"), pytest.param(5, id="unknown")]
+)
+@pytest.mark.parametrize(
+    "result",
+    [
+        pytest.param(None, id="missing"),
+        pytest.param(2, id="bad_key"),
+        pytest.param(99, id="error"),
+        pytest.param("bad", id="malformed"),
+    ],
+)
+async def test_command_result_failure(
+    hass: HomeAssistant, mock_opengarage: MagicMock, door: int, result: int | str | None
+) -> None:
+    """Failed commands restore the reported state, including unknown."""
+    await _simulate_door_state(hass, mock_opengarage, door)
+    before = hass.states.get("cover.garage_abcdef").state
+    mock_opengarage.push_open_button.return_value = result
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+            blocking=True,
+        )
+    assert hass.states.get("cover.garage_abcdef").state == before
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(aiohttp.ClientError(), id="network"),
+    ],
+)
+async def test_command_exception(
+    hass: HomeAssistant, mock_opengarage: MagicMock, error: Exception
+) -> None:
+    """Network failures cannot leave an optimistic transition behind."""
+    mock_opengarage.push_open_button.side_effect = error
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+            blocking=True,
+        )
+    assert hass.states.get("cover.garage_abcdef").state == STATE_CLOSED
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_movement_timeout(
+    hass: HomeAssistant, mock_opengarage: MagicMock
+) -> None:
+    """An accepted command that does not move eventually returns to reported state."""
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        blocking=True,
+    )
+    assert hass.states.get("cover.garage_abcdef").state == CoverState.OPENING
+    with patch(
+        "homeassistant.components.opengarage.cover.dt_util.utcnow",
+        return_value=dt_util.utcnow() + timedelta(seconds=61),
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+    assert hass.states.get("cover.garage_abcdef").state == STATE_CLOSED
