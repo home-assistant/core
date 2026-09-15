@@ -167,7 +167,6 @@ SENSOR_SETTINGS = vol.Schema(
                                 }
                             ),
                             mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="sensor_unit_of_measurement",
                             custom_value=True,
                             sort=True,
                         )
