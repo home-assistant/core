@@ -161,6 +161,10 @@ async def test_no_entities_for_metadata_registers(
         entity_registry.async_get_entity_id("sensor", DOMAIN, f"{MOCK_DEVICE_ID}_0.2.0")
         is None
     )
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, f"{MOCK_DEVICE_ID}_0.0.0")
+        is None
+    )
 
 
 @pytest.mark.usefixtures("mock_client")

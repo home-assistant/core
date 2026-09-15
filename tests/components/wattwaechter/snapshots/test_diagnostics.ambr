@@ -13,6 +13,7 @@
       'datetime_str': '2024-01-01T00:00:00',
       'timestamp': 1704067200,
       'values': dict({
+        '0.0.0': '**REDACTED**',
         '0.2.0': dict({
           'name': 'Firmware Revision',
           'unit': '',
