@@ -215,7 +215,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.8.1
+aioautomower==3.0.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -1562,7 +1562,7 @@ loqedAPI==2.1.11
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.10.0
+lunatone-rest-api-client==0.10.1
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -3129,7 +3129,7 @@ snapcast==2.3.8
 soco==0.31.2
 
 # homeassistant.components.sofar
-sofar-modbus==0.13.0
+sofar-modbus==0.14.0
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
@@ -3245,7 +3245,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.12.4
+tesla-fleet-api==1.13.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
