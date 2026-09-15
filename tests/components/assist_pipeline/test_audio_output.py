@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from dataclasses import FrozenInstanceError
 from http import HTTPStatus
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientPayloadError
 import pytest
@@ -22,8 +22,9 @@ from homeassistant.components.assist_pipeline.default_pipeline import (
 from homeassistant.components.assist_pipeline.error import PipelineRunValidationError
 from homeassistant.components.assist_pipeline.run import _PipelineProcessorRequest
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import chat_session
+from homeassistant.helpers import chat_session, llm
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonObjectType
 
 from tests.typing import ClientSessionGenerator
 
@@ -227,6 +228,55 @@ class _StreamingTestProcessor:
         """Invalidate processing."""
 
 
+class _TestPipelineTool(llm.Tool):
+    """Tool used by the audio-to-audio processor test."""
+
+    name = "test__pipeline_tool"
+    description = "Return the pipeline tool context"
+
+    def __init__(self) -> None:
+        """Initialize the tool."""
+        self.llm_context: llm.LLMContext | None = None
+
+    async def async_call(
+        self,
+        hass: HomeAssistant,
+        tool_input: llm.ToolInput,
+        llm_context: llm.LLMContext,
+    ) -> JsonObjectType:
+        """Return context that proves the call was scoped to the run."""
+        self.llm_context = llm_context
+        return {
+            "argument": tool_input.tool_args["argument"],
+            "device_id": llm_context.device_id,
+            "user_id": llm_context.context.user_id if llm_context.context else None,
+        }
+
+
+class _ToolCallingStreamingTestProcessor(_StreamingTestProcessor):
+    """Audio-to-audio processor that calls a Home Assistant tool."""
+
+    async def async_execute(self, request: _PipelineProcessorRequest) -> None:
+        """Consume audio, call a tool, and stream its result."""
+        assert request.stt_stream is not None
+        async for _chunk in request.stt_stream:
+            pass
+
+        tool_host = await self.host.async_get_tool_host()
+        assert [tool.name for tool in tool_host.tools] == ["test__pipeline_tool"]
+        result = await tool_host.async_call_tool(
+            llm.ToolInput(
+                tool_name="test__pipeline_tool",
+                tool_args={"argument": "called"},
+            )
+        )
+        await self.response_audio.async_write(
+            f"{result['argument']}:{result['device_id']}".encode()
+        )
+        self.response_audio.async_close()
+        self.finished = True
+
+
 async def test_private_audio_to_audio_processor(
     hass: HomeAssistant,
     init_components: None,
@@ -321,6 +371,97 @@ async def test_private_audio_to_audio_processor(
             "stream_response": True,
         },
     }
+
+
+async def test_audio_to_audio_processor_calls_run_scoped_tool(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test an audio processor can call a tool with the run's authorization."""
+    context = Context(user_id="test-user")
+    tool = _TestPipelineTool()
+    api_instance = llm.APIInstance(
+        api=Mock(hass=hass, id="test-api", name="Test API"),
+        api_prompt="Use the test tool",
+        llm_context=llm.LLMContext(
+            platform="unused",
+            context=None,
+            language=None,
+            assistant="unused",
+            device_id=None,
+        ),
+        tools=[tool],
+    )
+    processor: _ToolCallingStreamingTestProcessor | None = None
+    consumer_task: asyncio.Task[bytes] | None = None
+
+    async def audio_data() -> AsyncGenerator[bytes]:
+        yield b"audio"
+
+    def create_processor(run) -> _ToolCallingStreamingTestProcessor:
+        nonlocal processor
+        processor = _ToolCallingStreamingTestProcessor(run)
+        return processor
+
+    def process_event(event: assist_pipeline.PipelineEvent) -> None:
+        nonlocal consumer_task
+        if event.type is assist_pipeline.PipelineEventType.RUN_START:
+            assert processor is not None
+            consumer_task = hass.async_create_task(_collect(processor.response_audio))
+
+    async def get_api(
+        _hass: HomeAssistant,
+        _api_id: str | list[str],
+        llm_context: llm.LLMContext,
+    ) -> llm.APIInstance:
+        api_instance.llm_context = llm_context
+        return api_instance
+
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.run._create_pipeline_processor",
+            side_effect=create_processor,
+        ),
+        patch(
+            "homeassistant.components.assist_pipeline.tool_host.llm.async_get_api",
+            new_callable=AsyncMock,
+            side_effect=get_api,
+        ) as get_api,
+    ):
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=context,
+                pipeline=assist_pipeline.pipeline.async_get_pipeline(hass),
+                start_stage=assist_pipeline.PipelineStage.STT,
+                end_stage=assist_pipeline.PipelineStage.TTS,
+                event_callback=process_event,
+                llm_api_id="test-api",
+            ),
+            session=mock_chat_session,
+            stt_metadata=stt.SpeechMetadata(
+                language="en",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            device_id="device-id",
+        )
+        await pipeline_input.execute(validate=True)
+
+    assert consumer_task is not None
+    assert await consumer_task == b"called:device-id"
+    get_api.assert_awaited_once()
+    llm_context = get_api.await_args.args[2]
+    assert llm_context.context is context
+    assert llm_context.language == pipeline_input.run.language
+    assert llm_context.assistant == "conversation"
+    assert llm_context.device_id == "device-id"
+    assert tool.llm_context is llm_context
 
 
 class _FailingStreamingTestProcessor(_StreamingTestProcessor):
