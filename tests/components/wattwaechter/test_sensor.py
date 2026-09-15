@@ -77,7 +77,28 @@ async def test_minimal_meter_data(
             SensorDeviceClass.POWER,
             SensorStateClass.MEASUREMENT,
             "W",
-            id="mapped_momentary_unit",
+            id="mapped_power_unit",
+        ),
+        pytest.param(
+            "12.7.0",
+            SensorDeviceClass.VOLTAGE,
+            SensorStateClass.MEASUREMENT,
+            "V",
+            id="mapped_voltage_unit",
+        ),
+        pytest.param(
+            "91.7.0",
+            SensorDeviceClass.CURRENT,
+            SensorStateClass.MEASUREMENT,
+            "A",
+            id="mapped_current_unit",
+        ),
+        pytest.param(
+            "140.7.0",
+            SensorDeviceClass.FREQUENCY,
+            SensorStateClass.MEASUREMENT,
+            "Hz",
+            id="mapped_frequency_unit",
         ),
         pytest.param(
             "1.8.3",
@@ -139,6 +160,23 @@ async def test_generic_obis_sensor_classification(
     assert attributes.get("device_class") == device_class
     assert attributes.get("state_class") == state_class
     assert attributes.get("unit_of_measurement") == unit
+
+
+@pytest.mark.usefixtures("mock_client", "entity_registry_enabled_by_default")
+async def test_generic_obis_sensor_name_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a register without a reported name falls back to the OBIS code."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_94.91.1"
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).original_name == "OBIS 94.91.1"
 
 
 @pytest.mark.usefixtures("mock_client", "entity_registry_enabled_by_default")

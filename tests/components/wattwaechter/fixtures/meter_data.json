@@ -111,6 +111,26 @@
     "unit": "var",
     "name": "Reactive Power L1"
   },
+  "12.7.0": {
+    "value": 230.4,
+    "unit": "V",
+    "name": "Voltage Average"
+  },
+  "91.7.0": {
+    "value": 0.42,
+    "unit": "A",
+    "name": "Neutral Current"
+  },
+  "140.7.0": {
+    "value": 49.99,
+    "unit": "Hz",
+    "name": "Internal Frequency"
+  },
+  "94.91.1": {
+    "value": 3,
+    "unit": "",
+    "name": ""
+  },
   "94.91.0": {
     "value": "0x0182",
     "unit": "",

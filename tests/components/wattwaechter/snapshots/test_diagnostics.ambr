@@ -44,6 +44,11 @@
           'unit': 'VA',
           'value': 14.1,
         }),
+        '12.7.0': dict({
+          'name': 'Voltage Average',
+          'unit': 'V',
+          'value': 230.4,
+        }),
         '13.7.0': dict({
           'name': 'Power Factor',
           'unit': '',
@@ -53,6 +58,11 @@
           'name': 'Frequency',
           'unit': 'Hz',
           'value': 50.01,
+        }),
+        '140.7.0': dict({
+          'name': 'Internal Frequency',
+          'unit': 'Hz',
+          'value': 49.99,
         }),
         '15.7.0': dict({
           'name': 'Absolute Power',
@@ -149,10 +159,20 @@
           'unit': 'VA',
           'value': 1502.3,
         }),
+        '91.7.0': dict({
+          'name': 'Neutral Current',
+          'unit': 'A',
+          'value': 0.42,
+        }),
         '94.91.0': dict({
           'name': 'Status Word',
           'unit': '',
           'value': '0x0182',
+        }),
+        '94.91.1': dict({
+          'name': '',
+          'unit': '',
+          'value': 3,
         }),
         '96.1.0': '**REDACTED**',
         '96.5.0': dict({
