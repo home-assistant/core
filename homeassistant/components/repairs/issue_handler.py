@@ -1,6 +1,6 @@
 """The repairs integration."""
 
-from typing import Any, overload, override
+from typing import Any, override
 
 import probatio
 
@@ -43,85 +43,6 @@ class ConfirmRepairFlow(RepairsFlow):
         )
 
 
-# Sentinel to handle overload missing arg
-class _MISSING_ARG:
-    pass
-
-
-class DeprecatedIssueIdDict[_VT](dict[str, _VT]):
-    """Dict to detect use of `issue_id` in `user_input` and `init_data` of a RepairFlow."""
-
-    def __init__(self, integration_domain: str, data: dict[str, _VT]) -> None:
-        """Initialize a new dict wrapper."""
-        super().__init__(data)
-        self._integration_domain = integration_domain
-
-    @override
-    def __contains__(self, key: object) -> bool:
-        if key == "issue_id":
-            self._report_issue_id_usage("checks for")
-        return super().__contains__(key)
-
-    @override
-    def __getitem__(self, key: str) -> _VT:
-        """Deprecation warning on issue_id key access."""
-        if key == "issue_id":
-            self._report_issue_id_usage("accesses")
-        return super().__getitem__(key)
-
-    @overload
-    def get(self, key: str, default: None = None, /) -> _VT | None: ...
-    @overload
-    def get(self, key: str, default: _VT, /) -> _VT: ...
-    @overload
-    def get[_T](self, key: str, default: _T, /) -> _VT | _T: ...
-    @override
-    def get[_T](self, key: str, default: _T | None = None, /) -> _VT | _T | None:
-        """Deprecation warning on issue_id key access."""
-        if key == "issue_id":
-            self._report_issue_id_usage("gets")
-        return super().get(key, default)
-
-    @overload
-    def pop(self, key: str, /) -> _VT: ...
-    @overload
-    def pop(self, key: str, default: _VT, /) -> _VT: ...
-    @overload
-    def pop[_T](self, key: str, default: _T, /) -> _VT | _T: ...
-    @override
-    def pop[_T](
-        self, key: str, default: _T | _VT | _MISSING_ARG = _MISSING_ARG(), /
-    ) -> _VT | _T:
-        """Deprecation warning on issue_id key access."""
-        if key == "issue_id":
-            self._report_issue_id_usage("pops")
-        if isinstance(default, _MISSING_ARG):
-            return super().pop(key)
-        return super().pop(key, default)
-
-    @overload
-    def setdefault(self, key: str, default: None = None, /) -> _VT | None: ...
-    @overload
-    def setdefault(self, key: str, default: _VT, /) -> _VT: ...
-    @overload
-    def setdefault[_T](self, key: str, default: _T, /) -> _VT | _T: ...
-    @override
-    def setdefault[_T](
-        self, key: str, default: _T | _VT | None = None, /
-    ) -> _VT | _T | None:
-        if key == "issue_id":
-            self._report_issue_id_usage("calls setdefault on")
-        return super().setdefault(key, default)  # type: ignore[arg-type]
-
-    def _report_issue_id_usage(self, method: str) -> None:
-        report_usage(
-            f"{method} `issue_id` from `user_input` in `async_step_init` or `init_data` of a `RepairsFlow` "
-            "instead of `self.issue_id`",
-            breaks_in_ha_version="2028.10.0",
-            integration_domain=self._integration_domain,
-        )
-
-
 class RepairsFlowManager(
     data_entry_flow.FlowManager[RepairsFlowContext, RepairsFlowResult, str]
 ):
@@ -148,12 +69,7 @@ class RepairsFlowManager(
         if "issue_id" in _context:
             # interim compatibility fallback for custom integrations that may expect
             # "issue_id" in user_input of async_step_init
-            data = (
-                DeprecatedIssueIdDict(handler, data)
-                if data is not None
-                else DeprecatedIssueIdDict(handler, {})
-            )
-            data["issue_id"] = _context["issue_id"]
+            data = (data or {}).update({"issue_id": _context["issue_id"]})
         return await super().async_init(handler, context=_context, data=data)
 
     @override

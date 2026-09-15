@@ -48,9 +48,7 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
         data: dict[str, str | int | float | None] | None,
     ) -> RepairsFlow:
         if issue_id == "context_issue":
-            return MockFixFlowContextUserInputDeprecations()
-        if issue_id == "context_init_data_issue":
-            return MockFixFlowContextInitDataDeprecations()
+            return MockFixFlowContext()
         return MockFixFlowNextFlow()
 
     mock_platform(
@@ -60,7 +58,7 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
     )
 
 
-class MockFixFlowContextUserInputDeprecations(RepairsFlow):
+class MockFixFlowContext(RepairsFlow):
     """Mock for context deprecation tests."""
 
     def __init__(self) -> None:
@@ -87,30 +85,7 @@ class MockFixFlowContextUserInputDeprecations(RepairsFlow):
         assert self.issue_id == "fake_issue"
 
     async def async_step_init(self, user_input: dict | None) -> RepairsFlowResult:
-        """Test _DeprecatedIssueIdDict."""
-        assert user_input
-        assert "issue_id" in user_input
-        assert user_input.get("issue_id") == self.issue_id
-        assert user_input.pop("issue_id") == self.issue_id
-        assert user_input.pop("issue_id", "test_result") == "test_result"
-        assert user_input.setdefault("issue_id", "test_result") == "test_result"
-        assert user_input["issue_id"] == "test_result"
-
-        return self.async_show_form()
-
-
-class MockFixFlowContextInitDataDeprecations(RepairsFlow):
-    """Mock for context deprecation tests."""
-
-    async def async_step_init(self, user_input: dict | None) -> RepairsFlowResult:
-        """Test _DeprecatedIssueIdDict ."""
-        assert self.init_data
-        assert "issue_id" in self.init_data
-        assert self.init_data.get("issue_id") == self.issue_id
-        assert self.init_data.pop("issue_id") == self.issue_id
-        assert self.init_data.pop("issue_id", "test_result") == "test_result"
-        assert user_input.setdefault("issue_id", "test_result") == "test_result"
-        assert user_input["issue_id"] == "test_result"
+        """First step in mock flow."""
         return self.async_show_form()
 
 
@@ -275,71 +250,3 @@ async def test_issue_id_setter_getter_deprecation(
     assert result["type"] == "form"
     result = repairs.async_get(result["flow_id"])
     assert result["context"] == {"issue_id": "context_issue"}
-
-
-@pytest.mark.parametrize(
-    ("ignore_translations_for_mock_domains"),
-    [
-        ["fake_integration"],
-    ],
-)
-async def test_access_issue_id_in_async_step_init_deprecation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test RepairFlow issue_id getter/setter with switch to context."""
-
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    ir.async_create_issue(
-        hass,
-        issue_id="context_issue",
-        domain="fake_integration",
-        is_fixable=True,
-        severity="error",
-        translation_key="fake_key",
-    )
-
-    assert (repairs := repairs_flow_manager(hass))
-
-    await repairs.async_init("fake_integration", context={"issue_id": "context_issue"})
-    for method in ("checks for", "accesses", "gets", "pops", "calls setdefault on"):
-        assert any(
-            f"{method} `issue_id` from `user_input` in `async_step_init` or `init_data` of a `RepairsFlow`"
-            in msg
-            for msg in caplog.messages
-        )
-
-
-@pytest.mark.parametrize(
-    ("ignore_translations_for_mock_domains"),
-    [
-        ["fake_integration"],
-    ],
-)
-async def test_access_issue_id_from_init_data_deprecation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test RepairFlow issue_id getter/setter with switch to context."""
-
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    ir.async_create_issue(
-        hass,
-        issue_id="context_init_data_issue",
-        domain="fake_integration",
-        is_fixable=True,
-        severity="error",
-        translation_key="fake_key",
-    )
-
-    assert (repairs := repairs_flow_manager(hass))
-
-    await repairs.async_init(
-        "fake_integration", context={"issue_id": "context_init_data_issue"}
-    )
-    for method in ("checks for", "accesses", "gets", "pops", "calls setdefault on"):
-        assert any(
-            f"{method} `issue_id` from `user_input` in `async_step_init` or `init_data` of a `RepairsFlow`"
-            in msg
-            for msg in caplog.messages
-        )
