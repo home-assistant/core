@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final, NamedTuple
+from typing import Any, NamedTuple
 
 from pytouchline_extended import PyTouchline
 
@@ -17,7 +17,6 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -45,8 +44,6 @@ TOUCHLINE_HA_PRESETS = {
     (settings.mode, settings.program): preset
     for preset, settings in PRESET_MODES.items()
 }
-
-PLATFORM_SCHEMA: Final = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(
