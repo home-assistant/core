@@ -12,7 +12,7 @@ from typing import override
 from urllib.error import HTTPError
 from urllib.parse import urljoin
 
-import voluptuous as vol
+import probatio
 from zabbix_utils import ItemValue, Sender, ZabbixAPI
 from zabbix_utils.exceptions import APIRequestError, ProcessingError
 
@@ -59,21 +59,23 @@ RETRY_MESSAGE = f"%s Retrying in {RETRY_INTERVAL} seconds."
 BATCH_TIMEOUT = 1
 BATCH_BUFFER_SIZE = 100
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
-                vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-                vol.Optional(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_PUBLISH_STATES_HOST): cv.string,
-                vol.Optional(CONF_PUBLISH_STRING_STATES, default=False): cv.boolean,
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Optional(CONF_PASSWORD): cv.string,
+                probatio.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
+                probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+                probatio.Optional(CONF_USERNAME): cv.string,
+                probatio.Optional(CONF_PUBLISH_STATES_HOST): cv.string,
+                probatio.Optional(
+                    CONF_PUBLISH_STRING_STATES, default=False
+                ): cv.boolean,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

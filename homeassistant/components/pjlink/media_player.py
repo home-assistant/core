@@ -2,9 +2,9 @@
 
 from typing import Any, override
 
+import probatio
 from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -29,11 +29,11 @@ ERR_PROJECTOR_UNAVAILABLE = "projector unavailable"
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+        probatio.Optional(CONF_PASSWORD): cv.string,
     }
 )
 

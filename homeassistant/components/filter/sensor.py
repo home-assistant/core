@@ -10,7 +10,7 @@ from numbers import Number
 import statistics
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
@@ -84,47 +84,49 @@ FILTERS: Registry[str, type[Filter]] = Registry()
 
 ICON = "mdi:chart-line-variant"
 
-FILTER_SCHEMA = vol.Schema({vol.Optional(CONF_FILTER_PRECISION): vol.Coerce(int)})
+FILTER_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_FILTER_PRECISION): probatio.Coerce(int)}
+)
 
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend(
     {
-        vol.Required(CONF_FILTER_NAME): FILTER_NAME_OUTLIER,
-        vol.Optional(CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE): vol.Coerce(
-            int
-        ),
-        vol.Optional(CONF_FILTER_RADIUS, default=DEFAULT_FILTER_RADIUS): vol.Coerce(
-            float
-        ),
+        probatio.Required(CONF_FILTER_NAME): FILTER_NAME_OUTLIER,
+        probatio.Optional(
+            CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
+        ): probatio.Coerce(int),
+        probatio.Optional(
+            CONF_FILTER_RADIUS, default=DEFAULT_FILTER_RADIUS
+        ): probatio.Coerce(float),
     }
 )
 
 FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend(
     {
-        vol.Required(CONF_FILTER_NAME): FILTER_NAME_LOWPASS,
-        vol.Optional(CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE): vol.Coerce(
-            int
-        ),
-        vol.Optional(
+        probatio.Required(CONF_FILTER_NAME): FILTER_NAME_LOWPASS,
+        probatio.Optional(
+            CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
+        ): probatio.Coerce(int),
+        probatio.Optional(
             CONF_FILTER_TIME_CONSTANT, default=DEFAULT_FILTER_TIME_CONSTANT
-        ): vol.Coerce(int),
+        ): probatio.Coerce(int),
     }
 )
 
 FILTER_RANGE_SCHEMA = FILTER_SCHEMA.extend(
     {
-        vol.Required(CONF_FILTER_NAME): FILTER_NAME_RANGE,
-        vol.Optional(CONF_FILTER_LOWER_BOUND): vol.Coerce(float),
-        vol.Optional(CONF_FILTER_UPPER_BOUND): vol.Coerce(float),
+        probatio.Required(CONF_FILTER_NAME): FILTER_NAME_RANGE,
+        probatio.Optional(CONF_FILTER_LOWER_BOUND): probatio.Coerce(float),
+        probatio.Optional(CONF_FILTER_UPPER_BOUND): probatio.Coerce(float),
     }
 )
 
 FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend(
     {
-        vol.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_SMA,
-        vol.Optional(CONF_TIME_SMA_TYPE, default=TIME_SMA_LAST): vol.In(
+        probatio.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_SMA,
+        probatio.Optional(CONF_TIME_SMA_TYPE, default=TIME_SMA_LAST): probatio.In(
             [TIME_SMA_LAST]
         ),
-        vol.Required(CONF_FILTER_WINDOW_SIZE): vol.All(
+        probatio.Required(CONF_FILTER_WINDOW_SIZE): probatio.All(
             cv.time_period, cv.positive_timedelta
         ),
     }
@@ -132,17 +134,17 @@ FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend(
 
 FILTER_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
     {
-        vol.Required(CONF_FILTER_NAME): FILTER_NAME_THROTTLE,
-        vol.Optional(CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE): vol.Coerce(
-            int
-        ),
+        probatio.Required(CONF_FILTER_NAME): FILTER_NAME_THROTTLE,
+        probatio.Optional(
+            CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
+        ): probatio.Coerce(int),
     }
 )
 
 FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
     {
-        vol.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_THROTTLE,
-        vol.Required(CONF_FILTER_WINDOW_SIZE): vol.All(
+        probatio.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_THROTTLE,
+        probatio.Required(CONF_FILTER_WINDOW_SIZE): probatio.All(
             cv.time_period, cv.positive_timedelta
         ),
     }
@@ -150,17 +152,17 @@ FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): vol.Any(
+        probatio.Required(CONF_ENTITY_ID): probatio.Any(
             cv.entity_domain(SENSOR_DOMAIN),
             cv.entity_domain(BINARY_SENSOR_DOMAIN),
             cv.entity_domain(INPUT_NUMBER_DOMAIN),
         ),
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Required(CONF_FILTERS): vol.All(
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_FILTERS): probatio.All(
             cv.ensure_list,
             [
-                vol.Any(
+                probatio.Any(
                     FILTER_OUTLIER_SCHEMA,
                     FILTER_LOWPASS_SCHEMA,
                     FILTER_TIME_SMA_SCHEMA,
