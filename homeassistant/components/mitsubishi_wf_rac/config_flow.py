@@ -340,7 +340,10 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
-        local_name = discovery_info.hostname.rstrip(".")
+        # Lower case before anything is cut off it: DNS is case-insensitive,
+        # and an announcement shouting .LOCAL. would otherwise keep the suffix
+        # and never match the unit that is already configured.
+        local_name = discovery_info.hostname.rstrip(".").lower()
         node_name = local_name.removesuffix(".local")
         host = discovery_info.host
         # An announcement without a port is still this module: the port is
@@ -355,9 +358,9 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.port,
         )
 
-        # Lower case on both sides: this id comes from the hostname and every
+        # One case on both sides: this id comes from the hostname and every
         # other path from the airconId the unit reports.
-        await self.async_set_unique_id(node_name.lower())
+        await self.async_set_unique_id(node_name)
         # The address only, so a module that moved gets followed: modules have
         # been seen announcing 5353 where the API port belongs.
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})

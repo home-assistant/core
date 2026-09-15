@@ -28,12 +28,15 @@ USER_INPUT = {CONF_HOST: HOST, CONF_PORT: PORT}
 
 
 def _discovery_info(
-    port: int | None = PORT, host: str = HOST, airco_id: str = AIRCO_ID
+    port: int | None = PORT,
+    host: str = HOST,
+    airco_id: str = AIRCO_ID,
+    local_suffix: str = ".local",
 ) -> ZeroconfServiceInfo:
     return ZeroconfServiceInfo(
         ip_address=host,
         ip_addresses=[host],
-        hostname=f"{airco_id}.local.",
+        hostname=f"{airco_id}{local_suffix}.",
         name=f"{airco_id}._beaver._tcp.local.",
         port=port,
         type="_beaver._tcp.local.",
@@ -440,6 +443,27 @@ async def test_a_shouted_hostname_still_matches_the_entry(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=_discovery_info(host="192.168.1.9", airco_id=AIRCO_ID.upper()),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.9"
+
+
+@pytest.mark.usefixtures("mock_repository", "mock_setup_entry")
+async def test_a_shouted_local_suffix_is_still_the_suffix(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """The case applies to what is cut off the hostname as well.
+
+    A suffix announced as .LOCAL. survives removesuffix(), and the id then
+    carries it - which is a unit nobody has configured.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_discovery_info(host="192.168.1.9", local_suffix=".LOCAL"),
     )
 
     assert result["type"] is FlowResultType.ABORT
