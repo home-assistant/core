@@ -800,6 +800,18 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             translation_key="mute",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_KB_SOUND,
+            # Poorly translated as "Key tone switch of host" in the official Tuya app
+            translation_key="keypad_sound",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_ALARM_PROPEL,
+            # Poorly translated as "alarm push switch" in the official Tuya app
+            translation_key="alarm_push_notifications",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.WK: (
         SwitchEntityDescription(
@@ -892,6 +904,19 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
+        ),
+    ),
+    DeviceCategory.ZNJDQ: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.ZNJXS: (

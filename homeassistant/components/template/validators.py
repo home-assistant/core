@@ -6,7 +6,7 @@ from itertools import chain
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers import config_validation as cv
@@ -32,6 +32,7 @@ class BlockedTemplateAttributes:
         *,
         attributes: tuple[type[StrEnum], ...] | type[StrEnum] | None = None,
         device_class: bool = False,
+        allowed_attributes: tuple[StrEnum | str, ...] | None = None,
     ) -> None:
         """Initialize."""
         blocked_attributes: set[str]
@@ -41,6 +42,9 @@ class BlockedTemplateAttributes:
             blocked_attributes = set(chain(*attributes))
         else:
             blocked_attributes = set(attributes)
+
+        if allowed_attributes:
+            blocked_attributes -= set(allowed_attributes)
 
         if device_class:
             blocked_attributes.add("device_class")
@@ -64,7 +68,7 @@ def validate_attributes(
             return obj
 
         if blocked := blocked_attributes.blocked(obj):
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Unsupported attribute(s) found for {breadcrumb}: {', '.join(blocked)}"
             )
 
@@ -78,7 +82,7 @@ def log_validation_error(
     template: Template,
     attribute: str,
     entity_id: str | None,
-    exception: vol.Invalid,
+    exception: probatio.Invalid,
 ):
     """Log template entity validation error."""
     logging.getLogger(
@@ -174,7 +178,7 @@ def strenum[T: StrEnum](
                 if state_off and not bool_value:
                     return state_off
 
-            except vol.Invalid:
+            except probatio.Invalid:
                 pass
 
         expected = tuple(s.value for s in state_enum)
@@ -226,7 +230,7 @@ def boolean(
 
         try:
             return cv.boolean(result)
-        except vol.Invalid:
+        except probatio.Invalid:
             pass
 
         items: tuple[str, ...] = RESULT_ON + RESULT_OFF
@@ -278,10 +282,10 @@ def number(
                 value = float(value)
         else:
             try:
-                value = vol.Coerce(float)(result)
+                value = probatio.Coerce(float)(result)
                 if return_type is int:
                     value = int(value)
-            except vol.Invalid:
+            except probatio.Invalid:
                 log_validation_result_error(entity, attribute, result, message)
                 return None
 
@@ -404,7 +408,7 @@ def url(
 
         try:
             return cv.url(result)
-        except vol.Invalid:
+        except probatio.Invalid:
             log_validation_result_error(
                 entity,
                 attribute,
@@ -432,7 +436,7 @@ def string(
 
         try:
             return cv.string(result)
-        except vol.Invalid:
+        except probatio.Invalid:
             log_validation_result_error(
                 entity,
                 attribute,

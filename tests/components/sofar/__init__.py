@@ -53,5 +53,9 @@ def seed_pv_inverter(unit: MockModbusUnit, serial: str = MOCK_SERIAL) -> None:
 def seed_hybrid_inverter(
     unit: MockModbusUnit, serial: str = MOCK_HYBRID_SERIAL
 ) -> None:
-    """Seed identity registers for a hybrid inverter; the rest read as zero."""
+    """Seed a hybrid inverter with battery packs 1 and 3 wired, 2 absent."""
     _seed_common(unit, serial)
+    unit.holding[0x0604] = 520  # battery_voltage_1 -> 52.0 V
+    unit.holding[0x0608] = 87  # battery_capacity_1 -> 87%
+    unit.holding[0x0612] = 515  # battery_voltage_3 -> 51.5 V
+    unit.holding[0x0616] = 85  # battery_capacity_3 -> 85%

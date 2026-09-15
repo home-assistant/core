@@ -425,6 +425,54 @@ async def test_setup_creates_cloudhook_when_cloud_active(
         mock_setup_webhook.assert_called_once_with(CLOUDHOOK_URL)
 
 
+async def test_setup_survives_the_cloud_going_away(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+    mock_get_webook_configuration: AsyncMock,
+    mock_delete_webhook: AsyncMock,
+    mock_setup_webhook: AsyncMock,
+) -> None:
+    """Test the entry still loads when the cloud goes away mid-setup.
+
+    The connection is checked before the cloudhook is created, so it can be
+    gone by the time it is used. The local URL carries it until the
+    connection change listener creates the cloudhook.
+    """
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com"},
+    )
+    await mock_cloud(hass)
+    await hass.async_block_till_done()
+
+    mock_get_webook_configuration.return_value = {"urls": []}
+    mock_list_devices.return_value = [_water_detector()]
+    mock_get_status.return_value = {"battery": 100}
+    mock_delete_webhook.return_value = {}
+    mock_setup_webhook.return_value = {}
+
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
+            side_effect=CloudNotAvailable,
+        ),
+        patch("homeassistant.components.cloud.async_delete_cloudhook"),
+    ):
+        entry = await configure_integration(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert CONF_CLOUDHOOK_URL not in entry.data
+    # SwitchBot was given the local URL to push to in the meantime
+    mock_setup_webhook.assert_called_once()
+    assert mock_setup_webhook.call_args[0][0].startswith(
+        "https://example.com/api/webhook/"
+    )
+
+
 async def test_setup_reuses_persisted_cloudhook(
     hass: HomeAssistant,
     mock_list_devices,
