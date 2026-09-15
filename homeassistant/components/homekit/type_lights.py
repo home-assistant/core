@@ -37,7 +37,11 @@ from homeassistant.util.color import (
 )
 
 from .accessories import TYPES, HomeAccessory
+from .adaptive_lighting import ADAPTIVE_LIGHTING_CHARS, AdaptiveLightingController
 from .const import (
+    CONF_ADAPTIVE_LIGHTING,
+    CONF_MAX_COLOR_TEMP_KELVIN,
+    CONF_MIN_COLOR_TEMP_KELVIN,
     CHAR_BRIGHTNESS,
     CHAR_COLOR_TEMPERATURE,
     CHAR_HUE,
@@ -106,6 +110,16 @@ class Light(HomeAccessory):
         ):
             self.chars.append(CHAR_COLOR_TEMPERATURE)
 
+        # Adaptive lighting transitions both brightness and colour temperature,
+        # so it is only offered when the light supports both.
+        self._adaptive_lighting_enabled = bool(
+            self.config.get(CONF_ADAPTIVE_LIGHTING)
+            and self.brightness_supported
+            and CHAR_COLOR_TEMPERATURE in self.chars
+        )
+        if self._adaptive_lighting_enabled:
+            self.chars.extend(ADAPTIVE_LIGHTING_CHARS)
+
         serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
         self.char_on = serv_light.configure_char(CHAR_ON, value=0)
 
@@ -117,14 +131,18 @@ class Light(HomeAccessory):
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
+            # Some bulbs report a wider range than the hardware accepts and go
+            # dark instead of clamping, so the range can be overridden per entity.
             min_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(
+                self.config.get(CONF_MAX_COLOR_TEMP_KELVIN)
+                or attributes.get(
                     LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
                     DEFAULT_MAX_COLOR_TEMP,
                 )
             )
             max_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(
+                self.config.get(CONF_MIN_COLOR_TEMP_KELVIN)
+                or attributes.get(
                     LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN,
                     DEFAULT_MIN_COLOR_TEMP,
                 )
@@ -146,11 +164,35 @@ class Light(HomeAccessory):
             self.char_hue = serv_light.configure_char(CHAR_HUE, value=0)
             self.char_saturation = serv_light.configure_char(CHAR_SATURATION, value=75)
 
+        self.adaptive_lighting: AdaptiveLightingController | None = None
+        if self._adaptive_lighting_enabled:
+            self.adaptive_lighting = AdaptiveLightingController(
+                self, serv_light, self.entity_id
+            )
+
         self.async_update_state(state)
         serv_light.setter_callback = self._set_chars
 
+    @override
+    @callback
+    def run(self) -> None:
+        """Start the accessory and resume a saved adaptive lighting schedule."""
+        super().run()
+        if self.adaptive_lighting:
+            self.adaptive_lighting.schedule_restore()
+
+    @callback
+    def async_set_adaptive_color_temperature(self, mireds: int) -> None:
+        """Apply a colour temperature computed from the transition curve."""
+        self._set_chars({CHAR_COLOR_TEMPERATURE: mireds})
+
     def _set_chars(self, char_values: dict[str, Any]) -> None:
         _LOGGER.debug("Light _set_chars: %s", char_values)
+        if self.adaptive_lighting and (
+            char_values.keys() & {CHAR_COLOR_TEMPERATURE, CHAR_HUE, CHAR_SATURATION}
+        ):
+            # HomeKit expects adaptive lighting to stop on a manual colour change.
+            self.adaptive_lighting.notify_manual_change()
         # Newest change always wins
         if CHAR_COLOR_TEMPERATURE in self._pending_events and (
             CHAR_SATURATION in char_values or CHAR_HUE in char_values
