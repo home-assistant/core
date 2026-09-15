@@ -1342,3 +1342,131 @@ async def test_deprecated_async_render_no_api_prompt(
         "The deprecated function async_render_no_api_prompt was called. It will be "
         "removed in HA Core 2027.2. Use an empty string instead"
     ) in caplog.text
+
+
+@pytest.fixture
+async def front_door_lock(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> str:
+    """Register an exposed lock, which never has a device class."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    entry = entity_registry.async_get_or_create(
+        "lock", "test", "front_door", original_name="Front Door"
+    )
+    hass.states.async_set(entry.entity_id, "locked", {"friendly_name": "Front Door"})
+    async_expose_entity(hass, "conversation", entry.entity_id, True)
+    return entry.entity_id
+
+
+def _turn_off_tool(hass: HomeAssistant) -> llm.IntentTool:
+    """Return an IntentTool wrapping the real HassTurnOff handler."""
+    handler = next(
+        handler
+        for handler in intent.async_get(hass)
+        if handler.intent_type == intent.INTENT_TURN_OFF
+    )
+    return llm.IntentTool(f"intent__{handler.intent_type}", handler)
+
+
+@pytest.mark.usefixtures("front_door_lock")
+async def test_intent_tool_match_failed_is_returned_not_raised(
+    hass: HomeAssistant,
+) -> None:
+    """Test an over-constrained call describes itself instead of erroring.
+
+    A model asked to lock a front door tends to add device_class "door", which
+    no lock entity can have. The result has to tell it which argument to drop.
+    """
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+
+    result = await _turn_off_tool(hass).async_call(
+        hass,
+        llm.ToolInput(
+            "intent__HassTurnOff",
+            {"name": "Front Door", "domain": ["lock"], "device_class": ["door"]},
+        ),
+        llm_context,
+    )
+
+    assert result == {
+        "error": "MatchFailedError",
+        "reason": "device_class",
+        "constraints": {
+            "name": "Front Door",
+            "domain": ["lock"],
+            "device_class": ["door"],
+        },
+    }
+
+
+@pytest.mark.usefixtures("front_door_lock")
+async def test_intent_tool_match_failed_names_the_bad_value(
+    hass: HomeAssistant,
+) -> None:
+    """Test a constraint that does not exist at all is named in the result."""
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+
+    result = await _turn_off_tool(hass).async_call(
+        hass,
+        llm.ToolInput("intent__HassTurnOff", {"area": "Nowhere"}),
+        llm_context,
+    )
+
+    assert result == {
+        "error": "MatchFailedError",
+        "reason": "invalid_area",
+        "constraints": {"area": "Nowhere"},
+        "no_match_name": "Nowhere",
+    }
+
+
+@pytest.mark.parametrize(
+    ("constraints", "expected"),
+    [
+        pytest.param(
+            intent.MatchTargetsConstraints(
+                floor_name="Upstairs", states={"on"}, assistant="conversation"
+            ),
+            {"floor": "Upstairs", "state": ["on"]},
+            id="floor_and_state_use_slot_names",
+        ),
+        pytest.param(
+            intent.MatchTargetsConstraints(
+                domains={"light", "cover"}, assistant="conversation"
+            ),
+            {"domain": ["cover", "light"]},
+            id="collections_are_sorted",
+        ),
+        pytest.param(
+            # assistant and single_target are internal, not model arguments.
+            intent.MatchTargetsConstraints(
+                assistant="conversation", single_target=True
+            ),
+            {},
+            id="internal_constraints_omitted",
+        ),
+    ],
+)
+def test_match_failed_result_constraints(
+    constraints: intent.MatchTargetsConstraints, expected: dict[str, object]
+) -> None:
+    """Test only the model's own arguments are echoed back, by slot name."""
+    err = intent.MatchFailedError(
+        intent.MatchTargetsResult(False, intent.MatchFailedReason.NAME), constraints
+    )
+
+    assert llm._match_failed_result(err)["constraints"] == expected
