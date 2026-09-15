@@ -41,6 +41,16 @@
     "unit": "W",
     "name": "Import Power"
   },
+  "2.7.0": {
+    "value": 12.5,
+    "unit": "W",
+    "name": "Export Power"
+  },
+  "15.7.0": {
+    "value": 1467.7,
+    "unit": "W",
+    "name": "Absolute Power"
+  },
   "1.8.3": {
     "value": 823.11,
     "unit": "kWh",
@@ -51,10 +61,55 @@
     "unit": "kvarh",
     "name": "Reactive QI"
   },
+  "6.8.0": {
+    "value": 23.114,
+    "unit": "kvarh",
+    "name": "Reactive QII"
+  },
+  "7.8.0": {
+    "value": 5.871,
+    "unit": "kvarh",
+    "name": "Reactive QIII"
+  },
+  "8.8.0": {
+    "value": 44.209,
+    "unit": "kvarh",
+    "name": "Reactive QIV"
+  },
+  "5.8.1": {
+    "value": 55.217,
+    "unit": "kvarh",
+    "name": "Reactive QI Tariff 1"
+  },
   "3.7.0": {
     "value": 231.7,
     "unit": "var",
     "name": "Reactive Power"
+  },
+  "4.7.0": {
+    "value": 12.4,
+    "unit": "var",
+    "name": "Reactive Power Export"
+  },
+  "9.7.0": {
+    "value": 1502.3,
+    "unit": "VA",
+    "name": "Apparent Power"
+  },
+  "10.7.0": {
+    "value": 14.1,
+    "unit": "VA",
+    "name": "Apparent Power Export"
+  },
+  "21.7.0": {
+    "value": 500.1,
+    "unit": "W",
+    "name": "Import Power L1"
+  },
+  "23.7.0": {
+    "value": 120.4,
+    "unit": "var",
+    "name": "Reactive Power L1"
   },
   "94.91.0": {
     "value": "0x0182",

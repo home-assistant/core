@@ -73,7 +73,7 @@ async def test_minimal_meter_data(
     ("obis_code", "device_class", "state_class", "unit"),
     [
         pytest.param(
-            "1.7.0",
+            "21.7.0",
             SensorDeviceClass.POWER,
             SensorStateClass.MEASUREMENT,
             "W",
@@ -87,14 +87,14 @@ async def test_minimal_meter_data(
             id="cumulative_energy",
         ),
         pytest.param(
-            "5.8.0",
+            "5.8.1",
             SensorDeviceClass.REACTIVE_ENERGY,
             SensorStateClass.TOTAL_INCREASING,
             "kvarh",
             id="cumulative_reactive_energy",
         ),
         pytest.param(
-            "3.7.0",
+            "23.7.0",
             None,
             None,
             "var",
@@ -178,7 +178,7 @@ async def test_generic_obis_sensors_disabled_by_default(
     await hass.async_block_till_done()
 
     generic_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_1.7.0"
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_21.7.0"
     )
     assert generic_id is not None
     assert (

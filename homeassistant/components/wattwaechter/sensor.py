@@ -15,12 +15,14 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
     UnitOfReactiveEnergy,
+    UnitOfReactivePower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -230,6 +232,102 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     "4.8.0": SensorEntityDescription(
         key="4.8.0",
         translation_key="reactive_energy_export",
+        native_unit_of_measurement=(
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR
+        ),
+        device_class=SensorDeviceClass.REACTIVE_ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    "1.7.0": SensorEntityDescription(
+        key="1.7.0",
+        translation_key="active_power_import",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    "2.7.0": SensorEntityDescription(
+        key="2.7.0",
+        translation_key="active_power_export",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    "15.7.0": SensorEntityDescription(
+        key="15.7.0",
+        translation_key="absolute_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    "3.7.0": SensorEntityDescription(
+        key="3.7.0",
+        translation_key="reactive_power_import",
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        device_class=SensorDeviceClass.REACTIVE_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    "4.7.0": SensorEntityDescription(
+        key="4.7.0",
+        translation_key="reactive_power_export",
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        device_class=SensorDeviceClass.REACTIVE_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    "9.7.0": SensorEntityDescription(
+        key="9.7.0",
+        translation_key="apparent_power_import",
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    "10.7.0": SensorEntityDescription(
+        key="10.7.0",
+        translation_key="apparent_power_export",
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    "5.8.0": SensorEntityDescription(
+        key="5.8.0",
+        translation_key="reactive_energy_quadrant_1",
+        native_unit_of_measurement=(
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR
+        ),
+        device_class=SensorDeviceClass.REACTIVE_ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    "6.8.0": SensorEntityDescription(
+        key="6.8.0",
+        translation_key="reactive_energy_quadrant_2",
+        native_unit_of_measurement=(
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR
+        ),
+        device_class=SensorDeviceClass.REACTIVE_ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    "7.8.0": SensorEntityDescription(
+        key="7.8.0",
+        translation_key="reactive_energy_quadrant_3",
+        native_unit_of_measurement=(
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR
+        ),
+        device_class=SensorDeviceClass.REACTIVE_ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    "8.8.0": SensorEntityDescription(
+        key="8.8.0",
+        translation_key="reactive_energy_quadrant_4",
         native_unit_of_measurement=(
             UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR
         ),
