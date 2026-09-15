@@ -1,10 +1,14 @@
 """Define tests for the Music Assistant Integration config flow."""
 
+from collections.abc import Generator
 from copy import deepcopy
 from ipaddress import ip_address
 from unittest import mock
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import Discovery
 from music_assistant_client.exceptions import (
     CannotConnect,
     InvalidServerVersion,
@@ -14,6 +18,7 @@ from music_assistant_models.api import ServerInfoMessage
 from music_assistant_models.errors import AuthenticationFailed, InvalidToken
 import pytest
 
+from homeassistant.components.music_assistant.addon import ADDON_SLUG
 from homeassistant.components.music_assistant.config_flow import (
     CONF_URL,
     MusicAssistantConfigFlow,
@@ -72,12 +77,39 @@ ZEROCONF_DATA = ZeroconfServiceInfo(
     properties=ZEROCONF_PROPERTIES,
 )
 
+ADDON_DISCOVERY_CONFIG = {
+    "host": "addon-music-assistant",
+    "port": 8094,
+    "auth_token": "test_token",
+}
+ADDON_URL = "http://addon-music-assistant:8094"
+
 HASSIO_DATA = HassioServiceInfo(
-    config={"host": "addon-music-assistant", "port": 8094, "auth_token": "test_token"},
+    config=ADDON_DISCOVERY_CONFIG,
     name="Music Assistant",
     slug="music_assistant",
     uuid="1234",
 )
+
+
+@pytest.fixture(name="supervisor")
+def supervisor_fixture() -> Generator[MagicMock]:
+    """Mock the Supervisor being available."""
+    with patch(
+        "homeassistant.components.music_assistant.config_flow.is_hassio",
+        return_value=True,
+    ) as is_hassio:
+        yield is_hassio
+
+
+@pytest.fixture(name="addon_setup_time", autouse=True)
+def addon_setup_time_fixture() -> Generator[int]:
+    """Mock the app setup sleep time."""
+    with patch(
+        "homeassistant.components.music_assistant.config_flow.ADDON_SETUP_TIMEOUT",
+        new=0,
+    ) as addon_setup_time:
+        yield addon_setup_time
 
 
 async def test_full_flow(
@@ -97,7 +129,7 @@ async def test_full_flow(
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -173,7 +205,7 @@ async def test_duplicate_user(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -227,7 +259,7 @@ async def test_flow_user_server_version_invalid(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -293,7 +325,7 @@ async def test_user_url_different_from_server_base_url(
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -341,7 +373,7 @@ async def test_duplicate_user_with_different_urls(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -441,7 +473,7 @@ async def test_hassio_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
-        CONF_URL: "http://addon-music-assistant:8094",
+        CONF_URL: ADDON_URL,
         CONF_TOKEN: "test_token",
     }
     assert result["result"].unique_id == "1234"
@@ -509,7 +541,7 @@ async def test_hassio_flow_updates_failed_entry_and_reloads(
         assert result["reason"] == "already_configured"
 
         # Verify the entry was updated with new URL and token
-        assert failed_entry.data[CONF_URL] == "http://addon-music-assistant:8094"
+        assert failed_entry.data[CONF_URL] == ADDON_URL
         assert failed_entry.data[CONF_TOKEN] == "test_token"
 
         # Verify reload was scheduled
@@ -602,7 +634,7 @@ async def test_user_flow_with_auth_required(
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -667,7 +699,7 @@ async def test_hassio_flow_with_token(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
-        CONF_URL: "http://addon-music-assistant:8094",
+        CONF_URL: ADDON_URL,
         CONF_TOKEN: "test_token",
     }
     assert result["result"].unique_id == "1234"
@@ -683,7 +715,7 @@ async def test_auth_flow_success(
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -1038,3 +1070,284 @@ async def test_auth_with_redirect_uri(
         in result["url"]
     )
     assert "device_name=Home+Assistant" in result["url"]
+
+
+def _addon_discovery_info() -> list[Discovery]:
+    """Return the app discovery info from the Supervisor."""
+    return [
+        Discovery(
+            addon=ADDON_SLUG,
+            service=DOMAIN,
+            uuid=uuid4(),
+            config=dict(ADDON_DISCOVERY_CONFIG),
+        )
+    ]
+
+
+@pytest.mark.usefixtures(
+    "supervisor",
+    "addon_info",
+    "addon_running",
+    "get_addon_discovery_info",
+    "mock_get_server_info",
+)
+@pytest.mark.parametrize("discovery_info", [_addon_discovery_info()])
+async def test_addon_flow_with_addon_running(hass: HomeAssistant) -> None:
+    """Test the app flow when the Music Assistant app is already running."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+    assert result["menu_options"] == ["addon", "manual"]
+    assert result["description_placeholders"] == {"addon": DEFAULT_NAME}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "addon"}
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == {CONF_URL: ADDON_URL, CONF_TOKEN: "test_token"}
+    assert result["result"].unique_id == "1234"
+
+
+@pytest.mark.usefixtures(
+    "supervisor",
+    "addon_info",
+    "addon_installed",
+    "start_addon",
+    "get_addon_discovery_info",
+    "mock_get_server_info",
+)
+@pytest.mark.parametrize("discovery_info", [_addon_discovery_info()])
+async def test_addon_flow_with_addon_installed(hass: HomeAssistant) -> None:
+    """Test the app flow when the Music Assistant app is installed but stopped."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "addon"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    assert result["progress_action"] == "start_addon"
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_URL: ADDON_URL, CONF_TOKEN: "test_token"}
+
+
+@pytest.mark.usefixtures(
+    "supervisor",
+    "addon_info",
+    "addon_not_installed",
+    "install_addon",
+    "start_addon",
+    "get_addon_discovery_info",
+    "mock_get_server_info",
+)
+@pytest.mark.parametrize("discovery_info", [_addon_discovery_info()])
+async def test_addon_flow_with_addon_not_installed(hass: HomeAssistant) -> None:
+    """Test the app flow when the Music Assistant app is not installed yet."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "addon"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_addon"
+    assert result["progress_action"] == "install_addon"
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    assert result["progress_action"] == "start_addon"
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_URL: ADDON_URL, CONF_TOKEN: "test_token"}
+
+
+@pytest.mark.usefixtures(
+    "supervisor",
+    "addon_info",
+    "addon_running",
+    "get_addon_discovery_info",
+    "mock_get_server_info",
+)
+@pytest.mark.parametrize("discovery_info", [_addon_discovery_info()])
+async def test_addon_flow_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the app flow aborts and updates an already configured server."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "addon"}
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == {CONF_URL: ADDON_URL, CONF_TOKEN: "test_token"}
+
+
+@pytest.mark.usefixtures("supervisor", "addon_info", "addon_running")
+async def test_addon_flow_menu_manual_option(
+    hass: HomeAssistant, mock_get_server_info: AsyncMock
+) -> None:
+    """Test the manual option of the app menu."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "manual"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert mock_get_server_info.call_count == 0
+
+
+@pytest.mark.usefixtures("supervisor", "addon_installed", "mock_get_server_info")
+async def test_addon_info_failed(hass: HomeAssistant, addon_info: AsyncMock) -> None:
+    """Test the app flow when the app info cannot be retrieved."""
+    addon_info.side_effect = SupervisorError()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "addon"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_info_failed"
+    assert result["description_placeholders"] == {"addon": DEFAULT_NAME}
+
+
+@pytest.mark.usefixtures(
+    "supervisor",
+    "addon_info",
+    "addon_not_installed",
+    "start_addon",
+    "get_addon_discovery_info",
+    "mock_get_server_info",
+)
+@pytest.mark.parametrize("discovery_info", [_addon_discovery_info()])
+async def test_addon_install_failed(
+    hass: HomeAssistant, install_addon: AsyncMock
+) -> None:
+    """Test the app flow when installing the app fails."""
+    install_addon.side_effect = SupervisorError()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "addon"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_addon"
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_install_failed"
+    assert result["description_placeholders"] == {"addon": DEFAULT_NAME}
+
+
+@pytest.mark.usefixtures(
+    "supervisor",
+    "addon_info",
+    "addon_installed",
+    "get_addon_discovery_info",
+    "mock_get_server_info",
+)
+@pytest.mark.parametrize(
+    ("discovery_info", "start_addon_error"),
+    [
+        pytest.param([], None, id="no_discovery_info"),
+        pytest.param(
+            _addon_discovery_info(), SupervisorError(), id="start_addon_error"
+        ),
+    ],
+)
+async def test_addon_start_failed(
+    hass: HomeAssistant, start_addon: AsyncMock, start_addon_error: Exception | None
+) -> None:
+    """Test the app flow when the app does not start."""
+    start_addon.side_effect = start_addon_error
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "addon"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_start_failed"
+    assert result["description_placeholders"] == {"addon": DEFAULT_NAME}
+
+
+@pytest.mark.usefixtures(
+    "supervisor", "addon_info", "addon_running", "get_addon_discovery_info"
+)
+@pytest.mark.parametrize(
+    ("discovery_info", "get_server_info_error"),
+    [
+        pytest.param([], None, id="no_discovery_info"),
+        pytest.param(
+            _addon_discovery_info(), CannotConnect("Boom"), id="cannot_connect"
+        ),
+    ],
+)
+async def test_addon_connection_failed(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    get_server_info_error: Exception | None,
+) -> None:
+    """Test the app flow when the running app cannot be connected to."""
+    mock_get_server_info.side_effect = get_server_info_error
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "addon"}
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_connection_failed"
+    assert result["description_placeholders"] == {"addon": DEFAULT_NAME}
