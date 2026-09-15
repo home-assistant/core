@@ -204,3 +204,40 @@ async def test_light_empty_result_requires_confirmed_state(
         )
 
     mock_opengarage.update_state.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("response", [{"light": 0}, None])
+async def test_light_noop_cannot_use_cached_confirmation(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    response: dict[str, int] | None,
+) -> None:
+    """Bypass refresh cooldown and reject a failed poll despite cached ON state."""
+    mock_opengarage.set_light.return_value = 1
+    mock_opengarage.update_state.return_value = {
+        **mock_opengarage.update_state.return_value,
+        "light": 1,
+    }
+    await hass.services.async_call(
+        light.DOMAIN,
+        light.SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_ON
+
+    mock_opengarage.set_light.return_value = None
+    mock_opengarage.update_state.reset_mock()
+    mock_opengarage.update_state.return_value = response
+
+    with pytest.raises(HomeAssistantError, match="device is unavailable"):
+        await hass.services.async_call(
+            light.DOMAIN,
+            light.SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_opengarage.update_state.assert_awaited_once()

@@ -95,8 +95,8 @@ class OpenGarageLight(OpenGarageEntity, LightEntity):
             )
 
         if result is None:
-            await self.coordinator.async_request_refresh()
-            if self.is_on is turn_on:
+            await self.coordinator.async_refresh()
+            if self.coordinator.last_update_success and self.is_on is turn_on:
                 return
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
