@@ -16,7 +16,7 @@ from homeassistant.loader import Integration, async_get_integrations
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
-from .common import TRIGGERS
+from .models import TRIGGERS
 
 _LOGGER = logging.getLogger(__name__)
 

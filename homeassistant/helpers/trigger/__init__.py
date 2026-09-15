@@ -59,16 +59,6 @@ from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 
-from .common import (
-    TRIGGERS,
-    NotTriggeredInfo,
-    Trigger,
-    TriggerAction,
-    TriggerActionPayloadBuilder,
-    TriggerActionRunner,
-    TriggerConfig,
-    TriggerNotTriggeredReporter,
-)
 from .descriptions import (
     TRIGGER_DESCRIPTION_CACHE,
     async_get_all_descriptions,
@@ -103,6 +93,16 @@ from .entity_trigger import (
     make_entity_target_state_trigger,
     make_entity_transition_trigger,
     make_numerical_state_changed_with_unit_schema,
+)
+from .models import (
+    TRIGGERS,
+    NotTriggeredInfo,
+    Trigger,
+    TriggerAction,
+    TriggerActionPayloadBuilder,
+    TriggerActionRunner,
+    TriggerConfig,
+    TriggerNotTriggeredReporter,
 )
 
 __all__ = [

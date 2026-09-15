@@ -45,7 +45,7 @@ from homeassistant.helpers.target import (
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.util.unit_conversion import BaseUnitConverter
 
-from .common import (
+from .models import (
     NotTriggeredInfo,
     Trigger,
     TriggerActionRunner,
