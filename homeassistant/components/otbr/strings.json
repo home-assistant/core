@@ -42,6 +42,9 @@
     "pending_dataset_in_place": {
       "message": "A pending dataset is already in place: a migration or channel change is propagating through the mesh. Wait for it to complete, then try again."
     },
+    "pending_dataset_refused": {
+      "message": "The border router refused the pending dataset: it is not attached to a Thread network, or the network's leader rejected the dataset as not newer than the one in place."
+    },
     "pinned_router_unreachable": {
       "message": "The border router {router} pins the Thread channel for another radio, but could not be read to check whether it is on this network. Try again once it is reachable."
     },

@@ -503,6 +503,28 @@ async def test_already_on_network(
     assert not pending_calls(aioclient_mock)
 
 
+async def test_a_router_that_refuses_the_pending_dataset_says_so(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A refusal by the border router is reported as one, and hands back the window.
+
+    A border router that registers the dataset with the Thread leader answers
+    with a conflict when it is not attached, or when the leader rejects the
+    dataset. Nothing was registered, so nothing is propagating, and a retry
+    is not refused.
+    """
+    mock_pending_endpoint(aioclient_mock, put_status=HTTPStatus.CONFLICT)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await call_migrate(hass, dataset=TARGET)
+    assert exc_info.value.translation_key == "pending_dataset_refused"
+
+    mock_pending_endpoint(aioclient_mock)
+    assert (await call_migrate(hass, dataset=TARGET))["status"] == "migrating"
+
+
 async def test_router_refusal_is_reported(
     hass: HomeAssistant,
     otbr_config_entry_multipan: str,
