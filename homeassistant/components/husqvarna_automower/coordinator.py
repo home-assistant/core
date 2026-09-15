@@ -110,6 +110,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 mower_data.capabilities.work_areas for mower_data in self.data.values()
             ):
                 self._async_add_remove_work_areas()
+                self._update_work_area_devices()
             if (
                 not self._should_poll()
                 and self.update_interval is not None
@@ -323,7 +324,44 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
 
             if removed_areas:
                 _LOGGER.debug("Removing work areas: %s", removed_areas)
-                for entry in entries:
-                    for area_id in removed_areas:
+                device_registry = dr.async_get(self.hass)
+                for area_id in removed_areas:
+                    child_to_remove = (
+                        device_registry.async_get_child_device_by_identifier(
+                            (DOMAIN, f"{mower_id}_{area_id}"),
+                            self.config_entry.entry_id,
+                        )
+                    )
+                    if child_to_remove is not None:
+                        device_registry.async_remove_device(child_to_remove.id)
+                        continue
+                    for entry in entries:
                         if entry.unique_id.startswith(f"{mower_id}_{area_id}_"):
                             entity_registry.async_remove(entry.entity_id)
+
+    @callback
+    def _update_work_area_devices(self) -> None:
+        """Update work area devices."""
+        device_registry = dr.async_get(self.hass)
+
+        for mower_id, mower_data in self.data.items():
+            if not mower_data.capabilities.work_areas:
+                continue
+
+            if mower_data.work_areas is None:
+                continue
+
+            for work_area_id, work_area in mower_data.work_areas.items():
+                if work_area_id == 0:
+                    continue
+
+                device = device_registry.async_get_child_device_by_identifier(
+                    (DOMAIN, f"{mower_id}_{work_area_id}"),
+                    self.config_entry.entry_id,
+                )
+
+                if device is not None and device.name != work_area.name:
+                    device_registry.async_update_child_device(
+                        device.id,
+                        name=work_area.name,
+                    )
