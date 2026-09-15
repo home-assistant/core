@@ -520,6 +520,11 @@ ZEROCONF = {
             "domain": "freebox",
         },
     ],
+    "_gardena-smart._tcp.local.": [
+        {
+            "domain": "gardena_smart_local",
+        },
+    ],
     "_gasleser._tcp.local.": [
         {
             "domain": "energieleser",
