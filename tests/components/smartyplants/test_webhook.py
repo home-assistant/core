@@ -2,23 +2,29 @@
 
 import asyncio
 from copy import deepcopy
+from datetime import timedelta
 from hashlib import sha256
 import hmac
 import json
 from typing import Any
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pysmartyplants import Sensor, SensorUpdate
 import pytest
 
-from homeassistant.components.smartyplants.const import CONF_WEBHOOK_SECRET, DOMAIN
+from homeassistant.components.smartyplants.const import (
+    CONF_WEBHOOK_SECRET,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import WEBHOOK_ID, WEBHOOK_SECRET
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 MOISTURE = "sensor.monstera_soil_moisture"
@@ -149,12 +155,13 @@ async def test_push_signature_refused(
 
 
 @pytest.mark.usefixtures("mock_smartyplants_client")
-async def test_push_refused_without_secret(
+async def test_webhook_not_registered_without_secret(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
+    sensor_payloads: list[dict[str, Any]],
 ) -> None:
-    """Test pushes are refused when no secret was configured."""
+    """Test no webhook is registered when no push could ever be verified."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -166,7 +173,14 @@ async def test_push_refused_without_secret(
     )
     await setup_integration(hass, entry)
 
-    assert await _post_signed(hass_client_no_auth, _push()) == 401
+    # Home Assistant answers 200 for an unregistered webhook; a registered one would refuse with 401.
+    assert (
+        await _post_signed(hass_client_no_auth, _moisture_push(sensor_payloads, 55))
+        == 200
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(MOISTURE).state == "41"
 
 
 @pytest.mark.parametrize(
@@ -242,6 +256,34 @@ async def test_wrongly_typed_timestamp_ignored(
     await hass.async_block_till_done()
 
     assert hass.states.get(MOISTURE).state == "55"
+
+
+async def test_push_keeps_poll_schedule(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_smartyplants_client: AsyncMock,
+    sensor_payloads: list[dict[str, Any]],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a push does not postpone the next scheduled poll."""
+    await setup_integration(hass, mock_config_entry)
+    polls = mock_smartyplants_client.async_get_sensors.call_count
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL - timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    assert (
+        await _post_signed(hass_client_no_auth, _moisture_push(sensor_payloads, 55))
+        == 200
+    )
+    await hass.async_block_till_done()
+
+    # Poll due 10s after the push; restarting the timer would move it 60s out.
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_smartyplants_client.async_get_sensors.call_count == polls + 1
 
 
 async def test_push_during_poll_not_reverted(

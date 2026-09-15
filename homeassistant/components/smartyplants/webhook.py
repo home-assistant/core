@@ -36,22 +36,16 @@ async def async_register_webhook(
 ) -> None:
     """Register the push endpoint for this config entry."""
     webhook_id = entry.data.get(CONF_WEBHOOK_ID)
-    if not webhook_id:
-        return
-
     secret = entry.data.get(CONF_WEBHOOK_SECRET)
+    # Without a secret no push can be verified, so there is nothing to listen for.
+    if not webhook_id or not secret:
+        return
 
     async def _handle(
         hass: HomeAssistant, webhook_id: str, request: Request
     ) -> Response:
         """Validate and apply one pushed update."""
         body = await request.read()
-
-        # Without a secret we cannot prove the caller is the SmartyPlants
-        # backend, so we refuse rather than trusting an unauthenticated post.
-        if not secret:
-            _LOGGER.warning("Rejected webhook: no signing secret is configured")
-            return Response(status=401)
 
         if not _signature_matches(secret, body, request.headers.get(SIGNATURE_HEADER)):
             _LOGGER.warning("Rejected webhook: signature did not match")

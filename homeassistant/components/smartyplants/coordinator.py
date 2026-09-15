@@ -88,6 +88,8 @@ class SmartyPlantsCoordinator(DataUpdateCoordinator[dict[str, Sensor]]):
                 _LOGGER.debug("Ignoring push for unknown sensor %s", update.sensor_id)
                 return
 
-            self.async_set_updated_data(
-                {**data, update.sensor_id: existing.merge(update)}
-            )
+            # async_set_updated_data restarts the poll timer, and frequent pushes
+            # would then keep deferring the poll that notices removed sensors.
+            self.data = {**data, update.sensor_id: existing.merge(update)}
+            self.last_update_success = True
+            self.async_update_listeners()
