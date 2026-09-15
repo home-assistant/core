@@ -1565,7 +1565,7 @@ class Script:
         self._max_exceeded = max_exceeded
         if script_mode == SCRIPT_MODE_QUEUED:
             self._queue_lck = asyncio.Lock()
-        self._condition_cache: dict[frozenset[tuple[str, str]], ConditionChecker] = {}
+        self._condition_cache: dict[int, ConditionChecker] = {}
         self._repeat_script: dict[int, Script] = {}
         self._choose_data: dict[int, _ChooseData] = {}
         self._if_data: dict[int, _IfData] = {}
@@ -2087,7 +2087,7 @@ class Script:
         self._sequence_scripts.clear()
 
     async def _async_get_condition(self, config: ConfigType) -> ConditionChecker:
-        config_cache_key = frozenset((k, str(v)) for k, v in config.items())
+        config_cache_key = id(config)
         if not (cond := self._condition_cache.get(config_cache_key)):
             cond = await condition.async_from_config(self._hass, config)
             self._condition_cache[config_cache_key] = cond
