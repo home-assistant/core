@@ -300,7 +300,9 @@ class WfRacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             user_input=user_input,
             description_placeholders=description_placeholders,
-            allow_port_fallback=True,
+            # A port corrected in the form is a decision, not an announcement.
+            allow_port_fallback=not user_input
+            or user_input[CONF_PORT] == self._discovery_info[CONF_PORT],
         )
 
     @override

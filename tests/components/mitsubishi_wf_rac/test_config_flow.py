@@ -307,6 +307,31 @@ async def test_zeroconf_flow_port_fallback(
     assert result["data"][CONF_PORT] == DEFAULT_PORT
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_a_port_corrected_in_the_form_is_not_second_guessed(
+    hass: HomeAssistant, mock_repository: AsyncMock
+) -> None:
+    """The fallback belongs to the announcement, not to the person.
+
+    Someone who overwrites the announced port has said where the module
+    listens. Retrying 51443 behind their back would store a port they did not
+    ask for, so the failure has to reach the form as it is.
+    """
+    mock_repository.get_airco_id.side_effect = WfRacConnectionError("x")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info(port=5353)
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PORT: 8080}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
+    assert mock_repository.get_airco_id.await_count == 1
+
+
 @pytest.mark.usefixtures("mock_repository", "mock_setup_entry")
 async def test_zeroconf_flow_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
