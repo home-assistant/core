@@ -1,12 +1,13 @@
 """Repairs for the Teslemetry integration."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 import probatio
 from tesla_fleet_api.exceptions import PrivateKeyError, TeslaFleetError
 
+from homeassistant.components.bluetooth import async_scanner_count
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
@@ -17,7 +18,13 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 
 from . import TeslemetryConfigEntry, _async_get_rsa_key_pem
-from .const import ISSUE_GATEWAY_NOT_FOUND, LOGGER, VEHICLE_ISSUE_LEARN_MORE
+from .config_flow import VehiclePairingFlow
+from .const import (
+    ISSUE_GATEWAY_NOT_FOUND,
+    ISSUE_TYPE_BLE_KEY_REJECTED,
+    LOGGER,
+    VEHICLE_ISSUE_LEARN_MORE,
+)
 from .helpers import (
     PowerwallKeyRejectedError,
     async_verify_local_gateway,
@@ -67,6 +74,29 @@ class VehicleMetadataRepairFlow(RepairsFlow):
             step_id="confirm",
             description_placeholders=self.placeholders,
         )
+
+
+class BluetoothKeyRepairFlow(VehiclePairingFlow[RepairsFlowResult], RepairsFlow):
+    """Re-approve Home Assistant's Bluetooth key on a vehicle that rejected it."""
+
+    def __init__(self, vin: str) -> None:
+        """Create flow."""
+        super().__init__()
+        self._vin = vin
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> RepairsFlowResult:
+        """Start re-pairing by finding the vehicle over Bluetooth."""
+        if not async_scanner_count(self.hass, connectable=True):
+            return self.async_abort(reason="bluetooth_not_available")
+        return await self.async_step_scan()
+
+    @callback
+    @override
+    def _async_finish_pairing(self) -> RepairsFlowResult:
+        """Resolve the repair once the key is back on the vehicle's whitelist."""
+        return self.async_create_entry(data={})
 
 
 class GatewayNotFoundRepairFlow(RepairsFlow):
@@ -186,6 +216,12 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
+    if (
+        data is not None
+        and data.get("issue_type") == ISSUE_TYPE_BLE_KEY_REJECTED
+        and isinstance(vin := data.get("vin"), str)
+    ):
+        return BluetoothKeyRepairFlow(vin)
     if (
         data is not None
         and isinstance(entry_id := data.get("entry_id"), str)
