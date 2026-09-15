@@ -1,12 +1,12 @@
 """Data update coordinator for Sofar devices."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 from typing import override
 
-from modbus_connection import ModbusConnectionError, ModbusError
+from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
 from propcache.api import cached_property
 from sofar_modbus.model import UpdateReport
 from sofar_modbus.modern.device import SofarInverter
@@ -92,18 +92,17 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     async def _async_observed_poll(self) -> UpdateReport:
         """Poll once; a timeout either attempt hit must reach the tuner."""
+        attempted: dict[str, ModbusError] = {}
         try:
             report = await self._poll()
-        except ModbusError as err:
-            self._tuner.observe_failure(err)
-            raise
-        attempted = dict(report.failed)
-        try:
+            attempted = dict(report.failed)
             report = await self._retry_failed(report)
         except ModbusError as err:
-            self._tuner.observe_failure(err)
+            self._tuner.observe_failure(_timed_out(attempted) or err)
             raise
-        self._tuner.observe(UpdateReport(report.updated, attempted | report.failed))
+        self._tuner.observe(
+            UpdateReport(report.updated, _both_attempts(attempted, report.failed))
+        )
         return report
 
     async def _retry_failed(self, report: UpdateReport) -> UpdateReport:
@@ -137,6 +136,24 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                 _LOGGER.info("%s: %s is available again", self.name, name)
 
         return report
+
+
+def _timed_out(failures: Mapping[str, ModbusError]) -> ModbusTimeoutError | None:
+    """Whichever of these failures timed out, if any of them did."""
+    return next(
+        (err for err in failures.values() if isinstance(err, ModbusTimeoutError)), None
+    )
+
+
+def _both_attempts(
+    attempted: Mapping[str, ModbusError], retried: Mapping[str, ModbusError]
+) -> dict[str, ModbusError]:
+    """Both attempts' failures, a timeout outranking any other error."""
+    failures = dict(attempted)
+    for name, err in retried.items():
+        if not isinstance(failures.get(name), ModbusTimeoutError):
+            failures[name] = err
+    return failures
 
 
 @dataclass

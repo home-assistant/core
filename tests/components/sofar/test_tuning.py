@@ -3,7 +3,11 @@
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusTimeoutError, ServerDeviceBusyError
+from modbus_connection import (
+    ModbusConnectionError,
+    ModbusTimeoutError,
+    ServerDeviceBusyError,
+)
 from modbus_connection.mock import MockModbusConnection
 import pytest
 from sofar_modbus.model import UpdateReport
@@ -121,6 +125,50 @@ async def test_tuner_hears_a_timeout_the_retry_recovered(
         return UpdateReport({"state"}, {"grid": ModbusTimeoutError("slow")})
 
     init_integration.runtime_data.readings._poll = timed_out_grid
+    await _poll(hass, freezer, 1)
+
+    assert unit.required_timeout is None
+
+
+async def test_tuner_hears_a_timeout_the_retry_reported_otherwise(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a retry's own error does not bury the timeout that preceded it."""
+    unit = mock_connection.for_unit(1)
+    await _poll(hass, freezer, CLEAN_POLLS)
+    assert unit.required_timeout == EARNED_TIMEOUT
+
+    async def timed_out_grid() -> UpdateReport:
+        """A first attempt that timed out."""
+        return UpdateReport({"state"}, {"grid": ModbusTimeoutError("slow")})
+
+    init_integration.runtime_data.readings._poll = timed_out_grid
+    unit.fail_read(GRID_REGISTER, ServerDeviceBusyError("busy on retry"))
+    await _poll(hass, freezer, 1)
+
+    assert unit.required_timeout is None
+
+
+async def test_tuner_hears_a_timeout_when_the_retry_loses_the_link(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a link dying during the retry does not bury the earlier timeout."""
+    unit = mock_connection.for_unit(1)
+    await _poll(hass, freezer, CLEAN_POLLS)
+    assert unit.required_timeout == EARNED_TIMEOUT
+
+    async def timed_out_grid() -> UpdateReport:
+        """A first attempt that timed out."""
+        return UpdateReport({"state"}, {"grid": ModbusTimeoutError("slow")})
+
+    init_integration.runtime_data.readings._poll = timed_out_grid
+    unit.fail_read(GRID_REGISTER, ModbusConnectionError("link gone"))
     await _poll(hass, freezer, 1)
 
     assert unit.required_timeout is None
