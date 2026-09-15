@@ -1,6 +1,7 @@
 """Habitron integration using DataUpdateCoordinator."""
 
 import asyncio
+from dataclasses import dataclass
 from ipaddress import IPv4Address
 import logging
 from typing import override
@@ -65,7 +66,22 @@ def _area_name(router: Router, area_no: int) -> str:
     return "House"
 
 
-class HbtnCoordinator(DataUpdateCoordinator[int]):
+@dataclass(frozen=True, slots=True)
+class HbtnData:
+    """What one poll found, and the coordinator's change-detection key.
+
+    With ``always_update=False`` Home Assistant fans out to the entities only
+    when this differs from the previous tick, so everything an entity renders
+    from has to be in here. The bus status is covered by its CRC; the hub's own
+    readings are polled apart from it and can fail on their own, which is a
+    state the entities show -- so it travels alongside.
+    """
+
+    crc: int
+    host_readings_ok: bool
+
+
+class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
     """Habitron data update coordinator.
 
     Owns the connection and the whole model. ``async_refresh_system`` writes the
@@ -75,11 +91,10 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
     ``_handle_coordinator_update`` callbacks. The coordinator acts as a
     heartbeat that fans out update events.
 
-    ``_async_update_data`` returns the compact-status CRC (an ``int``), which
-    serves as the change-detection key. With ``always_update=False`` the
-    coordinator only fans out to the entities when the bus status actually
-    changed between ticks, avoiding a needless write of every entity on every
-    tick.
+    ``_async_update_data`` returns an :class:`HbtnData`, which serves as the
+    change-detection key. With ``always_update=False`` the coordinator only
+    fans out to the entities when something they show actually changed between
+    ticks, avoiding a needless write of every entity on every tick.
     """
 
     def __init__(self, hass: HomeAssistant, entry: HabitronConfigEntry) -> None:
@@ -376,10 +391,10 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
             await self.client.send_devregid(module.addr, dev.id)
 
     @override
-    async def _async_update_data(self) -> int:
+    async def _async_update_data(self) -> HbtnData:
         """Fetch the current Habitron status.
 
-        Returns the compact-status CRC used for change detection;
+        Returns the change-detection key (see :class:`HbtnData`);
         ``async_refresh_system`` also updates the model in place and fires the
         per-member listeners. Connection-level failures (timeouts, network
         errors, refused connections) are converted to ``UpdateFailed`` so the
@@ -406,7 +421,7 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
         # hub-diag hiccup must not mark every entity unavailable.
         await self._async_update_host()
         self._update_router_issue()
-        return self.crc
+        return HbtnData(crc=self.crc, host_readings_ok=self.host_readings_ok)
 
     async def _async_update_host(self) -> None:
         """Refresh the hub's own host readings.

@@ -77,7 +77,7 @@ async def test_update_returns_the_status_crc(
     """The CRC is the change-detection key the coordinator hands back."""
     bus, host = mock_refresh
     coord = _ready(hass)
-    assert await coord._async_update_data() == 4711
+    assert (await coord._async_update_data()).crc == 4711
     bus.assert_awaited_once()
     host.assert_awaited_once()
 
@@ -134,7 +134,31 @@ async def test_host_readings_never_fail_the_tick(
     _, host = mock_refresh
     host.side_effect = raised
     coord = _ready(hass)
-    assert await coord._async_update_data() == 4711
+    assert (await coord._async_update_data()).crc == 4711
+
+
+async def test_host_state_travels_in_the_coordinator_data(
+    hass: HomeAssistant,
+    mock_refresh: tuple[AsyncMock, AsyncMock],
+) -> None:
+    """A host failure has to change the data, or no entity hears about it.
+
+    ``always_update=False`` fans out to the entities only when the returned
+    data differs from the previous tick. On a quiet bus the status CRC does not
+    move, so a host state that lived outside the data would leave the hub's
+    sensors reporting a stale value as if it were live -- and leave them
+    unavailable after the hub answers again.
+    """
+    _, host = mock_refresh
+    coord = _ready(hass)
+    healthy = await coord._async_update_data()
+
+    host.side_effect = HabitronError("protocol glitch")
+    stale = await coord._async_update_data()
+    assert stale != healthy, "same data despite a failed host poll: no fanout"
+
+    host.side_effect = None
+    assert await coord._async_update_data() == healthy
 
 
 @pytest.mark.parametrize(
