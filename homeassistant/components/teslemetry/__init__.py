@@ -18,7 +18,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry
-from teslemetry_stream import TeslemetryStream
+from teslemetry_stream import TeslemetryStream, TeslemetryStreamAuthenticationError
 from teslemetry_stream.const import SseTopic
 
 from homeassistant.components.application_credentials import (
@@ -681,7 +681,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     create_handle_energy_stream_connection(energysites)
                 )
             )
-        entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
+
+        async def listen() -> None:
+            """Listen to the stream, prompting reauth if the token is rejected."""
+            try:
+                await stream.listen()
+            except TeslemetryStreamAuthenticationError:
+                entry.async_start_reauth(hass)
+
+        entry.async_create_background_task(hass, listen(), "Teslemetry Stream")
 
     return True
 
@@ -901,11 +909,6 @@ async def async_setup_stream(
 ) -> None:
     """Set up the stream for a vehicle."""
     await vehicle.stream_vehicle.get_config()
-    entry.async_create_background_task(
-        hass,
-        vehicle.stream_vehicle.prefer_typed(True),
-        f"Prefer typed for {vehicle.vin}",
-    )
 
     entry.async_on_unload(
         vehicle.stream_vehicle.listen_Version(

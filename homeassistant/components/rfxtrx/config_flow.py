@@ -39,7 +39,7 @@ from homeassistant.helpers.typing import VolDictType
 from . import (
     DOMAIN,
     DeviceTuple,
-    get_device_id,
+    get_device_tuple_from_device,
     get_device_tuple_from_identifiers,
     get_rfx_object,
 )
@@ -180,7 +180,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
         if user_input is not None:
             devices: dict[str, dict[str, Any] | None] = {}
             device: dict[str, Any]
-            device_id = get_device_id(
+            device_id = get_device_tuple_from_device(
                 self._selected_device_object.device,
                 data_bits=user_input.get(CONF_DATA_BITS),
             )
@@ -325,8 +325,8 @@ class RfxtrxOptionsFlow(OptionsFlow):
         old_device_data = self._get_device_data(old_device)
         new_device_data = self._get_device_data(replace_device)
 
-        old_device_id = "_".join(x for x in old_device_data[CONF_DEVICE_ID])
-        new_device_id = "_".join(x for x in new_device_data[CONF_DEVICE_ID])
+        old_device_id = old_device_data[CONF_DEVICE_ID].unique_id
+        new_device_id = new_device_data[CONF_DEVICE_ID].unique_id
 
         entity_registry = er.async_get(self.hass)
         entity_entries = er.async_entries_for_device(
@@ -414,12 +414,14 @@ class RfxtrxOptionsFlow(OptionsFlow):
 
     def _can_add_device(self, new_rfx_obj: rfxtrxmod.RFXtrxEvent) -> bool:
         """Check if device does not already exist."""
-        new_device_id = get_device_id(new_rfx_obj.device)
+        new_device_id = get_device_tuple_from_device(new_rfx_obj.device)
         for packet_id, entity_info in self.config_entry.data[CONF_DEVICES].items():
             rfx_obj = get_rfx_object(packet_id)
             assert rfx_obj
 
-            device_id = get_device_id(rfx_obj.device, entity_info.get(CONF_DATA_BITS))
+            device_id = get_device_tuple_from_device(
+                rfx_obj.device, entity_info.get(CONF_DATA_BITS)
+            )
             if new_device_id == device_id:
                 return False
 
@@ -493,7 +495,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
 class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for RFXCOM RFXtrx."""
 
-    VERSION = 1
+    VERSION = 2
 
     @override
     async def async_step_user(

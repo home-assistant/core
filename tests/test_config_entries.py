@@ -7306,16 +7306,25 @@ def test_raise_trying_to_add_same_config_entry_twice(
     ],
 )
 @pytest.mark.parametrize(
-    ("source", "reason"),
+    ("source", "reason", "translation_domain"),
     [
-        (config_entries.SOURCE_REAUTH, "reauth_successful"),
-        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful"),
+        (
+            config_entries.SOURCE_REAUTH,
+            "reauth_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
+        (
+            config_entries.SOURCE_RECONFIGURE,
+            "reconfigure_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
     ],
 )
 async def test_update_entry_and_reload(
     hass: HomeAssistant,
     source: str,
     reason: str,
+    translation_domain: str | None,
     expected_title: str,
     expected_unique_id: str,
     expected_data: dict[str, Any],
@@ -7379,6 +7388,7 @@ async def test_update_entry_and_reload(
     else:
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == reason
+        assert result.get("translation_domain") == translation_domain
     # Assert entry was reloaded
     assert len(comp.async_setup_entry.mock_calls) == calls_entry_load_unload[0]
     assert len(comp.async_unload_entry.mock_calls) == calls_entry_load_unload[1]
@@ -7447,16 +7457,25 @@ async def test_update_entry_and_reload_with_listener_logs(
 
 
 @pytest.mark.parametrize(
-    ("source", "reason"),
+    ("source", "reason", "translation_domain"),
     [
-        (config_entries.SOURCE_REAUTH, "reauth_successful"),
-        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful"),
+        (
+            config_entries.SOURCE_REAUTH,
+            "reauth_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
+        (
+            config_entries.SOURCE_RECONFIGURE,
+            "reconfigure_successful",
+            HOMEASSISTANT_DOMAIN,
+        ),
     ],
 )
 async def test_update_entry_without_reload(
     hass: HomeAssistant,
     source: str,
     reason: str,
+    translation_domain: str | None,
 ) -> None:
     """Test updating an entry without reloading."""
     entry = MockConfigEntry(
@@ -7518,9 +7537,71 @@ async def test_update_entry_without_reload(
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+    assert result.get("translation_domain") == translation_domain
     # Assert entry is not reloaded
     assert len(comp.async_setup_entry.mock_calls) == 1
     assert len(comp.async_unload_entry.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    "helper",
+    [
+        pytest.param("async_update_and_abort", id="without_reload"),
+        pytest.param("async_update_reload_and_abort", id="with_reload"),
+    ],
+)
+@pytest.mark.parametrize(
+    "start_flow",
+    [
+        pytest.param("start_reauth_flow", id="reauth"),
+        pytest.param("start_reconfigure_flow", id="reconfigure"),
+    ],
+)
+async def test_update_entry_and_abort_with_custom_reason(
+    hass: HomeAssistant,
+    helper: str,
+    start_flow: str,
+) -> None:
+    """Test a custom abort reason is not translated in the homeassistant domain."""
+    entry = MockConfigEntry(domain="comp", data={"vendor": "data"})
+    entry.add_to_hass(hass)
+
+    comp = MockModule(
+        "comp",
+        async_setup_entry=AsyncMock(return_value=True),
+        async_unload_entry=AsyncMock(return_value=True),
+    )
+    mock_integration(hass, comp)
+    mock_platform(hass, "comp.config_flow", None)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_reauth(self, data):
+            """Mock Reauth."""
+            return getattr(self, helper)(
+                entry, data_updates={"buyer": "me"}, reason="custom_reason"
+            )
+
+        async def async_step_reconfigure(self, data):
+            """Mock Reconfigure."""
+            return getattr(self, helper)(
+                entry, data_updates={"buyer": "me"}, reason="custom_reason"
+            )
+
+    with mock_config_flow("comp", MockFlowHandler):
+        result = await getattr(entry, start_flow)(hass)
+
+    await hass.async_block_till_done()
+
+    assert entry.data == {"vendor": "data", "buyer": "me"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "custom_reason"
+    assert "translation_domain" not in result
 
 
 @pytest.mark.parametrize(

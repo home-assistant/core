@@ -3501,6 +3501,7 @@ async def test_supports_reconfigure(
     assert data == {
         "handler": "test",
         "reason": "reconfigure_successful",
+        "translation_domain": "homeassistant",
         "type": "abort",
         "description_placeholders": None,
     }

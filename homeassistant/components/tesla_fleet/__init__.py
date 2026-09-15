@@ -1,5 +1,6 @@
 """Tesla Fleet integration."""
 
+import asyncio
 from typing import Final
 
 import jwt
@@ -34,6 +35,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN, LOGGER
 from .coordinator import (
+    VEHICLE_FIRST_REFRESH_TIMEOUT,
     TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
@@ -110,12 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     implementation = await async_get_config_entry_implementation(hass, entry)
 
     oauth_session = OAuth2Session(hass, entry, implementation)
-    try:
-        await oauth_session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed from err
-    except OAuth2TokenRequestError as err:
-        raise ConfigEntryNotReady from err
+    await oauth_session.async_ensure_token_valid()
 
     access_token = oauth_session.token[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
@@ -164,7 +161,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 hass, entry, api_vehicle, product, Scope.VEHICLE_LOCATION in scopes
             )
 
-            await coordinator.async_config_entry_first_refresh()
+            # A sleeping vehicle can take minutes to answer vehicle_data; bound the
+            # first refresh so setup retries instead of stalling HA's bootstrap.
+            try:
+                async with asyncio.timeout(VEHICLE_FIRST_REFRESH_TIMEOUT):
+                    await coordinator.async_config_entry_first_refresh()
+            except TimeoutError as err:
+                raise ConfigEntryNotReady(
+                    f"Timed out waiting for vehicle {vin} to respond"
+                ) from err
 
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},

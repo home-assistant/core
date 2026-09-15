@@ -170,6 +170,7 @@ async def async_attach_trigger(
             unsub()
         unsubs.clear()
 
+    @callback
     def _create_zwave_listeners() -> None:
         """Create Z-Wave JS listeners."""
         async_remove()

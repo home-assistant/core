@@ -415,10 +415,11 @@ class ProtectData:
 
         Each non-eviction change is dispatched — a detection type may surface at
         the event start, on a later update, or only as it ends — routed to the
-        subscribers registered for this device and event type; entities fire each
-        ``(event, type)`` once. Subscriptions are keyed by ``device_id`` (the
-        stable cross-API join key, shared by the private and public bootstraps),
-        so the event routes directly without a bootstrap lookup.
+        subscribers registered for this device and event type; entities dedupe
+        each surfaced type by event id and Protect event type. Subscriptions are
+        keyed by ``device_id`` (the stable cross-API join key, shared by the private
+        and public bootstraps), so the event routes directly without a bootstrap
+        lookup.
         """
         if change is EventChange.REMOVED:
             return
