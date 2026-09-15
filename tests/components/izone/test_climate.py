@@ -36,7 +36,7 @@ import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
-from .conftest import create_mock_controller, create_mock_zone
+from .conftest import create_mock_controller
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -90,19 +90,15 @@ async def test_zone_device_linked_to_controller(
     assert zone_device.via_device_id == controller_device.id
 
 
-@pytest.mark.parametrize(
-    "mock_controller",
-    [create_mock_controller(ras_mode="RAS", zones_total=1)],
-)
-async def test_set_controller_temperature_ras(
+async def test_set_controller_temperature_when_controller_owns(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
-    mock_zones: list[Mock],
 ) -> None:
-    """RAS-mode controller accepts target temperature commands."""
-    mock_controller.zones = mock_zones
+    """Controller accepts target temperature commands when it owns the unit target."""
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -203,19 +199,15 @@ async def test_set_zone_mode(
     zone.set_mode.assert_awaited_once_with(Zone.Mode.CLOSE)
 
 
-@pytest.mark.parametrize(
-    "mock_controller",
-    [create_mock_controller(ras_mode="RAS")],
-)
-async def test_target_temperature_feature_ras_mode(
+async def test_target_temperature_when_controller_owns(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
-    mock_zones: list[Mock],
 ) -> None:
-    """TARGET_TEMPERATURE is enabled in RAS mode."""
-    mock_controller.zones = mock_zones
+    """TARGET_TEMPERATURE is enabled when the controller owns the unit target."""
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
     await setup_integration(hass, mock_config_entry)
 
     entity = hass.states.get(CONTROLLER_ENTITY)
@@ -226,27 +218,16 @@ async def test_target_temperature_feature_ras_mode(
     ) == ClimateEntityFeature.TARGET_TEMPERATURE
 
 
-@pytest.mark.parametrize(
-    ("mock_controller", "mock_zones"),
-    [
-        (
-            create_mock_controller(zone_ctrl=1, zones_total=2),
-            [
-                create_mock_zone(index=0, name="Living Room", temp_current=22.5),
-                create_mock_zone(index=1, name="Bedroom", temp_current=None),
-            ],
-        )
-    ],
-)
-async def test_target_temperature_when_zone_missing_sensor(
+async def test_target_temperature_when_zone_owns(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
     mock_zones: list[Mock],
 ) -> None:
-    """TARGET_TEMPERATURE is enabled when any zone lacks a temperature sensor."""
-    mock_controller.zones = mock_zones
+    """TARGET_TEMPERATURE stays off when a zone owns the unit target."""
+    mock_controller.control_setpoint_owner = mock_zones[0]
+    mock_controller.control_setpoint = mock_zones[0].temp_setpoint
     await setup_integration(hass, mock_config_entry)
 
     entity = hass.states.get(CONTROLLER_ENTITY)
@@ -254,7 +235,29 @@ async def test_target_temperature_when_zone_missing_sensor(
     assert (
         entity.attributes["supported_features"]
         & ClimateEntityFeature.TARGET_TEMPERATURE
-    ) == ClimateEntityFeature.TARGET_TEMPERATURE
+    ) == 0
+
+
+async def test_control_zone_extra_attributes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+) -> None:
+    """Deprecated extras report the active zone name, not the climate entity name."""
+    mock_controller.zone_ctrl = 0
+    mock_zones[0].name = "Kitchen"
+    mock_zones[0].temp_setpoint = 22.5
+    mock_controller.control_setpoint_owner = mock_zones[0]
+    mock_controller.control_setpoint = 22.5
+    await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert entity.attributes["control_zone"] == 0
+    assert entity.attributes["control_zone_name"] == "Kitchen"
+    assert entity.attributes["control_zone_setpoint"] == 22.5
 
 
 @pytest.mark.usefixtures("init_integration")
