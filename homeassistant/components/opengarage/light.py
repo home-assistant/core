@@ -3,6 +3,7 @@
 from typing import Any, cast, override
 
 from aiohttp import ClientError
+from opengarage.errors import OpenGarageError
 
 from homeassistant.components.light import (
     ColorMode,
@@ -78,7 +79,7 @@ class OpenGarageLight(OpenGarageEntity, LightEntity):
         """Set the opener light and request fresh device state."""
         try:
             result = await self.coordinator.open_garage_connection.set_light(turn_on)
-        except (ClientError, TimeoutError) as err:
+        except (ClientError, TimeoutError, OpenGarageError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="light_control_unavailable",
@@ -94,6 +95,9 @@ class OpenGarageLight(OpenGarageEntity, LightEntity):
             )
 
         if result is None:
+            await self.coordinator.async_request_refresh()
+            if self.is_on is turn_on:
+                return
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="light_control_unavailable",

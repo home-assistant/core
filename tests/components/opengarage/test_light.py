@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from aiohttp import ClientError
+from opengarage.errors import ResponseError, TransportError, UnsupportedFeatureError
 import pytest
 
 from homeassistant.components import light
@@ -48,11 +49,13 @@ async def test_light_entity(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("service", "requested", "reported", "expected"),
+    ("service", "requested", "reported", "expected", "result"),
     [
-        (light.SERVICE_TURN_ON, True, 1, STATE_ON),
-        (light.SERVICE_TURN_OFF, False, 0, STATE_OFF),
-        (light.SERVICE_TURN_ON, True, 0, STATE_OFF),
+        (light.SERVICE_TURN_ON, True, 1, STATE_ON, 1),
+        (light.SERVICE_TURN_OFF, False, 0, STATE_OFF, 1),
+        (light.SERVICE_TURN_ON, True, 0, STATE_OFF, 1),
+        (light.SERVICE_TURN_ON, True, 1, STATE_ON, None),
+        (light.SERVICE_TURN_OFF, False, 0, STATE_OFF, None),
     ],
 )
 async def test_light_controls_refresh_device_state(
@@ -62,9 +65,10 @@ async def test_light_controls_refresh_device_state(
     requested: bool,
     reported: int,
     expected: str,
+    result: int | None,
 ) -> None:
     """A successful command refreshes all device data without assuming state."""
-    mock_opengarage.set_light.return_value = 1
+    mock_opengarage.set_light.return_value = result
     mock_opengarage.update_state.reset_mock()
     mock_opengarage.update_state.return_value = {
         **mock_opengarage.update_state.return_value,
@@ -104,7 +108,6 @@ async def test_light_not_created_without_capability(
     ("result", "message"),
     [
         (2, "device key is incorrect"),
-        (None, "device is unavailable or does not support light control"),
         (3, "OpenGarage returned error code 3"),
     ],
 )
@@ -132,11 +135,20 @@ async def test_light_control_error_surfaces_to_user(
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("error", [ClientError, TimeoutError])
+@pytest.mark.parametrize(
+    "error",
+    [
+        ClientError(),
+        TimeoutError(),
+        TransportError(),
+        ResponseError(503, "http://device"),
+        UnsupportedFeatureError(),
+    ],
+)
 async def test_light_network_error(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
-    error: type[Exception],
+    error: Exception,
 ) -> None:
     """Translate exhausted network errors without assuming command success."""
     mock_opengarage.set_light.side_effect = error
@@ -150,7 +162,7 @@ async def test_light_network_error(
             blocking=True,
         )
 
-    assert isinstance(exc_info.value.__cause__, error)
+    assert exc_info.value.__cause__ is error
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_OFF
     mock_opengarage.update_state.assert_not_awaited()
@@ -169,3 +181,26 @@ async def test_light_state_missing_after_refresh(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("reported", [0, None])
+async def test_light_empty_result_requires_confirmed_state(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    reported: int | None,
+) -> None:
+    """A missing command result only succeeds when a fresh poll confirms state."""
+    mock_opengarage.set_light.return_value = None
+    mock_opengarage.update_state.reset_mock()
+    mock_opengarage.update_state.return_value["light"] = reported
+
+    with pytest.raises(HomeAssistantError, match="device is unavailable"):
+        await hass.services.async_call(
+            light.DOMAIN,
+            light.SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_opengarage.update_state.assert_awaited_once()
