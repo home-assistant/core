@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 import logging
+from math import isfinite
 from typing import Any, override
 
 from homeassistant.components import (
@@ -1153,12 +1154,23 @@ class AlexaHumiditySensor(AlexaCapability):
         if value is None or value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return None
         try:
-            return {"value": float(value)}
+            humidity = float(value)
         except ValueError:
             _LOGGER.warning(
                 "Invalid humidity value %s for %s", value, self.entity.entity_id
             )
             return None
+
+        # Alexa.HumiditySensor accepts a double from 0 through 100.
+        if not isfinite(humidity) or not 0 <= humidity <= 100:
+            _LOGGER.warning(
+                "Humidity value %s for %s is outside the 0-100 range Alexa accepts",
+                value,
+                self.entity.entity_id,
+            )
+            return None
+
+        return {"value": humidity}
 
 
 class AlexaContactSensor(AlexaCapability):

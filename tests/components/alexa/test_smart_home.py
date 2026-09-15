@@ -2698,7 +2698,7 @@ async def test_humidity_sensor(hass: HomeAssistant) -> None:
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "sensor#test_humidity"
-    assert appliance["displayCategories"][0] == "TEMPERATURE_SENSOR"
+    assert appliance["displayCategories"][0] == "OTHER"
     assert appliance["friendlyName"] == "Test Humidity Sensor"
 
     capabilities = assert_endpoint_capabilities(

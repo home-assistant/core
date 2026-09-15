@@ -1357,7 +1357,15 @@ async def test_temperature_sensor_water_heater(hass: HomeAssistant) -> None:
 
 async def test_humidity_sensor_sensor(hass: HomeAssistant) -> None:
     """Test HumiditySensor reports sensor humidity correctly."""
-    for bad_value in (STATE_UNKNOWN, STATE_UNAVAILABLE, "not-number"):
+    for bad_value in (
+        STATE_UNKNOWN,
+        STATE_UNAVAILABLE,
+        "not-number",
+        "-1",
+        "101",
+        "nan",
+        "inf",
+    ):
         hass.states.async_set(
             "sensor.humidity_living_room",
             bad_value,
