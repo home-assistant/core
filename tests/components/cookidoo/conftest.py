@@ -1,10 +1,12 @@
 """Common fixtures for the Cookidoo tests."""
 
-from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from collections.abc import Callable, Generator
+from dataclasses import asdict
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from cookidoo_api import (
     CookidooAdditionalItem,
+    CookidooAuthData,
     CookidooIngredientItem,
     CookidooSubscription,
     CookidooUserInfo,
@@ -13,7 +15,13 @@ from cookidoo_api.types import CookidooCalendarDay, CookidooCalendarDayRecipe
 import pytest
 
 from homeassistant.components.cookidoo.const import DOMAIN
-from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_EMAIL,
+    CONF_LANGUAGE,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+)
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -23,6 +31,17 @@ COUNTRY = "CH"
 LANGUAGE = "de-CH"
 
 TEST_UUID = "sub_uuid"
+
+AUTH_DATA = CookidooAuthData(
+    access_token="test-access-token",
+    refresh_token="test-refresh-token",
+    expires_at=1762000000.0,
+)
+STALE_AUTH_DATA = CookidooAuthData(
+    access_token="stale-access-token",
+    refresh_token="stale-refresh-token",
+    expires_at=1761000000.0,
+)
 
 
 @pytest.fixture
@@ -34,52 +53,88 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-@pytest.fixture
-def mock_cookidoo_client() -> Generator[AsyncMock]:
-    """Mock a Cookidoo client."""
+@pytest.fixture(name="mock_cookidoo")
+def mock_cookidoo_class() -> Generator[MagicMock]:
+    """Mock the Cookidoo class the integration instantiates."""
     with patch(
         "homeassistant.components.cookidoo.helpers.Cookidoo",
         autospec=True,
     ) as mock_client:
-        client = mock_client.return_value
-        client.login.return_value = None
-        client.get_ingredient_items.return_value = [
-            CookidooIngredientItem(**item)
-            for item in load_json_object_fixture("ingredient_items.json", DOMAIN)[
-                "data"
-            ]
-        ]
-        client.get_additional_items.return_value = [
-            CookidooAdditionalItem(**item)
-            for item in load_json_object_fixture("additional_items.json", DOMAIN)[
-                "data"
-            ]
-        ]
-        client.get_active_subscription.return_value = CookidooSubscription(
-            **load_json_object_fixture("subscriptions.json", DOMAIN)["data"]
+        yield mock_client
+
+
+@pytest.fixture
+def notify_auth_data_update(
+    mock_cookidoo: MagicMock,
+) -> Callable[[CookidooAuthData], None]:
+    """Emulate the library notifying its consumer of new tokens."""
+
+    def _notify(auth_data: CookidooAuthData) -> None:
+        mock_cookidoo.return_value.auth_data = auth_data
+        if callback := mock_cookidoo.call_args.kwargs["on_auth_data_update"]:
+            callback(auth_data)
+
+    return _notify
+
+
+@pytest.fixture
+def login_success(
+    notify_auth_data_update: Callable[[CookidooAuthData], None],
+) -> Callable[[], None]:
+    """Emulate a successful login: fresh tokens, handed to the consumer."""
+
+    def _login() -> None:
+        notify_auth_data_update(AUTH_DATA)
+
+    return _login
+
+
+@pytest.fixture
+def mock_cookidoo_client(
+    mock_cookidoo: MagicMock,
+    login_success: Callable[[], None],
+) -> AsyncMock:
+    """Mock a Cookidoo client."""
+    client = mock_cookidoo.return_value
+    # No tokens until a login provides them or the consumer restores them
+    client.auth_data = None
+    client.login.side_effect = login_success
+    client.apply_auth_data.side_effect = lambda auth_data: setattr(
+        client, "auth_data", auth_data
+    )
+    client.get_ingredient_items.return_value = [
+        CookidooIngredientItem(**item)
+        for item in load_json_object_fixture("ingredient_items.json", DOMAIN)["data"]
+    ]
+    client.get_additional_items.return_value = [
+        CookidooAdditionalItem(**item)
+        for item in load_json_object_fixture("additional_items.json", DOMAIN)["data"]
+    ]
+    client.get_active_subscription.return_value = CookidooSubscription(
+        **load_json_object_fixture("subscriptions.json", DOMAIN)["data"]
+    )
+    client.get_user_info.return_value = CookidooUserInfo(
+        **load_json_object_fixture("user_info.json", DOMAIN)["data"]
+    )
+    client.get_recipes_in_calendar_week.return_value = [
+        CookidooCalendarDay(
+            id=day["id"],
+            title=day["title"],
+            recipes=[
+                CookidooCalendarDayRecipe(
+                    id=recipe["id"],
+                    name=recipe["name"],
+                    total_time=recipe["total_time"],
+                    thumbnail=recipe["thumbnail"],
+                    image=recipe["image"],
+                    url=recipe["url"],
+                )
+                for recipe in day["recipes"]
+            ],
         )
-        client.get_user_info.return_value = CookidooUserInfo(
-            **load_json_object_fixture("user_info.json", DOMAIN)["data"]
-        )
-        client.get_recipes_in_calendar_week.return_value = [
-            CookidooCalendarDay(
-                id=day["id"],
-                title=day["title"],
-                recipes=[
-                    CookidooCalendarDayRecipe(
-                        id=recipe["id"],
-                        name=recipe["name"],
-                        total_time=recipe["total_time"],
-                        thumbnail=recipe["thumbnail"],
-                        image=recipe["image"],
-                        url=recipe["url"],
-                    )
-                    for recipe in day["recipes"]
-                ],
-            )
-            for day in load_json_object_fixture("calendar_week.json", DOMAIN)["data"]
-        ]
-        yield client
+        for day in load_json_object_fixture("calendar_week.json", DOMAIN)["data"]
+    ]
+    return client
 
 
 @pytest.fixture(name="cookidoo_config_entry")
@@ -94,6 +149,25 @@ def mock_cookidoo_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: PASSWORD,
             CONF_COUNTRY: COUNTRY,
             CONF_LANGUAGE: LANGUAGE,
+        },
+        entry_id="01JBVVVJ87F6G5V0QJX6HBC94T",
+        unique_id=TEST_UUID,
+    )
+
+
+@pytest.fixture(name="cookidoo_config_entry_with_token")
+def mock_cookidoo_config_entry_with_token() -> MockConfigEntry:
+    """Mock a cookidoo configuration entry holding persisted OAuth2 tokens."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=3,
+        data={
+            CONF_EMAIL: EMAIL,
+            CONF_PASSWORD: PASSWORD,
+            CONF_COUNTRY: COUNTRY,
+            CONF_LANGUAGE: LANGUAGE,
+            CONF_TOKEN: asdict(STALE_AUTH_DATA),
         },
         entry_id="01JBVVVJ87F6G5V0QJX6HBC94T",
         unique_id=TEST_UUID,

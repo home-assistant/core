@@ -2,7 +2,7 @@
 
 import logging
 
-from cookidoo_api import CookidooAuthException, CookidooRequestException
+from cookidoo_api import CookidooException
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -98,7 +98,7 @@ async def async_migrate_entry(
         try:
             await cookidoo.login()
             user_info = await cookidoo.get_user_info()
-        except (CookidooRequestException, CookidooAuthException) as e:
+        except CookidooException as e:
             _LOGGER.error("Could not migrate config entry: %s", e)
             return False
 
@@ -114,7 +114,7 @@ async def async_migrate_entry(
         try:
             await cookidoo.login()
             user_info = await cookidoo.get_user_info()
-        except (CookidooRequestException, CookidooAuthException) as e:
+        except CookidooException as e:
             _LOGGER.error("Could not migrate config entry: %s", e)
             return False
 
