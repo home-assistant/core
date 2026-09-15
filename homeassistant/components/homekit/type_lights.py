@@ -39,14 +39,14 @@ from homeassistant.util.color import (
 from .accessories import TYPES, HomeAccessory
 from .adaptive_lighting import ADAPTIVE_LIGHTING_CHARS, AdaptiveLightingController
 from .const import (
-    CONF_ADAPTIVE_LIGHTING,
-    CONF_MAX_COLOR_TEMP_KELVIN,
-    CONF_MIN_COLOR_TEMP_KELVIN,
     CHAR_BRIGHTNESS,
     CHAR_COLOR_TEMPERATURE,
     CHAR_HUE,
     CHAR_ON,
     CHAR_SATURATION,
+    CONF_ADAPTIVE_LIGHTING,
+    CONF_MAX_COLOR_TEMP_KELVIN,
+    CONF_MIN_COLOR_TEMP_KELVIN,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
