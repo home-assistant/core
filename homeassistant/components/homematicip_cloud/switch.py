@@ -3,25 +3,6 @@
 from typing import Any, override
 
 from homematicip.base.enums import DeviceType, FunctionalChannelType
-from homematicip.device import (
-    BrandSwitch2,
-    DinRailSwitch,
-    DinRailSwitch4,
-    FullFlushInputSwitch,
-    HeatingSwitch2,
-    MotionDetectorSwitchOutdoor,
-    MultiIOBox,
-    OpenCollector8Module,
-    PlugableSwitch,
-    PrintedCircuitBoardSwitch2,
-    PrintedCircuitBoardSwitchBattery,
-    StatusBoard8,
-    SwitchMeasuring,
-    WiredInput32,
-    WiredInputSwitch6,
-    WiredSwitch4,
-    WiredSwitch8,
-)
 from homematicip.group import ExtendedLinkedSwitchingGroup, SwitchingGroup
 
 from homeassistant.components.switch import SwitchEntity
@@ -30,6 +11,21 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ATTR_GROUP_MEMBER_UNREACHABLE, HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
+
+SWITCH_CHANNEL_TYPES = (
+    FunctionalChannelType.SWITCH_CHANNEL,
+    FunctionalChannelType.SWITCH_MEASURING_CHANNEL,
+    FunctionalChannelType.MULTI_MODE_INPUT_SWITCH_CHANNEL,
+)
+
+# these carry a switch channel, but their entity is a light
+LIGHT_OWNED_DEVICE_TYPES = (
+    DeviceType.BRAND_SWITCH_NOTIFICATION_LIGHT,
+    DeviceType.BRAND_SWITCH_MEASURING,
+)
+
+# a single channel, but named after it, so renaming would break their entity ids
+CHANNEL_NAMED_DEVICE_TYPES = (DeviceType.DIN_RAIL_SWITCH,)
 
 
 async def async_setup_entry(
@@ -45,52 +41,28 @@ async def async_setup_entry(
         if isinstance(group, (ExtendedLinkedSwitchingGroup, SwitchingGroup))
     ]
     for device in hap.home.devices:
-        if (
-            isinstance(device, SwitchMeasuring)
-            and getattr(device, "deviceType", None) != DeviceType.BRAND_SWITCH_MEASURING
-        ):
-            entities.append(HomematicipSwitchMeasuring(hap, device))
-        elif isinstance(
-            device,
-            (
-                WiredSwitch4,
-                WiredSwitch8,
-                OpenCollector8Module,
-                StatusBoard8,
-                BrandSwitch2,
-                PrintedCircuitBoardSwitch2,
-                HeatingSwitch2,
-                MultiIOBox,
-                MotionDetectorSwitchOutdoor,
-                DinRailSwitch,
-                DinRailSwitch4,
-                WiredInput32,
-                WiredInputSwitch6,
-            ),
-        ):
-            channel_indices = [
-                ch.index
-                for ch in device.functionalChannels
-                if ch.functionalChannelType
-                in (
-                    FunctionalChannelType.SWITCH_CHANNEL,
-                    FunctionalChannelType.MULTI_MODE_INPUT_SWITCH_CHANNEL,
-                )
-            ]
-            entities.extend(
-                HomematicipMultiSwitch(hap, device, channel=channel)
-                for channel in channel_indices
+        device_type = getattr(device, "deviceType", None)
+        if device_type in LIGHT_OWNED_DEVICE_TYPES:
+            continue
+        channels = [
+            channel
+            for channel in device.functionalChannels
+            if channel.functionalChannelType in SWITCH_CHANNEL_TYPES
+        ]
+        # a lone channel is the device itself, so it keeps the device name
+        is_multi_channel = (
+            len(channels) > 1 or device_type in CHANNEL_NAMED_DEVICE_TYPES
+        )
+        entities.extend(
+            HomematicipMultiSwitch(
+                hap,
+                device,
+                channel=channel.index,
+                channel_real_index=channel.index,
+                is_multi_channel=is_multi_channel,
             )
-
-        elif isinstance(
-            device,
-            (
-                PlugableSwitch,
-                PrintedCircuitBoardSwitchBattery,
-                FullFlushInputSwitch,
-            ),
-        ):
-            entities.append(HomematicipSwitch(hap, device))
+            for channel in channels
+        )
 
     async_add_entities(entities)
 
@@ -103,6 +75,7 @@ class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
         hap: HomematicipHAP,
         device,
         channel=1,
+        channel_real_index=None,
         is_multi_channel=True,
     ) -> None:
         """Initialize the multi switch device."""
@@ -110,6 +83,7 @@ class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
             hap,
             device,
             channel=channel,
+            channel_real_index=channel_real_index,
             is_multi_channel=is_multi_channel,
             feature_id="switch",
         )
@@ -132,14 +106,6 @@ class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
         """Turn the switch off."""
         channel = self.get_channel_or_raise()
         await channel.async_turn_off()
-
-
-class HomematicipSwitch(HomematicipMultiSwitch, SwitchEntity):
-    """Representation of the HomematicIP switch."""
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the switch device."""
-        super().__init__(hap, device, is_multi_channel=False)
 
 
 class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
@@ -188,7 +154,3 @@ class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the group off."""
         await self._device.turn_off_async()
-
-
-class HomematicipSwitchMeasuring(HomematicipSwitch):
-    """Representation of the HomematicIP measuring switch."""
