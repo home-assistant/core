@@ -3,10 +3,11 @@
 from dataclasses import dataclass
 from typing import override
 
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import DeDietrichDataUpdateCoordinator
+from .coordinator import CHILD_COMPONENT_DEVICE_NAMES, DeDietrichDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -33,7 +34,18 @@ class DeDietrichEntity(CoordinatorEntity[DeDietrichDataUpdateCoordinator]):
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         )
-        self._attr_device_info = coordinator.device_info
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo:
+        """Route to a child device when its component bundle is detected, otherwise stay on the main boiler device so a transient miss does not detach the entity."""
+        coordinator = self.coordinator
+        component = self.entity_description.component
+        if component in CHILD_COMPONENT_DEVICE_NAMES:
+            child = coordinator.child_device_info(component)
+            if child is not None:
+                return child
+        return coordinator.device_info
 
     @property
     @override
