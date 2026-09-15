@@ -48,12 +48,7 @@ class ReentrantAsyncLock:
 
 @dataclass
 class Control4RuntimeData:
-    """Runtime data for a Control4 config entry.
-
-    account/director/websocket are always present once the entry has finished
-    setup; the rest are set once during async_setup_entry. cancel_token_refresh_callback
-    starts unset because it's only assigned after the first refresh is scheduled.
-    """
+    """Runtime data for a Control4 config entry; fields past account/director/websocket are set once during async_setup_entry."""
 
     account: C4Account
     director: C4Director

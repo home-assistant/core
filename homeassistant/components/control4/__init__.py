@@ -83,10 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
             except (TimeoutError, client_exceptions.ClientError) as err:
                 raise ConfigEntryNotReady(err) from err
     except BaseException:
-        # refresh_tokens() already connected the WebSocket and scheduled a
-        # refresh timer; async_unload_entry never runs for an entry that fails
-        # setup, so both have to be torn down here or they'd keep running
-        # orphaned while HA retries (or gives up retrying) this entry.
+        # Torn down here since async_unload_entry never runs for a failed setup.
         await runtime_data.websocket.sio_disconnect()
         if runtime_data.cancel_token_refresh_callback is not None:
             runtime_data.cancel_token_refresh_callback()
@@ -173,14 +170,8 @@ async def refresh_tokens(
         config[CONF_HOST], director_token_dict[CONF_TOKEN], no_verify_session
     )
 
-    # On the very first call (initial setup), there's no runtime_data yet and a
-    # new WebSocket has to be created. On later calls (the scheduled refresh),
-    # runtime_data already exists and its WebSocket connection is reused as-is,
-    # only the account/director tokens and refresh timer get replaced. The fresh
-    # account/director must be in place on runtime_data *before* sio_connect() is
-    # called: it can invoke the reconnect callback synchronously before returning,
-    # and that callback reads entry.runtime_data.director expecting it to already
-    # be current (this matters for BadToken-triggered reconnects in particular).
+    # runtime_data.director must be set before sio_connect(), which can
+    # synchronously trigger a reconnect callback that reads it.
     if hasattr(entry, "runtime_data"):
         runtime_data = entry.runtime_data
         websocket = runtime_data.websocket
