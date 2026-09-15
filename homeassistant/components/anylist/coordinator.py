@@ -45,6 +45,7 @@ class AnyListDataUpdateCoordinator(DataUpdateCoordinator[AnyListState]):
         """Load initial AnyList data and start realtime updates."""
         try:
             self.client.sync.add_listener(self._handle_sync)
+            self.client.sync.add_status_listener(self._handle_sync_status)
             await self.client.load(realtime=True, load_tag_data=False)
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
@@ -61,6 +62,23 @@ class AnyListDataUpdateCoordinator(DataUpdateCoordinator[AnyListState]):
     async def _async_update_data(self) -> AnyListState:
         """Return the event-driven AnyList state."""
         return self.client.state
+
+    @callback
+    def _handle_sync_status(self, error: Exception | None) -> None:
+        """Reflect AnyList aggregate sync health in coordinator availability."""
+        if error is None:
+            if not self.last_update_success:
+                _LOGGER.info("Fetching %s data recovered", self.name)
+                self.async_set_updated_data(self.client.state)
+            return
+
+        # Initial setup failures are translated by _async_setup below. Runtime failures
+        # arrive here because realtime callbacks intentionally cannot kill the socket.
+        if not self.client.ready.is_set():
+            return
+        if isinstance(error, AuthenticationError):
+            self.config_entry.async_start_reauth_if_available(self.hass)
+        self.async_set_update_error(error)
 
     @callback
     def async_update_from_client(self) -> None:

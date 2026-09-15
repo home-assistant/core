@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/anylist",
   "integration_type": "service",
   "iot_class": "cloud_push",
-  "quality_scale": "bronze",
-  "requirements": ["aioanylist==1.0.1"]
+  "quality_scale": "silver",
+  "requirements": ["aioanylist==1.0.2"]
 }

@@ -89,11 +89,16 @@ def mock_anylist_client_fixture() -> Generator[MagicMock]:
 
     client.sync = MagicMock()
     client.sync_listener = None
+    client.sync_status_listener = None
 
     def add_sync_listener(listener) -> None:
         client.sync_listener = listener
 
+    def add_sync_status_listener(listener) -> None:
+        client.sync_status_listener = listener
+
     client.sync.add_listener.side_effect = add_sync_listener
+    client.sync.add_status_listener.side_effect = add_sync_status_listener
 
     lists = MagicMock()
     lists.item.side_effect = lambda list_id, item_id: client.state.get_item(

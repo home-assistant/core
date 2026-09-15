@@ -1,5 +1,6 @@
 """Tests for AnyList integration setup."""
 
+import logging
 from unittest.mock import MagicMock
 
 from aioanylist import AuthenticationError, AuthTokens, TransportError
@@ -28,7 +29,9 @@ async def test_setup_and_unload(
         realtime=True, load_tag_data=False
     )
     mock_anylist_client.sync.add_listener.assert_called_once()
+    mock_anylist_client.sync.add_status_listener.assert_called_once()
     assert mock_anylist_client.sync_listener is not None
+    assert mock_anylist_client.sync_status_listener is not None
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -91,3 +94,57 @@ async def test_setup_retries_on_connection_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_runtime_sync_failure_marks_entities_unavailable_and_recovers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+    caplog,
+) -> None:
+    """Test runtime AnyList sync health controls availability without log spam."""
+    await setup_integration(hass, mock_config_entry)
+    status_listener = mock_anylist_client.sync_status_listener
+    assert status_listener is not None
+
+    entity_id = "todo.groceries"
+    assert hass.states.get(entity_id).state != "unavailable"
+
+    caplog.set_level(
+        logging.INFO, logger="homeassistant.components.anylist.coordinator"
+    )
+    error = TransportError("AnyList is unreachable")
+    status_listener(error)
+    status_listener(error)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "unavailable"
+    assert (
+        caplog.text.count("Error requesting anylist data: AnyList is unreachable") == 1
+    )
+
+    status_listener(None)
+    status_listener(None)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state != "unavailable"
+    assert caplog.text.count("Fetching anylist data recovered") == 1
+
+
+async def test_runtime_auth_failure_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """Test a runtime authentication failure starts reauthentication."""
+    await setup_integration(hass, mock_config_entry)
+    status_listener = mock_anylist_client.sync_status_listener
+    assert status_listener is not None
+
+    status_listener(AuthenticationError())
+    await hass.async_block_till_done()
+
+    assert any(
+        flow["context"]["source"] == SOURCE_REAUTH
+        for flow in hass.config_entries.flow.async_progress()
+    )
