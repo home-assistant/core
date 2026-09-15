@@ -508,6 +508,33 @@ async def test_temperature_below_the_units_range_is_refused(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_a_mode_the_unit_does_not_have_is_refused(
+    hass: HomeAssistant, mock_repository: AsyncMock
+) -> None:
+    """The combined call takes any mode of the enum, this unit has six.
+
+    Nothing between the service and the entity holds hvac_mode to the modes
+    the entity advertises, so heat_cool arrives here and must come back as a
+    validation error rather than as a lookup that fails.
+    """
+    mock_repository.send_airco_command.reset_mock()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 21.0,
+                ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+            },
+            blocking=True,
+        )
+
+    mock_repository.send_airco_command.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_setting_temperature_and_mode_together(
     hass: HomeAssistant, mock_repository: AsyncMock
 ) -> None:

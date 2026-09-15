@@ -6,6 +6,7 @@ from typing import Any, override
 from pywfrac import AIRFLOW_UNKNOWN, Aircon, AirconCommands
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     FAN_AUTO,
     PRESET_AWAY,
     PRESET_NONE,
@@ -208,9 +209,19 @@ class AircoClimate(WfRacEntity, ClimateEntity):
         """Set new target temperature."""
         set_temp = kwargs[ATTR_TEMPERATURE]
 
+        # The service schema coerces hvac_mode to the enum without checking
+        # it against the modes this entity offers.
+        requested_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        if requested_hvac_mode is not None:
+            self._valid_mode_or_raise("hvac", requested_hvac_mode, self.hvac_modes)
+
         # A call that switches hvac_mode is measured against the mode it
         # switches to, not the one still reported until the next poll.
-        target_hvac_mode = kwargs.get("hvac_mode", self._attr_hvac_mode)
+        target_hvac_mode = (
+            requested_hvac_mode
+            if requested_hvac_mode is not None
+            else self._attr_hvac_mode
+        )
         target_hvac_mode = (
             HVACMode.OFF if target_hvac_mode is None else target_hvac_mode
         )
@@ -246,7 +257,7 @@ class AircoClimate(WfRacEntity, ClimateEntity):
             AirconCommands.PresetTemp: round(set_temp * 2) / 2
         }
 
-        if "hvac_mode" in kwargs:
+        if requested_hvac_mode is not None:
             opts.update(
                 {
                     AirconCommands.OperationMode: self._device.airco.OperationMode
