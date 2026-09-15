@@ -121,7 +121,7 @@ async def test_browse_media(
     requests_mock: requests_mock.Mocker,
     hubs,
     hubs_music_library,
-    media_1,
+    media_1: str,
 ) -> None:
     """Test getting Plex clients from plex.tv."""
     websocket_client = await hass_ws_client(hass)
