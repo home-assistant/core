@@ -47,6 +47,20 @@
       }
     }
   },
+  "entity": {
+    "select": {
+      "bstmode": {
+        "name": "Boost Mode",
+        "state": {
+          "0": "Off",
+          "1": "On",
+          "3": "Relais",
+          "4": "SELV-Relais",
+          "5": "AUX-Relais"
+        }
+      }
+    }
+  },
   "exceptions": {
     "auth_error": {
       "message": "Authentication failed. Remove and add the integration again with the current device password."
