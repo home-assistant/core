@@ -117,7 +117,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
         )
         stills_resolution = (
             StreamResolution.HD
-            if coordinator.config_entry.runtime_data.use_stream_for_stills
+            if coordinator.config_entry.runtime_data.use_hd_stream_for_stills
             else StreamResolution.SD
         )
         self._video_url = self._camera_module.stream_rtsp_url(

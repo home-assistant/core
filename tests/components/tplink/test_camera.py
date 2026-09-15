@@ -21,7 +21,7 @@ from homeassistant.components.camera import (
     get_camera_from_entity_id,
 )
 from homeassistant.components.tplink.camera import TPLinkCameraEntity
-from homeassistant.components.tplink.const import CONF_USE_STREAM_FOR_STILLS, DOMAIN
+from homeassistant.components.tplink.const import CONF_USE_HD_STREAM_FOR_STILLS, DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, HomeAssistantError
@@ -429,7 +429,7 @@ async def test_camera_stills_use_hd_when_enabled(
         title="TPLink",
         domain=DOMAIN,
         data=CREATE_ENTRY_DATA_AES_CAMERA,
-        options={CONF_USE_STREAM_FOR_STILLS: True},
+        options={CONF_USE_HD_STREAM_FOR_STILLS: True},
         unique_id=MAC_ADDRESS3,
     )
 

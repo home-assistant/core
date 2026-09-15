@@ -23,7 +23,7 @@ from homeassistant.components.tplink.const import (
     CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
     CONF_LIVE_VIEW,
-    CONF_USE_STREAM_FOR_STILLS,
+    CONF_USE_HD_STREAM_FOR_STILLS,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -2505,12 +2505,12 @@ async def test_options_flow(
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={CONF_USE_STREAM_FOR_STILLS: True},
+            user_input={CONF_USE_HD_STREAM_FOR_STILLS: True},
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        assert mock_camera_config_entry.options == {CONF_USE_STREAM_FOR_STILLS: True}
+        assert mock_camera_config_entry.options == {CONF_USE_HD_STREAM_FOR_STILLS: True}
         assert mock_camera_config_entry.state is ConfigEntryState.LOADED
 
         camera_module.stream_rtsp_url.assert_any_call(

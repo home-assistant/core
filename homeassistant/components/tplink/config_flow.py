@@ -56,7 +56,7 @@ from .const import (
     CONF_CONNECTION_PARAMETERS,
     CONF_CREDENTIALS_HASH,
     CONF_LIVE_VIEW,
-    CONF_USE_STREAM_FOR_STILLS,
+    CONF_USE_HD_STREAM_FOR_STILLS,
     CONF_USES_HTTP,
     CONNECT_TIMEOUT,
     DOMAIN,
@@ -80,7 +80,7 @@ STEP_CAMERA_AUTH_DATA_SCHEMA = probatio.Schema(
 )
 
 STEP_OPTIONS_DATA_SCHEMA = probatio.Schema(
-    {probatio.Optional(CONF_USE_STREAM_FOR_STILLS): bool}
+    {probatio.Optional(CONF_USE_HD_STREAM_FOR_STILLS): bool}
 )
 
 
@@ -903,8 +903,8 @@ class TPLinkOptionsFlowHandler(OptionsFlowWithReload):
             data_schema=self.add_suggested_values_to_schema(
                 STEP_OPTIONS_DATA_SCHEMA,
                 {
-                    CONF_USE_STREAM_FOR_STILLS: self.config_entry.options.get(
-                        CONF_USE_STREAM_FOR_STILLS, False
+                    CONF_USE_HD_STREAM_FOR_STILLS: self.config_entry.options.get(
+                        CONF_USE_HD_STREAM_FOR_STILLS, False
                     )
                 },
             ),
