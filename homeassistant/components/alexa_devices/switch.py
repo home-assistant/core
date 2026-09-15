@@ -15,63 +15,77 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import AmazonConfigEntry, alexa_api_call
+from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonEntity
 from .utils import async_remove_entity_from_virtual_group, async_update_unique_id
 
 PARALLEL_UPDATES = 1
 
-TYPE_DND = "dnd"
-TYPE_COMMUNICATION = "communication"
+
+def _update_dnd_state(
+    coordinator: AmazonDevicesCoordinator, serial_num: str, key: str, state: bool
+) -> None:
+    """Update the local DND state."""
+    coordinator.set_dnd_state(serial_num, state)
+
+
+def _update_communication_state(
+    coordinator: AmazonDevicesCoordinator, serial_num: str, key: str, state: bool
+) -> None:
+    """Update the local communication settings state."""
+    coordinator.data[serial_num].communication_settings[key] = "ON" if state else "OFF"
 
 
 @dataclass(frozen=True, kw_only=True)
 class AmazonSwitchEntityDescription(SwitchEntityDescription):
     """Alexa Devices switch entity description."""
 
-    is_on_fn: Callable[[AmazonDevice], bool]
+    is_on_fn: Callable[[AmazonDevice, bool], bool]
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
         device.online
         and (sensor := device.sensors.get(key)) is not None
         and sensor.error is False
     )
     method: str
-    switch_type: str
+    update_state_fn: Callable[[AmazonDevicesCoordinator, str, str, bool], None]
 
 
 DND_SWITCH: Final = AmazonSwitchEntityDescription(
     key="dnd",
     translation_key="do_not_disturb",
-    # Unused: DND state is read from coordinator.dnd_states instead.
-    is_on_fn=lambda device: False,
+    is_on_fn=lambda device, dnd: dnd,
     is_available_fn=lambda device, _key: device.online,
     method="set_do_not_disturb",
-    switch_type=TYPE_DND,
+    update_state_fn=_update_dnd_state,
 )
 COMMUNICATION_SWITCHES: Final = (
     AmazonSwitchEntityDescription(
         key="announcements",
         translation_key="announcements",
         entity_category=EntityCategory.CONFIG,
-        is_on_fn=lambda device: device.communication_settings["announcements"] == "ON",
+        is_on_fn=lambda device, dnd: (
+            device.communication_settings["announcements"] == "ON"
+        ),
         is_available_fn=lambda device, key: (
             device.online
             and device.communication_settings.get(key) is not None
             and device.communication_settings.get("communications") != "OFF"
         ),
         method="set_announcement_status",
-        switch_type=TYPE_COMMUNICATION,
+        update_state_fn=_update_communication_state,
     ),
     AmazonSwitchEntityDescription(
         key="communications",
         translation_key="communications",
         entity_category=EntityCategory.CONFIG,
-        is_on_fn=lambda device: device.communication_settings["communications"] == "ON",
+        is_on_fn=lambda device, dnd: (
+            device.communication_settings["communications"] == "ON"
+        ),
         is_available_fn=lambda device, key: (
             device.online and device.communication_settings.get(key) is not None
         ),
         method="set_communication_status",
-        switch_type=TYPE_COMMUNICATION,
+        update_state_fn=_update_communication_state,
     ),
 )
 
@@ -143,12 +157,12 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
 
         async with alexa_api_call(self.coordinator):
             await method(self.device, state)
-        if self.entity_description.switch_type == TYPE_DND:
-            self.coordinator.set_dnd_state(self.device.serial_number, state)
-        elif self.entity_description.switch_type == TYPE_COMMUNICATION:
-            self.coordinator.data[self.device.serial_number].communication_settings[
-                self.entity_description.key
-            ] = "ON" if state else "OFF"
+        self.entity_description.update_state_fn(
+            self.coordinator,
+            self.device.serial_number,
+            self.entity_description.key,
+            state,
+        )
         self.async_write_ha_state()
 
     @override
@@ -165,10 +179,11 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
     @override
     def is_on(self) -> bool:
         """Return True if switch is on."""
-        if self.entity_description.switch_type == TYPE_DND:
-            return self.coordinator.dnd_states.get(self.device.serial_number, False)
 
-        return self.entity_description.is_on_fn(self.device)
+        return self.entity_description.is_on_fn(
+            self.device,
+            self.coordinator.dnd_states.get(self.device.serial_number, False),
+        )
 
     @property
     @override
