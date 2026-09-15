@@ -1558,6 +1558,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/rehlko/ @bdraco @peterager
 /homeassistant/components/remember_the_milk/ @MartinHjelmare
 /tests/components/remember_the_milk/ @MartinHjelmare
+/homeassistant/components/remootio/ @remootio
+/tests/components/remootio/ @remootio
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
 /homeassistant/components/remote_calendar/ @Thomas55555 @allenporter

@@ -2569,6 +2569,9 @@ pyrate-limiter==4.5.0
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
 
+# homeassistant.components.remootio
+pyremootio==0.1.4
+
 # homeassistant.components.repetier
 pyrepetierng==0.1.0
 
