@@ -301,6 +301,33 @@ async def test_error_sensor(
         assert state.state == expected_state
 
 
+@pytest.mark.parametrize(
+    ("serial_number", "expected_state"),
+    [
+        pytest.param("184800801", "2018-11-26", id="valid_serial"),
+        pytest.param("123", STATE_UNAVAILABLE, id="not_9_digits"),
+        pytest.param("18AB00801", STATE_UNAVAILABLE, id="not_all_digits"),
+        pytest.param("180000801", STATE_UNAVAILABLE, id="week_out_of_range"),
+        pytest.param("215300801", STATE_UNAVAILABLE, id="iso_week_does_not_exist"),
+    ],
+)
+async def test_manufacture_date_sensor(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    values: dict[str, MowerAttributes],
+    serial_number: str,
+    expected_state: str,
+) -> None:
+    """Test the manufacture date sensor decodes a 9-digit YYWWNNNNN serial number."""
+    values[TEST_MOWER_ID].system.serial_number = serial_number
+    mock_automower_client.get_status.return_value = values
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("sensor.garden_test_mower_1_manufacture_date")
+    assert state is not None
+    assert state.state == expected_state
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_snapshot(
     hass: HomeAssistant,
