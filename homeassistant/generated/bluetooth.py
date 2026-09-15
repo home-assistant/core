@@ -1089,6 +1089,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "SPECIALIZED*",
     },
     {
+        "connectable": True,
+        "domain": "spinev",
+        "service_uuid": "49535343-fe7d-4ae5-8fa9-9fafd205e455",
+    },
+    {
         "connectable": False,
         "domain": "switchbot",
         "service_data_uuid": "00000d00-0000-1000-8000-00805f9b34fb",

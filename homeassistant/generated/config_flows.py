@@ -755,6 +755,7 @@ FLOWS = {
         "soundtouch",
         "specialized_turbo",
         "speedtestdotnet",
+        "spinev",
         "splunk",
         "spotify",
         "sql",
