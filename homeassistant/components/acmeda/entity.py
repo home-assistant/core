@@ -30,9 +30,13 @@ class AcmedaEntity(entity.Entity):
         """Entity being removed from hass."""
         self.roller.callback_unsubscribe(self.notify_update)
 
-    @callback
     def notify_update(self) -> None:
-        """Write updated device state information."""
+        """Schedule update on the event loop from aiopulse thread."""
+        self.hass.loop.call_soon_threadsafe(self._handle_update)
+
+    @callback
+    def _handle_update(self) -> None:
+        """Handle update on the event loop."""
         LOGGER.debug("Device update notification received: %s", self.name)
         self.async_write_ha_state()
 
@@ -45,7 +49,7 @@ class AcmedaEntity(entity.Entity):
     @property
     def device_id(self) -> str:
         """Return the ID of this roller."""
-        return self.roller.id  # type: ignore[no-any-return]
+        return str(self.roller.id)
 
     @property
     @override
