@@ -1,0 +1,9 @@
+{
+  "id": 9,
+  "globalID": 9,
+  "type": "DeviceResumed",
+  "time": "2024-01-01T00:08:00.000000000Z",
+  "data": {
+    "device": "ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD"
+  }
+}
