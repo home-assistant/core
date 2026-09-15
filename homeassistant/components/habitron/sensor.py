@@ -4,7 +4,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from habitron_client import BusMember, Logic, Module
+from habitron_client import (
+    FINGER_KEYS,
+    BusMember,
+    Logic,
+    Module,
+    decode_finger,
+    decode_user,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -30,50 +37,6 @@ from .coordinator import HabitronConfigEntry, HbtnCoordinator
 from .entity import HabitronEntity, HbtnOwner
 
 PARALLEL_UPDATES = 0
-
-# Stable, language-independent enum keys ordered by the hub's raw finger value
-# (1..10). Localized labels live in strings.json under
-# ``entity.sensor.ekey_finger_name.state`` — the state itself carries no display
-# text.
-_FINGER_KEYS: tuple[str, ...] = (
-    "left_pinky",
-    "left_ring",
-    "left_middle",
-    "left_index",
-    "left_thumb",
-    "right_thumb",
-    "right_index",
-    "right_middle",
-    "right_ring",
-    "right_pinky",
-)
-
-
-def _ekey_user_value(module: Module, idx: int) -> str | None:
-    """Translate a raw ekey identifier value into a user-name string.
-
-    Raw 0 means "no current user"; reporting that as unknown matches the finger
-    sensor and avoids publishing the literal text ``None`` as a state.
-    """
-    id_val = int(module.sensors[idx].value or 0)
-    if id_val == 0:
-        return None
-    if id_val == 255:
-        return "Error"
-    if (id_val - 1) in range(len(module.ids)):
-        return str(module.ids[id_val - 1].name)
-    if (abs(id_val) - 1) in range(len(module.ids)):
-        return str(module.ids[abs(id_val) - 1].name) + "-disabled"
-    return "Unknown"
-
-
-def _ekey_finger_value(module: Module, idx: int) -> str | None:
-    """Translate a raw ekey finger value into a stable finger-key string."""
-    id_val = int(module.sensors[idx].value or 0)
-    if id_val in range(1, 11):
-        return _FINGER_KEYS[id_val - 1]
-    # 0 (idle), 255 (error) or out of range → no current finger.
-    return None
 
 
 async def async_setup_entry(
@@ -472,7 +435,9 @@ EKEY_USER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_user_name",
     translation_key="ekey_user_name",
     translated_name=True,
-    value_fn=_ekey_user_value,
+    value_fn=lambda module, idx: decode_user(
+        int(module.sensors[idx].value or 0), module.ids
+    ),
     # No ``subscribe_fn``: the poll parser (``_status_ekey``) writes this member
     # and the same read moves the module CRC, so the coordinator already updates
     # the entity -- subscribing would write the state twice. The FINGER bus event
@@ -483,9 +448,9 @@ EKEY_FINGER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_finger_name",
     translation_key="ekey_finger_name",
     device_class=SensorDeviceClass.ENUM,
-    options=list(_FINGER_KEYS),
+    options=list(FINGER_KEYS),
     translated_name=True,
-    value_fn=_ekey_finger_value,
+    value_fn=lambda module, idx: decode_finger(int(module.sensors[idx].value or 0)),
     # No ``subscribe_fn``: the poll parser (``_status_ekey``) writes this member
     # and the same read moves the module CRC, so the coordinator already updates
     # the entity -- subscribing would write the state twice. The FINGER bus event
