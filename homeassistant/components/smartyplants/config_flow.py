@@ -2,13 +2,13 @@
 
 from typing import Any, override
 
+import probatio
 from pysmartyplants import (
     SmartyPlantsAuthError,
     SmartyPlantsClient,
     SmartyPlantsConnectionError,
     SmartyPlantsForbiddenError,
 )
-import voluptuous as vol
 
 from homeassistant.components import webhook as hass_webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -18,12 +18,12 @@ from homeassistant.helpers.network import NoURLAvailableError
 
 from .const import CONF_WEBHOOK_SECRET, DOMAIN
 
-CREDENTIALS_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+CREDENTIALS_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
 
 
 # The secret is optional: without it the integration still polls, it just
 # cannot verify pushes, so it refuses them.
-STEP_WEBHOOK_SCHEMA = vol.Schema({vol.Optional(CONF_WEBHOOK_SECRET): str})
+STEP_WEBHOOK_SCHEMA = probatio.Schema({probatio.Optional(CONF_WEBHOOK_SECRET): str})
 
 
 class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
