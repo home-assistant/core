@@ -27,6 +27,11 @@
           }
         }
       }
+    },
+    "select": {
+      "active_scene": {
+        "default": "mdi:palette"
+      }
     }
   },
   "services": {
