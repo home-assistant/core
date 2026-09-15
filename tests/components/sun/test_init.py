@@ -160,24 +160,25 @@ async def test_state_change(
 
 
 async def test_norway_in_june(hass: HomeAssistant) -> None:
-    """Test location in Norway where the sun doesn't set in summer."""
+    """Test midnight sun inside the Arctic Circle in Norway."""
     hass.config.latitude = 69.6
     hass.config.longitude = 18.8
 
     june = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
 
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=june):
+    with patch("homeassistant.components.sun.entity.dt_util.utcnow", return_value=june):
         assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     state = hass.states.get(entity.ENTITY_ID)
     assert state is not None
 
-    assert dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_RISING]
-    ) == datetime(2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC)
+    # Midnight sun ends with the next sunset.
     assert dt_util.parse_datetime(
         state.attributes[entity.STATE_ATTR_NEXT_SETTING]
-    ) == datetime(2016, 7, 25, 22, 17, 13, 503932, tzinfo=dt_util.UTC)
+    ) == datetime(2016, 7, 25, 22, 16, 21, 829089, tzinfo=dt_util.UTC)
+    assert dt_util.parse_datetime(
+        state.attributes[entity.STATE_ATTR_NEXT_RISING]
+    ) == datetime(2016, 7, 25, 23, 26, 30, 480352, tzinfo=dt_util.UTC)
 
     assert state.state == sun.STATE_ABOVE_HORIZON
 
