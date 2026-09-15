@@ -60,18 +60,33 @@ async def test_update_listener_triggers_reload(
         mock_reload.assert_called_with(entry.entry_id)
 
 
-async def test_setup_entry_timeout_marks_retry(
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(TimeoutError("hub silent"), id="timeout"),
+        pytest.param(ConnectionRefusedError("hub refused"), id="refused"),
+        pytest.param(OSError("network down"), id="oserror"),
+        pytest.param(HabitronError("protocol glitch"), id="habitron_error"),
+    ],
+)
+async def test_setup_entry_build_errors_mark_retry(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_config_entry: MockConfigEntry,
     mock_habitron_client: MagicMock,
+    side_effect: Exception,
 ) -> None:
-    """A timeout during setup surfaces as SETUP_RETRY, not SETUP_ERROR."""
+    """A failure while connecting and building the model surfaces as SETUP_RETRY.
+
+    The library raises its own error hierarchy (protocol and connection errors)
+    rather than ``OSError`` for a flaky or rebooting hub, so setup has to treat
+    each of these as transient and retry instead of failing permanently.
+    """
     mock_config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.habitron.coordinator."
         "HbtnCoordinator._async_connect_and_build",
-        side_effect=TimeoutError("hub silent"),
+        side_effect=side_effect,
     ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -111,65 +126,6 @@ async def test_async_remove_config_entry_device(
         name="Sub module",
     )
     assert await async_remove_config_entry_device(hass, entry, other_device) is True
-
-
-async def test_setup_entry_connection_refused_marks_retry(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_config_entry: MockConfigEntry,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """A ``ConnectionRefusedError`` during setup surfaces as SETUP_RETRY."""
-    mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.habitron.coordinator."
-        "HbtnCoordinator._async_connect_and_build",
-        side_effect=ConnectionRefusedError("hub refused"),
-    ):
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_oserror_marks_retry(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_config_entry: MockConfigEntry,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """A network-level ``OSError`` during setup surfaces as SETUP_RETRY."""
-    mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.habitron.coordinator."
-        "HbtnCoordinator._async_connect_and_build",
-        side_effect=OSError("network down"),
-    ):
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_habitron_error_marks_retry(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_config_entry: MockConfigEntry,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """A library ``HabitronError`` during setup surfaces as SETUP_RETRY.
-
-    The library raises its own error hierarchy (protocol/connection errors)
-    rather than ``OSError`` for a flaky or rebooting hub, so setup must treat it
-    as transient and retry instead of failing permanently.
-    """
-    mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.habitron.coordinator."
-        "HbtnCoordinator._async_connect_and_build",
-        side_effect=HabitronError("protocol glitch"),
-    ):
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry_returns_false_when_platform_unload_fails(

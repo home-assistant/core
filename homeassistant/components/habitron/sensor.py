@@ -211,8 +211,6 @@ class HbtnSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
         self._sensor_idx = sensor.nmbr
         self._attr_name = sensor.name
 
-    # To link this entity to its device, this property must return an
-    # identifiers value matching that used in the module
     @property
     @override
     def device_info(self) -> DeviceInfo:
