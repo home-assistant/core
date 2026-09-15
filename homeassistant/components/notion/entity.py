@@ -50,7 +50,13 @@ class NotionEntity(CoordinatorEntity[NotionDataUpdateCoordinator]):
         )
 
         if bridge := self._async_get_bridge(bridge_id):
-            self._attr_device_info["via_device"] = (DOMAIN, bridge.hardware_id)
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, bridge.hardware_id),
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                )
+            )
 
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = listener_id

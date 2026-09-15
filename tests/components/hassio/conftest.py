@@ -10,7 +10,6 @@ from aiohasupervisor.models import AddonsStats, AddonState, InstalledAddonComple
 from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.components.hassio.const import DATA_HASSIO_SUPERVISOR_USER
 from homeassistant.components.hassio.handler import HassIO
 from homeassistant.components.http.config import _DEFAULT_CONFIG as HTTP_DEFAULT_CONFIG
 from homeassistant.components.http.const import CONF_SERVER_PORT
@@ -71,16 +70,23 @@ async def hassio_client_supervisor(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
     hassio_stubs: None,
-) -> TestClient:
+) -> AsyncGenerator[TestClient]:
     """Return an authenticated HTTP client."""
-    hassio_user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
-    assert hassio_user.refresh_tokens
-    refresh_token = next(iter(hassio_user.refresh_tokens.values()))
-    access_token = hass.auth.async_create_access_token(refresh_token)
-    return await aiohttp_client(
-        hass.http.app,
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
+    with (
+        patch(
+            "homeassistant.components.hassio.auth.is_supervisor_unix_socket_request",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.http.ban.is_supervisor_unix_socket_request",
+            return_value=True,
+        ),
+    ):
+        yield await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture
@@ -91,11 +97,21 @@ def hass_supervisor_ws_client(
     """Return a websocket client authenticated as the Supervisor user."""
 
     async def create_client() -> WebSocketGenerator:
-        hassio_user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
-        assert hassio_user.refresh_tokens
-        refresh_token = next(iter(hassio_user.refresh_tokens.values()))
-        access_token = hass.auth.async_create_access_token(refresh_token)
-        return await hass_ws_client(hass, access_token=access_token)
+        with (
+            patch(
+                "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
+                return_value=True,
+            ),
+            patch(
+                "homeassistant.components.http.ban.is_supervisor_unix_socket_request",
+                return_value=True,
+            ),
+            patch(
+                "homeassistant.components.websocket_api.http.is_supervisor_unix_socket_request",
+                return_value=True,
+            ),
+        ):
+            return await hass_ws_client(hass, supervisor_unix_socket=True)
 
     return create_client
 

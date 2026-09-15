@@ -68,8 +68,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     helper_config_entry_id=config_entry.entry_id,
                     source_device_id=source_device_id,
                 )
+        if config_entry.minor_version < 3:
+            if options.get("sampling_size") == 0:
+                options.pop("sampling_size")
         hass.config_entries.async_update_entry(
-            config_entry, options=options, minor_version=2
+            config_entry, options=options, minor_version=3
         )
 
     _LOGGER.debug(

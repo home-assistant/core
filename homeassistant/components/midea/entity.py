@@ -1,17 +1,34 @@
 """Base entity for Midea."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from typing import Any, override
 
 from midealocal.device import MideaDevice
+from midealocal.exceptions import MideaLocalError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN, LOGGER
 from .device_catalog import MIDEA_DEVICE_NAMES
 
 type MideaConfigEntry = ConfigEntry[MideaDevice]
+
+
+@contextmanager
+def midea_api_call() -> Generator[None]:
+    """Translate midealocal device-communication errors into HomeAssistantError."""
+    try:
+        yield
+    except MideaLocalError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="device_communication_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
 
 class MideaEntity(Entity):
@@ -43,15 +60,21 @@ class MideaEntity(Entity):
     @override
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return DeviceInfo(
+        device_info = DeviceInfo(
             manufacturer="Midea",
             # Map the device type (numeric ID) to a human-readable model name.
-            model=MIDEA_DEVICE_NAMES.get(self._device.device_type, "Unknown"),
+            model=MIDEA_DEVICE_NAMES.get(self._device.device_type),
             identifiers={(DOMAIN, str(self._device.device_id))},
             name=self._device_name,
-            model_id=str(self._device.device_type),
-            hw_version=str(self._device.subtype),
+            model_id=self._device.device_type.name,
+            hw_version=str(self._device.model),
         )
+        if mac := self._device.mac:
+            device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
+        if serial_number := self._device.serial_number:
+            device_info["serial_number"] = serial_number
+
+        return device_info
 
     @property
     @override

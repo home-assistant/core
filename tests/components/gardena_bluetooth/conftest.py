@@ -75,8 +75,8 @@ def mock_setup_entry(mock_unload_entry) -> Generator[AsyncMock]:
 def mock_read_char_raw():
     """Mock data on device."""
     return {
-        DeviceInformation.firmware_version.uuid: b"1.2.3",
-        DeviceInformation.model_number.uuid: b"Mock Model",
+        DeviceInformation.firmware_version.unique_id: b"1.2.3",
+        DeviceInformation.model_number.unique_id: b"Mock Model",
     }
 
 
@@ -122,13 +122,24 @@ def mock_client(
 
     SENTINEL = object()
 
+    def _chars() -> list[Characteristic]:
+        product_type = client_class.call_args.args[1]
+        return [
+            char
+            for service in Service.services_for_product_type(product_type)
+            for char in service.characteristics.values()
+        ]
+
     def _read_char(char: Characteristic, default: Any = SENTINEL):
         try:
-            return char.decode(mock_read_char_raw[char.uuid])
+            val = mock_read_char_raw[char.unique_id]
         except KeyError:
             if default is SENTINEL:
                 raise CharacteristicNotFound from KeyError
             return default
+        if isinstance(val, Exception):
+            raise val
+        return char.decode(val)
 
     def _read_char_raw(uuid: str, default: Any = SENTINEL):
         try:
@@ -142,17 +153,13 @@ def mock_client(
         return val
 
     def _all_char_uuid():
-        return set(mock_read_char_raw.keys())
+        """Physical uuids the device exposes."""
+        return {char.uuid for char in _chars() if char.unique_id in mock_read_char_raw}
 
     def _all_char():
-        product_type = client_class.call_args.args[1]
-        services = Service.services_for_product_type(product_type)
-        return {
-            char.unique_id: char
-            for service in services
-            for char in service.characteristics.values()
-            if char.uuid in mock_read_char_raw
-        }
+        """Every characteristic on an exposed uuid, virtual ones included."""
+        uuids = _all_char_uuid()
+        return {char.unique_id: char for char in _chars() if char.uuid in uuids}
 
     client = Mock(spec_set=Client)
     client.read_char.side_effect = _read_char

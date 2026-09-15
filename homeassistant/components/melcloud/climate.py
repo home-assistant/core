@@ -2,6 +2,7 @@
 
 from typing import Any, cast, override
 
+import probatio
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW, AtaDevice, AtwDevice
 import pymelcloud.ata_device as ata
 import pymelcloud.atw_device as atw
@@ -14,7 +15,6 @@ from pymelcloud.atw_device import (
     Zone,
 )
 from pymelcloud.device import PROPERTY_POWER
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -105,12 +105,12 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_VANE_HORIZONTAL,
-        {vol.Required(CONF_POSITION): cv.string},
+        {probatio.Required(CONF_POSITION): cv.string},
         "async_set_vane_horizontal",
     )
     platform.async_register_entity_service(
         SERVICE_SET_VANE_VERTICAL,
-        {vol.Required(CONF_POSITION): cv.string},
+        {probatio.Required(CONF_POSITION): cv.string},
         "async_set_vane_vertical",
     )
 

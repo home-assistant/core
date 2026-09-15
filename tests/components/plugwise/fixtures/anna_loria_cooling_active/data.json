@@ -1,7 +1,7 @@
 {
   "582dfbdace4d4aeb832923ce7d1ddda0": {
     "active_preset": "home",
-    "available_schedules": ["Winter", "Test ", "off"],
+    "available_schedules": ["off", "Winter", "Test "],
     "climate_mode": "auto",
     "control_state": "cooling",
     "dev_class": "thermostat",
@@ -60,24 +60,24 @@
       "flame_state": false,
       "heating_state": false
     },
-    "dev_class": "heater_central",
-    "dhw_mode": "auto",
-    "dhw_modes": ["off", "auto", "boost", "eco", "comfort"],
-    "location": "674b657c138a41a291d315d7471deb06",
-    "max_dhw_temperature": {
-      "current": 52.9,
-      "lower_bound": 35.0,
-      "resolution": 0.01,
-      "setpoint": 53.0,
-      "upper_bound": 60.0
-    },
-    "maximum_boiler_temperature": {
+    "boiler_temperature": {
       "current": 25.3,
       "lower_bound": 25.0,
       "resolution": 0.01,
       "setpoint": 40.0,
       "upper_bound": 45.0
     },
+    "dev_class": "heater_central",
+    "dhw_mode": "auto",
+    "dhw_modes": ["off", "auto", "boost", "eco", "comfort"],
+    "dhw_temperature": {
+      "current": 52.9,
+      "lower_bound": 35.0,
+      "resolution": 0.01,
+      "setpoint": 53.0,
+      "upper_bound": 60.0
+    },
+    "location": "674b657c138a41a291d315d7471deb06",
     "model": "Generic heater/cooler",
     "model_id": "173",
     "name": "OpenTherm",

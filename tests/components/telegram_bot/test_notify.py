@@ -1,6 +1,5 @@
 """Test the telegram bot notify platform."""
 
-from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -15,6 +14,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_capture_events
 
@@ -34,7 +34,7 @@ async def test_send_message(
         AsyncMock(
             return_value=Message(
                 message_id=12345,
-                date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                date=dt_util.utcnow(),
                 chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),

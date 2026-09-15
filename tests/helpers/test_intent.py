@@ -4,8 +4,8 @@ import asyncio
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import light, switch
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -80,9 +80,7 @@ async def test_async_match_states(
         suggested_object_id="kitchen",
         original_name="kitchen light",
     )
-    entity_registry.async_update_entity(
-        state1.entity_id, area_id=area_kitchen.id, aliases=[er.COMPUTED_NAME]
-    )
+    entity_registry.async_update_entity(state1.entity_id, area_id=area_kitchen.id)
 
     entity_registry.async_get_or_create(
         "switch",
@@ -228,7 +226,6 @@ async def test_async_match_targets(
     kitchen_outlet = entity_registry.async_update_entity(
         kitchen_outlet.entity_id,
         name="kitchen outlet",
-        aliases=[er.COMPUTED_NAME],
         device_class=switch.SwitchDeviceClass.OUTLET,
         area_id=area_kitchen.id,
     )
@@ -262,7 +259,6 @@ async def test_async_match_targets(
     bedroom_switch_2 = entity_registry.async_update_entity(
         bedroom_switch_2.entity_id,
         name="second floor bedroom switch",
-        aliases=[er.COMPUTED_NAME],
         area_id=area_bedroom_2.id,
     )
     state_bedroom_switch_2 = State(
@@ -298,7 +294,6 @@ async def test_async_match_targets(
     bedroom_switch_3 = entity_registry.async_update_entity(
         bedroom_switch_3.entity_id,
         name="third floor bedroom switch",
-        aliases=[er.COMPUTED_NAME],
         area_id=area_bedroom_3.id,
     )
     state_bedroom_switch_3 = State(
@@ -607,15 +602,64 @@ async def test_match_device_area(
     ) == [state1]
 
 
+async def test_match_child_device_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test async_match_states with an entity on a child device.
+
+    The child device inherits its parent's area.
+    """
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    area_kitchen = area_registry.async_get_or_create("kitchen")
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    device_registry.async_update_device(parent_device.id, area_id=area_kitchen.id)
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent_device.id,
+        name="Outlet 1",
+    )
+
+    state1 = State(
+        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+    )
+    state2 = State(
+        "light.living_room", "on", attributes={ATTR_FRIENDLY_NAME: "living room light"}
+    )
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity(state1.entity_id, device_id=child_device.id)
+
+    # The entity is matched through the child device's inherited area
+    assert list(
+        intent.async_match_states(
+            hass,
+            domains={"light"},
+            area_name="kitchen",
+            states=[state1, state2],
+        )
+    ) == [state1]
+
+
 def test_async_validate_slots() -> None:
     """Test async_validate_slots of IntentHandler."""
-    handler1 = MockIntentHandler({vol.Required("name"): cv.string})
+    handler1 = MockIntentHandler({probatio.Required("name"): cv.string})
 
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({})
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({"name": 1})
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({"name": "kitchen"})
     handler1.async_validate_slots({"name": {"value": "kitchen"}})
     handler1.async_validate_slots(

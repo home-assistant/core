@@ -1,6 +1,6 @@
 """The iCloud component."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
@@ -22,27 +22,30 @@ SERVICE_ICLOUD_DISPLAY_MESSAGE = "display_message"
 SERVICE_ICLOUD_LOST_DEVICE = "lost_device"
 SERVICE_ICLOUD_UPDATE = "update"
 
-SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ACCOUNT): cv.string})
+SERVICE_SCHEMA = probatio.Schema({probatio.Optional(ATTR_ACCOUNT): cv.string})
 
-SERVICE_SCHEMA_PLAY_SOUND = vol.Schema(
-    {vol.Required(ATTR_ACCOUNT): cv.string, vol.Required(ATTR_DEVICE_NAME): cv.string}
-)
-
-SERVICE_SCHEMA_DISPLAY_MESSAGE = vol.Schema(
+SERVICE_SCHEMA_PLAY_SOUND = probatio.Schema(
     {
-        vol.Required(ATTR_ACCOUNT): cv.string,
-        vol.Required(ATTR_DEVICE_NAME): cv.string,
-        vol.Required(ATTR_LOST_DEVICE_MESSAGE): cv.string,
-        vol.Optional(ATTR_LOST_DEVICE_SOUND): cv.boolean,
+        probatio.Required(ATTR_ACCOUNT): cv.string,
+        probatio.Required(ATTR_DEVICE_NAME): cv.string,
     }
 )
 
-SERVICE_SCHEMA_LOST_DEVICE = vol.Schema(
+SERVICE_SCHEMA_DISPLAY_MESSAGE = probatio.Schema(
     {
-        vol.Required(ATTR_ACCOUNT): cv.string,
-        vol.Required(ATTR_DEVICE_NAME): cv.string,
-        vol.Required(ATTR_LOST_DEVICE_NUMBER): cv.string,
-        vol.Required(ATTR_LOST_DEVICE_MESSAGE): cv.string,
+        probatio.Required(ATTR_ACCOUNT): cv.string,
+        probatio.Required(ATTR_DEVICE_NAME): cv.string,
+        probatio.Required(ATTR_LOST_DEVICE_MESSAGE): cv.string,
+        probatio.Optional(ATTR_LOST_DEVICE_SOUND): cv.boolean,
+    }
+)
+
+SERVICE_SCHEMA_LOST_DEVICE = probatio.Schema(
+    {
+        probatio.Required(ATTR_ACCOUNT): cv.string,
+        probatio.Required(ATTR_DEVICE_NAME): cv.string,
+        probatio.Required(ATTR_LOST_DEVICE_NUMBER): cv.string,
+        probatio.Required(ATTR_LOST_DEVICE_MESSAGE): cv.string,
     }
 )
 

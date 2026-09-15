@@ -12,7 +12,7 @@ from boschshcpy.exceptions import (
     SHCRegistrationError,
     SHCSessionError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -31,9 +31,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-HOST_SCHEMA = vol.Schema(
+HOST_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
@@ -204,9 +204,9 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             user_input = {}
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                 ): str,
             }

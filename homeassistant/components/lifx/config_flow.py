@@ -5,7 +5,7 @@ from typing import Any, Self, override
 
 from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
@@ -117,12 +117,12 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
         if not (legacy_entry := async_get_legacy_entry(self.hass)):
             return False
         device_registry = dr.async_get(self.hass)
-        existing_device = device_registry.async_get_device(
+        existing_devices = device_registry.async_get_devices(
             identifiers={(DOMAIN, self.unique_id)}
         )
-        return bool(
-            existing_device is not None
-            and legacy_entry.entry_id in existing_device.config_entries
+        return any(
+            device.config_entry_id == legacy_entry.entry_id
+            for device in existing_devices
         )
 
     async def async_step_discovery_confirm(
@@ -170,7 +170,9 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
+            data_schema=probatio.Schema(
+                {probatio.Optional(CONF_HOST, default=""): str}
+            ),
             errors=errors,
         )
 
@@ -211,7 +213,9 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(devices_name)}
+            ),
         )
 
     @callback
