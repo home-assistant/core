@@ -6,8 +6,7 @@
       "auth_new_token_not_work_error": "Failed to authenticate using newly created token",
       "auth_required_error": "Failed to determine if authorization is required",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_id": "The Hyperion Ambilight instance did not report its ID",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "no_id": "The Hyperion Ambilight instance did not report its ID"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

@@ -6,7 +6,7 @@ from collections.abc import AsyncIterable
 import logging
 from typing import final, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
@@ -133,7 +133,7 @@ class WakeWordDetectionEntity(RestoreEntity):
 @websocket_api.websocket_command(
     {
         "type": "wake_word/info",
-        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+        probatio.Required("entity_id"): cv.entity_domain(DOMAIN),
     }
 )
 @websocket_api.async_response
