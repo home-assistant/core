@@ -84,6 +84,13 @@ class CommandLineNotificationService(BaseNotificationService):
                 translation_key="timeout_error",
                 translation_placeholders={"command": command},
             ) from err
+        except asyncio.CancelledError:
+            # Kill synchronously so the child isn't orphaned; the event loop
+            # reaps it without awaiting wait(), which cancellation would
+            # interrupt anyway.
+            with suppress(ProcessLookupError):
+                proc.kill()
+            raise
 
         if proc.returncode != 0:
             LOGGER.error(

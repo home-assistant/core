@@ -10,6 +10,7 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
+from homeassistant.components.command_line.notify import CommandLineNotificationService
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -369,3 +370,39 @@ async def test_timeout_cleanup(
     mock_proc.wait.assert_awaited_once()
     assert mock_proc.stdin.transport.abort.called is expected_abort
     assert "Timeout for command" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "kill_side_effect",
+    [
+        pytest.param(None, id="process_running"),
+        # The command may have exited before the kill.
+        pytest.param(ProcessLookupError, id="process_already_gone"),
+    ],
+)
+async def test_cancelled_kills_process(
+    hass: HomeAssistant, kill_side_effect: type[Exception] | None
+) -> None:
+    """Test the subprocess is killed and the cancellation is re-raised.
+
+    The event loop reaps the killed child on its own, so the cancellation path
+    does not await wait().
+    """
+    mock_proc = AsyncMock()
+    mock_proc.communicate.side_effect = asyncio.CancelledError
+    mock_proc.kill = MagicMock(side_effect=kill_side_effect)
+
+    service = CommandLineNotificationService("exit 0", 15)
+    service.hass = hass
+
+    with (
+        patch(
+            "homeassistant.components.command_line.notify.asyncio.create_subprocess_shell",
+            return_value=mock_proc,
+        ),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await service.async_send_message("error")
+
+    mock_proc.kill.assert_called_once()
+    mock_proc.wait.assert_not_awaited()
