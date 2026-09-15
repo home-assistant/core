@@ -173,6 +173,7 @@ homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
 homeassistant.components.dhcp.*
 homeassistant.components.diagnostics.*
+homeassistant.components.discogs.*
 homeassistant.components.discovergy.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dlna_dms.*
@@ -311,6 +312,7 @@ homeassistant.components.imgw_pib.*
 homeassistant.components.immich.*
 homeassistant.components.incomfort.*
 homeassistant.components.indevolt.*
+homeassistant.components.indi_allsky.*
 homeassistant.components.inels.*
 homeassistant.components.infrared.*
 homeassistant.components.input_button.*

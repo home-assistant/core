@@ -211,8 +211,7 @@ async def test_triggers_for_invalid_device_id(
 
     # Create an additional device that does not exist.  Fetching supported
     # triggers for an unknown device will fail.
-    assert len(device_entry.config_entries) == 1
-    config_entry_id = next(iter(device_entry.config_entries))
+    config_entry_id = device_entry.config_entry_id
     device_entry_2 = device_registry.async_get_or_create(
         config_entry_id=config_entry_id, identifiers={(DOMAIN, "some-unknown-nest-id")}
     )

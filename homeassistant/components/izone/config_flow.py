@@ -8,7 +8,7 @@ from typing import Any, Self, override
 
 import pizone
 from pizone.discovery import SCAN_TIMEOUT
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, FlowType
@@ -161,9 +161,9 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 next_flow=(FlowType.CONFIG_FLOW, candidates[0].flow_id),
             )
 
-        selection_schema = vol.Schema(
+        selection_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     SELECTED_CONTROLLER_UID,
                     default=candidates[0].uid,
                 ): SelectSelector(
