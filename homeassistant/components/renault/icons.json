@@ -86,6 +86,9 @@
     "ac_start": {
       "service": "mdi:hvac"
     },
+    "charge_get_schedules": {
+      "service": "mdi:calendar-search"
+    },
     "charge_set_schedules": {
       "service": "mdi:calendar-clock"
     },
