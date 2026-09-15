@@ -19,14 +19,7 @@ _FALSE_STRINGS = {"false", "0"}
 
 
 def to_bool(value: Any) -> bool | None:
-    """Normalize a Control4 boolean-ish variable that may arrive as a string.
-
-    Numeric Control4 variables (e.g. LIGHT_LEVEL) are known to arrive as
-    strings over the wire; boolean-ish ones (Fully Closed, IS_MUTED, ...)
-    haven't been confirmed either way, so this treats a string the same
-    way a real bool would be, rather than assuming str(value) is always
-    truthy like a bare `bool(value)` would.
-    """
+    """Normalize a Control4 boolean-ish variable that may arrive as a string."""
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
@@ -46,13 +39,7 @@ async def _with_token_refresh[T](
     entry: Control4ConfigEntry,
     call: Callable[[], Coroutine[Any, Any, T]],
 ) -> T:
-    """Call `call`, refreshing the director token once on BadToken.
-
-    Concurrent callers serialize on the entry's token_refresh_lock. Each one
-    retries once after acquiring it, in case another caller already refreshed
-    the token while this one waited, so only the first caller through the
-    lock actually calls refresh_tokens().
-    """
+    """Call `call`, refreshing the director token once on BadToken."""
     try:
         return await call()
     except BadToken:

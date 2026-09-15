@@ -97,8 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
             runtime_data.cancel_token_refresh_callback()
         if runtime_data.cancel_periodic_resync_callback is not None:
             runtime_data.cancel_periodic_resync_callback()
-            # A retried setup reuses this same runtime_data (see refresh_tokens()),
-            # and only reschedules this timer when this is None.
+            # Retried setup reuses this runtime_data; only reschedule when unset.
             runtime_data.cancel_periodic_resync_callback = None
         raise
 
@@ -109,10 +108,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     runtime_data.director_all_items = director_all_items
     runtime_data.ui_configuration = ui_configuration
 
-    # Platform-level setup failures (e.g. a director timeout while a platform
-    # fetches its own items) are caught and logged inside HA's own
-    # entity_platform setup (see entity_platform.py's _async_setup_platform),
-    # not raised here, so this doesn't need the cleanup block above.
+    # Platform setup failures are caught inside HA's own entity_platform
+    # setup, never raised here, so this needs no cleanup block.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -132,8 +129,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) ->
     if runtime_data.cancel_periodic_resync_callback is not None:
         _LOGGER.debug("Cancelling periodic resync poll for config entry unload")
         runtime_data.cancel_periodic_resync_callback()
-        # A reload reuses this same runtime_data (see refresh_tokens()), and
-        # only reschedules this timer when this is None.
+        # A reload reuses this runtime_data; only reschedule when unset.
         runtime_data.cancel_periodic_resync_callback = None
     return unload_ok
 
@@ -225,8 +221,7 @@ async def refresh_tokens(
     runtime_data.cancel_token_refresh_callback = async_call_later(
         hass=hass, delay=delay, action=obj.refresh_tokens
     )
-    # Only the very first call (initial setup) needs this; a scheduled token
-    # refresh reuses the existing periodic timer untouched.
+    # Only needed once, on initial setup.
     if runtime_data.cancel_periodic_resync_callback is None:
         runtime_data.cancel_periodic_resync_callback = async_track_time_interval(
             hass,
@@ -246,11 +241,7 @@ async def _resync_items(hass: HomeAssistant, entry: Control4ConfigEntry) -> None
             _LOGGER.warning("Failed to resync item %s", item_id)
             continue
         if not item_attributes:
-            # An item the Director no longer recognizes (removed, offline)
-            # returns no variables at all; sending this through unchanged
-            # would mark it available again without changing its stale
-            # cached attributes, same as director_get_entry_variables()
-            # returning {} is already treated as "no data" during setup.
+            # No data means removed/offline; don't mark it available with stale attributes.
             _LOGGER.warning(
                 "Resync for item %s returned no data, leaving unavailable", item_id
             )
@@ -290,14 +281,8 @@ class C4WebsocketConnectionTracker:
         if not self._was_disconnected:
             return
         _LOGGER.info("WebSocket connection to Control4 re-established")
-        # Reset before resyncing, not after: sio_connect() disconnects and
-        # reconnects unconditionally, which synchronously re-invokes this
-        # callback. If _resync_items() below hits a BadToken and that
-        # triggers its own refresh_tokens() -> sio_connect() call, the
-        # nested invocation must see _was_disconnected already False and
-        # return via the guard above - otherwise it would try to reacquire
-        # resync_lock from within the same task and deadlock forever, since
-        # asyncio.Lock isn't reentrant.
+        # Reset first: a nested reconnect (BadToken -> sio_connect) must see
+        # this as False and return above, not re-enter resync_lock and deadlock.
         self._was_disconnected = False
         async with self.entry.runtime_data.resync_lock:
             await _resync_items(self.hass, self.entry)

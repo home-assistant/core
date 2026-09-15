@@ -58,11 +58,7 @@ async def test_concurrent_bad_token_only_refreshes_once(
 
     token_valid = False
     sync_count = 0
-    # Only the first two calls (one per gathered coroutine, both made before
-    # either has acquired the refresh lock) sync up here, forcing them to hit
-    # BadToken together instead of one racing to completion - refresh
-    # included - before the other even starts, which fully synchronous mocks
-    # would otherwise allow. Later retries (inside/after the lock) skip this.
+    # Forces both initial calls to hit BadToken together, not one-then-other.
     both_calls_started = asyncio.Barrier(2)
 
     async def _get_item_variables(item_id: int) -> list[dict]:

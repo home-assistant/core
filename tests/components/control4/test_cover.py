@@ -369,14 +369,7 @@ async def test_cover_push_update_with_string_encoded_booleans(
     hass: HomeAssistant,
     mock_c4_websocket: MagicMock,
 ) -> None:
-    """A push carrying "Fully Closed"/"Closing"/"Opening" as strings isn't misread as truthy.
-
-    The wire format for these fields over WebSocket push hasn't been
-    confirmed (unlike numeric fields, which are known to arrive as
-    strings), so this exercises the defensive parsing for the case where
-    it does: bool("False") is True in plain Python, which would make a
-    cover falsely report itself as closing/closed.
-    """
+    """A push carrying "Fully Closed"/"Closing"/"Opening" as strings isn't misread as truthy."""
     callback = mock_c4_websocket.item_callbacks[234][0]
     await callback(
         234,
@@ -393,8 +386,7 @@ async def test_cover_push_update_with_string_encoded_booleans(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    # Every field says "not doing that", all as strings; a naive bool(str)
-    # would treat every one of them as truthy and report CLOSING or CLOSED.
+    # A naive bool(str) would treat every value here as truthy.
     assert state.state == CoverState.OPEN
 
 
@@ -440,14 +432,7 @@ async def test_reconnect_resync_with_no_data_stays_unavailable(
     mock_c4_websocket: MagicMock,
     mock_cover_variables: dict,
 ) -> None:
-    """A resync that returns no data for an item must not mark it available.
-
-    The Director returning no variables at all for an item (removed,
-    offline) previously still produced a synthesized OnDataToUI message,
-    which _update_callback treats as "available" regardless of whether
-    its data is empty - restoring stale cached attributes under a
-    falsely-available state instead of leaving the entity unavailable.
-    """
+    """A resync that returns no data for an item must not mark it available."""
     await mock_c4_websocket.disconnect_callback()
     await hass.async_block_till_done()
 
@@ -504,16 +489,7 @@ async def test_reconnect_resync_with_nested_token_refresh_does_not_deadlock(
     mock_c4_websocket: MagicMock,
     mock_c4_director: MagicMock,
 ) -> None:
-    """A BadToken during reconnect-resync must not deadlock on resync_lock.
-
-    sio_connect() always disconnects and reconnects, which synchronously
-    re-invokes connect_callback() on the new connection - real pyControl4
-    behavior, simulated here via the mock. If a BadToken during this
-    resync pass triggers refresh_tokens() -> sio_connect(), the nested
-    connect_callback() call must not try to reacquire resync_lock from the
-    same task (asyncio.Lock isn't reentrant); if it did, this test would
-    hang until the asyncio.wait_for timeout below.
-    """
+    """A BadToken during reconnect-resync must not deadlock on resync_lock."""
     await mock_c4_websocket.disconnect_callback()
     await hass.async_block_till_done()
 

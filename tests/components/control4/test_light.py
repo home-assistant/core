@@ -357,13 +357,7 @@ async def test_light_is_on_falls_through_undefined_key(
     hass: HomeAssistant,
     mock_c4_websocket: MagicMock,
 ) -> None:
-    """is_on checks later keys when an earlier one is present but Undefined.
-
-    Regression test: is_on used to return on the first matching key
-    regardless of whether it had a usable value, so a device reporting
-    LIGHT_LEVEL as Undefined while CURRENT_POWER had a real value was
-    incorrectly reported as off.
-    """
+    """is_on checks later keys when an earlier one is present but Undefined."""
     callback = mock_c4_websocket.item_callbacks[345][0]
     await callback(
         345,
