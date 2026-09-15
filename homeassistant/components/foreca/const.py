@@ -19,6 +19,7 @@ from homeassistant.components.weather import (
 
 DOMAIN = "foreca"
 ATTRIBUTION = "Data provided by Foreca"
+SUBENTRY_TYPE_LOCATION = "location"
 UPDATE_INTERVAL = timedelta(minutes=30)
 HOURLY_PERIODS = 48
 DAILY_PERIODS = 10

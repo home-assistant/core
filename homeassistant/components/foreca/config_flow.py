@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector
 
-from .const import DOMAIN
+from .const import DOMAIN, SUBENTRY_TYPE_LOCATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_LATITUDE: self.hass.config.latitude,
                                 CONF_LONGITUDE: self.hass.config.longitude,
                             },
-                            subentry_type="location",
+                            subentry_type=SUBENTRY_TYPE_LOCATION,
                             title=(info.name if info else None) or "Foreca",
                             unique_id=(
                                 f"{self.hass.config.latitude}-"
@@ -104,7 +104,7 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return the subentry types this integration supports."""
-        return {"location": LocationSubentryFlowHandler}
+        return {SUBENTRY_TYPE_LOCATION: LocationSubentryFlowHandler}
 
 
 class LocationSubentryFlowHandler(ConfigSubentryFlow):

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 from pyforeca import ForecaAuthError, ForecaConnectionError
 import pytest
 
+from homeassistant.components.foreca.const import SUBENTRY_TYPE_LOCATION
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
@@ -89,7 +90,7 @@ async def test_added_location_gets_an_entity(
         mock_config_entry,
         ConfigSubentry(
             data={CONF_LATITUDE: 48.86, CONF_LONGITUDE: 2.35},
-            subentry_type="location",
+            subentry_type=SUBENTRY_TYPE_LOCATION,
             title="Paris",
             unique_id="48.86-2.35",
         ),
