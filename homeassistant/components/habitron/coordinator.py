@@ -349,14 +349,13 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
         await self.client.send_devregid(0, rt_dev.id)
 
         for module in router.modules:
-            raddr = module.addr - router.id
             # ``suggested_area`` seeds the area only on device creation; a
             # forced ``async_update_device(area_id=...)`` here would clobber the
             # user's manually chosen area on every reload, so it is
             # intentionally not done.
             dev = dev_reg.async_get_or_create(
                 config_entry_id=self.entry.entry_id,
-                configuration_url=self._conf_url(f"/module-{raddr}"),
+                configuration_url=self._conf_url(f"/module-{module.addr}"),
                 identifiers={(DOMAIN, module.uid)},
                 manufacturer=MANUFACTURER,
                 suggested_area=_area_name(router, module.area),
@@ -366,7 +365,7 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
                 hw_version=module.hw_version,
                 via_device_id=rt_dev.id,
             )
-            await self.client.send_devregid(raddr, dev.id)
+            await self.client.send_devregid(module.addr, dev.id)
 
     @override
     async def _async_update_data(self) -> int:

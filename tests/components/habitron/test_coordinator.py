@@ -378,7 +378,6 @@ async def test_build_registers_the_device_tree(
     mock_config_entry.add_to_hass(hass)
     router = Router(
         uid="rt_1",
-        id=100,
         name="Router",
         version="1.0",
         serial="HBT-1",
@@ -386,7 +385,7 @@ async def test_build_registers_the_device_tree(
         modules=[
             Module(
                 uid="mod_1",
-                addr=101,
+                addr=1,
                 typ=TYPE_SMART_CONTROLLER,
                 name="Module 1",
                 mod_type="Smart Controller",
