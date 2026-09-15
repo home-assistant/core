@@ -48,7 +48,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -86,7 +86,7 @@ from .media_source import MotionEyeMediaProxyView, split_motioneye_device_identi
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
-
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 def create_motioneye_client(
     *args: Any,
