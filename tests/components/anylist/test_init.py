@@ -4,6 +4,7 @@ import logging
 from unittest.mock import MagicMock
 
 from aioanylist import AuthenticationError, AuthTokens, TransportError
+import pytest
 
 from homeassistant.components.anylist.const import CONF_REFRESH_TOKEN, CONF_USER_LOCALE
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -100,7 +101,7 @@ async def test_runtime_sync_failure_marks_entities_unavailable_and_recovers(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_anylist_client: MagicMock,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test runtime AnyList sync health controls availability without log spam."""
     await setup_integration(hass, mock_config_entry)

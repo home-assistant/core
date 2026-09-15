@@ -101,9 +101,7 @@ def mock_anylist_client_fixture() -> Generator[MagicMock]:
     client.sync.add_status_listener.side_effect = add_sync_status_listener
 
     lists = MagicMock()
-    lists.item.side_effect = lambda list_id, item_id: client.state.get_item(
-        list_id, item_id
-    )
+    lists.item.side_effect = client.state.get_item
     lists.add_item = AsyncMock()
     lists.rename_item = AsyncMock()
     lists.set_checked = AsyncMock()
