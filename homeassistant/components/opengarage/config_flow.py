@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
-import aiohttp
 import opengarage
+from opengarage.errors import OpenGarageError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -37,16 +37,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         f"{data[CONF_HOST]}:{data[CONF_PORT]}",
         data[CONF_DEVICE_KEY],
         data[CONF_VERIFY_SSL],
-        async_get_clientsession(hass),
+        async_get_clientsession(hass, verify_ssl=data[CONF_VERIFY_SSL]),
     )
 
     try:
-        status = await open_garage.update_state()
-    except aiohttp.ClientError as exp:
+        status = (await open_garage.get_state()).raw
+    except OpenGarageError as exp:
         raise CannotConnect from exp
 
-    if status is None:
-        raise InvalidAuth
+    if not {"name", "mac"} <= status.keys():
+        raise CannotConnect
 
     return {"title": status.get("name"), "unique_id": format_mac(status["mac"])}
 

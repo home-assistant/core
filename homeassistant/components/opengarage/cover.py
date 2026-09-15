@@ -1,5 +1,6 @@
 """Platform for the opengarage.io cover component."""
 
+from collections.abc import Awaitable, Callable
 import logging
 from typing import Any, cast, override
 
@@ -79,7 +80,9 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         self._state_before_move = self._state
         self._state = CoverState.CLOSING
         self.async_write_ha_state()
-        await self._push_button()
+        await self._push_button(
+            self.coordinator.open_garage_connection.push_close_button
+        )
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -89,15 +92,17 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         self._state_before_move = self._state
         self._state = CoverState.OPENING
         self.async_write_ha_state()
-        await self._push_button()
+        await self._push_button(
+            self.coordinator.open_garage_connection.push_open_button
+        )
 
     @callback
     @override
     def _update_attr(self) -> None:
         """Update the state and attributes."""
-        status = self.coordinator.data
+        status = self.coordinator.data.raw
 
-        state = STATES_MAP.get(status.get("door"))  # type: ignore[arg-type]
+        state = STATES_MAP.get(status.get("door"))
         if self._state_before_move is not None:
             if self._state_before_move != state:
                 self._state = state
@@ -115,9 +120,9 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
             return 100
         return None
 
-    async def _push_button(self):
+    async def _push_button(self, command: Callable[[], Awaitable[int | None]]) -> None:
         """Send commands to API."""
-        result = await self.coordinator.open_garage_connection.push_button()
+        result = await command()
         if result is None:
             _LOGGER.error("Unable to connect to OpenGarage device")
         if result == 1:
@@ -125,7 +130,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
 
         if result == 2:
             _LOGGER.error("Unable to control %s: Device key is incorrect", self.name)
-        elif result > 2:
+        elif result is not None:
             _LOGGER.error("Unable to control %s: Error code %s", self.name, result)
 
         self._state = self._state_before_move

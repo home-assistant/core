@@ -68,7 +68,7 @@ async def async_setup_entry(
             description,
         )
         for description in SENSOR_TYPES
-        if description.key in open_garage_data_coordinator.data
+        if description.key in open_garage_data_coordinator.data.raw
     )
 
 
@@ -79,4 +79,6 @@ class OpenGarageSensor(OpenGarageEntity, SensorEntity):
     @override
     def _update_attr(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+        self._attr_native_value = self.coordinator.data.raw.get(
+            self.entity_description.key
+        )

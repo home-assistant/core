@@ -51,10 +51,10 @@ class OpenGarageEntity(CoordinatorEntity[OpenGarageDataUpdateCoordinator]):
         """Return the device_info of the device."""
         return DeviceInfo(
             configuration_url=self.coordinator.open_garage_connection.device_url,
-            connections={(CONNECTION_NETWORK_MAC, self.coordinator.data["mac"])},
+            connections={(CONNECTION_NETWORK_MAC, self.coordinator.data.raw["mac"])},
             identifiers={(DOMAIN, self._device_id)},
             manufacturer="Open Garage",
-            name=self.coordinator.data["name"],
+            name=self.coordinator.data.raw["name"],
             suggested_area="Garage",
-            sw_version=str(self.coordinator.data["fwv"]),
+            sw_version=str(self.coordinator.data.raw["fwv"]),
         )

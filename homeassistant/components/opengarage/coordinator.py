@@ -2,9 +2,11 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, override
+from typing import override
 
 import opengarage
+from opengarage.errors import OpenGarageError
+from opengarage.state import NormalizedState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -19,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 type OpenGarageConfigEntry = ConfigEntry[OpenGarageDataUpdateCoordinator]
 
 
-class OpenGarageDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class OpenGarageDataUpdateCoordinator(DataUpdateCoordinator[NormalizedState]):
     """Class to manage fetching Opengarage data."""
 
     config_entry: OpenGarageConfigEntry
@@ -42,10 +44,15 @@ class OpenGarageDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     @override
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> NormalizedState:
         """Fetch data."""
-        data = await self.open_garage_connection.update_state()
-        if data is None:
+        try:
+            data = await self.open_garage_connection.get_state()
+        except OpenGarageError as err:
+            raise update_coordinator.UpdateFailed(
+                "Unable to connect to OpenGarage device"
+            ) from err
+        if not {"name", "mac", "fwv", "door"} <= data.raw.keys():
             raise update_coordinator.UpdateFailed(
                 "Unable to connect to OpenGarage device"
             )

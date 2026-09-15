@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from opengarage.state import normalize_state
 import pytest
 
 from homeassistant.components.cover import (
@@ -26,7 +27,9 @@ async def _simulate_door_state(
     door_state: int,
 ) -> None:
     """Simulate the OpenGarage device reporting a new door state."""
-    mock_opengarage.update_state.return_value = {"door": door_state, "name": "abcdef"}
+    mock_opengarage.get_state.return_value = normalize_state(
+        {**mock_opengarage.get_state.return_value.raw, "door": door_state}
+    )
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
 
@@ -48,7 +51,6 @@ async def test_cover_position(
     expected_position: int,
 ) -> None:
     """Test that current_cover_position reflects the door state."""
-    mock_opengarage.push_button.return_value = 1
     await _simulate_door_state(hass, mock_opengarage, door_state)
 
     state = hass.states.get("cover.garage_abcdef")
@@ -62,7 +64,6 @@ async def test_cover_position_during_transition(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test that current_cover_position is None during opening/closing transition."""
-    mock_opengarage.push_button.return_value = 1
     await _simulate_door_state(hass, mock_opengarage, 0)
 
     # Open the cover - will be in OPENING state before update
@@ -105,7 +106,6 @@ async def test_toggle_cover(
     final_position: int,
 ) -> None:
     """Test toggling the cover switches it to the opposite state."""
-    mock_opengarage.push_button.return_value = 1
     await _simulate_door_state(hass, mock_opengarage, initial_door_state)
 
     state = hass.states.get("cover.garage_abcdef")
@@ -119,7 +119,10 @@ async def test_toggle_cover(
         blocking=True,
     )
 
-    assert mock_opengarage.push_button.call_count == 1
+    assert (
+        mock_opengarage.push_open_button.call_count
+        + mock_opengarage.push_close_button.call_count
+    ) == 1
 
     await _simulate_door_state(hass, mock_opengarage, final_door_state)
 
@@ -140,7 +143,6 @@ async def test_toggle_does_not_reuse_stale_close_direction(
     cached direction instead of the current position, it would incorrectly
     open an already-open cover instead of closing it.
     """
-    mock_opengarage.push_button.return_value = 1
     await _simulate_door_state(hass, mock_opengarage, 1)
 
     state = hass.states.get("cover.garage_abcdef")
@@ -153,7 +155,10 @@ async def test_toggle_does_not_reuse_stale_close_direction(
         {ATTR_ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
-    assert mock_opengarage.push_button.call_count == 1
+    assert (
+        mock_opengarage.push_open_button.call_count
+        + mock_opengarage.push_close_button.call_count
+    ) == 1
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == CoverState.CLOSING
@@ -183,7 +188,10 @@ async def test_toggle_does_not_reuse_stale_close_direction(
         {ATTR_ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
-    assert mock_opengarage.push_button.call_count == 2
+    assert (
+        mock_opengarage.push_open_button.call_count
+        + mock_opengarage.push_close_button.call_count
+    ) == 2
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == CoverState.CLOSING
@@ -214,7 +222,6 @@ async def test_cover_command(
     final_position: int,
 ) -> None:
     """Test explicit open/close commands."""
-    mock_opengarage.push_button.return_value = 1
     await _simulate_door_state(hass, mock_opengarage, initial_door_state)
 
     await hass.services.async_call(
@@ -224,7 +231,10 @@ async def test_cover_command(
         blocking=True,
     )
 
-    assert mock_opengarage.push_button.call_count == 1
+    assert (
+        mock_opengarage.push_open_button.call_count
+        + mock_opengarage.push_close_button.call_count
+    ) == 1
 
     await _simulate_door_state(hass, mock_opengarage, final_door_state)
 

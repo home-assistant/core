@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from opengarage.state import normalize_state
 import pytest
 
 from homeassistant.components.opengarage.const import CONF_DEVICE_KEY, DOMAIN
@@ -37,11 +38,17 @@ def mock_opengarage() -> Generator[MagicMock]:
     ) as client_mock:
         client = client_mock.return_value
         client.device_url = "http://1.1.1.1:80"
-        client.update_state.return_value = {
-            "name": "abcdef",
-            "mac": "aa:bb:cc:dd:ee:ff",
-            "fwv": 120,
-        }
+        client.get_state.return_value = normalize_state(
+            {
+                "name": "abcdef",
+                "mac": "aa:bb:cc:dd:ee:ff",
+                "fwv": 120,
+                "door": 0,
+            }
+        )
+        client.push_open_button.return_value = 1
+        client.push_close_button.return_value = 1
+        client.reboot.return_value = 1
         yield client
 
 

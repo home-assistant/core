@@ -2,7 +2,8 @@
 
 from unittest.mock import patch
 
-import aiohttp
+from opengarage.errors import TransportError
+from opengarage.state import normalize_state
 
 from homeassistant import config_entries
 from homeassistant.components.opengarage.const import DOMAIN
@@ -23,8 +24,10 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "opengarage.OpenGarage.update_state",
-            return_value={"name": "Name of the device", "mac": "unique"},
+            "opengarage.OpenGarage.get_state",
+            return_value=normalize_state(
+                {"name": "Name of the device", "mac": "unique"}
+            ),
         ),
         patch(
             "homeassistant.components.opengarage.async_setup_entry",
@@ -48,15 +51,15 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+async def test_form_invalid_response(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "opengarage.OpenGarage.update_state",
-        return_value=None,
+        "opengarage.OpenGarage.get_state",
+        return_value=normalize_state(None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -64,7 +67,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -74,8 +77,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "opengarage.OpenGarage.update_state",
-        side_effect=aiohttp.ClientError,
+        "opengarage.OpenGarage.get_state",
+        side_effect=TransportError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -93,7 +96,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "opengarage.OpenGarage.update_state",
+        "opengarage.OpenGarage.get_state",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -118,8 +121,8 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     first_entry.add_to_hass(hass)
 
     with patch(
-        "opengarage.OpenGarage.update_state",
-        return_value={"name": "Name of the device", "mac": "unique"},
+        "opengarage.OpenGarage.get_state",
+        return_value=normalize_state({"name": "Name of the device", "mac": "unique"}),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

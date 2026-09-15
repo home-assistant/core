@@ -64,7 +64,7 @@ class OpenGarageBinarySensor(OpenGarageEntity, BinarySensorEntity):
     @override
     def _update_attr(self) -> None:
         """Handle updated data from the coordinator."""
-        state = self.coordinator.data.get(self.entity_description.key)
+        state = self.coordinator.data.raw.get(self.entity_description.key)
         if state == 1:
             self._attr_is_on = True
             self._available = True

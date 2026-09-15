@@ -18,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenGarageConfigEntry) -
         f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}",
         entry.data[CONF_DEVICE_KEY],
         entry.data[CONF_VERIFY_SSL],
-        async_get_clientsession(hass),
+        async_get_clientsession(hass, verify_ssl=entry.data[CONF_VERIFY_SSL]),
     )
     open_garage_data_coordinator = OpenGarageDataUpdateCoordinator(
         hass, entry, open_garage_connection
