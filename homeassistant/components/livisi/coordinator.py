@@ -150,6 +150,8 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[LivisiDevice]]):
 
     async def on_close(self) -> None:
         """Handle the websocket closing."""
+        for device_id in self.devices:
+            self._async_dispatch_reachability(device_id, False)
 
     async def ws_connect(self) -> None:
         """Connect the websocket."""
