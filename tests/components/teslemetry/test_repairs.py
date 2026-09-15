@@ -220,6 +220,7 @@ async def test_repair_fix_flow(
         None,
         {"entry_id": "missing"},
         {"entry_id": 123, "vin": VEHICLE_VIN, "issue_type": "key", "vehicle": "Car"},
+        {"issue_type": ISSUE_TYPE_BLE_KEY_REJECTED},
     ],
 )
 async def test_repair_invalid_data_returns_confirm_flow(

@@ -1,5 +1,6 @@
 """Config Flow for Teslemetry integration."""
 
+from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Mapping
 import logging
@@ -231,7 +232,7 @@ class OAuth2FlowHandler(
 
 
 class VehiclePairingFlow[_ResultT: FlowResult[Any, Any]](
-    FlowHandler[Any, _ResultT, Any]
+    FlowHandler[Any, _ResultT, Any], ABC
 ):
     """Find a vehicle over Bluetooth and approve Home Assistant's virtual key on it."""
 
@@ -247,9 +248,9 @@ class VehiclePairingFlow[_ResultT: FlowResult[Any, Any]](
         self._pair_error: dict[str, str] = {}
 
     @callback
+    @abstractmethod
     def _async_finish_pairing(self) -> _ResultT:
         """Finish the flow once the virtual key is on the vehicle's whitelist."""
-        raise NotImplementedError
 
     async def async_step_scan(
         self, user_input: dict[str, Any] | None = None

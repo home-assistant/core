@@ -1316,7 +1316,7 @@
         "step": {
           "instructions": {
             "description": "Select **Submit**, then place your key card against the center console card reader of vehicle {vin} to re-approve Home Assistant's virtual key.",
-            "title": "Re-approve the virtual key"
+            "title": "Re-approve the Bluetooth key"
           },
           "scan": {
             "description": "Vehicle {vin} has stopped accepting Home Assistant's Bluetooth key, so commands are being sent through the cloud instead. This usually means the key was removed from the vehicle's Locks screen.\n\nTo re-approve the key, Home Assistant will look for the vehicle over Bluetooth. Make sure it is within Bluetooth range of a Home Assistant Bluetooth adapter and has fewer than three phone keys in range, then continue.",
