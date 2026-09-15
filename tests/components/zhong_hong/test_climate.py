@@ -642,10 +642,7 @@ async def test_an_entity_offers_the_fan_modes_set_for_its_gateway(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
 ) -> None:
-    """Test an air conditioner offers the fan speeds chosen for its gateway.
-
-    Not the five it can address, but the ones the options were narrowed to.
-    """
+    """Test an air conditioner offers the fan speeds chosen for its gateway."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

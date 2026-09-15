@@ -60,6 +60,9 @@
     }
   },
   "options": {
+    "error": {
+      "no_fan_modes_selected": "Select at least one fan speed."
+    },
     "step": {
       "init": {
         "data": {

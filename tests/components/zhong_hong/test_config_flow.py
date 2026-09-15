@@ -22,7 +22,7 @@ from homeassistant.components.zhong_hong.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .conftest import ENTITY_ID, HOST, FakeGateway
@@ -288,7 +288,17 @@ async def test_options_flow_needs_a_fan_speed(
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
-    with pytest.raises(InvalidData):
-        await hass.config_entries.options.async_configure(
-            result["flow_id"], {CONF_FAN_MODES: []}
-        )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_FAN_MODES: []}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_FAN_MODES: "no_fan_modes_selected"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_FAN_MODES: [FAN_LOW]}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_FAN_MODES: [FAN_LOW]}

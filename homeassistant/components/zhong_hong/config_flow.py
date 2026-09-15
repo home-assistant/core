@@ -44,16 +44,13 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 OPTIONS_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_FAN_MODES): probatio.All(
-            SelectSelector(
-                SelectSelectorConfig(
-                    options=ALL_FAN_MODES,
-                    multiple=True,
-                    mode=SelectSelectorMode.LIST,
-                    translation_key="fan_modes",
-                )
-            ),
-            probatio.Length(min=1),
+        probatio.Required(CONF_FAN_MODES): SelectSelector(
+            SelectSelectorConfig(
+                options=ALL_FAN_MODES,
+                multiple=True,
+                mode=SelectSelectorMode.LIST,
+                translation_key="fan_modes",
+            )
         )
     }
 )
@@ -161,28 +158,36 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
 class ZhongHongOptionsFlow(OptionsFlowWithReload):
     """Handle the ZhongHong options.
 
-    The fan speeds live here because the protocol has no way to ask a unit
-    which of its five speeds it actually has: a three-speed unit is not
-    telling one that simply never ran at the other two apart. They are named
-    by hand so the ones a unit does not have can be dropped, rather than
-    offered and left to do nothing when picked.
+    The fan speeds are chosen here because the protocol cannot report which of
+    its five speeds a unit has: one that lacks a speed looks the same as one
+    that never ran at it. Choosing them drops the speeds a unit does not have,
+    which would otherwise be offered and do nothing when picked.
     """
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Let the user name the fan speeds their air conditioners have."""
+        """Let the user choose the fan speeds their air conditioners have."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
+            # The selector cannot enforce a minimum on its own, so an empty
+            # choice is caught here to keep an air conditioner from being left
+            # with no speed to offer.
+            if user_input[CONF_FAN_MODES]:
+                return self.async_create_entry(data=user_input)
+            errors[CONF_FAN_MODES] = "no_fan_modes_selected"
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 OPTIONS_SCHEMA,
-                {
+                user_input
+                or {
                     CONF_FAN_MODES: self.config_entry.options.get(
                         CONF_FAN_MODES, ALL_FAN_MODES
                     )
                 },
             ),
+            errors=errors,
         )
