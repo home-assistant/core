@@ -109,6 +109,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     runtime_data.director_all_items = director_all_items
     runtime_data.ui_configuration = ui_configuration
 
+    # Platform-level setup failures (e.g. a director timeout while a platform
+    # fetches its own items) are caught and logged inside HA's own
+    # entity_platform setup (see entity_platform.py's _async_setup_platform),
+    # not raised here, so this doesn't need the cleanup block above.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
