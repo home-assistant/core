@@ -244,15 +244,11 @@ async def test_get_stream_from_camera(
     aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
 ) -> None:
     """Test getting a stream."""
-    stream_called = False
+    authorization = None
 
     async def stream_handler(request: web.Request) -> web.Response:
-        nonlocal stream_called
-        stream_called = True
-        assert (
-            request.headers["Authorization"]
-            == "Basic Y2FtZXJhX3VzZXI6Y2FtZXJhX3Bhc3N3b3Jk"
-        )
+        nonlocal authorization
+        authorization = request.headers.get("Authorization")
         return web.Response(body="")
 
     app = web.Application()
@@ -282,19 +278,18 @@ async def test_get_stream_from_camera(
     await hass.async_block_till_done()
 
     await async_get_mjpeg_stream(hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID)
-    assert stream_called
+    assert authorization == "Basic Y2FtZXJhX3VzZXI6Y2FtZXJhX3Bhc3N3b3Jk"
 
 
 async def test_get_stream_from_camera_falls_back_to_surveillance_credentials(
     aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
 ) -> None:
     """Test stream auth falls back to global surveillance credentials."""
-    stream_called = False
+    authorization = None
 
     async def stream_handler(request: web.Request) -> web.Response:
-        nonlocal stream_called
-        stream_called = True
-        assert request.headers["Authorization"] == "Basic dXNlcjpwYXNzd29yZA=="
+        nonlocal authorization
+        authorization = request.headers.get("Authorization")
         return web.Response(body="")
 
     app = web.Application()
@@ -326,8 +321,7 @@ async def test_get_stream_from_camera_falls_back_to_surveillance_credentials(
     await hass.async_block_till_done()
 
     await async_get_mjpeg_stream(hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID)
-    assert stream_called
-
+    assert authorization == "Basic dXNlcjpwYXNzd29yZA=="
 
 async def test_state_attributes(hass: HomeAssistant) -> None:
     """Test state attributes are set correctly."""
