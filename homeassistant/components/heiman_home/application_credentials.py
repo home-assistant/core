@@ -2,7 +2,7 @@
 
 from json import JSONDecodeError
 import logging
-from typing import NoReturn, cast
+from typing import NoReturn, cast, override
 
 from aiohttp import BasicAuth, ClientError, ClientResponse, RequestInfo
 from yarl import URL
@@ -51,6 +51,7 @@ class HeimanOAuth2Implementation(AuthImplementation):
     - Detailed logging for debugging token issues
     """
 
+    @override
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         session = async_get_clientsession(self.hass)

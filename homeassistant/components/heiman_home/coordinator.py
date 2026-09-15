@@ -2,9 +2,9 @@
 
 import contextlib
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from heimanconnect import (
     DeviceManagement,
@@ -24,6 +24,7 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .api import HeimanApiClient
 from .const import (
@@ -165,6 +166,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 area_sync_mode=area_sync_mode,
             )
 
+    @override
     async def _async_update_data(self) -> HeimanData:
         """Update coordinator data."""
         # Ensure client is initialized
@@ -186,7 +188,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         await self._fetch_and_process_devices(home_id)
 
         # Update last update time
-        self.data.last_update = datetime.now(UTC)
+        self.data.last_update = dt_util.utcnow()
 
         return self.data
 

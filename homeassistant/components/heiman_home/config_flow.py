@@ -2,10 +2,10 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from heimanconnect import HeimanAuthError, HeimanHome, HeimanTokenExpiredError
-import voluptuous as vol
+import probatio as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
@@ -38,15 +38,18 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self._auth_info = AuthInfo()
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {}
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for Heiman."""
         api_client = HeimanApiClient(

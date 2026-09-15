@@ -3,8 +3,8 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from heimanconnect import HeimanAuthError, HeimanTokenExpiredError
+import probatio as vol
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.heiman_home.config_flow import AuthInfo, HeimanConfigFlow
 from homeassistant.components.heiman_home.const import CONF_HOME_ID, CONF_USER_ID

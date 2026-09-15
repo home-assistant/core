@@ -99,7 +99,7 @@ async def test_sensor_entity_creation(
     # Check that sensor entity was created
     assert len(added_entities) == 1
     sensor = added_entities[0]
-    assert sensor.unique_id == "device-1_temperature_sensor"
+    assert sensor.unique_id == "device-1_temperature"
     assert sensor.name == "Temperature"
 
 
@@ -437,7 +437,7 @@ async def test_sensor_entity_unique_id(hass: HomeAssistant) -> None:
     )
 
     # Check unique ID
-    assert sensor.unique_id == "device-123_temperature_sensor"
+    assert sensor.unique_id == "device-123_temperature"
 
 
 async def test_sensor_entity_has_entity_name(hass: HomeAssistant) -> None:
@@ -549,9 +549,9 @@ async def test_sensor_entity_creation_with_multiple_properties(
     # Check that only readable properties with entity="sensor" were created
     assert len(added_entities) == 3
     unique_ids = {sensor.unique_id for sensor in added_entities}
-    assert "device-1_temperature_sensor" in unique_ids
-    assert "device-1_humidity_sensor" in unique_ids
-    assert "device-1_battery_sensor" in unique_ids
+    assert "device-1_temperature" in unique_ids
+    assert "device-1_humidity" in unique_ids
+    assert "device-1_battery" in unique_ids
 
 
 async def test_sensor_entity_creation_no_readable_properties(
@@ -961,8 +961,8 @@ async def test_sensor_creation_readable_without_entity_marker(
     # Check that sensors were created for properties without entity marker
     assert len(added_entities) == 2
     unique_ids = {sensor.unique_id for sensor in added_entities}
-    assert "device-no-entity_signal_strength_sensor" in unique_ids
-    assert "device-no-entity_rssi_value_sensor" in unique_ids
+    assert "device-no-entity_signal_strength" in unique_ids
+    assert "device-no-entity_rssi_value" in unique_ids
 
 
 async def test_sensor_creation_skips_non_sensor_entities(
@@ -1040,7 +1040,7 @@ async def test_sensor_creation_skips_non_sensor_entities(
 
     # Check that only sensor entity was created (switch and binary_sensor skipped)
     assert len(added_entities) == 1
-    assert added_entities[0].unique_id == "device-mixed_temperature_sensor"
+    assert added_entities[0].unique_id == "device-mixed_temperature"
 
 
 async def test_sensor_signal_strength_non_numeric_skips_device_class(
@@ -1151,7 +1151,7 @@ async def test_sensor_skips_non_scalar_properties(hass: HomeAssistant) -> None:
     # Only the numeric temperature property should create a sensor
     # Bool, list, and dict properties should be filtered out
     assert len(added_entities) == 1
-    assert added_entities[0].unique_id == "device-1_temperature_sensor"
+    assert added_entities[0].unique_id == "device-1_temperature"
     assert added_entities[0]._property_identifier == "temperature"
 
 
@@ -1216,7 +1216,7 @@ async def test_sensor_skip_scan_on_no_structure_change(
 
     # Verify initial sensor was created
     assert len(added_entities) == 1
-    assert added_entities[0].unique_id == "device-1_temperature_sensor"
+    assert added_entities[0].unique_id == "device-1_temperature"
 
     # Now trigger the listener again without changing structure
     # This should return early due to no structure change

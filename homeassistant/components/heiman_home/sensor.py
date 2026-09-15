@@ -1,7 +1,7 @@
 """Sensor platform for Heiman integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from heimanconnect import DeviceProperty, HeimanDevice
 
@@ -13,12 +13,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -79,7 +79,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="co_concentration",
         translation_key="co_concentration",
         device_class=SensorDeviceClass.CO,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -138,7 +138,7 @@ async def async_setup_entry(
                 if not _property_is_sensor_eligible(prop):
                     continue
                 current_sensor_candidates.add((device.device_id, property_id))
-                unique_id = f"{device.device_id}_{property_id}_sensor"
+                unique_id = f"{device.device_id}_{property_id}"
                 if unique_id in existing_entities:
                     continue
                 new_sensors.append(
@@ -190,7 +190,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         self._property_identifier = property_identifier
 
         # Generate unique ID
-        self._attr_unique_id = f"{device.device_id}_{property_identifier}_sensor"
+        self._attr_unique_id = f"{device.device_id}_{property_identifier}"
 
         # Get property object
         prop = device.properties.get(property_identifier)
@@ -294,6 +294,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             # Non-numeric sensors should not have state_class set
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if not self.coordinator.last_update_success:
@@ -306,6 +307,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         return device.online is True
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         device = self.coordinator.get_device(self._device.device_id)
@@ -319,6 +321,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         return DeviceProperty.validate_sensor_value(prop.value)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {}
