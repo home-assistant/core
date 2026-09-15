@@ -83,10 +83,10 @@ from .const import (
 from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
 from .media_source import MotionEyeMediaProxyView, split_motioneye_device_identifier
 
-
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 def create_motioneye_client(
     *args: Any,
