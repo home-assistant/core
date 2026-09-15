@@ -60,10 +60,46 @@ async def test_update_listener_triggers_reload(
         mock_reload.assert_called_with(entry.entry_id)
 
 
+async def test_failed_setup_still_releases_the_client(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_config_entry: MockConfigEntry,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """A setup that fails still closes the client and clears the router issue.
+
+    Home Assistant runs the on-unload callbacks for a failed setup but never
+    calls ``async_unload_entry``, so cleanup registered only there would leak
+    the client and leave the repair issue standing across every retry.
+    """
+    mock_config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.habitron.coordinator."
+            "HbtnCoordinator._async_connect_and_build",
+            side_effect=HabitronError("protocol glitch"),
+        ),
+        patch(
+            "homeassistant.components.habitron.coordinator.HbtnCoordinator.async_close"
+        ) as mock_close,
+        patch(
+            "homeassistant.components.habitron.coordinator."
+            "HbtnCoordinator.async_clear_router_issue"
+        ) as mock_clear,
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_close.assert_called_once()
+    mock_clear.assert_called_once()
+
+
 @pytest.mark.parametrize(
     "side_effect",
     [
         pytest.param(TimeoutError("hub silent"), id="timeout"),
+        pytest.param(HabitronTimeoutError("hub silent"), id="library_timeout"),
         pytest.param(ConnectionRefusedError("hub refused"), id="refused"),
         pytest.param(OSError("network down"), id="oserror"),
         pytest.param(HabitronError("protocol glitch"), id="habitron_error"),
@@ -431,39 +467,3 @@ async def test_migrate_v2_entry_is_bumped_and_keeps_the_token(
     assert (entry.version, entry.minor_version) == (2, 2)
     assert entry.data == {CONF_HOST: MOCK_HOST, "websock_token": "rotated-token"}
     assert entry.state is ConfigEntryState.LOADED
-
-
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        TimeoutError("silent"),
-        HabitronTimeoutError("silent"),
-        ConnectionRefusedError("refused"),
-        OSError("network down"),
-        HabitronError("protocol glitch"),
-    ],
-)
-async def test_setup_entry_connection_errors_mark_retry(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_config_entry: MockConfigEntry,
-    mock_habitron_client: MagicMock,
-    mock_coordinator_setup: None,
-    side_effect: Exception,
-) -> None:
-    """Every connection error from the first refresh becomes a retry.
-
-    The refresh is where the hub is actually spoken to, so a failure there is
-    transient by nature and Home Assistant should come back with backoff
-    instead of giving up on the entry.
-    """
-    mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.helpers.update_coordinator."
-        "DataUpdateCoordinator.async_config_entry_first_refresh",
-        side_effect=side_effect,
-    ):
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

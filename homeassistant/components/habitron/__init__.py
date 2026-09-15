@@ -2,11 +2,8 @@
 
 import logging
 
-from habitron_client import HabitronError, HabitronTimeoutError
-
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
@@ -55,47 +52,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> 
     """Set up Habitron from a config entry."""
     coordinator = HbtnCoordinator(hass, entry)
     entry.runtime_data = coordinator
-    try:
-        # First refresh runs the coordinator setup (connect, build the hub and
-        # bus models, register the devices), then the first bus poll.
-        await coordinator.async_config_entry_first_refresh()
-    except (TimeoutError, HabitronTimeoutError) as ex:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="connect_timeout",
-        ) from ex
-    except ConnectionRefusedError as ex:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="connect_refused",
-            translation_placeholders={"error": str(ex)},
-        ) from ex
-    except (OSError, ConnectionError) as ex:
-        # Network-level failures (DNS, socket errors, ...) are transient
-        # and should let HA retry the entry. Programming errors such as
-        # AttributeError/KeyError must propagate so they show up in the
-        # logs instead of being masked as a retry loop.
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="connect_error",
-            translation_placeholders={"error": str(ex)},
-        ) from ex
-    except HabitronError as ex:
-        # The library raises its own HabitronError subclasses (protocol /
-        # connection errors) rather than OSError for a flaky or rebooting hub
-        # — e.g. a dropped connection or a truncated response during setup.
-        # Treat them as transient so HA retries the entry with backoff instead
-        # of failing setup permanently. (HabitronTimeoutError, a subclass, is
-        # already handled above with its own translation key.)
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="connect_error",
-            translation_placeholders={"error": str(ex)},
-        ) from ex
 
-    # Past the connection: everything below is local bookkeeping, so it stays
-    # outside the handlers above. An unexpected failure here is a defect and
-    # must surface as one, not disappear into an indefinite setup retry.
+    # Registered before the first refresh, not in ``async_unload_entry``: a
+    # setup that fails runs the on-unload callbacks but never
+    # ``async_unload_entry``, so cleanup living only there would leave the
+    # client open and the router repair issue standing on every retry.
+    entry.async_on_unload(coordinator.async_clear_router_issue)
+    entry.async_on_unload(coordinator.async_close)
+
+    # First refresh runs the coordinator setup (connect, build the hub and bus
+    # models, register the devices), then the first bus poll. Both halves are
+    # wrapped by DataUpdateCoordinator, which turns every failure into
+    # ConfigEntryNotReady and carries the translation key the coordinator
+    # attached -- so no raw library error can surface here.
+    await coordinator.async_config_entry_first_refresh()
 
     # Before the update listener exists: adopting rewrites the entry, and
     # ``async_update_entry`` fires the listeners -- which would schedule a
@@ -132,15 +102,13 @@ async def async_remove_config_entry_device(
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> bool:
-    """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
+    """Unload a config entry.
 
-    entry.runtime_data.async_clear_router_issue()
-    await entry.runtime_data.async_close()
-
-    return True
+    Closing the client and clearing the router issue are registered as
+    on-unload callbacks in ``async_setup_entry``, so they also run when setup
+    itself failed; Home Assistant invokes them once the platforms are gone.
+    """
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: HabitronConfigEntry) -> None:
