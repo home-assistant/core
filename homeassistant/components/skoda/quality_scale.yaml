@@ -5,7 +5,7 @@ rules:
     comment: Integration does not register custom actions.
   appropriate-polling: done
   brands:
-    status: todo
+    status: done
     comment: |
       Waiting on home-assistant/brands#11080 to be merged.
   common-modules: done
