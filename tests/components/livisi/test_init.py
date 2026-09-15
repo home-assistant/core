@@ -284,7 +284,15 @@ async def test_setup_entities_and_unload(
     on_close = connection.listen_for_events.await_args.args[1]
     await on_close()
     await hass.async_block_till_done()
-    assert hass.states.is_state(switch_id, STATE_OFF)
+    assert hass.states.is_state(binary_sensor_id, STATE_UNAVAILABLE)
+    assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
+    assert hass.states.is_state(climate_id, STATE_UNAVAILABLE)
+
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.is_state(binary_sensor_id, STATE_OFF)
+    assert hass.states.is_state(switch_id, STATE_ON)
+    assert not hass.states.is_state(climate_id, STATE_UNAVAILABLE)
 
     on_data(
         LivisiWebsocketEvent(
