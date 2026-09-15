@@ -1,5 +1,7 @@
 """Constants for the Ollama integration."""
 
+from homeassistant.const import CONF_MAX_HISTORY
+
 DOMAIN = "ollama"
 
 DEFAULT_NAME = "Ollama"
@@ -17,7 +19,6 @@ DEFAULT_NUM_CTX = 8192
 MIN_NUM_CTX = 2048
 DEFAULT_THINK = False
 
-CONF_MAX_HISTORY = "max_history"
 DEFAULT_MAX_HISTORY = 20
 
 MAX_HISTORY_SECONDS = 60 * 60  # 1 hour

@@ -698,10 +698,24 @@ async def test_message_history_trimming(
         assert args[4].kwargs["messages"][5]["content"] == "message 5"
 
 
-async def test_message_history_unlimited(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+@pytest.mark.parametrize(
+    ("max_history_option", "expected_message_count", "expected_user_message_count"),
+    [
+        # system + 99 * (user + assistant) + user
+        pytest.param({}, 200, 100, id="unlimited"),
+        # system + user
+        pytest.param({ollama.CONF_MAX_HISTORY: 0}, 2, 1, id="no_history"),
+    ],
+)
+async def test_message_history_rounds(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    max_history_option: dict[str, int],
+    expected_message_count: int,
+    expected_user_message_count: int,
 ) -> None:
-    """Test that message history is not trimmed when max_history = 0."""
+    """Test how much history is sent for an unset and a zero max_history."""
     conversation_id = "1234"
 
     def stream(*args, **kwargs) -> AsyncGenerator[dict]:
@@ -716,7 +730,14 @@ async def test_message_history_unlimited(
         hass.config_entries.async_update_subentry(
             mock_config_entry,
             subentry,
-            data={**subentry.data, ollama.CONF_MAX_HISTORY: 0},
+            data={
+                **{
+                    key: value
+                    for key, value in subentry.data.items()
+                    if key != ollama.CONF_MAX_HISTORY
+                },
+                **max_history_option,
+            },
         )
         await hass.async_block_till_done()
         for i in range(100):
@@ -734,10 +755,14 @@ async def test_message_history_unlimited(
         args = mock_chat.call_args_list
         assert len(args) == 100
         recorded_messages = args[-1].kwargs["messages"]
+        assert len(recorded_messages) == expected_message_count
+        assert recorded_messages[0]["role"] == "system"
+        assert recorded_messages[-1]["role"] == "user"
+        assert recorded_messages[-1]["content"] == "message 100"
         message_count = sum(
             (message["role"] == "user") for message in recorded_messages
         )
-        assert message_count == 100
+        assert message_count == expected_user_message_count
 
 
 async def test_error_handling(

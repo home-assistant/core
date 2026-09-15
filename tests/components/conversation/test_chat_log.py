@@ -22,7 +22,10 @@ from homeassistant.components.conversation import (
 from homeassistant.components.conversation.chat_log import (
     DATA_CHAT_LOGS,
     Attachment,
+    ChatLog,
     ChatLogEventType,
+    Content,
+    SystemContent,
     async_subscribe_chat_logs,
 )
 from homeassistant.components.llm import LLMTools
@@ -1034,3 +1037,98 @@ async def test_chat_log_subscription(
 
     # Verify no new events were received after unsubscribing
     assert len(received_events) == events_before_unsubscribe
+
+
+SYSTEM_CONTENT = SystemContent(content="system prompt")
+USER_CONTENT_1 = UserContent(content="message 1")
+ASSISTANT_CONTENT_1 = AssistantContent(agent_id="mock-agent-id", content="response 1")
+USER_CONTENT_2 = UserContent(content="message 2")
+ASSISTANT_CONTENT_2 = AssistantContent(agent_id="mock-agent-id", content="response 2")
+USER_CONTENT_3 = UserContent(content="message 3")
+
+THREE_ROUNDS: list[Content] = [
+    SYSTEM_CONTENT,
+    USER_CONTENT_1,
+    ASSISTANT_CONTENT_1,
+    USER_CONTENT_2,
+    ASSISTANT_CONTENT_2,
+    USER_CONTENT_3,
+]
+
+
+@pytest.mark.parametrize(
+    ("max_rounds", "expected_content"),
+    [
+        pytest.param(None, THREE_ROUNDS, id="unset_keeps_everything"),
+        pytest.param(
+            0, [SYSTEM_CONTENT, USER_CONTENT_3], id="zero_keeps_round_in_progress"
+        ),
+        pytest.param(
+            1,
+            [SYSTEM_CONTENT, USER_CONTENT_2, ASSISTANT_CONTENT_2, USER_CONTENT_3],
+            id="one_previous_round",
+        ),
+        pytest.param(2, THREE_ROUNDS, id="exactly_the_rounds_available"),
+        pytest.param(10, THREE_ROUNDS, id="more_rounds_than_available"),
+    ],
+)
+async def test_get_content_max_rounds(
+    hass: HomeAssistant,
+    max_rounds: int | None,
+    expected_content: list[Content],
+) -> None:
+    """Test limiting the number of previous rounds returned."""
+    chat_log = ChatLog(hass, "mock-conversation-id", content=list(THREE_ROUNDS))
+
+    assert chat_log.async_get_content(max_rounds=max_rounds) == expected_content
+    # The log itself is never trimmed
+    assert chat_log.content == THREE_ROUNDS
+
+
+async def test_get_content_keeps_tool_results_of_round_in_progress(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the round in progress is returned in full."""
+    tool_call = AssistantContent(
+        agent_id="mock-agent-id",
+        tool_calls=[
+            llm.ToolInput(
+                id="mock-tool-call-id",
+                tool_name="test_tool",
+                tool_args={},
+            )
+        ],
+    )
+    tool_result = ToolResultContent(
+        agent_id="mock-agent-id",
+        tool_call_id="mock-tool-call-id",
+        tool_name="test_tool",
+        tool_result={"result": "ok"},
+    )
+    chat_log = ChatLog(
+        hass,
+        "mock-conversation-id",
+        content=[
+            SYSTEM_CONTENT,
+            USER_CONTENT_1,
+            ASSISTANT_CONTENT_1,
+            USER_CONTENT_2,
+            tool_call,
+            tool_result,
+        ],
+    )
+
+    assert chat_log.async_get_content(max_rounds=0) == [
+        SYSTEM_CONTENT,
+        USER_CONTENT_2,
+        tool_call,
+        tool_result,
+    ]
+
+
+async def test_get_content_negative_max_rounds(hass: HomeAssistant) -> None:
+    """Test that a negative number of rounds is rejected."""
+    chat_log = ChatLog(hass, "mock-conversation-id", content=list(THREE_ROUNDS))
+
+    with pytest.raises(ValueError):
+        chat_log.async_get_content(max_rounds=-1)

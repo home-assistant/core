@@ -21,8 +21,3 @@ class MessageHistory:
 
     messages: list[ollama.Message]
     """List of message history, including system prompt and assistant responses."""
-
-    @property
-    def num_user_messages(self) -> int:
-        """Return a count of user messages."""
-        return sum(m["role"] == MessageRole.USER.value for m in self.messages)

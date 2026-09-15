@@ -9,7 +9,7 @@ from ollama import ResponseError
 import pytest
 
 from homeassistant.components import ollama
-from homeassistant.components.ollama.const import DOMAIN
+from homeassistant.components.ollama.const import DEFAULT_MAX_HISTORY, DOMAIN
 from homeassistant.config_entries import (
     ConfigEntryDisabler,
     ConfigEntryState,
@@ -199,7 +199,7 @@ async def test_migration_from_v1(
         await hass.async_block_till_done()
 
     assert mock_config_entry.version == 3
-    assert mock_config_entry.minor_version == 3
+    assert mock_config_entry.minor_version == 4
     # After migration, parent entry should only have URL
     assert mock_config_entry.data == {CONF_URL: "http://localhost:11434"}
     assert mock_config_entry.options == {}
@@ -324,7 +324,7 @@ async def test_migration_from_v1_with_multiple_urls(
 
     for idx, entry in enumerate(entries):
         assert entry.version == 3
-        assert entry.minor_version == 3
+        assert entry.minor_version == 4
         assert not entry.options
         assert len(entry.subentries) == 2
 
@@ -433,7 +433,7 @@ async def test_migration_from_v1_with_same_urls(
 
     entry = entries[0]
     assert entry.version == 3
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
     assert not entry.options
     # Two conversation subentries from the two original entries and 1 aitask subentry
     assert len(entry.subentries) == 3
@@ -472,6 +472,7 @@ async def test_migration_from_v1_with_same_urls(
         "merged_config_entry_disabled_by",
         "conversation_subentry_data",
         "main_config_entry",
+        "minor_version_after_migration",
     ),
     [
         (
@@ -494,6 +495,7 @@ async def test_migration_from_v1_with_same_urls(
                 },
             ],
             1,
+            4,
         ),
         (
             [None, ConfigEntryDisabler.USER],
@@ -515,6 +517,7 @@ async def test_migration_from_v1_with_same_urls(
                 },
             ],
             0,
+            4,
         ),
         (
             [ConfigEntryDisabler.USER, ConfigEntryDisabler.USER],
@@ -536,6 +539,7 @@ async def test_migration_from_v1_with_same_urls(
                 },
             ],
             0,
+            3,
         ),
     ],
 )
@@ -549,8 +553,13 @@ async def test_migration_from_v1_disabled(
     merged_config_entry_disabled_by: ConfigEntryDisabler | None,
     conversation_subentry_data: list[dict[str, Any]],
     main_config_entry: int,
+    minor_version_after_migration: int,
 ) -> None:
-    """Test migration where the config entries are disabled."""
+    """Test migration where the config entries are disabled.
+
+    Migration does not run for disabled config entries, so those stay behind
+    on the minor version set by the structural migration.
+    """
     # Create a v1 config entry with conversation options and an entity
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -625,7 +634,7 @@ async def test_migration_from_v1_disabled(
     entry = entries[0]
     assert entry.disabled_by is merged_config_entry_disabled_by
     assert entry.version == 3
-    assert entry.minor_version == 3
+    assert entry.minor_version == minor_version_after_migration
     assert not entry.options
     assert entry.title == "Ollama"
     assert len(entry.subentries) == 3
@@ -759,7 +768,7 @@ async def test_migration_from_v2_1(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 3
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
     assert not entry.options
     assert entry.title == "Ollama"
     assert len(entry.subentries) == 3
@@ -845,7 +854,7 @@ async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
 
     # Check migration to v3.1
     assert mock_config_entry.version == 3
-    assert mock_config_entry.minor_version == 3
+    assert mock_config_entry.minor_version == 4
 
     # Check that model was moved from main data to subentry
     assert mock_config_entry.data == {CONF_URL: "http://localhost:11434"}
@@ -855,6 +864,7 @@ async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
     assert subentry.data == {
         **V21_TEST_USER_DATA,
         ollama.CONF_MODEL: "test_model:latest",
+        ollama.CONF_MAX_HISTORY: DEFAULT_MAX_HISTORY,
     }
 
 
@@ -883,7 +893,7 @@ async def test_migration_from_v3_1_without_subentry(hass: HomeAssistant) -> None
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.version == 3
-    assert mock_config_entry.minor_version == 3
+    assert mock_config_entry.minor_version == 4
 
     assert next(iter(mock_config_entry.subentries.values()), None) is None
 
@@ -906,7 +916,7 @@ async def test_migration_from_v3_1_without_subentry(hass: HomeAssistant) -> None
             DeviceEntryDisabler.CONFIG_ENTRY,
             RegistryEntryDisabler.CONFIG_ENTRY,
             True,
-            3,
+            4,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -916,7 +926,7 @@ async def test_migration_from_v3_1_without_subentry(hass: HomeAssistant) -> None
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
             True,
-            3,
+            4,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -926,7 +936,7 @@ async def test_migration_from_v3_1_without_subentry(hass: HomeAssistant) -> None
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
             True,
-            3,
+            4,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
@@ -936,7 +946,7 @@ async def test_migration_from_v3_1_without_subentry(hass: HomeAssistant) -> None
             None,
             None,
             True,
-            3,
+            4,
             None,
             None,
             None,
@@ -1083,3 +1093,69 @@ async def test_migrate_entry_from_v3_2(
     assert mock_config_entry.disabled_by == config_entry_disabled_by_after_migration
     assert conversation_device.disabled_by == device_disabled_by_after_migration
     assert conversation_entity.disabled_by == entity_disabled_by_after_migration
+
+
+@pytest.mark.parametrize(
+    ("max_history_before", "max_history_after"),
+    [
+        pytest.param(
+            {},
+            {ollama.CONF_MAX_HISTORY: DEFAULT_MAX_HISTORY},
+            id="unset_keeps_the_previous_default",
+        ),
+        pytest.param({ollama.CONF_MAX_HISTORY: 0}, {}, id="zero_sent_everything"),
+        pytest.param({ollama.CONF_MAX_HISTORY: -1}, {}, id="negative_sent_everything"),
+        pytest.param(
+            {ollama.CONF_MAX_HISTORY: 5},
+            {ollama.CONF_MAX_HISTORY: 5},
+            id="number_of_rounds_is_unchanged",
+        ),
+    ],
+)
+async def test_migration_from_v3_3(
+    hass: HomeAssistant,
+    max_history_before: dict[str, int],
+    max_history_after: dict[str, int],
+) -> None:
+    """Test migration of max_history from version 3.3."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://localhost:11434"},
+        version=3,
+        minor_version=3,
+        subentries_data=[
+            ConfigSubentryData(
+                data={ollama.CONF_MODEL: "test_model:latest", **max_history_before},
+                subentry_type="conversation",
+                title="Test Conversation",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data={ollama.CONF_MODEL: "test_model:latest"},
+                subentry_type="ai_task_data",
+                title="Test AI Task",
+                unique_id=None,
+            ),
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.ollama.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.version == 3
+    assert mock_config_entry.minor_version == 4
+
+    subentries = {
+        subentry.subentry_type: subentry
+        for subentry in mock_config_entry.subentries.values()
+    }
+    assert subentries["conversation"].data == {
+        ollama.CONF_MODEL: "test_model:latest",
+        **max_history_after,
+    }
+    # AI tasks have no conversation history to migrate
+    assert subentries["ai_task_data"].data == {ollama.CONF_MODEL: "test_model:latest"}

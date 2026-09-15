@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script import ScriptConfig
-from homeassistant.const import EntityStateAttribute
+from homeassistant.const import CONF_MAX_HISTORY, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -1411,3 +1411,25 @@ async def test_deprecated_async_render_no_api_prompt(
         "The deprecated function async_render_no_api_prompt was called. It will be "
         "removed in HA Core 2027.2. Use an empty string instead"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("options", "default", "expected_suggested_value"),
+    [
+        pytest.param({}, None, None, id="unset"),
+        pytest.param({}, 20, 20, id="default"),
+        pytest.param({CONF_MAX_HISTORY: 0}, 20, 0, id="stored_value_wins"),
+    ],
+)
+def test_max_history_schema(
+    options: dict[str, int],
+    default: int | None,
+    expected_suggested_value: int | None,
+) -> None:
+    """Test the config flow schema for the conversation history option."""
+    schema = llm.max_history_schema(options, default=default)
+
+    marker = next(iter(schema))
+    assert marker.schema == CONF_MAX_HISTORY
+    assert marker.description == {"suggested_value": expected_suggested_value}
+    assert schema[marker].config["min"] == 0

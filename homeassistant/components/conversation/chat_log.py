@@ -378,6 +378,41 @@ class ChatLog:
         return self.content[-1].role == "tool_result"
 
     @callback
+    def async_get_content(self, *, max_rounds: int | None = None) -> list[Content]:
+        """Return the content to pass to the model.
+
+        A round is a user message together with everything that followed it, so
+        the round in progress is always returned in full. Only the number of
+        rounds before it is limited: None keeps all of them, 0 keeps none.
+
+        The log itself is never modified, and system content is always kept.
+        """
+        if max_rounds is None:
+            return list(self.content)
+
+        if max_rounds < 0:
+            raise ValueError("max_rounds cannot be negative")
+
+        user_indexes = [
+            index
+            for index, content in enumerate(self.content)
+            if content.role == "user"
+        ]
+        # The last user message is the round in progress
+        if len(user_indexes) <= max_rounds + 1:
+            return list(self.content)
+
+        drop_before = user_indexes[-(max_rounds + 1)]
+        return [
+            *(
+                content
+                for content in self.content[:drop_before]
+                if content.role == "system"
+            ),
+            *self.content[drop_before:],
+        ]
+
+    @callback
     def async_add_user_content(self, content: UserContent) -> None:
         """Add user content to the log."""
         LOGGER.debug("Adding user content: %s", content)

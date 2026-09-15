@@ -131,6 +131,38 @@ async def test_subentry_options(
     }
 
 
+async def test_subentry_options_without_max_history(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test that clearing the history field sends the whole conversation."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    assert ollama.CONF_MAX_HISTORY in subentry.data
+
+    with patch(
+        "ollama.AsyncClient.list",
+        return_value={"models": [{"model": TEST_MODEL}]},
+    ):
+        options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+
+        options = await hass.config_entries.subentries.async_configure(
+            options_flow["flow_id"],
+            {
+                ollama.CONF_MODEL: TEST_MODEL,
+                ollama.CONF_PROMPT: "test prompt",
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert options["type"] is FlowResultType.ABORT
+    assert options["reason"] == "reconfigure_successful"
+    assert subentry.data == {
+        ollama.CONF_MODEL: TEST_MODEL,
+        ollama.CONF_PROMPT: "test prompt",
+    }
+
+
 async def test_creating_new_conversation_subentry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

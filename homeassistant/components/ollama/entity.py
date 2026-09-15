@@ -10,7 +10,7 @@ import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import CONF_MAX_HISTORY, CONF_MODEL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
@@ -19,11 +19,9 @@ from homeassistant.helpers.json import json_dumps
 from . import OllamaConfigEntry
 from .const import (
     CONF_KEEP_ALIVE,
-    CONF_MAX_HISTORY,
     CONF_NUM_CTX,
     CONF_THINK,
     DEFAULT_KEEP_ALIVE,
-    DEFAULT_MAX_HISTORY,
     DEFAULT_NUM_CTX,
     DOMAIN,
     KEEP_ALIVE_FOREVER,
@@ -218,11 +216,15 @@ class OllamaBaseLLMEntity(Entity):
                 for tool in chat_log.llm_api.tools
             ]
 
+        max_history = settings.get(CONF_MAX_HISTORY)
         message_history: MessageHistory = MessageHistory(
-            [_convert_content(content) for content in chat_log.content]
+            [
+                _convert_content(content)
+                for content in chat_log.async_get_content(
+                    max_rounds=None if max_history is None else int(max_history)
+                )
+            ]
         )
-        max_messages = int(settings.get(CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY))
-        self._trim_history(message_history, max_messages)
 
         output_format: dict[str, Any] | None = None
         if structure:
@@ -281,30 +283,3 @@ class OllamaBaseLLMEntity(Entity):
 
             if not chat_log.unresponded_tool_results:
                 break
-
-    def _trim_history(self, message_history: MessageHistory, max_messages: int) -> None:
-        """Trims excess messages from a single history.
-
-        This sets the max history to allow a configurable size history may take
-        up in the context window.
-
-        Note that some messages in the history may not be from ollama only, and
-        may come from other anents, so the assumptions here may not strictly hold,
-        but generally should be effective.
-        """
-        if max_messages < 1:
-            # Keep all messages
-            return
-
-        # Ignore the in progress user message
-        num_previous_rounds = message_history.num_user_messages - 1
-        if num_previous_rounds >= max_messages:
-            # Trim history but keep system prompt (first message).
-            # Every other message should be an assistant message, so keep 2x
-            # message objects. Also keep the last in progress user message
-            num_keep = 2 * max_messages + 1
-            drop_index = len(message_history.messages) - num_keep
-            message_history.messages = [
-                message_history.messages[0],
-                *message_history.messages[drop_index:],
-            ]

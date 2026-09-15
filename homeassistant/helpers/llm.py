@@ -1,7 +1,7 @@
 """Module to coordinate llm tools."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field as dc_field
 from typing import Any, override
 
@@ -11,6 +11,7 @@ import slugify as unicode_slug
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_SERVICE,
+    CONF_MAX_HISTORY,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED,
 )
@@ -121,6 +122,30 @@ async def async_get_api(
 def async_get_apis(hass: HomeAssistant) -> list[API]:
     """Get all the LLM APIs."""
     return list(_async_get_apis(hass).values())
+
+
+def max_history_schema(
+    options: Mapping[str, Any], *, default: int | None = None
+) -> dict[Any, Any]:
+    """Return a config flow schema for how much history to send to the model.
+
+    The value is the number of previous conversation rounds to send: 0 sends
+    none of them, and an absent value sends all of them. Pass the stored value
+    on to `ChatLog.async_get_content(max_rounds=...)`.
+
+    Integrations that want a history limit on new agents pass it as `default`,
+    which is stored when the user submits the form without changing the field.
+    """
+    return {
+        probatio.Optional(
+            CONF_MAX_HISTORY,
+            description={"suggested_value": options.get(CONF_MAX_HISTORY, default)},
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0, step=1, mode=selector.NumberSelectorMode.BOX
+            )
+        ),
+    }
 
 
 @dataclass(slots=True)

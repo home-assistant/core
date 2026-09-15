@@ -66,6 +66,7 @@
         "llm_hass_api": "Control Home Assistant",
         "location": "Location",
         "longitude": "Longitude",
+        "max_history": "Conversation history",
         "mode": "Mode",
         "name": "Name",
         "password": "Password",
@@ -82,6 +83,7 @@
       },
       "data_description": {
         "infrared_entity_id": "The infrared emitter entity to use for sending commands.",
+        "max_history": "Number of previous questions and answers to send along with each message. Leave empty to send the entire conversation history, or set to 0 to send none of it.",
         "radio_frequency_transmitter": "The radio frequency transmitter to use for sending commands."
       },
       "description": {

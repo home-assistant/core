@@ -10,6 +10,7 @@ import ollama
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_MAX_HISTORY,
     CONF_MODEL,
     CONF_PROMPT,
     CONF_URL,
@@ -31,10 +32,10 @@ from homeassistant.util.ssl import get_default_context
 
 from .const import (
     CONF_KEEP_ALIVE,
-    CONF_MAX_HISTORY,
     CONF_NUM_CTX,
     CONF_THINK,
     DEFAULT_AI_TASK_NAME,
+    DEFAULT_MAX_HISTORY,
     DEFAULT_NAME,
     DEFAULT_TIMEOUT,
     DOMAIN,
@@ -285,6 +286,26 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> 
                     disabled_by=er.RegistryEntryDisabler.DEVICE,
                 )
         hass.config_entries.async_update_entry(entry, minor_version=3)
+
+    if entry.version == 3 and entry.minor_version == 3:
+        # max_history used to send the whole conversation when set to 0 or less,
+        # while an absent value fell back to DEFAULT_MAX_HISTORY. Both are now
+        # expressed by the value itself: absent sends everything, 0 sends nothing.
+        for subentry in entry.subentries.values():
+            if subentry.subentry_type != "conversation":
+                continue
+            max_history = subentry.data.get(CONF_MAX_HISTORY)
+            updated_data = dict(subentry.data)
+            if max_history is None:
+                updated_data[CONF_MAX_HISTORY] = DEFAULT_MAX_HISTORY
+            elif max_history <= 0:
+                del updated_data[CONF_MAX_HISTORY]
+            else:
+                continue
+            hass.config_entries.async_update_subentry(
+                entry, subentry, data=MappingProxyType(updated_data)
+            )
+        hass.config_entries.async_update_entry(entry, minor_version=4)
 
     _LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version

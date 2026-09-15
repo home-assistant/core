@@ -46,7 +46,6 @@ from homeassistant.util.ssl import get_default_context
 from . import OllamaConfigEntry
 from .const import (
     CONF_KEEP_ALIVE,
-    CONF_MAX_HISTORY,
     CONF_NUM_CTX,
     CONF_THINK,
     DEFAULT_AI_TASK_NAME,
@@ -89,7 +88,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ollama."""
 
     VERSION = 3
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     async def _async_validate_connection(
         self, url: str, api_key: str | None
@@ -488,18 +487,7 @@ def ollama_config_option_schema(
                     mode=NumberSelectorMode.BOX,
                 )
             ),
-            probatio.Optional(
-                CONF_MAX_HISTORY,
-                description={
-                    "suggested_value": options.get(
-                        CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY
-                    )
-                },
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=0, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
-                )
-            ),
+            **llm.max_history_schema(options, default=DEFAULT_MAX_HISTORY),
             probatio.Optional(
                 CONF_KEEP_ALIVE,
                 description={
