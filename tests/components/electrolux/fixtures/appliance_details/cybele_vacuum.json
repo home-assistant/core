@@ -1,0 +1,544 @@
+{
+  "applianceInfo": {
+    "brand": "ELECTROLUX",
+    "colour": "SHELL_WHITE",
+    "deviceType": "ROBOTIC_VACUUM_CLEANER",
+    "model": "ER81UW3SW",
+    "pnc": "900402423",
+    "serialNumber": "52400051",
+    "variant": "TM5"
+  },
+  "capabilities": {
+    "batteryStatus": {
+      "access": "read",
+      "type": "int",
+      "max": 100,
+      "min": 1
+    },
+    "chargingStatus": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "charging": {},
+        "fullyCharged": {},
+        "idle": {}
+      }
+    },
+    "cleaningMode": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "notSet": {},
+        "globalClean": {},
+        "zoneClean": {},
+        "exploreMap": {}
+      }
+    },
+    "cleaningType": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "vacuum": {},
+        "vacuumAndMop": {},
+        "mop": {},
+        "vacuumFirstThenMop": {}
+      }
+    },
+    "state": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "idle": {},
+        "vacuuming": {},
+        "mopping": {},
+        "vaccumAndMopping": {},
+        "pitStop": {},
+        "paused": {},
+        "goingHome": {},
+        "stationAction": {}
+      }
+    },
+    "vacuumMode": {
+      "access": "readwrite",
+      "type": "string",
+      "schedulable": true,
+      "values": {
+        "quiet": {},
+        "energySaving": {},
+        "standard": {},
+        "powerful": {},
+        "max": {}
+      }
+    },
+    "waterPumpRate": {
+      "access": "readwrite",
+      "type": "string",
+      "default": "medium",
+      "schedulable": true,
+      "values": {
+        "off": {},
+        "low": {},
+        "medium": {},
+        "high": {}
+      }
+    },
+    "emptyingTime": {
+      "access": "readwrite",
+      "type": "int",
+      "max": 30,
+      "min": 10
+    },
+    "mopDryTime": {
+      "access": "readwrite",
+      "type": "int",
+      "max": 65535,
+      "min": 0,
+      "default": 120
+    },
+    "dustCollectionFreq": {
+      "access": "readwrite",
+      "type": "int",
+      "max": 3,
+      "min": 1
+    },
+    "autoDustCollection": {
+      "access": "readwrite",
+      "type": "boolean",
+      "default": true,
+      "values": {
+        "false": {},
+        "true": {}
+      }
+    },
+    "autoMopDry": {
+      "access": "readwrite",
+      "type": "boolean",
+      "default": true,
+      "values": {
+        "false": {},
+        "true": {}
+      }
+    },
+    "autoMopWash": {
+      "access": "readwrite",
+      "type": "boolean",
+      "default": true,
+      "values": {
+        "false": {},
+        "true": {}
+      }
+    },
+    "mopWashFreqRoom": {
+      "access": "readwrite",
+      "type": "int",
+      "max": 65535,
+      "min": 0,
+      "default": 2
+    },
+    "mopWashFreqArea": {
+      "access": "readwrite",
+      "type": "int",
+      "max": 65535,
+      "min": 0,
+      "default": 5
+    },
+    "mopWashFreqTime": {
+      "access": "readwrite",
+      "type": "int",
+      "max": 65535,
+      "min": 0,
+      "default": 15
+    },
+    "mopWashTime": {
+      "access": "read",
+      "type": "int",
+      "max": 65535,
+      "min": 0
+    },
+    "mopWithHotWater": {
+      "access": "readwrite",
+      "type": "boolean",
+      "default": false,
+      "values": {
+        "false": {},
+        "true": {}
+      }
+    },
+    "autoMopArmExtension": {
+      "access": "readwrite",
+      "type": "boolean",
+      "default": true,
+      "values": {
+        "false": {},
+        "true": {}
+      }
+    },
+    "mopArmExtensionFreq": {
+      "access": "readwrite",
+      "type": "int",
+      "max": 65535,
+      "min": 0,
+      "default": 1
+    },
+    "autoDetergentUsage": {
+      "access": "readwrite",
+      "type": "boolean",
+      "default": true,
+      "values": {
+        "false": {},
+        "true": {}
+      }
+    },
+    "maxUsageDustBox": {
+      "access": "readwrite",
+      "type": "int",
+      "max": 65535,
+      "min": 0,
+      "default": 240
+    },
+    "maxUsageStationBag": {
+      "access": "readwrite",
+      "type": "int",
+      "max": 65535,
+      "min": 0,
+      "default": 2400
+    },
+    "faultCode": {
+      "access": "read",
+      "type": "int",
+      "max": 65535,
+      "min": 0
+    },
+    "niuStatus": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "booting": {},
+        "available": {}
+      }
+    },
+    "mopRoute": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "S": {},
+        "Y": {}
+      }
+    },
+    "mopInstalled": {
+      "access": "read",
+      "type": "boolean",
+      "values": {
+        "false": {},
+        "true": {}
+      },
+      "triggers": [
+        {
+          "action": {
+            "cleaningType": {
+              "access": "readwrite",
+              "type": "string",
+              "values": {
+                "vacuum": {}
+              }
+            },
+            "waterPumpRate": {
+              "access": "read",
+              "type": "string",
+              "disable": true
+            },
+            "mopDryTime": {
+              "access": "readwrite",
+              "type": "int",
+              "disable": true
+            },
+            "autoMopDry": {
+              "access": "readwrite",
+              "type": "boolean",
+              "disable": true
+            },
+            "autoMopWash": {
+              "access": "readwrite",
+              "type": "boolean",
+              "disable": true
+            },
+            "mopWashFreqRoom": {
+              "access": "readwrite",
+              "type": "int",
+              "disable": true
+            },
+            "mopWashFreqArea": {
+              "access": "readwrite",
+              "type": "int",
+              "disable": true
+            },
+            "mopWashFreqTime": {
+              "access": "readwrite",
+              "type": "int",
+              "disable": true
+            },
+            "mopWashTime": {
+              "access": "read",
+              "type": "int",
+              "disable": true
+            },
+            "mopWithHotWater": {
+              "access": "readwrite",
+              "type": "boolean",
+              "disable": true
+            },
+            "autoMopArmExtension": {
+              "access": "readwrite",
+              "type": "boolean",
+              "disable": true
+            },
+            "mopArmExtensionFreq": {
+              "access": "readwrite",
+              "type": "int",
+              "disable": true
+            },
+            "mopRoute": {
+              "access": "readwrite",
+              "type": "string",
+              "disable": true
+            },
+            "autoDetergentUsage": {
+              "access": "readwrite",
+              "type": "boolean",
+              "disable": true
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "false",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "cleaningType": {
+              "access": "readwrite",
+              "type": "string",
+              "values": {
+                "vacuum": {},
+                "vacuumAndMop": {},
+                "mop": {},
+                "vacuumFirstThenMop": {}
+              }
+            },
+            "waterPumpRate": {
+              "access": "read",
+              "type": "string",
+              "default": "medium",
+              "values": {
+                "off": {},
+                "low": {},
+                "medium": {},
+                "high": {},
+                "max": {}
+              }
+            },
+            "mopDryTime": {
+              "access": "readwrite",
+              "type": "int",
+              "max": 65535,
+              "min": 0,
+              "default": 120
+            },
+            "autoMopDry": {
+              "access": "readwrite",
+              "type": "boolean",
+              "default": true,
+              "values": {
+                "false": {},
+                "true": {}
+              }
+            },
+            "autoMopWash": {
+              "access": "readwrite",
+              "type": "boolean",
+              "default": true,
+              "values": {
+                "false": {},
+                "true": {}
+              }
+            },
+            "mopWashFreqRoom": {
+              "access": "readwrite",
+              "type": "int",
+              "max": 65535,
+              "min": 0,
+              "default": 2
+            },
+            "mopWashFreqArea": {
+              "access": "readwrite",
+              "type": "int",
+              "max": 65535,
+              "min": 0,
+              "default": 5
+            },
+            "mopWashFreqTime": {
+              "access": "readwrite",
+              "type": "int",
+              "max": 65535,
+              "min": 0,
+              "default": 15
+            },
+            "mopWashTime": {
+              "access": "read",
+              "type": "int",
+              "max": 65535,
+              "min": 0
+            },
+            "mopWithHotWater": {
+              "access": "readwrite",
+              "type": "boolean",
+              "default": false,
+              "values": {
+                "false": {},
+                "true": {}
+              }
+            },
+            "autoMopArmExtension": {
+              "access": "readwrite",
+              "type": "boolean",
+              "default": true,
+              "values": {
+                "false": {},
+                "true": {}
+              }
+            },
+            "mopArmExtensionFreq": {
+              "access": "readwrite",
+              "type": "int",
+              "max": 65535,
+              "min": 0,
+              "default": 1
+            },
+            "mopRoute": {
+              "access": "readwrite",
+              "type": "string",
+              "values": {
+                "S": {},
+                "Y": {}
+              }
+            },
+            "autoDetergentUsage": {
+              "access": "readwrite",
+              "type": "boolean",
+              "default": true,
+              "values": {
+                "false": {},
+                "true": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "true",
+            "operator": "eq"
+          }
+        }
+      ]
+    },
+    "stationCollectingDust": {
+      "access": "read",
+      "type": "string"
+    },
+    "returnToWash": {
+      "access": "read",
+      "type": "string"
+    },
+    "waterStationAction": {
+      "access": "read",
+      "type": "string"
+    },
+    "inCharger": {
+      "access": "read",
+      "type": "string"
+    },
+    "roomSelected": {
+      "access": "read",
+      "type": "string"
+    },
+    "selectedRoomId": {},
+    "dndEnabled": {},
+    "dndStartTime": {},
+    "dndEndTime": {},
+    "dndRunAirDry": {},
+    "aiRecognition": {},
+    "carpetBoost": {},
+    "carpetAvoid": {},
+    "carpetDisplay": {},
+    "soundPackFile": {},
+    "soundPackUseDefault": {},
+    "soundPackDownloadState": {},
+    "cleaningCommand": {
+      "access": "write",
+      "type": "string",
+      "schedulable": true,
+      "values": {
+        "startGlobalClean": {},
+        "startExploreClean": {},
+        "startZoneClean": {},
+        "startGoToCharger": {},
+        "startDustCollection": {},
+        "startMopDrying": {},
+        "startMopWashing": {},
+        "pauseClean": {},
+        "resumeClean": {},
+        "stopClean": {}
+      }
+    },
+    "voiceVolume": {
+      "access": "readwrite",
+      "type": "int",
+      "max": 10,
+      "min": 0
+    },
+    "mapCommand": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "mapId": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "type": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo/roomId": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo/roomName": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo/cleaningType": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo/vacuumMode": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo/waterPumpRate": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo/numberOfCleaningRepetitions": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo/roomSequence": {
+      "access": "readwrite",
+      "type": "custom"
+    }
+  }
+}

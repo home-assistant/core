@@ -1,0 +1,73 @@
+{
+  "applianceInfo": {
+    "brand": "ELECTROLUX",
+    "colour": "DARKGOLD",
+    "deviceType": "ROBOTIC_VACUUM_CLEANER",
+    "model": "i92",
+    "pnc": "900277470",
+    "serialNumber": "04300049",
+    "variant": "M3"
+  },
+  "capabilities": {
+    "CleaningCommand": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "play": {},
+        "stop": {},
+        "pause": {},
+        "home": {}
+      }
+    },
+    "robotStatus": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "1": {},
+        "2": {},
+        "3": {},
+        "4": {},
+        "5": {},
+        "6": {},
+        "7": {},
+        "8": {},
+        "9": {},
+        "10": {},
+        "11": {},
+        "12": {},
+        "13": {},
+        "14": {}
+      }
+    },
+    "dustbinStatus": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "NOTCONNECTED": {},
+        "CONNECTED": {},
+        "FULL": {},
+        "EMPTY": {}
+      }
+    },
+    "batteryStatus": {
+      "access": "read",
+      "max": 6,
+      "min": 1,
+      "type": "int"
+    },
+    "powerMode": {
+      "access": "readwrite",
+      "max": 3,
+      "min": 1,
+      "type": "int"
+    },
+    "CustomPlay/persistentMapId": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "CustomPlay/zones": {
+      "access": "readwrite",
+      "type": "custom"
+    }
+  }
+}
