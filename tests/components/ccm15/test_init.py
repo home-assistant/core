@@ -70,3 +70,19 @@ async def test_non_contiguous_slots(hass: HomeAssistant) -> None:
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state != "unavailable"
+
+
+@pytest.mark.usefixtures("network_error_ccm15_device")
+async def test_setup_retry_on_connection_error(hass: HomeAssistant) -> None:
+    """Setup is retried when the controller cannot be reached."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1.1.1.1",
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
