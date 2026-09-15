@@ -78,8 +78,9 @@ class AircoClimate(WfRacEntity, ClimateEntity):
     _attr_swing_modes: list[str] | None = SUPPORT_SWING_MODES
     _attr_swing_horizontal_mode: str | None = SWING_HORIZONTAL_AUTO
     _attr_swing_horizontal_modes: list[str] | None = SUPPORT_SWING_HORIZONTAL_MODES
-    # The setpoint byte is int(PresetTemp / 0.5), which truncates: without the
-    # step, 21.4 arrives as 21.0.
+    # The setpoint byte is int(PresetTemp / 0.5), which truncates - so the
+    # card offers halves, and async_set_temperature rounds to one before
+    # sending, since nothing validates this step on the way in.
     _attr_target_temperature_step: float = 0.5
     # Filled in only for a model that reports VacantProperty (see __init__).
     _attr_preset_modes: list[str] | None = None
@@ -239,7 +240,15 @@ class AircoClimate(WfRacEntity, ClimateEntity):
                 },
             )
 
-        opts: dict[AirconCommands, Any] = {AirconCommands.PresetTemp: set_temp}
+        # Home Assistant validates the advertised range but not the step, so a
+        # value between two halves arrives here intact - and the frame would
+        # truncate it, turning 21.4 into 21.0 rather than the 21.5 it is
+        # nearer to. Rounded rather than refused: the unit cannot hold it
+        # either way, and an automation that has always sent tenths should not
+        # start failing over it.
+        opts: dict[AirconCommands, Any] = {
+            AirconCommands.PresetTemp: round(set_temp * 2) / 2
+        }
 
         if "hvac_mode" in kwargs:
             opts.update(

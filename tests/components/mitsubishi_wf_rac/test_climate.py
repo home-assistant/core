@@ -115,6 +115,35 @@ async def test_commands_reach_the_module(
 
 
 @pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("asked", "sent"),
+    [
+        pytest.param(21.4, 21.5, id="up to the nearer half"),
+        pytest.param(21.2, 21.0, id="down to the nearer half"),
+        pytest.param(21.5, 21.5, id="already on a half"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_a_setpoint_between_two_halves_is_rounded_not_truncated(
+    hass: HomeAssistant, mock_repository: AsyncMock, asked: float, sent: float
+) -> None:
+    """The frame carries int(PresetTemp / 0.5), and nothing validates the step.
+
+    A value between two halves therefore reaches the unit as the lower one
+    unless it is rounded here - 21.4 as 21.0, half a degree away from what was
+    asked for.
+    """
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: asked},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert _sent_command(mock_repository).PresetTemp == sent
+
+
 async def test_temperature_outside_the_units_range_is_refused(
     hass: HomeAssistant,
 ) -> None:

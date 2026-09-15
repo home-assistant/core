@@ -77,7 +77,8 @@ def result_code(answer: Any) -> int | None:
 def registration_full_issue_id(entry_id: str) -> str:
     """Repair-issue id for a full account table on this entry's airco.
 
-    Shared with async_unload_entry, which clears it when the entry goes.
+    Shared with async_remove_entry, which clears it when the entry is deleted.
+    An unload leaves it standing: the condition outlives a reload.
     """
     return f"too_many_devices_{entry_id}"
 
