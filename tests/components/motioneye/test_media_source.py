@@ -455,7 +455,7 @@ async def test_async_resolve_media_success(
     )
     assert media == PlayMedia(
         url=(
-            f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/1/"
+            f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/{TEST_CAMERA_ID}/"
             "movies/0/L2Zvby5tcDQ="
         ),
         mime_type="video/mp4",
@@ -469,7 +469,7 @@ async def test_async_resolve_media_success(
     )
     assert media == PlayMedia(
         url=(
-            f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/1/"
+            f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/{TEST_CAMERA_ID}/"
             "images/0/L2Zvby5qcGc="
         ),
         mime_type="image/jpeg",
