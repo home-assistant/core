@@ -86,7 +86,7 @@ class LivisiSwitch(LivisiEntity, SwitchEntity):
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        await self.async_update_value()
+        await self._async_update_initial_value()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

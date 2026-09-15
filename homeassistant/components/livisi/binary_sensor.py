@@ -104,7 +104,7 @@ class LivisiWindowDoorSensor(LivisiBinarySensor):
     async def async_added_to_hass(self) -> None:
         """Get current state."""
         await super().async_added_to_hass()
-        await self.async_update_value()
+        await self._async_update_initial_value()
 
     @override
     async def async_update_value(self) -> bool:

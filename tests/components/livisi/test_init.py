@@ -390,17 +390,17 @@ async def test_setup_entities_and_unload(
         pytest.param(DEVICES[2], Platform.CLIMATE, id="climate"),
     ],
 )
-async def test_state_read_failure_keeps_entity_unavailable(
+async def test_state_read_failure_recovery(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device: LivisiDevice,
     platform: Platform,
 ) -> None:
-    """Test a failed recovery state read keeps the entity unavailable."""
+    """Test recovery from state read failures."""
     connection = MagicMock(spec=LivisiConnection)
     connection.controller = CONTROLLER
     connection.async_get_devices.return_value = [device]
-    connection.async_get_value.return_value = True
+    connection.async_get_value.side_effect = LivisiException
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
     config_entry.add_to_hass(hass)
@@ -414,6 +414,12 @@ async def test_state_read_failure_keeps_entity_unavailable(
 
     entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, device.id)
     assert entity_id is not None
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    connection.async_get_value.side_effect = None
+    connection.async_get_value.return_value = True
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
     assert not hass.states.is_state(entity_id, STATE_UNAVAILABLE)
 
     connection.async_get_devices.return_value = [replace(device, unreachable=True)]
