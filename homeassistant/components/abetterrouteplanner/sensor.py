@@ -3,8 +3,9 @@
 Which metrics a vehicle reports varies by make, model and connectivity, so its
 sensor set cannot be known up front — it is only learned from what the vehicle
 actually sends. Entities are therefore created lazily, on a metric's first
-value. A vehicle that has reported before but is parked now shows up as an
-unavailable registry entry until it next wakes.
+value. A vehicle that has reported before shows up as an unavailable registry
+entry until a value arrives — ABRP replays each metric's last value when the
+stream connects, so that does not wait on the vehicle waking.
 
 The ``charging_state`` option strings are HA-owned rather than derived from the
 library enum, so a library-side value change cannot alter a reported state.
