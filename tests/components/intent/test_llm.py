@@ -98,3 +98,58 @@ async def test_no_prompt_without_exposed_entities(hass: HomeAssistant) -> None:
 async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
     """Test the platform returns None for an unsupported API."""
     assert intent_llm.async_get_tools(hass, _llm_context(), "other") is None
+
+
+ALIAS_TOOLS = {
+    "intent__HassLock",
+    "intent__HassUnlock",
+    "intent__HassOpen",
+    "intent__HassClose",
+    "intent__HassPress",
+}
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "expected"),
+    [
+        pytest.param(
+            "lock.front_door",
+            {"intent__HassLock", "intent__HassUnlock"},
+            id="lock",
+        ),
+        pytest.param(
+            "cover.blind",
+            {"intent__HassOpen", "intent__HassClose"},
+            id="cover",
+        ),
+        pytest.param(
+            "valve.water",
+            {"intent__HassOpen", "intent__HassClose"},
+            id="valve",
+        ),
+        pytest.param("button.doorbell", {"intent__HassPress"}, id="button"),
+        pytest.param("input_button.reset", {"intent__HassPress"}, id="input_button"),
+        pytest.param("light.kitchen", set(), id="light_offers_no_aliases"),
+    ],
+)
+async def test_onoff_aliases_require_a_relevant_exposed_entity(
+    hass: HomeAssistant, entity_id: str, expected: set[str]
+) -> None:
+    """Test each alias is only offered when one of its domains is exposed."""
+    # The fixture exposes a cover, which would offer the cover aliases.
+    async_expose_entity(hass, "conversation", COVER_ENTITY_ID, False)
+    hass.states.async_set(entity_id, "off")
+    async_expose_entity(hass, "conversation", entity_id, True)
+
+    names = await _tool_names(hass)
+
+    assert names & ALIAS_TOOLS == expected
+    # Turn on and off stay available for whatever else is exposed.
+    assert "intent__HassTurnOn" in names
+
+
+async def test_onoff_aliases_absent_when_nothing_exposed(hass: HomeAssistant) -> None:
+    """Test no aliases are offered when nothing at all is exposed."""
+    async_expose_entity(hass, "conversation", COVER_ENTITY_ID, False)
+
+    assert not await _tool_names(hass) & ALIAS_TOOLS
