@@ -3615,3 +3615,30 @@ async def test_async_set_updates_last_reported(hass: HomeAssistant) -> None:
         assert state.last_reported_timestamp != last_reported_timestamp
         last_reported = state.last_reported
         last_reported_timestamp = state.last_reported_timestamp
+
+
+async def test_async_set_updates_last_reported_in_serialized_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test the dict and JSON views follow last_reported on a same-state write.
+
+    A write that changes neither the state nor the attributes mutates the
+    existing State in place. Anything serialized from it beforehand is cached,
+    so it has to be dropped or `/api/states` and the websocket `get_states`
+    keep serving the last_reported the entity had when it last changed.
+    """
+    hass.states.async_set("light.bowl", "on", {})
+    state = hass.states.get("light.bowl")
+    assert state is not None
+
+    # Reading these is what fills the caches the same-state write invalidates.
+    assert state.as_dict()["last_reported"] == state.last_reported.isoformat()
+    stale_json = state.as_dict_json
+    stale_fragment = state.json_fragment
+
+    hass.states.async_set("light.bowl", "on", {})
+
+    assert state.as_dict()["last_reported"] == state.last_reported.isoformat()
+    assert state.as_dict_json != stale_json
+    assert state.last_reported.isoformat().encode() in state.as_dict_json
+    assert state.json_fragment is not stale_fragment
