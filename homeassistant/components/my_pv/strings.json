@@ -52,11 +52,11 @@
       "bstmode": {
         "name": "Boost Mode",
         "state": {
-          "0": "Off",
-          "1": "On",
-          "3": "Relais",
-          "4": "SELV-Relais",
-          "5": "AUX-Relais"
+          "0": "[%key:common::state::off%]",
+          "1": "[%key:common::state::on%]",
+          "3": "Relay",
+          "4": "SELV-Relay",
+          "5": "AUX-Relay"
         }
       }
     }
