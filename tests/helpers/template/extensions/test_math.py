@@ -539,15 +539,37 @@ def test_remap_with_mirror(hass: HomeAssistant) -> None:
     """Test the mirror edge mode of the remap function."""
 
     assert [
-        MathExtension.remap(i, 0, 4, 0, 1, edges="mirror") for i in range(-4, 9)
-    ] == [1.0, 0.75, 0.5, 0.25, 0.0, 0.25, 0.5, 0.75, 1.0, 0.75, 0.5, 0.25, 0.0]
+        MathExtension.remap(i, 0, 4, 0, 1, edges="mirror") for i in range(-8, 9)
+    ] == [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0,
+        0.75,
+        0.5,
+        0.25,
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0,
+        0.75,
+        0.5,
+        0.25,
+        0.0,
+    ]
 
     # Test with different output range
     assert MathExtension.remap(15, 0, 10, 50, 150, edges="mirror") == 100.0
     assert MathExtension.remap(25, 0, 10, 50, 150, edges="mirror") == 100.0
+    assert MathExtension.remap(-15, 0, 10, 50, 150, edges="mirror") == 100.0
     # Test with inverted output range
     assert MathExtension.remap(15, 0, 10, 100, 0, edges="mirror") == 50.0
     assert MathExtension.remap(12, 0, 10, 100, 0, edges="mirror") == 20.0
+    # Mirroring reflects at the range boundaries, so the result for a value
+    # d below in_min matches the result for a value d above in_min
+    assert MathExtension.remap(-12, 0, 10, 100, 0, edges="mirror") == 20.0
     # Test without remapping
     assert MathExtension.remap(-0.1, 0, 1, 0, 1, edges="mirror") == pytest.approx(0.1)
 
