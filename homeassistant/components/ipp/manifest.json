@@ -1,7 +1,7 @@
 {
   "domain": "ipp",
   "name": "Internet Printing Protocol (IPP)",
-  "codeowners": ["@ctalkington"],
+  "codeowners": ["@ctalkington", "@brianegge"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ipp",
   "integration_type": "device",
