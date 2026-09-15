@@ -74,6 +74,10 @@ from .helpers import async_get_ble_parent
 from .models import TeslemetryEnergyData
 
 
+class PowerwallSetupError(Exception):
+    """Signal a recoverable energy-site setup failure for the form to retry."""
+
+
 class PowerwallLookupError(Exception):
     """Signal that the authorized-client lookup failed for a non-retryable reason."""
 
@@ -481,15 +485,16 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 reason="all_sites_added" if local_control_sites else "no_powerwall"
             )
 
+        errors: dict[str, str] = {}
         if user_input is not None:
             energy_data = available[user_input[CONF_SITE_ID]]
             self._site_id = energy_data.id
             self._site_name = energy_data.device.get("name") or "Energy Site"
-            if abort := await self._prepare_energy_site(
-                _cloud_energy_site(energy_data)
-            ):
-                return abort
-            return await self._async_begin_pairing()
+            try:
+                await self._prepare_energy_site(_cloud_energy_site(energy_data))
+                return await self._async_begin_pairing()
+            except PowerwallSetupError:
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -503,6 +508,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                     )
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_reconfigure(
@@ -524,14 +530,17 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         )
         if energy_data is None:
             return self.async_abort(reason="cannot_connect")
-        if abort := await self._prepare_energy_site(_cloud_energy_site(energy_data)):
-            return abort
-        return await self._async_begin_pairing()
+        try:
+            await self._prepare_energy_site(_cloud_energy_site(energy_data))
+            return await self._async_begin_pairing()
+        except PowerwallSetupError:
+            return self.async_abort(reason="cannot_connect")
 
-    async def _prepare_energy_site(
-        self, energy_site: TeslemetryEnergySite
-    ) -> SubentryFlowResult | None:
-        """Discover the gateway address and load the integration's RSA key."""
+    async def _prepare_energy_site(self, energy_site: TeslemetryEnergySite) -> None:
+        """Discover the gateway address and load the integration's RSA key.
+
+        Raises PowerwallSetupError if the RSA key cannot be loaded.
+        """
         self._energy_site = energy_site
 
         try:
@@ -554,17 +563,16 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             )
         except (OSError, ValueError, PrivateKeyError) as err:
             LOGGER.debug("RSA key load failed: %s", err)
-            return self.async_abort(reason="cannot_connect")
+            raise PowerwallSetupError from err
         self._public_key_der = keyholder.rsa_public_der_pkcs1
         self._public_key_b64 = keyholder.rsa_public_der_pkcs1_b64
-        return None
 
     async def _async_begin_pairing(self) -> SubentryFlowResult:
         """Resume or begin key pairing based on the key's state on the gateway."""
         try:
             client = await self._find_authorized_client()
-        except PowerwallLookupError:
-            return self.async_abort(reason="cannot_connect")
+        except PowerwallLookupError as err:
+            raise PowerwallSetupError from err
         if client is not None:
             # Key already registered; do not re-register a pending one (it would reset).
             if client.state == AuthorizedClientState.VERIFIED:
@@ -574,7 +582,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             if client.state != AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
                 # Unrecognized state is unusable; treat it as a lookup failure.
                 LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
-                return self.async_abort(reason="cannot_connect")
+                raise PowerwallSetupError
             # Re-registering resets the expired window (no duplicate); fall through.
 
         if TYPE_CHECKING:
@@ -590,7 +598,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             )
         except (ClientError, TeslaFleetError) as err:
             LOGGER.error("Add authorized client failed: %s", err)
-            return self.async_abort(reason="cannot_connect")
+            raise PowerwallSetupError from err
 
         return await self.async_step_pair()
 
