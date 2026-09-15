@@ -707,10 +707,10 @@ async def test_message_history_trimming(
         pytest.param({ollama.CONF_MAX_HISTORY: 0}, 2, 1, id="no_history"),
     ],
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_message_history_rounds(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     max_history_option: dict[str, int],
     expected_message_count: int,
     expected_user_message_count: int,

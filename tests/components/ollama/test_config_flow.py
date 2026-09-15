@@ -131,8 +131,9 @@ async def test_subentry_options(
     }
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_subentry_options_without_max_history(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that clearing the history field sends the whole conversation."""
     subentry = next(iter(mock_config_entry.subentries.values()))
