@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
@@ -101,3 +102,35 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
         assert len(mocked_wakeonlan.mock_calls) == 1
         assert mocked_wakeonlan.mock_calls[0][1][0] == mac
         assert not mocked_wakeonlan.mock_calls[0][2]
+
+
+async def test_send_magic_packet_raise_repair(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test of send magic packet service call raises a repair."""
+    assert await async_setup_component(hass, "repairs", {})
+    mac = "aa:bb:cc:dd:ee:ff"
+    with patch("homeassistant.components.wake_on_lan.wakeonlan"):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MAGIC_PACKET,
+            {"mac": mac},
+            blocking=True,
+        )
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) > 0
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "wol_service_deprecated":
+            issue = i
+    assert issue is not None
+    assert issue["issue_id"] == "wol_service_deprecated"
+    assert issue["translation_key"] == "wol_service_deprecated"
