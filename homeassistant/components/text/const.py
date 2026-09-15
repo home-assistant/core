@@ -10,7 +10,9 @@ if TYPE_CHECKING:
 
     from . import TextEntity
 
+
 DOMAIN: Final = "text"
+DATA_COMPONENT: HassKey[EntityComponent[TextEntity]] = HassKey(DOMAIN)
 
 
 class TextEntityCapabilityAttribute(StrEnum):
@@ -28,5 +30,3 @@ ATTR_PATTERN = "pattern"
 ATTR_VALUE = "value"
 
 SERVICE_SET_VALUE = "set_value"
-
-DATA_COMPONENT: HassKey[EntityComponent[TextEntity]] = HassKey(DOMAIN)

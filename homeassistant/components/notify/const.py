@@ -13,6 +13,9 @@ if TYPE_CHECKING:
 
     from . import NotifyEntity
 
+DOMAIN: Final = "notify"
+DATA_COMPONENT: HassKey[EntityComponent[NotifyEntity]] = HassKey(DOMAIN)
+
 ATTR_DATA = "data"
 
 # Text to notify user of
@@ -27,7 +30,6 @@ ATTR_RECIPIENTS = "recipients"
 # Title of notification
 ATTR_TITLE = "title"
 
-DOMAIN: Final = "notify"
 
 LOGGER = logging.getLogger(__package__)
 
@@ -43,5 +45,3 @@ NOTIFY_SERVICE_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_DATA): dict,
     }
 )
-
-DATA_COMPONENT: HassKey[EntityComponent[NotifyEntity]] = HassKey(DOMAIN)

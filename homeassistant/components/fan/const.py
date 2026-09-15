@@ -11,6 +11,10 @@ if TYPE_CHECKING:
     from . import FanEntity
 
 
+DOMAIN: Final = "fan"
+DATA_COMPONENT: HassKey[EntityComponent[FanEntity]] = HassKey(DOMAIN)
+
+
 class FanEntityCapabilityAttribute(StrEnum):
     """Capability attributes for fan entities."""
 
@@ -25,8 +29,3 @@ class FanEntityStateAttribute(StrEnum):
     PERCENTAGE = "percentage"
     PERCENTAGE_STEP = "percentage_step"
     PRESET_MODE = "preset_mode"
-
-
-DOMAIN: Final = "fan"
-
-DATA_COMPONENT: HassKey[EntityComponent[FanEntity]] = HassKey(DOMAIN)

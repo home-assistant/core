@@ -11,7 +11,9 @@ if TYPE_CHECKING:
 
     from . import WaterHeaterEntity
 
+
 DOMAIN: Final = "water_heater"
+DATA_COMPONENT: HassKey[EntityComponent[WaterHeaterEntity]] = HassKey(DOMAIN)
 
 
 class WaterHeaterCapabilityAttribute(StrEnum):
@@ -47,5 +49,3 @@ STATE_PERFORMANCE = "performance"
 STATE_HIGH_DEMAND = "high_demand"
 STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
-
-DATA_COMPONENT: HassKey[EntityComponent[WaterHeaterEntity]] = HassKey(DOMAIN)

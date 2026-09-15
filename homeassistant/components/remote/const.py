@@ -11,13 +11,12 @@ if TYPE_CHECKING:
     from . import RemoteEntity
 
 
+DOMAIN: Final = "remote"
+DATA_COMPONENT: HassKey[EntityComponent[RemoteEntity]] = HassKey(DOMAIN)
+
+
 class RemoteEntityStateAttribute(StrEnum):
     """State attributes for remote entities."""
 
     ACTIVITY_LIST = "activity_list"
     CURRENT_ACTIVITY = "current_activity"
-
-
-DOMAIN: Final = "remote"
-
-DATA_COMPONENT: HassKey[EntityComponent[RemoteEntity]] = HassKey(DOMAIN)

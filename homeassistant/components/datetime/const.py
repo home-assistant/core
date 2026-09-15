@@ -9,10 +9,10 @@ if TYPE_CHECKING:
 
     from . import DateTimeEntity
 
+
 DOMAIN: Final = "datetime"
+DATA_COMPONENT: HassKey[EntityComponent[DateTimeEntity]] = HassKey(DOMAIN)
 
 ATTR_DATETIME = "datetime"
 
 SERVICE_SET_VALUE = "set_value"
-
-DATA_COMPONENT: HassKey[EntityComponent[DateTimeEntity]] = HassKey(DOMAIN)

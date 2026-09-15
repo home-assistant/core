@@ -11,6 +11,8 @@ if TYPE_CHECKING:
     from . import EventEntity
 
 DOMAIN: Final = "event"
+DATA_COMPONENT: HassKey[EntityComponent[EventEntity]] = HassKey(DOMAIN)
+
 ATTR_EVENT_TYPE = "event_type"
 ATTR_EVENT_TYPES = "event_types"
 ATTR_MULTI_PRESS_COUNT = "multi_press_count"
@@ -47,6 +49,3 @@ class ButtonEventType(StrEnum):
     LONG_PRESS_END = "long_press_end"
     MULTI_PRESS_ONGOING = "multi_press_ongoing"
     MULTI_PRESS_END = "multi_press_end"
-
-
-DATA_COMPONENT: HassKey[EntityComponent[EventEntity]] = HassKey(DOMAIN)

@@ -10,6 +10,6 @@ if TYPE_CHECKING:
     from . import ButtonEntity
 
 DOMAIN: Final = "button"
-SERVICE_PRESS = "press"
-
 DATA_COMPONENT: HassKey[EntityComponent[ButtonEntity]] = HassKey(DOMAIN)
+
+SERVICE_PRESS = "press"

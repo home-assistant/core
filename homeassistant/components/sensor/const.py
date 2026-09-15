@@ -81,7 +81,9 @@ if TYPE_CHECKING:
 
     from . import SensorEntity
 
+
 DOMAIN: Final = "sensor"
+DATA_COMPONENT: HassKey[EntityComponent[SensorEntity]] = HassKey(DOMAIN)
 
 CONF_STATE_CLASS: Final = "state_class"
 
@@ -921,5 +923,3 @@ AMBIGUOUS_UNITS: dict[str | None, str] = {
     "VArh": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
     "kVArh": UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
 }
-
-DATA_COMPONENT: HassKey[EntityComponent[SensorEntity]] = HassKey(DOMAIN)

@@ -10,7 +10,9 @@ if TYPE_CHECKING:
 
     from . import UpdateEntity
 
+
 DOMAIN: Final = "update"
+DATA_COMPONENT: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)
 
 
 class UpdateEntityStateAttribute(StrEnum):
@@ -53,5 +55,3 @@ ATTR_SKIPPED_VERSION: Final = "skipped_version"
 ATTR_TITLE: Final = "title"
 ATTR_UPDATE_PERCENTAGE: Final = "update_percentage"
 ATTR_VERSION: Final = "version"
-
-DATA_COMPONENT: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)

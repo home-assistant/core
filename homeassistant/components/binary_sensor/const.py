@@ -11,5 +11,4 @@ if TYPE_CHECKING:
 
 
 DOMAIN: Final = "binary_sensor"
-
 DATA_COMPONENT: HassKey[EntityComponent[BinarySensorEntity]] = HassKey(DOMAIN)

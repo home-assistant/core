@@ -10,7 +10,9 @@ if TYPE_CHECKING:
 
     from . import AlarmControlPanelEntity
 
+
 DOMAIN: Final = "alarm_control_panel"
+DATA_COMPONENT: HassKey[EntityComponent[AlarmControlPanelEntity]] = HassKey(DOMAIN)
 
 ATTR_CHANGED_BY: Final = "changed_by"
 ATTR_CODE_ARM_REQUIRED: Final = "code_arm_required"
@@ -64,5 +66,3 @@ CONDITION_ARMED_AWAY: Final = "is_armed_away"
 CONDITION_ARMED_NIGHT: Final = "is_armed_night"
 CONDITION_ARMED_VACATION: Final = "is_armed_vacation"
 CONDITION_ARMED_CUSTOM_BYPASS: Final = "is_armed_custom_bypass"
-
-DATA_COMPONENT: HassKey[EntityComponent[AlarmControlPanelEntity]] = HassKey(DOMAIN)

@@ -9,8 +9,8 @@ if TYPE_CHECKING:
 
     from . import TimeEntity
 
+
 DOMAIN: Final = "time"
+DATA_COMPONENT: HassKey[EntityComponent[TimeEntity]] = HassKey(DOMAIN)
 
 SERVICE_SET_VALUE = "set_value"
-
-DATA_COMPONENT: HassKey[EntityComponent[TimeEntity]] = HassKey(DOMAIN)

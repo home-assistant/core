@@ -1,6 +1,9 @@
 """Constants for the image_processing component."""
 
 from enum import StrEnum
+from typing import Final
+
+DOMAIN: Final = "image_processing"
 
 
 class ImageProcessingEntityStateAttribute(StrEnum):

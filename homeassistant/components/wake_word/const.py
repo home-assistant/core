@@ -9,6 +9,6 @@ if TYPE_CHECKING:
 
     from . import WakeWordDetectionEntity
 
-DOMAIN: Final = "wake_word"
 
+DOMAIN: Final = "wake_word"
 DATA_COMPONENT: HassKey[EntityComponent[WakeWordDetectionEntity]] = HassKey(DOMAIN)

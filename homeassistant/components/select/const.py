@@ -10,7 +10,9 @@ if TYPE_CHECKING:
 
     from . import SelectEntity
 
+
 DOMAIN: Final = "select"
+DATA_COMPONENT: HassKey[EntityComponent[SelectEntity]] = HassKey(DOMAIN)
 
 
 class SelectEntityCapabilityAttribute(StrEnum):
@@ -29,5 +31,3 @@ SERVICE_SELECT_FIRST = "select_first"
 SERVICE_SELECT_LAST = "select_last"
 SERVICE_SELECT_NEXT = "select_next"
 SERVICE_SELECT_PREVIOUS = "select_previous"
-
-DATA_COMPONENT: HassKey[EntityComponent[SelectEntity]] = HassKey(DOMAIN)

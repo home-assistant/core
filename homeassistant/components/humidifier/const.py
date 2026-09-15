@@ -10,6 +10,9 @@ if TYPE_CHECKING:
 
     from . import HumidifierEntity
 
+DOMAIN: Final = "humidifier"
+DATA_COMPONENT: HassKey[EntityComponent[HumidifierEntity]] = HassKey(DOMAIN)
+
 MODE_NORMAL = "normal"
 MODE_ECO = "eco"
 MODE_AWAY = "away"
@@ -41,7 +44,6 @@ ATTR_TARGET_HUMIDITY_STEP = "target_humidity_step"
 DEFAULT_MIN_HUMIDITY = 0
 DEFAULT_MAX_HUMIDITY = 100
 
-DOMAIN: Final = "humidifier"
 
 SERVICE_SET_MODE = "set_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
@@ -69,6 +71,3 @@ class HumidifierEntityFeature(IntFlag):
     """Supported features of the humidifier entity."""
 
     MODES = 1
-
-
-DATA_COMPONENT: HassKey[EntityComponent[HumidifierEntity]] = HassKey(DOMAIN)

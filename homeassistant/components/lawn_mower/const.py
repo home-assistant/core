@@ -11,6 +11,10 @@ if TYPE_CHECKING:
     from . import LawnMowerEntity
 
 
+DOMAIN: Final = "lawn_mower"
+DATA_COMPONENT: HassKey[EntityComponent[LawnMowerEntity]] = HassKey(DOMAIN)
+
+
 class LawnMowerActivity(StrEnum):
     """Activity state of lawn mower devices."""
 
@@ -42,11 +46,7 @@ class LawnMowerEntityFeature(IntFlag):
     STOP = 8
 
 
-DOMAIN: Final = "lawn_mower"
-
 SERVICE_START_MOWING = "start_mowing"
 SERVICE_PAUSE = "pause"
 SERVICE_DOCK = "dock"
 SERVICE_STOP = "stop"
-
-DATA_COMPONENT: HassKey[EntityComponent[LawnMowerEntity]] = HassKey(DOMAIN)

@@ -9,6 +9,6 @@ if TYPE_CHECKING:
 
     from . import AirQualityEntity
 
-DOMAIN: Final = "air_quality"
 
+DOMAIN: Final = "air_quality"
 DATA_COMPONENT: HassKey[EntityComponent[AirQualityEntity]] = HassKey(DOMAIN)

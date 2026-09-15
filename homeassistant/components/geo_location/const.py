@@ -12,6 +12,10 @@ if TYPE_CHECKING:
     from . import GeolocationEvent
 
 
+DOMAIN: Final = "geo_location"
+DATA_COMPONENT: HassKey[EntityComponent[GeolocationEvent]] = HassKey(DOMAIN)
+
+
 class GeolocationEntityStateAttribute(
     StrEnum,
     metaclass=EnumWithDeprecatedMembers,
@@ -25,8 +29,3 @@ class GeolocationEntityStateAttribute(
     SOURCE = "source"
     LATITUDE = "latitude"  # Deprecated, replaced with EntityStateAttribute.LATITUDE
     LONGITUDE = "longitude"  # Deprecated, replaced with EntityStateAttribute.LONGITUDE
-
-
-DOMAIN: Final = "geo_location"
-
-DATA_COMPONENT: HassKey[EntityComponent[GeolocationEvent]] = HassKey(DOMAIN)

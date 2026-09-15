@@ -11,5 +11,4 @@ if TYPE_CHECKING:
 
 
 DOMAIN: Final = "scene"
-
 DATA_COMPONENT: HassKey[EntityComponent[BaseScene]] = HassKey(DOMAIN)

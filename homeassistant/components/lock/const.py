@@ -10,7 +10,9 @@ if TYPE_CHECKING:
 
     from . import LockEntity
 
+
 DOMAIN: Final = "lock"
+DATA_COMPONENT: HassKey[EntityComponent[LockEntity]] = HassKey(DOMAIN)
 
 
 class LockEntityStateAttribute(StrEnum):
@@ -30,6 +32,3 @@ class LockState(StrEnum):
     UNLOCKING = "unlocking"
     LOCKED = "locked"
     UNLOCKED = "unlocked"
-
-
-DATA_COMPONENT: HassKey[EntityComponent[LockEntity]] = HassKey(DOMAIN)

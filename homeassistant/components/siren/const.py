@@ -10,7 +10,9 @@ if TYPE_CHECKING:
 
     from . import SirenEntity
 
+
 DOMAIN: Final = "siren"
+DATA_COMPONENT: HassKey[EntityComponent[SirenEntity]] = HassKey(DOMAIN)
 
 ATTR_TONE: Final = "tone"
 
@@ -33,6 +35,3 @@ class SirenEntityFeature(IntFlag):
     TONES = 4
     VOLUME_SET = 8
     DURATION = 16
-
-
-DATA_COMPONENT: HassKey[EntityComponent[SirenEntity]] = HassKey(DOMAIN)

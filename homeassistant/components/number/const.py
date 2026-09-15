@@ -81,6 +81,9 @@ if TYPE_CHECKING:
 
     from . import NumberEntity
 
+DOMAIN: Final = "number"
+DATA_COMPONENT: HassKey[EntityComponent[NumberEntity]] = HassKey(DOMAIN)
+
 ATTR_VALUE = "value"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
@@ -90,7 +93,6 @@ DEFAULT_MIN_VALUE = 0.0
 DEFAULT_MAX_VALUE = 100.0
 DEFAULT_STEP = 1.0
 
-DOMAIN: Final = "number"
 
 SERVICE_SET_VALUE = "set_value"
 
@@ -707,5 +709,3 @@ AMBIGUOUS_UNITS: dict[str | None, str] = {
     "VArh": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
     "kVArh": UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
 }
-
-DATA_COMPONENT: HassKey[EntityComponent[NumberEntity]] = HassKey(DOMAIN)

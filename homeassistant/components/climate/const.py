@@ -12,6 +12,10 @@ if TYPE_CHECKING:
     from . import ClimateEntity
 
 
+DOMAIN: Final = "climate"
+DATA_COMPONENT: HassKey[EntityComponent[ClimateEntity]] = HassKey(DOMAIN)
+
+
 class HVACMode(StrEnum):
     """HVAC mode for climate devices."""
 
@@ -133,7 +137,6 @@ DEFAULT_MAX_TEMP = 35
 DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
-DOMAIN: Final = "climate"
 
 INTENT_SET_FAN_MODE = "HassClimateSetFanMode"
 INTENT_SET_TEMPERATURE = "HassClimateSetTemperature"
@@ -200,6 +203,3 @@ class ClimateEntityFeature(IntFlag):
     TURN_OFF = 128
     TURN_ON = 256
     SWING_HORIZONTAL_MODE = 512
-
-
-DATA_COMPONENT: HassKey[EntityComponent[ClimateEntity]] = HassKey(DOMAIN)

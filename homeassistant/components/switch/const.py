@@ -9,6 +9,6 @@ if TYPE_CHECKING:
 
     from . import SwitchEntity
 
-DOMAIN: Final = "switch"
 
+DOMAIN: Final = "switch"
 DATA_COMPONENT: HassKey[EntityComponent[SwitchEntity]] = HassKey(DOMAIN)

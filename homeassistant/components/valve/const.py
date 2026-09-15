@@ -10,7 +10,9 @@ if TYPE_CHECKING:
 
     from . import ValveEntity
 
+
 DOMAIN: Final = "valve"
+DATA_COMPONENT: HassKey[EntityComponent[ValveEntity]] = HassKey(DOMAIN)
 
 
 class ValveEntityStateAttribute(StrEnum):
@@ -44,6 +46,3 @@ class ValveState(StrEnum):
     CLOSING = "closing"
     CLOSED = "closed"
     OPEN = "open"
-
-
-DATA_COMPONENT: HassKey[EntityComponent[ValveEntity]] = HassKey(DOMAIN)

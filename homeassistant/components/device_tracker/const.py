@@ -14,9 +14,11 @@ if TYPE_CHECKING:
 
     from . import BaseTrackerEntity
 
+DOMAIN: Final = "device_tracker"
+DATA_COMPONENT: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
+
 LOGGER: Final = logging.getLogger(__package__)
 
-DOMAIN: Final = "device_tracker"
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 PLATFORM_TYPE_LEGACY: Final = "legacy"
@@ -109,5 +111,3 @@ ATTR_IP: Final = "ip"
 CONNECTED_DEVICE_REGISTERED = SignalType[dict[str, str | None]](
     "device_tracker_connected_device_registered"
 )
-
-DATA_COMPONENT: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
