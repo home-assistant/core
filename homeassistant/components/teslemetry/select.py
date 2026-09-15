@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, override
+from typing import Any, cast, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
+from .coordinator import TeslemetryEnergySiteInfoCoordinator
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
@@ -405,6 +406,9 @@ class TeslemetryOperationSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(self.api.operation(option))
         self._attr_current_option = option
+        cast(
+            TeslemetryEnergySiteInfoCoordinator, self.coordinator
+        ).async_set_local_value(self.key, option)
         self.async_write_ha_state()
 
 
