@@ -1,7 +1,37 @@
 {
+  "conditions": {
+    "is_before": {
+      "description": "Tests if datetime entity is before the reference time.",
+      "fields": {
+        "behavior": {
+          "name": "Condition passes if"
+        },
+        "reference": {
+          "description": "Time to compare the target against.",
+          "name": "Reference time"
+        },
+        "reference_offset": {
+          "description": "Amount of time to offset the reference before comparison.",
+          "name": "Reference offset"
+        }
+      },
+      "name": "Datetime is before"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::datetime::title%]"
+    }
+  },
+  "selector": {
+    "now": {
+      "value": "Now"
+    },
+    "reference": {
+      "choices": {
+        "entity": "Entity",
+        "now": "Now"
+      }
     }
   },
   "services": {

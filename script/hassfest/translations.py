@@ -413,6 +413,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> probatio.Sch
                         translation_value_validator,
                         slug_validator=translation_key_validator,
                     ),
+                    probatio.Optional("value"): translation_value_validator,
                     probatio.Optional("fields"): probatio.Any(
                         # Old format:
                         # "key": "translation"
