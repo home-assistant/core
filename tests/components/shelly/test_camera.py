@@ -5,7 +5,12 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.const import MODEL_CAMERA
-from aioshelly.exceptions import HttpCallError, InvalidAuthError
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    DeviceConnectionTimeoutError,
+    HttpCallError,
+    InvalidAuthError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -126,19 +131,16 @@ async def test_camera_image(
     ("exception", "error"),
     [
         (
+            DeviceConnectionTimeoutError,
+            "Device communication timeout error occurred for Test name",
+        ),
+        (
+            DeviceConnectionError,
+            "Device communication error occurred for Test name",
+        ),
+        (
             HttpCallError(500, "Server error"),
-            "RPC call error occurred while calling action"
-            " for camera.test_name_stream_0 of Test name",
-        ),
-        (
-            TimeoutError("timeout"),
-            "Device communication error occurred while calling action"
-            " for camera.test_name_stream_0 of Test name",
-        ),
-        (
-            OSError("connection failed"),
-            "Device communication error occurred while calling action"
-            " for camera.test_name_stream_0 of Test name",
+            "HTTP call error occurred for Test name",
         ),
     ],
 )
