@@ -132,7 +132,7 @@ async def test_camera_image(
     [
         (
             DeviceConnectionTimeoutError,
-            "Device communication timeout error occurred for Test name",
+            "Device communication error occurred for Test name",
         ),
         (
             DeviceConnectionError,
