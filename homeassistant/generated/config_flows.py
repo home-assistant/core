@@ -442,6 +442,7 @@ FLOWS = {
         "lidarr",
         "liebherr",
         "lifx",
+        "linknlink",
         "linkplay",
         "litejet",
         "litellm",
