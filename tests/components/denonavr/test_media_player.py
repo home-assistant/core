@@ -1,9 +1,17 @@
 """The tests for the denonavr media player platform."""
 
+import asyncio
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from denonavr.exceptions import AvrIncompleteResponseError, AvrInvalidResponseError
+from denonavr.const import POWER_ON
+from denonavr.exceptions import (
+    AvrCommandError,
+    AvrIncompleteResponseError,
+    AvrInvalidResponseError,
+    AvrNetworkError,
+    AvrProcessingError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -21,7 +29,13 @@ from homeassistant.components.denonavr.services import (
     SERVICE_SET_DYNAMIC_EQ,
     SERVICE_UPDATE_AUDYSSEY,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_MODEL,
+    SERVICE_VOLUME_UP,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -61,11 +75,43 @@ def client_fixture():
         mock_client_class.return_value.input_func_list = []
         mock_client_class.return_value.sound_mode_list = []
         mock_client_class.return_value.zones = {"Main": mock_client_class.return_value}
+        mock_client_class.return_value.telnet_connected = False
+        mock_client_class.return_value.telnet_healthy = False
+        # Not used by these tests directly, but select/switch are set
+        # up alongside media_player in every test here too (the same
+        # config entry forwards all platforms) - leaving these as
+        # auto-generated MagicMocks makes the entity registry's stored
+        # "capabilities.options" for those selects an unserializable
+        # mock, which crashes the whole test's teardown when it tries
+        # to write the registry, not just something scoped to
+        # media_player. See the matching comment in test_switch.py.
+        mock_client_class.return_value.dynamic_eq = True
+        mock_client_class.return_value.reference_level_offset_setting_list = [
+            "0dB",
+            "+5dB",
+            "+10dB",
+            "+15dB",
+        ]
+        mock_client_class.return_value.dynamic_volume_setting_list = [
+            "Off",
+            "Light",
+            "Medium",
+            "Heavy",
+        ]
+        mock_client_class.return_value.multi_eq_setting_list = [
+            "Off",
+            "Flat",
+            "L/R Bypass",
+            "Reference",
+            "Manual",
+        ]
         yield mock_client_class.return_value
 
 
 async def setup_denonavr(
-    hass: HomeAssistant, serial_number: str | None = TEST_SERIALNUMBER
+    hass: HomeAssistant,
+    serial_number: str | None = TEST_SERIALNUMBER,
+    options: dict | None = None,
 ) -> MockConfigEntry:
     """Initialize media_player for tests."""
     entry_data = {
@@ -80,6 +126,7 @@ async def setup_denonavr(
         domain=DOMAIN,
         unique_id=TEST_UNIQUE_ID if serial_number else None,
         data=entry_data,
+        options=options or {},
     )
 
     mock_entry.add_to_hass(hass)
@@ -107,7 +154,7 @@ async def test_setup_without_serial_number(
     )
 
 
-async def test_get_command(hass: HomeAssistant, client) -> None:
+async def test_get_command(hass: HomeAssistant, client: MagicMock) -> None:
     """Test generic command functionality."""
     await setup_denonavr(hass)
 
@@ -121,7 +168,106 @@ async def test_get_command(hass: HomeAssistant, client) -> None:
     client.async_get_command.assert_awaited_with("test_command")
 
 
-async def test_dynamic_eq(hass: HomeAssistant, client) -> None:
+async def test_avr_processing_error_does_not_mark_unavailable(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """An AvrProcessingError is logged but doesn't affect availability.
+
+    Unlike the connectivity-type errors, this means the receiver
+    responded but wasn't fully done updating yet - not a reason to
+    mark it unavailable.
+    """
+    entry = await setup_denonavr(hass)
+    client.async_volume_up.side_effect = AvrProcessingError(
+        "Update not complete", "SetVolume"
+    )
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert entry.runtime_data.coordinator.last_update_success is True
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+
+async def test_avr_command_error_does_not_mark_unavailable(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """An AvrCommandError (rejected command) is logged but doesn't mark unavailable.
+
+    Not a connectivity problem - just this one command being rejected.
+    """
+    entry = await setup_denonavr(hass)
+    client.async_volume_up.side_effect = AvrCommandError(
+        "Could not set volume", "SetVolume"
+    )
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert entry.runtime_data.coordinator.last_update_success is True
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+
+async def test_dynamic_eq_attribute_updates_from_audyssey_coordinator(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """The dynamic_eq attribute refreshes when the Audyssey coordinator does.
+
+    It's Audyssey-scoped data, but this entity's own coordinator
+    subscription (from CoordinatorEntity) only covers general status -
+    without a separate subscription to the Audyssey coordinator too,
+    a switch toggle, the update/set services, or a periodic Audyssey
+    refresh would leave this attribute stale until something unrelated
+    (e.g. Telnet or the next general poll) happened to rewrite state.
+    """
+    entry = await setup_denonavr(hass)
+    client.power = POWER_ON
+    client.dynamic_eq = True
+    entry.runtime_data.audyssey_coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_DYNAMIC_EQ] is True
+
+    client.dynamic_eq = False
+    entry.runtime_data.audyssey_coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_DYNAMIC_EQ] is False
+
+
+async def test_set_dynamic_eq_connectivity_error_marks_audyssey_unavailable(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A connectivity failure here also affects the Audyssey coordinator.
+
+    This command is Audyssey-scoped, sent directly to the receiver
+    rather than through that coordinator - so on a connectivity
+    failure, only marking the general coordinator unavailable (what
+    the decorator already does) would leave Audyssey-backed entities
+    still showing available with stale data.
+    """
+    entry = await setup_denonavr(hass)
+    client.async_dynamic_eq_on.side_effect = AvrNetworkError(
+        "Connection refused", "SetAudyssey"
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_DYNAMIC_EQ,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DYNAMIC_EQ: True},
+    )
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.audyssey_coordinator.last_update_success is False
+
+
+async def test_dynamic_eq(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that dynamic eq method works."""
     await setup_denonavr(hass)
 
@@ -142,9 +288,16 @@ async def test_dynamic_eq(hass: HomeAssistant, client) -> None:
     client.async_dynamic_eq_off.assert_called_once()
 
 
-async def test_update_audyssey(hass: HomeAssistant, client) -> None:
+async def test_update_audyssey(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that dynamic eq method works."""
     await setup_denonavr(hass)
+
+    # The Audyssey coordinator also fetches this once at setup (see
+    # homeassistant/components/denonavr/coordinator.py), so the mock
+    # has already been called by the time the service below runs -
+    # assert the service adds exactly one more call, rather than a
+    # fixed total.
+    calls_before_service = client.async_update_audyssey.call_count
 
     # Verify call
     await hass.services.async_call(
@@ -156,7 +309,110 @@ async def test_update_audyssey(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    client.async_update_audyssey.assert_called_once()
+    assert client.async_update_audyssey.call_count == calls_before_service + 1
+
+
+async def test_update_audyssey_forces_fetch_with_healthy_telnet(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """The explicit action must still fetch even if Telnet already looks healthy.
+
+    Otherwise this action would silently do nothing whenever Telnet is
+    on and connected - the same Telnet-healthy skip that lets
+    scheduled polls save an HTTP round-trip would swallow this
+    explicit, on-demand one too.
+    """
+    client.telnet_connected = True
+    client.telnet_healthy = True
+    await setup_denonavr(hass, options={"use_telnet": True})
+
+    calls_before_service = client.async_update_audyssey.call_count
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_AUDYSSEY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+    )
+    await hass.async_block_till_done()
+
+    assert client.async_update_audyssey.call_count == calls_before_service + 1
+
+
+async def test_update_audyssey_restores_availability(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A successful call recovers Audyssey entities from a prior failure.
+
+    Calling the receiver directly instead of going through the
+    coordinator would change its properties without updating the
+    Audyssey coordinator's last_update_success, so a prior failure
+    would keep every Audyssey-backed entity unavailable even after
+    this succeeds.
+    """
+    entry = await setup_denonavr(hass)
+    entry.runtime_data.audyssey_coordinator.last_update_success = False
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_AUDYSSEY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+    )
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.audyssey_coordinator.last_update_success is True
+
+
+async def test_update_audyssey_connectivity_error_marks_media_player_unavailable(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A connectivity failure here also affects the general coordinator.
+
+    This entity's own availability is tied to the general coordinator,
+    not the Audyssey one it's routed through here - without also
+    marking that one unavailable, a connectivity failure would leave
+    this entity looking available despite just confirming the
+    receiver itself is unreachable.
+    """
+    entry = await setup_denonavr(hass)
+    client.async_update_audyssey.side_effect = AvrNetworkError(
+        "Connection refused", "GetAudyssey"
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_AUDYSSEY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+    )
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.coordinator.last_update_success is False
+
+
+async def test_set_dynamic_eq_always_refreshes_audyssey(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """Refreshes Audyssey after this action regardless of the option.
+
+    "Update Audyssey settings" only governs the recurring poll - this
+    action just changed Audyssey-scoped data directly, so the new
+    select/switch entities need to hear about it either way.
+    """
+    with patch(
+        "homeassistant.components.denonavr.coordinator.ACTION_REFRESH_DEBOUNCE_COOLDOWN",
+        0,
+    ):
+        await setup_denonavr(hass, options={"update_audyssey": False})
+        calls_before = client.async_update_audyssey.await_count
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_DYNAMIC_EQ,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DYNAMIC_EQ: False},
+        )
+        await asyncio.sleep(0)
+        await hass.async_block_till_done()
+
+    assert client.async_update_audyssey.await_count > calls_before
 
 
 @pytest.mark.parametrize(
@@ -174,7 +430,7 @@ async def test_update_audyssey(hass: HomeAssistant, client) -> None:
 )
 async def test_malformed_response_marks_unavailable(
     hass: HomeAssistant,
-    client,
+    client: MagicMock,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
