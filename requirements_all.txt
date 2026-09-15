@@ -432,7 +432,7 @@ aiorussound==5.0.2
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.32.0
+aioshelly==13.33.0
 
 # homeassistant.components.skybell
 aioskybell==23.12.0
