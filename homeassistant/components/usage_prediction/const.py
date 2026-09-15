@@ -10,9 +10,6 @@ DOMAIN = "usage_prediction"
 
 DEFAULT_LIMIT = 8
 
-# Predicted and cached at the maximum so any requested limit is served from the cache
-MAX_LIMIT = 50
-
 DATA_CACHE: HassKey[
     dict[str, asyncio.Task[EntityUsagePredictions] | EntityUsageDataCache]
 ] = HassKey("usage_prediction")

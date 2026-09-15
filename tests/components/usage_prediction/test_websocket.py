@@ -10,7 +10,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.usage_prediction import DOMAIN
-from homeassistant.components.usage_prediction.const import DEFAULT_LIMIT, MAX_LIMIT
+from homeassistant.components.usage_prediction.const import DEFAULT_LIMIT
 from homeassistant.components.usage_prediction.models import EntityUsagePredictions
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -22,7 +22,7 @@ from tests.typing import WebSocketGenerator
 # Morning in the test time zone
 NOW = datetime(2026, 8, 26, 15, 0, 0, tzinfo=dt_util.UTC)
 
-MORNING_ENTITIES = [f"light.morning_{index}" for index in range(MAX_LIMIT + 10)]
+MORNING_ENTITIES = [f"light.morning_{index}" for index in range(60)]
 
 
 @pytest.fixture
@@ -127,7 +127,7 @@ async def test_caching_behavior(
     [
         pytest.param({}, MORNING_ENTITIES[:DEFAULT_LIMIT], id="default"),
         pytest.param({"limit": 3}, MORNING_ENTITIES[:3], id="fewer"),
-        pytest.param({"limit": MAX_LIMIT}, MORNING_ENTITIES[:MAX_LIMIT], id="maximum"),
+        pytest.param({"limit": 100}, MORNING_ENTITIES, id="more_than_predicted"),
     ],
 )
 async def test_common_control_limit(
@@ -160,7 +160,7 @@ async def test_common_control_limit(
     "limit",
     [
         pytest.param(0, id="below_minimum"),
-        pytest.param(MAX_LIMIT + 1, id="above_maximum"),
+        pytest.param(-1, id="negative"),
         pytest.param("3", id="string"),
         pytest.param(3.5, id="float"),
     ],

@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import common_control
-from .const import DATA_CACHE, DEFAULT_LIMIT, DOMAIN, MAX_LIMIT
+from .const import DATA_CACHE, DEFAULT_LIMIT, DOMAIN
 from .models import EntityUsageDataCache, EntityUsagePredictions
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -32,7 +32,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     {
         probatio.Required("type"): f"{DOMAIN}/common_control",
         probatio.Optional("limit", default=DEFAULT_LIMIT): probatio.All(
-            int, probatio.Range(min=1, max=MAX_LIMIT)
+            int, probatio.Range(min=1)
         ),
     }
 )
