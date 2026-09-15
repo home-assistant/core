@@ -1,15 +1,12 @@
 """Test Control4 Cover."""
 
 from collections.abc import Generator
-from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.control4.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -20,18 +17,13 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "cover.test_controller_living_room_shade"
 
@@ -70,17 +62,17 @@ def mock_cover_variables() -> dict:
 @pytest.fixture
 def mock_cover_update_variables(
     mock_cover_variables: dict,
-) -> Generator[AsyncMock]:
-    """Mock update_variables for cover platform."""
+    mock_c4_director: MagicMock,
+) -> None:
+    """Mock the Director API so tests exercise the real Undefined/empty-dict normalization."""
 
-    async def _mock_update_variables(*args, **kwargs):
-        return mock_cover_variables
+    async def _mock_get_item_variables(item_id: int) -> list[dict[str, Any]]:
+        item_data = mock_cover_variables.get(item_id, {})
+        return [{"varName": name, "value": value} for name, value in item_data.items()]
 
-    with patch(
-        "homeassistant.components.control4.cover.update_variables_for_config_entry",
-        new=_mock_update_variables,
-    ) as mock_update:
-        yield mock_update
+    mock_c4_director.get_item_variables = AsyncMock(
+        side_effect=_mock_get_item_variables
+    )
 
 
 @pytest.fixture
@@ -252,10 +244,16 @@ async def test_set_cover_position(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 75},
         blocking=True,
     )
-    mock_c4_blind.set_level_target.assert_called_once_with(75)
+    mock_c4_blind.set_level_target.assert_called_once_with(level=75)
 
 
-@pytest.mark.parametrize("mock_cover_variables", [{}])
+@pytest.mark.parametrize(
+    "mock_cover_variables",
+    [
+        pytest.param({}, id="item_id_missing_from_response"),
+        pytest.param({234: {}}, id="item_id_present_with_no_variables"),
+    ],
+)
 @pytest.mark.usefixtures(
     "mock_c4_account",
     "mock_c4_director",
@@ -265,7 +263,7 @@ async def test_set_cover_position(
 async def test_cover_not_created_when_no_initial_data(
     hass: HomeAssistant,
 ) -> None:
-    """Test cover entity is not created when coordinator has no initial data."""
+    """Test cover entity is not created when there is no initial variable data."""
     state = hass.states.get(ENTITY_ID)
     assert state is None
 
@@ -273,12 +271,6 @@ async def test_cover_not_created_when_no_initial_data(
 @pytest.mark.parametrize(
     ("mock_cover_variables", "expected_position", "expected_state"),
     [
-        pytest.param(
-            {234: {}},
-            None,
-            STATE_UNKNOWN,
-            id="all_missing",
-        ),
         pytest.param(
             {234: {"Level": 0}},
             0,
@@ -317,21 +309,77 @@ async def test_cover_partial_variables(
     "mock_cover_update_variables",
     "init_integration",
 )
-async def test_cover_unavailable_when_data_disappears(
+async def test_cover_unavailable_on_websocket_disconnect(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_cover_variables: dict,
+    mock_c4_websocket: MagicMock,
 ) -> None:
-    """Cover becomes unavailable if coordinator stops returning its idx."""
+    """Cover becomes unavailable when the WebSocket disconnect callback fires."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
-    mock_cover_variables.clear()
-    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
-    async_fire_time_changed(hass)
+    await mock_c4_websocket.disconnect_callback()
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_cover_update_variables",
+    "init_integration",
+)
+async def test_cover_push_update(
+    hass: HomeAssistant,
+    mock_c4_websocket: MagicMock,
+) -> None:
+    """Cover state updates when a normal OnDataToUI push event arrives."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_POSITION] == 50
+
+    callback = mock_c4_websocket.item_callbacks[234][0]
+    await callback(
+        234,
+        {"evtName": "OnDataToUI", "data": {"Level": 80, "Fully Open": True}},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 80
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_cover_update_variables",
+    "init_integration",
+)
+async def test_cover_reconnect_resyncs_state(
+    hass: HomeAssistant,
+    mock_c4_websocket: MagicMock,
+    mock_cover_variables: dict,
+) -> None:
+    """Cover re-fetches and resyncs state after a WebSocket reconnect."""
+    await mock_c4_websocket.disconnect_callback()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_cover_variables[234]["Level"] = 10
+    mock_cover_variables[234]["Fully Closed"] = False
+
+    await mock_c4_websocket.connect_callback()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_CURRENT_POSITION] == 10
