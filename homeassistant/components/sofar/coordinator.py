@@ -91,14 +91,20 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             return report
 
     async def _async_observed_poll(self) -> UpdateReport:
-        """Poll once, telling the tuner how it went either way."""
+        """Poll once; a timeout either attempt hit must reach the tuner."""
         try:
             report = await self._poll()
         except ModbusError as err:
             self._tuner.observe_failure(err)
             raise
-        self._tuner.observe(report)
-        return await self._retry_failed(report)
+        attempted = dict(report.failed)
+        try:
+            report = await self._retry_failed(report)
+        except ModbusError as err:
+            self._tuner.observe_failure(err)
+            raise
+        self._tuner.observe(UpdateReport(report.updated, attempted | report.failed))
+        return report
 
     async def _retry_failed(self, report: UpdateReport) -> UpdateReport:
         """Retry failures once; skip if none answered, to avoid doubling timeout."""
