@@ -8,6 +8,7 @@ from devolo_plc_api.exceptions.device import DeviceNotFound
 from yarl import URL
 
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -149,6 +150,37 @@ async def async_setup_entry(
     )
 
     return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: DevoloHomeNetworkConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Allow removing a Wi-Fi client that is not connected to any access point."""
+    if config_entry.state is not ConfigEntryState.LOADED:
+        return False
+
+    serial_number = config_entry.runtime_data.device.serial_number
+    if (DOMAIN, serial_number) in device_entry.identifiers:
+        return False
+
+    client_macs = {
+        mac
+        for connection_type, mac in device_entry.connections
+        if connection_type == dr.CONNECTION_NETWORK_MAC
+    }
+    # A client roaming between access points is not stale, so all of them are asked
+    entries: list[DevoloHomeNetworkConfigEntry] = (
+        hass.config_entries.async_loaded_entries(DOMAIN)
+    )
+    connected_macs = {
+        dr.format_mac(mac)
+        for entry in entries
+        if (coordinator := entry.runtime_data.coordinators.get(CONNECTED_WIFI_CLIENTS))
+        for mac in coordinator.data
+    }
+    return bool(client_macs) and client_macs.isdisjoint(connected_macs)
 
 
 async def async_unload_entry(
