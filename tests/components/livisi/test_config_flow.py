@@ -39,6 +39,23 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         connect.return_value.close.assert_awaited_once_with()
 
 
+async def test_no_controller(hass: HomeAssistant) -> None:
+    """Test a connection without controller data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with mocked_livisi_connect() as connect:
+        connect.return_value.controller = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], VALID_CONFIG
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
+    connect.return_value.close.assert_awaited_once_with()
+
+
 @pytest.mark.parametrize(
     ("exception", "expected_reason"),
     [

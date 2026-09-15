@@ -105,8 +105,11 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
 
         if self._recovery_task is not None and not self._recovery_task.done():
             return
-        self._recovery_task = self.hass.async_create_task(
-            self._async_recover(generation)
+        self._recovery_task = self.coordinator.config_entry.async_create_task(
+            self.hass,
+            self._async_recover(generation),
+            "livisi-recovery",
+            eager_start=False,
         )
 
     async def _async_recover(self, generation: int) -> None:
