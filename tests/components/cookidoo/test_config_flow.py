@@ -9,6 +9,7 @@ from cookidoo_api import CookidooAuthData
 from cookidoo_api.exceptions import (
     CookidooAuthException,
     CookidooException,
+    CookidooParseException,
     CookidooRequestException,
 )
 import pytest
@@ -117,6 +118,7 @@ async def test_flow_user_stores_token_rotated_during_validation(
     ("raise_error", "text_error"),
     [
         (CookidooRequestException(), "cannot_connect"),
+        (CookidooParseException(), "cannot_connect"),
         (CookidooAuthException(), "invalid_auth"),
         (CookidooException(), "unknown"),
         (IndexError(), "unknown"),
@@ -172,6 +174,7 @@ async def test_flow_user_init_data_unknown_error_and_recover_on_step_1(
     ("raise_error", "text_error"),
     [
         (CookidooRequestException(), "cannot_connect"),
+        (CookidooParseException(), "cannot_connect"),
         (CookidooAuthException(), "invalid_auth"),
         (CookidooException(), "unknown"),
         (IndexError(), "unknown"),
@@ -294,6 +297,7 @@ async def test_flow_reconfigure_success(
     ("raise_error", "text_error"),
     [
         (CookidooRequestException(), "cannot_connect"),
+        (CookidooParseException(), "cannot_connect"),
         (CookidooException(), "unknown"),
         (IndexError(), "unknown"),
     ],
@@ -355,6 +359,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
     ("raise_error", "text_error"),
     [
         (CookidooRequestException(), "cannot_connect"),
+        (CookidooParseException(), "cannot_connect"),
         (CookidooException(), "unknown"),
         (IndexError(), "unknown"),
     ],
@@ -475,6 +480,7 @@ async def test_flow_reauth(
     ("raise_error", "text_error"),
     [
         (CookidooRequestException(), "cannot_connect"),
+        (CookidooParseException(), "cannot_connect"),
         (CookidooAuthException(), "invalid_auth"),
         (CookidooException(), "unknown"),
         (IndexError(), "unknown"),
