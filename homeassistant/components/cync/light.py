@@ -35,6 +35,13 @@ async def async_setup_entry(
     entities_to_add = []
 
     for home in cync.get_homes():
+        global_lights = [
+            CyncLightEntity(device, coordinator)
+            for device in home.global_devices
+            if isinstance(device, CyncLight)
+        ]
+        entities_to_add.extend(global_lights)
+
         for room in home.rooms:
             room_lights = [
                 CyncLightEntity(device, coordinator, room.name)
@@ -190,4 +197,4 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
     def _device(self) -> CyncLight:
         """Fetch the reference to the backing Cync light for this device."""
 
-        return self.coordinator.data[self._cync_device_id]
+        return self.coordinator.data[self._cync_unique_id]

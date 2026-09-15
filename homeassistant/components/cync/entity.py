@@ -25,7 +25,7 @@ class CyncBaseEntity(CoordinatorEntity[CyncCoordinator]):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
 
-        self._cync_device_id = device.device_id
+        self._cync_unique_id = device.unique_id
         self._attr_unique_id = device.unique_id
 
         self._attr_device_info = DeviceInfo(
@@ -43,6 +43,6 @@ class CyncBaseEntity(CoordinatorEntity[CyncCoordinator]):
         return (
             super().available
             and self.coordinator.data is not None
-            and self._cync_device_id in self.coordinator.data
-            and self.coordinator.data[self._cync_device_id].is_online
+            and self._cync_unique_id in self.coordinator.data
+            and self.coordinator.data[self._cync_unique_id].is_online
         )
