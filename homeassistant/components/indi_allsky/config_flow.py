@@ -9,7 +9,7 @@ from aioindiallsky import (
     IndiAllSkyConnectionError,
     IndiAllSkyTimeoutError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
@@ -31,23 +31,23 @@ from .util import get_ssl_context, normalize_host
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(
+        probatio.Required(CONF_HOST): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="host",
             ),
         ),
-        vol.Required(CONF_PORT, default=443): NumberSelector(
+        probatio.Required(CONF_PORT, default=443): NumberSelector(
             NumberSelectorConfig(
                 min=1,
                 max=65535,
                 mode=NumberSelectorMode.BOX,
             ),
         ),
-        vol.Optional(CONF_SSL, default=True): BooleanSelector(),
-        vol.Optional(CONF_VERIFY_SSL, default=True): BooleanSelector(),
+        probatio.Optional(CONF_SSL, default=True): BooleanSelector(),
+        probatio.Optional(CONF_VERIFY_SSL, default=True): BooleanSelector(),
     }
 )
 
