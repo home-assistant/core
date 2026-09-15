@@ -15,6 +15,7 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.components.motioneye.const import DOMAIN
 from homeassistant.components.motioneye.media_source import async_get_media_source
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -27,6 +28,7 @@ from . import (
     setup_mock_motioneye_config_entry,
 )
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 TEST_MOVIES = {
@@ -465,6 +467,24 @@ async def test_media_proxy_rejects_invalid_base64_path(
 
     assert response.status == 400
     client.async_get_media.assert_not_awaited()
+
+
+async def test_media_proxy_rejects_config_entry_from_other_domain(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test rejecting a config entry from another domain."""
+    config = MockConfigEntry(
+        domain="test",
+        state=ConfigEntryState.LOADED,
+    )
+    config.add_to_hass(hass)
+
+    client_session = await hass_client()
+    response = await client_session.get(
+        f"/api/motioneye/media/{config.entry_id}/1/images/0/L2Zvby5qcGc="
+    )
+
+    assert response.status == 404
 
 
 async def test_async_resolve_media_success(
