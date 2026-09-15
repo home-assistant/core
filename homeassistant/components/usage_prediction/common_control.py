@@ -18,14 +18,13 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
+from .const import MAX_NUM_RESULTS
 from .models import EntityUsagePredictions
 
 _LOGGER = logging.getLogger(__name__)
 
 # Time categories for usage patterns
 TIME_CATEGORIES = ["morning", "afternoon", "evening", "night"]
-
-RESULTS_TO_INCLUDE = 8
 
 # Rows fetched per round trip while streaming the events query
 QUERY_YIELD_PER = 4096
@@ -107,18 +106,15 @@ async def async_predict_common_control(
 
     return EntityUsagePredictions(
         morning=[
-            ent_id for (ent_id, _) in results["morning"].most_common(RESULTS_TO_INCLUDE)
+            ent_id for (ent_id, _) in results["morning"].most_common(MAX_NUM_RESULTS)
         ],
         afternoon=[
-            ent_id
-            for (ent_id, _) in results["afternoon"].most_common(RESULTS_TO_INCLUDE)
+            ent_id for (ent_id, _) in results["afternoon"].most_common(MAX_NUM_RESULTS)
         ],
         evening=[
-            ent_id for (ent_id, _) in results["evening"].most_common(RESULTS_TO_INCLUDE)
+            ent_id for (ent_id, _) in results["evening"].most_common(MAX_NUM_RESULTS)
         ],
-        night=[
-            ent_id for (ent_id, _) in results["night"].most_common(RESULTS_TO_INCLUDE)
-        ],
+        night=[ent_id for (ent_id, _) in results["night"].most_common(MAX_NUM_RESULTS)],
     )
 
 

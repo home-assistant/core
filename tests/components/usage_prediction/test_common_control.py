@@ -336,7 +336,7 @@ async def test_entities_limit(hass: HomeAssistant) -> None:
     with (
         freeze_time("2023-07-02 10:00:00"),
         patch(
-            "homeassistant.components.usage_prediction.common_control.RESULTS_TO_INCLUDE",
+            "homeassistant.components.usage_prediction.common_control.MAX_NUM_RESULTS",
             5,
         ),
     ):  # Next day, so events are recent
