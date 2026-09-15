@@ -9,7 +9,12 @@ from typing import Any
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
-from pyControl4.error_handling import BadCredentials, C4Exception, InvalidCategory
+from pyControl4.error_handling import (
+    BadCredentials,
+    C4Exception,
+    InvalidCategory,
+    Unauthorized,
+)
 from pyControl4.websocket import C4Websocket
 
 from homeassistant.const import (
@@ -151,7 +156,7 @@ async def refresh_tokens(
         await account.get_account_bearer_token()
     except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
-    except BadCredentials as err:
+    except (BadCredentials, Unauthorized) as err:
         raise ConfigEntryAuthFailed(err) from err
 
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
@@ -161,6 +166,8 @@ async def refresh_tokens(
         )
     except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
+    except (BadCredentials, Unauthorized) as err:
+        raise ConfigEntryAuthFailed(err) from err
 
     no_verify_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
     director = C4Director(
@@ -194,11 +201,6 @@ async def refresh_tokens(
             account=account, director=director, websocket=websocket
         )
         entry.runtime_data = runtime_data
-        runtime_data.cancel_periodic_resync_callback = async_track_time_interval(
-            hass,
-            functools.partial(_periodic_resync, hass, entry),
-            timedelta(seconds=WEBSOCKET_RESYNC_INTERVAL_SEC),
-        )
 
     try:
         await websocket.sio_connect(director.director_bearer_token)
@@ -213,6 +215,14 @@ async def refresh_tokens(
     runtime_data.cancel_token_refresh_callback = async_call_later(
         hass=hass, delay=delay, action=obj.refresh_tokens
     )
+    # Only the very first call (initial setup) needs this; a scheduled token
+    # refresh reuses the existing periodic timer untouched.
+    if runtime_data.cancel_periodic_resync_callback is None:
+        runtime_data.cancel_periodic_resync_callback = async_track_time_interval(
+            hass,
+            functools.partial(_periodic_resync, hass, entry),
+            timedelta(seconds=WEBSOCKET_RESYNC_INTERVAL_SEC),
+        )
     return runtime_data
 
 
