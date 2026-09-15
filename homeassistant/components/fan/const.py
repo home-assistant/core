@@ -1,18 +1,9 @@
 """Constants for the fan component."""
 
 from enum import IntFlag, StrEnum
-from typing import TYPE_CHECKING, Final
-
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from homeassistant.helpers.entity_component import EntityComponent
-
-    from . import FanEntity
-
+from typing import Final
 
 DOMAIN: Final = "fan"
-DATA_COMPONENT: HassKey[EntityComponent[FanEntity]] = HassKey(DOMAIN)
 
 
 class FanEntityCapabilityAttribute(StrEnum):

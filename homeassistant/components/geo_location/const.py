@@ -1,19 +1,11 @@
 """Constants for the geo_location component."""
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from homeassistant.helpers.entity_component import EntityComponent
-
-    from . import GeolocationEvent
-
 
 DOMAIN: Final = "geo_location"
-DATA_COMPONENT: HassKey[EntityComponent[GeolocationEvent]] = HassKey(DOMAIN)
 
 
 class GeolocationEntityStateAttribute(

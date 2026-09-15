@@ -21,6 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_ACTION,
@@ -30,7 +31,6 @@ from .const import (  # noqa: F401
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     ATTR_TARGET_HUMIDITY_STEP,
-    DATA_COMPONENT,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DEVICE_CLASSES_SCHEMA,
@@ -55,6 +55,7 @@ from .const import (  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[HumidifierEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

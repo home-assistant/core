@@ -24,6 +24,7 @@ from homeassistant.helpers.entity import ABCCachedProperties, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_AUTO_UPDATE,
@@ -38,7 +39,6 @@ from .const import (  # noqa: F401
     ATTR_TITLE,
     ATTR_UPDATE_PERCENTAGE,
     ATTR_VERSION,
-    DATA_COMPONENT,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     SERVICE_INSTALL,
@@ -50,6 +50,7 @@ from .const import (  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

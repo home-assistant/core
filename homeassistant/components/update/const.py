@@ -1,20 +1,11 @@
 """Constants for the update component."""
 
 from enum import IntFlag, StrEnum
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 import probatio
 
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from homeassistant.helpers.entity_component import EntityComponent
-
-    from . import UpdateEntity
-
-
 DOMAIN: Final = "update"
-DATA_COMPONENT: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)
 
 
 class UpdateEntityStateAttribute(StrEnum):

@@ -1,17 +1,9 @@
 """Provides the constants needed for the component."""
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final
-
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from homeassistant.helpers.entity_component import EntityComponent
-
-    from . import EventEntity
+from typing import Final
 
 DOMAIN: Final = "event"
-DATA_COMPONENT: HassKey[EntityComponent[EventEntity]] = HassKey(DOMAIN)
 
 ATTR_EVENT_TYPE = "event_type"
 ATTR_EVENT_TYPES = "event_types"

@@ -1,18 +1,9 @@
 """Constants for the remote component."""
 
 from enum import IntFlag, StrEnum
-from typing import TYPE_CHECKING, Final
-
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from homeassistant.helpers.entity_component import EntityComponent
-
-    from . import RemoteEntity
-
+from typing import Final
 
 DOMAIN: Final = "remote"
-DATA_COMPONENT: HassKey[EntityComponent[RemoteEntity]] = HassKey(DOMAIN)
 
 
 class RemoteEntityStateAttribute(StrEnum):

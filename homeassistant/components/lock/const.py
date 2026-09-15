@@ -1,18 +1,9 @@
 """Constants for the lock entity platform."""
 
 from enum import IntFlag, StrEnum
-from typing import TYPE_CHECKING, Final
-
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from homeassistant.helpers.entity_component import EntityComponent
-
-    from . import LockEntity
-
+from typing import Final
 
 DOMAIN: Final = "lock"
-DATA_COMPONENT: HassKey[EntityComponent[LockEntity]] = HassKey(DOMAIN)
 
 
 class LockEntityStateAttribute(StrEnum):

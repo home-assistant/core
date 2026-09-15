@@ -29,6 +29,7 @@ from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .condition import make_cover_is_closed_condition, make_cover_is_open_condition
 from .const import (
@@ -38,7 +39,6 @@ from .const import (
     ATTR_POSITION,
     ATTR_SPEED,
     ATTR_TILT_POSITION,
-    DATA_COMPONENT,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     INTENT_CLOSE_COVER,
@@ -53,6 +53,7 @@ from .trigger import make_cover_closed_trigger, make_cover_opened_trigger
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[CoverEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

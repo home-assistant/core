@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_ATTRIBUTES,
@@ -28,7 +29,6 @@ from .const import (  # noqa: F401
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
     CONNECTED_DEVICE_REGISTERED,
-    DATA_COMPONENT,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_TRACK_NEW,
     DOMAIN,
@@ -65,6 +65,8 @@ from .legacy import (  # noqa: F401
     async_setup_integration as async_setup_legacy_integration,
     see,
 )
+
+DATA_COMPONENT: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
 
 
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:

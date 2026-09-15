@@ -3,19 +3,12 @@
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
-from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType
 
-if TYPE_CHECKING:
-    from homeassistant.helpers.entity_component import EntityComponent
-
-    from . import BaseTrackerEntity
-
 DOMAIN: Final = "device_tracker"
-DATA_COMPONENT: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
 
 LOGGER: Final = logging.getLogger(__package__)
 

@@ -18,16 +18,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
-from .const import (  # noqa: F401
-    DATA_COMPONENT,
-    DEVICE_CLASSES_SCHEMA,
-    DOMAIN,
-    SwitchDeviceClass,
-)
+from .const import DEVICE_CLASSES_SCHEMA, DOMAIN, SwitchDeviceClass  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[SwitchEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

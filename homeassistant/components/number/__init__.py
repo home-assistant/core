@@ -30,6 +30,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_suggest_report_issue
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     AMBIGUOUS_UNITS,
@@ -37,7 +38,6 @@ from .const import (  # noqa: F401
     ATTR_MIN,
     ATTR_STEP,
     ATTR_VALUE,
-    DATA_COMPONENT,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
@@ -54,6 +54,7 @@ from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[NumberEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

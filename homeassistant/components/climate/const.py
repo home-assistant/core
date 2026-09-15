@@ -1,19 +1,11 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from homeassistant.helpers.entity_component import EntityComponent
-
-    from . import ClimateEntity
-
 
 DOMAIN: Final = "climate"
-DATA_COMPONENT: HassKey[EntityComponent[ClimateEntity]] = HassKey(DOMAIN)
 
 
 class HVACMode(StrEnum):

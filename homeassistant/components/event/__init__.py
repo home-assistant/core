@@ -15,12 +15,12 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
     ATTR_MULTI_PRESS_COUNT,
-    DATA_COMPONENT,
     DOMAIN,
     ButtonEventType,
     DoorbellEventType,
@@ -30,6 +30,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+DATA_COMPONENT: HassKey[EntityComponent[EventEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

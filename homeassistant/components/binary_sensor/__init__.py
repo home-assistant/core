@@ -14,16 +14,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
-from .const import (  # noqa: F401
-    DATA_COMPONENT,
-    DEVICE_CLASSES_SCHEMA,
-    DOMAIN,
-    BinarySensorDeviceClass,
-)
+from .const import DEVICE_CLASSES_SCHEMA, DOMAIN, BinarySensorDeviceClass  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[BinarySensorEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE

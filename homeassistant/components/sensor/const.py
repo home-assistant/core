@@ -1,7 +1,7 @@
 """Constants for sensor."""
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 import probatio
 
@@ -40,7 +40,6 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
-from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import (
     ApparentPowerConverter,
     AreaConverter,
@@ -76,14 +75,7 @@ from homeassistant.util.unit_conversion import (
     VolumeFlowRateConverter,
 )
 
-if TYPE_CHECKING:
-    from homeassistant.helpers.entity_component import EntityComponent
-
-    from . import SensorEntity
-
-
 DOMAIN: Final = "sensor"
-DATA_COMPONENT: HassKey[EntityComponent[SensorEntity]] = HassKey(DOMAIN)
 
 CONF_STATE_CLASS: Final = "state_class"
 

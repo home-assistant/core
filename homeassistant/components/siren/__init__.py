@@ -14,13 +14,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, VolDictType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_AVAILABLE_TONES,
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
-    DATA_COMPONENT,
     DOMAIN,
     SirenEntityCapabilityAttribute,
     SirenEntityFeature,
@@ -28,6 +28,7 @@ from .const import (  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[SirenEntity]] = HassKey(DOMAIN)
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=60)

@@ -19,6 +19,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_DATA,
@@ -26,7 +27,6 @@ from .const import (  # noqa: F401
     ATTR_RECIPIENTS,
     ATTR_TARGET,
     ATTR_TITLE,
-    DATA_COMPONENT,
     DOMAIN,
     NOTIFY_SERVICE_SCHEMA,
     SERVICE_NOTIFY,
@@ -47,6 +47,7 @@ from .repairs import migrate_notify_issue  # noqa: F401
 # Platform specific data
 ATTR_TITLE_DEFAULT = "Home Assistant"
 
+DATA_COMPONENT: HassKey[EntityComponent[NotifyEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
