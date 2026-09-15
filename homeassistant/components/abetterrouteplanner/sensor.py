@@ -53,37 +53,33 @@ CHARGING_STATE_OPTIONS: dict[ChargingState, str] = {
 
 
 @dataclass(frozen=True, kw_only=True)
-class AbrpTelemetrySensorEntityDescription[T](SensorEntityDescription):
+class AbrpTelemetrySensorEntityDescription(SensorEntityDescription):
     """SensorEntityDescription binding a sensor to its telemetry ``Metric``.
 
     ``key`` is HA-owned rather than derived from ``Metric.value`` so unique_ids
-    survive a library-side enum change.
+    survive a library-side enum change. ``value_fn``'s helper pins the metric's
+    type, so pairing a metric with the wrong reader is a type error at the table
+    row below.
     """
 
     metric: Metric
-    value_fn: Callable[[Telemetry], MetricValue[T] | None]
+    value_fn: Callable[[Telemetry], float | str | None]
 
 
-@dataclass(frozen=True, kw_only=True)
-class AbrpNumericSensorEntityDescription(AbrpTelemetrySensorEntityDescription[float]):
-    """Description for a numeric telemetry sensor (soc / power / voltage / ...)."""
+def _numeric(metric_value: MetricValue[float] | None) -> float | None:
+    """Unwrap a numeric metric's reading."""
+    return metric_value.value if metric_value is not None else None
 
 
-@dataclass(frozen=True, kw_only=True)
-class AbrpEnumSensorEntityDescription(AbrpTelemetrySensorEntityDescription[str]):
-    """Description for the categorical ENUM telemetry sensor (charging_state).
-
-    The ``unused-ignore`` below is needed because the narrowed ``value_fn``
-    assignment error only appears in a partial mypy run.
-    """
-
-    value_fn: Callable[[Telemetry], MetricValue[ChargingState] | None]  # type: ignore[assignment, unused-ignore]
+def _charging_state(metric_value: MetricValue[ChargingState] | None) -> str | None:
+    """Map the library ``ChargingState`` to this integration's option string."""
+    if metric_value is None:
+        return None
+    return CHARGING_STATE_OPTIONS.get(metric_value.value)
 
 
-SENSORS: tuple[
-    AbrpNumericSensorEntityDescription | AbrpEnumSensorEntityDescription, ...
-] = (
-    AbrpNumericSensorEntityDescription(
+SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
+    AbrpTelemetrySensorEntityDescription(
         key="soc",
         translation_key="soc",
         device_class=SensorDeviceClass.BATTERY,
@@ -91,25 +87,25 @@ SENSORS: tuple[
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
         metric=Metric.SOC,
-        value_fn=lambda t: t.soc,
+        value_fn=lambda t: _numeric(t.soc),
     ),
-    AbrpNumericSensorEntityDescription(
+    AbrpTelemetrySensorEntityDescription(
         key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         metric=Metric.POWER,
-        value_fn=lambda t: t.power,
+        value_fn=lambda t: _numeric(t.power),
     ),
-    AbrpNumericSensorEntityDescription(
+    AbrpTelemetrySensorEntityDescription(
         key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         metric=Metric.VOLTAGE,
-        value_fn=lambda t: t.voltage,
+        value_fn=lambda t: _numeric(t.voltage),
     ),
-    AbrpNumericSensorEntityDescription(
+    AbrpTelemetrySensorEntityDescription(
         key="soe",
         translation_key="soe",
         device_class=SensorDeviceClass.ENERGY_STORAGE,
@@ -118,9 +114,9 @@ SENSORS: tuple[
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=1,
         metric=Metric.SOE,
-        value_fn=lambda t: t.soe,
+        value_fn=lambda t: _numeric(t.soe),
     ),
-    AbrpNumericSensorEntityDescription(
+    AbrpTelemetrySensorEntityDescription(
         key="odometer",
         translation_key="odometer",
         device_class=SensorDeviceClass.DISTANCE,
@@ -129,9 +125,9 @@ SENSORS: tuple[
         suggested_unit_of_measurement=UnitOfLength.KILOMETERS,
         suggested_display_precision=0,
         metric=Metric.ODOMETER,
-        value_fn=lambda t: t.odometer,
+        value_fn=lambda t: _numeric(t.odometer),
     ),
-    AbrpNumericSensorEntityDescription(
+    AbrpTelemetrySensorEntityDescription(
         key="calibrated_ref_cons",
         translation_key="calibrated_ref_cons",
         device_class=SensorDeviceClass.ENERGY_DISTANCE,
@@ -140,9 +136,9 @@ SENSORS: tuple[
         # HA defaults this device class to 0 decimals, rendering 5.71 km/kWh as "6".
         suggested_display_precision=1,
         metric=Metric.CALIBRATED_REF_CONS,
-        value_fn=lambda t: t.calibrated_ref_cons,
+        value_fn=lambda t: _numeric(t.calibrated_ref_cons),
     ),
-    AbrpNumericSensorEntityDescription(
+    AbrpTelemetrySensorEntityDescription(
         key="battery_capacity",
         translation_key="battery_capacity",
         device_class=SensorDeviceClass.ENERGY_STORAGE,
@@ -154,18 +150,18 @@ SENSORS: tuple[
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=1,
         metric=Metric.BATTERY_CAPACITY,
-        value_fn=lambda t: t.battery_capacity,
+        value_fn=lambda t: _numeric(t.battery_capacity),
     ),
-    AbrpNumericSensorEntityDescription(
+    AbrpTelemetrySensorEntityDescription(
         key="soh",
         translation_key="soh",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
         metric=Metric.SOH,
-        value_fn=lambda t: t.soh,
+        value_fn=lambda t: _numeric(t.soh),
     ),
-    AbrpNumericSensorEntityDescription(
+    AbrpTelemetrySensorEntityDescription(
         key="range",
         translation_key="range",
         device_class=SensorDeviceClass.DISTANCE,
@@ -175,9 +171,9 @@ SENSORS: tuple[
         # ``MEASUREMENT``, not ``TOTAL_INCREASING``: rises on charge, falls on drive.
         suggested_display_precision=0,
         metric=Metric.RANGE,
-        value_fn=lambda t: t.range,
+        value_fn=lambda t: _numeric(t.range),
     ),
-    AbrpNumericSensorEntityDescription(
+    AbrpTelemetrySensorEntityDescription(
         key="battery_temperature",
         translation_key="battery_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -185,15 +181,15 @@ SENSORS: tuple[
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         metric=Metric.BATTERY_TEMPERATURE,
-        value_fn=lambda t: t.battery_temperature,
+        value_fn=lambda t: _numeric(t.battery_temperature),
     ),
-    AbrpEnumSensorEntityDescription(
+    AbrpTelemetrySensorEntityDescription(
         key="charging_state",
         translation_key="charging_state",
         device_class=SensorDeviceClass.ENUM,
         options=list(CHARGING_STATE_OPTIONS.values()),
         metric=Metric.CHARGING_STATE,
-        value_fn=lambda t: t.charging_state,
+        value_fn=lambda t: _charging_state(t.charging_state),
     ),
 )
 
@@ -203,35 +199,6 @@ def _telemetry_unique_id(
 ) -> str:
     """Build a telemetry sensor's ``unique_id`` — the one definition of the scheme."""
     return f"{entry.unique_id}_{vehicle_id}_{key}"
-
-
-def _extract_value(
-    description: AbrpNumericSensorEntityDescription | AbrpEnumSensorEntityDescription,
-    metric_value: MetricValue,
-) -> float | str | None:
-    """Extract a description's display value from a MetricValue (presence probe)."""
-    value = metric_value.value
-    if isinstance(description, AbrpEnumSensorEntityDescription):
-        return (
-            CHARGING_STATE_OPTIONS.get(value)
-            if isinstance(value, ChargingState)
-            else None
-        )
-    if isinstance(value, (int, float)) and not isinstance(value, bool):
-        return float(value)
-    return None
-
-
-def _build_telemetry_sensor(
-    coordinator: AbrpTelemetryCoordinator,
-    entry: AbetterrouteplannerConfigEntry,
-    vehicle_id: int,
-    description: AbrpNumericSensorEntityDescription | AbrpEnumSensorEntityDescription,
-) -> AbrpTelemetrySensor[float] | AbrpTelemetrySensor[str]:
-    """Dispatch on the description type to the matching concrete sensor."""
-    if isinstance(description, AbrpEnumSensorEntityDescription):
-        return AbrpEnumSensor(coordinator, entry, vehicle_id, description)
-    return AbrpNumericSensor(coordinator, entry, vehicle_id, description)
 
 
 async def async_setup_entry(
@@ -258,13 +225,10 @@ async def async_setup_entry(
             for description in SENSORS:
                 if (vehicle_id, description.metric) in added:
                     continue
-                metric_value = description.value_fn(tlm)
-                if metric_value is None:
-                    continue
-                if _extract_value(description, metric_value) is None:
+                if description.value_fn(tlm) is None:
                     continue
                 entities.append(
-                    _build_telemetry_sensor(
+                    AbrpTelemetrySensor(
                         telemetry_coordinator, entry, vehicle_id, description
                     )
                 )
@@ -275,20 +239,18 @@ async def async_setup_entry(
     _add_new_sensors()
 
 
-class AbrpTelemetrySensor[T: (float, str)](
-    CoordinatorEntity[AbrpTelemetryCoordinator], SensorEntity
-):
+class AbrpTelemetrySensor(CoordinatorEntity[AbrpTelemetryCoordinator], SensorEntity):
     """One telemetry sensor (soc / power / voltage / charging_state) per vehicle."""
 
     _attr_has_entity_name = True
-    entity_description: AbrpTelemetrySensorEntityDescription[T]
+    entity_description: AbrpTelemetrySensorEntityDescription
 
     def __init__(
         self,
         coordinator: AbrpTelemetryCoordinator,
         entry: AbetterrouteplannerConfigEntry,
         vehicle_id: int,
-        description: AbrpTelemetrySensorEntityDescription[T],
+        description: AbrpTelemetrySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -301,25 +263,14 @@ class AbrpTelemetrySensor[T: (float, str)](
             identifiers={(DOMAIN, scope)},
         )
 
-    def _value_from_metric(self, metric_value: MetricValue) -> T | None:
-        """Coerce a live ``MetricValue`` to this sensor's display ``T``."""
-        raise NotImplementedError
-
     @property
     @override
     def native_value(self) -> StateType:
-        """Return this metric's latest reading.
-
-        Annotated ``StateType``, not ``T | None``: HA's ``home-assistant-return-type``
-        pylint plugin checks the literal annotation and won't resolve the TypeVar.
-        """
+        """Return this metric's latest reading."""
         tlm = self.coordinator.data.get(self._vehicle_id)
         if tlm is None:
             return None
-        metric_value = self.entity_description.value_fn(tlm)
-        if metric_value is None:
-            return None
-        return self._value_from_metric(metric_value)
+        return self.entity_description.value_fn(tlm)
 
     @property
     @override
@@ -349,31 +300,3 @@ class AbrpTelemetrySensor[T: (float, str)](
         so it stops being reported rather than going stale indefinitely.
         """
         return not self.coordinator.stream_auth_failed and self.native_value is not None
-
-
-class AbrpNumericSensor(AbrpTelemetrySensor[float]):
-    """A numeric telemetry sensor (soc / power / voltage / ...)."""
-
-    entity_description: AbrpNumericSensorEntityDescription
-
-    @override
-    def _value_from_metric(self, metric_value: MetricValue) -> float | None:
-        """Return the numeric reading; ignore a non-float value defensively."""
-        value = metric_value.value
-        if isinstance(value, (int, float)) and not isinstance(value, bool):
-            return float(value)
-        return None
-
-
-class AbrpEnumSensor(AbrpTelemetrySensor[str]):
-    """The categorical ENUM telemetry sensor (charging_state)."""
-
-    entity_description: AbrpEnumSensorEntityDescription
-
-    @override
-    def _value_from_metric(self, metric_value: MetricValue) -> str | None:
-        """Map the library ``ChargingState`` to this integration's option string."""
-        value = metric_value.value
-        if isinstance(value, ChargingState):
-            return CHARGING_STATE_OPTIONS.get(value)
-        return None
