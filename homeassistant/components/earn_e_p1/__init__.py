@@ -2,7 +2,7 @@
 
 from earn_e_p1 import DEFAULT_PORT, EarnEP1Listener
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -47,11 +47,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> 
         entry.runtime_data.stop()
 
         # Stop shared listener if no other entries are loaded
-        other_loaded = any(
-            e.state is ConfigEntryState.LOADED and e.entry_id != entry.entry_id
-            for e in hass.config_entries.async_entries(DOMAIN)
-        )
-        if not other_loaded:
+        if not hass.config_entries.async_loaded_entries(DOMAIN):
             await hass.data.pop(EARN_E_P1_DATA).stop()
 
     return unload_ok
