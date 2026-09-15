@@ -99,6 +99,11 @@
           'value': '0x0182',
         }),
         '96.1.0': '**REDACTED**',
+        '96.5.0': dict({
+          'name': 'Operating Status',
+          'unit': '',
+          'value': 386,
+        }),
       }),
     }),
     'system': dict({

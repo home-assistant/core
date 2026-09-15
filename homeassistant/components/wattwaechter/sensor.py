@@ -277,11 +277,12 @@ CUMULATIVE_ENERGY_UNITS: dict[str, SensorDeviceClass] = {
     ),
 }
 
-# OBIS groups 0.x.y and 96.x.y carry device metadata such as serial numbers
-# or manufacturer identification — nothing to observe or automate on, so no
-# entities are created for them. The raw values remain available in the
-# diagnostics download.
-METADATA_OBIS_PREFIXES = ("0.", "96.")
+# Identifier registers (device address, firmware revision, serial number)
+# carry nothing to observe or automate on, so no entities are created for
+# them. Other codes in the 0.x/96.x service groups can hold observable
+# values (e.g. 96.5.0 operating status) and stay in the generic fallback.
+# The raw identifier values remain available in the diagnostics download.
+METADATA_OBIS_CODES = {"0.0.0", "0.2.0", "96.1.0"}
 
 
 def _is_cumulative_register(obis_code: str) -> bool:
@@ -340,7 +341,7 @@ async def async_setup_entry(
                     obis_code=obis_code,
                 )
             )
-        elif not obis_code.startswith(METADATA_OBIS_PREFIXES):
+        elif obis_code not in METADATA_OBIS_CODES:
             entities.append(
                 WattwaechterGenericObisSensor(coordinator, obis_code, obis_value)
             )

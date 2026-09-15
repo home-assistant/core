@@ -107,6 +107,13 @@ async def test_minimal_meter_data(
             None,
             id="string_value_plain_sensor",
         ),
+        pytest.param(
+            "96.5.0",
+            None,
+            None,
+            None,
+            id="observable_service_register",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_client", "entity_registry_enabled_by_default")
