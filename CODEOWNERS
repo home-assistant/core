@@ -932,8 +932,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/iperf3/ @rohankapoorcom
 /homeassistant/components/ipma/ @dgomes
 /tests/components/ipma/ @dgomes
-/homeassistant/components/ipp/ @ctalkington
-/tests/components/ipp/ @ctalkington
+/homeassistant/components/ipp/ @ctalkington @brianegge
+/tests/components/ipp/ @ctalkington @brianegge
 /homeassistant/components/iqvia/ @bachya
 /tests/components/iqvia/ @bachya
 /homeassistant/components/irish_rail_transport/ @ttroy50
