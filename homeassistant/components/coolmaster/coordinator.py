@@ -25,6 +25,8 @@ class CoolmasterDataUpdateCoordinator(
 ):
     """Class to manage fetching Coolmaster data."""
 
+    config_entry: CoolmasterConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,

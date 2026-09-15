@@ -3,9 +3,9 @@
 from pycoolmasternet_async import CoolMasterNet
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import CONF_SEND_WAKEUP_PROMPT, CONF_SWING_SUPPORT, DOMAIN
 from .coordinator import CoolmasterConfigEntry, CoolmasterDataUpdateCoordinator
@@ -44,9 +44,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoolmasterConfigEntry) -
     coordinator = CoolmasterDataUpdateCoordinator(hass, entry, coolmaster, info)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+    await _async_migrate_unique_ids(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def _async_migrate_unique_ids(
+    hass: HomeAssistant, entry: CoolmasterConfigEntry
+) -> None:
+    """Migrate entities and devices to config-entry-scoped unique IDs.
+
+    Unique IDs used to be the raw unit ID (e.g. L5.002). Unit IDs are only
+    unique within a single CoolMasterNet device, so two devices reporting
+    the same unit IDs collided and the second device's entities were
+    silently dropped.
+    """
+    prefix = f"{entry.entry_id}-"
+
+    @callback
+    def _migrate(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        if entity_entry.unique_id.startswith(prefix):
+            return None
+        return {"new_unique_id": f"{prefix}{entity_entry.unique_id}"}
+
+    await er.async_migrate_entries(hass, entry.entry_id, _migrate)
+
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        # Prefix every identifier owned by this entry, including units that
+        # are currently not reported (e.g. offline), so a returning unit
+        # reuses its migrated device instead of creating a duplicate.
+        new_identifiers = {
+            (domain, ident)
+            if domain != DOMAIN or ident.startswith(prefix)
+            else (domain, f"{prefix}{ident}")
+            for domain, ident in device.identifiers
+        }
+        if new_identifiers != device.identifiers:
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifiers)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CoolmasterConfigEntry) -> bool:
@@ -61,5 +97,6 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a config entry from a device."""
     return not device_entry.identifiers.intersection(
-        (DOMAIN, unit_id) for unit_id in config_entry.runtime_data.data
+        (DOMAIN, f"{config_entry.entry_id}-{unit_id}")
+        for unit_id in config_entry.runtime_data.data
     )
