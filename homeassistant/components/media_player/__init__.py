@@ -101,7 +101,6 @@ from .const import (  # noqa: F401
     ATTR_SOUND_MODE_LIST,
     CONTENT_AUTH_EXPIRY_TIME,
     DATA_COMPONENT,
-    DEVICE_CLASSES,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     INTENT_MEDIA_SEARCH_AND_PLAY,
@@ -152,6 +151,9 @@ class MediaPlayerEnqueue(StrEnum):
     PLAY = "play"
     # play the given media item now, clear queue
     REPLACE = "replace"
+
+
+DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]
 
 
 def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:

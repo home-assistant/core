@@ -17,7 +17,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
     DATA_COMPONENT,
-    DEVICE_CLASSES,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     BinarySensorDeviceClass,
@@ -30,6 +29,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
 
+
+DEVICE_CLASSES = [cls.value for cls in BinarySensorDeviceClass]
 
 # mypy: disallow-any-generics
 

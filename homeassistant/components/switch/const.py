@@ -25,5 +25,3 @@ class SwitchDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(SwitchDeviceClass))
-
-DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]

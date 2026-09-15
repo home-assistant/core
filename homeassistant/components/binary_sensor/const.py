@@ -111,5 +111,3 @@ class BinarySensorDeviceClass(StrEnum):
 DEVICE_CLASSES_SCHEMA = probatio.All(
     probatio.Lower, probatio.Coerce(BinarySensorDeviceClass)
 )
-
-DEVICE_CLASSES = [cls.value for cls in BinarySensorDeviceClass]

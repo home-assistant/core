@@ -85,7 +85,3 @@ class HumidifierDeviceClass(StrEnum):
 DEVICE_CLASSES_SCHEMA = probatio.All(
     probatio.Lower, probatio.Coerce(HumidifierDeviceClass)
 )
-
-# DEVICE_CLASSES below is deprecated as of 2021.12
-# use the HumidifierDeviceClass enum instead.
-DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]

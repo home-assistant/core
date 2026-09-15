@@ -82,5 +82,3 @@ class CoverDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(CoverDeviceClass))
-
-DEVICE_CLASSES = [cls.value for cls in CoverDeviceClass]

@@ -232,5 +232,3 @@ class MediaPlayerDeviceClass(StrEnum):
 DEVICE_CLASSES_SCHEMA = probatio.All(
     probatio.Lower, probatio.Coerce(MediaPlayerDeviceClass)
 )
-
-DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]

@@ -21,7 +21,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
     DATA_COMPONENT,
-    DEVICE_CLASSES,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     SwitchDeviceClass,
@@ -36,6 +35,8 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
+
+DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
 
 # mypy: disallow-any-generics
 
