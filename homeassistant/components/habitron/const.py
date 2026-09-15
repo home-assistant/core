@@ -1,9 +1,10 @@
 """Constants for the Habitron integration.
 
-Protocol indices, module codes, event ids and the hub's identity rule now
-live in the ``habitron_client`` library (the integration is a thin wrapper).
-Only the integration-level constants (domain, service keys, heartbeat
-interval) remain here.
+Integration-level values only -- the domain, the heartbeat interval and the
+sentinel for a hub on Home Assistant's own machine. Everything the bus itself
+defines (protocol indices, module codes, event ids, the hub's identity rule)
+belongs to ``habitron_client``, which is where a new constant of that kind
+goes.
 """
 
 from datetime import timedelta

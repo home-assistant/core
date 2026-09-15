@@ -70,11 +70,16 @@ def _area_name(router: Router, area_no: int) -> str:
 class HbtnData:
     """What one poll found, and the coordinator's change-detection key.
 
-    With ``always_update=False`` Home Assistant fans out to the entities only
-    when this differs from the previous tick, so everything an entity renders
-    from has to be in here. The bus status is covered by its CRC; the hub's own
-    readings are polled apart from it and can fail on their own, which is a
-    state the entities show -- so it travels alongside.
+    Most entities do not wait for this: they subscribe to the model member they
+    render and the library notifies them as soon as its value moves. The
+    coordinator fan-out covers what no member notification carries -- and with
+    ``always_update=False`` it happens only when this value differs from the
+    previous tick.
+
+    Hence both fields. The CRC moves when the bus status does. The host state
+    belongs here because it is not a member value at all: the hub's readings
+    are polled apart from the bus, and their failure is something the entities
+    show rather than something a member reports.
     """
 
     crc: int

@@ -325,7 +325,9 @@ def test_described_sensor_inherits_measurement_state_class() -> None:
     sensor_desc = _make_sensor_descriptor()
     coord = MagicMock(spec=DataUpdateCoordinator)
     entity = HbtnDescribedSensor(module, sensor_desc, coord, 0, HUMIDITY_DESCRIPTION)
-    assert entity._attr_state_class is SensorStateClass.MEASUREMENT
+    # The public property, not the private attribute: SensorEntity reads the
+    # state class off the description itself, so nothing copies it over.
+    assert entity.state_class is SensorStateClass.MEASUREMENT
 
 
 def test_described_text_sensor_has_no_state_class() -> None:
@@ -336,7 +338,7 @@ def test_described_text_sensor_has_no_state_class() -> None:
     entity = HbtnDescribedSensor(
         module, sensor_desc, coord, 0, EKEY_USER_NAME_DESCRIPTION
     )
-    assert entity._attr_state_class is None
+    assert entity.state_class is None
     # No seeded value: the entity stays unknown until the bus reports a user.
     assert entity._attr_native_value is None
 

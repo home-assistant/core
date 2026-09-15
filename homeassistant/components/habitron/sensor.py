@@ -200,27 +200,19 @@ async def async_setup_entry(
 class HbtnSensorEntityDescription(SensorEntityDescription):
     """Habitron-specific sensor description.
 
-    ``value_fn`` lets each description point at its own module attribute
-    (``module.sensors``, ``module.diags``, ``module.chan_currents``, …) so all
-    variants share a single entity class, including the text/enum sensors whose
-    ``value_fn`` derives a string from the raw member value.
+    The per-owner accessors let one entity class serve every member list, so
+    only the three flags need saying:
 
-    ``subscribe_fn`` returns the bus member to push-subscribe to (or ``None`` for
-    the coordinator-polled sensors).
+    ``diag_check`` falls back to a hidden diagnostic entity when the member's
+    own ``type`` says it is one -- the router's current, voltage and timeout
+    streams only reveal that at runtime.
 
-    ``diag_check`` enables the common pattern of falling back to a hidden
-    diagnostic entity when the underlying descriptor's ``type`` field is flagged
-    as diagnostic (used by the router current/voltage/timeout streams whose
-    diag-ness is only known at runtime).
+    ``translated_name`` drops the bus name, so the display name comes from the
+    ``translation_key`` instead.
 
-    ``translated_name`` drops the bus name so the display name comes from the
-    ``translation_key`` (+ per-instance ``translation_placeholders``) instead.
-
-    ``numbered`` appends the member number to the unique_id. Set it where one
-    device carries several members of the same kind -- the router's current,
-    voltage and timeout channels, a module's analogue inputs -- because there
-    the key alone does not tell them apart. Everything else is one per device
-    and keeps the plain ``{uid}_{key}``.
+    ``numbered`` appends the member number to the unique_id, for a device that
+    carries several members of the same kind (the router channels, a module's
+    analogue inputs) where the key alone would not tell them apart.
     """
 
     value_fn: Callable[[Any, int], Any]
@@ -258,10 +250,6 @@ class HbtnDescribedSensor(HabitronEntity, SensorEntity):
         self._attr_unique_id = f"{module.uid}_{description.key}"
         if description.numbered:
             self._attr_unique_id = f"{self._attr_unique_id}_{sensor.nmbr}"
-        # State class comes from the description; text/enum sensors carry None.
-        # Unlike ``options``, which SensorEntity reads off the description on
-        # its own, this needs an explicit assignment.
-        self._attr_state_class = description.state_class
         if description.translated_name:
             # Let the translation_key (not the bus name) drive the display name.
             del self._attr_name
