@@ -8,10 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from habitron_client import Area, Diagnostic, Sensor, SmartController, SmartHub
 import pytest
 
-from homeassistant.components.habitron import (
-    sensor as habitron_sensor,
-    sensor as sensor_module,
-)
+from homeassistant.components.habitron import sensor as habitron_sensor
 from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.components.habitron.sensor import (
     AIRQUALITY_DESCRIPTION,
@@ -158,7 +155,7 @@ def test_no_description_carries_a_static_icon() -> None:
     A static ``icon`` on the description wins over the icon translation and over
     the one a device class implies, so it cannot be themed or translated away.
     """
-    for name, value in vars(sensor_module).items():
+    for name, value in vars(habitron_sensor).items():
         if isinstance(value, HbtnSensorEntityDescription):
             assert value.icon is None, f"{name} carries a static icon"
 
@@ -166,11 +163,11 @@ def test_no_description_carries_a_static_icon() -> None:
 def test_every_icon_translation_key_exists() -> None:
     """Each icons.json sensor key belongs to a description that asks for it."""
     icons = json.loads(
-        (Path(sensor_module.__file__).parent / "icons.json").read_text(encoding="utf-8")
+        (Path(habitron_sensor.__file__).parent / "icons.json").read_text(encoding="utf-8")
     )
     described = {
         value.translation_key
-        for value in vars(sensor_module).values()
+        for value in vars(habitron_sensor).values()
         if isinstance(value, HbtnSensorEntityDescription)
     }
     assert set(icons["entity"]["sensor"]) <= described
