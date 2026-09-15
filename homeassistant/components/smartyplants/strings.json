@@ -26,7 +26,7 @@
         "data_description": {
           "webhook_secret": "The signing secret the SmartyPlants app shows after you add the webhook URL. It is used to verify that pushed updates really came from SmartyPlants."
         },
-        "description": "Optional: for instant updates instead of polling every minute, add this webhook URL in the SmartyPlants app, then paste the signing secret it gives you below.\n\n`{webhook_url}`\n\nLeave the secret empty to use polling only.",
+        "description": "Optional: for instant updates in addition to polling every minute, add this webhook URL in the SmartyPlants app, then paste the signing secret it gives you below.\n\n`{webhook_url}`\n\nLeave the secret empty to use polling only.",
         "title": "Enable live updates"
       }
     }
