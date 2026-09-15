@@ -69,6 +69,7 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -442,6 +443,37 @@ async def test_setup_api_existing_hassio_user(
     )
     assert not user.refresh_tokens
     assert hass.auth.async_validate_access_token(access_token) is None
+
+
+@pytest.mark.parametrize("has_entry", [True, False])
+async def test_setup_adopts_existing_supervisor_user(
+    hass: HomeAssistant, has_entry: bool
+) -> None:
+    """Test setup reuses an existing Supervisor system user.
+
+    When the config entry data (and legacy store) naming the Supervisor user
+    is lost, an existing Supervisor system user must be adopted instead of
+    creating a duplicate. A regular user named alike must not be picked up.
+    """
+    human = await hass.auth.async_create_user(HASSIO_USER_NAME)
+    user = await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+    )
+    if has_entry:
+        MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN).add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data[ENTRY_DATA_USER] == user.id
+    assert entry.data[ENTRY_DATA_USER] != human.id
+    assert [
+        existing
+        for existing in await hass.auth.async_get_users()
+        if existing.system_generated and existing.name == HASSIO_USER_NAME
+    ] == [user]
 
 
 async def test_setup_migrates_legacy_hassio_store_to_config_entry(
