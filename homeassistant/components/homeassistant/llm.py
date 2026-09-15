@@ -83,6 +83,7 @@ def async_get_exposed_entities(
         "current_temperature",
         "temperature_unit",
         "brightness",
+        "color_temp_kelvin",
         "humidity",
         "unit_of_measurement",
         "device_class",
