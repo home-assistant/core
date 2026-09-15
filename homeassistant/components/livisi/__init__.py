@@ -2,14 +2,13 @@
 
 from typing import Final
 
-from aiohttp import ClientConnectorError
-from livisi.aiolivisi import AioLivisi
+from livisi import LivisiException, WrongCredentialException
 
 from homeassistant import core
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .coordinator import LivisiConfigEntry, LivisiDataUpdateCoordinator
@@ -19,16 +18,16 @@ PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SWITCH]
 
 async def async_setup_entry(hass: core.HomeAssistant, entry: LivisiConfigEntry) -> bool:
     """Set up Livisi Smart Home from a config entry."""
-    web_session = aiohttp_client.async_get_clientsession(hass)
-    aiolivisi = AioLivisi(web_session)
-    coordinator = LivisiDataUpdateCoordinator(hass, entry, aiolivisi)
+    coordinator = LivisiDataUpdateCoordinator(hass, entry)
     try:
         await coordinator.async_setup()
-        await coordinator.async_set_all_rooms()
-    except ClientConnectorError as exception:
+    except WrongCredentialException as exception:
+        raise ConfigEntryAuthFailed from exception
+    except LivisiException as exception:
         raise ConfigEntryNotReady from exception
 
     entry.runtime_data = coordinator
+    entry.async_on_unload(coordinator.async_close)
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -42,7 +41,6 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: LivisiConfigEntry) 
     entry.async_create_background_task(
         hass, coordinator.ws_connect(), "livisi-ws_connect"
     )
-    entry.async_on_unload(coordinator.websocket.disconnect)
     return True
 
 
