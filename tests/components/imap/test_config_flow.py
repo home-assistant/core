@@ -4,8 +4,8 @@ import ssl
 from unittest.mock import AsyncMock, patch
 
 from aioimaplib import AioImapException
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.imap.const import (
@@ -448,7 +448,7 @@ async def test_options_flow_when_connection_fails(
                 # Check if entry was updated
                 for key, value in new_config.items():
                     assert entry.data[key] == value
-    except vol.Invalid:
+    except probatio.Invalid:
         # Check if form was expected with these options
         assert assert_result is FlowResultType.FORM
 

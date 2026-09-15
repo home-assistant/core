@@ -1,4 +1,78 @@
 # serializer version: 1
+# name: test_sensor_state[single_phase][sensor.garage_charging_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ev_connected_press_start',
+        'charging',
+        'waiting_for_ev',
+        'charging_completed',
+        'charging_reservation',
+        'plug_not_connected',
+        'see_error_state',
+        'waiting_for_swipe',
+        'waiting_for_button',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garage_charging_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging message',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging message',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_message',
+    'unique_id': 'AA:BB_charging_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_state[single_phase][sensor.garage_charging_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Charging message',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ev_connected_press_start',
+        'charging',
+        'waiting_for_ev',
+        'charging_completed',
+        'charging_reservation',
+        'plug_not_connected',
+        'see_error_state',
+        'waiting_for_swipe',
+        'waiting_for_button',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_charging_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ev_connected_press_start',
+  })
+# ---
 # name: test_sensor_state[single_phase][sensor.garage_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -55,6 +129,250 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3500',
+  })
+# ---
+# name: test_sensor_state[single_phase][sensor.garage_charging_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'start',
+        'finish_charging',
+        'waiting',
+        'finished',
+        'canceled',
+        'connect',
+        'fault',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garage_charging_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging status',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_status',
+    'unique_id': 'AA:BB_charging_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_state[single_phase][sensor.garage_charging_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Charging status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'start',
+        'finish_charging',
+        'waiting',
+        'finished',
+        'canceled',
+        'connect',
+        'fault',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'start',
+  })
+# ---
+# name: test_sensor_state[single_phase][sensor.garage_current_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'fault',
+        'charging_fault_1',
+        'charging_fault_2',
+        'waiting_for_swipe',
+        'waiting_for_button',
+        'not_connected',
+        'ready_to_charge',
+        'charging',
+        'completed',
+        'completed_full_charge',
+        'charging_reservation',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garage_current_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Current state',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_state',
+    'unique_id': 'AA:BB_current_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_state[single_phase][sensor.garage_current_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Current state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'fault',
+        'charging_fault_1',
+        'charging_fault_2',
+        'waiting_for_swipe',
+        'waiting_for_button',
+        'not_connected',
+        'ready_to_charge',
+        'charging',
+        'completed',
+        'completed_full_charge',
+        'charging_reservation',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_current_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charging',
+  })
+# ---
+# name: test_sensor_state[single_phase][sensor.garage_error_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'relay_stick_error',
+        'offline',
+        'cc_error',
+        'cp_error',
+        'emergency_stop',
+        'over_temperature',
+        'leakage_protection',
+        'short_circuit',
+        'over_current',
+        'ungrounded',
+        'over_voltage',
+        'low_voltage',
+        'input_power_error',
+        'dlb_over_current',
+        'diode_short_circuit',
+        'rtc_failure',
+        'flash_memory_failure',
+        'eeprom_failure',
+        'metering_module_failure',
+        'no_error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garage_error_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Error state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Error state',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'error_state',
+    'unique_id': 'AA:BB_error_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_state[single_phase][sensor.garage_error_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Error state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'relay_stick_error',
+        'offline',
+        'cc_error',
+        'cp_error',
+        'emergency_stop',
+        'over_temperature',
+        'leakage_protection',
+        'short_circuit',
+        'over_current',
+        'ungrounded',
+        'over_voltage',
+        'low_voltage',
+        'input_power_error',
+        'dlb_over_current',
+        'diode_short_circuit',
+        'rtc_failure',
+        'flash_memory_failure',
+        'eeprom_failure',
+        'metering_module_failure',
+        'no_error',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_error_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_error',
   })
 # ---
 # name: test_sensor_state[single_phase][sensor.garage_external_temperature-entry]
@@ -289,6 +607,128 @@
     'state': '230.0',
   })
 # ---
+# name: test_sensor_state[single_phase][sensor.garage_output_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charging',
+        'idle',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garage_output_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Output state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Output state',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'output_state',
+    'unique_id': 'AA:BB_output_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_state[single_phase][sensor.garage_output_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Output state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charging',
+        'idle',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_output_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charging',
+  })
+# ---
+# name: test_sensor_state[single_phase][sensor.garage_plug_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disconnected',
+        'connected_unlocked',
+        'connected_locked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garage_plug_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Plug state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Plug state',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'plug_state',
+    'unique_id': 'AA:BB_plug_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_state[single_phase][sensor.garage_plug_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Plug state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disconnected',
+        'connected_unlocked',
+        'connected_locked',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_plug_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'connected_locked',
+  })
+# ---
 # name: test_sensor_state[single_phase][sensor.garage_session_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -405,6 +845,80 @@
     'state': '12.3',
   })
 # ---
+# name: test_sensor_state[three_phase][sensor.garage_charging_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ev_connected_press_start',
+        'charging',
+        'waiting_for_ev',
+        'charging_completed',
+        'charging_reservation',
+        'plug_not_connected',
+        'see_error_state',
+        'waiting_for_swipe',
+        'waiting_for_button',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garage_charging_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging message',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging message',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_message',
+    'unique_id': 'AA:BB_charging_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_state[three_phase][sensor.garage_charging_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Charging message',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ev_connected_press_start',
+        'charging',
+        'waiting_for_ev',
+        'charging_completed',
+        'charging_reservation',
+        'plug_not_connected',
+        'see_error_state',
+        'waiting_for_swipe',
+        'waiting_for_button',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_charging_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ev_connected_press_start',
+  })
+# ---
 # name: test_sensor_state[three_phase][sensor.garage_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -461,6 +975,250 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3500',
+  })
+# ---
+# name: test_sensor_state[three_phase][sensor.garage_charging_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'start',
+        'finish_charging',
+        'waiting',
+        'finished',
+        'canceled',
+        'connect',
+        'fault',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garage_charging_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging status',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_status',
+    'unique_id': 'AA:BB_charging_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_state[three_phase][sensor.garage_charging_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Charging status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'start',
+        'finish_charging',
+        'waiting',
+        'finished',
+        'canceled',
+        'connect',
+        'fault',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'start',
+  })
+# ---
+# name: test_sensor_state[three_phase][sensor.garage_current_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'fault',
+        'charging_fault_1',
+        'charging_fault_2',
+        'waiting_for_swipe',
+        'waiting_for_button',
+        'not_connected',
+        'ready_to_charge',
+        'charging',
+        'completed',
+        'completed_full_charge',
+        'charging_reservation',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garage_current_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Current state',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_state',
+    'unique_id': 'AA:BB_current_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_state[three_phase][sensor.garage_current_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Current state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'fault',
+        'charging_fault_1',
+        'charging_fault_2',
+        'waiting_for_swipe',
+        'waiting_for_button',
+        'not_connected',
+        'ready_to_charge',
+        'charging',
+        'completed',
+        'completed_full_charge',
+        'charging_reservation',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_current_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charging',
+  })
+# ---
+# name: test_sensor_state[three_phase][sensor.garage_error_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'relay_stick_error',
+        'offline',
+        'cc_error',
+        'cp_error',
+        'emergency_stop',
+        'over_temperature',
+        'leakage_protection',
+        'short_circuit',
+        'over_current',
+        'ungrounded',
+        'over_voltage',
+        'low_voltage',
+        'input_power_error',
+        'dlb_over_current',
+        'diode_short_circuit',
+        'rtc_failure',
+        'flash_memory_failure',
+        'eeprom_failure',
+        'metering_module_failure',
+        'no_error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garage_error_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Error state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Error state',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'error_state',
+    'unique_id': 'AA:BB_error_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_state[three_phase][sensor.garage_error_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Error state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'relay_stick_error',
+        'offline',
+        'cc_error',
+        'cp_error',
+        'emergency_stop',
+        'over_temperature',
+        'leakage_protection',
+        'short_circuit',
+        'over_current',
+        'ungrounded',
+        'over_voltage',
+        'low_voltage',
+        'input_power_error',
+        'dlb_over_current',
+        'diode_short_circuit',
+        'rtc_failure',
+        'flash_memory_failure',
+        'eeprom_failure',
+        'metering_module_failure',
+        'no_error',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_error_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_error',
   })
 # ---
 # name: test_sensor_state[three_phase][sensor.garage_external_temperature-entry]
@@ -925,6 +1683,128 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '232.0',
+  })
+# ---
+# name: test_sensor_state[three_phase][sensor.garage_output_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charging',
+        'idle',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garage_output_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Output state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Output state',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'output_state',
+    'unique_id': 'AA:BB_output_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_state[three_phase][sensor.garage_output_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Output state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charging',
+        'idle',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_output_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charging',
+  })
+# ---
+# name: test_sensor_state[three_phase][sensor.garage_plug_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disconnected',
+        'connected_unlocked',
+        'connected_locked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garage_plug_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Plug state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Plug state',
+    'platform': 'besen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'plug_state',
+    'unique_id': 'AA:BB_plug_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_state[three_phase][sensor.garage_plug_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Plug state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disconnected',
+        'connected_unlocked',
+        'connected_locked',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_plug_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'connected_locked',
   })
 # ---
 # name: test_sensor_state[three_phase][sensor.garage_session_energy-entry]
