@@ -91,6 +91,13 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=ThermostatService.State.ON,
         should_poll=False,
     ),
+    "presencesimulation": SHCSwitchEntityDescription(
+        key="presencesimulation",
+        device_class=SwitchDeviceClass.SWITCH,
+        on_key="enabled",
+        on_value=True,
+        should_poll=False,
+    ),
 }
 
 
@@ -206,6 +213,18 @@ async def async_setup_entry(
             *session.device_helper.light_switches_bsm,
         )
     )
+
+    presence_simulation_system = session.device_helper.presence_simulation_system
+    if presence_simulation_system is not None:
+        entities.append(
+            SHCSwitch(
+                hass=hass,
+                device=presence_simulation_system,
+                parent_id=shc_info.unique_id,
+                entry_id=config_entry.entry_id,
+                description=SWITCH_TYPES["presencesimulation"],
+            )
+        )
 
     async_add_entities(entities)
 
