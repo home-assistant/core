@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from gridx_connector import GridXAuthenticationError, GridXError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -11,10 +11,10 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from .const import DOMAIN, LOGGER
 from .coordinator import create_connector
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 

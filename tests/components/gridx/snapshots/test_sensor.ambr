@@ -228,7 +228,7 @@
     'state': '77.0',
   })
 # ---
-# name: test_all_entities[sensor.home_consumption-entry]
+# name: test_all_entities[sensor.home_consumption_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -244,7 +244,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_consumption',
+    'entity_id': 'sensor.home_consumption_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -252,7 +252,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Consumption',
+    'object_id_base': 'Consumption power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -260,7 +260,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Consumption',
+    'original_name': 'Consumption power',
     'platform': 'gridx',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -270,248 +270,16 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.home_consumption-state]
+# name: test_all_entities[sensor.home_consumption_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Consumption',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Consumption power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_consumption',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '600',
-  })
-# ---
-# name: test_all_entities[sensor.home_direct_consumption_ev-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_direct_consumption_ev',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Direct consumption EV',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Direct consumption EV',
-    'platform': 'gridx',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'direct_consumption_ev',
-    'unique_id': '11111111-1111-1111-1111-111111111111_direct_consumption_ev',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_all_entities[sensor.home_direct_consumption_ev-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Direct consumption EV',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_direct_consumption_ev',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_all_entities[sensor.home_direct_consumption_heat_pump-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_direct_consumption_heat_pump',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Direct consumption heat pump',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Direct consumption heat pump',
-    'platform': 'gridx',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'direct_consumption_heat_pump',
-    'unique_id': '11111111-1111-1111-1111-111111111111_direct_consumption_heat_pump',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_all_entities[sensor.home_direct_consumption_heat_pump-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Direct consumption heat pump',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_direct_consumption_heat_pump',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_all_entities[sensor.home_direct_consumption_heater-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_direct_consumption_heater',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Direct consumption heater',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Direct consumption heater',
-    'platform': 'gridx',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'direct_consumption_heater',
-    'unique_id': '11111111-1111-1111-1111-111111111111_direct_consumption_heater',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_all_entities[sensor.home_direct_consumption_heater-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Direct consumption heater',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_direct_consumption_heater',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_all_entities[sensor.home_direct_consumption_household-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_direct_consumption_household',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Direct consumption household',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Direct consumption household',
-    'platform': 'gridx',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'direct_consumption_household',
-    'unique_id': '11111111-1111-1111-1111-111111111111_direct_consumption_household',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_all_entities[sensor.home_direct_consumption_household-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Direct consumption household',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_direct_consumption_household',
+    'entity_id': 'sensor.home_consumption_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -805,6 +573,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16.1',
+  })
+# ---
+# name: test_all_entities[sensor.home_ev_direct_consumption_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_ev_direct_consumption_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'EV direct consumption power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'EV direct consumption power',
+    'platform': 'gridx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direct_consumption_ev',
+    'unique_id': '11111111-1111-1111-1111-111111111111_direct_consumption_ev',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[sensor.home_ev_direct_consumption_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home EV direct consumption power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_ev_direct_consumption_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_all_entities[sensor.home_ev_state_of_charge-entry]
@@ -1106,6 +932,64 @@
     'state': '-59',
   })
 # ---
+# name: test_all_entities[sensor.home_heat_pump_direct_consumption_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_heat_pump_direct_consumption_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heat pump direct consumption power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Heat pump direct consumption power',
+    'platform': 'gridx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direct_consumption_heat_pump',
+    'unique_id': '11111111-1111-1111-1111-111111111111_direct_consumption_heat_pump',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[sensor.home_heat_pump_direct_consumption_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Heat pump direct consumption power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_heat_pump_direct_consumption_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_all_entities[sensor.home_heat_pump_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1162,6 +1046,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1200',
+  })
+# ---
+# name: test_all_entities[sensor.home_heater_direct_consumption_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_heater_direct_consumption_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heater direct consumption power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Heater direct consumption power',
+    'platform': 'gridx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direct_consumption_heater',
+    'unique_id': '11111111-1111-1111-1111-111111111111_direct_consumption_heater',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[sensor.home_heater_direct_consumption_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Heater direct consumption power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_heater_direct_consumption_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_all_entities[sensor.home_heater_power-entry]
@@ -1280,7 +1222,7 @@
     'state': '48.5',
   })
 # ---
-# name: test_all_entities[sensor.home_production-entry]
+# name: test_all_entities[sensor.home_household_direct_consumption_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1296,7 +1238,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_production',
+    'entity_id': 'sensor.home_household_direct_consumption_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1304,7 +1246,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Production',
+    'object_id_base': 'Household direct consumption power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1312,7 +1254,65 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Production',
+    'original_name': 'Household direct consumption power',
+    'platform': 'gridx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direct_consumption_household',
+    'unique_id': '11111111-1111-1111-1111-111111111111_direct_consumption_household',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[sensor.home_household_direct_consumption_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Household direct consumption power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_household_direct_consumption_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '600',
+  })
+# ---
+# name: test_all_entities[sensor.home_production_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_production_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Production power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Production power',
     'platform': 'gridx',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1322,16 +1322,16 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.home_production-state]
+# name: test_all_entities[sensor.home_production_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Production',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Production power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_production',
+    'entity_id': 'sensor.home_production_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1396,7 +1396,7 @@
     'state': '1512',
   })
 # ---
-# name: test_all_entities[sensor.home_self_consumption-entry]
+# name: test_all_entities[sensor.home_self_consumption_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1412,7 +1412,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_self_consumption',
+    'entity_id': 'sensor.home_self_consumption_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1420,7 +1420,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Self consumption',
+    'object_id_base': 'Self-consumption power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1428,7 +1428,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Self consumption',
+    'original_name': 'Self-consumption power',
     'platform': 'gridx',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1438,16 +1438,16 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.home_self_consumption-state]
+# name: test_all_entities[sensor.home_self_consumption_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Self consumption',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Self-consumption power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_self_consumption',
+    'entity_id': 'sensor.home_self_consumption_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1478,7 +1478,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Self consumption rate',
+    'object_id_base': 'Self-consumption rate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1486,7 +1486,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Self consumption rate',
+    'original_name': 'Self-consumption rate',
     'platform': 'gridx',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1499,7 +1499,7 @@
 # name: test_all_entities[sensor.home_self_consumption_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Self consumption rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Self-consumption rate',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
@@ -1535,7 +1535,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Self sufficiency rate',
+    'object_id_base': 'Self-sufficiency rate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1543,7 +1543,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Self sufficiency rate',
+    'original_name': 'Self-sufficiency rate',
     'platform': 'gridx',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1556,7 +1556,7 @@
 # name: test_all_entities[sensor.home_self_sufficiency_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Self sufficiency rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Self-sufficiency rate',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
@@ -1568,7 +1568,7 @@
     'state': '100.0',
   })
 # ---
-# name: test_all_entities[sensor.home_self_supply-entry]
+# name: test_all_entities[sensor.home_self_supply_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1584,7 +1584,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_self_supply',
+    'entity_id': 'sensor.home_self_supply_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1592,7 +1592,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Self supply',
+    'object_id_base': 'Self-supply power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1600,7 +1600,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Self supply',
+    'original_name': 'Self-supply power',
     'platform': 'gridx',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1610,23 +1610,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.home_self_supply-state]
+# name: test_all_entities[sensor.home_self_supply_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Self supply',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Self-supply power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_self_supply',
+    'entity_id': 'sensor.home_self_supply_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '600',
   })
 # ---
-# name: test_all_entities[sensor.home_total_consumption-entry]
+# name: test_all_entities[sensor.home_total_consumption_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1642,7 +1642,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_total_consumption',
+    'entity_id': 'sensor.home_total_consumption_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1650,7 +1650,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Total consumption',
+    'object_id_base': 'Total consumption power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1658,7 +1658,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Total consumption',
+    'original_name': 'Total consumption power',
     'platform': 'gridx',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1668,16 +1668,16 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.home_total_consumption-state]
+# name: test_all_entities[sensor.home_total_consumption_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Total consumption',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Total consumption power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_total_consumption',
+    'entity_id': 'sensor.home_total_consumption_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
