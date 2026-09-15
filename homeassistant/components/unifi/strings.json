@@ -5,6 +5,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "configuration_updated": "Configuration updated",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown_site_id": "Previously configured UniFi Network site can no longer be found"
     },
     "error": {
@@ -14,6 +15,24 @@
     },
     "flow_title": "{name} ({host})",
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "site": "[%key:component::unifi::config::step::user::data::site%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "[%key:component::unifi::config::step::user::data_description::host%]",
+          "password": "[%key:component::unifi::config::step::user::data_description::password%]",
+          "port": "[%key:component::unifi::config::step::user::data_description::port%]",
+          "username": "[%key:component::unifi::config::step::user::data_description::username%]",
+          "verify_ssl": "[%key:component::unifi::config::step::user::data_description::verify_ssl%]"
+        },
+        "title": "[%key:component::unifi::config::step::user::title%]"
+      },
       "site": {
         "data": {
           "site": "Site ID"
