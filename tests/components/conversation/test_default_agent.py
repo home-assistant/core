@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
+from home_assistant_intents import ErrorKey
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import yaml
@@ -23,7 +24,10 @@ from homeassistant.components.conversation.chat_log import (
     ToolResultContent,
     async_get_chat_log,
 )
-from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
+from homeassistant.components.conversation.default_agent import (
+    METADATA_CUSTOM_SENTENCE,
+    _get_match_error_response,
+)
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import (
@@ -990,6 +994,66 @@ async def test_error_no_device_on_floor_exposed(
             result.response.speech["plain"]["speech"]
             == "Sorry, test light in the ground floor is not exposed"
         )
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_error_device_in_other_area(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test error message when a known device exists, but not in the asked-for area."""
+    area_kitchen = area_registry.async_update(
+        area_registry.async_get_or_create("kitchen_id").id, name="kitchen"
+    )
+    area_bedroom = area_registry.async_update(
+        area_registry.async_get_or_create("bedroom_id").id, name="bedroom"
+    )
+
+    # The kitchen has a light, so the area itself is a valid target
+    for object_id, name, area in (
+        ("1234", "ceiling", area_kitchen),
+        ("5678", "test light", area_bedroom),
+    ):
+        entry = entity_registry.async_get_or_create("light", "demo", object_id)
+        entry = entity_registry.async_update_entity(
+            entry.entity_id, name=name, area_id=area.id
+        )
+        hass.states.async_set(entry.entity_id, "off", {ATTR_FRIENDLY_NAME: name})
+        expose_entity(hass, entry.entity_id, True)
+    await hass.async_block_till_done()
+
+    result = await conversation.async_converse(
+        hass, "turn on the test light in the kitchen", None, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any device called test light in the kitchen area"
+    )
+
+
+@pytest.mark.parametrize("reason", list(intent.MatchFailedReason))
+def test_match_error_response_never_falls_back(
+    reason: intent.MatchFailedReason,
+) -> None:
+    """Test every failure keeps its own message when a target was named.
+
+    A reason with no branch used to reach the generic "couldn't understand"
+    error, which says nothing about what was actually wrong.
+    """
+    match_error = intent.MatchFailedError(
+        result=intent.MatchTargetsResult(False, reason, no_match_name="test light"),
+        constraints=intent.MatchTargetsConstraints(
+            name="test light", area_name="kitchen", states={"on"}
+        ),
+    )
+
+    error_key, _error_args = _get_match_error_response(match_error)
+
+    assert error_key is not ErrorKey.NO_INTENT
 
 
 @pytest.mark.usefixtures("init_components")
