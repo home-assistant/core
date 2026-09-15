@@ -57,6 +57,7 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
+    CONF_ADAPTIVE_LIGHTING,
     AUDIO_CODEC_COPY,
     AUDIO_CODEC_OPUS,
     CONF_AUDIO_CODEC,
@@ -66,6 +67,8 @@ from .const import (
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
+    CONF_MAX_COLOR_TEMP_KELVIN,
+    CONF_MIN_COLOR_TEMP_KELVIN,
     CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_FILTER_CHANGE_INDICATION,
     CONF_LINKED_FILTER_LIFE_LEVEL,
@@ -149,6 +152,9 @@ VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 BASIC_INFO_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_ADAPTIVE_LIGHTING, default=False): cv.boolean,
+        probatio.Optional(CONF_MIN_COLOR_TEMP_KELVIN): cv.positive_int,
+        probatio.Optional(CONF_MAX_COLOR_TEMP_KELVIN): cv.positive_int,
         probatio.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
         probatio.Optional(CONF_LINKED_BATTERY_CHARGING_SENSOR): cv.entity_domain(
             BINARY_SENSOR_DOMAIN
