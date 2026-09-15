@@ -92,13 +92,13 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[LivisiDevice]]):
 
     def confirm_device_reachable(self, device_id: str, generation: int) -> bool:
         """Confirm recovery unless a newer unreachable update arrived."""
-        if (
-            device_id not in self._unreachable_devices
-            or self._reachability_generations[device_id] != generation
-        ):
-            return False
-        self._unreachable_devices.remove(device_id)
-        return True
+        is_current = (
+            device_id in self._unreachable_devices
+            and self._reachability_generations[device_id] == generation
+        )
+        if is_current:
+            self._unreachable_devices.remove(device_id)
+        return is_current
 
     async def async_setup(self) -> None:
         """Set up the Livisi Smart Home Controller."""
