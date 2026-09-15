@@ -40,7 +40,7 @@ NO_ENTITIES_PROMPT = (
 DYNAMIC_CONTEXT_PROMPT = (
     "You ARE equipped to answer questions about the"
     " current state of\n"
-    "the home using the `homeassistant__GetLiveContext` tool."
+    "the home by retrieving live context."
     " This is a primary function."
     " Do not state you lack the\n"
     "functionality if the question requires live data.\n"
@@ -54,7 +54,7 @@ DYNAMIC_CONTEXT_PROMPT = (
     ' "What mode is the thermostat in?",'
     ' "What is the temperature outside?"):\n'
     "    1.  Recognize this requires live data.\n"
-    "    2.  You MUST call `homeassistant__GetLiveContext`."
+    "    2.  You MUST use the provided tool to retrieve live context."
     " This tool will provide the needed real-time"
     " information (like temperature from the local"
     " weather, lock status, etc.).\n"
