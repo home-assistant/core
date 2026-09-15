@@ -244,6 +244,11 @@ class OTBRData:
             raise GetBorderAgentIdNotSupported from exc
 
     @_handle_otbr_error
+    async def get_api_version(self) -> str | None:
+        """Get the REST API version, or None for a router that has none."""
+        return await self.api.get_api_version()
+
+    @_handle_otbr_error
     async def set_enabled(self, enabled: bool) -> None:
         """Enable or disable the router."""
         return await self.api.set_enabled(enabled)
@@ -286,17 +291,29 @@ class OTBRData:
 
         Refused while a pending dataset is in place; the wrapper turns that
         refusal into the error that says so. A border router that registers
-        the dataset with the Thread leader (ot-br-posix#3582) also refuses
-        one it cannot deliver -- it is not attached, or the leader rejected
-        the dataset -- with a conflict, which the library reports as
-        ThreadNetworkActiveError; this endpoint uses that status for
-        nothing else.
+        the dataset with the Thread leader (ot-br-posix#3582) reports two
+        more verdicts: a rejection -- it is not attached, the leader refused
+        the dataset, or an earlier registration is still being answered --
+        in the router's own words, and no verdict at all, when the leader
+        did not answer in time. Each gets its own error, since the caller
+        has to treat them differently: nothing happened, versus something
+        may have.
         """
         try:
             await self.api.set_pending_dataset_tlvs(dataset)
-        except python_otbr_api.ThreadNetworkActiveError as exc:
+        except python_otbr_api.PendingDatasetRejectedError as exc:
+            if exc.reason:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="pending_dataset_refused_reason",
+                    translation_placeholders={"reason": exc.reason},
+                ) from exc
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="pending_dataset_refused"
+            ) from exc
+        except python_otbr_api.PendingDatasetOutcomeUnknownError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="pending_dataset_unanswered"
             ) from exc
 
     @_handle_otbr_error

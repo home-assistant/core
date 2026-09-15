@@ -3,8 +3,15 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
+from awesomeversion import AwesomeVersion, AwesomeVersionException
 import probatio
-from python_otbr_api import PENDING_DATASET_DELAY_TIMER, OTBRError, tlv_parser
+from python_otbr_api import (
+    PENDING_DATASET_DELAY_TIMER,
+    PENDING_DATASET_TIMEOUT,
+    OTBRError,
+    PendingDatasetOutcomeUnknownError,
+    tlv_parser,
+)
 from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components.thread import (
@@ -51,10 +58,16 @@ DEFAULT_DELAY_S = PENDING_DATASET_DELAY_TIMER // 1000
 _LEADER_KEY_CHANGE_DELAY_S = 300
 _LEADER_MINIMUM_DELAY_S = 30
 
+# The REST API version from which the border router registers a pending
+# dataset with the Thread leader instead of writing it locally
+# (ot-br-posix#3582).
+_LEADER_REGISTERING_API = AwesomeVersion("0.6.0")
+
 # How long the write itself can take: the library reads the pending dataset
-# and then writes it, each bounded by the ten second timeout the integration
-# gives its API client.
-_WRITE_WINDOW_S = 20
+# within the ten second timeout the integration gives its API client, then
+# writes it, waiting for the leader's verdict for as long as the library
+# allows.
+_WRITE_WINDOW_S = 10 + PENDING_DATASET_TIMEOUT
 
 # The pending dataset is merged by the router over a base it chooses: an
 # in-flight pending dataset, or a freshly generated random network. Any
@@ -282,10 +295,18 @@ async def _router_holds_a_pending_dataset(data: OTBRData) -> bool:
     that was being written. A router that cannot be asked leaves the
     question open, and the answer that protects the mesh is that there is
     one.
+
+    So does a router that registers the dataset with the Thread leader:
+    its own copy only arrives once the leader hands the dataset back to
+    the mesh, so not holding one right after the write says nothing about
+    whether the write landed. It is not asked.
     """
     try:
+        version = await data.get_api_version()
+        if version is not None and AwesomeVersion(version) >= _LEADER_REGISTERING_API:
+            return True
         return await data.get_pending_dataset_tlvs() is not None
-    except HomeAssistantError:
+    except HomeAssistantError, AwesomeVersionException:
         return True
 
 
@@ -317,19 +338,27 @@ async def _write_pending_dataset(
         await data.set_pending_dataset_tlvs(dataset)
     except HomeAssistantError as err:
         # A definitive answer from the router, or the library's own refusal,
-        # means nothing was written. A dropped connection leaves that open,
-        # so ask the router: holding a pending dataset means something is
-        # propagating and the window stays, measured from the latest moment
-        # the write can have landed; holding none means it never arrived,
-        # and keeping the window would refuse every retry until it expired.
-        if isinstance(
-            err.__cause__, OTBRError
-        ) or not await _router_holds_a_pending_dataset(data):
-            await issued.async_restore(source_xpan, previous)
+        # means nothing was written. Two outcomes leave that open: a router
+        # that registered the dataset with the leader and got no answer,
+        # and a dropped connection. The first is not asked anything, the
+        # dataset may well be on its way back from the leader; the second
+        # is asked whether it holds a pending dataset. Something propagating
+        # keeps the window, measured from the latest moment the write can
+        # have landed; nothing hands it back, or every retry would be
+        # refused until it expired.
+        cause = err.__cause__
+        if isinstance(cause, PendingDatasetOutcomeUnknownError):
+            in_flight = True
+        elif isinstance(cause, OTBRError):
+            in_flight = False
         else:
+            in_flight = await _router_holds_a_pending_dataset(data)
+        if in_flight:
             await issued.async_set(
                 source_xpan, stamp, until=dt_util.utcnow().timestamp() + delay
             )
+        else:
+            await issued.async_restore(source_xpan, previous)
         raise
     # The router's delay timer started when it accepted the write, not when
     # the request left: a slow request would otherwise end the recorded
