@@ -1,10 +1,12 @@
 """Test Control4 Cover."""
 
+import asyncio
 from collections.abc import Generator
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyControl4.error_handling import BadToken
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -453,3 +455,54 @@ async def test_cover_periodic_resync(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes[ATTR_CURRENT_POSITION] == 10
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_cover_update_variables",
+    "init_integration",
+)
+async def test_reconnect_resync_with_nested_token_refresh_does_not_deadlock(
+    hass: HomeAssistant,
+    mock_c4_websocket: MagicMock,
+    mock_c4_director: MagicMock,
+) -> None:
+    """A BadToken during reconnect-resync must not deadlock on resync_lock.
+
+    sio_connect() always disconnects and reconnects, which synchronously
+    re-invokes connect_callback() on the new connection - real pyControl4
+    behavior, simulated here via the mock. If a BadToken during this
+    resync pass triggers refresh_tokens() -> sio_connect(), the nested
+    connect_callback() call must not try to reacquire resync_lock from the
+    same task (asyncio.Lock isn't reentrant); if it did, this test would
+    hang until the asyncio.wait_for timeout below.
+    """
+    await mock_c4_websocket.disconnect_callback()
+    await hass.async_block_till_done()
+
+    token_valid = False
+
+    async def _get_item_variables(item_id: int) -> list[dict[str, Any]]:
+        if not token_valid:
+            raise BadToken("expired")
+        return [{"varName": "Level", "value": 60}]
+
+    async def _sio_connect_triggers_reconnect_callback(
+        *args: Any, **kwargs: Any
+    ) -> None:
+        nonlocal token_valid
+        token_valid = True
+        await mock_c4_websocket.connect_callback()
+
+    mock_c4_director.get_item_variables = AsyncMock(side_effect=_get_item_variables)
+    mock_c4_websocket.sio_connect = AsyncMock(
+        side_effect=_sio_connect_triggers_reconnect_callback
+    )
+
+    await asyncio.wait_for(mock_c4_websocket.connect_callback(), timeout=5)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_CURRENT_POSITION] == 60
