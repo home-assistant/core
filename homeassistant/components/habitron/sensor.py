@@ -206,10 +206,8 @@ class HbtnDescribedSensor(HabitronEntity, SensorEntity):
         # is registered (see ``async_added_to_hass``). HA has no per-entity
         # ``suggested_area``, so it has to go through the entity registry.
         self._initial_area_id = initial_area_id
-        # ``{device uid}_{key}``: the uid already identifies the device, and the
-        # key says what the entity is. A description that several members of one
-        # device carry -- the router's channels, the analogue inputs -- adds the
-        # member number, which is what tells those apart.
+        # Members sharing a description -- router channels, analogue inputs --
+        # would collide on uid and key alone, hence the member number.
         self._attr_unique_id = f"{module.uid}_{description.key}"
         if description.numbered:
             self._attr_unique_id = f"{self._attr_unique_id}_{sensor.nmbr}"
