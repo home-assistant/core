@@ -877,6 +877,7 @@ FLOWS = {
         "vlc_telnet",
         "vodafone_station",
         "voip",
+        "volkszaehler",
         "volumio",
         "volvo",
         "wake_on_lan",
