@@ -14,7 +14,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, assert_entities_alt, setup_platform
-from .const import ENERGY_HISTORY, VEHICLE_DATA, VEHICLE_DATA_ALT
+from .const import (
+    ENERGY_HISTORY,
+    ENERGY_HISTORY_OVERNIGHT,
+    VEHICLE_DATA,
+    VEHICLE_DATA_ALT,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -204,6 +209,45 @@ async def test_energy_history_last_reset(
     state = hass.states.get(entity_id)
     # The first timestamp in the fixture is "2023-06-01T01:00:00-07:00"
     assert state.attributes.get("last_reset") == "2023-06-01T01:00:00-07:00"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "expected_state"),
+    [
+        pytest.param("sensor.energy_site_solar_generated", "0.0", id="solar_generated"),
+        pytest.param("sensor.energy_site_grid_exported", "0.0", id="grid_exported"),
+        pytest.param(
+            "sensor.energy_site_battery_discharged", "0.0", id="battery_discharged"
+        ),
+        pytest.param("sensor.energy_site_battery_charged", "4.1", id="battery_charged"),
+        pytest.param("sensor.energy_site_home_usage", "1.0", id="home_usage"),
+        pytest.param("sensor.energy_site_grid_imported", "5.1", id="grid_imported"),
+    ],
+)
+async def test_energy_history_omitted_fields_are_zero(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+    entity_id: str,
+    expected_state: str,
+) -> None:
+    """Test fields Tesla omits from every period report zero, not unknown."""
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+    mock_energy_history.return_value = ENERGY_HISTORY_OVERNIGHT
+
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
+    assert state.attributes["last_reset"] == "2026-09-12T00:00:00+01:00"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
