@@ -203,12 +203,6 @@ async def test_follow_up_refresh_callback_runs(
     await setup_integration(hass, mock_config_entry)
     coordinator = mock_config_entry.runtime_data
 
-    # Let the setup-time seed refresh's debounce cooldown (10s) lapse without
-    # tripping the 20s scheduled poll, so the follow-up refresh below is not
-    # coalesced into that debounce window.
-    freezer.tick(timedelta(seconds=11))
-    await hass.async_block_till_done()
-
     initial_count = mock_neopool_client.async_read_all.await_count
     coordinator.request_refresh_with_followup(delay=0.1)
     freezer.tick(timedelta(seconds=0.2))

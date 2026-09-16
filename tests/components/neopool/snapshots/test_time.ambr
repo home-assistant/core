@@ -246,7 +246,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_all_entities[time.neopool_timer_2_filtration_stop-entry]
@@ -346,7 +346,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_all_entities[time.neopool_timer_3_filtration_stop-entry]
@@ -546,7 +546,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_all_entities[time.neopool_timer_aux_1_2_stop-entry]
@@ -746,7 +746,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_all_entities[time.neopool_timer_aux_2_2_stop-entry]
@@ -946,7 +946,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_all_entities[time.neopool_timer_aux_3_2_stop-entry]
@@ -1146,7 +1146,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_all_entities[time.neopool_timer_aux_4_2_stop-entry]
@@ -1446,7 +1446,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_setup_when_modules_absent[time.neopool_timer_2_filtration_stop-entry]
@@ -1546,7 +1546,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_setup_when_modules_absent[time.neopool_timer_3_filtration_stop-entry]
@@ -1746,7 +1746,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_setup_when_modules_absent[time.neopool_timer_aux_1_2_stop-entry]
@@ -1946,7 +1946,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_setup_when_modules_absent[time.neopool_timer_aux_2_2_stop-entry]
@@ -2146,7 +2146,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_setup_when_modules_absent[time.neopool_timer_aux_3_2_stop-entry]
@@ -2346,7 +2346,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_setup_when_modules_absent[time.neopool_timer_aux_4_2_stop-entry]

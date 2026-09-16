@@ -1,6 +1,5 @@
 """Tests for the NeoPool button platform."""
 
-from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -17,7 +16,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 def _button_entity_id(
@@ -58,12 +57,6 @@ async def test_sync_time_button_writes_time_and_commit(
     mock_neopool_client.async_sync_device_time.reset_mock()
     reads_before = mock_neopool_client.async_read_all.await_count
     await _press(hass, entity_id)
-    # The post-press refresh is debounced behind the setup-time seed refresh's
-    # 10s cooldown, a loop timer; advance the clock and fire it so the coalesced
-    # read runs.
-    freezer.tick(timedelta(seconds=11))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
 
     mock_neopool_client.async_sync_device_time.assert_awaited_once_with(1704164645)
     assert mock_neopool_client.async_read_all.await_count > reads_before
