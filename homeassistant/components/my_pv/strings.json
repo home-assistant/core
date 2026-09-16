@@ -47,6 +47,13 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "bstmode": {
+        "name": "Boost Mode"
+      }
+    }
+  },
   "exceptions": {
     "auth_error": {
       "message": "Authentication failed. Remove and add the integration again with the current device password."
