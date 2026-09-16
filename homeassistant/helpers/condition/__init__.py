@@ -64,7 +64,9 @@ from .conditions import (
     OrConditionChecker,
     async_numeric_state,
     async_template,
+    numeric_state,
     state,
+    template,
     time,
 )
 from .descriptions import (
