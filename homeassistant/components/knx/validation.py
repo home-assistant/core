@@ -20,10 +20,15 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     STATE_CLASS_UNITS,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_UNIT_OF_MEASUREMENT,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.helpers import config_validation as cv
 
-from .const import NumberConf
+from .const import PLATFORMS_WITHOUT_CONFIG_CATEGORY, NumberConf
 from .dpt import DPTInfo, get_supported_dpts
 
 
@@ -49,6 +54,38 @@ dpt_base_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-a
 numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[type-abstract]
 string_type_validator = dpt_subclass_validator(DPTString)
 sensor_type_validator = probatio.Any(numeric_type_validator, string_type_validator)
+
+
+def entity_category_validator(
+    platform: Platform,
+) -> Callable[[Any], EntityCategory | None]:
+    """Validate the entity category is supported by the platform.
+
+    Works for both, UI and YAML configuration schema.
+    """
+    valid_categories = set(EntityCategory)
+    if platform in PLATFORMS_WITHOUT_CONFIG_CATEGORY:
+        valid_categories -= {EntityCategory.CONFIG}
+
+    def validate(value: Any) -> EntityCategory | None:
+        """Validate the entity category."""
+        if value is None or value == "":  # UI sends an empty value to clear it
+            return None
+        try:
+            entity_category = EntityCategory(value)
+        except ValueError:
+            raise probatio.Invalid(
+                f"'{value}' is not a valid entity category"
+            ) from None
+        if entity_category not in valid_categories:
+            _options = ", ".join(sorted(valid_categories))
+            raise probatio.Invalid(
+                f"Entity category '{entity_category}' is not supported by the"
+                f" {platform} platform. Valid options are: {_options}"
+            )
+        return entity_category
+
+    return validate
 
 
 def ga_validator(value: Any) -> str | int:

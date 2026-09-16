@@ -198,6 +198,11 @@ SUPPORTED_PLATFORMS_YAML: Final = {
     Platform.WEATHER,
 }
 
+# read-only platforms raising when added with `EntityCategory.CONFIG`
+PLATFORMS_WITHOUT_CONFIG_CATEGORY: Final = frozenset(
+    {Platform.BINARY_SENSOR, Platform.SENSOR}
+)
+
 SUPPORTED_PLATFORMS_UI: Final = {
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
