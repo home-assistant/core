@@ -2,15 +2,15 @@
 
 from typing import Any, override
 
+import probatio
 from pyhelty import HeltyClient, HeltyConnectionError, HeltyError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 class HeltyConfigFlow(ConfigFlow, domain=DOMAIN):

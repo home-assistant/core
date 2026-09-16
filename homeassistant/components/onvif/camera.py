@@ -5,7 +5,7 @@ from typing import override
 
 from haffmpeg.camera import CameraMjpeg
 from onvif.exceptions import ONVIFError
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.components import ffmpeg
@@ -63,12 +63,12 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_PTZ,
         {
-            vol.Optional(ATTR_PAN): vol.In([DIR_LEFT, DIR_RIGHT]),
-            vol.Optional(ATTR_TILT): vol.In([DIR_UP, DIR_DOWN]),
-            vol.Optional(ATTR_ZOOM): vol.In([ZOOM_OUT, ZOOM_IN]),
-            vol.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
-            vol.Optional(ATTR_SPEED): cv.small_float,
-            vol.Optional(ATTR_MOVE_MODE, default=RELATIVE_MOVE): vol.In(
+            probatio.Optional(ATTR_PAN): probatio.In([DIR_LEFT, DIR_RIGHT]),
+            probatio.Optional(ATTR_TILT): probatio.In([DIR_UP, DIR_DOWN]),
+            probatio.Optional(ATTR_ZOOM): probatio.In([ZOOM_OUT, ZOOM_IN]),
+            probatio.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
+            probatio.Optional(ATTR_SPEED): cv.small_float,
+            probatio.Optional(ATTR_MOVE_MODE, default=RELATIVE_MOVE): probatio.In(
                 [
                     CONTINUOUS_MOVE,
                     RELATIVE_MOVE,
@@ -77,8 +77,8 @@ async def async_setup_entry(
                     STOP_MOVE,
                 ]
             ),
-            vol.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
-            vol.Optional(ATTR_PRESET, default="0"): cv.string,
+            probatio.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
+            probatio.Optional(ATTR_PRESET, default="0"): cv.string,
         },
         "async_perform_ptz",
     )

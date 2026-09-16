@@ -44,7 +44,7 @@ async def test_sensor(
     assert state
     assert state.state == "1500"
 
-    mock_waterfurnace_client.read_with_retry.return_value.totalunitpower = 2000
+    mock_waterfurnace_client.read.return_value.totalunitpower = 2000
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -75,7 +75,7 @@ async def test_availability(
     assert state
     assert state.state == "1500"
 
-    mock_waterfurnace_client.read_with_retry.side_effect = side_effect
+    mock_waterfurnace_client.read.side_effect = side_effect
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -84,7 +84,7 @@ async def test_availability(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    mock_waterfurnace_client.read_with_retry.side_effect = None
+    mock_waterfurnace_client.read.side_effect = None
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

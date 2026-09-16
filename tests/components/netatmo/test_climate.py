@@ -4,9 +4,9 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from probatio.error import MultipleInvalid
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,

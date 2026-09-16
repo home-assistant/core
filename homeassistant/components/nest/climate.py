@@ -298,6 +298,13 @@ class ThermostatEntity(ClimateEntity):
             ) from err
 
     @override
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        if self.hvac_mode != HVACMode.OFF:
+            return
+        await super().async_turn_on()
+
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         hvac_mode = self.hvac_mode
@@ -353,10 +360,6 @@ class ThermostatEntity(ClimateEntity):
         """Set new target fan mode."""
         if fan_mode not in self.fan_modes:
             raise ValueError(f"Unsupported fan_mode '{fan_mode}'")
-        if fan_mode == FAN_ON and self.hvac_mode == HVACMode.OFF:
-            raise ValueError(
-                "Cannot turn on fan, please set an HVAC mode (e.g. heat/cool) first"
-            )
         trait = self._device.traits[FanTrait.NAME]
         duration = None
         if fan_mode != FAN_OFF:
@@ -372,12 +375,6 @@ class ThermostatEntity(ClimateEntity):
         """Set a short term fan timer."""
         if not self.supported_features & ClimateEntityFeature.FAN_MODE:
             raise HomeAssistantError(f"Entity {self.entity_id} does not support fan")
-
-        if self.hvac_mode == HVACMode.OFF:
-            raise HomeAssistantError(
-                f"Cannot turn on fan for {self.entity_id},"
-                " please set an HVAC mode (e.g. heat/cool) first"
-            )
 
         seconds = int(duration.total_seconds())
         if seconds <= 0 or seconds > MAX_FAN_DURATION:

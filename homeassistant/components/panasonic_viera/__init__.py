@@ -7,7 +7,7 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -32,23 +32,23 @@ type PanasonicVieraConfigEntry = ConfigEntry[Remote]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                        vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+                        probatio.Required(CONF_HOST): cv.string,
+                        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        probatio.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                     }
                 )
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]

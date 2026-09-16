@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass
 import logging
 from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -47,11 +47,11 @@ DEFAULT_NAME = "Template Select"
 
 SCRIPT_FIELDS = (CONF_SELECT_OPTION,)
 
-SELECT_COMMON_SCHEMA = vol.Schema(
+SELECT_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS): cv.template,
-        vol.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_STATE): cv.template,
+        probatio.Required(CONF_OPTIONS): cv.template,
+        probatio.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_STATE): cv.template,
     }
 )
 
