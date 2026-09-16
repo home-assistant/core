@@ -9,6 +9,7 @@ from urllib.parse import quote
 
 from habitron_client import (
     HabitronClient,
+    HabitronConnectionError,
     HabitronError,
     HabitronTimeoutError,
     Router,
@@ -68,18 +69,11 @@ def _area_name(router: Router, area_no: int) -> str:
 
 @dataclass(frozen=True, slots=True)
 class HbtnData:
-    """What one poll found, and the coordinator's change-detection key.
+    """The coordinator's change-detection key.
 
-    Most entities do not wait for this: they subscribe to the model member they
-    render and the library notifies them as soon as its value moves. The
-    coordinator fan-out covers what no member notification carries -- and with
-    ``always_update=False`` it happens only when this value differs from the
-    previous tick.
-
-    Hence both fields. The CRC moves when the bus status does. The host state
-    belongs here because it is not a member value at all: the hub's readings
-    are polled apart from the bus, and their failure is something the entities
-    show rather than something a member reports.
+    With ``always_update=False`` the fan-out happens only when this differs
+    from the previous tick, so anything no member notification carries has to
+    be in here -- which is why the host state travels beside the bus CRC.
     """
 
     crc: int
@@ -422,10 +416,21 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
                 translation_domain=DOMAIN,
                 translation_key="update_timeout",
             ) from err
-        except (OSError, ConnectionError, HabitronError) as err:
+        except (OSError, ConnectionError, HabitronConnectionError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_network_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        except HabitronError as err:
+            # Everything else the library raises is about the answer, not the
+            # connection: a bad marker, an inconsistent frame length, a CRC
+            # that does not match, a module list the bus status contradicts.
+            # Reporting those as a network fault sends the user looking in the
+            # wrong place.
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_protocol_error",
                 translation_placeholders={"error": str(err)},
             ) from err
         # Outside the try: the host readings swallow their own errors, so a

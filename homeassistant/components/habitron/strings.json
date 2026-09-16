@@ -112,6 +112,9 @@
     "update_network_error": {
       "message": "Network error fetching status from SmartHub: {error}"
     },
+    "update_protocol_error": {
+      "message": "SmartHub sent an unusable answer: {error}"
+    },
     "update_timeout": {
       "message": "Timeout fetching system status from SmartHub."
     }

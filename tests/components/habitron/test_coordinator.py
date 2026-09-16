@@ -12,8 +12,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from habitron_client import (
     Area,
     Diagnostic,
+    HabitronBusError,
     HabitronConnectionError,
     HabitronError,
+    HabitronProtocolError,
     HabitronTimeoutError,
     Module,
     Router,
@@ -100,6 +102,9 @@ async def test_update_feeds_the_previous_crc_back(
         (HabitronTimeoutError("no response"), "update_timeout"),
         (OSError("dns down"), "update_network_error"),
         (HabitronConnectionError("bus down"), "update_network_error"),
+        # Not a network fault: the hub answered, the answer was unusable.
+        (HabitronProtocolError("bad marker"), "update_protocol_error"),
+        (HabitronBusError("router error"), "update_protocol_error"),
     ],
 )
 async def test_update_translates_poll_failures(
