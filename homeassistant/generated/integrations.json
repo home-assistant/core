@@ -8530,6 +8530,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "zentraly": {
+      "name": "Zentraly",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "zerproc": {
       "name": "Zerproc",
       "integration_type": "hub",

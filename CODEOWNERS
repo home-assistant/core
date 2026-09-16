@@ -2181,6 +2181,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/zamg/ @killer0071234
 /tests/components/zamg/ @killer0071234
 /homeassistant/components/zengge/ @emontnemery
+/homeassistant/components/zentraly/ @zentralySAU
+/tests/components/zentraly/ @zentralySAU
 /homeassistant/components/zeroconf/ @bdraco
 /tests/components/zeroconf/ @bdraco
 /homeassistant/components/zerproc/ @emlove
