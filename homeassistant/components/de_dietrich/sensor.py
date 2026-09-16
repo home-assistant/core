@@ -173,19 +173,26 @@ SENSOR_DESCRIPTIONS: tuple[DeDietrichSensorDescription, ...] = (
 def _enabled_descriptions(
     coordinator: DeDietrichDataUpdateCoordinator,
 ) -> tuple[DeDietrichSensorDescription, ...]:
-    """Drop descriptions whose component bundle did not answer the first refresh or whose component is iSystem-only on a base-layout boiler."""
+    """Drop descriptions whose bundle is not wired to this boiler. Must match coordinator.child_device_info so a setup-created entity does not flip between boiler and child on every poll."""
     device = coordinator.device
-    updated = coordinator.data.updated
     eligible: list[DeDietrichSensorDescription] = []
     for description in SENSOR_DESCRIPTIONS:
         component = description.component
         if component not in CHILD_COMPONENT_DEVICE_NAMES:
             eligible.append(description)
             continue
-        if component not in updated:
-            continue
-        if component == "circuit_c" and not isinstance(device, DiematicISystem):
-            continue
+        if component == "hot_water":
+            if not device.hot_water_present:
+                continue
+        elif component == "circuit_a":
+            if not device.circuit_a_present:
+                continue
+        elif component == "circuit_b":
+            if not device.circuit_b_present:
+                continue
+        elif component == "circuit_c":
+            if not (isinstance(device, DiematicISystem) and device.circuit_c_present):
+                continue
         eligible.append(description)
     return tuple(eligible)
 

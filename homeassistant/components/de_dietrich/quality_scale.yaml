@@ -68,8 +68,8 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices:
-    status: done
-    comment: A detected heating circuit or hot-water bundle is exposed as a ChildDeviceInfo for that circuit or hot water on the boiler device, so each detected bundle becomes its own child device.
+    status: todo
+    comment: A detected heating circuit or hot-water bundle is exposed as a ChildDeviceInfo for that circuit or hot water on the boiler device, but discovery happens once at config-entry setup. Bundles that become present after setup need a config-entry reload before their child device and sensors appear.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -80,7 +80,7 @@ rules:
   repair-issues: todo
   stale-devices:
     status: exempt
-    comment: A config entry maps to a single boiler removed with the entry, so none become stale.
+    comment: A config entry maps to a single boiler removed with the entry, so the rule's orphan-from-removed-entry path never fires. A child device may vanish mid-life when its bundle stops reporting, while the device-registry row stays until the config entry is removed. That is a presence transition, which a different rule covers.
 
   # Platinum
   async-dependency: done

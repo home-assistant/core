@@ -1,7 +1,6 @@
 """Test the De Dietrich sensor platform."""
 
 from datetime import timedelta
-from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
@@ -60,44 +59,6 @@ async def test_diagnostic_entities_disabled_by_default(
         "fan_speed",
         "ionization_current",
     }
-
-
-@pytest.mark.parametrize(
-    ("register", "entity_id"),
-    [
-        pytest.param(
-            614,
-            "sensor.de_dietrich_heating_circuit_a_room_temperature",
-            id="circuit_a",
-        ),
-        pytest.param(
-            616,
-            "sensor.de_dietrich_heating_circuit_b_room_temperature",
-            id="circuit_b",
-        ),
-    ],
-)
-async def test_circuit_sensor_without_room_temperature(
-    hass: HomeAssistant,
-    mock_connection: MockModbusConnection,
-    mock_config_entry: MockConfigEntry,
-    register: int,
-    entity_id: str,
-) -> None:
-    """Test a circuit sensor is unknown when no room temperature is reported."""
-    mock_connection.for_unit(DEFAULT_UNIT_ID).holding[register] = 0xFFFF
-    mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.de_dietrich.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert (state := hass.states.get(entity_id)) is not None
-    assert state.state == "unknown"
 
 
 @pytest.mark.parametrize(

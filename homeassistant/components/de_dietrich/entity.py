@@ -38,7 +38,10 @@ class DeDietrichEntity(CoordinatorEntity[DeDietrichDataUpdateCoordinator]):
     @property
     @override
     def device_info(self) -> DeviceInfo | ChildDeviceInfo:
-        """Route to a child device when its component bundle is detected, otherwise stay on the main boiler device so a transient miss does not detach the entity."""
+        """Route to the child device for this bundle's component when it reports live readings, otherwise fall back to the boiler device.
+
+        Presence is cached by the dependency, so a transient poll failure does not detach the entity from its child device.
+        """
         coordinator = self.coordinator
         component = self.entity_description.component
         if component in CHILD_COMPONENT_DEVICE_NAMES:
