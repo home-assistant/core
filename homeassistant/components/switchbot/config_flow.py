@@ -113,7 +113,7 @@ class SwitchbotOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
     ) -> dict[str, Any]:
         """Resolve the callback through pySwitchbot's OAuth implementation."""
         try:
-            return await exchange_oauth_code(
+            token = await exchange_oauth_code(
                 async_get_clientsession(self.hass),
                 self.client_id,
                 external_data["state"]["redirect_uri"],
@@ -137,6 +137,11 @@ class SwitchbotOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
             ) from err
         except SwitchbotApiError:
             return {}
+
+        # The shared OAuth flow logs the full mapping when expires_in is missing.
+        if "expires_in" not in token:
+            return {}
+        return token
 
 
 class SwitchbotConfigFlow(

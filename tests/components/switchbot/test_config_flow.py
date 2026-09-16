@@ -2123,6 +2123,76 @@ async def test_encrypted_device_oauth_login(
     assert "token" not in result["data"]
 
 
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("exception", "reason", "description_placeholders"),
+    [
+        pytest.param(
+            SwitchbotAuthenticationError("invalid token"),
+            "oauth_unauthorized",
+            None,
+            id="authentication",
+        ),
+        pytest.param(
+            SwitchbotAccountConnectionError("API unavailable"),
+            "api_error",
+            {"error_detail": "API unavailable"},
+            id="connection",
+        ),
+        pytest.param(
+            SwitchbotApiError("API error"),
+            "api_error",
+            {"error_detail": "API error"},
+            id="api",
+        ),
+        pytest.param(
+            Exception("unexpected"),
+            "unknown",
+            None,
+            id="unknown",
+        ),
+    ],
+)
+async def test_encrypted_device_oauth_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    exception: Exception,
+    reason: str,
+    description_placeholders: dict[str, str] | None,
+) -> None:
+    """Test errors retrieving an encrypted device key with an OAuth token."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=WOLOCK_SERVICE_INFO,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "encrypted_oauth"}
+    )
+    state = _oauth_state(hass, result["flow_id"])
+
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/auth/external/callback?code=authorization-code&state={state}"
+    )
+    assert response.status == 200
+    aioclient_mock.post(
+        OAUTH_TOKEN_URL,
+        json={"access_token": OAUTH_ACCESS_TOKEN, "expires_in": 3600},
+    )
+
+    with patch(
+        "switchbot.SwitchbotLock.async_retrieve_encryption_key_by_token",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert result.get("description_placeholders") == description_placeholders
+
+
 @pytest.mark.usefixtures("current_request_with_host", "mock_scanners_all_passive")
 async def test_oauth_token_reused_for_encrypted_device(
     hass: HomeAssistant,
@@ -2248,6 +2318,32 @@ async def test_oauth_invalid_token_response(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "oauth_error"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_oauth_malformed_library_token_not_logged(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a malformed library response does not expose its access token."""
+    result = await _async_start_user_oauth(hass)
+    state = _oauth_state(hass, result["flow_id"])
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/auth/external/callback?code=authorization-code&state={state}"
+    )
+    assert response.status == 200
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.exchange_oauth_code",
+        return_value={"access_token": OAUTH_ACCESS_TOKEN},
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+    assert OAUTH_ACCESS_TOKEN not in caplog.text
 
 
 @pytest.mark.usefixtures("current_request_with_host")
