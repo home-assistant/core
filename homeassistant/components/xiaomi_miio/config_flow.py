@@ -7,7 +7,7 @@ from typing import Any, override
 
 from micloud import MiCloud
 from micloud.micloudexception import MiCloudAccessDenied
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -42,18 +42,22 @@ from .typing import XiaomiMiioConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_SETTINGS = {
-    vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
+    probatio.Required(CONF_TOKEN): probatio.All(str, probatio.Length(min=32, max=32)),
 }
-DEVICE_CONFIG = vol.Schema({vol.Required(CONF_HOST): str}).extend(DEVICE_SETTINGS)
-DEVICE_MODEL_CONFIG = vol.Schema({vol.Required(CONF_MODEL): vol.In(MODELS_ALL)})
-DEVICE_CLOUD_CONFIG = vol.Schema(
+DEVICE_CONFIG = probatio.Schema({probatio.Required(CONF_HOST): str}).extend(
+    DEVICE_SETTINGS
+)
+DEVICE_MODEL_CONFIG = probatio.Schema(
+    {probatio.Required(CONF_MODEL): probatio.In(MODELS_ALL)}
+)
+DEVICE_CLOUD_CONFIG = probatio.Schema(
     {
-        vol.Optional(CONF_CLOUD_USERNAME): str,
-        vol.Optional(CONF_CLOUD_PASSWORD): str,
-        vol.Optional(CONF_CLOUD_COUNTRY, default=DEFAULT_CLOUD_COUNTRY): vol.In(
-            SERVER_COUNTRY_CODES
-        ),
-        vol.Optional(CONF_MANUAL, default=False): bool,
+        probatio.Optional(CONF_CLOUD_USERNAME): str,
+        probatio.Optional(CONF_CLOUD_PASSWORD): str,
+        probatio.Optional(
+            CONF_CLOUD_COUNTRY, default=DEFAULT_CLOUD_COUNTRY
+        ): probatio.In(SERVER_COUNTRY_CODES),
+        probatio.Optional(CONF_MANUAL, default=False): bool,
     }
 )
 
@@ -85,9 +89,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             if not errors:
                 return self.async_create_entry(title="", data=user_input)
 
-        settings_schema = vol.Schema(
+        settings_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_CLOUD_SUBDEVICES,
                     default=self.config_entry.options.get(CONF_CLOUD_SUBDEVICES, False),
                 ): bool
@@ -314,8 +318,8 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             self.extract_cloud_info(cloud_device)
             return await self.async_step_connect()
 
-        select_schema = vol.Schema(
-            {vol.Required("select_device"): vol.In(list(self.cloud_devices))}
+        select_schema = probatio.Schema(
+            {probatio.Required("select_device"): probatio.In(list(self.cloud_devices))}
         )
 
         return self.async_show_form(
@@ -335,7 +339,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_connect()
 
         if self.host:
-            schema = vol.Schema(DEVICE_SETTINGS)
+            schema = probatio.Schema(DEVICE_SETTINGS)
         else:
             schema = DEVICE_CONFIG
 

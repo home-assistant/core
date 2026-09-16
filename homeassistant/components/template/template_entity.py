@@ -5,8 +5,8 @@ import contextlib
 import logging
 from typing import Any, cast, override
 
+import probatio
 from propcache.api import under_cached_property
-import voluptuous as vol
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
@@ -122,7 +122,7 @@ class _TemplateAttribute:
 
         try:
             validated = self.validator(result)
-        except vol.Invalid as ex:
+        except probatio.Invalid as ex:
             log_validation_error(
                 result, self.template, self._attribute, self._entity.entity_id, ex
             )
@@ -204,7 +204,7 @@ class TemplateEntity(AbstractTemplateEntity):
         # if the entity renders unavailable.
         self._attr_name = None
         for option, attribute, validator in (
-            (CONF_ICON, "_attr_icon", vol.Or(cv.whitespace, cv.icon)),
+            (CONF_ICON, "_attr_icon", probatio.Or(cv.whitespace, cv.icon)),
             (CONF_PICTURE, "_attr_entity_picture", cv.string),
             (CONF_NAME, "_attr_name", cv.string),
         ):
@@ -524,11 +524,11 @@ class TemplateEntity(AbstractTemplateEntity):
                     return
 
                 try:
-                    self._attr_extra_state_attributes = vol.All(
+                    self._attr_extra_state_attributes = probatio.All(
                         dict,
                         validate_attributes(self.entity_id, self._blocked_attributes),
                     )(result)
-                except vol.Invalid as err:
+                except probatio.Invalid as err:
                     log_validation_error(
                         result, template, CONF_ATTRIBUTES, self.entity_id, err
                     )
