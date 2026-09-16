@@ -30,10 +30,12 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
     CONF_ADDRESS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_SENSOR_TYPE,
+    CONF_TOKEN,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -1979,6 +1981,30 @@ async def test_user_show_menu_when_no_scanners(hass: HomeAssistant) -> None:
         CONF_SENSOR_TYPE: "bot",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "token",
+    [
+        pytest.param({}, id="missing-access-token"),
+        pytest.param(
+            {CONF_ACCESS_TOKEN: OAUTH_ACCESS_TOKEN}, id="missing-continuation"
+        ),
+    ],
+)
+async def test_oauth_create_entry_invalid_data(
+    hass: HomeAssistant, token: dict[str, object]
+) -> None:
+    """Test invalid OAuth entry data aborts setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    handler = hass.config_entries.flow._progress[result["flow_id"]]
+
+    result = await handler.async_oauth_create_entry({CONF_TOKEN: token})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_scanners_all_passive")
