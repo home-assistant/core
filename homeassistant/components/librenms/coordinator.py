@@ -102,15 +102,6 @@ class LibrenmsCentralDataUpdateCoordinator(
         device_reg = dr.async_get(self.hass)
         for device in devices:
             identifier = f"{self.config_entry.entry_id}_{device.device_id}"
-            if (
-                device_reg.async_get_device_by_identifier(
-                    identifier=(DOMAIN, identifier),
-                    config_entry_id=self.config_entry.entry_id,
-                )
-                is not None
-            ):
-                continue
-
             sw_version = device.version
             model = None
             if device.os != "ping":
@@ -126,11 +117,6 @@ class LibrenmsCentralDataUpdateCoordinator(
                 name=device.display,
                 model=model,
                 serial_number=device.serial,
-            )
-            self.logger.debug(
-                "Created device entry for new device '%s' (id: %s)",
-                device.display,
-                device.device_id,
             )
 
         return LibrenmsCentralData(system, {dev.device_id: dev for dev in devices})
