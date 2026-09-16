@@ -51,7 +51,16 @@ def mock_login(mock_srp_access_token: str) -> Generator[MagicMock]:
 @pytest.fixture
 def aioclient_mock_fixture(aioclient_mock: AiohttpClientMocker) -> None:
     """Fixture to provide an aioclient mocker."""
-    aioclient_mock.post(OAUTH2_TOKEN_URL, status=HTTPStatus.OK, json={})
+    aioclient_mock.post(
+        OAUTH2_TOKEN_URL,
+        status=HTTPStatus.OK,
+        json={
+            "access_token": "mock-access-token",
+            "refresh_token": "refresh",
+            "token_type": "bearer",
+            "expires_in": 3600,
+        },
+    )
 
 
 @pytest.fixture

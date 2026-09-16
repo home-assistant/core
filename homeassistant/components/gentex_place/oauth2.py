@@ -9,6 +9,7 @@ from place.auth.abstract_auth import AbstractAuth
 from place.config import COGNITO_CLIENT_ID, OAUTH2_TOKEN_URL
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestConnectionError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -76,6 +77,12 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
                 "refresh_token": token["refresh_token"],
             }
         )
+
+        # Merging a response without one would keep the stale access token while
+        # extending its expiry, so the session would never recover.
+        if not new_token.get("access_token"):
+            raise OAuth2TokenRequestConnectionError(domain=self.domain)
+
         return {**token, **new_token}
 
 
