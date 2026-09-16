@@ -652,7 +652,7 @@ async def test_ble_key_fix_flow_checks_the_repaired_vehicle(
             SessionInfoAuthenticationFault(),
             "unknown",
             1,
-            id="session_info_rejected",
+            id="session_info_unauthenticated",
         ),
     ],
 )

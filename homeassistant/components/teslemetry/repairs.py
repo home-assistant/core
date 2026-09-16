@@ -113,14 +113,14 @@ class BluetoothKeyRepairFlow(RepairsFlow):
             )
         try:
             async with asyncio.timeout(BLE_HANDSHAKE_TIMEOUT):
-                # Bypass the router, whose cloud failover would mask a still rejected key.
+                # Call the Bluetooth backend directly so no other backend can answer for it.
                 # Vehicle security owns the key whitelist and answers while the vehicle sleeps.
                 await router.primary.handshakeVehicleSecurity()
         except (
             TimeoutError,
             BluetoothTimeout,
             BluetoothTransportError,
-            # Try again faults, which the vehicle can return for any domain.
+            # Faults the vehicle asks the caller to retry.
             TeslaFleetMessageFaultBusy,
             TeslaFleetMessageFaultInternal,
             TeslaFleetMessageFaultTimeout,
