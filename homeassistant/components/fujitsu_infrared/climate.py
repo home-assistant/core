@@ -313,6 +313,9 @@ class FujitsuAcClimateWithReceiver(
                 self.async_write_ha_state()
             return
 
+        if command.protocol is not self._protocol:
+            return
+
         hvac_mode = _LIB_MODE_TO_HA[command.mode]
         if hvac_mode not in self._attr_hvac_modes:
             return

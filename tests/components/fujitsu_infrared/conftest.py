@@ -12,8 +12,9 @@ from homeassistant.components.fujitsu_infrared.const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
+    PROTOCOL_STANDARD,
 )
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PROTOCOL, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -42,9 +43,15 @@ def has_receiver() -> bool:
 
 
 @pytest.fixture
-def extra_entry_data(hvac_modes: list[HVACMode]) -> dict[str, Any]:
+def protocol() -> str:
+    """Return the protocol configured on the config entry."""
+    return PROTOCOL_STANDARD
+
+
+@pytest.fixture
+def extra_entry_data(hvac_modes: list[HVACMode], protocol: str) -> dict[str, Any]:
     """Return the config entry data beyond the emitter/receiver ids."""
-    return {CONF_HVAC_MODES: hvac_modes}
+    return {CONF_HVAC_MODES: hvac_modes, CONF_PROTOCOL: protocol}
 
 
 @pytest.fixture

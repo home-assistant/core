@@ -36,12 +36,14 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.fujitsu_infrared.climate import FAN_QUIET
-from homeassistant.components.fujitsu_infrared.const import PROTOCOL_EXTENDED
+from homeassistant.components.fujitsu_infrared.const import (
+    PROTOCOL_EXTENDED,
+    PROTOCOL_STANDARD,
+)
 from homeassistant.components.infrared import InfraredReceivedSignal
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
-    CONF_PROTOCOL,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -214,7 +216,7 @@ async def test_set_temperature_sends_command_when_active(
     assert state.attributes[ATTR_TEMPERATURE] == 26.0
 
 
-@pytest.mark.parametrize("extra_entry_data", [{CONF_PROTOCOL: PROTOCOL_EXTENDED}])
+@pytest.mark.parametrize("protocol", [PROTOCOL_EXTENDED])
 @pytest.mark.usefixtures("init_integration")
 async def test_extended_protocol_offers_half_degree_steps(hass: HomeAssistant) -> None:
     """Test a half-degree remote advertises the step it can actually send."""
@@ -223,7 +225,7 @@ async def test_extended_protocol_offers_half_degree_steps(hass: HomeAssistant) -
     assert state.attributes["target_temp_step"] == 0.5
 
 
-@pytest.mark.parametrize("extra_entry_data", [{CONF_PROTOCOL: PROTOCOL_EXTENDED}])
+@pytest.mark.parametrize("protocol", [PROTOCOL_EXTENDED])
 @pytest.mark.usefixtures("init_integration")
 async def test_extended_protocol_sends_half_degrees(
     hass: HomeAssistant, mock_infrared_emitter_entity: MockInfraredEmitterEntity
@@ -250,15 +252,13 @@ async def test_extended_protocol_sends_half_degrees(
 
 
 @pytest.mark.parametrize(
-    ("extra_entry_data", "requested", "expected"),
+    ("protocol", "requested", "expected"),
     [
-        pytest.param({}, 24.5, 24.0, id="standard_rounds_a_half_degree_away"),
         pytest.param(
-            {CONF_PROTOCOL: PROTOCOL_EXTENDED}, 24.2, 24.0, id="extended_rounds_down"
+            PROTOCOL_STANDARD, 24.5, 24.0, id="standard_rounds_a_half_degree_away"
         ),
-        pytest.param(
-            {CONF_PROTOCOL: PROTOCOL_EXTENDED}, 24.4, 24.5, id="extended_rounds_up"
-        ),
+        pytest.param(PROTOCOL_EXTENDED, 24.2, 24.0, id="extended_rounds_down"),
+        pytest.param(PROTOCOL_EXTENDED, 24.4, 24.5, id="extended_rounds_up"),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -538,7 +538,7 @@ async def test_receiver_updates_state_on_cool_signal(
     assert state.attributes[ATTR_SWING_MODE] == SWING_BOTH
 
 
-@pytest.mark.parametrize("extra_entry_data", [{CONF_PROTOCOL: PROTOCOL_EXTENDED}])
+@pytest.mark.parametrize("protocol", [PROTOCOL_EXTENDED])
 @pytest.mark.parametrize("has_receiver", [True])
 @pytest.mark.usefixtures("init_integration")
 async def test_receiver_converts_a_fahrenheit_signal(
@@ -611,6 +611,34 @@ async def test_receiver_ignores_unconfigured_hvac_mode(
             timings=FujitsuAcCommand(
                 mode=FujitsuAcMode.HEAT,
                 temperature=24,
+                fan=FujitsuAcFanSpeed.HIGH,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_FAN_MODE] == FAN_AUTO
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_ignores_another_protocol_family(
+    hass: HomeAssistant, mock_infrared_receiver_entity: MockInfraredReceiverEntity
+) -> None:
+    """Test a frame from the other remote family does not change state.
+
+    The entry is configured for the standard protocol, so an extended frame belongs to
+    a different unit and the configured one ignores it too.
+    """
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=FujitsuAcCommand(
+                protocol=FujitsuAcProtocol.EXTENDED,
+                mode=FujitsuAcMode.COOL,
+                temperature=29,
                 fan=FujitsuAcFanSpeed.HIGH,
             ).get_raw_timings()
         )
