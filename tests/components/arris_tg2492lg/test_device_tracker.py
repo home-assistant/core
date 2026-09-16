@@ -79,11 +79,16 @@ async def test_device_tracker_two_entries_same_mac(
         data={CONF_HOST: "192.168.178.2", CONF_PASSWORD: "password"},
     )
     mock_config_entry.add_to_hass(hass)
-    second_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # A second router seeing the same device must not take over its tracker.
+    second_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert second_entry.state is ConfigEntryState.LOADED
 
     entities = [
