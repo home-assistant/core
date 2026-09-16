@@ -17,7 +17,7 @@ from async_upnp_client.exceptions import (
 )
 from async_upnp_client.profiles.dlna import DmrDevice
 from async_upnp_client.utils import async_get_local_ip
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -380,7 +380,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         # media_id should only be a channel number
         try:
             cv.positive_int(media_id)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             LOGGER.error("Media ID must be positive integer")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

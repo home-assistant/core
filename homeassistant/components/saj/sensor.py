@@ -2,8 +2,8 @@
 
 from typing import override
 
+import probatio
 import pysaj
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -48,11 +48,13 @@ SAJ_UNIT_MAPPINGS = {
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_TYPE, default=CONNECTION_TYPES[0]): vol.In(CONNECTION_TYPES),
-        vol.Inclusive(CONF_USERNAME, "credentials"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "credentials"): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_TYPE, default=CONNECTION_TYPES[0]): probatio.In(
+            CONNECTION_TYPES
+        ),
+        probatio.Inclusive(CONF_USERNAME, "credentials"): cv.string,
+        probatio.Inclusive(CONF_PASSWORD, "credentials"): cv.string,
     }
 )
 

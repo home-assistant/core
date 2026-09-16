@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, State
@@ -37,12 +37,12 @@ class SetTemperatureIntent(intent.IntentHandler):
     intent_type = INTENT_SET_TEMPERATURE
     description = "Sets the target temperature of a climate device or entity"
     slot_schema = {
-        vol.Required("temperature"): vol.Coerce(float),
-        vol.Optional("area"): intent.non_empty_string,
-        vol.Optional("name"): intent.non_empty_string,
-        vol.Optional("floor"): intent.non_empty_string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Required("temperature"): probatio.Coerce(float),
+        probatio.Optional("area"): intent.non_empty_string,
+        probatio.Optional("name"): intent.non_empty_string,
+        probatio.Optional("floor"): intent.non_empty_string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {DOMAIN}
 
@@ -118,12 +118,12 @@ class SetFanModeIntent(intent.IntentHandler):
     intent_type = INTENT_SET_FAN_MODE
     description = "Sets the fan mode of a climate device or entity"
     slot_schema = {
-        vol.Required("fan_mode"): intent.non_empty_string,
-        vol.Optional("area"): intent.non_empty_string,
-        vol.Optional("name"): intent.non_empty_string,
-        vol.Optional("floor"): intent.non_empty_string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Required("fan_mode"): intent.non_empty_string,
+        probatio.Optional("area"): intent.non_empty_string,
+        probatio.Optional("name"): intent.non_empty_string,
+        probatio.Optional("floor"): intent.non_empty_string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {DOMAIN}
 

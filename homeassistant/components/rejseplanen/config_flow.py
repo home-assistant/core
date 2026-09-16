@@ -2,13 +2,13 @@
 
 from typing import Any, override
 
+import probatio
 from py_rejseplan.api.departures import DeparturesAPIClient as Rejseplanen
 from py_rejseplan.dataclasses.transport_mappings import DEPARTURE_TYPE_TO_CLASS
 from py_rejseplan.exceptions import (
     APIError as RejseplanenAPIError,
     ConnectionError as RejseplanenConnectionError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -40,27 +40,27 @@ from .const import (
     DOMAIN,
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY, default=""): str,
+        probatio.Required(CONF_API_KEY, default=""): str,
     }
 )
 
-CONFIG_STOP_SCHEMA = vol.Schema(
+CONFIG_STOP_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_STOP_ID): NumberSelector(
+        probatio.Required(CONF_STOP_ID): NumberSelector(
             NumberSelectorConfig(
                 mode=NumberSelectorMode.BOX, min=1, max=999999999, step=1
             ),
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_STOP_NAME): str,  # pylint: disable=home-assistant-config-flow-name-field
-        vol.Optional(CONF_DIRECTION, default=[]): TextSelector(
+        probatio.Optional(CONF_NAME, default=DEFAULT_STOP_NAME): str,  # pylint: disable=home-assistant-config-flow-name-field
+        probatio.Optional(CONF_DIRECTION, default=[]): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 multiple=True,
             )
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_DEPARTURE_TYPE,
             default=[],
         ): SelectSelector(

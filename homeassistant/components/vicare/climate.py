@@ -4,6 +4,7 @@ from contextlib import suppress
 import logging
 from typing import Any, override
 
+import probatio
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
@@ -11,7 +12,6 @@ from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareNotSupportedFeatureError,
 )
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -102,7 +102,7 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_VICARE_MODE,
-        {vol.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): cv.string},
+        {probatio.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): cv.string},
         "set_vicare_mode",
     )
 

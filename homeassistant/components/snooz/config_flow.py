@@ -4,8 +4,8 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any, override
 
+import probatio
 from pysnooz.advertisement import SnoozAdvertisementData
-import voluptuous as vol
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -116,11 +116,11 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
                     # Name field is no longer allowed in config flow schemas
                     # pylint: disable-next=home-assistant-config-flow-name-field
-                    vol.Required(CONF_NAME): vol.In(
+                    probatio.Required(CONF_NAME): probatio.In(
                         [
                             d.device.display_name
                             for d in self._discovered_devices.values()

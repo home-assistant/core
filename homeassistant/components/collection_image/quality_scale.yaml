@@ -92,9 +92,7 @@ rules:
   icon-translations:
     status: exempt
     comment: No meaningful icon translations for an image entity.
-  reconfiguration-flow:
-    status: exempt
-    comment: Nothing to reconfigure.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: Nothing to repair.

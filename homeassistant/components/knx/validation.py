@@ -6,7 +6,7 @@ import ipaddress
 import math
 from typing import Any
 
-import voluptuous as vol
+import probatio
 from xknx.dpt import DPTBase, DPTNumeric, DPTString
 from xknx.exceptions import CouldNotParseAddress
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
@@ -20,10 +20,15 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     STATE_CLASS_UNITS,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_UNIT_OF_MEASUREMENT,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.helpers import config_validation as cv
 
-from .const import NumberConf
+from .const import PLATFORMS_WITHOUT_CONFIG_CATEGORY, NumberConf
 from .dpt import DPTInfo, get_supported_dpts
 
 
@@ -37,7 +42,7 @@ def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str
             and dpt_base_class.parse_transcoder(value) is not None
         ):
             return value
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"type '{value}' is not a valid DPT identifier for"
             f" {dpt_base_class.__name__}."
         )
@@ -48,20 +53,52 @@ def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str
 dpt_base_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
 numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[type-abstract]
 string_type_validator = dpt_subclass_validator(DPTString)
-sensor_type_validator = vol.Any(numeric_type_validator, string_type_validator)
+sensor_type_validator = probatio.Any(numeric_type_validator, string_type_validator)
+
+
+def entity_category_validator(
+    platform: Platform,
+) -> Callable[[Any], EntityCategory | None]:
+    """Validate the entity category is supported by the platform.
+
+    Works for both, UI and YAML configuration schema.
+    """
+    valid_categories = set(EntityCategory)
+    if platform in PLATFORMS_WITHOUT_CONFIG_CATEGORY:
+        valid_categories -= {EntityCategory.CONFIG}
+
+    def validate(value: Any) -> EntityCategory | None:
+        """Validate the entity category."""
+        if value is None or value == "":  # UI sends an empty value to clear it
+            return None
+        try:
+            entity_category = EntityCategory(value)
+        except ValueError:
+            raise probatio.Invalid(
+                f"'{value}' is not a valid entity category"
+            ) from None
+        if entity_category not in valid_categories:
+            _options = ", ".join(sorted(valid_categories))
+            raise probatio.Invalid(
+                f"Entity category '{entity_category}' is not supported by the"
+                f" {platform} platform. Valid options are: {_options}"
+            )
+        return entity_category
+
+    return validate
 
 
 def ga_validator(value: Any) -> str | int:
     """Validate that value is parsable as GroupAddress or InternalGroupAddress."""
     if not isinstance(value, (str, int)):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'{value}' is not a valid KNX group address:"
             f" Invalid type '{type(value).__name__}'"
         )
     try:
         parse_device_group_address(value)
     except CouldNotParseAddress as exc:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'{value}' is not a valid KNX group address: {exc.message}"
         ) from exc
     return value
@@ -69,28 +106,34 @@ def ga_validator(value: Any) -> str | int:
 
 def maybe_ga_validator(value: Any) -> str | int | None:
     """Validate a group address or None."""
-    # this is a version of vol.Maybe(ga_validator) that delivers the
+    # this is a version of probatio.Maybe(ga_validator) that delivers the
     # error message of ga_validator if validation fails.
     return ga_validator(value) if value is not None else None
 
 
-ga_list_validator = vol.All(
+ga_list_validator = probatio.All(
     cv.ensure_list,
     [ga_validator],
-    vol.IsTrue("value must be a group address or a list containing group addresses"),
+    probatio.IsTrue(
+        "value must be a group address or a list containing group addresses"
+    ),
 )
 
-ga_list_validator_optional = vol.Maybe(
-    vol.All(
+ga_list_validator_optional = probatio.Maybe(
+    probatio.All(
         cv.ensure_list,
         [ga_validator],
-        vol.Any(vol.IsTrue(), vol.SetTo(None)),  # avoid empty lists -> None
+        probatio.Any(
+            probatio.IsTrue(), probatio.SetTo(None)
+        ),  # avoid empty lists -> None
     )
 )
 
-ia_validator = vol.Any(
-    vol.All(str, str.strip, cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern)),
-    vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+ia_validator = probatio.Any(
+    probatio.All(
+        str, str.strip, cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern)
+    ),
+    probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=65535)),
     msg=(
         "value does not match pattern for KNX individual address"
         " '<area>.<line>.<device>' (eg.'1.1.100')"
@@ -106,30 +149,34 @@ def ip_v4_validator(value: Any, multicast: bool | None = None) -> str:
     try:
         address = ipaddress.IPv4Address(value)
     except ipaddress.AddressValueError as ex:
-        raise vol.Invalid(f"value '{value}' is not a valid IPv4 address: {ex}") from ex
+        raise probatio.Invalid(
+            f"value '{value}' is not a valid IPv4 address: {ex}"
+        ) from ex
     if multicast is not None and address.is_multicast != multicast:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"value '{value}' is not a valid IPv4"
             f" {'multicast' if multicast else 'unicast'} address"
         )
     return str(address)
 
 
-sync_state_validator = vol.Any(
-    vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
+sync_state_validator = probatio.Any(
+    probatio.All(probatio.Coerce(int), probatio.Range(min=2, max=1440)),
     cv.boolean,
     cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
 )
 
 # entities having a writable group address can omit the state address
 # instead of disabling state updates entirely
-sync_state_no_false_validator = vol.All(
+sync_state_no_false_validator = probatio.All(
     sync_state_validator,
-    vol.IsTrue("Sync state can not be disabled for this platform"),
+    probatio.IsTrue("Sync state can not be disabled for this platform"),
 )
 
 
-def backwards_compatible_xknx_climate_enum_member(enumClass: type[Enum]) -> vol.All:
+def backwards_compatible_xknx_climate_enum_member(
+    enumClass: type[Enum],
+) -> probatio.All:
     """Transform a string to an enum member.
 
     Backwards compatible with member names of xknx 2.x climate DPT Enums
@@ -143,7 +190,7 @@ def backwards_compatible_xknx_climate_enum_member(enumClass: type[Enum]) -> vol.
         looked like `FAN_ONLY = "Fan only"`, therefore the upper & replace part.
         """
         if not isinstance(value, str):
-            raise vol.Invalid("value should be a string")
+            raise probatio.Invalid("value should be a string")
         name = value.upper().replace(" ", "_")
         match name:
             case "NIGHT":
@@ -155,9 +202,9 @@ def backwards_compatible_xknx_climate_enum_member(enumClass: type[Enum]) -> vol.
             case _:
                 return name
 
-    return vol.All(
+    return probatio.All(
         _string_transform,
-        vol.In(enumClass.__members__),
+        probatio.In(enumClass.__members__),
         enumClass.__getitem__,
     )
 
@@ -178,29 +225,29 @@ def validate_number_attributes(
     # Infinity is not supported by Home Assistant frontend so user defined
     # config is required if xknx DPTNumeric subclass defines it as limit.
     if min_config is None and transcoder.value_min == -math.inf:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'min' key required for {_dpt_error_str}",
             path=[NumberConf.MIN],
         )
     if min_config is not None and min_config < transcoder.value_min:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'min: {min_config}' undercuts possible minimum"
             f" of {_dpt_error_str}: {transcoder.value_min}",
             path=[NumberConf.MIN],
         )
     if max_config is None and transcoder.value_max == math.inf:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'max' key required for {_dpt_error_str}",
             path=[NumberConf.MAX],
         )
     if max_config is not None and max_config > transcoder.value_max:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'max: {max_config}' exceeds possible maximum"
             f" of {_dpt_error_str}: {transcoder.value_max}",
             path=[NumberConf.MAX],
         )
     if step_config is not None and step_config < transcoder.resolution:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'step: {step_config}' undercuts possible minimum step"
             f" of {_dpt_error_str}: {transcoder.resolution}",
             path=[NumberConf.STEP],
@@ -223,7 +270,7 @@ def validate_number_attributes(
         and unit_of_measurement not in d_c_units
     ):
         _options = ", ".join(sorted(map(str, d_c_units), key=str.casefold))
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Unit of measurement '{unit_of_measurement}'"
             f" is not valid for device class"
             f" '{device_class}'."
@@ -265,7 +312,7 @@ def validate_sensor_attributes(
         and state_class not in state_classes
     ):
         _options = ", ".join(sorted(map(str, state_classes), key=str.casefold))
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"State class '{state_class}' is not valid"
             f" for device class '{device_class}'."
             f" Valid options are: {_options}",
@@ -277,7 +324,7 @@ def validate_sensor_attributes(
         and unit_of_measurement not in d_c_units
     ):
         _options = ", ".join(sorted(map(str, d_c_units), key=str.casefold))
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Unit of measurement '{unit_of_measurement}'"
             f" is not valid for device class"
             f" '{device_class}'."
@@ -294,7 +341,7 @@ def validate_sensor_attributes(
         and unit_of_measurement not in s_c_units
     ):
         _options = ", ".join(sorted(map(str, s_c_units), key=str.casefold))
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Unit of measurement '{unit_of_measurement}'"
             f" is not valid for state class"
             f" '{state_class}'."

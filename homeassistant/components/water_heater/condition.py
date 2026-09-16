@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_OPTIONS, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
@@ -25,9 +25,9 @@ ATTR_OPERATION_MODE = "operation_mode"
 
 _OPERATION_MODE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(ATTR_OPERATION_MODE): vol.All(
-                cv.ensure_list, vol.Length(min=1), [str]
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(ATTR_OPERATION_MODE): probatio.All(
+                cv.ensure_list, probatio.Length(min=1), [str]
             ),
         },
     }

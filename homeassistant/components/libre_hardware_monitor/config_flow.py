@@ -11,7 +11,7 @@ from librehardwaremonitor_api import (
     LibreHardwareMonitorUnauthorizedError,
 )
 from librehardwaremonitor_api.model import LibreHardwareMonitorData
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -25,17 +25,17 @@ from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 

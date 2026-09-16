@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -33,15 +33,17 @@ from .const import (
     SERVICE_REMOVE_URL,
 )
 
-SERVICE_URL_SCHEMA = vol.Schema({vol.Required(CONF_URL): vol.Any(cv.url, cv.path)})
-SERVICE_ADD_URL_SCHEMA = vol.Schema(
+SERVICE_URL_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_URL): probatio.Any(cv.url, cv.path)}
+)
+SERVICE_ADD_URL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_URL): vol.Any(cv.url, cv.path),
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(CONF_URL): probatio.Any(cv.url, cv.path),
     }
 )
-SERVICE_REFRESH_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_FORCE, default=False): cv.boolean}
+SERVICE_REFRESH_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_FORCE, default=False): cv.boolean}
 )
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)

@@ -1,6 +1,6 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import ATTR_COMMAND
@@ -24,7 +24,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_GET_COMMAND,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Required(ATTR_COMMAND): cv.string},
+        schema={probatio.Required(ATTR_COMMAND): cv.string},
         func=f"async_{SERVICE_GET_COMMAND}",
     )
     service.async_register_platform_entity_service(
@@ -32,7 +32,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_DYNAMIC_EQ,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Required(ATTR_DYNAMIC_EQ): cv.boolean},
+        schema={probatio.Required(ATTR_DYNAMIC_EQ): cv.boolean},
         func=f"async_{SERVICE_SET_DYNAMIC_EQ}",
     )
     service.async_register_platform_entity_service(

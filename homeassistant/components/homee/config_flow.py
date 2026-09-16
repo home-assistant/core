@@ -4,12 +4,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pyHomee import (
     Homee,
     HomeeAuthFailedException as HomeeAuthenticationFailedException,
     HomeeConnectionFailedException,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -29,11 +29,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-AUTH_SCHEMA = vol.Schema(
+AUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -179,10 +179,10 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -237,10 +237,12 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=self._reauth_username): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(
+                        CONF_USERNAME, default=self._reauth_username
+                    ): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             description_placeholders={
@@ -287,9 +289,9 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
                     ): str
                 }

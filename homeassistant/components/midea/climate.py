@@ -718,7 +718,7 @@ class MideaFBClimate(MideaClimate):
     ) -> None:
         """Midea FB Climate entity init."""
         super().__init__(device, description)
-        self._attr_preset_modes: list[str] = self._device.modes
+        self._attr_preset_modes: list[str] = cast(list[str], self._device.modes)
 
     @property
     @override

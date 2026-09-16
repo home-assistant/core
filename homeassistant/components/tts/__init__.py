@@ -19,8 +19,8 @@ from typing import Any, Final, Protocol
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
@@ -125,7 +125,7 @@ _RE_VOICE_FILE = re.compile(
 )
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
 
-SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
+SCHEMA_SERVICE_CLEAR_CACHE = probatio.Schema({})
 
 FFMPEG_CHUNK_SIZE: Final[int] = 4096
 
@@ -448,11 +448,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         "speak",
         {
-            vol.Required(ATTR_MEDIA_PLAYER_ENTITY_ID): cv.comp_entity_ids,
-            vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_CACHE, default=DEFAULT_CACHE): cv.boolean,
-            vol.Optional(ATTR_LANGUAGE): cv.string,
-            vol.Optional(ATTR_OPTIONS): dict,
+            probatio.Required(ATTR_MEDIA_PLAYER_ENTITY_ID): cv.comp_entity_ids,
+            probatio.Required(ATTR_MESSAGE): cv.string,
+            probatio.Optional(ATTR_CACHE, default=DEFAULT_CACHE): cv.boolean,
+            probatio.Optional(ATTR_LANGUAGE): cv.string,
+            probatio.Optional(ATTR_OPTIONS): dict,
         },
         "async_speak",
     )
@@ -1375,8 +1375,8 @@ class TextToSpeechView(HomeAssistantView):
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/list",
-        vol.Optional("country"): str,
-        vol.Optional("language"): str,
+        probatio.Optional("country"): str,
+        probatio.Optional("language"): str,
     }
 )
 @callback
@@ -1427,7 +1427,7 @@ def websocket_list_engines(
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/get",
-        vol.Required("engine_id"): str,
+        probatio.Required("engine_id"): str,
     }
 )
 @callback
@@ -1472,8 +1472,8 @@ def websocket_get_engine(
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/voices",
-        vol.Required("engine_id"): str,
-        vol.Required("language"): str,
+        probatio.Required("engine_id"): str,
+        probatio.Required("language"): str,
     }
 )
 @callback

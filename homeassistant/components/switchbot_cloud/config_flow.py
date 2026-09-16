@@ -3,12 +3,12 @@
 from logging import getLogger
 from typing import Any, override
 
+import probatio
 from switchbot_api import (
     SwitchBotAPI,
     SwitchBotAuthenticationError,
     SwitchBotConnectionError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
@@ -17,10 +17,10 @@ from .const import DOMAIN, ENTRY_TITLE
 
 _LOGGER = getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_TOKEN): str,
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_API_TOKEN): str,
+        probatio.Required(CONF_API_KEY): str,
     }
 )
 

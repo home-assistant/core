@@ -1,6 +1,6 @@
 """MediaPlayer platform for Roon integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -21,6 +21,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_TRANSFER,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Required(ATTR_TRANSFER): cv.entity_id},
+        schema={probatio.Required(ATTR_TRANSFER): cv.entity_id},
         func="async_transfer",
     )

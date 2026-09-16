@@ -15,7 +15,7 @@ from midealocal.device import MideaDevice
 from midealocal.devices import device_selector
 from midealocal.discover import discover
 from midealocal.exceptions import MideaCloudError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -241,11 +241,11 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         error: str | None = None,
     ) -> ConfigFlowResult:
         """Show the login form, retaining any previously entered values."""
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_ACCOUNT): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(
+                probatio.Required(CONF_ACCOUNT): str,
+                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(
                     CONF_SERVER,
                     default=default_server,
                 ): SelectSelector(
@@ -292,9 +292,9 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_method",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "login_mode",
                         default=LOGIN_MODE_PRESET,
                     ): SelectSelector(
@@ -381,8 +381,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         # show discovery device input form with auto or ip address in web UI
         return self.async_show_form(
             step_id="search",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_IP_ADDRESS, default="auto"): str},
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_IP_ADDRESS, default="auto"): str},
             ),
             errors={"base": error} if error else None,
         )
@@ -592,12 +592,12 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         # show available device list in UI
         return self.async_show_form(
             step_id="auto",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_DEVICE,
                         default=next(iter(self.available_device.keys())),
-                    ): vol.In(self.available_device),
+                    ): probatio.In(self.available_device),
                 },
             ),
             **self._form_error(error),
@@ -804,9 +804,9 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_IP_ADDRESS,
                         default=(user_input or entry.data)[CONF_IP_ADDRESS],
                     ): str
@@ -822,43 +822,43 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show the manual step form, retaining any previously entered values."""
         protocol = self.found_device.get(CONF_PROTOCOL)
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_DEVICE_ID,
                     default=self.found_device.get(CONF_DEVICE_ID),
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_TYPE,
                     default=(self.found_device.get(CONF_TYPE) or DeviceType.AC),
-                ): vol.In(self.supports),
-                vol.Required(
+                ): probatio.In(self.supports),
+                probatio.Required(
                     CONF_IP_ADDRESS,
                     default=self.found_device.get(CONF_IP_ADDRESS),
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_PORT,
                     default=(self.found_device.get(CONF_PORT) or 6444),
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_PROTOCOL,
                     default=(protocol or ProtocolVersion.V3),
-                ): vol.In(
+                ): probatio.In(
                     [protocol] if protocol else ProtocolVersion,
                 ),
-                vol.Required(
+                probatio.Required(
                     CONF_MODEL,
                     default=(self.found_device.get(CONF_MODEL) or "Unknown"),
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_SUBTYPE,
                     default=(self.found_device.get(CONF_SUBTYPE) or 0),
                 ): int,
-                vol.Optional(
+                probatio.Optional(
                     CONF_TOKEN,
                     default=(self.found_device.get(CONF_TOKEN) or ""),
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_KEY,
                     default=(self.found_device.get(CONF_KEY) or ""),
                 ): str,

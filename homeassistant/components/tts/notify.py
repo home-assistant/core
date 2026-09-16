@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
@@ -22,17 +22,19 @@ ENTITY_LEGACY_PROVIDER_GROUP = "entity_or_legacy_provider"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     cv.has_at_least_one_key(CONF_TTS_SERVICE, CONF_ENTITY_ID),
     NOTIFY_PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Exclusive(CONF_TTS_SERVICE, ENTITY_LEGACY_PROVIDER_GROUP): cv.entity_id,
-            vol.Exclusive(
+            probatio.Required(CONF_NAME): cv.string,
+            probatio.Exclusive(
+                CONF_TTS_SERVICE, ENTITY_LEGACY_PROVIDER_GROUP
+            ): cv.entity_id,
+            probatio.Exclusive(
                 CONF_ENTITY_ID, ENTITY_LEGACY_PROVIDER_GROUP
             ): cv.entities_domain(DOMAIN),
-            vol.Required(CONF_MEDIA_PLAYER): cv.entity_id,
-            vol.Optional(ATTR_LANGUAGE): cv.string,
+            probatio.Required(CONF_MEDIA_PLAYER): cv.entity_id,
+            probatio.Optional(ATTR_LANGUAGE): cv.string,
         }
     ),
 )

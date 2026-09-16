@@ -1,7 +1,7 @@
 """Tests for the llm helpers."""
 
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import probatio
 import pytest
@@ -141,6 +141,75 @@ async def test_call_tool_no_existing(
         await instance.async_call_tool(
             llm.ToolInput("test_tool", {}),
         )
+
+
+async def test_call_non_intent_tool_preserves_blank_arguments(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test blank arguments are preserved for non-intent tools."""
+    tool_args = {"name": "", "response": " ", "other": None}
+    tool = MagicMock(spec=llm.Tool)
+    tool.name = "test_tool"
+    tool.async_call = AsyncMock(return_value={"tool_args": tool_args})
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    result = await instance.async_call_tool(llm.ToolInput(tool.name, tool_args))
+
+    assert result == {"tool_args": tool_args}
+    assert tool.async_call.await_args.args[1].tool_args is tool_args
+
+
+@pytest.mark.parametrize("namespaced", [False, True])
+async def test_intent_tool_omits_blank_arguments(
+    hass: HomeAssistant, llm_context: llm.LLMContext, namespaced: bool
+) -> None:
+    """Test direct and namespaced intent tools omit blank arguments."""
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "test_intent"
+        slot_schema = {
+            probatio.Optional("name"): intent.non_empty_string,
+            probatio.Optional("response"): cv.string,
+            probatio.Optional("count"): probatio.Coerce(int),
+            probatio.Optional("enabled"): cv.boolean,
+        }
+
+    intent_tool = llm.IntentTool("test_intent", MyIntentHandler())
+    tool: llm.Tool = (
+        llm.NamespacedTool("test_api", intent_tool) if namespaced else intent_tool
+    )
+    tool_args = {
+        "name": "",
+        "response": " \t",
+        "other": None,
+        "count": 0,
+        "enabled": False,
+    }
+    tool_input = llm.ToolInput(tool.name, tool_args)
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+    intent_response = intent.IntentResponse("*")
+
+    with patch(
+        "homeassistant.helpers.intent.async_handle", return_value=intent_response
+    ) as mock_intent_handle:
+        await instance.async_call_tool(tool_input)
+
+    assert mock_intent_handle.await_args.kwargs["slots"] == {
+        "count": {"value": 0},
+        "enabled": {"value": False},
+    }
+    assert tool_input.tool_args is tool_args
+    assert tool_args == {
+        "name": "",
+        "response": " \t",
+        "other": None,
+        "count": 0,
+        "enabled": False,
+    }
 
 
 async def test_assist_api(

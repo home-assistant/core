@@ -1,6 +1,6 @@
 """Provides device conditions for sensors."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
@@ -159,11 +159,11 @@ ENTITY_CONDITIONS = {
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_VALUE}],
 }
 
-CONDITION_SCHEMA = vol.All(
+CONDITION_SCHEMA = probatio.All(
     cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            vol.Required(CONF_TYPE): vol.In(
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+            probatio.Required(CONF_TYPE): probatio.In(
                 [
                     CONF_IS_ABSOLUTE_HUMIDITY,
                     CONF_IS_APPARENT_POWER,
@@ -224,8 +224,8 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_VALUE,
                 ]
             ),
-            vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(float)),
-            vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(float)),
+            probatio.Optional(CONF_BELOW): probatio.Any(probatio.Coerce(float)),
+            probatio.Optional(CONF_ABOVE): probatio.Any(probatio.Coerce(float)),
         }
     ),
     cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
@@ -295,7 +295,7 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List condition capabilities."""
 
     try:
@@ -310,14 +310,14 @@ async def async_get_condition_capabilities(
         )
 
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_ABOVE, description={"suffix": unit_of_measurement}
-                ): vol.Coerce(float),
-                vol.Optional(
+                ): probatio.Coerce(float),
+                probatio.Optional(
                     CONF_BELOW, description={"suffix": unit_of_measurement}
-                ): vol.Coerce(float),
+                ): probatio.Coerce(float),
             }
         )
     }

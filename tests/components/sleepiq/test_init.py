@@ -10,6 +10,7 @@ from asyncsleepiq import (
     SleepData,
     SleepIQAPIException,
     SleepIQBed,
+    SleepIQConnectionException,
     SleepIQFoundation,
     SleepIQLoginException,
     SleepIQSleeper,
@@ -80,6 +81,18 @@ async def test_entry_setup_timeout_error(
     mock_asyncsleepiq.login.side_effect = SleepIQTimeoutException
     entry = await setup_platform(hass, None)
     assert not await hass.config_entries.async_setup(entry.entry_id)
+
+
+async def test_entry_setup_connection_error(
+    hass: HomeAssistant, mock_asyncsleepiq: MagicMock
+) -> None:
+    """Test that a transient connection failure retries instead of triggering reauth."""
+    mock_asyncsleepiq.login.side_effect = SleepIQConnectionException(
+        "Connection failure: DNS resolution failed"
+    )
+    entry = await setup_platform(hass, None)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_update_interval(hass: HomeAssistant, mock_asyncsleepiq) -> None:

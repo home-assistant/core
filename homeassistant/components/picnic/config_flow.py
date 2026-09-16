@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from python_picnic_api2 import PicnicAPI
 from python_picnic_api2.session import (
     Picnic2FAError,
@@ -11,7 +12,6 @@ from python_picnic_api2.session import (
     PicnicAuthError,
 )
 import requests
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -33,19 +33,19 @@ _LOGGER = logging.getLogger(__name__)
 CONF_2FA_CODE = "two_fa_code"
 CONF_2FA_CHANNEL = "two_fa_channel"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_COUNTRY_CODE, default=COUNTRY_CODES[0]): vol.In(
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_COUNTRY_CODE, default=COUNTRY_CODES[0]): probatio.In(
             COUNTRY_CODES
         ),
     }
 )
 
-STEP_2FA_CHANNEL_SCHEMA = vol.Schema(
+STEP_2FA_CHANNEL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_2FA_CHANNEL, default=TWO_FA_CHANNELS[0]): SelectSelector(
+        probatio.Required(CONF_2FA_CHANNEL, default=TWO_FA_CHANNELS[0]): SelectSelector(
             SelectSelectorConfig(
                 options=TWO_FA_CHANNELS,
                 mode=SelectSelectorMode.LIST,
@@ -55,9 +55,9 @@ STEP_2FA_CHANNEL_SCHEMA = vol.Schema(
     }
 )
 
-STEP_2FA_SCHEMA = vol.Schema(
+STEP_2FA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_2FA_CODE): str,
+        probatio.Required(CONF_2FA_CODE): str,
     }
 )
 

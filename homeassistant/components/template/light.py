@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -106,31 +106,31 @@ SCRIPT_FIELDS = (
     CONF_XY_ACTION,
 )
 
-LIGHT_COMMON_SCHEMA = vol.Schema(
+LIGHT_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
-        vol.Inclusive(CONF_EFFECT_LIST, "effect"): cv.template,
-        vol.Inclusive(CONF_EFFECT, "effect"): cv.template,
-        vol.Optional(CONF_HS_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_HS): cv.template,
-        vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_LEVEL): cv.template,
-        vol.Optional(CONF_MAX_MIREDS): cv.template,
-        vol.Optional(CONF_MIN_MIREDS): cv.template,
-        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_RGB): cv.template,
-        vol.Optional(CONF_RGBW_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_RGBW): cv.template,
-        vol.Optional(CONF_RGBWW_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_RGBWW): cv.template,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_SUPPORTS_TRANSITION): cv.template,
-        vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_TEMPERATURE): cv.template,
-        vol.Optional(CONF_XY): cv.template,
-        vol.Optional(CONF_XY_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
+        probatio.Inclusive(CONF_EFFECT_LIST, "effect"): cv.template,
+        probatio.Inclusive(CONF_EFFECT, "effect"): cv.template,
+        probatio.Optional(CONF_HS_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_HS): cv.template,
+        probatio.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_LEVEL): cv.template,
+        probatio.Optional(CONF_MAX_MIREDS): cv.template,
+        probatio.Optional(CONF_MIN_MIREDS): cv.template,
+        probatio.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_RGB): cv.template,
+        probatio.Optional(CONF_RGBW_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_RGBW): cv.template,
+        probatio.Optional(CONF_RGBWW_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_RGBWW): cv.template,
+        probatio.Optional(CONF_STATE): cv.template,
+        probatio.Optional(CONF_SUPPORTS_TRANSITION): cv.template,
+        probatio.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_TEMPERATURE): cv.template,
+        probatio.Optional(CONF_XY): cv.template,
+        probatio.Optional(CONF_XY_ACTION): cv.SCRIPT_SCHEMA,
     }
 )
 

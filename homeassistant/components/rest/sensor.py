@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 from xml.parsers.expat import ExpatError
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -38,7 +38,7 @@ from .util import parse_json_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     SENSOR_PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **SENSOR_SCHEMA}),
     cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE),
 )

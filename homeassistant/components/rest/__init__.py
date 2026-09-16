@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -85,7 +85,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await _async_process_config(hass, conf)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
+        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=probatio.Schema({})
     )
 
     return await _async_process_config(hass, config)

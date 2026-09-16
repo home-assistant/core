@@ -6,7 +6,7 @@ from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from gspread import Client, GSpreadException, Spreadsheet, Worksheet
 from gspread.utils import ValueInputOption
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import (
@@ -36,20 +36,24 @@ WORKSHEET = "worksheet"
 SERVICE_APPEND_SHEET = "append_sheet"
 SERVICE_GET_SHEET = "get_sheet"
 
-SHEET_SERVICE_SCHEMA = vol.All(
+SHEET_SERVICE_SCHEMA = probatio.All(
     {
-        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(WORKSHEET): cv.string,
-        vol.Optional(ADD_CREATED_COLUMN, default=True): cv.boolean,
-        vol.Required(DATA): vol.Any(cv.ensure_list, [dict]),
+        probatio.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Optional(WORKSHEET): cv.string,
+        probatio.Optional(ADD_CREATED_COLUMN, default=True): cv.boolean,
+        probatio.Required(DATA): probatio.Any(cv.ensure_list, [dict]),
     },
 )
 
-get_SHEET_SERVICE_SCHEMA = vol.All(
+get_SHEET_SERVICE_SCHEMA = probatio.All(
     {
-        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(WORKSHEET): cv.string,
-        vol.Required(ROWS): cv.positive_int,
+        probatio.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Optional(WORKSHEET): cv.string,
+        probatio.Required(ROWS): cv.positive_int,
     },
 )
 

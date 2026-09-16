@@ -2,7 +2,7 @@
 
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import state as state_trigger
@@ -33,9 +33,9 @@ TRIGGER_TYPES: Final[set[str]] = BASIC_TRIGGER_TYPES | {
 
 TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
-        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
+        probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -103,11 +103,11 @@ async def async_get_triggers(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
     return {
-        "extra_fields": vol.Schema(
-            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        "extra_fields": probatio.Schema(
+            {probatio.Optional(CONF_FOR): cv.positive_time_period_dict}
         )
     }
 

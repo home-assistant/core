@@ -4,6 +4,7 @@ import logging
 from typing import Any, override
 
 from aiohttp import ClientConnectorError
+import probatio
 from pygti.auth import GTI_DEFAULT_HOST
 from pygti.exceptions import GTIError, GTIUnauthorizedError
 from pygti.models import (
@@ -14,7 +15,6 @@ from pygti.models import (
     SDName,
     SDNameType,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
@@ -26,21 +26,21 @@ from .hub import GTIHub, HVVConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-SCHEMA_STEP_USER = vol.Schema(
+SCHEMA_STEP_USER = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default=GTI_DEFAULT_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST, default=GTI_DEFAULT_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
-SCHEMA_STEP_STATION = vol.Schema({vol.Required(CONF_STATION): str})
+SCHEMA_STEP_STATION = probatio.Schema({probatio.Required(CONF_STATION): str})
 
-SCHEMA_STEP_OPTIONS = vol.Schema(
+SCHEMA_STEP_OPTIONS = probatio.Schema(
     {
-        vol.Required(CONF_FILTER): vol.In([]),
-        vol.Required(CONF_OFFSET, default=0): cv.positive_int,
-        vol.Optional(CONF_REAL_TIME, default=True): bool,
+        probatio.Required(CONF_FILTER): probatio.In([]),
+        probatio.Required(CONF_OFFSET, default=0): cv.positive_int,
+        probatio.Optional(CONF_REAL_TIME, default=True): bool,
     }
 )
 
@@ -125,7 +125,9 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the step where the user inputs his/her station."""
 
-        schema = vol.Schema({vol.Required(CONF_STATION): vol.In(list(self.stations))})
+        schema = probatio.Schema(
+            {probatio.Required(CONF_STATION): probatio.In(list(self.stations))}
+        )
 
         if user_input is None:
             return self.async_show_form(step_id="station_select", data_schema=schema)
@@ -215,9 +217,9 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_FILTER, default=old_filter): cv.multi_select(
+                    probatio.Optional(CONF_FILTER, default=old_filter): cv.multi_select(
                         {
                             key: (
                                 f"{departure_filter.get('serviceName', '')},"
@@ -226,11 +228,11 @@ class OptionsFlowHandler(OptionsFlow):
                             for key, departure_filter in self.departure_filters.items()
                         }
                     ),
-                    vol.Required(
+                    probatio.Required(
                         CONF_OFFSET,
                         default=self.config_entry.options.get(CONF_OFFSET, 0),
                     ): cv.positive_int,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_REAL_TIME,
                         default=self.config_entry.options.get(CONF_REAL_TIME, True),
                     ): bool,

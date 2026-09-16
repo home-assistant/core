@@ -3,7 +3,7 @@
 from operator import attrgetter
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
@@ -43,10 +43,10 @@ class TodoGetItemsTool(Tool):
 
     def __init__(self, todo_lists: list[str]) -> None:
         """Init the get items tool."""
-        self.parameters = vol.Schema(
+        self.parameters = probatio.Schema(
             {
-                vol.Required("todo_list"): vol.In(todo_lists),
-                vol.Optional(
+                probatio.Required("todo_list"): probatio.In(todo_lists),
+                probatio.Optional(
                     "status",
                     description=(
                         "Filter returned items by status,"
@@ -54,7 +54,7 @@ class TodoGetItemsTool(Tool):
                         " items"
                     ),
                     default="needs_action",
-                ): vol.In(["needs_action", "completed", "all"]),
+                ): probatio.In(["needs_action", "completed", "all"]),
             }
         )
 

@@ -9,7 +9,7 @@ import logging
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast, overload
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -131,26 +131,26 @@ def _validate_option_or_feature(option_or_feature: str, label: str) -> Any:
     try:
         domain, enum, option = option_or_feature.split(".", 2)
     except ValueError as exc:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Invalid {label} '{option_or_feature}', expected <domain>.<enum>.<member>"
         ) from exc
 
     base_components = _base_components()
     if not (base_component := base_components.get(domain)):
-        raise vol.Invalid(f"Unknown base component '{domain}'")
+        raise probatio.Invalid(f"Unknown base component '{domain}'")
 
     try:
         attribute_enum = getattr(base_component, enum)
     except AttributeError as exc:
-        raise vol.Invalid(f"Unknown {label} enum '{domain}.{enum}'") from exc
+        raise probatio.Invalid(f"Unknown {label} enum '{domain}.{enum}'") from exc
 
     if not issubclass(attribute_enum, Enum):
-        raise vol.Invalid(f"Expected {label} '{domain}.{enum}' to be an enum")
+        raise probatio.Invalid(f"Expected {label} '{domain}.{enum}' to be an enum")
 
     try:
         return getattr(attribute_enum, option).value
     except AttributeError as exc:
-        raise vol.Invalid(f"Unknown {label} '{enum}.{option}'") from exc
+        raise probatio.Invalid(f"Unknown {label} '{enum}.{option}'") from exc
 
 
 def validate_attribute_option(attribute_option: str) -> Any:
@@ -165,50 +165,50 @@ def validate_supported_feature(supported_feature: str) -> Any:
 
 # Basic schemas which translate attribute and supported feature enum names
 # to their values. Full validation is done by hassfest.services
-_FIELD_SCHEMA = vol.Schema(
+_FIELD_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SELECTOR): selector.validate_selector,
-        vol.Optional("filter"): {
-            vol.Optional("attribute"): {
-                vol.Required(str): [vol.All(str, validate_attribute_option)],
+        probatio.Optional(CONF_SELECTOR): selector.validate_selector,
+        probatio.Optional("filter"): {
+            probatio.Optional("attribute"): {
+                probatio.Required(str): [probatio.All(str, validate_attribute_option)],
             },
-            vol.Optional("supported_features"): [
-                vol.All(str, validate_supported_feature)
+            probatio.Optional("supported_features"): [
+                probatio.All(str, validate_supported_feature)
             ],
         },
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-_SECTION_SCHEMA = vol.Schema(
+_SECTION_SCHEMA = probatio.Schema(
     {
-        vol.Required("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+        probatio.Required("fields"): probatio.Schema({str: _FIELD_SCHEMA}),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-_SERVICE_SCHEMA = vol.Schema(
+_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
-        vol.Optional("fields"): vol.Schema(
-            {str: vol.Any(_SECTION_SCHEMA, _FIELD_SCHEMA)}
+        probatio.Optional("target"): TargetSelector.CONFIG_SCHEMA,
+        probatio.Optional("fields"): probatio.Schema(
+            {str: probatio.Any(_SECTION_SCHEMA, _FIELD_SCHEMA)}
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
 def starts_with_dot(key: str) -> str:
     """Check if key starts with dot."""
     if not key.startswith("."):
-        raise vol.Invalid("Key does not start with .")
+        raise probatio.Invalid("Key does not start with .")
     return key
 
 
-_SERVICES_SCHEMA = vol.Schema(
+_SERVICES_SCHEMA = probatio.Schema(
     {
-        vol.Remove(vol.All(str, starts_with_dot)): object,
-        cv.slug: vol.Any(None, _SERVICE_SCHEMA),
+        probatio.Remove(probatio.All(str, starts_with_dot)): object,
+        cv.slug: probatio.Any(None, _SERVICE_SCHEMA),
     }
 )
 
@@ -268,7 +268,7 @@ def async_prepare_call_from_config(
     if validate_config:
         try:
             config = cv.SERVICE_SCHEMA(config)
-        except vol.Invalid as ex:
+        except probatio.Invalid as ex:
             raise HomeAssistantError(
                 f"Invalid config for calling service: {ex}"
             ) from ex
@@ -286,7 +286,7 @@ def async_prepare_call_from_config(
             raise HomeAssistantError(
                 f"Error rendering service name template: {ex}"
             ) from ex
-        except vol.Invalid as ex:
+        except probatio.Invalid as ex:
             raise HomeAssistantError(
                 f"Template rendered invalid service: {domain_service}"
             ) from ex
@@ -314,7 +314,7 @@ def async_prepare_call_from_config(
             raise HomeAssistantError(
                 f"Error rendering service target template: {ex}"
             ) from ex
-        except vol.Invalid as ex:
+        except probatio.Invalid as ex:
             raise HomeAssistantError(
                 f"Template rendered invalid entity IDs: {target[CONF_ENTITY_ID]}"
             ) from ex
@@ -457,7 +457,7 @@ def _load_services_file(integration: Integration) -> JSON_TYPE:
             "Unable to find services.yaml for the %s integration", integration.domain
         )
         return {}
-    except (HomeAssistantError, vol.Invalid) as ex:
+    except (HomeAssistantError, probatio.Invalid) as ex:
         _LOGGER.warning(
             "Unable to parse services.yaml for the %s integration: %s",
             integration.domain,
@@ -615,7 +615,7 @@ def async_set_service_schema(
         # Match validation applied to descriptions loaded from services.yaml.
         try:
             description["target"] = TargetSelector.CONFIG_SCHEMA(schema["target"])
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             _LOGGER.warning(
                 "Invalid target in the description of service %s.%s, ignoring it: %s",
                 domain,
@@ -1005,7 +1005,7 @@ def async_register_admin_service(
         | EntityServiceResponse
         | None,
     ],
-    schema: VolSchemaType = vol.Schema({}, extra=vol.PREVENT_EXTRA),
+    schema: VolSchemaType = probatio.Schema({}, extra=probatio.PREVENT_EXTRA),
     supports_response: SupportsResponse = SupportsResponse.NONE,
     *,
     description_placeholders: Mapping[str, str] | None = None,

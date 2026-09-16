@@ -32,6 +32,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -
         _LOGGER.error("Authentication failed: %s", str(exception))
         return False
 
+    # Immediately get customer id, since it is required for all api calls
+    try:
+        await energyflip.customer_overview()
+    except EnergyFlipException as exception:
+        _LOGGER.error("Getting customer id failed: %s", str(exception))
+        return False
+
     # Create a coordinator for polling updates
     coordinator = EnergyFlipUpdateCoordinator(hass, entry, energyflip)
 

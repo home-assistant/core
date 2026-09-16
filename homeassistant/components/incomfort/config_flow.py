@@ -9,7 +9,7 @@ from incomfortclient import (
     InvalidGateway,
     InvalidHeaterList,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -38,43 +38,43 @@ from .coordinator import InComfortConfigEntry
 _LOGGER = logging.getLogger(__name__)
 TITLE = "Intergas InComfort/Intouch Lan2RF gateway"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(
+        probatio.Required(CONF_HOST): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
-        vol.Optional(CONF_USERNAME): TextSelector(
+        probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="admin")
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
 )
 
-DHCP_CONFIG_SCHEMA = vol.Schema(
+DHCP_CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_USERNAME): TextSelector(
+        probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="admin")
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
 )
 
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
 )
 
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_LEGACY_SETPOINT_STATUS, default=False): BooleanSelector(
+        probatio.Optional(CONF_LEGACY_SETPOINT_STATUS, default=False): BooleanSelector(
             BooleanSelectorConfig()
         )
     }
@@ -166,7 +166,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial set up via DHCP."""
         errors: dict[str, str] | None = None
-        data_schema: vol.Schema = DHCP_CONFIG_SCHEMA
+        data_schema: probatio.Schema = DHCP_CONFIG_SCHEMA
         if user_input is not None:
             user_input[CONF_HOST] = self._discovered_host
             if (
@@ -188,7 +188,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] | None = None
-        data_schema: vol.Schema = CONFIG_SCHEMA
+        data_schema: probatio.Schema = CONFIG_SCHEMA
         if is_reconfigure := (self.source == SOURCE_RECONFIGURE):
             reconfigure_entry = self._get_reconfigure_entry()
             data_schema = self.add_suggested_values_to_schema(

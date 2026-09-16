@@ -1,11 +1,12 @@
 """Config flow for the my-PV integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, Final, override
 
 from my_pv import MyPVLocalDevice
 from my_pv.exceptions import MyPVAuthenticationError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
@@ -23,14 +24,14 @@ from .const import DOMAIN
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-HOST_SCHEMA: Final = vol.Schema(
+HOST_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_HOST): TextSelector(),
     }
 )
-AUTH_SCHEMA: Final = vol.Schema(
+AUTH_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -209,6 +210,52 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id=step_id,
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders=self.context["title_placeholders"],
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        errors: dict[str, str] = {}
+
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None:
+            user_input = {**reauth_entry.data, **user_input}
+            host = user_input[CONF_HOST]
+            password = user_input[CONF_PASSWORD]
+
+            device = MyPVLocalDevice(host, password)
+            try:
+                if not await device.connect():
+                    errors[CONF_BASE] = "cannot_connect"
+            except MyPVAuthenticationError:
+                errors[CONF_PASSWORD] = "invalid_password"
+            finally:
+                await device.disconnect()
+
+            if not errors:
+                await self.async_set_unique_id(device.serial_number)
+                self._abort_if_unique_id_mismatch()
+                data = {
+                    CONF_PASSWORD: password,
+                }
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=data
+                )
+
+        data_schema = self.add_suggested_values_to_schema(AUTH_SCHEMA, user_input or {})
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
             data_schema=data_schema,
             errors=errors,
             description_placeholders=self.context["title_placeholders"],

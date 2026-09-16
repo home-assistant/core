@@ -6,7 +6,7 @@ import logging
 from typing import Any, override
 
 from broadlink.exceptions import BroadlinkException
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -45,24 +45,24 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SLOTS = "slots"
 
-SWITCH_SCHEMA = vol.Schema(
+SWITCH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_COMMAND_OFF): data_packet,
-        vol.Optional(CONF_COMMAND_ON): data_packet,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Optional(CONF_COMMAND_OFF): data_packet,
+        probatio.Optional(CONF_COMMAND_ON): data_packet,
     }
 )
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     cv.deprecated(CONF_HOST),
     cv.deprecated(CONF_SLOTS),
     cv.deprecated(CONF_TIMEOUT),
     cv.deprecated(CONF_TYPE),
     SWITCH_PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_MAC): mac_address,
-            vol.Optional(CONF_HOST): cv.string,
-            vol.Optional(CONF_SWITCHES, default=[]): vol.All(
+            probatio.Required(CONF_MAC): mac_address,
+            probatio.Optional(CONF_HOST): cv.string,
+            probatio.Optional(CONF_SWITCHES, default=[]): probatio.All(
                 cv.ensure_list,
                 [SWITCH_SCHEMA],
             ),

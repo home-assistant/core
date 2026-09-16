@@ -1482,6 +1482,52 @@ async def test_component_config_validation_error_with_docs(
 
 
 @pytest.mark.parametrize(
+    ("key", "expected"),
+    [
+        pytest.param(
+            "command_topci",
+            "'command_topci' is an invalid option for 'mqtt' "
+            "(did you mean 'command_topic'?), check: command_topci",
+            id="one_candidate",
+        ),
+        pytest.param(
+            "command_t",
+            "'command_t' is an invalid option for 'mqtt' "
+            "(did you mean 'command_topic' or 'command_template'?), check: command_t",
+            id="two_candidates",
+        ),
+        pytest.param(
+            "totally_unrelated",
+            "'totally_unrelated' is an invalid option for 'mqtt', "
+            "check: totally_unrelated",
+            id="no_candidate",
+        ),
+    ],
+)
+async def test_stringify_invalid_suggests_close_keys(
+    hass: HomeAssistant, key: str, expected: str
+) -> None:
+    """Test an unknown option reports the close matches probatio found."""
+    schema = probatio.Schema(
+        {
+            probatio.Optional("command_topic"): str,
+            probatio.Optional("command_template"): str,
+        }
+    )
+    config = {key: "some-value"}
+
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        schema(config)
+
+    assert (
+        config_util.stringify_invalid(
+            hass, exc_info.value.errors[0], "mqtt", config, None, 500
+        )
+        == f"Invalid config for 'mqtt': {expected}"
+    )
+
+
+@pytest.mark.parametrize(
     "config_dir",
     ["packages", "packages_include_dir_named"],
 )

@@ -5,8 +5,8 @@ import logging
 from typing import override
 
 from concord232 import client as concord232_client
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
@@ -32,11 +32,11 @@ SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
 PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_CODE): cv.string,
-        vol.Optional(CONF_MODE, default=DEFAULT_MODE): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_CODE): cv.string,
+        probatio.Optional(CONF_MODE, default=DEFAULT_MODE): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 

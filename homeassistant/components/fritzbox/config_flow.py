@@ -4,9 +4,9 @@ from collections.abc import Mapping
 import ipaddress
 from typing import TYPE_CHECKING, Any, Self, override
 
+import probatio
 from pyfritzhome import Fritzhome, LoginError
 from requests.exceptions import HTTPError
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -31,23 +31,23 @@ from homeassistant.helpers.service_info.ssdp import (
 
 from .const import DEFAULT_URL, DEFAULT_USERNAME, DEFAULT_VERIFY_SSL, DOMAIN
 
-DATA_SCHEMA_USER = vol.Schema(
+DATA_SCHEMA_USER = probatio.Schema(
     {
-        vol.Required(CONF_URL, default=DEFAULT_URL): TextSelector(
+        probatio.Required(CONF_URL, default=DEFAULT_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+        probatio.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
 
-DATA_SCHEMA_CONFIRM = vol.Schema(
+DATA_SCHEMA_CONFIRM = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -246,10 +246,10 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=self._username): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME, default=self._username): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             description_placeholders={"name": self._name},
@@ -286,12 +286,12 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_URL, default=self._url): TextSelector(
+                    probatio.Required(CONF_URL, default=self._url): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
-                    vol.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
+                    probatio.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
                 }
             ),
             description_placeholders={"name": self._url},

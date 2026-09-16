@@ -39,6 +39,7 @@ def _ac_device() -> DummyDevice:
             ACAttributes.swing_horizontal: True,
             ACAttributes.indoor_humidity: 50,
             ACAttributes.full_dust: True,
+            ACAttributes.water_pump_running: True,
         },
     )
 

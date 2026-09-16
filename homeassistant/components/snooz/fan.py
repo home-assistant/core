@@ -4,6 +4,7 @@ from collections.abc import Callable
 from datetime import timedelta
 from typing import Any, override
 
+import probatio
 from pysnooz.api import UnknownSnoozState
 from pysnooz.commands import (
     SnoozCommandData,
@@ -12,7 +13,6 @@ from pysnooz.commands import (
     turn_off,
     turn_on,
 )
-import voluptuous as vol
 
 from homeassistant.components.fan import (
     FanEntity,
@@ -49,21 +49,21 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_TRANSITION_ON,
         {
-            vol.Optional(ATTR_VOLUME): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Optional(ATTR_VOLUME): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             ),
-            vol.Optional(ATTR_DURATION, default=DEFAULT_TRANSITION_DURATION): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=300)
-            ),
+            probatio.Optional(
+                ATTR_DURATION, default=DEFAULT_TRANSITION_DURATION
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=300)),
         },
         "async_transition_on",
     )
     platform.async_register_entity_service(
         SERVICE_TRANSITION_OFF,
         {
-            vol.Optional(ATTR_DURATION, default=DEFAULT_TRANSITION_DURATION): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=300)
-            ),
+            probatio.Optional(
+                ATTR_DURATION, default=DEFAULT_TRANSITION_DURATION
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=300)),
         },
         "async_transition_off",
     )

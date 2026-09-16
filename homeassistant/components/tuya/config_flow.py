@@ -3,8 +3,8 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from tuya_sharing import LoginControl
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import selector
@@ -60,9 +60,9 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USER_CODE, default=user_input.get(CONF_USER_CODE, "")
                     ): str,
                 }
@@ -78,9 +78,9 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="scan",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Optional("QR"): selector.QrCodeSelector(
+                        probatio.Optional("QR"): selector.QrCodeSelector(
                             config=selector.QrCodeSelectorConfig(
                                 data=f"tuyaSmart--qrLogin?token={self.__qr_code}",
                                 scale=5,
@@ -103,9 +103,9 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="scan",
                 errors={"base": "login_error"},
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Optional("QR"): selector.QrCodeSelector(
+                        probatio.Optional("QR"): selector.QrCodeSelector(
                             config=selector.QrCodeSelectorConfig(
                                 data=f"tuyaSmart--qrLogin?token={self.__qr_code}",
                                 scale=5,
@@ -179,9 +179,9 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_user_code",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USER_CODE, default=user_input.get(CONF_USER_CODE, "")
                     ): str,
                 }

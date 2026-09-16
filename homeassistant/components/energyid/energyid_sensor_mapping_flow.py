@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigSubentryFlow, SubentryFlowResult
@@ -140,9 +140,9 @@ class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
 
         suggested_entities = _get_suggested_entities(self.hass)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required("ha_entity_id"): EntitySelector(
+                probatio.Required("ha_entity_id"): EntitySelector(
                     EntitySelectorConfig(include_entities=suggested_entities)
                 ),
             }

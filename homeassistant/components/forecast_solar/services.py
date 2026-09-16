@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     HomeAssistant,
@@ -33,12 +33,14 @@ RESOLUTION_HOURLY = "hourly"
 
 SERVICE_GET_FORECAST = "get_forecast"
 
-GET_FORECAST_SCHEMA = vol.Schema(
+GET_FORECAST_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(ATTR_START): cv.datetime,
-        vol.Optional(ATTR_END): cv.datetime,
-        vol.Optional(ATTR_RESOLUTION, default=RESOLUTION_RAW): vol.In(
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Optional(ATTR_START): cv.datetime,
+        probatio.Optional(ATTR_END): cv.datetime,
+        probatio.Optional(ATTR_RESOLUTION, default=RESOLUTION_RAW): probatio.In(
             (RESOLUTION_RAW, RESOLUTION_HOURLY)
         ),
     }

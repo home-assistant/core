@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -46,7 +46,7 @@ PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(ValveDeviceClass))
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(ValveDeviceClass))
 
 
 ATTR_POSITION = "position"
@@ -74,8 +74,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_VALVE_POSITION,
         {
-            vol.Required(ATTR_POSITION): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Required(ATTR_POSITION): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             )
         },
         "async_set_valve_position",

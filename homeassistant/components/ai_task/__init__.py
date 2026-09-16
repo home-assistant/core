@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_source import local_source
 from homeassistant.config_entries import ConfigEntry
@@ -61,26 +61,28 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-STRUCTURE_FIELD_SCHEMA = vol.Schema(
+STRUCTURE_FIELD_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DESCRIPTION): str,
-        vol.Optional(ATTR_REQUIRED): bool,
-        vol.Required(CONF_SELECTOR): selector.validate_selector,
+        probatio.Optional(CONF_DESCRIPTION): str,
+        probatio.Optional(ATTR_REQUIRED): bool,
+        probatio.Required(CONF_SELECTOR): selector.validate_selector,
     }
 )
 
 
-def _validate_structure_fields(value: dict[str, Any]) -> vol.Schema:
-    """Validate the structure fields as a voluptuous Schema."""
+def _validate_structure_fields(value: dict[str, Any]) -> probatio.Schema:
+    """Validate the structure fields as a probatio Schema."""
     if not isinstance(value, dict):
-        raise vol.Invalid("Structure must be a dictionary")
+        raise probatio.Invalid("Structure must be a dictionary")
     fields = {}
     for k, v in value.items():
-        field_class = vol.Required if v.get(ATTR_REQUIRED, False) else vol.Optional
+        field_class = (
+            probatio.Required if v.get(ATTR_REQUIRED, False) else probatio.Optional
+        )
         fields[field_class(k, description=v.get(CONF_DESCRIPTION))] = selector.selector(
             v[CONF_SELECTOR]
         )
-    return vol.Schema(fields, extra=vol.PREVENT_EXTRA)
+    return probatio.Schema(fields, extra=probatio.PREVENT_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -97,16 +99,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_GENERATE_DATA,
         async_service_generate_data,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_TASK_NAME): cv.string,
-                vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
-                vol.Required(ATTR_INSTRUCTIONS): cv.string,
-                vol.Optional(ATTR_STRUCTURE): vol.All(
-                    vol.Schema({str: STRUCTURE_FIELD_SCHEMA}),
+                probatio.Required(ATTR_TASK_NAME): cv.string,
+                probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
+                probatio.Required(ATTR_INSTRUCTIONS): cv.string,
+                probatio.Optional(ATTR_STRUCTURE): probatio.All(
+                    probatio.Schema({str: STRUCTURE_FIELD_SCHEMA}),
                     _validate_structure_fields,
                 ),
-                vol.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
+                probatio.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
                     {"accept": ["*/*"], "multiple": True}
                 ),
             }
@@ -118,12 +120,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_GENERATE_IMAGE,
         async_service_generate_image,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_TASK_NAME): cv.string,
-                vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
-                vol.Required(ATTR_INSTRUCTIONS): cv.string,
-                vol.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
+                probatio.Required(ATTR_TASK_NAME): cv.string,
+                probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
+                probatio.Required(ATTR_INSTRUCTIONS): cv.string,
+                probatio.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
                     {"accept": ["*/*"], "multiple": True}
                 ),
             }

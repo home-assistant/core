@@ -8,7 +8,7 @@ from typing import Any, override
 from aiohttp import ClientConnectorError, ClientSession
 from airly import Airly
 from airly.exceptions import AirlyError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
@@ -88,13 +88,13 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
-                    vol.Optional(
+                    probatio.Required(CONF_API_KEY): str,
+                    probatio.Optional(
                         CONF_LATITUDE, default=self.hass.config.latitude
                     ): cv.latitude,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
                 }

@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import (
@@ -54,7 +54,7 @@ DEFAULT_SOURCE_TYPE = SourceType.GPS
 def valid_config(config: ConfigType) -> ConfigType:
     """Check if there is a state topic or json_attributes_topic."""
     if CONF_STATE_TOPIC not in config and CONF_JSON_ATTRS_TOPIC not in config:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Invalid device tracker config, missing"
             f" {CONF_STATE_TOPIC} or"
             f" {CONF_JSON_ATTRS_TOPIC}, got: {config}"
@@ -64,22 +64,22 @@ def valid_config(config: ConfigType) -> ConfigType:
 
 PLATFORM_SCHEMA_MODERN_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
-        vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
-        vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
-        vol.Optional(CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE): vol.Coerce(
-            SourceType
-        ),
+        probatio.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
+        probatio.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
+        probatio.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
+        probatio.Optional(
+            CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE
+        ): probatio.Coerce(SourceType),
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-PLATFORM_SCHEMA_MODERN = vol.All(PLATFORM_SCHEMA_MODERN_BASE, valid_config)
+PLATFORM_SCHEMA_MODERN = probatio.All(PLATFORM_SCHEMA_MODERN_BASE, valid_config)
 
 
-DISCOVERY_SCHEMA = vol.All(
-    PLATFORM_SCHEMA_MODERN_BASE.extend({}, extra=vol.REMOVE_EXTRA), valid_config
+DISCOVERY_SCHEMA = probatio.All(
+    PLATFORM_SCHEMA_MODERN_BASE.extend({}, extra=probatio.REMOVE_EXTRA), valid_config
 )
 
 

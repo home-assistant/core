@@ -7,8 +7,8 @@ import logging
 from typing import Any, Final, final, override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
@@ -62,7 +62,7 @@ class UpdateDeviceClass(StrEnum):
     FIRMWARE = "firmware"
 
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(UpdateDeviceClass))
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(UpdateDeviceClass))
 
 
 __all__ = [
@@ -96,8 +96,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_INSTALL,
         {
-            vol.Optional(ATTR_VERSION): cv.string,
-            vol.Optional(ATTR_BACKUP, default=False): cv.boolean,
+            probatio.Optional(ATTR_VERSION): cv.string,
+            probatio.Optional(ATTR_BACKUP, default=False): cv.boolean,
         },
         async_install,
         [UpdateEntityFeature.INSTALL],
@@ -551,8 +551,8 @@ class UpdateEntity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "update/release_notes",
-        vol.Required("entity_id"): cv.entity_id,
+        probatio.Required("type"): "update/release_notes",
+        probatio.Required("entity_id"): cv.entity_id,
     }
 )
 @websocket_api.async_response

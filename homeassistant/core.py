@@ -41,8 +41,8 @@ from typing import (
     override,
 )
 
+import probatio
 from propcache.api import cached_property, under_cached_property
-import voluptuous as vol
 
 from . import util
 from .const import (
@@ -2692,7 +2692,7 @@ class ServiceRegistry:
             [ServiceCall],
             Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
-        schema: vol.Schema | None = None,
+        schema: probatio.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register a service.
@@ -2924,7 +2924,7 @@ class ServiceRegistry:
         if handler.schema:
             try:
                 processed_data: dict[str, Any] = handler.schema(service_data)
-            except vol.Invalid:
+            except probatio.Invalid:
                 _LOGGER.debug(
                     "Invalid data for service call %s.%s: %s",
                     domain,

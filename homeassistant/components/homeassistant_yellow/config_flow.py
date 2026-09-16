@@ -5,8 +5,8 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, final, override
 
+import probatio
 from universal_silabs_flasher.flasher import YellowFlasher
-import voluptuous as vol
 
 from homeassistant.components.hassio import (
     SupervisorError,
@@ -49,11 +49,11 @@ from .hardware import BOARD_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_HW_SETTINGS_SCHEMA = vol.Schema(
+STEP_HW_SETTINGS_SCHEMA = probatio.Schema(
     {
-        vol.Required("disk_led"): selector.BooleanSelector(),
-        vol.Required("heartbeat_led"): selector.BooleanSelector(),
-        vol.Required("power_led"): selector.BooleanSelector(),
+        probatio.Required("disk_led"): selector.BooleanSelector(),
+        probatio.Required("heartbeat_led"): selector.BooleanSelector(),
+        probatio.Required("power_led"): selector.BooleanSelector(),
     }
 )
 

@@ -5,11 +5,11 @@ from collections.abc import Callable, Coroutine
 import logging
 from typing import Any, cast
 
+import probatio
 from pydantic import ValidationError
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import Camera, Chime
 from uiprotect.exceptions import ClientError
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
@@ -67,37 +67,37 @@ ALL_GLOBAL_SERVICES = [
     SERVICE_PTZ_GOTO_PRESET,
 ]
 
-DOORBELL_TEXT_SCHEMA = vol.Schema(
+DOORBELL_TEXT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_MESSAGE): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_MESSAGE): cv.string,
     },
 )
 
-CHIME_PAIRED_SCHEMA = vol.Schema(
+CHIME_PAIRED_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_DEVICE_ID): str,
         "doorbells": cv.ENTITY_SERVICE_FIELDS,
     },
 )
 
-REMOVE_PRIVACY_ZONE_SCHEMA = vol.Schema(
+REMOVE_PRIVACY_ZONE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_NAME): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_NAME): cv.string,
     },
 )
 
-GET_USER_KEYRING_INFO_SCHEMA = vol.Schema(
+GET_USER_KEYRING_INFO_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_DEVICE_ID): str,
     },
 )
 
-PTZ_GOTO_PRESET_SCHEMA = vol.Schema(
+PTZ_GOTO_PRESET_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PRESET): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_PRESET): cv.string,
     },
 )
 

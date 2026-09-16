@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from elgato import Elgato, ElgatoError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -97,9 +97,9 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST,
                         default=self._get_reconfigure_entry().data[CONF_HOST],
                     ): str,
@@ -142,9 +142,9 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
+                    probatio.Required(CONF_HOST): str,
                 }
             ),
             errors=errors or {},

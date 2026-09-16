@@ -7,7 +7,7 @@ from typing import Final
 from zoneinfo import ZoneInfo
 
 from energyzero import EnergyPrices, EnergyZeroNoDataError, Interval, PriceType
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     HomeAssistant,
@@ -34,23 +34,25 @@ ENERGY_INTERVALS = {"hour": Interval.HOUR, "quarter": Interval.QUARTER}
 
 GAS_SERVICE_NAME: Final = "get_gas_prices"
 ENERGY_SERVICE_NAME: Final = "get_energy_prices"
-SERVICE_SCHEMA: Final = vol.Schema(
+SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
-        vol.Required(ATTR_INCL_VAT): bool,
-        vol.Optional(ATTR_START): str,
-        vol.Optional(ATTR_END): str,
+        probatio.Required(ATTR_INCL_VAT): bool,
+        probatio.Optional(ATTR_START): str,
+        probatio.Optional(ATTR_END): str,
     }
 )
 
 ENERGY_SERVICE_SCHEMA: Final = SERVICE_SCHEMA.extend(
     {
-        vol.Optional(ATTR_PRICE_TYPE, default="market"): vol.In(("market", "all_in")),
-        vol.Optional(ATTR_INTERVAL, default="hour"): vol.In(ENERGY_INTERVALS),
+        probatio.Optional(ATTR_PRICE_TYPE, default="market"): probatio.In(
+            ("market", "all_in")
+        ),
+        probatio.Optional(ATTR_INTERVAL, default="hour"): probatio.In(ENERGY_INTERVALS),
     }
 )
 

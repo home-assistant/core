@@ -9,7 +9,7 @@ from typing import Any, cast, override
 from aiopurpleair import API
 from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -47,9 +47,9 @@ CONF_SENSOR_INDEX = "sensor_index"
 
 DEFAULT_DISTANCE = 5
 
-API_KEY_SCHEMA = vol.Schema(
+API_KEY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
     }
 )
 
@@ -62,17 +62,17 @@ def async_get_api(hass: HomeAssistant, api_key: str) -> API:
 
 
 @callback
-def async_get_coordinates_schema(hass: HomeAssistant) -> vol.Schema:
+def async_get_coordinates_schema(hass: HomeAssistant) -> probatio.Schema:
     """Define a schema for searching for sensors near a coordinate pair."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Inclusive(
+            probatio.Inclusive(
                 CONF_LATITUDE, "coords", default=hass.config.latitude
             ): cv.latitude,
-            vol.Inclusive(
+            probatio.Inclusive(
                 CONF_LONGITUDE, "coords", default=hass.config.longitude
             ): cv.longitude,
-            vol.Optional(CONF_DISTANCE, default=DEFAULT_DISTANCE): cv.positive_int,
+            probatio.Optional(CONF_DISTANCE, default=DEFAULT_DISTANCE): cv.positive_int,
         }
     )
 
@@ -91,11 +91,11 @@ def async_get_nearby_sensors_options(
 
 
 @callback
-def async_get_nearby_sensors_schema(options: list[SelectOptionDict]) -> vol.Schema:
+def async_get_nearby_sensors_schema(options: list[SelectOptionDict]) -> probatio.Schema:
     """Define a schema for selecting a sensor from a list."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_SENSOR_INDEX): SelectSelector(
+            probatio.Required(CONF_SENSOR_INDEX): SelectSelector(
                 SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
             )
         }
@@ -117,11 +117,11 @@ def async_get_remove_sensor_options(
 
 
 @callback
-def async_get_remove_sensor_schema(sensors: list[SelectOptionDict]) -> vol.Schema:
+def async_get_remove_sensor_schema(sensors: list[SelectOptionDict]) -> probatio.Schema:
     """Define a schema removing a sensor."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_SENSOR_DEVICE_ID): SelectSelector(
+            probatio.Required(CONF_SENSOR_DEVICE_ID): SelectSelector(
                 SelectSelectorConfig(options=sensors, mode=SelectSelectorMode.DROPDOWN)
             )
         }
@@ -320,11 +320,11 @@ class PurpleAirOptionsFlowHandler(OptionsFlowWithReload):
         self._flow_data: dict[str, Any] = {}
 
     @property
-    def settings_schema(self) -> vol.Schema:
+    def settings_schema(self) -> probatio.Schema:
         """Return the settings schema."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_SHOW_ON_MAP,
                     description={
                         "suggested_value": self.config_entry.options.get(

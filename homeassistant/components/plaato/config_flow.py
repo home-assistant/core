@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from pyplaato.plaato import PlaatoDeviceType
-import voluptuous as vol
 
 from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import (
@@ -58,18 +58,18 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
                     # Name field is no longer allowed in config flow schemas
                     # pylint: disable-next=home-assistant-config-flow-name-field
-                    vol.Required(
+                    probatio.Required(
                         CONF_DEVICE_NAME,
                         default=self._init_info.get(CONF_DEVICE_NAME, None),
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_DEVICE_TYPE,
                         default=self._init_info.get(CONF_DEVICE_TYPE, None),
-                    ): vol.In(list(PlaatoDeviceType)),
+                    ): probatio.In(list(PlaatoDeviceType)),
                 }
             ),
         )
@@ -148,11 +148,11 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _show_api_method_form(
         self, device_type: PlaatoDeviceType, errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
-        data_schema = vol.Schema({vol.Optional(CONF_TOKEN, default=""): str})
+        data_schema = probatio.Schema({probatio.Optional(CONF_TOKEN, default=""): str})
 
         if device_type == PlaatoDeviceType.Airlock:
             data_schema = data_schema.extend(
-                {vol.Optional(CONF_USE_WEBHOOK, default=False): bool}
+                {probatio.Optional(CONF_USE_WEBHOOK, default=False): bool}
             )
 
         return self.async_show_form(
@@ -213,11 +213,11 @@ class PlaatoOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
                     # Polling interval is user-configurable, which is no longer allowed
                     # pylint: disable-next=home-assistant-config-flow-polling-field
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SCAN_INTERVAL,
                         default=self.config_entry.options.get(
                             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL

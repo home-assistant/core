@@ -41,6 +41,15 @@
     "number": {
       "charging_current": { "name": "Charging current" }
     },
+    "select": {
+      "temperature_unit": {
+        "name": "Temperature unit",
+        "state": {
+          "celsius": "Celsius",
+          "fahrenheit": "Fahrenheit"
+        }
+      }
+    },
     "sensor": {
       "charging_message": {
         "name": "Charging message",

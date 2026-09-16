@@ -10,8 +10,8 @@ from aiohttp import web
 from aiohttp.hdrs import AUTHORIZATION
 import jwt
 from jwt.warnings import InsecureKeyLengthWarning
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.notify import ATTR_DATA, ATTR_TARGET
@@ -39,42 +39,42 @@ ATTR_EXPIRATIONTIME = "expirationTime"
 NOTIFY_CALLBACK_EVENT = "html5_notification"
 
 
-KEYS_SCHEMA = vol.All(
+KEYS_SCHEMA = probatio.All(
     dict,
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Required(ATTR_AUTH): cv.string,
-            vol.Required(ATTR_P256DH): cv.string,
+            probatio.Required(ATTR_AUTH): cv.string,
+            probatio.Required(ATTR_P256DH): cv.string,
         }
     ),
 )
 
-SUBSCRIPTION_SCHEMA = vol.All(
+SUBSCRIPTION_SCHEMA = probatio.All(
     dict,
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Required(ATTR_ENDPOINT): vol.Url(),
-            vol.Required(ATTR_KEYS): KEYS_SCHEMA,
-            vol.Optional(ATTR_EXPIRATIONTIME): vol.Any(None, cv.positive_int),
+            probatio.Required(ATTR_ENDPOINT): probatio.Url(),
+            probatio.Required(ATTR_KEYS): KEYS_SCHEMA,
+            probatio.Optional(ATTR_EXPIRATIONTIME): probatio.Any(None, cv.positive_int),
         }
     ),
 )
 
-REGISTER_SCHEMA = vol.Schema(
+REGISTER_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
-        vol.Required(ATTR_BROWSER): vol.In(["chrome", "firefox"]),
-        vol.Optional(ATTR_NAME): cv.string,
+        probatio.Required(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
+        probatio.Required(ATTR_BROWSER): probatio.In(["chrome", "firefox"]),
+        probatio.Optional(ATTR_NAME): cv.string,
     }
 )
 
-CALLBACK_EVENT_PAYLOAD_SCHEMA = vol.Schema(
+CALLBACK_EVENT_PAYLOAD_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_TAG): cv.string,
-        vol.Required(ATTR_TYPE): vol.In(["received", "clicked", "closed"]),
-        vol.Required(ATTR_TARGET): cv.string,
-        vol.Optional(ATTR_ACTION): cv.string,
-        vol.Optional(ATTR_DATA): dict,
+        probatio.Required(ATTR_TAG): cv.string,
+        probatio.Required(ATTR_TYPE): probatio.In(["received", "clicked", "closed"]),
+        probatio.Required(ATTR_TARGET): cv.string,
+        probatio.Optional(ATTR_ACTION): cv.string,
+        probatio.Optional(ATTR_DATA): dict,
     }
 )
 
@@ -109,7 +109,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
         try:
             data = cast(Registration, REGISTER_SCHEMA(data))
-        except vol.Invalid as ex:
+        except probatio.Invalid as ex:
             return self.json_message(humanize_error(data, ex), HTTPStatus.BAD_REQUEST)
 
         devname = data.get(ATTR_NAME)
@@ -280,7 +280,7 @@ class HTML5PushCallbackView(HomeAssistantView):
 
         try:
             event_payload = CALLBACK_EVENT_PAYLOAD_SCHEMA(event_payload)
-        except vol.Invalid as ex:
+        except probatio.Invalid as ex:
             _LOGGER.warning(
                 "Callback event payload is not valid: %s",
                 humanize_error(event_payload, ex),

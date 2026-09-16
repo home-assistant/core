@@ -11,7 +11,7 @@ from aiohttp.web_exceptions import (
     HTTPServiceUnavailable,
     HTTPUnauthorized,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
@@ -71,13 +71,13 @@ class HassIOAuth(HassIOBaseAuth):
     url = "/api/hassio_auth"
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(ATTR_USERNAME): cv.string,
-                vol.Required(ATTR_PASSWORD): cv.string,
-                vol.Required(ATTR_ADDON): cv.string,
+                probatio.Required(ATTR_USERNAME): cv.string,
+                probatio.Required(ATTR_PASSWORD): cv.string,
+                probatio.Required(ATTR_ADDON): cv.string,
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
     )
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
@@ -102,12 +102,12 @@ class HassIOPasswordReset(HassIOBaseAuth):
     url = "/api/hassio_auth/password_reset"
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(ATTR_USERNAME): cv.string,
-                vol.Required(ATTR_PASSWORD): cv.string,
+                probatio.Required(ATTR_USERNAME): cv.string,
+                probatio.Required(ATTR_PASSWORD): cv.string,
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
     )
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:

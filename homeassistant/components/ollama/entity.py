@@ -6,8 +6,7 @@ import logging
 from typing import Any
 
 import ollama
-from probatio import to_openapi
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -43,7 +42,9 @@ def _format_tool(
     """Format tool specification."""
     tool_spec = {
         "name": tool.name,
-        "parameters": to_openapi(tool.parameters, custom_serializer=custom_serializer),
+        "parameters": probatio.to_openapi(
+            tool.parameters, custom_serializer=custom_serializer
+        ),
     }
     if tool.description:
         tool_spec["description"] = tool.description
@@ -202,7 +203,7 @@ class OllamaBaseLLMEntity(Entity):
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         settings = {**self.entry.data, **self.subentry.data}
@@ -225,7 +226,7 @@ class OllamaBaseLLMEntity(Entity):
 
         output_format: dict[str, Any] | None = None
         if structure:
-            output_format = to_openapi(
+            output_format = probatio.to_openapi(
                 structure,
                 custom_serializer=(
                     chat_log.llm_api.custom_serializer

@@ -3,7 +3,7 @@
 from typing import Any
 
 from env_canada import ECWeather
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
@@ -13,7 +13,9 @@ from homeassistant.helpers import config_validation as cv, service
 from .const import DOMAIN
 
 SERVICE_GET_ALERTS = "get_alerts"
-SERVICE_GET_ALERTS_SCHEMA = vol.Schema({vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string})
+SERVICE_GET_ALERTS_SCHEMA = probatio.Schema(
+    {probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string}
+)
 
 SNAKE_MAPPING = {
     "alertColourLevel": "alert_colour_level",

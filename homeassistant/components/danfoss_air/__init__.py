@@ -3,9 +3,9 @@
 from datetime import timedelta
 import logging
 
+import probatio
 from pydanfossair.commands import ReadCommand
 from pydanfossair.danfossclient import DanfossClient
-import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -20,8 +20,9 @@ DOMAIN = "danfoss_air"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema({probatio.Required(CONF_HOST): cv.string})},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

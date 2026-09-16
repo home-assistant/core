@@ -3,9 +3,9 @@
 import logging
 from typing import override
 
+import probatio
 from pyblackbird import get_blackbird
 from serialx import SerialException
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -29,11 +29,11 @@ from .const import DOMAIN, SERVICE_SETALLZONES
 
 _LOGGER = logging.getLogger(__name__)
 
-MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
+MEDIA_PLAYER_SCHEMA = probatio.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 
-ZONE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+ZONE_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.string})
 
-SOURCE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+SOURCE_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.string})
 
 CONF_ZONES = "zones"
 CONF_SOURCES = "sources"
@@ -43,24 +43,26 @@ DATA_BLACKBIRD = "blackbird"
 ATTR_SOURCE = "source"
 
 BLACKBIRD_SETALLZONES_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {vol.Required(ATTR_SOURCE): cv.string}
+    {probatio.Required(ATTR_SOURCE): cv.string}
 )
 
 
 # Valid zone ids: 1-8
-ZONE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
+ZONE_IDS = probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=8))
 
 # Valid source ids: 1-8
-SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
+SOURCE_IDS = probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=8))
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
     MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         {
-            vol.Exclusive(CONF_PORT, CONF_TYPE): cv.string,
-            vol.Exclusive(CONF_HOST, CONF_TYPE): cv.string,
-            vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
-            vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
+            probatio.Exclusive(CONF_PORT, CONF_TYPE): cv.string,
+            probatio.Exclusive(CONF_HOST, CONF_TYPE): cv.string,
+            probatio.Required(CONF_ZONES): probatio.Schema({ZONE_IDS: ZONE_SCHEMA}),
+            probatio.Required(CONF_SOURCES): probatio.Schema(
+                {SOURCE_IDS: SOURCE_SCHEMA}
+            ),
         }
     ),
 )

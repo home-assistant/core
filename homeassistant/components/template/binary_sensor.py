@@ -7,7 +7,7 @@ from functools import partial
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
@@ -55,14 +55,20 @@ CONF_DELAY_OFF = "delay_off"
 CONF_AUTO_OFF = "auto_off"
 
 
-BINARY_SENSOR_COMMON_SCHEMA = vol.Schema(
+BINARY_SENSOR_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_AUTO_OFF): vol.Any(cv.positive_time_period, cv.template),
-        vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
-        vol.Optional(CONF_DELAY_ON): vol.Any(cv.positive_time_period, cv.template),
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Required(CONF_STATE): cv.template,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_AUTO_OFF): probatio.Any(
+            cv.positive_time_period, cv.template
+        ),
+        probatio.Optional(CONF_DELAY_OFF): probatio.Any(
+            cv.positive_time_period, cv.template
+        ),
+        probatio.Optional(CONF_DELAY_ON): probatio.Any(
+            cv.positive_time_period, cv.template
+        ),
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Required(CONF_STATE): cv.template,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
@@ -151,13 +157,13 @@ class AbstractTemplateBinarySensor(
         self._delay_on = None
         try:
             self._delay_on = cv.positive_time_period(config.get(CONF_DELAY_ON))
-        except vol.Invalid:
+        except probatio.Invalid:
             self.setup_template(CONF_DELAY_ON, "_delay_on", cv.positive_time_period)
 
         self._delay_off = None
         try:
             self._delay_off = cv.positive_time_period(config.get(CONF_DELAY_OFF))
-        except vol.Invalid:
+        except probatio.Invalid:
             self.setup_template(CONF_DELAY_OFF, "_delay_off", cv.positive_time_period)
 
     @override
@@ -348,7 +354,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         if not isinstance(delay, timedelta):
             try:
                 delay = cv.positive_time_period(delay)
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 key = CONF_DELAY_ON if state else CONF_DELAY_OFF
                 logging.getLogger(__name__).warning(
                     "Error rendering %s template: %s", key, err
@@ -382,7 +388,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         if not isinstance(auto_off_delay, timedelta):
             try:
                 auto_off_delay = cv.positive_time_period(auto_off_delay)
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 logging.getLogger(__name__).warning(
                     "Error rendering %s template: %s", CONF_AUTO_OFF, err
                 )

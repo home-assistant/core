@@ -6,8 +6,8 @@ import functools as ft
 import logging
 from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -77,14 +77,14 @@ CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
 _LOGGER = logging.getLogger(__name__)
 
 SET_AWAY_MODE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_AWAY_MODE): cv.boolean,
+    probatio.Required(ATTR_AWAY_MODE): cv.boolean,
 }
 SET_TEMPERATURE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
-    vol.Optional(ATTR_OPERATION_MODE): cv.string,
+    probatio.Required(ATTR_TEMPERATURE, "temperature"): probatio.Coerce(float),
+    probatio.Optional(ATTR_OPERATION_MODE): cv.string,
 }
 SET_OPERATION_MODE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_OPERATION_MODE): cv.string,
+    probatio.Required(ATTR_OPERATION_MODE): cv.string,
 }
 
 # mypy: disallow-any-generics

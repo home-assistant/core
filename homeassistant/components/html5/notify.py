@@ -14,9 +14,9 @@ import warnings
 from aiohttp import ClientError, ClientResponse, ClientSession
 import jwt
 from jwt.warnings import InsecureKeyLengthWarning
+import probatio
 from py_vapid import Vapid
 from pywebpush import WebPusher, WebPushException, webpush_async
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.notify import (
@@ -73,7 +73,7 @@ ATTR_JWT = "jwt"
 
 WS_TYPE_APPKEY = "notify/html5/appkey"
 SCHEMA_WS_APPKEY = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_APPKEY}
+    {probatio.Required("type"): WS_TYPE_APPKEY}
 )
 
 # The number of days after the moment a notification is sent that a JWT
@@ -82,10 +82,10 @@ JWT_VALID_DAYS = 7
 VAPID_CLAIM_VALID_HOURS = 12
 
 
-DISMISS_SERVICE_SCHEMA = vol.Schema(
+DISMISS_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_DATA): dict,
+        probatio.Optional(ATTR_TARGET): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_DATA): dict,
     }
 )
 
@@ -266,7 +266,7 @@ class HTML5NotificationService(BaseNotificationService):
             info = self.registrations.get(target)
             try:
                 info = cast(Registration, REGISTER_SCHEMA(info))
-            except vol.Invalid:
+            except probatio.Invalid:
                 _LOGGER.error(
                     "%s is not a valid HTML5 push notification target", target
                 )

@@ -6,7 +6,7 @@ from typing import Any, override
 
 from fing_agent_api import FingAgent
 import httpx
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
@@ -106,11 +106,11 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_IP_ADDRESS): str,
-                        vol.Required(CONF_PORT, default="49090"): str,
-                        vol.Required(CONF_API_KEY): str,
+                        probatio.Required(CONF_IP_ADDRESS): str,
+                        probatio.Required(CONF_PORT, default="49090"): str,
+                        probatio.Required(CONF_API_KEY): str,
                     }
                 ),
                 user_input,

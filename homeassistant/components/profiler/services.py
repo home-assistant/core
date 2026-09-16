@@ -15,7 +15,7 @@ import traceback
 from typing import Any, cast
 
 from lru import LRU
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_ENABLED, CONF_SCAN_INTERVAL, CONF_TYPE
@@ -274,8 +274,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         DOMAIN,
         SERVICE_START,
         _async_run_profile,
-        schema=vol.Schema(
-            {vol.Optional(CONF_SECONDS, default=60.0): vol.Coerce(float)}
+        schema=probatio.Schema(
+            {probatio.Optional(CONF_SECONDS, default=60.0): probatio.Coerce(float)}
         ),
     )
 
@@ -284,8 +284,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         DOMAIN,
         SERVICE_MEMORY,
         _async_run_memory_profile,
-        schema=vol.Schema(
-            {vol.Optional(CONF_SECONDS, default=60.0): vol.Coerce(float)}
+        schema=probatio.Schema(
+            {probatio.Optional(CONF_SECONDS, default=60.0): probatio.Coerce(float)}
         ),
     )
 
@@ -294,9 +294,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         DOMAIN,
         SERVICE_START_LOG_OBJECTS,
         _async_start_log_objects,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period
             }
@@ -315,14 +315,14 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         DOMAIN,
         SERVICE_START_LOG_OBJECT_SOURCES,
         _async_start_object_sources,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
-                vol.Optional(CONF_MAX_OBJECTS, default=DEFAULT_MAX_OBJECTS): vol.Range(
-                    min=1, max=1024
-                ),
+                probatio.Optional(
+                    CONF_MAX_OBJECTS, default=DEFAULT_MAX_OBJECTS
+                ): probatio.Range(min=1, max=1024),
             }
         ),
     )
@@ -339,7 +339,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         DOMAIN,
         SERVICE_DUMP_LOG_OBJECTS,
         _dump_log_objects,
-        schema=vol.Schema({vol.Required(CONF_TYPE): str}),
+        schema=probatio.Schema({probatio.Required(CONF_TYPE): str}),
     )
 
     async_register_admin_service(
@@ -375,7 +375,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         DOMAIN,
         SERVICE_SET_ASYNCIO_DEBUG,
         _async_asyncio_debug,
-        schema=vol.Schema({vol.Optional(CONF_ENABLED, default=True): cv.boolean}),
+        schema=probatio.Schema(
+            {probatio.Optional(CONF_ENABLED, default=True): cv.boolean}
+        ),
     )
 
     async_register_admin_service(

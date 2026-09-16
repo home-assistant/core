@@ -5,7 +5,7 @@ from typing import Any, Self, override
 
 from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
@@ -170,7 +170,9 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
+            data_schema=probatio.Schema(
+                {probatio.Optional(CONF_HOST, default=""): str}
+            ),
             errors=errors,
         )
 
@@ -211,7 +213,9 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(devices_name)}
+            ),
         )
 
     @callback

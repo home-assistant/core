@@ -4,8 +4,8 @@ from collections.abc import Callable
 import functools
 from typing import Any, override
 
+import probatio
 from pydantic import ValidationError
-import voluptuous as vol
 from zwave_js_server.model.controller import CONTROLLER_EVENT_MODEL_MAP
 from zwave_js_server.model.driver import DRIVER_EVENT_MODEL_MAP, Driver
 from zwave_js_server.model.node import NODE_EVENT_MODEL_MAP
@@ -55,17 +55,17 @@ def validate_event_source_targets(obj: dict) -> dict:
     """Validate that the targets match the event source."""
     if obj[ATTR_EVENT_SOURCE] == "node":
         if ATTR_DEVICE_ID not in obj and ATTR_ENTITY_ID not in obj:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Node event triggers must contain {ATTR_DEVICE_ID} or "
                 f"{ATTR_ENTITY_ID}."
             )
         return obj
     if ATTR_CONFIG_ENTRY_ID not in obj:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Non node event triggers must contain {ATTR_CONFIG_ENTRY_ID}."
         )
     if ATTR_DEVICE_ID in obj or ATTR_ENTITY_ID in obj:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Non node event triggers must not contain {ATTR_DEVICE_ID} or "
             f"{ATTR_ENTITY_ID}."
         )
@@ -78,11 +78,11 @@ def validate_event_name(obj: dict) -> dict:
     event_name = obj[ATTR_EVENT]
     # the keys to the event source's model map are the event names
     if event_source == "controller":
-        vol.In(CONTROLLER_EVENT_MODEL_MAP)(event_name)
+        probatio.In(CONTROLLER_EVENT_MODEL_MAP)(event_name)
     elif event_source == "driver":
-        vol.In(DRIVER_EVENT_MODEL_MAP)(event_name)
+        probatio.In(DRIVER_EVENT_MODEL_MAP)(event_name)
     else:
-        vol.In(NODE_EVENT_MODEL_MAP)(event_name)
+        probatio.In(NODE_EVENT_MODEL_MAP)(event_name)
     return obj
 
 
@@ -106,23 +106,23 @@ def validate_event_data(obj: dict) -> dict:
         # Filter out required field errors if keys can be missing, and if there are
         # still errors, raise an exception
         if [error for error in exc.errors() if error["type"] != "missing"]:
-            raise vol.MultipleInvalid from exc
+            raise probatio.MultipleInvalid from exc
     return obj
 
 
 _OPTIONS_SCHEMA_DICT = {
-    vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
-    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_EVENT_SOURCE): vol.In(["controller", "driver", "node"]),
-    vol.Required(ATTR_EVENT): cv.string,
-    vol.Optional(ATTR_EVENT_DATA): dict,
-    vol.Optional(ATTR_PARTIAL_DICT_MATCH, default=False): bool,
+    probatio.Optional(ATTR_CONFIG_ENTRY_ID): str,
+    probatio.Optional(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+    probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    probatio.Required(ATTR_EVENT_SOURCE): probatio.In(["controller", "driver", "node"]),
+    probatio.Required(ATTR_EVENT): cv.string,
+    probatio.Optional(ATTR_EVENT_DATA): dict,
+    probatio.Optional(ATTR_PARTIAL_DICT_MATCH, default=False): bool,
 }
 
-_CONFIG_SCHEMA = vol.Schema(
+_CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS): vol.All(
+        probatio.Required(CONF_OPTIONS): probatio.All(
             _OPTIONS_SCHEMA_DICT,
             validate_event_name,
             validate_event_data,
@@ -166,7 +166,7 @@ class EventTrigger(Trigger):
         if ATTR_CONFIG_ENTRY_ID in options:
             entry_id = options[ATTR_CONFIG_ENTRY_ID]
             if hass.config_entries.async_get_entry(entry_id) is None:
-                raise vol.Invalid(f"Config entry '{entry_id}' not found")
+                raise probatio.Invalid(f"Config entry '{entry_id}' not found")
 
         if async_bypass_dynamic_config_validation(hass, options):
             return config
@@ -174,7 +174,7 @@ class EventTrigger(Trigger):
         if options[ATTR_EVENT_SOURCE] == "node" and not async_get_nodes_from_targets(
             hass, options
         ):
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
             )
 

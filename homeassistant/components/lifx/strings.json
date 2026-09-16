@@ -50,6 +50,11 @@
       }
     }
   },
+  "exceptions": {
+    "not_loaded": {
+      "message": "LIFX is not loaded, so this action cannot be performed."
+    }
+  },
   "services": {
     "effect_colorloop": {
       "description": "Runs an effect with looping colors.",

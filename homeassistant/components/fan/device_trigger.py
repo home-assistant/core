@@ -1,6 +1,6 @@
 """Provides device automations for Fan."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import CONF_DOMAIN
@@ -10,9 +10,11 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-TRIGGER_SCHEMA = vol.All(
+TRIGGER_SCHEMA = probatio.All(
     toggle_entity.TRIGGER_SCHEMA,
-    vol.Schema({vol.Required(CONF_DOMAIN): DOMAIN}, extra=vol.ALLOW_EXTRA),
+    probatio.Schema(
+        {probatio.Required(CONF_DOMAIN): DOMAIN}, extra=probatio.ALLOW_EXTRA
+    ),
 )
 
 
@@ -25,7 +27,7 @@ async def async_get_triggers(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
     return await toggle_entity.async_get_trigger_capabilities(hass, config)
 

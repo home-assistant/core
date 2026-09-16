@@ -4,8 +4,8 @@ import asyncio
 import logging
 from typing import Any, Final, override
 
+import probatio
 from pyfronius import Fronius, FroniusError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -20,7 +20,9 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 DHCP_REQUEST_DELAY: Final = 60
 
-MODBUS_PORT_SELECTOR: Final = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
+MODBUS_PORT_SELECTOR: Final = probatio.All(
+    probatio.Coerce(int), probatio.Range(min=1, max=65535)
+)
 
 
 def create_title(info: FroniusConfigEntryData) -> str:
@@ -101,10 +103,10 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(
                         CONF_MODBUS_PORT, default=DEFAULT_MODBUS_PORT
                     ): MODBUS_PORT_SELECTOR,
                 }
@@ -182,10 +184,10 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
         modbus_port = reconfigure_entry.data.get(CONF_MODBUS_PORT, DEFAULT_MODBUS_PORT)
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=host): str,
-                    vol.Required(
+                    probatio.Required(CONF_HOST, default=host): str,
+                    probatio.Required(
                         CONF_MODBUS_PORT, default=modbus_port
                     ): MODBUS_PORT_SELECTOR,
                 }

@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.air_quality import (
     DOMAIN as AIR_QUALITY_DOMAIN,
@@ -38,7 +38,10 @@ from .const import (
 from .coordinator import OpenSenseMapConfigEntry, OpenSenseMapCoordinator
 
 PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_STATION_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
+    {
+        probatio.Required(CONF_STATION_ID): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+    }
 )
 
 

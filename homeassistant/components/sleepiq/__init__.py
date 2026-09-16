@@ -7,10 +7,11 @@ from asyncsleepiq import (
     AsyncSleepIQ,
     SleepIQAPIException,
     SleepIQBed,
+    SleepIQConnectionException,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, PRESSURE, Platform
@@ -41,14 +42,14 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: {
-            vol.Required(CONF_USERNAME): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
+            probatio.Required(CONF_USERNAME): cv.string,
+            probatio.Required(CONF_PASSWORD): cv.string,
         }
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -76,6 +77,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
 
     try:
         await gateway.login(email, password)
+    except SleepIQConnectionException as err:
+        raise ConfigEntryNotReady(
+            str(err) or "Transient connection failure during authentication"
+        ) from err
     except SleepIQLoginException as err:
         _LOGGER.error("Could not authenticate with SleepIQ server")
         raise ConfigEntryAuthFailed(err) from err
