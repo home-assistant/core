@@ -447,8 +447,8 @@ async def test_missing_set_humidity_config(
         (
             "target_temperature",
             {
-                "min_temp": -2,
-                "max_temp": 101,
+                "min_temperature": -2,
+                "max_temperature": 101,
                 **SET_TEMPERATURE_ACTION,
                 **MINIMUM_REQUIREMENTS,
             },
@@ -788,8 +788,8 @@ async def test_optimistic_set_temperature_action_without_hvac_mode(
         (
             "target_temperature_high",
             {
-                "min_temp": -3,
-                "max_temp": 101,
+                "min_temperature": -3,
+                "max_temperature": 101,
                 "target_temperature_low": "{{ -3 }}",
                 **SET_TEMPERATURE_ACTION,
                 **MINIMUM_REQUIREMENTS,
@@ -836,8 +836,8 @@ async def test_target_temperature_high_template(
         (
             "target_temperature_low",
             {
-                "min_temp": -2,
-                "max_temp": 102,
+                "min_temperature": -2,
+                "max_temperature": 102,
                 "target_temperature_high": "{{ 102 }}",
                 **SET_TEMPERATURE_ACTION,
                 **MINIMUM_REQUIREMENTS,
@@ -1560,8 +1560,8 @@ async def test_group_optimistic_actions(
     [
         ("max_humidity", "int"),
         ("min_humidity", "int"),
-        ("max_temp", "float"),
-        ("min_temp", "float"),
+        ("max_temperature", "float"),
+        ("min_temperature", "float"),
     ],
 )
 @pytest.mark.parametrize("value", ["not a number", None])

@@ -67,9 +67,9 @@ CONF_HVAC_ACTION = "hvac_action"
 CONF_HVAC_MODE = "hvac_mode"
 CONF_HVAC_MODES = "hvac_modes"
 CONF_MAX_HUMIDITY = "max_humidity"
-CONF_MAX_TEMP = "max_temp"
+CONF_MAX_TEMPERATURE = "max_temperature"
 CONF_MIN_HUMIDITY = "min_humidity"
-CONF_MIN_TEMP = "min_temp"
+CONF_MIN_TEMPERATURE = "min_temperature"
 CONF_PRECISION = "precision"
 CONF_PRESET_MODE = "preset_mode"
 CONF_PRESET_MODES = "preset_modes"
@@ -127,9 +127,9 @@ CLIMATE_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_HVAC_MODE): cv.template,
         probatio.Required(CONF_HVAC_MODES): cv.template,
         probatio.Optional(CONF_MAX_HUMIDITY): probatio.Coerce(int),
-        probatio.Optional(CONF_MAX_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_MAX_TEMPERATURE): probatio.Coerce(float),
         probatio.Optional(CONF_MIN_HUMIDITY): probatio.Coerce(int),
-        probatio.Optional(CONF_MIN_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_MIN_TEMPERATURE): probatio.Coerce(float),
         probatio.Optional(CONF_PRECISION): probatio.Any(
             PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE
         ),
@@ -414,8 +414,8 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         # Only set these options when it exists in the configuration in order
         # to properly use default values set by the upstream class.
         for attr, option in (
-            ("_attr_max_temp", CONF_MAX_TEMP),
-            ("_attr_min_temp", CONF_MIN_TEMP),
+            ("_attr_max_temp", CONF_MAX_TEMPERATURE),
+            ("_attr_min_temp", CONF_MIN_TEMPERATURE),
             ("_attr_max_humidity", CONF_MAX_HUMIDITY),
             ("_attr_min_humidity", CONF_MIN_HUMIDITY),
             ("_attr_precision", CONF_PRECISION),
@@ -656,6 +656,19 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
 
         return update
 
+    def _round_humidity_value(self, value: Any) -> int:
+        result = (
+            value
+            if self._attr_target_humidity_step is None
+            else int(
+                _round_to_step(
+                    float(value) / 10.0, self._attr_target_humidity_step / 10.0
+                )
+                * 10.0
+            )
+        )
+        return int(min(self.max_humidity, max(self.min_humidity, result)))
+
     def _update_target_humidity(
         self,
         result,
@@ -664,18 +677,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             self._attr_target_humidity = None
             return
 
-        if self._attr_target_humidity_step is None:
-            self._attr_target_humidity = result
-        else:
-            rounded = int(
-                _round_to_step(
-                    float(result) / 10.0, self._attr_target_humidity_step / 10.0
-                )
-                * 10.0
-            )
-            self._attr_target_humidity = min(
-                self.max_humidity, max(self.min_humidity, rounded)
-            )
+        self._attr_target_humidity = self._round_humidity_value(result)
 
     async def _async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         if script := self._action_scripts.get(SET_HVAC_MODE_ACTION):
@@ -745,14 +747,15 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
     @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set the target humidity."""
+        rounded = self._round_humidity_value(humidity)
         if script := self._action_scripts.get(SET_HUMIDITY_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={"humidity": humidity},
+                run_variables={"humidity": rounded},
                 context=self._context,
             )
 
-        self.write_assumed_attribute(CONF_TARGET_HUMIDITY, humidity)
+        self.write_assumed_attribute(CONF_TARGET_HUMIDITY, rounded)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:

@@ -58,8 +58,8 @@ from .climate import (
     CONF_HVAC_ACTION,
     CONF_HVAC_MODE,
     CONF_HVAC_MODES,
-    CONF_MAX_TEMP,
-    CONF_MIN_TEMP,
+    CONF_MAX_TEMPERATURE,
+    CONF_MIN_TEMPERATURE,
     CONF_TARGET_TEMPERATURE,
     SET_HVAC_MODE_ACTION,
     SET_TEMPERATURE_ACTION,
@@ -228,14 +228,14 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             ),
         }
         additional_options |= {
-            probatio.Optional(CONF_MIN_TEMP): selector.NumberSelector(
+            probatio.Optional(CONF_MIN_TEMPERATURE): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     mode=selector.NumberSelectorMode.BOX,
                     unit_of_measurement=DEGREE,
                     step=0.1,
                 )
             ),
-            probatio.Optional(CONF_MAX_TEMP): selector.NumberSelector(
+            probatio.Optional(CONF_MAX_TEMPERATURE): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     mode=selector.NumberSelectorMode.BOX,
                     unit_of_measurement=DEGREE,
