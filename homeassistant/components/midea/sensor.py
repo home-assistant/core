@@ -1,6 +1,7 @@
 """Midea Sensor entities."""
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import cast, override
 
 from midealocal.const import DeviceType
@@ -29,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .entity import MideaConfigEntry, MideaEntity
 
@@ -568,6 +570,17 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         ],
     ),
     MideaSensorEntityDescription(
+        key="time_remaining",
+        translation_key="time_remaining",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    MideaSensorEntityDescription(
+        key="heating_time_remaining",
+        translation_key="time_remaining",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        models=[DeviceType.E2],
+    ),
+    MideaSensorEntityDescription(
         key="wash_time",
         translation_key="wash_time",
         device_class=SensorDeviceClass.DURATION,
@@ -808,7 +821,7 @@ class MideaSensor(MideaEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Native value of the sensor."""
         value = self._device.get_attribute(self.entity_description.key)
         if (
@@ -819,4 +832,8 @@ class MideaSensor(MideaEntity, SensorEntity):
             return None
         if value == "unknown":
             return None
+        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
+            if not isinstance(value, (int, float)) or value <= 0:
+                return None
+            return dt_util.utcnow() + timedelta(minutes=value)
         return cast("StateType", value)

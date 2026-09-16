@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
@@ -70,7 +71,7 @@ from tests.common import MockConfigEntry, snapshot_platform
                 DeviceType.E8,
                 attributes={
                     E8Attributes.status: 1,
-                    E8Attributes.time_remaining: 3600,
+                    E8Attributes.time_remaining: 60,
                     E8Attributes.keep_warm_remaining: 1800,
                     E8Attributes.working_time: 7200,
                     E8Attributes.target_temperature: 22.0,
@@ -177,12 +178,14 @@ from tests.common import MockConfigEntry, snapshot_platform
 )
 async def test_all_entities(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     device: DummyDevice,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor entities are created."""
+    freezer.move_to("2026-01-09 12:00:00+00:00")
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry, device)
@@ -242,6 +245,41 @@ async def test_sensor_state_update(
     assert state.state == "unknown"
 
     await set_device_attribute(device, ACAttributes.indoor_humidity, 255)
+    state = hass.states.get(entity_entry.entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_time_remaining_sensor_as_timestamp(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    set_device_attribute: SetDeviceAttribute,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test time_remaining is reported as an absolute timestamp in minutes."""
+    freezer.move_to("2026-01-09 12:00:00+00:00")
+    device = DummyDevice(
+        DeviceType.E8,
+        attributes={E8Attributes.time_remaining: 90},
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[
+        f"{TEST_DEVICE_ID}_time_remaining"
+    ]
+
+    state = hass.states.get(entity_entry.entity_id)
+    assert state is not None
+    assert state.state == "2026-01-09T13:30:00+00:00"
+
+    await set_device_attribute(device, E8Attributes.time_remaining, 0)
+    state = hass.states.get(entity_entry.entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+    await set_device_attribute(device, E8Attributes.time_remaining, None)
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
     assert state.state == "unknown"
