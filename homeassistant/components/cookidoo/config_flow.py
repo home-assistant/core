@@ -250,6 +250,10 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 await get_localization_options(country=data_input[CONF_COUNTRY].lower())
             )[0].language  # Pick any language to test login
 
+        # Only this attempt's tokens may reach the entry: a login that yields
+        # none leaves _save_token uncalled, and an earlier attempt may have
+        # stored a pair, for another account in a reauth
+        self.token = {}
         cookidoo = await cookidoo_from_config_data(
             self.hass, data_input, on_auth_data_update=self._save_token
         )

@@ -114,6 +114,44 @@ async def test_flow_user_stores_token_rotated_during_validation(
     assert result["data"][CONF_TOKEN] == asdict(rotated)
 
 
+async def test_flow_reauth_drops_tokens_of_a_failed_attempt(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+) -> None:
+    """Test a retried reauth does not persist the tokens of an earlier attempt.
+
+    The first attempt logs in -- which hands us its tokens -- and only then
+    fails, and the retry logs in without any. Those tokens belong to the
+    credentials that were rejected, so they must not reach the entry.
+    """
+    await setup_integration(hass, cookidoo_config_entry)
+    mock_cookidoo_client.reset_mock()
+
+    result = await cookidoo_config_entry.start_reauth_flow(hass)
+
+    user_info = mock_cookidoo_client.get_user_info.return_value
+    mock_cookidoo_client.get_user_info.side_effect = [
+        CookidooRequestException(),
+        user_info,
+    ]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "wrong-email", CONF_PASSWORD: "wrong-password"},
+    )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # The retried login yields no tokens, so nothing overwrites the stale pair
+    mock_cookidoo_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["reason"] == "reauth_successful"
+    assert cookidoo_config_entry.data[CONF_TOKEN] == {}
+
+
 async def test_flow_user_login_without_tokens(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cookidoo_client: AsyncMock
 ) -> None:
