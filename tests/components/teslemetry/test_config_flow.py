@@ -804,11 +804,11 @@ async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None
 
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
         patch.object(hass.config_entries, "async_schedule_reload"),
@@ -837,11 +837,11 @@ async def test_subentry_pairing_duplicate_vin_aborts(hass: HomeAssistant) -> Non
 
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
         patch.object(hass.config_entries, "async_schedule_reload"),
@@ -882,11 +882,11 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
 
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
         patch.object(hass.config_entries, "async_schedule_reload"),
@@ -925,11 +925,11 @@ async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
     ):
@@ -972,11 +972,11 @@ async def test_subentry_authorize_failure(
 
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
     ):
@@ -1014,11 +1014,11 @@ async def test_subentry_authorize_unexpected_error_disconnects(
 
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
     ):
@@ -1058,11 +1058,11 @@ async def test_subentry_authorize_existing_key_finishes(hass: HomeAssistant) -> 
 
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
         patch.object(hass.config_entries, "async_schedule_reload"),
@@ -1122,11 +1122,11 @@ async def test_subentry_handshake_error_recovers(
 
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
         patch.object(hass.config_entries, "async_schedule_reload"),
@@ -1171,11 +1171,11 @@ async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
     ):
@@ -1204,11 +1204,11 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[],
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=MagicMock(),
         ),
     ):
@@ -1245,11 +1245,11 @@ async def test_subentry_scan_key_load_recovers(
 
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             side_effect=[key_error, _mock_ble_parent(vehicle)],
         ) as mock_ble_parent,
         patch.object(hass.config_entries, "async_schedule_reload"),
@@ -1291,15 +1291,15 @@ async def test_subentry_scan_finds_device_after_active_scan(
 
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             mock_discovered,
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_request_active_scan",
+            "homeassistant.components.teslemetry.config_flow.async_request_active_scan",
             AsyncMock(side_effect=_active_scan),
         ) as mock_active_scan,
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
         patch.object(hass.config_entries, "async_schedule_reload"),
@@ -1358,11 +1358,11 @@ async def test_subentry_add_flow_keeps_device_on_parent(
     # writes the vehicle key file nor opens a real connection.
     with (
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
         patch(

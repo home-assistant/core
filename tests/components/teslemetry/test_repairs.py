@@ -248,7 +248,7 @@ def discovered() -> Generator[MagicMock]:
     info = MagicMock()
     info.name = TeslaBluetooth().get_name(VEHICLE_VIN)
     with patch(
-        "homeassistant.components.teslemetry.pairing_flow.async_discovered_service_info",
+        "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
         return_value=[info],
     ) as mock_discovered:
         yield mock_discovered
@@ -261,7 +261,7 @@ def ble_parent(ble_vehicle: AsyncMock) -> Generator[MagicMock]:
     parent.get_name.return_value = TeslaBluetooth().get_name(VEHICLE_VIN)
     parent.vehicles.createBluetooth.return_value = ble_vehicle
     with patch(
-        "homeassistant.components.teslemetry.pairing_flow.async_get_ble_parent",
+        "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
         return_value=parent,
     ):
         yield parent

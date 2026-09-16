@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 
 from . import TeslemetryConfigEntry
+from .config_flow import VehiclePairingFlow
 from .const import ISSUE_TYPE_BLE_KEY_REJECTED, VEHICLE_ISSUE_LEARN_MORE
-from .pairing_flow import VehiclePairingFlow
 
 
 class VehicleMetadataRepairFlow(RepairsFlow):
@@ -60,7 +60,7 @@ class VehicleMetadataRepairFlow(RepairsFlow):
         )
 
 
-class BluetoothKeyRepairFlow(VehiclePairingFlow[RepairsFlowResult], RepairsFlow):
+class BluetoothKeyRepairFlow(VehiclePairingFlow, RepairsFlow):
     """Re-approve Home Assistant's Bluetooth key on a vehicle that rejected it."""
 
     def __init__(self, vin: str) -> None:
@@ -74,11 +74,11 @@ class BluetoothKeyRepairFlow(VehiclePairingFlow[RepairsFlowResult], RepairsFlow)
         """Start re-pairing by finding the vehicle over Bluetooth."""
         if not async_scanner_count(self.hass, connectable=True):
             return self.async_abort(reason="bluetooth_not_available")
-        return await self.async_step_scan()
+        return await self.async_step_scan()  # type: ignore[return-value]
 
     @callback
     @override
-    def _async_finish_pairing(self) -> RepairsFlowResult:
+    def _async_finish_pairing(self) -> RepairsFlowResult:  # type: ignore[override]
         """Resolve the repair once the key is back on the vehicle's whitelist."""
         return self.async_create_entry(data={})
 
