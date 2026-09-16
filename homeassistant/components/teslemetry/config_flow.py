@@ -344,11 +344,16 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             assert self._vin is not None
         await self._async_disconnect()
         if self.source == SOURCE_RECONFIGURE:
-            return self.async_update_and_abort(
-                self._get_entry(),
+            entry = self._get_entry()
+            result = self.async_update_and_abort(
+                entry,
                 self._get_reconfigure_subentry(),
                 data_updates={CONF_ADDRESS: self._address},
             )
+            # Reload manually: the subentry change listener only fires on add or
+            # remove, and async_update_reload_and_abort would warn (listener present).
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return result
         return self.async_create_entry(
             title=self._title or self._vin,
             data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},

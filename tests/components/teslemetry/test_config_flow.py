@@ -771,7 +771,10 @@ async def _setup_paired_entry(hass: HomeAssistant) -> MockConfigEntry:
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
-        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock()
+        ble_vehicle = AsyncMock()
+        # set_device is sync; an AsyncMock child would leak an un-awaited coroutine.
+        ble_vehicle.set_device = MagicMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = ble_vehicle
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     return entry
@@ -1441,6 +1444,63 @@ async def test_subentry_reconfigure_updates_address(hass: HomeAssistant) -> None
     assert updated.data == {CONF_VIN: VIN, CONF_ADDRESS: new_address}
     vehicle.connect.assert_awaited_once()
     vehicle.disconnect.assert_awaited_once()
+
+
+async def test_subentry_reconfigure_reloads_onto_new_address(
+    hass: HomeAssistant,
+) -> None:
+    """Reconfigure reloads the entry so the live router uses the new address."""
+    entry = await _setup_paired_entry(hass)
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+    new_address = "11:22:33:44:55:66"
+
+    vehicle = _mock_vehicle(on_whitelist=True)
+    info = _discovered_info()
+    info.address = new_address
+
+    # async_schedule_reload is left unpatched so the real reload runs here with the
+    # committed BLE address; keep the setup-time Bluetooth mocks active so it neither
+    # writes the vehicle key file nor opens a real connection.
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[info],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ) as mock_ble_device,
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = MagicMock()
+
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        # The reconfigure schedules the reload, which runs to completion here.
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert entry.state is ConfigEntryState.LOADED
+
+        router = entry.runtime_data.vehicles[0].api
+        assert isinstance(router, VehicleRouter)
+        mock_ble_device.reset_mock()
+        # The health check is what the router uses to decide it can talk locally.
+        assert await router.is_healthy()
+
+    # The reloaded router looks for the new address, not the one it was set up with.
+    assert mock_ble_device.call_args.args[1] == new_address
 
 
 async def test_subentry_reconfigure_device_not_found(hass: HomeAssistant) -> None:
