@@ -1,11 +1,12 @@
 """Test the ISEO Argo BLE integration setup and teardown."""
 
-from unittest.mock import MagicMock
+import time
+from unittest.mock import MagicMock, patch
 
 from iseo_argo_ble import IseoAuthError, IseoConnectionError, LockState
 import pytest
 
-from homeassistant.components.iseo_argo_ble.const import DOMAIN
+from homeassistant.components.iseo_argo_ble.const import DOMAIN, STATE_POLL_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -135,6 +136,29 @@ async def test_poll_auth_error_logs_once(
     caplog.clear()
     await trigger_poll(hass)
     assert "rejected the Home Assistant identity" not in caplog.text
+
+
+async def test_poll_is_throttled_to_the_poll_interval(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+) -> None:
+    """Test an advertisement inside the poll interval does not read the lock."""
+    interval = STATE_POLL_INTERVAL.total_seconds()
+    # Date the reading below from the real clock, so the advertisements that
+    # follow are measured against it rather than against the pinned one.
+    with patch(
+        "homeassistant.components.iseo_argo_ble.coordinator.monotonic_time_coarse",
+        side_effect=time.monotonic,
+    ):
+        await trigger_poll(hass)
+    mock_iseo_client.read_state.reset_mock()
+
+    await trigger_poll(hass, after=interval - 1)
+    mock_iseo_client.read_state.assert_not_called()
+
+    await trigger_poll(hass, after=interval + 1)
+    mock_iseo_client.read_state.assert_called_once()
 
 
 async def test_no_poll_without_door_sensor(

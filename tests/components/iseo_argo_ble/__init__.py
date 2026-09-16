@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from itertools import count
+import time
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.core import HomeAssistant
@@ -11,6 +12,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
     generate_advertisement_data,
     generate_ble_device,
+    inject_advertisement_with_time_and_source,
     inject_bluetooth_service_info,
 )
 
@@ -58,13 +60,20 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     await hass.async_block_till_done()
 
 
-def inject_advertisement(hass: HomeAssistant) -> None:
+def inject_advertisement(hass: HomeAssistant, at_time: float | None = None) -> None:
     """Inject a fresh advertisement from the lock."""
-    inject_bluetooth_service_info(hass, _service_info({next(_adv_counter): b"\x01"}))
+    info = _service_info({next(_adv_counter): b"\x01"})
+    inject_advertisement_with_time_and_source(
+        hass,
+        info.device,
+        info.advertisement,
+        time.monotonic() if at_time is None else at_time,
+        info.source,
+    )
 
 
-async def trigger_poll(hass: HomeAssistant) -> None:
-    """Advertise the lock and let the debounced coordinator poll run."""
-    inject_advertisement(hass)
+async def trigger_poll(hass: HomeAssistant, after: float = 0) -> None:
+    """Advertise the lock `after` seconds from now, and let the poll run."""
+    inject_advertisement(hass, at_time=time.monotonic() + after)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
     await hass.async_block_till_done()
