@@ -152,7 +152,7 @@ async def test_user_flow_without_receiver(hass: HomeAssistant) -> None:
 async def test_user_flow_stale_emitter_selection(
     hass: HomeAssistant,
 ) -> None:
-    """Test user flow rejects an emitter that disappears before submit."""
+    """Test user flow recovers when an emitter disappears before submit."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -161,9 +161,11 @@ async def test_user_flow_stale_emitter_selection(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
+    replacement_emitter = "infrared.replacement_emitter"
+
     with patch(
         "homeassistant.components.osram_infrared.config_flow.async_get_emitters",
-        return_value=["infrared.other_emitter"],
+        return_value=[replacement_emitter],
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -172,10 +174,23 @@ async def test_user_flow_stale_emitter_selection(
             },
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {
-        CONF_IR_EMITTER_ENTITY_ID: "cannot_connect",
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {
+            CONF_IR_EMITTER_ENTITY_ID: "cannot_connect",
+        }
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_IR_EMITTER_ENTITY_ID: replacement_emitter,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"OSRAM light via {replacement_emitter}"
+    assert result["data"] == {
+        CONF_IR_EMITTER_ENTITY_ID: replacement_emitter,
     }
 
 
@@ -186,7 +201,7 @@ async def test_user_flow_stale_emitter_selection(
 async def test_user_flow_stale_receiver_selection(
     hass: HomeAssistant,
 ) -> None:
-    """Test user flow rejects a receiver that disappears before submit."""
+    """Test user flow recovers when a receiver disappears before submit."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -195,9 +210,11 @@ async def test_user_flow_stale_receiver_selection(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
+    replacement_receiver = "infrared.replacement_receiver"
+
     with patch(
         "homeassistant.components.osram_infrared.config_flow.async_get_receivers",
-        return_value=[],
+        return_value=[replacement_receiver],
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -207,10 +224,24 @@ async def test_user_flow_stale_receiver_selection(
             },
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {
-        CONF_IR_RECEIVER_ENTITY_ID: "cannot_connect",
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {
+            CONF_IR_RECEIVER_ENTITY_ID: "cannot_connect",
+        }
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+                CONF_IR_RECEIVER_ENTITY_ID: replacement_receiver,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+        CONF_IR_RECEIVER_ENTITY_ID: replacement_receiver,
     }
 
 

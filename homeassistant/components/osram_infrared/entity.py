@@ -15,13 +15,13 @@ FULL_FRAME_REPEAT_DELAY = 0.01
 
 
 class OsramIrEntity(Entity):
-    """OSRAM IR base entity providing common device information."""
+    """OSRAM IR base entity providing common device info."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, entry: ConfigEntry, unique_id_suffix: str) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize an OSRAM IR entity."""
-        self._attr_unique_id = f"{entry.entry_id}_{unique_id_suffix}"
+        self._attr_unique_id = entry.entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="OSRAM light",
@@ -36,10 +36,9 @@ class OsramIrEmitterEntity(OsramIrEntity, InfraredEmitterConsumerEntity):
         self,
         entry: ConfigEntry,
         emitter_entity_id: str,
-        unique_id_suffix: str,
     ) -> None:
         """Initialize an OSRAM IR emitter consumer entity."""
-        super().__init__(entry, unique_id_suffix)
+        super().__init__(entry)
         self._infrared_emitter_entity_id = emitter_entity_id
 
     async def _async_send_code(

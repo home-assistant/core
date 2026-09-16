@@ -402,7 +402,7 @@ async def test_receiver_ignores_other_nec_addresses(
     state = hass.states.get("light.osram_light")
 
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("has_receiver_entity", [True])
@@ -420,7 +420,7 @@ async def test_receiver_ignores_non_nec_signals(
     state = hass.states.get("light.osram_light")
 
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("has_receiver_entity", [True])
@@ -501,4 +501,4 @@ async def test_receiver_ignores_unknown_osram_command(
 
     state = hass.states.get("light.osram_light")
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN

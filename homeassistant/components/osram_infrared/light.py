@@ -157,13 +157,9 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
 
     def __init__(self, entry: ConfigEntry, emitter_entity_id: str) -> None:
         """Initialize an OSRAM infrared light."""
-        super().__init__(
-            entry,
-            emitter_entity_id,
-            unique_id_suffix="light",
-        )
+        super().__init__(entry, emitter_entity_id)
 
-        self._attr_is_on = False
+        self._attr_is_on = None
         self._attr_effect = EFFECT_OFF
         self._last_static_color_code = OsramLightCode.WHITE
         self._last_static_rgb_color = RGB_WHITE
