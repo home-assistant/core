@@ -6,7 +6,12 @@ from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TOGGLE
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -72,6 +77,58 @@ async def test_switch_unavailable_setup_value_none(
 
     state = hass.states.get("switch.my_pv_ac_elwa_2_boost_mode")
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_switch_turn_on(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test setting value."""
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SWITCH]):
+        mock_config_entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_my_pv_client.get_setup_value = Mock(return_value=False)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "switch.my_pv_ac_elwa_2_boost_mode",
+        },
+        blocking=True,
+    )
+    mock_my_pv_client.set_setup_value.assert_awaited_once_with("bstmode", True)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_switch_turn_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test setting value."""
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SWITCH]):
+        mock_config_entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_my_pv_client.get_setup_value = Mock(return_value=True)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            ATTR_ENTITY_ID: "switch.my_pv_ac_elwa_2_boost_mode",
+        },
+        blocking=True,
+    )
+    mock_my_pv_client.set_setup_value.assert_awaited_once_with("bstmode", False)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
