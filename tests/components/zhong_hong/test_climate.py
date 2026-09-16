@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
     FAN_LOW,
-    FAN_MIDDLE,
+    FAN_MEDIUM,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -456,7 +456,7 @@ async def test_commands_in_a_row_are_read_back_once(
 
     assert mock_gateway.query_all_status_calls == 1
 
-    commands = (FAN_HIGH, FAN_LOW, FAN_MIDDLE)
+    commands = (FAN_HIGH, FAN_LOW, FAN_MEDIUM)
     for fan_mode in commands:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -623,7 +623,7 @@ async def test_every_fan_mode_has_a_name(
     assert {mode: named_here.get(f"{by_integration}{mode}") for mode in fan_modes} == {
         FAN_LOW: None,
         FAN_MEDIUM_LOW: "Medium low",
-        FAN_MIDDLE: None,
+        FAN_MEDIUM: None,
         FAN_MEDIUM_HIGH: "Medium high",
         FAN_HIGH: None,
     }
@@ -632,7 +632,7 @@ async def test_every_fan_mode_has_a_name(
     } == {
         FAN_LOW: "Low",
         FAN_MEDIUM_LOW: None,
-        FAN_MIDDLE: "Middle",
+        FAN_MEDIUM: "Medium",
         FAN_MEDIUM_HIGH: None,
         FAN_HIGH: "High",
     }

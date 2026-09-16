@@ -9,7 +9,7 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODES,
     FAN_HIGH,
     FAN_LOW,
-    FAN_MIDDLE,
+    FAN_MEDIUM,
 )
 from homeassistant.components.zhong_hong.config_flow import DISCOVERY_TIMEOUT
 from homeassistant.components.zhong_hong.const import (
@@ -239,18 +239,18 @@ async def test_options_flow(
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {CONF_FAN_MODES: [FAN_LOW, FAN_MIDDLE, FAN_HIGH]}
+        result["flow_id"], {CONF_FAN_MODES: [FAN_LOW, FAN_MEDIUM, FAN_HIGH]}
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {
-        CONF_FAN_MODES: [FAN_LOW, FAN_MIDDLE, FAN_HIGH]
+        CONF_FAN_MODES: [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
     }
     # Saving reloads the entry, which is where the entity picks the speeds up.
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODES] == [
         FAN_LOW,
-        FAN_MIDDLE,
+        FAN_MEDIUM,
         FAN_HIGH,
     ]
 

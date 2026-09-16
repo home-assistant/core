@@ -77,11 +77,11 @@
   "selector": {
     "fan_modes": {
       "options": {
-        "high": "High",
-        "low": "Low",
+        "high": "[%key:common::state::high%]",
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
         "medium_high": "Medium high",
-        "medium_low": "Medium low",
-        "middle": "Middle"
+        "medium_low": "Medium low"
       }
     }
   }
