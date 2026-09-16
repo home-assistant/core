@@ -19,7 +19,7 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED
@@ -80,7 +80,7 @@ class CollectionImageImageEntity(ImageEntity):
         self._attr_image_url = UNDEFINED
         self._cached_image = None
         self.async_write_ha_state()
-        raise ServiceValidationError(
+        raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="no_images",
             translation_placeholders={"entity": self.entity_id},
@@ -201,7 +201,7 @@ class CollectionImageImageEntity(ImageEntity):
             self._attr_image_url = UNDEFINED
             self._attr_content_type = DEFAULT_CONTENT_TYPE
             self.async_write_ha_state()
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unresolvable",
                 translation_placeholders={
@@ -230,7 +230,7 @@ class CollectionImageImageEntity(ImageEntity):
         async def get_random_image_on_start(_hass: HomeAssistant) -> None:
             try:
                 await self.get_random_image()
-            except ServiceValidationError:
+            except HomeAssistantError:
                 _LOGGER.exception(
                     "Unable to get an initial image",
                 )

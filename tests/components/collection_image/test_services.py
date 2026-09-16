@@ -13,7 +13,7 @@ from homeassistant.components.collection_image.services import (
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import MediaSourceMocks, MediaSourceState
 from .const import DEFAULT_ENTITY_ID, MOCK_MEDIA_DIR_URI_1
@@ -179,7 +179,7 @@ async def test_navigation(
 
     # Now there are no images, go to unavailable
     media_source_state.browse_results = {MOCK_MEDIA_DIR_URI_1: directory("My pictures")}
-    with pytest.raises(ServiceValidationError, match="No image files were found"):
+    with pytest.raises(HomeAssistantError, match="No image files were found"):
         await hass.services.async_call(
             DOMAIN,
             CollectionImageService.SELECT_NEXT,
@@ -218,7 +218,7 @@ async def test_first_unavailable(
     assert state and state.state != STATE_UNAVAILABLE
 
     media_source_state.browse_results = {MOCK_MEDIA_DIR_URI_1: directory("My pictures")}
-    with pytest.raises(ServiceValidationError, match="No image files were found"):
+    with pytest.raises(HomeAssistantError, match="No image files were found"):
         await hass.services.async_call(
             DOMAIN,
             CollectionImageService.SELECT_FIRST,

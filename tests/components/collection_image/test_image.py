@@ -305,6 +305,14 @@ async def test_unresolvable(
 
     assert "Mock image failed to resolve" in caplog.text
 
+    with pytest.raises(HomeAssistantError, match="failed to resolve"):
+        await hass.services.async_call(
+            DOMAIN,
+            "shuffle",
+            {ATTR_ENTITY_ID: DEFAULT_ENTITY_ID},
+            blocking=True,
+        )
+
     # Test we can recover by calling shuffle again when the image is resolvable
     del media_source_state.resolve_exceptions[MOCK_MEDIA_IMAGE_URI_1]
 
@@ -318,8 +326,8 @@ async def test_unresolvable(
             blocking=True,
         )
 
-    assert mock_media_source.image_browse.call_count == 2
-    assert mock_media_source.resolve.call_count == 2
+    assert mock_media_source.image_browse.call_count == 3
+    assert mock_media_source.resolve.call_count == 3
 
     state = hass.states.get(DEFAULT_ENTITY_ID)
 
