@@ -727,9 +727,9 @@ async def test_number_workarea_cutting_height_legacy_registry_entry_removed(
     entity_registry: er.EntityRegistry,
     legacy_mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test removal of a legacy global cutting height registry entry."""
+    """Test removal of a legacy global cutting height registry entry and migration to minor version 2."""
     legacy_mock_config_entry.add_to_hass(hass)
-
+    assert legacy_mock_config_entry.minor_version == 1
     unique_id = f"{TEST_MOWER_ID}_0_cutting_height_work_area"
     registry_entry = entity_registry.async_get_or_create(
         Platform.NUMBER,
@@ -739,31 +739,25 @@ async def test_number_workarea_cutting_height_legacy_registry_entry_removed(
     )
 
     await hass.config_entries.async_setup(legacy_mock_config_entry.entry_id)
-
+    assert legacy_mock_config_entry.minor_version == 2
     assert entity_registry.async_get(registry_entry.entity_id) is None
 
 
+@pytest.mark.parametrize(
+    ("side_effect"),
+    [
+        (AuthError()),
+        (ApiError()),
+    ],
+)
 async def test_migration_failure(
     hass: HomeAssistant,
     mock_automower_client,
     legacy_mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
 ) -> None:
     """Test removal of a legacy global cutting height registry entry."""
-    mock_automower_client.get_status.side_effect = AuthError("Boom")
-    legacy_mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(legacy_mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert legacy_mock_config_entry.minor_version == 1
-    assert legacy_mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR
-
-
-async def test_migration_failure2(
-    hass: HomeAssistant,
-    mock_automower_client,
-    legacy_mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test removal of a legacy global cutting height registry entry."""
-    mock_automower_client.get_status.side_effect = ApiError("Boom")
+    mock_automower_client.get_status.side_effect = side_effect
     legacy_mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(legacy_mock_config_entry.entry_id)
     await hass.async_block_till_done()
