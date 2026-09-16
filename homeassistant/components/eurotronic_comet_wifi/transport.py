@@ -41,7 +41,7 @@ def get_mqtt_client(hass: HomeAssistant) -> MqttClient:
                 subscribe_callback(msg.topic, msg.payload)
 
         if sub_state is not None:
-            await async_unsubscribe(sub_state)  # Release old subscription
+            await async_unsubscribe(sub_state)
         try:
             unsubscribe = await mqtt.async_subscribe(
                 hass, topic, async_message_received

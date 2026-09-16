@@ -42,7 +42,6 @@ async def validate_input(hass: HomeAssistant, mac: str) -> str:
     if not connected:
         raise CannotConnect
 
-    # Return info to be stored in the config entry.
     return client.mac
 
 
