@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "minor_version": 4,
+  "minor_version": 5,
   "key": "knx/config_store.json",
   "data": {
     "entities": {
@@ -139,6 +139,7 @@
       }
     },
     "expose": {},
-    "time_server": {}
+    "time_server": {},
+    "entity_links": {}
   }
 }

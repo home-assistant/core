@@ -11,6 +11,15 @@ CONF_GA_STATE: Final = "state"
 CONF_GA_PASSIVE: Final = "passive"
 CONF_DPT: Final = "dpt"
 
+# Entity links
+CONF_KNX: Final = "knx"
+CONF_NOTES: Final = "notes"
+CONF_GA_STATUS: Final = "ga_status"
+CONF_GA_COMMAND: Final = "ga_command"
+CONF_COOLDOWN: Final = "cooldown"
+CONF_SEND_ON_INIT: Final = "send_on_init"
+CONF_PERIODIC_SEND: Final = "periodic_send"
+
 CONF_GA_SENSOR: Final = "ga_sensor"
 CONF_GA_SWITCH: Final = "ga_switch"
 CONF_GA_DATE: Final = "ga_date"

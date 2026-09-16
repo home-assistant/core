@@ -1105,6 +1105,51 @@
       "description": "Add and manage KNX entities",
       "title": "Entities"
     },
+    "entity_links": {
+      "create": {
+        "cooldown": {
+          "description": "[%key:component::knx::config_panel::expose::create::cooldown::description%]",
+          "label": "[%key:component::knx::config_panel::expose::create::cooldown::label%]"
+        },
+        "description": "Make a Home Assistant entity behave like a KNX actuator: its state is sent to the status group address and telegrams received on the command group address control it.",
+        "entity": {
+          "description": "Home Assistant entity to control from and report to the KNX bus.",
+          "label": "[%key:component::knx::config_panel::expose::create::entity::label%]"
+        },
+        "ga_command": {
+          "description": "Group address listened on to control the entity (KNX to Home Assistant). It must differ from the status address.",
+          "label": "Command address"
+        },
+        "ga_status": {
+          "description": "Group address the entity state is sent to (Home Assistant to KNX).",
+          "label": "Status address"
+        },
+        "invert": {
+          "description": "Invert payloads of the status and command group addresses.",
+          "label": "Invert"
+        },
+        "notes": {
+          "label": "[%key:component::knx::config_panel::expose::create::notes::label%]",
+          "placeholder": "[%key:component::knx::config_panel::expose::create::notes::placeholder%]"
+        },
+        "periodic_send": {
+          "description": "[%key:component::knx::config_panel::expose::create::periodic_send::description%]",
+          "label": "[%key:component::knx::config_panel::expose::create::periodic_send::label%]"
+        },
+        "respond_to_read": {
+          "description": "Respond to GroupValueRead telegrams received to the status address.",
+          "label": "[%key:component::knx::config_panel::entities::create::_::knx::respond_to_read::label%]"
+        },
+        "section_advanced_options": {
+          "title": "[%key:component::knx::config_panel::expose::create::section_advanced_options::title%]"
+        },
+        "send_on_init": {
+          "description": "Send the entity state to the status address when the link is initialized. When disabled, a state change will trigger the first telegram.",
+          "label": "[%key:component::knx::config_panel::expose::create::send_on_init::label%]"
+        },
+        "title": "Entity link"
+      }
+    },
     "expose": {
       "create": {
         "add_expose": "Add expose",
