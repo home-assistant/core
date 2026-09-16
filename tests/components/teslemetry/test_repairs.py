@@ -5,15 +5,17 @@ from collections.abc import Awaitable, Callable
 from copy import deepcopy
 from dataclasses import replace
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohttp.test_utils import TestClient
+from bleak.exc import BleakError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from tesla_fleet_api.exceptions import (
     BluetoothTimeout,
     BluetoothTransportError,
     NotOnWhitelistFault,
+    SessionInfoAuthenticationFault,
     TeslaFleetError,
     TeslaFleetMessageFaultBusy,
     TeslaFleetMessageFaultInternal,
@@ -57,9 +59,6 @@ OTHER_VIN = "LRW3F7EK4NC799999"
 OTHER_ADDRESS = "11:22:33:44:55:66"
 ENTRY_ID = "teslemetry_entry"
 BLE_KEY_ISSUE_ID = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{VEHICLE_VIN}"
-BLE_PING_RESULT = {"response": {"result": True, "reason": ""}}
-CLOUD_PING_RESULT = {"response": {"result": True, "reason": "cloud"}}
-FAILED_PING_RESULT = {"response": {"result": False, "reason": "Too many retries"}}
 
 
 def _metadata_with_issue(issue: str | None) -> dict[str, Any]:
@@ -322,8 +321,8 @@ async def _raise_ble_key_issue(hass: HomeAssistant) -> MockConfigEntry:
         router.secondary.flash_lights = AsyncMock()
         await router.flash_lights()
 
-    # A cloud ping always succeeds, so only a Bluetooth ping can keep the repair open.
-    router.secondary.ping = AsyncMock(return_value=CLOUD_PING_RESULT)
+    # Teslemetry's cloud cannot handshake, but a signed cloud backend can, so give it one that succeeds.
+    router.secondary.handshakeVehicleSecurity = AsyncMock(return_value=None)
     assert ir.async_get(hass).async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is not None
     return entry
 
@@ -340,7 +339,7 @@ async def _submit_ble_key_fix_flow(
 
 
 async def _hang() -> None:
-    """Never return, like a ping to a vehicle that stops responding."""
+    """Never return, like a Bluetooth call to a vehicle that stops responding."""
     await asyncio.Event().wait()
 
 
@@ -364,7 +363,8 @@ async def test_ble_key_fix_flow_hands_off_to_reconfigure(
 ) -> None:
     """The fix flow opens the rejecting vehicle's reconfigure flow, which clears it."""
     entry = await _raise_ble_key_issue(hass)
-    entry.runtime_data.vehicles[0].api.primary.ping.side_effect = NotOnWhitelistFault()
+    router = entry.runtime_data.vehicles[0].api
+    router.primary.handshakeVehicleSecurity.side_effect = NotOnWhitelistFault()
     subentry = next(
         subentry
         for subentry in entry.subentries.values()
@@ -427,7 +427,7 @@ async def test_ble_key_fix_flow_hands_off_to_reconfigure(
 
 
 @pytest.mark.parametrize(
-    ("repair_scanners", "ble_device", "pings"),
+    ("repair_scanners", "ble_device", "handshakes"),
     [
         pytest.param(0, None, 0, id="no_scanner"),
         # The scanner goes away before the reconfigure flow starts.
@@ -440,13 +440,13 @@ async def test_ble_key_fix_flow_no_bluetooth(
     issue_registry: ir.IssueRegistry,
     repair_scanners: int,
     ble_device: MagicMock | None,
-    pings: int,
+    handshakes: int,
 ) -> None:
     """Without a connectable Bluetooth scanner the fix flow aborts and keeps the repair."""
     # No enable_bluetooth fixture here, so the reconfigure flow finds no scanner.
     entry = await _raise_ble_key_issue(hass)
     router = entry.runtime_data.vehicles[0].api
-    router.primary.ping.side_effect = NotOnWhitelistFault()
+    router.primary.handshakeVehicleSecurity.side_effect = NotOnWhitelistFault()
     client = await hass_client()
     result = await start_repair_fix_flow(client, DOMAIN, BLE_KEY_ISSUE_ID)
 
@@ -459,13 +459,13 @@ async def test_ble_key_fix_flow_no_bluetooth(
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "bluetooth_not_available"
     assert "next_flow" not in result
-    assert router.primary.ping.await_count == pings
+    assert router.primary.handshakeVehicleSecurity.await_count == handshakes
     assert not hass.config_entries.subentries.async_progress()
     assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is not None
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_ble_key_fix_flow_ping_succeeds(
+async def test_ble_key_fix_flow_handshake_succeeds(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
@@ -473,15 +473,16 @@ async def test_ble_key_fix_flow_ping_succeeds(
     """A key the vehicle accepts again over Bluetooth finishes the repair without re-pairing."""
     entry = await _raise_ble_key_issue(hass)
     router = entry.runtime_data.vehicles[0].api
-    router.primary.ping.return_value = BLE_PING_RESULT
+    router.primary.handshakeVehicleSecurity.return_value = None
     client = await hass_client()
     result = await start_repair_fix_flow(client, DOMAIN, BLE_KEY_ISSUE_ID)
 
     result = await _submit_ble_key_fix_flow(client, result["flow_id"], MagicMock())
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    router.primary.ping.assert_awaited_once_with()
-    router.secondary.ping.assert_not_awaited()
+    router.primary.handshakeVehicleSecurity.assert_awaited_once_with()
+    router.secondary.handshakeVehicleSecurity.assert_not_awaited()
+    router.primary.disconnect.assert_not_awaited()
     assert not hass.config_entries.subentries.async_progress()
     assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is None
 
@@ -500,10 +501,10 @@ async def test_ble_key_fix_flow_bypasses_cloud_failover(
     issue_registry: ir.IssueRegistry,
     key_error: TeslaFleetError,
 ) -> None:
-    """A cloud ping that would succeed cannot clear a key the vehicle still rejects."""
+    """A cloud handshake that would succeed cannot clear a key the vehicle still rejects."""
     entry = await _raise_ble_key_issue(hass)
     router = entry.runtime_data.vehicles[0].api
-    router.primary.ping.side_effect = key_error
+    router.primary.handshakeVehicleSecurity.side_effect = key_error
     client = await hass_client()
     result = await start_repair_fix_flow(client, DOMAIN, BLE_KEY_ISSUE_ID)
 
@@ -512,13 +513,72 @@ async def test_ble_key_fix_flow_bypasses_cloud_failover(
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reconfigure"
     assert result["next_flow"][0] == FlowType.CONFIG_SUBENTRIES_FLOW
-    router.primary.ping.assert_awaited_once_with()
-    router.secondary.ping.assert_not_awaited()
+    router.primary.handshakeVehicleSecurity.assert_awaited_once_with()
+    router.secondary.handshakeVehicleSecurity.assert_not_awaited()
     assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is not None
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_ble_key_fix_flow_pings_the_repaired_vehicle(
+@pytest.mark.parametrize(
+    "disconnect_side_effect",
+    [
+        pytest.param(None, id="disconnected"),
+        pytest.param(BleakError(), id="bleak_error"),
+        pytest.param(BluetoothTransportError(), id="library_error"),
+        pytest.param(_hang, id="hung"),
+    ],
+)
+async def test_ble_key_fix_flow_disconnects_before_reconfigure(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+    disconnect_side_effect: BaseException | Callable[[], Any] | None,
+) -> None:
+    """A rejected key releases the repair's Bluetooth link before the reconfigure flow opens its own."""
+    entry = await _raise_ble_key_issue(hass)
+    router = entry.runtime_data.vehicles[0].api
+    router.primary.handshakeVehicleSecurity.side_effect = NotOnWhitelistFault()
+    router.primary.disconnect.side_effect = disconnect_side_effect
+    subentry = next(
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.unique_id == VEHICLE_VIN
+    )
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, BLE_KEY_ISSUE_ID)
+
+    # One parent records both calls, so their order can be asserted.
+    calls = MagicMock()
+    calls.attach_mock(router.primary.disconnect, "disconnect")
+    with (
+        patch.object(
+            hass.config_entries.subentries,
+            "async_init",
+            wraps=hass.config_entries.subentries.async_init,
+        ) as reconfigure,
+        # Bound the hung disconnect without waiting out the real timeout.
+        patch("homeassistant.components.teslemetry.repairs.BLE_DISCONNECT_TIMEOUT", 0),
+    ):
+        calls.attach_mock(reconfigure, "reconfigure")
+        result = await _submit_ble_key_fix_flow(client, result["flow_id"], MagicMock())
+    # The entry unload at teardown disconnects again, and must not hang.
+    router.primary.disconnect.side_effect = None
+
+    assert calls.mock_calls == [
+        call.disconnect(),
+        call.reconfigure(
+            (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+            context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry.subentry_id},
+        ),
+    ]
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reconfigure"
+    assert result["next_flow"][0] == FlowType.CONFIG_SUBENTRIES_FLOW
+    assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is not None
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_ble_key_fix_flow_checks_the_repaired_vehicle(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
@@ -526,9 +586,9 @@ async def test_ble_key_fix_flow_pings_the_repaired_vehicle(
     """Another vehicle accepting its key cannot clear this vehicle's repair."""
     entry = await _raise_ble_key_issue(hass)
     vehicle = entry.runtime_data.vehicles[0]
-    vehicle.api.primary.ping.side_effect = NotOnWhitelistFault()
+    vehicle.api.primary.handshakeVehicleSecurity.side_effect = NotOnWhitelistFault()
     other_bluetooth_vehicle = AsyncMock()
-    other_bluetooth_vehicle.ping.return_value = BLE_PING_RESULT
+    other_bluetooth_vehicle.handshakeVehicleSecurity.return_value = None
     # Listed first so the repair cannot find the right router by position.
     entry.runtime_data.vehicles.insert(
         0,
@@ -545,14 +605,15 @@ async def test_ble_key_fix_flow_pings_the_repaired_vehicle(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reconfigure"
-    vehicle.api.primary.ping.assert_awaited_once_with()
-    other_bluetooth_vehicle.ping.assert_not_awaited()
+    vehicle.api.primary.handshakeVehicleSecurity.assert_awaited_once_with()
+    other_bluetooth_vehicle.handshakeVehicleSecurity.assert_not_awaited()
+    other_bluetooth_vehicle.disconnect.assert_not_awaited()
     assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is not None
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
 @pytest.mark.parametrize(
-    ("ble_device", "ping_side_effect", "error", "pings"),
+    ("ble_device", "handshake_side_effect", "error", "handshakes"),
     [
         pytest.param(None, None, "cannot_connect", 0, id="out_of_range"),
         pytest.param(
@@ -587,7 +648,11 @@ async def test_ble_key_fix_flow_pings_the_repaired_vehicle(
             id="other_fault",
         ),
         pytest.param(
-            MagicMock(), lambda: FAILED_PING_RESULT, "unknown", 1, id="failed_result"
+            MagicMock(),
+            SessionInfoAuthenticationFault(),
+            "unknown",
+            1,
+            id="session_info_rejected",
         ),
     ],
 )
@@ -596,26 +661,27 @@ async def test_ble_key_fix_flow_keeps_repair_open(
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
     ble_device: MagicMock | None,
-    ping_side_effect: BaseException | Callable[[], Any] | None,
+    handshake_side_effect: BaseException | Callable[[], Any] | None,
     error: str,
-    pings: int,
+    handshakes: int,
 ) -> None:
-    """A ping that cannot prove the key either way re-shows the form without re-pairing."""
+    """A handshake that cannot prove the key either way re-shows the form without re-pairing."""
     entry = await _raise_ble_key_issue(hass)
     router = entry.runtime_data.vehicles[0].api
-    router.primary.ping.side_effect = ping_side_effect
+    router.primary.handshakeVehicleSecurity.side_effect = handshake_side_effect
     client = await hass_client()
     result = await start_repair_fix_flow(client, DOMAIN, BLE_KEY_ISSUE_ID)
 
-    # Bound the hung ping without waiting out the real timeout.
-    with patch("homeassistant.components.teslemetry.repairs.BLE_PING_TIMEOUT", 0):
+    # Bound the hung handshake without waiting out the real timeout.
+    with patch("homeassistant.components.teslemetry.repairs.BLE_HANDSHAKE_TIMEOUT", 0):
         result = await _submit_ble_key_fix_flow(client, result["flow_id"], ble_device)
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": error}
-    assert router.primary.ping.await_count == pings
-    router.secondary.ping.assert_not_awaited()
+    assert router.primary.handshakeVehicleSecurity.await_count == handshakes
+    router.secondary.handshakeVehicleSecurity.assert_not_awaited()
+    router.primary.disconnect.assert_not_awaited()
     assert not hass.config_entries.subentries.async_progress()
     assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is not None
 
@@ -644,5 +710,5 @@ async def test_ble_key_fix_flow_without_router(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "bluetooth_not_loaded"
-    bluetooth_vehicle.ping.assert_not_awaited()
+    bluetooth_vehicle.handshakeVehicleSecurity.assert_not_awaited()
     assert not hass.config_entries.subentries.async_progress()

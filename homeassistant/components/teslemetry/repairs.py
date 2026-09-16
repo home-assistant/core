@@ -3,6 +3,7 @@
 import asyncio
 from typing import Any
 
+from bleak.exc import BleakError
 from tesla_fleet_api.exceptions import (
     BluetoothTimeout,
     BluetoothTransportError,
@@ -27,7 +28,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import TeslemetryConfigEntry
 from .const import (
-    BLE_PING_TIMEOUT,
+    BLE_DISCONNECT_TIMEOUT,
+    BLE_HANDSHAKE_TIMEOUT,
     CONF_VIN,
     ISSUE_TYPE_BLE_KEY_REJECTED,
     LOGGER,
@@ -97,52 +99,46 @@ class BluetoothKeyRepairFlow(RepairsFlow):
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> RepairsFlowResult:
-        """Ping the vehicle over Bluetooth and re-approve the key if it is still rejected."""
+        """Check the key with a Bluetooth security handshake and re-approve it if still rejected."""
         if user_input is None:
             return self.async_show_form(step_id="confirm")
         if not async_scanner_count(self.hass, connectable=True):
             return self.async_abort(reason="bluetooth_not_available")
         if (router := self._async_get_router()) is None:
             return self.async_abort(reason="bluetooth_not_loaded")
-        # The router's health check also refreshes the device handle the ping connects with.
+        # The router's health check also refreshes the device handle the handshake connects with.
         if not await router.is_healthy():
             return self.async_show_form(
                 step_id="confirm", errors={"base": "cannot_connect"}
             )
         try:
-            async with asyncio.timeout(BLE_PING_TIMEOUT):
+            async with asyncio.timeout(BLE_HANDSHAKE_TIMEOUT):
                 # Bypass the router, whose cloud failover would mask a still rejected key.
-                response = await router.primary.ping()
+                # Vehicle security owns the key whitelist and answers while the vehicle sleeps.
+                await router.primary.handshakeVehicleSecurity()
         except (
             TimeoutError,
             BluetoothTimeout,
             BluetoothTransportError,
-            # Retryable faults from a vehicle subsystem that is asleep or still booting.
+            # Try again faults, which the vehicle can return for any domain.
             TeslaFleetMessageFaultBusy,
             TeslaFleetMessageFaultInternal,
             TeslaFleetMessageFaultTimeout,
         ) as err:
-            LOGGER.debug("Bluetooth ping could not reach the vehicle: %s", err)
+            LOGGER.debug("Bluetooth handshake could not reach the vehicle: %s", err)
             return self.async_show_form(
                 step_id="confirm", errors={"base": "cannot_connect"}
             )
         except TeslaFleetError as err:
             if not is_key_rejected(err):
-                LOGGER.error("Bluetooth ping failed: %s", err)
+                LOGGER.error("Bluetooth handshake failed: %s", err)
                 return self.async_show_form(
                     step_id="confirm", errors={"base": "unknown"}
                 )
         else:
-            if not response["response"]["result"]:
-                LOGGER.error(
-                    "Bluetooth ping failed: %s", response["response"]["reason"]
-                )
-                return self.async_show_form(
-                    step_id="confirm", errors={"base": "unknown"}
-                )
             return self.async_create_entry(data={})
         # Only a rejected key reaches here.
-        return await self._async_reconfigure()
+        return await self._async_reconfigure(router)
 
     @callback
     def _async_get_router(self) -> VehicleRouter | None:
@@ -166,8 +162,14 @@ class BluetoothKeyRepairFlow(RepairsFlow):
             None,
         )
 
-    async def _async_reconfigure(self) -> RepairsFlowResult:
+    async def _async_reconfigure(self, router: VehicleRouter) -> RepairsFlowResult:
         """Open the vehicle's reconfigure flow to re-approve the key."""
+        # The reconfigure flow opens its own link to the vehicle, so release this one first.
+        try:
+            async with asyncio.timeout(BLE_DISCONNECT_TIMEOUT):
+                await router.primary.disconnect()
+        except (BleakError, TeslaFleetError, TimeoutError) as err:
+            LOGGER.debug("Error disconnecting Bluetooth before reconfigure: %s", err)
         result = await self.hass.config_entries.subentries.async_init(
             (self._entry_id, SUBENTRY_TYPE_VEHICLE),
             context={"source": SOURCE_RECONFIGURE, "subentry_id": self._subentry_id},
