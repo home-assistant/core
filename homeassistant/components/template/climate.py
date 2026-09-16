@@ -436,7 +436,6 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self._attr_target_temperature_low = None
         self._attr_target_temperature_high = None
 
-        # Setup HVAC Mode
         self.setup_template(
             CONF_HVAC_MODES,
             "_attr_hvac_modes",
@@ -458,7 +457,6 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             "_attr_hvac_action", CONF_HVAC_ACTION, SET_HVAC_MODE_ACTION
         )
 
-        # Temperatures
         self.setup_template(
             CONF_CURRENT_TEMPERATURE,
             "_attr_current_temperature",
@@ -481,7 +479,6 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             )
             self.add_assumed_attribute(attr, option, SET_TEMPERATURE_ACTION)
 
-        # Humidities
         self.setup_template(
             CONF_TARGET_HUMIDITY,
             "_attr_target_humidity",
@@ -503,8 +500,6 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             tcv.number(self, CONF_CURRENT_HUMIDITY, 0, 100, int),
         )
 
-        # Fan Mode
-
         self.setup_template(
             CONF_FAN_MODES,
             "_attr_fan_modes",
@@ -517,7 +512,6 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         )
         self.add_assumed_attribute("_attr_fan_mode", CONF_FAN_MODE, SET_FAN_MODE_ACTION)
 
-        # Swing Mode
         self.setup_template(
             CONF_SWING_MODES,
             "_attr_swing_modes",
@@ -534,7 +528,6 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             "_attr_swing_mode", CONF_SWING_MODE, SET_SWING_MODE_ACTION
         )
 
-        # Swing Horizontal Mode
         self.setup_template(
             CONF_SWING_HORIZONTAL_MODES,
             "_attr_swing_horizontal_modes",
@@ -556,7 +549,6 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             SET_SWING_HORIZONTAL_MODE_ACTION,
         )
 
-        # Preset Mode
         self.setup_template(
             CONF_PRESET_MODES,
             "_attr_preset_modes",
