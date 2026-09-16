@@ -431,6 +431,53 @@ async def test_rapid_set_value_coalesces_via_debounce(
     )
 
 
+async def test_sibling_writes_to_same_block_are_serialized(
+    hass: HomeAssistant,
+    mock_config_entry_timers: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Concurrent start/stop writes to one block never overlap in the library.
+
+    write_timer is a read-modify-write of the shared block, so overlapping
+    sibling writes could read a stale endpoint and clobber each other. A
+    per-block lock must serialize them: the in-flight count never exceeds one.
+    """
+    await setup_integration(hass, mock_config_entry_timers)
+    await _poll(
+        hass,
+        freezer,
+        mock_neopool_client,
+        {**MOCK_POOL_DATA, "filtration1_start": 0, "filtration1_stop": 0},
+    )
+
+    start_id = _time_entity_id(hass, mock_config_entry_timers, "filtration1_start")
+    stop_id = _time_entity_id(hass, mock_config_entry_timers, "filtration1_stop")
+
+    in_flight = 0
+    max_in_flight = 0
+
+    async def _tracking_write(block: str, timer_data: dict[str, Any]) -> bool:
+        nonlocal in_flight, max_in_flight
+        in_flight += 1
+        max_in_flight = max(max_in_flight, in_flight)
+        # Yield so a second write not held by the lock would overlap here.
+        await asyncio.sleep(0)
+        in_flight -= 1
+        return True
+
+    mock_neopool_client.write_timer.reset_mock()
+    mock_neopool_client.write_timer.side_effect = _tracking_write
+
+    start_task = _set_time_nowait(hass, start_id, dt_time(6, 0))
+    stop_task = _set_time_nowait(hass, stop_id, dt_time(10, 0))
+    await _flush(hass, freezer)
+    await asyncio.gather(start_task, stop_task)
+
+    assert mock_neopool_client.write_timer.await_count == 2
+    assert max_in_flight == 1
+
+
 async def test_repeated_set_value_writes_only_latest(
     hass: HomeAssistant,
     mock_config_entry_timers: MockConfigEntry,

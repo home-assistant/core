@@ -204,6 +204,13 @@ class NeoPoolTime(NeoPoolEntity, TimeEntity):
         self._removing = False
         self._pending_value = None
         await super().async_added_to_hass()
+        # super() just registered this entity's coordinator context, which gates
+        # its timer block's polling. The config entry's first refresh ran before
+        # any context existed, so context-gated blocks were skipped and would
+        # read as unknown until the next scheduled poll. Seed a refresh now;
+        # async_request_refresh is debounced, so every timer entity registering
+        # at setup collapses into a single extra read.
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -323,7 +330,13 @@ class NeoPoolTime(NeoPoolEntity, TimeEntity):
                     resolved = True
                     return
                 try:
-                    await self.coordinator.client.write_timer(block, {lib_key: pending})
+                    # Siblings (start/stop) share the block's register set, so
+                    # serialize the library's read-modify-write per block: a
+                    # concurrent sibling write must not read a stale endpoint.
+                    async with self.coordinator.timer_write_lock(block):
+                        await self.coordinator.client.write_timer(
+                            block, {lib_key: pending}
+                        )
                 except (NeoPoolError, OSError, TimeoutError) as err:
                     self._report_write_failure(
                         future,
