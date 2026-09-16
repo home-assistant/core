@@ -129,6 +129,7 @@ MOCK_TIMER_BLOCKS: dict[str, dict[str, Any]] = {
     "relay_aux3b": _timer_block(),
     "relay_aux4": _timer_block(),
     "relay_aux4b": _timer_block(),
+    "relay_light": _timer_block(),
 }
 
 

@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '00:00:00',
   })
 # ---
 # name: test_all_entities[time.neopool_light_timer_stop-entry]
@@ -1193,106 +1193,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'time.neopool_timer_aux_4_2_stop',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_setup_when_modules_absent[time.neopool_light_timer_start-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'time',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'time.neopool_light_timer_start',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Light timer - start',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Light timer - start',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'relay_light_start',
-    'unique_id': '1234567890_relay_light_start',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup_when_modules_absent[time.neopool_light_timer_start-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Light timer - start',
-    }),
-    'context': <ANY>,
-    'entity_id': 'time.neopool_light_timer_start',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_setup_when_modules_absent[time.neopool_light_timer_stop-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'time',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'time.neopool_light_timer_stop',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Light timer - stop',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Light timer - stop',
-    'platform': 'neopool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'relay_light_stop',
-    'unique_id': '1234567890_relay_light_stop',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup_when_modules_absent[time.neopool_light_timer_stop-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Light timer - stop',
-    }),
-    'context': <ANY>,
-    'entity_id': 'time.neopool_light_timer_stop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

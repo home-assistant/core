@@ -8,6 +8,7 @@ from datetime import datetime, time as dt_time, timedelta
 from typing import Any, Literal, override
 
 from neopool_modbus.exceptions import NeoPoolError
+from neopool_modbus.registers import is_valid_relay_gpio
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
@@ -53,6 +54,18 @@ def _option_supported(
     return lambda _data, opts: bool(opts.get(opt_flag))
 
 
+def _light_supported(data: dict[str, Any], opts: Mapping[str, Any]) -> bool:
+    """Gate the light timer on its option and a valid lighting GPIO.
+
+    The coordinator skips the relay_light block when the GPIO is invalid, so
+    without this the entities would sit permanently unknown and could still
+    issue writes to an unavailable relay. Mirror the light platform's check.
+    """
+    return bool(opts.get(CONF_USE_LIGHT)) and is_valid_relay_gpio(
+        data.get("MBF_PAR_LIGHTING_GPIO", 0) or 0
+    )
+
+
 # Filtration timers exist on every device, so they are not option-gated:
 # filtration1 is enabled by default, filtration2/3 created disabled. Aux and
 # light timers stay gated on their option flags.
@@ -92,6 +105,14 @@ def _build_descriptions() -> dict[str, NeoPoolTimeEntityDescription]:
                     "number": digits.rstrip("b"),
                     "subtimer": "2" if digits.endswith("b") else "1",
                 }
+            if block == "relay_light":
+                supported_fn: (
+                    Callable[[dict[str, Any], Mapping[str, Any]], bool] | None
+                ) = _light_supported
+            elif opt_flag is not None:
+                supported_fn = _option_supported(opt_flag)
+            else:
+                supported_fn = None
             out[key] = NeoPoolTimeEntityDescription(
                 key=key,
                 translation_key=translation_key,
@@ -100,9 +121,7 @@ def _build_descriptions() -> dict[str, NeoPoolTimeEntityDescription]:
                 entity_registry_enabled_default=enabled_default,
                 timer_block=block,
                 timer_field=field,
-                supported_fn=(
-                    _option_supported(opt_flag) if opt_flag is not None else None
-                ),
+                supported_fn=supported_fn,
             )
     return out
 
