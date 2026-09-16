@@ -242,9 +242,8 @@ class HeimanOAuth2Implementation(AuthImplementation):
             return cast(dict, response_data)
         except ClientError, JSONDecodeError:
             _LOGGER.exception(
-                "Token request returned non-JSON response (status %s, content_type='%s'): %s",
+                "Token request returned a non-JSON response (status %s, content_type='%s')",
                 resp.status,
                 resp.content_type,
-                text[:500] if text else "(empty)",
             )
             raise
