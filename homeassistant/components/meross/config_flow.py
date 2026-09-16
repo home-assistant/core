@@ -1,11 +1,8 @@
 """Config flow for Meross Bluetooth."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from meross_ble import (
-    DEFAULT_RETRY_COUNT,
     MODEL_FRIENDLY_NAME,
     MerossAdvertisement,
     MerossBLEError,
@@ -13,34 +10,22 @@ from meross_ble import (
     create_device,
     parse_advertisement_data,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
-from homeassistant.const import CONF_ADDRESS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL
+from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONF_BOUND_IDENTIFY_DONE,
-    CONF_MODEL,
-    CONF_RETRY_COUNT,
-    DOMAIN,
-    LOGGER,
-    MANUAL_SCAN_DURATION,
-    USER_SETUP_MODELS,
-)
+from .const import DOMAIN, LOGGER, MANUAL_SCAN_DURATION, USER_SETUP_MODELS
 
 
 def _format_ble_unique_id(address: str) -> str:
+    """Format a Bluetooth address as a config entry unique id."""
     return address.replace(":", "").replace("-", "").lower()
 
 
@@ -55,6 +40,7 @@ def _label_from_discovery(discovery: MerossAdvertisement) -> str:
 
 
 def _discovery_title_placeholders(discovery: MerossAdvertisement) -> dict[str, str]:
+    """Return title placeholders for discovery flows."""
     return {
         "name": discovery.friendly_name,
         "address": discovery.address,
@@ -64,6 +50,7 @@ def _discovery_title_placeholders(discovery: MerossAdvertisement) -> dict[str, s
 def _collect_discovered_service_info(
     hass: HomeAssistant,
 ) -> list[BluetoothServiceInfoBleak]:
+    """Collect unique discovered Bluetooth service infos."""
     seen: set[str] = set()
     results: list[BluetoothServiceInfoBleak] = []
     for connectable in (True, False):
@@ -87,6 +74,7 @@ class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
         self._setup_model: str | None = None
         self._setup_ble_model: MerossModel | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -126,6 +114,7 @@ class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
         self._setup_ble_model = MerossModel(model)
         return await self.async_step_bluetooth_setup()
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -207,9 +196,9 @@ class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="bluetooth_setup",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
                             address: _label_from_discovery(parsed)
                             for address, parsed in self._discovered_devices.items()
@@ -267,40 +256,5 @@ class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_ADDRESS: discovery.address,
                 CONF_MODEL: discovery.model.value,
-                CONF_BOUND_IDENTIFY_DONE: True,
-            },
-            options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Return options flow for BLE entries."""
-        return MerossBluetoothOptionsFlow()
-
-
-class MerossBluetoothOptionsFlow(OptionsFlow):
-    """Options: GATT connection retry count."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        model = self.config_entry.data.get(CONF_MODEL, MerossModel.MS120)
-        options = self.config_entry.options
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_RETRY_COUNT,
-                        default=options.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
-                }
-            ),
-            description_placeholders={
-                "model": MODEL_FRIENDLY_NAME.get(MerossModel(model), str(model)),
             },
         )

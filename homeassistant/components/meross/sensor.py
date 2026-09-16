@@ -1,8 +1,7 @@
 """Sensor platform for Meross Bluetooth."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from meross_ble import MerossModel
 
@@ -119,13 +118,16 @@ class MerossBLESensor(MerossBLEEntity, SensorEntity):
     def __init__(
         self, coordinator: MerossBLEDataUpdateCoordinator, sensor: str
     ) -> None:
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = SENSOR_TYPES[sensor]
         self._sensor = sensor
         self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
 
     @property
+    @override
     def native_value(self) -> float | int | None:
+        """Return the sensor value."""
         value = self.parsed_data.get(self._sensor)
         if isinstance(value, (int, float)):
             return value

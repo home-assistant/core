@@ -1,11 +1,7 @@
 """Tests for the Meross Bluetooth integration."""
 
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
-from meross_ble.const import (
-    MEROSS_SERVICE_DATA_UUID,
-    SUBDEV_MS120,
-    SUBDEV_MS220,
-)
+from meross_ble.const import MEROSS_SERVICE_DATA_UUID, SUBDEV_MS120, SUBDEV_MS220
 
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
