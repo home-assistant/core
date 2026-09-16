@@ -40,6 +40,19 @@ def _in_home_chime_exists(device: RingDoorBell) -> bool:
         return False
     try:
         return device.existing_doorbell_type in IN_HOME_CHIME_IS_PRESENT
+    except KeyError as ex:
+        _LOGGER.debug(
+            "Unknown doorbell chime type %s; skipping in-home chime for %s",
+            ex.args[0],
+            device.device_api_id,
+        )
+        return False
+
+
+def _in_home_chime_is_on(device: RingDoorBell) -> bool:
+    """Return if the doorbell's in-home chime is enabled."""
+    try:
+        return device.existing_doorbell_type_enabled or False
     except KeyError:
         return False
 
@@ -77,7 +90,7 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
         key="in_home_chime",
         translation_key="in_home_chime",
         exists_fn=_in_home_chime_exists,
-        is_on_fn=lambda device: device.existing_doorbell_type_enabled or False,
+        is_on_fn=_in_home_chime_is_on,
         turn_on_fn=lambda device: device.async_set_existing_doorbell_type_enabled(True),
         turn_off_fn=lambda device: device.async_set_existing_doorbell_type_enabled(
             False

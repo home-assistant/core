@@ -34,6 +34,8 @@ class BadChimeDoorbell:
     family = "doorbots"
     id = 987654321
     device_api_id = 987654321
+    device_id = "aa:bb:cc:dd:ee:ff"
+    name = "Bad Chime Doorbell"
 
     @property
     def existing_doorbell_type(self) -> str:
@@ -201,3 +203,4 @@ async def test_switch_setup_succeeds_with_unknown_chime_type(
 
     assert hass.states.get("switch.front_siren")
     assert hass.states.get("switch.front_motion_detection")
+    assert not hass.states.get("switch.bad_chime_doorbell_in_home_chime")
