@@ -40,6 +40,8 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import (
+    ValidationIssueReporter,
+    async_call_platform_validator,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
@@ -59,7 +61,6 @@ from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 
-from .automation import ValidationIssueReporter, async_call_platform_validator
 from .descriptions import (
     TRIGGER_DESCRIPTION_CACHE,
     async_get_all_descriptions,
