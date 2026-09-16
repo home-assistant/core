@@ -250,30 +250,9 @@ class LunatoneLineBroadcastLight(
         self._coordinator_info = coordinator_info
         self._broadcast = broadcast
 
-        line = broadcast.line
-
-        self._attr_unique_id = f"{config_entry_unique_id}-line{line}"
-
-        line_device = self._coordinator_info.data.lines[str(line)].device
-        extra_info: dict = {}
-        if line_device.serial != self._coordinator_info.data.device.serial:
-            extra_info.update(
-                serial_number=str(line_device.serial),
-                hw_version=line_device.pcb,
-                model_id=f"{line_device.article_number}{line_device.article_info}",
-            )
-
-        assert self.unique_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            name=f"DALI Line {line}",
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.coordinator.hass,
-                (DOMAIN, config_entry_unique_id),
-                config_entry_id=self.coordinator.config_entry.entry_id,
-            ),
-            **extra_info,
-        )
+        line_unique_id = f"{config_entry_unique_id}-line{broadcast.line}"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, line_unique_id)})
+        self._attr_unique_id = line_unique_id
 
     @override
     async def async_added_to_hass(self) -> None:

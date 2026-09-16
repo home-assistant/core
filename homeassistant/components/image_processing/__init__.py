@@ -6,7 +6,7 @@ from enum import StrEnum
 import logging
 from typing import Any, Final, TypedDict, final, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import async_get_image
 from homeassistant.const import (
@@ -62,18 +62,18 @@ CONF_CONFIDENCE = "confidence"
 DEFAULT_TIMEOUT = 10
 DEFAULT_CONFIDENCE = 80
 
-SOURCE_SCHEMA = vol.Schema(
+SOURCE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain("camera"),
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_domain("camera"),
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
-        vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE): vol.All(
-            vol.Coerce(float), vol.Range(min=0, max=100)
+        probatio.Optional(CONF_SOURCE): probatio.All(cv.ensure_list, [SOURCE_SCHEMA]),
+        probatio.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0, max=100)
         ),
     }
 )

@@ -6,8 +6,8 @@ import pathlib
 import re
 from typing import Any
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.const import CONF_SELECTOR
 from homeassistant.exceptions import HomeAssistantError
@@ -20,7 +20,7 @@ from .model import Config, Integration
 def exists(value: Any) -> Any:
     """Check if value exists."""
     if value is None:
-        raise vol.Invalid("Value cannot be None")
+        raise probatio.Invalid("Value cannot be None")
     return value
 
 
@@ -31,43 +31,45 @@ def unique_field_validator(fields: Any) -> Any:
         if value and "fields" in value:
             for key in value["fields"]:
                 if key in all_fields:
-                    raise vol.Invalid(f"Duplicate use of field {key} in service.")
+                    raise probatio.Invalid(f"Duplicate use of field {key} in service.")
                 all_fields.add(key)
         else:
             if key in all_fields:
-                raise vol.Invalid(f"Duplicate use of field {key} in service.")
+                raise probatio.Invalid(f"Duplicate use of field {key} in service.")
             all_fields.add(key)
 
     return fields
 
 
 CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT = {
-    vol.Optional("description"): str,
-    vol.Optional("name"): str,
+    probatio.Optional("description"): str,
+    probatio.Optional("name"): str,
 }
 
 
 CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA_DICT = {
-    vol.Optional("example"): exists,
-    vol.Optional("default"): exists,
-    vol.Optional("required"): bool,
-    vol.Optional("advanced"): bool,
-    vol.Optional(CONF_SELECTOR): selector.validate_selector,
+    probatio.Optional("example"): exists,
+    probatio.Optional("default"): exists,
+    probatio.Optional("required"): bool,
+    probatio.Optional("advanced"): bool,
+    probatio.Optional(CONF_SELECTOR): selector.validate_selector,
 }
 
 FIELD_FILTER_SCHEMA_DICT = {
-    vol.Optional("filter"): {
-        vol.Exclusive("attribute", "field_filter"): {
-            vol.Required(str): [vol.All(str, service.validate_attribute_option)],
+    probatio.Optional("filter"): {
+        probatio.Exclusive("attribute", "field_filter"): {
+            probatio.Required(str): [
+                probatio.All(str, service.validate_attribute_option)
+            ],
         },
-        vol.Exclusive("supported_features", "field_filter"): [
-            vol.All(str, service.validate_supported_feature)
+        probatio.Exclusive("supported_features", "field_filter"): [
+            probatio.All(str, service.validate_supported_feature)
         ],
     }
 }
 
 
-def _field_schema(targeted: bool, custom: bool) -> vol.Schema:
+def _field_schema(targeted: bool, custom: bool) -> probatio.Schema:
     """Return the field schema."""
     schema_dict = CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA_DICT.copy()
 
@@ -80,14 +82,14 @@ def _field_schema(targeted: bool, custom: bool) -> vol.Schema:
     if custom:
         schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
 
-    return vol.Schema(schema_dict)
+    return probatio.Schema(schema_dict)
 
 
-def _section_schema(targeted: bool, custom: bool) -> vol.Schema:
+def _section_schema(targeted: bool, custom: bool) -> probatio.Schema:
     """Return the section schema."""
     schema_dict = {
-        vol.Optional("collapsed"): bool,
-        vol.Required("fields"): vol.Schema(
+        probatio.Optional("collapsed"): bool,
+        probatio.Required("fields"): probatio.Schema(
             {
                 str: _field_schema(targeted, custom),
             }
@@ -97,16 +99,16 @@ def _section_schema(targeted: bool, custom: bool) -> vol.Schema:
     if custom:
         schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
 
-    return vol.Schema(schema_dict)
+    return probatio.Schema(schema_dict)
 
 
-def _service_schema(targeted: bool, custom: bool) -> vol.Schema:
+def _service_schema(targeted: bool, custom: bool) -> probatio.Schema:
     """Return the service schema."""
     schema_dict = {
-        vol.Optional("fields"): vol.All(
-            vol.Schema(
+        probatio.Optional("fields"): probatio.All(
+            probatio.Schema(
                 {
-                    str: vol.Any(
+                    str: probatio.Any(
                         _field_schema(targeted, custom),
                         _section_schema(targeted, custom),
                     ),
@@ -119,14 +121,14 @@ def _service_schema(targeted: bool, custom: bool) -> vol.Schema:
     def raise_on_target_device_filter(value: dict[str, Any]) -> dict[str, Any]:
         """Raise error if target has a device filter."""
         if "device" in value:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 "Services do not support device filters on target, use a device "
                 "selector instead"
             )
         return value
 
     if targeted:
-        schema_dict[vol.Required("target")] = vol.All(
+        schema_dict[probatio.Required("target")] = probatio.All(
             selector.TargetSelector.CONFIG_SCHEMA,
             raise_on_target_device_filter,
         )
@@ -134,30 +136,30 @@ def _service_schema(targeted: bool, custom: bool) -> vol.Schema:
     if custom:
         schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
 
-    return vol.Schema(schema_dict)
+    return probatio.Schema(schema_dict)
 
 
-CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
+CORE_INTEGRATION_SERVICE_SCHEMA = probatio.Any(
     _service_schema(targeted=True, custom=False),
     _service_schema(targeted=False, custom=False),
     None,
 )
 
-CUSTOM_INTEGRATION_SERVICE_SCHEMA = vol.Any(
+CUSTOM_INTEGRATION_SERVICE_SCHEMA = probatio.Any(
     _service_schema(targeted=True, custom=True),
     _service_schema(targeted=False, custom=True),
     None,
 )
 
 
-CORE_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
+CORE_INTEGRATION_SERVICES_SCHEMA = probatio.Schema(
     {
-        vol.Remove(vol.All(str, service.starts_with_dot)): object,
+        probatio.Remove(probatio.All(str, service.starts_with_dot)): object,
         cv.slug: CORE_INTEGRATION_SERVICE_SCHEMA,
     }
 )
 
-CUSTOM_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
+CUSTOM_INTEGRATION_SERVICES_SCHEMA = probatio.Schema(
     {cv.slug: CUSTOM_INTEGRATION_SERVICE_SCHEMA}
 )
 
@@ -238,7 +240,7 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
             services = CORE_INTEGRATION_SERVICES_SCHEMA(data)
         else:
             services = CUSTOM_INTEGRATION_SERVICES_SCHEMA(data)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         integration.add_error(
             "services", f"Invalid services.yaml: {humanize_error(data, err)}"
         )
