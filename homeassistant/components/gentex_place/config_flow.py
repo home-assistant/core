@@ -5,7 +5,7 @@ from typing import Any, override
 
 import botocore.exceptions
 from place.auth import decode_sub, login
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
@@ -60,8 +60,11 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_EMAIL): str,
+                    probatio.Required(CONF_PASSWORD): str,
+                }
             ),
             errors=errors,
         )
