@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> bool:
         # since its the wrong device. As soon as the device comes back
         # online the ip will get updated and setup will proceed.
         raise ConfigEntryNotReady(
-            "Found bulb {bulb.mac} at {ip_address}, expected {entry.unique_id}"
+            f"Found bulb {bulb.mac} at {ip_address}, expected {entry.unique_id}"
         )
 
     coordinator = WizCoordinator(hass, entry, bulb)
