@@ -160,8 +160,7 @@ def payload_modifier(
     timestamp: int | None = None,
 ) -> None:
     """Mutate the payload for fake post request."""
-    # Used via the ``msg_callback`` hook to simulate backend changes server timestamp and
-    # e.g. camera attributes such as monitoring state, power status.
+    # Apply updates before pyatmo parses the mocked response.
 
     if timestamp is not None:
         payload["time_server"] = timestamp
