@@ -1348,14 +1348,16 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
                 updated_addon if addon.slug == slug else addon for addon in addons_list
             ]
 
-        self.async_set_updated_data(
-            HassioAddonData(
-                addons={
-                    **self.data.addons,
-                    slug: replace(addon_data, addon=updated_addon),
-                }
-            )
+        # Apply directly instead of async_set_updated_data to not reset the
+        # polling interval on every state change event
+        self.data = replace(
+            self.data,
+            addons={
+                **self.data.addons,
+                slug: replace(addon_data, addon=updated_addon),
+            },
         )
+        self.async_update_listeners()
 
     @override
     async def _async_update_data(self) -> HassioAddonData:
