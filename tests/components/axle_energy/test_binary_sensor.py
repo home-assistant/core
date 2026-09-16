@@ -329,7 +329,7 @@ async def test_disable_enable(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Stop tracking while disabled and restore the current state on enable."""
+    """Keep a disabled entity absent and restore its current state on enable."""
     await setup(hass, mock_config_entry)
     entity_registry.async_update_entity(
         ENTITY_ID, disabled_by=er.RegistryEntryDisabler.USER
