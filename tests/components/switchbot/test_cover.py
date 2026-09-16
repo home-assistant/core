@@ -20,6 +20,8 @@ from homeassistant.components.cover import (
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_RETRY_COUNT,
+    CURTAIN_SPEED_NORMAL,
+    CURTAIN_SPEED_SLOW,
     DEFAULT_RETRY_COUNT,
     ROLLER_SHADE_SPEED_PERFORMANCE,
     ROLLER_SHADE_SPEED_QUIET,
@@ -176,7 +178,7 @@ async def test_curtain3_controlling(
         )
         await hass.async_block_till_done()
 
-        mock_set_position.assert_awaited_once()
+        mock_set_position.assert_awaited_once_with(50, 255)  # Default speed
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPEN
         assert state.attributes[ATTR_CURRENT_POSITION] == 60
@@ -229,6 +231,75 @@ async def test_curtain3_custom_speed_controlling(
         )
         await hass.async_block_till_done()
         mock_close.assert_awaited_once_with(50)
+
+
+@pytest.mark.parametrize(
+    ("speed", "expected_value"),
+    [
+        pytest.param(CURTAIN_SPEED_NORMAL, 255, id="normal"),
+        pytest.param(CURTAIN_SPEED_SLOW, 1, id="slow"),
+    ],
+)
+async def test_curtain3_speed(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    speed: str,
+    expected_value: int,
+) -> None:
+    """Test the curtain forwards the requested cover speed to the device."""
+    inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="curtain")
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.open",
+            new=AsyncMock(return_value=True),
+        ) as mock_open,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.close",
+            new=AsyncMock(return_value=True),
+        ) as mock_close,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.set_position",
+            new=AsyncMock(return_value=True),
+        ) as mock_set_position,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "cover.test_name"
+
+        state = hass.states.get(entity_id)
+        assert state.attributes[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] == [
+            CURTAIN_SPEED_NORMAL,
+            CURTAIN_SPEED_SLOW,
+        ]
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: speed},
+            blocking=True,
+        )
+        mock_open.assert_awaited_once_with(expected_value)
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: speed},
+            blocking=True,
+        )
+        mock_close.assert_awaited_once_with(expected_value)
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50, ATTR_SPEED: speed},
+            blocking=True,
+        )
+        mock_set_position.assert_awaited_once_with(50, expected_value)
 
 
 async def test_blindtilt_setup(

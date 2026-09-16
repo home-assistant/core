@@ -261,6 +261,14 @@ ROLLER_SHADE_SPEED_TO_MODE = {
     ROLLER_SHADE_SPEED_QUIET: 1,
 }
 
+# Curtain movement speeds, exposed as cover speeds
+CURTAIN_SPEED_NORMAL = "normal"
+CURTAIN_SPEED_SLOW = "slow"
+CURTAIN_SPEED_TO_VALUE = {
+    CURTAIN_SPEED_NORMAL: 255,
+    CURTAIN_SPEED_SLOW: 1,
+}
+
 AIRPURIFIER_BASIC_MODELS = {
     SwitchbotModel.AIR_PURIFIER_JP,
     SwitchbotModel.AIR_PURIFIER_US,
