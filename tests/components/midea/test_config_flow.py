@@ -18,6 +18,7 @@ from homeassistant.components.midea.config_flow import (
 from homeassistant.components.midea.const import (
     CONF_ACCOUNT,
     CONF_KEY,
+    CONF_POWER_ANALYSIS_METHOD,
     CONF_SERVER,
     CONF_SN,
     CONF_SUBTYPE,
@@ -40,7 +41,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import DummyDevice, default_ac_device
@@ -2570,3 +2571,72 @@ async def test_dhcp_discovery_no_match(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
     assert config_entry.data[CONF_IP_ADDRESS] == TEST_IP_ADDRESS
+
+
+async def test_ac_options_flow_shows_power_analysis_methods(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC options flow shows all power analysis method choices."""
+    config_entry = mock_config_entry(default_ac_device())
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    schema = result["data_schema"]
+    power_method_key = next(
+        key for key in schema.schema if key == CONF_POWER_ANALYSIS_METHOD
+    )
+    assert power_method_key.default() == "1"
+    selector = schema.schema[power_method_key]
+    assert selector.config["options"] == ["1", "2", "3", "101", "12"]
+
+
+async def test_ac_options_flow_accepts_power_analysis_method_12(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC options flow accepts method 12 and stores it as int."""
+    config_entry = mock_config_entry(default_ac_device())
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_POWER_ANALYSIS_METHOD: "12"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_POWER_ANALYSIS_METHOD] == 12
+
+
+async def test_ac_options_flow_rejects_invalid_power_analysis_method(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC options flow schema rejects invalid power analysis input."""
+    config_entry = mock_config_entry(default_ac_device())
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    with pytest.raises(InvalidData):
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_POWER_ANALYSIS_METHOD: "abc"},
+        )
+
+
+async def test_non_ac_options_flow_skips_power_analysis_selector(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test non-AC devices do not show power analysis method options."""
+    config_entry = mock_config_entry(DummyDevice(DeviceType.C3, attributes={}))
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {}
