@@ -270,6 +270,8 @@ async def test_media_error(
     for err in error_messages:
         assert err in caplog.text
 
+    assert "No image files were found in the configured media" in caplog.text
+
     client = await hass_client()
     resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
@@ -301,7 +303,7 @@ async def test_unresolvable(
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "image.random_image: Mock image failed to resolve" in caplog.text
+    assert "Mock image failed to resolve" in caplog.text
 
     # Test we can recover by calling shuffle again when the image is resolvable
     del media_source_state.resolve_exceptions[MOCK_MEDIA_IMAGE_URI_1]
