@@ -366,13 +366,6 @@ async def test_child_devices_route_per_component_sensors(
             id="isystem_no_circuit_c",
         ),
         pytest.param(
-            seed_isystem_boiler,
-            [603],
-            "hot_water",
-            "hot_water_temperature",
-            id="isystem_no_hot_water",
-        ),
-        pytest.param(
             seed_boiler,
             [18, 21],
             "circuit_a",
@@ -385,13 +378,6 @@ async def test_child_devices_route_per_component_sensors(
             "circuit_b",
             "circuit_b_room_temperature",
             id="base_no_circuit_b",
-        ),
-        pytest.param(
-            seed_boiler,
-            [62, 459],
-            "hot_water",
-            "hot_water_temperature",
-            id="base_no_hot_water",
         ),
     ],
 )

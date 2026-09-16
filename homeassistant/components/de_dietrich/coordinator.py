@@ -85,10 +85,7 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         """
         if component not in CHILD_COMPONENT_DEVICE_NAMES:
             return None
-        if component == "hot_water":
-            if not self.device.hot_water_present:
-                return None
-        elif component == "circuit_a":
+        if component == "circuit_a":
             if not self.device.circuit_a_present:
                 return None
         elif component == "circuit_b":

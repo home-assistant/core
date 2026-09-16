@@ -171,10 +171,7 @@ def _enabled_descriptions(
         if component not in CHILD_COMPONENT_DEVICE_NAMES:
             eligible.append(description)
             continue
-        if component == "hot_water":
-            if not device.hot_water_present:
-                continue
-        elif component == "circuit_a":
+        if component == "circuit_a":
             if not device.circuit_a_present:
                 continue
         elif component == "circuit_b":
