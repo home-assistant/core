@@ -6,6 +6,7 @@ from typing import Any, override
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -14,12 +15,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
 
@@ -44,17 +40,9 @@ from .const import (
 
 RE_API_KEY = re.compile(r"^[a-zA-Z0-9]{16}$")
 
-_ANGLE_UNITS: frozenset[str] = frozenset({"°", "degrees", "deg", "degree"})
-
-
-def _get_angle_sensor_ids(hass: HomeAssistant) -> list[str]:
-    """Get entity IDs of sensors that report angle units."""
-    return [
-        entity_id
-        for entity_id in hass.states.async_entity_ids("sensor")
-        if (state := hass.states.get(entity_id)) is not None
-        and state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) in _ANGLE_UNITS
-    ]
+_ANGLE_SENSOR_SELECTOR = selector.EntitySelector(
+    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
+)
 
 
 def _location_data(
@@ -112,16 +100,8 @@ def _plane_title(data: Mapping[str, Any], hass: HomeAssistant) -> str:
     return f"{declination_label} / {azimuth_label} / {data[CONF_MODULES_POWER]}W"
 
 
-def _plane_schema(hass: HomeAssistant) -> vol.Schema:
-    """Build the plane form schema, offering sensor fields only if any angle sensors exist."""
-    angle_sensors = _get_angle_sensor_ids(hass)
-    angle_sensor_selector = selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=angle_sensors, mode=selector.SelectSelectorMode.DROPDOWN
-        )
-    )
-
-    schema: dict[Any, Any] = {
+_PLANE_SCHEMA = vol.Schema(
+    {
         vol.Required(CONF_DECLINATION): vol.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
@@ -130,30 +110,26 @@ def _plane_schema(hass: HomeAssistant) -> vol.Schema:
             ),
             vol.Coerce(int),
         ),
+        vol.Optional(CONF_DECLINATION_SENSOR): _ANGLE_SENSOR_SELECTOR,
+        vol.Required(CONF_AZIMUTH): vol.All(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=360, step=1, mode=selector.NumberSelectorMode.BOX
+                ),
+            ),
+            vol.Coerce(int),
+        ),
+        vol.Optional(CONF_AZIMUTH_SENSOR): _ANGLE_SENSOR_SELECTOR,
+        vol.Required(CONF_MODULES_POWER): vol.All(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, step=1, mode=selector.NumberSelectorMode.BOX
+                ),
+            ),
+            vol.Coerce(int),
+        ),
     }
-    if angle_sensors:
-        schema[vol.Optional(CONF_DECLINATION_SENSOR)] = angle_sensor_selector
-
-    schema[vol.Required(CONF_AZIMUTH)] = vol.All(
-        selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0, max=360, step=1, mode=selector.NumberSelectorMode.BOX
-            ),
-        ),
-        vol.Coerce(int),
-    )
-    if angle_sensors:
-        schema[vol.Optional(CONF_AZIMUTH_SENSOR)] = angle_sensor_selector
-
-    schema[vol.Required(CONF_MODULES_POWER)] = vol.All(
-        selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=1, step=1, mode=selector.NumberSelectorMode.BOX
-            ),
-        ),
-        vol.Coerce(int),
-    )
-    return vol.Schema(schema)
+)
 
 
 class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -204,7 +180,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     ],
                 )
 
-        schema = _LOCATION_SCHEMA.extend(_plane_schema(self.hass).schema)
+        schema = _LOCATION_SCHEMA.extend(_PLANE_SCHEMA.schema)
 
         return self.async_show_form(
             step_id="user",
@@ -370,7 +346,7 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                _plane_schema(self.hass),
+                _PLANE_SCHEMA,
                 {
                     CONF_DECLINATION: DEFAULT_DECLINATION,
                     CONF_AZIMUTH: DEFAULT_AZIMUTH,
@@ -398,6 +374,6 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                _plane_schema(self.hass), subentry.data
+                _PLANE_SCHEMA, subentry.data
             ),
         )

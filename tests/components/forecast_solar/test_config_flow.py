@@ -1,5 +1,6 @@
 """Test the Forecast.Solar config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -21,6 +22,7 @@ from homeassistant.components.forecast_solar.const import (
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     SOURCE_USER,
+    ConfigFlowResult,
     ConfigSubentryData,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
@@ -28,6 +30,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+
+def _suggested(result: ConfigFlowResult, key: str) -> Any:
+    """Return the suggested value a re-shown form offers for a field."""
+    return next(
+        schema_key.description["suggested_value"]
+        for schema_key in result["data_schema"].schema
+        if schema_key == key
+    )
 
 
 async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -707,11 +718,11 @@ async def test_subentry_flow_add_plane_with_sensors(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_subentry_flow_no_angle_sensors_hides_sensor_fields(
+async def test_subentry_flow_offers_sensor_fields_without_any_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the sensor fields are absent from the form when no angle sensors exist."""
+    """Test the sensor fields are offered even when no sensor exists yet."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -722,8 +733,53 @@ async def test_subentry_flow_no_angle_sensors_hides_sensor_fields(
     )
 
     schema_keys = {str(key) for key in result["data_schema"].schema}
-    assert CONF_DECLINATION_SENSOR not in schema_keys
-    assert CONF_AZIMUTH_SENSOR not in schema_keys
+    assert CONF_DECLINATION_SENSOR in schema_keys
+    assert CONF_AZIMUTH_SENSOR in schema_keys
+
+
+@pytest.mark.usefixtures("mock_forecast_solar")
+async def test_subentry_flow_reconfigure_keeps_sensor_without_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a configured sensor survives reconfigure while it has no state."""
+    mock_config_entry.add_to_hass(hass)
+    subentry_id = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[
+        0
+    ].subentry_id
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        mock_config_entry.subentries[subentry_id],
+        data={
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH: 190,
+            CONF_MODULES_POWER: 5100,
+            CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+        },
+    )
+
+    # The sensor is never added to the state machine.
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
+        context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry_id},
+    )
+
+    assert result["step_id"] == "reconfigure"
+    assert _suggested(result, CONF_AZIMUTH_SENSOR) == "sensor.roof_azimuth"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH: 190,
+            CONF_MODULES_POWER: 5100,
+            CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
+    assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.roof_azimuth"
 
 
 @pytest.mark.usefixtures("mock_forecast_solar", "mock_setup_entry")
