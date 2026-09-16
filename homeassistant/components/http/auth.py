@@ -187,16 +187,19 @@ async def async_setup_auth(
         request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True
 
-    @callback
-    def async_authenticate_supervisor_unix_socket(request: Request) -> bool:
+    async def async_authenticate_supervisor_unix_socket(request: Request) -> bool:
         """Authenticate a request from a Unix socket as the Supervisor user.
 
         The Unix Socket is dedicated and only available to Supervisor. To
         avoid the extra overhead and round trips for the authentication and
         refresh tokens, we directly authenticate requests from the socket as
-        the Supervisor user provided by the hassio integration.
+        the Supervisor user provided by the hassio integration. The user is
+        looked up in the auth store so a user removed at runtime is not
+        authenticated any longer.
         """
-        if (user := hass.data.get(DATA_SUPERVISOR_USER)) is None:
+        if (supervisor_user := hass.data.get(DATA_SUPERVISOR_USER)) is None or (
+            user := await hass.auth.async_get_user(supervisor_user.id)
+        ) is None:
             # The Unix socket should not be serving before the hassio integration
             # has provided the Supervisor user. If we get here, something is wrong.
             _LOGGER.error(
@@ -217,7 +220,7 @@ async def async_setup_auth(
         authenticated = False
 
         if is_supervisor_unix_socket_request(request):
-            authenticated = async_authenticate_supervisor_unix_socket(request)
+            authenticated = await async_authenticate_supervisor_unix_socket(request)
             auth_type = "supervisor unix socket"
 
         elif hdrs.AUTHORIZATION in request.headers and async_validate_auth_header(

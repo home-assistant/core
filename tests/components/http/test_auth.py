@@ -799,6 +799,29 @@ async def test_unix_socket_auth_without_supervisor_user(
     assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+async def test_unix_socket_auth_removed_user(
+    hass: HomeAssistant,
+    app: web.Application,
+    aiohttp_client: ClientSessionGenerator,
+) -> None:
+    """Test that Unix socket requests fail once the Supervisor user was removed."""
+    supervisor_user = await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+    )
+    hass.data[DATA_SUPERVISOR_USER] = supervisor_user
+    await hass.auth.async_remove_user(supervisor_user)
+
+    await async_setup_auth(hass, app)
+    client = await aiohttp_client(app)
+
+    with patch(
+        "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
+        return_value=True,
+    ):
+        req = await client.get("/")
+    assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
 async def test_unix_socket_auth_uses_provided_user(
     hass: HomeAssistant,
     app: web.Application,
