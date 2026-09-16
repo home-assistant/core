@@ -1,8 +1,9 @@
 """Test event metadata and coordinator lifecycle."""
 
+from collections.abc import Generator
 from dataclasses import replace
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioaxlevpp import (
     AxleAuthenticationError,
@@ -14,10 +15,18 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def sensor_platform_only() -> Generator[None]:
+    """Limit these tests to the sensor platform."""
+    with patch("homeassistant.components.axle_energy.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 async def setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
