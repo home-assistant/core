@@ -39,9 +39,13 @@ class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
 
     @override
     async def _async_update_data(self) -> WAQIAirQuality:
+        station_number = self.subentry.data[CONF_STATION_NUMBER]
         try:
-            return await self._client.get_by_station_number(
-                self.subentry.data[CONF_STATION_NUMBER]
-            )
+            return await self._client.get_by_station_number(station_number)
         except WAQIError as exc:
-            raise UpdateFailed from exc
+            LOGGER.warning(
+                "Error fetching WAQI data for station %s: %s",
+                station_number,
+                exc,
+            )
+            raise UpdateFailed(str(exc)) from exc
