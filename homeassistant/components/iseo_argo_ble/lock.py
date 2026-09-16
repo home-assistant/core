@@ -1,15 +1,16 @@
 """ISEO BLE Lock entity."""
 
-import asyncio
+from datetime import datetime
 from typing import Any, override
 
 from bleak import BleakError
 from iseo_argo_ble import IseoAuthError, IseoConnectionError
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN, GATEWAY_NAME, RELOCK_DELAY, RELOCK_POLL_DELAY
 from .coordinator import IseoConfigEntry, IseoCoordinator
@@ -43,8 +44,11 @@ class IseoLockEntity(IseoEntity, LockEntity):
         """Initialize the lock entity."""
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.config_entry.unique_id
-        self._relock_task: asyncio.Task[None] | None = None
+        self._cancel_relock: CALLBACK_TYPE | None = None
         self._applied_poll = 0
+        # Set between an unlock and the reading that verifies it: the latch is
+        # open but a door sensor still reports the door closed.
+        self._awaiting_relock_poll = False
         # Unknown until the first successful read: the lock is only known to be
         # latched once it reports its door status.
         self._attr_is_locked: bool | None = None
@@ -52,15 +56,16 @@ class IseoLockEntity(IseoEntity, LockEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Register the relock task teardown."""
+        """Register the relock teardown."""
         await super().async_added_to_hass()
-        self.async_on_remove(self._cancel_relock_task)
+        self.async_on_remove(self._cancel_pending_relock)
 
     @callback
-    def _cancel_relock_task(self) -> None:
-        """Cancel any pending relock task."""
-        if self._relock_task and not self._relock_task.done():
-            self._relock_task.cancel()
+    def _cancel_pending_relock(self) -> None:
+        """Cancel a relock that has not fired yet."""
+        if self._cancel_relock:
+            self._cancel_relock()
+            self._cancel_relock = None
 
     @callback
     @override
@@ -82,6 +87,8 @@ class IseoLockEntity(IseoEntity, LockEntity):
         if state is None or self._applied_poll == self.coordinator.poll_count:
             return
         self._applied_poll = self.coordinator.poll_count
+        if self._awaiting_relock_poll:
+            return
 
         if state.door_closed is None:
             # Without a door sensor the state can only ever be assumed: the
@@ -98,21 +105,21 @@ class IseoLockEntity(IseoEntity, LockEntity):
     def _set_locked(self) -> None:
         """Assume the lock has re-latched."""
         self._attr_is_unlocking = False
+        self._awaiting_relock_poll = False
         self._attr_is_locked = True
         self.async_write_ha_state()
 
-    async def _auto_relock(self) -> None:
-        """Revert to 'locked' after the motor has re-latched."""
+    async def _async_relock(self, _now: datetime) -> None:
+        """Read the door once the latch has had time to re-engage."""
+        self._cancel_relock = None
+        self._awaiting_relock_poll = False
         # Support is unknown until a reading succeeds; try to take one rather
         # than assume the door has closed behind an unlock.
         if self.coordinator.door_status_supported is not False:
-            await asyncio.sleep(RELOCK_POLL_DELAY)
             if await self.coordinator.async_poll_now():
                 return
             # The poll took no reading, so fall back to the lock's own
             # re-latching behaviour.
-        else:
-            await asyncio.sleep(RELOCK_DELAY)
         self._set_locked()
 
     @override
@@ -126,7 +133,7 @@ class IseoLockEntity(IseoEntity, LockEntity):
     @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Open the lock (momentary actuator — always re-latches automatically)."""
-        self._cancel_relock_task()
+        self._cancel_pending_relock()
 
         self._attr_is_locked = False
         self._attr_is_unlocking = True
@@ -149,5 +156,13 @@ class IseoLockEntity(IseoEntity, LockEntity):
             ) from exc
 
         self._attr_is_unlocking = False
+        self._awaiting_relock_poll = True
         self.async_write_ha_state()
-        self._relock_task = self.hass.async_create_task(self._auto_relock())
+        # A lock with no door to read only needs time to re-latch; one with a
+        # door sensor is read as soon as the latch has re-engaged.
+        delay = (
+            RELOCK_DELAY
+            if self.coordinator.door_status_supported is False
+            else RELOCK_POLL_DELAY
+        )
+        self._cancel_relock = async_call_later(self.hass, delay, self._async_relock)

@@ -1,7 +1,6 @@
 """Test the ISEO Argo BLE lock entity."""
 
 import asyncio
-from collections.abc import Generator
 from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -11,6 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
+from homeassistant.components.iseo_argo_ble.const import RELOCK_DELAY
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -38,12 +38,15 @@ ENTITY_ID = "lock.iseo_lock"
 
 
 async def _unlock(hass: HomeAssistant) -> None:
-    """Call the unlock action on the lock and let the relock task settle."""
+    """Call the unlock action on the lock and let the relock settle."""
     await hass.services.async_call(
         LOCK_DOMAIN,
         SERVICE_UNLOCK,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
+    )
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RELOCK_DELAY + 1)
     )
     await hass.async_block_till_done()
 
@@ -57,16 +60,6 @@ def _record_states(hass: HomeAssistant) -> list[str]:
         lambda event: reported.append(event.data["new_state"].state),
     )
     return reported
-
-
-@pytest.fixture(autouse=True)
-def _no_relock_delay() -> Generator[None]:
-    """Run the relock bookkeeping without waiting for the real delays."""
-    with (
-        patch("homeassistant.components.iseo_argo_ble.lock.RELOCK_DELAY", 0),
-        patch("homeassistant.components.iseo_argo_ble.lock.RELOCK_POLL_DELAY", 0),
-    ):
-        yield
 
 
 @pytest.mark.usefixtures("mock_iseo_client")
@@ -183,6 +176,36 @@ async def test_advertisement_does_not_relock_before_the_door_is_read(
     await _unlock(hass)
 
     # The reading on file still said the door was closed, from before the unlock.
+    assert reported == [LockState.UNLOCKING, LockState.UNLOCKED]
+
+
+async def test_advertisement_does_not_relock_before_the_verification_poll(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    lock_state: IseoLockState,
+) -> None:
+    """Test a poll between the unlock and its verification does not relock."""
+    mock_iseo_client.read_state.reset_mock()
+    reported = _record_states(hass)
+
+    # Hold the verification back, so the lock can advertise in between.
+    with patch("homeassistant.components.iseo_argo_ble.lock.RELOCK_POLL_DELAY", 60):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+        # The lock still reports the door closed, from before the unlock.
+        await trigger_poll(hass)
+
+        # The door is opened before the latch is read again.
+        lock_state.door_closed = False
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
+        await hass.async_block_till_done()
+
+    assert mock_iseo_client.read_state.call_count == 2
     assert reported == [LockState.UNLOCKING, LockState.UNLOCKED]
 
 
