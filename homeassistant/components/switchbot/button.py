@@ -1,7 +1,6 @@
 """Button support for SwitchBot devices."""
 
 import logging
-import random
 from typing import override
 
 import switchbot
@@ -118,13 +117,8 @@ class SwitchBotArtFrameRandomButton(SwitchBotArtFrameButtonBase):
     @override
     async def async_press(self) -> None:
         """Handle the button press."""
-        all_images = self._device.get_all_images_index()
-        if not all_images or len(all_images) <= 1:
-            return
-        current_index = self._device.get_current_image_index()
-        choices = [i for i in range(len(all_images)) if all_images[i] != current_index]
         _LOGGER.debug("Pressing random image button %s", self._address)
-        await self._device.set_image(random.choice(choices))
+        await self._device.random_image()
 
 
 class SwitchBotMeterProCO2SyncDateTimeButton(SwitchbotEntity, ButtonEntity):
