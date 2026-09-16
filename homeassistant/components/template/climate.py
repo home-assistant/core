@@ -752,7 +752,12 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set one or more target temperatures."""
-        common_params: dict[str, Any] = {}
+        common_params: dict[str, Any] = {
+            "temperature": None,
+            "target_temp_high": None,
+            "target_temp_low": None,
+            "hvac_mode": None,
+        }
         write_state = False
 
         breadcrumb = f"{SET_TEMPERATURE_ACTION} {ATTR_HVAC_MODE}"
