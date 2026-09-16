@@ -17,7 +17,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -37,7 +37,20 @@ async def test_all_entities(
     assert device.model is None
     assert device.manufacturer == "De Dietrich"
     assert device.sw_version == "100"
-    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+    sensor_entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, init_integration.entry_id
+        )
+        if entry.domain == SENSOR_DOMAIN
+    ]
+    assert sensor_entries
+    for entity_entry in sensor_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_entry.disabled_by is None, "Please enable all entities."
+        state = hass.states.get(entity_entry.entity_id)
+        assert state, f"State not found for {entity_entry.entity_id}"
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 async def test_diagnostic_entities_disabled_by_default(

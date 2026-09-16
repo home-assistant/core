@@ -50,11 +50,19 @@
       "room_temperature": {
         "name": "Room temperature"
       },
-      "temperature": {
-        "name": "Temperature"
-      },
       "water_pressure": {
         "name": "Water pressure"
+      }
+    },
+    "water_heater": {
+      "mode_eco": {
+        "name": "Eco"
+      },
+      "mode_high_demand": {
+        "name": "High demand"
+      },
+      "mode_performance": {
+        "name": "Performance"
       }
     }
   },
@@ -67,6 +75,12 @@
     },
     "no_component_answered": {
       "message": "No component answered."
+    },
+    "set_operation_mode_error": {
+      "message": "Failed to set the hot water operating mode."
+    },
+    "set_temperature_error": {
+      "message": "Failed to set the hot water target temperature."
     },
     "unsupported_device": {
       "message": "This device is not supported: {error}"

@@ -128,16 +128,6 @@ SENSOR_DESCRIPTIONS: tuple[DeDietrichSensorDescription, ...] = (
         value_fn=lambda device: device.sensors.ionization_current,
     ),
     DeDietrichSensorDescription(
-        key="hot_water_temperature",
-        translation_key="temperature",
-        component="hot_water",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-        value_fn=lambda device: device.hot_water.temp,
-    ),
-    DeDietrichSensorDescription(
         key="circuit_a_room_temperature",
         translation_key="room_temperature",
         component="circuit_a",
