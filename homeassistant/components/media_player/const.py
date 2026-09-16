@@ -1,6 +1,7 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
+from typing import Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
 
@@ -41,7 +42,7 @@ ATTR_MEDIA_VOLUME_MUTED = "is_volume_muted"
 ATTR_SOUND_MODE = "sound_mode"
 ATTR_SOUND_MODE_LIST = "sound_mode_list"
 
-DOMAIN = "media_player"
+DOMAIN: Final = "media_player"
 
 INTENT_MEDIA_PAUSE = "HassMediaPause"
 INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"

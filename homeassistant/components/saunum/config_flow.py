@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pysaunum import SaunumClient, SaunumException
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -29,9 +29,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
     }
 )
 
@@ -119,21 +119,21 @@ class LeilSaunaOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         OPT_PRESET_NAME_TYPE_1,
                         default=self.config_entry.options.get(
                             OPT_PRESET_NAME_TYPE_1, DEFAULT_PRESET_NAME_TYPE_1
                         ),
                     ): cv.string,
-                    vol.Optional(
+                    probatio.Optional(
                         OPT_PRESET_NAME_TYPE_2,
                         default=self.config_entry.options.get(
                             OPT_PRESET_NAME_TYPE_2, DEFAULT_PRESET_NAME_TYPE_2
                         ),
                     ): cv.string,
-                    vol.Optional(
+                    probatio.Optional(
                         OPT_PRESET_NAME_TYPE_3,
                         default=self.config_entry.options.get(
                             OPT_PRESET_NAME_TYPE_3, DEFAULT_PRESET_NAME_TYPE_3

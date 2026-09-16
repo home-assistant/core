@@ -362,6 +362,49 @@ PDU_OUTLETS_UPDATE_DATA = [
     },
 ]
 
+UPS_DEVICE_1 = deepcopy(PDU_DEVICE_1)
+UPS_DEVICE_1.update(
+    {
+        "device_id": "mock-ups",
+        "mac": "02:00:00:00:00:01",
+        "model": "USPDA2B",
+        "name": "Dummy UPS 2U Pro",
+        "type": "usp",
+        "outlet_table": [
+            {
+                "index": 1,
+                "relay_state": True,
+                "cycle_enabled": False,
+                "name": "Outlet 1",
+                "outlet_caps": 65539,
+                "outlet_voltage": 121.7,
+                "outlet_current": 0.35,
+                "outlet_power": 42.5,
+                "outlet_power_factor": 0.98,
+            },
+            {
+                "index": 2,
+                "relay_state": True,
+                "cycle_enabled": False,
+                "has_metering": True,
+                "name": "Outlet 2",
+                "outlet_voltage": 121.7,
+                "outlet_current": 0.1,
+                "outlet_power": 12.5,
+                "outlet_power_factor": 0.95,
+            },
+        ],
+        "outlet_overrides": [
+            {
+                "cycle_enabled": False,
+                "name": "Outlet 1",
+                "relay_state": True,
+                "index": 1,
+            }
+        ],
+    }
+)
+
 
 @pytest.mark.parametrize(
     "config_entry_options",
@@ -954,6 +997,27 @@ async def test_outlet_power_readings(
         await hass.async_block_till_done()
 
         assert hass.states.get(f"sensor.{entity_id}").state == expected_update_value
+
+
+@pytest.mark.parametrize("device_payload", [[UPS_DEVICE_1]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_outlet_power_reading_extended_caps(
+    hass: HomeAssistant,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Test outlet power reporting with extended capability bits and numeric values."""
+    entity_id = "sensor.dummy_ups_2u_pro_outlet_1_outlet_power"
+    assert hass.states.get(entity_id).state == "42.5"
+    assert (
+        hass.states.get("sensor.dummy_ups_2u_pro_outlet_2_outlet_power").state == "12.5"
+    )
+
+    updated_device_data = deepcopy(UPS_DEVICE_1)
+    updated_device_data["outlet_table"][0]["outlet_power"] = 43.5
+    mock_websocket_message(message=MessageKey.DEVICE, data=updated_device_data)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "43.5"
 
 
 @pytest.mark.parametrize(
@@ -1646,14 +1710,22 @@ async def test_device_uptime(
     ],
 )
 @pytest.mark.parametrize(
-    ("monitor_id", "state", "updated_state", "index_to_update"),
+    ("monitor_id", "state", "index_to_update", "monitor_update", "updated_state"),
     [
-        # Microsoft
-        ("microsoft_wan", "56", "20", 0),
-        # Google
-        ("google_wan", "53", "90", 1),
-        # Cloudflare
-        ("cloudflare_wan", "30", "80", 2),
+        pytest.param(
+            "microsoft_wan", "56", 0, {"latency_average": 20}, "20", id="microsoft"
+        ),
+        pytest.param("google_wan", "53", 1, {"latency_average": 90}, "90", id="google"),
+        pytest.param(
+            "cloudflare_wan", "30", 2, {"latency_average": 80}, "80", id="cloudflare"
+        ),
+        pytest.param(
+            "microsoft_wan", "56", 0, {}, STATE_UNKNOWN, id="microsoft_no_response"
+        ),
+        pytest.param("google_wan", "53", 1, {}, STATE_UNKNOWN, id="google_no_response"),
+        pytest.param(
+            "cloudflare_wan", "30", 2, {}, STATE_UNKNOWN, id="cloudflare_no_response"
+        ),
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
@@ -1664,8 +1736,9 @@ async def test_wan_monitor_latency(
     device_payload: list[dict[str, Any]],
     monitor_id: str,
     state: str,
-    updated_state: str,
     index_to_update: int,
+    monitor_update: dict[str, Any],
+    updated_state: str,
 ) -> None:
     """Verify that wan latency sensors are working as expected."""
     entity_id = f"sensor.mock_name_{monitor_id}_latency"
@@ -1693,14 +1766,14 @@ async def test_wan_monitor_latency(
     # Verify sensor state
     assert hass.states.get(entity_id).state == state
 
-    # Verify state update
-    device = device_payload[0]
-    device["uptime_stats"]["WAN"]["monitors"][index_to_update]["latency_average"] = (
-        updated_state
-    )
-
+    # Update state
+    device = deepcopy(device_payload[0])
+    monitor = device["uptime_stats"]["WAN"]["monitors"][index_to_update]
+    monitor.pop("latency_average")
+    monitor.update(monitor_update)
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
+    # Verify state update
     assert hass.states.get(entity_id).state == updated_state
 
 

@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import re
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import (
@@ -44,10 +44,10 @@ _ANGLE_SENSOR_SELECTOR = selector.EntitySelector(
 )
 
 
-_COORDINATES_SCHEMA = vol.Schema(
+_COORDINATES_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_LATITUDE): cv.latitude,
-        vol.Required(CONF_LONGITUDE): cv.longitude,
+        probatio.Required(CONF_LATITUDE): cv.latitude,
+        probatio.Required(CONF_LONGITUDE): cv.longitude,
     }
 )
 
@@ -84,33 +84,33 @@ def _plane_title(hass: HomeAssistant, data: Mapping[str, Any]) -> str:
     )
 
 
-_PLANE_SCHEMA = vol.Schema(
+PLANE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DECLINATION): vol.All(
+        probatio.Required(CONF_DECLINATION): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0, max=90, step=1, mode=selector.NumberSelectorMode.BOX
                 ),
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Optional(CONF_DECLINATION_SENSOR): _ANGLE_SENSOR_SELECTOR,
-        vol.Required(CONF_AZIMUTH): vol.All(
+        probatio.Optional(CONF_DECLINATION_SENSOR): _ANGLE_SENSOR_SELECTOR,
+        probatio.Required(CONF_AZIMUTH): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0, max=360, step=1, mode=selector.NumberSelectorMode.BOX
                 ),
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Optional(CONF_AZIMUTH_SENSOR): _ANGLE_SENSOR_SELECTOR,
-        vol.Required(CONF_MODULES_POWER): vol.All(
+        probatio.Optional(CONF_AZIMUTH_SENSOR): _ANGLE_SENSOR_SELECTOR,
+        probatio.Required(CONF_MODULES_POWER): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=1, step=1, mode=selector.NumberSelectorMode.BOX
                 ),
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
     }
 )
@@ -165,7 +165,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="home_location",
             data_schema=self.add_suggested_values_to_schema(
-                _PLANE_SCHEMA, _PLANE_DEFAULTS
+                PLANE_SCHEMA, _PLANE_DEFAULTS
             ),
         )
 
@@ -185,7 +185,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="fixed_location",
             data_schema=self.add_suggested_values_to_schema(
-                _COORDINATES_SCHEMA.extend(_PLANE_SCHEMA.schema),
+                _COORDINATES_SCHEMA.extend(PLANE_SCHEMA.schema),
                 {
                     CONF_LATITUDE: self.hass.config.latitude,
                     CONF_LONGITUDE: self.hass.config.longitude,
@@ -293,23 +293,23 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_API_KEY,
                         default=suggested_api_key,
                     )
                     if planes_count > 1
-                    else vol.Optional(
+                    else probatio.Optional(
                         CONF_API_KEY,
                         description={"suggested_value": suggested_api_key},
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DAMPING_MORNING,
                         default=self.config_entry.options.get(
                             CONF_DAMPING_MORNING, DEFAULT_DAMPING
                         ),
-                    ): vol.All(
+                    ): probatio.All(
                         selector.NumberSelector(
                             selector.NumberSelectorConfig(
                                 min=0,
@@ -318,14 +318,14 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                                 mode=selector.NumberSelectorMode.BOX,
                             ),
                         ),
-                        vol.Coerce(float),
+                        probatio.Coerce(float),
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DAMPING_EVENING,
                         default=self.config_entry.options.get(
                             CONF_DAMPING_EVENING, DEFAULT_DAMPING
                         ),
-                    ): vol.All(
+                    ): probatio.All(
                         selector.NumberSelector(
                             selector.NumberSelectorConfig(
                                 min=0,
@@ -334,16 +334,16 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                                 mode=selector.NumberSelectorMode.BOX,
                             ),
                         ),
-                        vol.Coerce(float),
+                        probatio.Coerce(float),
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_INVERTER_SIZE,
                         description={
                             "suggested_value": self.config_entry.options.get(
                                 CONF_INVERTER_SIZE
                             )
                         },
-                    ): vol.All(
+                    ): probatio.All(
                         selector.NumberSelector(
                             selector.NumberSelectorConfig(
                                 min=1,
@@ -351,7 +351,7 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                                 mode=selector.NumberSelectorMode.BOX,
                             ),
                         ),
-                        vol.Coerce(int),
+                        probatio.Coerce(int),
                     ),
                 }
             ),
@@ -382,7 +382,7 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                _PLANE_SCHEMA, _PLANE_DEFAULTS
+                PLANE_SCHEMA, _PLANE_DEFAULTS
             ),
         )
 
@@ -406,6 +406,6 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                _PLANE_SCHEMA, subentry.data
+                PLANE_SCHEMA, subentry.data
             ),
         )

@@ -6,8 +6,9 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_AZIMUTH,
@@ -26,8 +27,17 @@ from .const import (
     SUBENTRY_TYPE_PLANE,
 )
 from .coordinator import ForecastSolarConfigEntry, ForecastSolarDataUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Forecast.Solar integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_migrate_entry(

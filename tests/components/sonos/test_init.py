@@ -8,6 +8,7 @@ import logging
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from requests import Response
@@ -97,7 +98,10 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
 
 
 async def test_upnp_disabled_discovery(
-    hass: HomeAssistant, config_entry: MockConfigEntry, soco: MockSoCo
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
 ) -> None:
     """Test issue creation when discovery processing fails with 403."""
 
@@ -115,7 +119,6 @@ async def test_upnp_disabled_discovery(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         issue_registry.async_get_issue(
             sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
@@ -126,6 +129,7 @@ async def test_upnp_disabled_discovery(
 
 async def test_upnp_disabled_manual_hosts(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     soco_factory: SoCoMockFactory,
 ) -> None:
     """Test issue creation when manual host processing fails with 403."""
@@ -144,7 +148,6 @@ async def test_upnp_disabled_manual_hosts(
     ):
         await _setup_hass(hass)
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(
         sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
     )
@@ -577,32 +580,111 @@ async def test_async_poll_manual_hosts_6(
     soco_1.renderingControl = Mock()
     soco_1.renderingControl.GetVolume = Mock()
     soco_1.renderingControl.GetVolume.side_effect = SonosUpdateError()
-    speaker_1_activity = SpeakerActivity(hass, soco_1)
     soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
     soco_2.renderingControl = Mock()
     soco_2.renderingControl.GetVolume = Mock()
     soco_2.renderingControl.GetVolume.side_effect = SonosUpdateError()
-    speaker_2_activity = SpeakerActivity(hass, soco_2)
 
-    with patch(
-        "homeassistant.components.sonos.DISCOVERY_INTERVAL"
-    ) as mock_discovery_interval:
-        # Speed up manual discovery interval so second iteration runs sooner
-        mock_discovery_interval.total_seconds = Mock(side_effect=[0.0, 60])
-        await _setup_hass(hass)
-
-        assert "media_player.bedroom" in entity_registry.entities
-        assert "media_player.living_room" in entity_registry.entities
-
-        with caplog.at_level(logging.DEBUG):
-            caplog.clear()
-            await hass.async_block_till_done()
-            assert "Activity on Living Room" not in caplog.text
-            assert "Activity on Bedroom" not in caplog.text
-            assert speaker_1_activity.call_count == 0
-            assert speaker_2_activity.call_count == 0
-
+    await _setup_hass(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "media_player.bedroom" in entity_registry.entities
+    assert "media_player.living_room" in entity_registry.entities
+    bedroom_state = hass.states.get("media_player.bedroom")
+    assert bedroom_state is not None
+    assert bedroom_state.state == "unavailable"
+    living_room_state = hass.states.get("media_player.living_room")
+    assert living_room_state is not None
+    assert living_room_state.state == "unavailable"
+
+    speaker_1_activity = SpeakerActivity(hass, soco_1)
+    speaker_2_activity = SpeakerActivity(hass, soco_2)
+    soco_1.renderingControl.GetVolume.reset_mock()
+    soco_2.renderingControl.GetVolume.reset_mock()
+
+    with (
+        caplog.at_level(logging.DEBUG),
+        freeze_time(dt_util.utcnow()) as freezer,
+    ):
+        caplog.clear()
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        soco_1.renderingControl.GetVolume.assert_called_once_with(
+            [("InstanceID", 0), ("Channel", "Master")], timeout=1
+        )
+        soco_2.renderingControl.GetVolume.assert_called_once_with(
+            [("InstanceID", 0), ("Channel", "Master")], timeout=1
+        )
+        assert "Activity on Living Room" not in caplog.text
+        assert "Activity on Bedroom" not in caplog.text
+        assert speaker_1_activity.call_count == 0
+        assert speaker_2_activity.call_count == 0
+
+
+async def test_async_poll_manual_hosts_skips_ping_for_disabled_device(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabled manual-host speakers are not pinged on heartbeat."""
+    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco.renderingControl = Mock()
+    soco.renderingControl.GetVolume = Mock()
+
+    await _setup_hass(hass)
+
+    assert "media_player.living_room" in entity_registry.entities
+
+    # Mark the speaker unavailable via ZGS event with VanishedDevices.
+    async def fire_vanish_event():
+        subscription = soco.zoneGroupTopology.subscribe.return_value
+        sub_callback = await subscription.wait_for_callback_to_be_set()
+        zgs_with_vanished = f"""<ZoneGroupState>
+            <ZoneGroups>
+                <ZoneGroup Coordinator="{soco.uid}" ID="{soco.uid}:1384750254">
+                    <ZoneGroupMember UUID="{soco.uid}" Location="http://192.168.4.2:1400/xml/device_description.xml" ZoneName="Living Room"/>
+                </ZoneGroup>
+            </ZoneGroups>
+            <VanishedDevices>
+                <ZoneGroupMember UUID="{soco.uid}" Reason="powered off" ZoneName="Living Room"/>
+            </VanishedDevices>
+        </ZoneGroupState>"""
+        event = SonosMockEvent(
+            soco, soco.zoneGroupTopology, {"ZoneGroupState": zgs_with_vanished}
+        )
+        sub_callback(event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    await fire_vanish_event()
+
+    # Verify the speaker is marked unavailable.
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    # Now disable the device.
+    entry = hass.config_entries.async_entries(sonos.DOMAIN)[0]
+    device = device_registry.async_get_device_by_identifier(
+        (sonos.DOMAIN, soco.uid), entry.entry_id
+    )
+    assert device is not None
+    device_registry.async_update_device(
+        device.id,
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    # SonosSpeaker.ping uses RenderingControl.GetVolume under the hood.
+    soco.renderingControl.GetVolume.reset_mock()
+    with freeze_time(dt_util.utcnow()) as freezer:
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The disabled speaker should not have been pinged.
+    soco.renderingControl.GetVolume.assert_not_called()
 
 
 async def test_async_poll_manual_hosts_7(

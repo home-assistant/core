@@ -70,9 +70,6 @@ async def async_setup_entry(
                 manufacturer=MANUFACTURER,
                 model=controller.hardware.model.description,
                 name=controller.name,
-                # Explicitly clear any via_device_id: older versions linked the
-                # controller device to itself via its rain sensor entity.
-                via_device_id=None,
             )
 
     # Register the controllers known at setup before the platforms construct
