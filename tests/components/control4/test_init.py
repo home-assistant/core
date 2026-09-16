@@ -1,17 +1,13 @@
 """Test Control4 integration setup and core behaviors."""
 
 import asyncio
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyControl4.error_handling import BadToken
 import pytest
 
-from homeassistant.components.control4 import RefreshTokensObject
-from homeassistant.components.control4.const import (
-    WEBSOCKET_RESYNC_INTERVAL_SEC,
-    ReentrantAsyncLock,
-)
+from homeassistant.components.control4 import RefreshTokensObject, _periodic_resync
+from homeassistant.components.control4.const import ReentrantAsyncLock
 from homeassistant.components.control4.director_utils import (
     director_get_entry_variables,
     gather_entry_variables,
@@ -23,7 +19,7 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -40,16 +36,28 @@ async def test_periodic_resync_skips_when_already_running(
     """A periodic resync tick is skipped while a previous pass is still running."""
     await setup_integration(hass, mock_config_entry)
 
+    resync_started = asyncio.Event()
+    release_resync = asyncio.Event()
+
+    async def _slow_resync_items(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+        resync_started.set()
+        await release_resync.wait()
+
     with patch(
-        "homeassistant.components.control4._resync_items", new=AsyncMock()
+        "homeassistant.components.control4._resync_items",
+        new=AsyncMock(side_effect=_slow_resync_items),
     ) as mock_resync:
-        async with mock_config_entry.runtime_data.resync_lock:
-            async_fire_time_changed(
-                hass,
-                dt_util.utcnow() + timedelta(seconds=WEBSOCKET_RESYNC_INTERVAL_SEC),
-            )
-            await hass.async_block_till_done()
-        mock_resync.assert_not_called()
+        first_tick = hass.async_create_task(
+            _periodic_resync(hass, mock_config_entry, dt_util.utcnow()),
+            "test first resync tick",
+        )
+        await resync_started.wait()
+
+        await _periodic_resync(hass, mock_config_entry, dt_util.utcnow())
+        mock_resync.assert_called_once()
+
+        release_resync.set()
+        await first_tick
 
 
 @pytest.mark.usefixtures("mock_c4_account")

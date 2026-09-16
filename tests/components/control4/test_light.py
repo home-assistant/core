@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -19,7 +20,6 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from . import setup_integration
@@ -413,6 +413,7 @@ async def test_light_reconnect_resyncs_state(
 )
 async def test_light_periodic_resync(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_light_variables: dict,
 ) -> None:
     """Light re-fetches and resyncs state on the periodic safety-net poll."""
@@ -422,9 +423,8 @@ async def test_light_periodic_resync(
 
     mock_light_variables[345]["LIGHT_LEVEL"] = 0
 
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=WEBSOCKET_RESYNC_INTERVAL_SEC)
-    )
+    freezer.tick(timedelta(seconds=WEBSOCKET_RESYNC_INTERVAL_SEC))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(DIMMER_ENTITY_ID)
