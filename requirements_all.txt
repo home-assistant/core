@@ -86,7 +86,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.21.0
 
 # homeassistant.components.switchbot
-PySwitchbot==2.7.0
+PySwitchbot==2.9.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -318,7 +318,7 @@ aioimaplib==2.0.1
 aioimmich==0.17.0
 
 # homeassistant.components.indi_allsky
-aioindiallsky==0.1.1
+aioindiallsky==0.1.2
 
 # homeassistant.components.ipp
 aioipp==0.19.3
@@ -477,7 +477,7 @@ aiotedee==0.3.0
 aiotractive==1.0.3
 
 # homeassistant.components.unifi
-aiounifi==95
+aiounifi==96
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
@@ -679,7 +679,7 @@ batinfo==0.4.2
 beautifulsoup4==4.13.3
 
 # homeassistant.components.besen
-besen==0.4.2
+besen==0.4.5
 
 # homeassistant.components.bitvis
 bitvis-protobuf==2.0.4
@@ -1339,7 +1339,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.1.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.16.0
+homematicip==2.17.0
 
 # homeassistant.components.homevolt
 homevolt==0.7.0
@@ -1417,7 +1417,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==10.0.0
+infrared-protocols==10.1.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -1571,7 +1571,7 @@ loqedAPI==2.1.11
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.10.1
+lunatone-rest-api-client==0.10.2
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
