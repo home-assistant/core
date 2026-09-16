@@ -1,5 +1,7 @@
 """Test the Forecast.Solar coordinator."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components.forecast_solar.const import (
@@ -12,56 +14,70 @@ from homeassistant.components.forecast_solar.const import (
     SUBENTRY_TYPE_PLANE,
 )
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+AZIMUTH_SENSOR = "sensor.roof_azimuth"
+DECLINATION_SENSOR = "sensor.roof_declination"
+DEGREES = {"unit_of_measurement": "°"}
 
-@pytest.fixture
-def sensor_plane_config_entry() -> MockConfigEntry:
-    """Return a config entry whose main plane reads azimuth from a sensor."""
+FIXED_LOCATION = {CONF_LATITUDE: 52.42, CONF_LONGITUDE: 4.42}
+
+
+def _config_entry(
+    *planes: dict[str, Any],
+    entry_data: dict[str, Any],
+    options: dict[str, Any] | None = None,
+) -> MockConfigEntry:
+    """Return a config entry with a plane subentry per given plane data."""
     return MockConfigEntry(
         title="Sensor House",
         unique_id="unique-sensor",
         version=3,
         domain=DOMAIN,
-        data={CONF_LATITUDE: 52.42, CONF_LONGITUDE: 4.42},
-        options={},
+        data=entry_data,
+        options=options or {},
         subentries_data=[
             ConfigSubentryData(
-                data={
-                    CONF_DECLINATION: 30,
-                    CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
-                    CONF_MODULES_POWER: 5100,
-                },
-                subentry_id="mock_plane_id",
+                data=plane,
+                subentry_id=f"plane_{index}",
                 subentry_type=SUBENTRY_TYPE_PLANE,
-                title="30° / sensor.roof_azimuth / 5100W",
+                title=f"Plane {index}",
                 unique_id=None,
-            ),
+            )
+            for index, plane in enumerate(planes)
         ],
     )
+
+
+AZIMUTH_SENSOR_PLANE = {
+    CONF_DECLINATION: 30,
+    CONF_AZIMUTH: 190,
+    CONF_AZIMUTH_SENSOR: AZIMUTH_SENSOR,
+    CONF_MODULES_POWER: 5100,
+}
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
 async def test_coordinator_rereads_azimuth_sensor_on_each_update(
     hass: HomeAssistant,
-    sensor_plane_config_entry: MockConfigEntry,
 ) -> None:
     """Test the azimuth sensor is read at setup and a changed value on refresh.
 
     UI stores 0-360 (0=North), library expects -180..180 (0=South).
     """
-    hass.states.async_set("sensor.roof_azimuth", "100", {"unit_of_measurement": "°"})
-    sensor_plane_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(sensor_plane_config_entry.entry_id)
+    hass.states.async_set(AZIMUTH_SENSOR, "100", DEGREES)
+    entry = _config_entry(AZIMUTH_SENSOR_PLANE, entry_data=FIXED_LOCATION)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = sensor_plane_config_entry.runtime_data
+    coordinator = entry.runtime_data
     assert coordinator.forecast.azimuth == 100 - 180
 
-    hass.states.async_set("sensor.roof_azimuth", "200", {"unit_of_measurement": "°"})
+    hass.states.async_set(AZIMUTH_SENSOR, "200", DEGREES)
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -69,185 +85,167 @@ async def test_coordinator_rereads_azimuth_sensor_on_each_update(
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
-async def test_coordinator_update_fails_when_sensor_unavailable(
+async def test_coordinator_normalises_compass_azimuth(hass: HomeAssistant) -> None:
+    """Test a compass sensor reporting -180..180 is normalised, not rejected."""
+    hass.states.async_set(AZIMUTH_SENSOR, "-90", DEGREES)
+    entry = _config_entry(AZIMUTH_SENSOR_PLANE, entry_data=FIXED_LOCATION)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data
+    assert coordinator.forecast.azimuth == 270 - 180
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        pytest.param("unavailable", id="unavailable"),
+        pytest.param("unknown", id="unknown"),
+        pytest.param("north", id="not_a_number"),
+        pytest.param("500", id="out_of_range"),
+    ],
+)
+@pytest.mark.usefixtures("mock_forecast_solar")
+async def test_coordinator_falls_back_to_configured_azimuth(
     hass: HomeAssistant,
-    sensor_plane_config_entry: MockConfigEntry,
+    state: str,
 ) -> None:
-    """Test an unavailable sensor fails that poll instead of setup."""
-    hass.states.async_set("sensor.roof_azimuth", "100", {"unit_of_measurement": "°"})
-    sensor_plane_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(sensor_plane_config_entry.entry_id)
+    """Test an unusable sensor falls back to the configured angle, keeping the entry up."""
+    hass.states.async_set(AZIMUTH_SENSOR, state, DEGREES)
+    entry = _config_entry(AZIMUTH_SENSOR_PLANE, entry_data=FIXED_LOCATION)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = sensor_plane_config_entry.runtime_data
-    hass.states.async_set("sensor.roof_azimuth", "unavailable")
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    assert coordinator.last_update_success is False
+    coordinator = entry.runtime_data
+    assert coordinator.last_update_success is True
+    assert coordinator.forecast.azimuth == 190 - 180
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
-async def test_coordinator_update_fails_when_sensor_out_of_range(
+async def test_coordinator_falls_back_when_sensor_entity_missing(
     hass: HomeAssistant,
-    sensor_plane_config_entry: MockConfigEntry,
 ) -> None:
-    """Test an out-of-range sensor value fails setup."""
-    hass.states.async_set("sensor.roof_azimuth", "500", {"unit_of_measurement": "°"})
-    sensor_plane_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.async_setup(sensor_plane_config_entry.entry_id)
+    """Test a sensor that does not exist falls back to the configured angle."""
+    entry = _config_entry(AZIMUTH_SENSOR_PLANE, entry_data=FIXED_LOCATION)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result is False
+    assert entry.runtime_data.forecast.azimuth == 190 - 180
 
 
-@pytest.fixture
-def declination_sensor_plane_config_entry() -> MockConfigEntry:
-    """Return a config entry whose main plane reads declination from a sensor."""
-    return MockConfigEntry(
-        title="Sensor House",
-        unique_id="unique-declination-sensor",
-        version=3,
-        domain=DOMAIN,
-        data={CONF_LATITUDE: 52.42, CONF_LONGITUDE: 4.42},
-        options={},
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    CONF_DECLINATION_SENSOR: "sensor.roof_declination",
-                    CONF_AZIMUTH: 190,
-                    CONF_MODULES_POWER: 5100,
-                },
-                subentry_id="mock_plane_id",
-                subentry_type=SUBENTRY_TYPE_PLANE,
-                title="sensor.roof_declination / 190° / 5100W",
-                unique_id=None,
-            ),
-        ],
-    )
+@pytest.mark.usefixtures("mock_forecast_solar")
+async def test_coordinator_recovers_when_sensor_returns(hass: HomeAssistant) -> None:
+    """Test a recovered sensor is picked up again on the next update."""
+    hass.states.async_set(AZIMUTH_SENSOR, "unavailable", DEGREES)
+    entry = _config_entry(AZIMUTH_SENSOR_PLANE, entry_data=FIXED_LOCATION)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data
+    assert coordinator.forecast.azimuth == 190 - 180
+
+    hass.states.async_set(AZIMUTH_SENSOR, "100", DEGREES)
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.forecast.azimuth == 100 - 180
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
 async def test_coordinator_resolves_declination_sensor_on_setup(
     hass: HomeAssistant,
-    declination_sensor_plane_config_entry: MockConfigEntry,
 ) -> None:
     """Test the coordinator reads the declination sensor's value at setup."""
-    hass.states.async_set("sensor.roof_declination", "42", {"unit_of_measurement": "°"})
-    declination_sensor_plane_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(
-        declination_sensor_plane_config_entry.entry_id
+    hass.states.async_set(DECLINATION_SENSOR, "42", DEGREES)
+    entry = _config_entry(
+        {
+            CONF_DECLINATION: 30,
+            CONF_DECLINATION_SENSOR: DECLINATION_SENSOR,
+            CONF_AZIMUTH: 190,
+            CONF_MODULES_POWER: 5100,
+        },
+        entry_data=FIXED_LOCATION,
     )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = declination_sensor_plane_config_entry.runtime_data
-    assert coordinator.forecast.declination == 42
-
-
-@pytest.fixture
-def sensor_extra_plane_config_entry() -> MockConfigEntry:
-    """Return a config entry with a sensor-backed extra (non-main) plane."""
-    return MockConfigEntry(
-        title="Sensor House",
-        unique_id="unique-extra-sensor",
-        version=3,
-        domain=DOMAIN,
-        data={CONF_LATITUDE: 52.42, CONF_LONGITUDE: 4.42},
-        options={"api_key": "abcdef1234567890"},
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    CONF_DECLINATION: 30,
-                    CONF_AZIMUTH: 190,
-                    CONF_MODULES_POWER: 5100,
-                },
-                subentry_id="main_plane_id",
-                subentry_type=SUBENTRY_TYPE_PLANE,
-                title="30° / 190° / 5100W",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data={
-                    CONF_DECLINATION_SENSOR: "sensor.extra_declination",
-                    CONF_AZIMUTH_SENSOR: "sensor.extra_azimuth",
-                    CONF_MODULES_POWER: 3000,
-                },
-                subentry_id="extra_plane_id",
-                subentry_type=SUBENTRY_TYPE_PLANE,
-                title="sensor.extra_declination / sensor.extra_azimuth / 3000W",
-                unique_id=None,
-            ),
-        ],
-    )
+    assert entry.runtime_data.forecast.declination == 42
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
 async def test_coordinator_resolves_extra_plane_sensors_on_setup(
     hass: HomeAssistant,
-    sensor_extra_plane_config_entry: MockConfigEntry,
 ) -> None:
     """Test a sensor-backed extra plane's angles resolve from its sensors."""
-    hass.states.async_set(
-        "sensor.extra_declination", "20", {"unit_of_measurement": "°"}
+    hass.states.async_set("sensor.extra_declination", "20", DEGREES)
+    hass.states.async_set("sensor.extra_azimuth", "160", DEGREES)
+    entry = _config_entry(
+        {CONF_DECLINATION: 30, CONF_AZIMUTH: 190, CONF_MODULES_POWER: 5100},
+        {
+            CONF_DECLINATION: 45,
+            CONF_DECLINATION_SENSOR: "sensor.extra_declination",
+            CONF_AZIMUTH: 270,
+            CONF_AZIMUTH_SENSOR: "sensor.extra_azimuth",
+            CONF_MODULES_POWER: 3000,
+        },
+        entry_data=FIXED_LOCATION,
+        options={CONF_API_KEY: "abcdef1234567890"},
     )
-    hass.states.async_set("sensor.extra_azimuth", "160", {"unit_of_measurement": "°"})
-    sensor_extra_plane_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(sensor_extra_plane_config_entry.entry_id)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = sensor_extra_plane_config_entry.runtime_data
-    extra_plane = coordinator.planes[0]
+    extra_plane = entry.runtime_data.planes[0]
     assert extra_plane.declination == 20
     assert extra_plane.azimuth == 160 - 180
-
-
-@pytest.fixture
-def tracked_location_config_entry() -> MockConfigEntry:
-    """Return a config entry with no fixed location, tracking HA's home location."""
-    return MockConfigEntry(
-        title="Tracked Location House",
-        unique_id="unique-tracked-location",
-        version=3,
-        domain=DOMAIN,
-        data={},
-        options={},
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    CONF_DECLINATION: 30,
-                    CONF_AZIMUTH: 190,
-                    CONF_MODULES_POWER: 5100,
-                },
-                subentry_id="mock_plane_id",
-                subentry_type=SUBENTRY_TYPE_PLANE,
-                title="30° / 190° / 5100W",
-                unique_id=None,
-            ),
-        ],
-    )
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
 async def test_coordinator_retracks_home_location_on_update(
     hass: HomeAssistant,
-    tracked_location_config_entry: MockConfigEntry,
 ) -> None:
     """Test HA's home location is used at setup and a changed value on refresh."""
-    hass.config.latitude = 51.5
-    hass.config.longitude = -0.1
-    tracked_location_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(tracked_location_config_entry.entry_id)
+    await hass.config.async_update(latitude=51.5, longitude=-0.1)
+    entry = _config_entry(
+        {CONF_DECLINATION: 30, CONF_AZIMUTH: 190, CONF_MODULES_POWER: 5100},
+        entry_data={},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = tracked_location_config_entry.runtime_data
+    coordinator = entry.runtime_data
     assert coordinator.forecast.latitude == 51.5
 
-    hass.config.latitude = 48.85
-    hass.config.longitude = 2.35
+    await hass.config.async_update(latitude=48.85, longitude=2.35)
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     assert coordinator.forecast.latitude == 48.85
     assert coordinator.forecast.longitude == 2.35
+
+
+@pytest.mark.usefixtures("mock_forecast_solar")
+async def test_coordinator_keeps_configured_angles_integral(
+    hass: HomeAssistant,
+) -> None:
+    """Test fixed angles stay ints, so the request URL is unchanged for existing users."""
+    entry = _config_entry(
+        {CONF_DECLINATION: 30, CONF_AZIMUTH: 190, CONF_MODULES_POWER: 5100},
+        entry_data=FIXED_LOCATION,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    forecast = entry.runtime_data.forecast
+    assert isinstance(forecast.declination, int)
+    assert isinstance(forecast.azimuth, int)
+    assert f"{forecast.declination}/{forecast.azimuth}" == "30/10"

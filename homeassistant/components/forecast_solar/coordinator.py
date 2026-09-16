@@ -2,12 +2,18 @@
 
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any, override
+from typing import Any, cast, override
 
 from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError, Plane
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -71,14 +77,12 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
 
         main_plane, *extra_planes = entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
 
-        # Errors collected here are reported by the first refresh, which re-resolves.
-        errors: list[str] = []
-        declination, azimuth = self._plane_angles(main_plane.data, errors)
+        declination, azimuth = self._plane_angles(main_plane.data)
         latitude, longitude = _resolve_location(hass, entry.data)
 
         self.planes = []
         for subentry in extra_planes:
-            plane_declination, plane_azimuth = self._plane_angles(subentry.data, errors)
+            plane_declination, plane_azimuth = self._plane_angles(subentry.data)
             self.planes.append(
                 Plane(
                     declination=plane_declination,
@@ -101,41 +105,33 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             planes=self.planes,
         )
 
-    def _get_safe_sensor_value(
-        self,
-        entity_id: str,
-        min_value: float,
-        max_value: float,
-        name: str,
-        errors: list[str],
-    ) -> float:
-        """Fetch and validate a numeric sensor value. Returns 0.0 on failure."""
+    def _sensor_value(
+        self, entity_id: str, min_value: float, max_value: float, name: str
+    ) -> float | None:
+        """Return a sensor's numeric value, or None if it cannot be used."""
         sensor = self.hass.states.get(entity_id)
-        error: str | None = None
 
         if sensor is None:
-            error = f"{name} sensor '{entity_id}' not available"
+            error = "is not available"
+        elif sensor.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            error = f"has an invalid state: {sensor.state}"
         else:
-            state = sensor.state
-            if state in ("unavailable", "unknown"):
-                error = f"{name} sensor '{entity_id}' invalid state: {state}"
+            try:
+                value = float(sensor.state)
+            except ValueError:
+                error = f"is not a number: {sensor.state}"
             else:
-                try:
-                    value = float(state)
-                except TypeError, ValueError:
-                    error = f"{name} sensor '{entity_id}' not a number: {state}"
-                else:
-                    if not (min_value <= value <= max_value):
-                        error = (
-                            f"{name} sensor '{entity_id}' value {value:.3f} "
-                            f"out of range [{min_value}, {max_value}]"
-                        )
-                    else:
-                        return value
+                if min_value <= value <= max_value:
+                    return value
+                error = f"reports {value:.3f}, outside [{min_value}, {max_value}]"
 
-        LOGGER.debug(error)
-        errors.append(error)
-        return 0.0
+        LOGGER.warning(
+            "%s sensor '%s' %s; falling back to the configured angle",
+            name,
+            entity_id,
+            error,
+        )
+        return None
 
     def _resolve_angle(
         self,
@@ -145,50 +141,40 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         min_value: float,
         max_value: float,
         name: str,
-        errors: list[str],
     ) -> float:
-        """Resolve a plane angle from its fixed value or a sensor."""
-        if entity_id := data.get(sensor_key):
-            return self._get_safe_sensor_value(
-                entity_id, min_value, max_value, name, errors
-            )
-        return float(data[value_key])
+        """Resolve a plane angle from its sensor, or its configured fixed value."""
+        if (entity_id := data.get(sensor_key)) and (
+            value := self._sensor_value(entity_id, min_value, max_value, name)
+        ) is not None:
+            return value
+        return cast(float, data[value_key])
 
-    def _plane_angles(
-        self, data: Mapping[str, Any], errors: list[str]
-    ) -> tuple[float, float]:
-        """Resolve a plane's declination and azimuth from fixed values or sensors.
+    def _plane_angles(self, data: Mapping[str, Any]) -> tuple[float, float]:
+        """Resolve a plane's declination and azimuth.
 
         UI stores azimuth 0-360 (0=North); the API expects -180..180 (0=South).
+        A sensor may use any convention, e.g. a compass reporting -180..180,
+        so its reading is normalised rather than rejected.
         """
         declination = self._resolve_angle(
-            data,
-            CONF_DECLINATION,
-            CONF_DECLINATION_SENSOR,
-            0,
-            90,
-            "Declination",
-            errors,
+            data, CONF_DECLINATION, CONF_DECLINATION_SENSOR, 0, 90, "Declination"
         )
         azimuth = self._resolve_angle(
-            data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR, 0, 360, "Azimuth", errors
+            data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR, -360, 360, "Azimuth"
         )
-        return declination, azimuth - 180
+        return declination, azimuth % 360 - 180
 
-    def _refresh_plane_angles(self) -> list[str]:
-        """Re-resolve every plane's declination/azimuth, returning any errors."""
-        errors: list[str] = []
+    def _refresh_plane_angles(self) -> None:
+        """Re-resolve every plane's declination/azimuth from its sensors."""
         main_plane, *extra_planes = self.config_entry.get_subentries_of_type(
             SUBENTRY_TYPE_PLANE
         )
 
         self.forecast.declination, self.forecast.azimuth = self._plane_angles(
-            main_plane.data, errors
+            main_plane.data
         )
         for plane, subentry in zip(self.planes, extra_planes, strict=True):
-            plane.declination, plane.azimuth = self._plane_angles(subentry.data, errors)
-
-        return errors
+            plane.declination, plane.azimuth = self._plane_angles(subentry.data)
 
     @override
     async def _async_update_data(self) -> Estimate:
@@ -196,8 +182,7 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         self.forecast.latitude, self.forecast.longitude = _resolve_location(
             self.hass, self.config_entry.data
         )
-        if errors := self._refresh_plane_angles():
-            raise UpdateFailed(f"Errors: {' '.join(sorted(errors))}")
+        self._refresh_plane_angles()
         try:
             return await self.forecast.estimate()
         except ForecastSolarConnectionError as error:
