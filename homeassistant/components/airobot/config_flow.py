@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, override
 
+import probatio
 from pyairobotrest import AirobotClient
 from pyairobotrest.exceptions import (
     AirobotAuthError,
@@ -13,7 +14,6 @@ from pyairobotrest.exceptions import (
     AirobotError,
     AirobotTimeoutError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow as BaseConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_USERNAME
@@ -26,11 +26,11 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -143,9 +143,9 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
         # Only ask for password since we already have the device_id from discovery
         return self.async_show_form(
             step_id="dhcp_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             description_placeholders={
@@ -256,9 +256,9 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             description_placeholders={

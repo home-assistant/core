@@ -12,7 +12,11 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_BAUDRATE, CONF_UNIT, DEFAULT_PORT, TYPE_SERIAL
 from .coordinator import FlexitConfigEntry, FlexitDataCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+]
 
 
 def create_modbus_params(

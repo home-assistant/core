@@ -109,6 +109,7 @@ homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.axis.*
+homeassistant.components.axle_energy.*
 homeassistant.components.azure_storage.*
 homeassistant.components.backblaze_b2.*
 homeassistant.components.backup.*
@@ -118,6 +119,7 @@ homeassistant.components.bayesian.*
 homeassistant.components.besen.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
+homeassistant.components.bitvis.*
 homeassistant.components.blockchain.*
 homeassistant.components.blue_current.*
 homeassistant.components.blueprint.*
@@ -172,6 +174,7 @@ homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
 homeassistant.components.dhcp.*
 homeassistant.components.diagnostics.*
+homeassistant.components.discogs.*
 homeassistant.components.discovergy.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dlna_dms.*
@@ -310,6 +313,7 @@ homeassistant.components.imgw_pib.*
 homeassistant.components.immich.*
 homeassistant.components.incomfort.*
 homeassistant.components.indevolt.*
+homeassistant.components.indi_allsky.*
 homeassistant.components.inels.*
 homeassistant.components.infrared.*
 homeassistant.components.input_button.*
