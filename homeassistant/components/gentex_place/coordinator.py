@@ -94,7 +94,6 @@ class PlaceCoordinator(DataUpdateCoordinator[dict[str, PlaceDeviceShadow]]):
         current = self.data or {}
         existing = current.get(thing_name)
         if existing is not None:
-            # This is a shallow copy. Use deepcopy if caller mutates nested fields
             updated = replace(existing)
             updated.merge(payload)
         else:
