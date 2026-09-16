@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Any, cast, override
 
-from aiocomelit import ComelitSerialBridgeObject
+from aiocomelit import ComelitDeviceObject
 from aiocomelit.const import COVER, STATE_COVER, STATE_OFF, STATE_ON
 
 from homeassistant.components.cover import (
@@ -67,7 +67,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
     def __init__(
         self,
         coordinator: ComelitSerialBridge,
-        device: ComelitSerialBridgeObject,
+        device: ComelitDeviceObject,
         config_entry_entry_id: str,
     ) -> None:
         """Init cover entity."""

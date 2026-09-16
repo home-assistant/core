@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from openevsehttp.__main__ import OpenEVSE
+from openevsehttp import OpenEVSE
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -94,5 +94,5 @@ class OpenEVSEButton(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], ButtonEnt
     @override
     async def async_press(self) -> None:
         """Press the button."""
-        with openevse_exception_handler(0.0):
+        with openevse_exception_handler():
             await self.entity_description.press_fn(self.coordinator.charger)

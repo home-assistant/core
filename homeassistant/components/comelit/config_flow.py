@@ -12,7 +12,7 @@ from aiocomelit import (
 )
 from aiocomelit.api import ComelitCommonApi
 from aiocomelit.const import BRIDGE
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
@@ -44,17 +44,20 @@ from .utils import async_client_session
 DEFAULT_HOST = "192.168.1.252"
 DEFAULT_PIN = "111111"
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.string,
-        vol.Required(CONF_TYPE, default=BRIDGE): vol.In(DEVICE_TYPE_LIST),
-        vol.Optional(CONF_VEDO_PIN): cv.string,
+        probatio.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PIN, default=DEFAULT_PIN): cv.string,
+        probatio.Required(CONF_TYPE, default=BRIDGE): probatio.In(DEVICE_TYPE_LIST),
+        probatio.Optional(CONF_VEDO_PIN): cv.string,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PIN): cv.string, vol.Optional(CONF_VEDO_PIN): cv.string}
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_PIN): cv.string,
+        probatio.Optional(CONF_VEDO_PIN): cv.string,
+    }
 )
 
 
@@ -246,17 +249,17 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     reconfigure_entry, data_updates=data_updates
                 )
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
                 ): cv.string,
-                vol.Required(
+                probatio.Required(
                     CONF_PORT,
                     default=reconfigure_entry.data.get(CONF_PORT, DEFAULT_PORT),
                 ): cv.port,
-                vol.Optional(CONF_PIN): cv.string,
-                vol.Optional(CONF_VEDO_PIN): cv.string,
+                probatio.Optional(CONF_PIN): cv.string,
+                probatio.Optional(CONF_VEDO_PIN): cv.string,
             }
         )
 

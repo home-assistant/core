@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -53,22 +53,22 @@ from .const import (
 )
 from .helpers import is_valid_config_entry
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_INCL_FILTER): TextSelector(
+        probatio.Optional(CONF_INCL_FILTER): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 multiple=True,
             ),
         ),
-        vol.Optional(CONF_EXCL_FILTER): TextSelector(
+        probatio.Optional(CONF_EXCL_FILTER): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 multiple=True,
             ),
         ),
-        vol.Optional(CONF_REALTIME): BooleanSelector(),
-        vol.Required(CONF_VEHICLE_TYPE): SelectSelector(
+        probatio.Optional(CONF_REALTIME): BooleanSelector(),
+        probatio.Required(CONF_VEHICLE_TYPE): SelectSelector(
             SelectSelectorConfig(
                 options=VEHICLE_TYPES,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -76,7 +76,7 @@ OPTIONS_SCHEMA = vol.Schema(
                 sort=True,
             )
         ),
-        vol.Required(CONF_UNITS): SelectSelector(
+        probatio.Required(CONF_UNITS): SelectSelector(
             SelectSelectorConfig(
                 options=UNITS,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -84,29 +84,29 @@ OPTIONS_SCHEMA = vol.Schema(
                 sort=True,
             )
         ),
-        vol.Optional(CONF_AVOID_TOLL_ROADS): BooleanSelector(),
-        vol.Optional(CONF_AVOID_SUBSCRIPTION_ROADS): BooleanSelector(),
-        vol.Optional(CONF_AVOID_FERRIES): BooleanSelector(),
-        vol.Optional(CONF_TIME_DELTA): DurationSelector(
+        probatio.Optional(CONF_AVOID_TOLL_ROADS): BooleanSelector(),
+        probatio.Optional(CONF_AVOID_SUBSCRIPTION_ROADS): BooleanSelector(),
+        probatio.Optional(CONF_AVOID_FERRIES): BooleanSelector(),
+        probatio.Optional(CONF_TIME_DELTA): DurationSelector(
             DurationSelectorConfig(
                 allow_negative=True,
                 enable_second=False,
             )
         ),
-        vol.Optional(CONF_BASE_COORDINATES): LocationSelector(
+        probatio.Optional(CONF_BASE_COORDINATES): LocationSelector(
             LocationSelectorConfig(radius=False)
         ),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         # Name field is no longer allowed in config flow schemas
         # pylint: disable-next=home-assistant-config-flow-name-field
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Required(CONF_ORIGIN): TextSelector(),
-        vol.Required(CONF_DESTINATION): TextSelector(),
-        vol.Required(CONF_REGION): SelectSelector(
+        probatio.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        probatio.Required(CONF_ORIGIN): TextSelector(),
+        probatio.Required(CONF_DESTINATION): TextSelector(),
+        probatio.Required(CONF_REGION): SelectSelector(
             SelectSelectorConfig(
                 options=REGIONS,
                 mode=SelectSelectorMode.DROPDOWN,

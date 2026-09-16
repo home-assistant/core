@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.const import COVER, WATT
 from freezegun.api import FrozenDateTimeFactory
 import pytest
