@@ -26,7 +26,8 @@ class XiaomiMiioRuntimeData:
     """Runtime data for Xiaomi Miio config entry.
 
     Either device/device_coordinator or gateway/gateway_coordinators
-    must be set, based on CONF_FLOW_TYPE (CONF_DEVICE or CONF_GATEWAY)
+    must be set, based on CONF_FLOW_TYPE (CONF_DEVICE, CONF_GATEWAY
+    or CONF_WIFI_REPEATER)
     """
 
     device: MiioDevice = None  # type: ignore[assignment]

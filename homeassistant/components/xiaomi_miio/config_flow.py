@@ -27,11 +27,13 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     CONF_MANUAL,
+    CONF_WIFI_REPEATER,
     DEFAULT_CLOUD_COUNTRY,
     DOMAIN,
     MODELS_ALL,
     MODELS_ALL_DEVICES,
     MODELS_GATEWAY,
+    MODELS_WIFI_REPEATER,
     SERVER_COUNTRY_CODES,
     AuthException,
     SetupException,
@@ -418,6 +420,13 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         for gateway_model in MODELS_GATEWAY:
             if self.model.startswith(gateway_model):
                 flow_type = CONF_GATEWAY
+
+        # The repeater must match before the MODELS_ALL_DEVICES loop, which
+        # also contains the repeater models.
+        if flow_type is None:
+            for repeater_model in MODELS_WIFI_REPEATER:
+                if self.model.startswith(repeater_model):
+                    flow_type = CONF_WIFI_REPEATER
 
         if flow_type is None:
             for device_model in MODELS_ALL_DEVICES:
