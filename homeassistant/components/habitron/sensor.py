@@ -235,23 +235,22 @@ class HbtnDescribedSensor(HabitronEntity, SensorEntity):
             )
         if (subscribe_fn := self.entity_description.subscribe_fn) is not None:
             # Push subscription: keep HA state in sync whenever the member changes.
-            subscribe_fn(self._module, self._sensor_idx).add_listener(
-                self._handle_coordinator_update
+            member = subscribe_fn(self._module, self._sensor_idx)
+            member.add_listener(self._handle_coordinator_update)
+            # Unsubscribed through ``async_on_remove`` rather than
+            # ``async_will_remove_from_hass``: the latter is skipped when adding
+            # the entity fails after this hook has run -- ``entity_platform``
+            # then calls ``add_to_platform_abort``, which runs only the
+            # on-remove callbacks -- and the library would keep a listener for
+            # an entity Home Assistant has discarded.
+            self.async_on_remove(
+                lambda: member.remove_listener(self._handle_coordinator_update)
             )
         # CoordinatorEntity.async_added_to_hass does not write an initial state,
         # and the coordinator's first refresh completed before this platform was
         # set up, so without this the entity would read "unknown" until the next
         # coordinator tick.
         self._handle_coordinator_update()
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Entity being removed from hass."""
-        if (subscribe_fn := self.entity_description.subscribe_fn) is not None:
-            subscribe_fn(self._module, self._sensor_idx).remove_listener(
-                self._handle_coordinator_update
-            )
-        await super().async_will_remove_from_hass()
 
     @callback
     @override

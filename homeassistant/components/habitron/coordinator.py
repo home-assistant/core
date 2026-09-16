@@ -479,8 +479,9 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
     def _update_router_issue(self) -> None:
         """Mirror the router's system-error flag into the issue registry.
 
-        A router system error is surfaced as a non-fixable (informational)
-        repair issue and cleared again once the router recovers.
+        Raised at ``ERROR`` severity and not fixable from Home Assistant: the
+        fault is on the bus, so there is nothing a repair flow could do here.
+        It clears itself once the router reports a healthy state again.
         """
         issue_id = f"router_system_error_{self.router.uid}"
         if self.router.sys_ok:

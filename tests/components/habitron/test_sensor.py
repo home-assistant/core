@@ -477,14 +477,26 @@ async def test_described_sensor_remove_listener(
     source: str,
     name: str,
 ) -> None:
-    """Push descriptions remove the member callback on removal."""
+    """Push descriptions unsubscribe through the on-remove callbacks.
+
+    Registered there rather than in ``async_will_remove_from_hass``, because
+    that hook is skipped when adding the entity fails after it subscribed --
+    ``entity_platform`` aborts by running only the on-remove callbacks.
+    """
     mod = _make_module()
-    getattr(mod, source)[0] = MagicMock()
+    member = MagicMock()
+    getattr(mod, source)[0] = member
     sensor_desc = _make_sensor_descriptor(name=name)
     coord = MagicMock(spec=DataUpdateCoordinator)
     entity = HbtnDescribedSensor(mod, sensor_desc, coord, 0, description)
-    await entity.async_will_remove_from_hass()
-    getattr(mod, source)[0].remove_listener.assert_called()
+    entity.async_write_ha_state = MagicMock()
+
+    await _run_added_to_hass(entity)
+    member.add_listener.assert_called_once()
+
+    # What ``add_to_platform_abort`` and ``async_remove`` both run.
+    entity._call_on_remove_callbacks()
+    member.remove_listener.assert_called_once_with(entity._handle_coordinator_update)
 
 
 @pytest.mark.parametrize(
