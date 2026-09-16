@@ -79,8 +79,8 @@ rules:
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices:
-    status: exempt
-    comment: A config entry maps to a single boiler removed with the entry, so the rule's orphan-from-removed-entry path never fires. A child device may vanish mid-life when its bundle stops reporting, while the device-registry row stays until the config entry is removed. That is a presence transition, which a different rule covers.
+    status: todo
+    comment: A child device created at setup for a heating circuit or hot-water bundle stays in the device registry as long as the config entry exists, even after the bundle stops reporting and `child_device_info` returns None for it. Future work should track the set of bundle identifiers produced at setup and remove the corresponding child device once a bundle has been absent for sustained polling.
 
   # Platinum
   async-dependency: done
