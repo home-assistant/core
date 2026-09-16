@@ -230,3 +230,62 @@ async def test_doorbell_node(
     )
     state = hass.states.get("event.mock_doorbell_doorbell")
     assert state.attributes[ATTR_EVENT_TYPE] == "ring"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_doorbell_multi"])
+async def test_doorbell_multi_press_node(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the 'ring' event type is always present for a multi-press Doorbell node."""
+    state = hass.states.get("event.mock_doorbell_multi_doorbell")
+    assert state
+    assert state.state == "unknown"
+    # 'ring' is prepended even though the device only reports multi-press events
+    assert state.attributes[ATTR_EVENT_TYPES] == [
+        "ring",
+        "multi_press_1",
+        "multi_press_2",
+        "long_press",
+        "long_release",
+    ]
+    # a multi-press event is reported as-is
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=59,
+            event_id=6,
+            event_number=0,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"totalNumberOfPressesCounted": 1},
+        ),
+    )
+    state = hass.states.get("event.mock_doorbell_multi_doorbell")
+    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_1"
+
+    # an initial press event, if the device sends one, is still remapped to 'ring'
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=59,
+            event_id=1,
+            event_number=0,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data=None,
+        ),
+    )
+    state = hass.states.get("event.mock_doorbell_multi_doorbell")
+    assert state.attributes[ATTR_EVENT_TYPE] == "ring"
