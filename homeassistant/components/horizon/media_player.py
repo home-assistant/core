@@ -6,7 +6,7 @@ from typing import Any, override
 
 from horimote import Client, keys
 from horimote.exceptions import AuthenticationError
-import voluptuous as vol
+import probatio
 
 from homeassistant import util
 from homeassistant.components.media_player import (
@@ -34,9 +34,9 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 

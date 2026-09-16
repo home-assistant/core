@@ -10,8 +10,8 @@ import wave
 
 from hass_nabucasa.voice import VoiceError, VoiceTokenError
 from hass_nabucasa.voice_data import TTS_VOICES
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
     STORAGE_KEY,
@@ -91,12 +91,12 @@ def test_schema() -> None:
     processed = PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL"})
     assert processed["gender"] == "female"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         PLATFORM_SCHEMA(
             {"platform": "cloud", "language": "non-existing", "gender": "female"}
         )
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         PLATFORM_SCHEMA(
             {"platform": "cloud", "language": "nl-NL", "gender": "not-supported"}
         )

@@ -19,7 +19,7 @@ import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, override
 
 import attr
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
@@ -150,6 +150,7 @@ class EntityNamePart(StrEnum):
     DEVICE = "device"
     ENTITY = "entity"
     FLOOR = "floor"
+    PARENT_DEVICE = "parent_device"
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -521,10 +522,25 @@ def _async_get_full_entity_name(
 
     elif not use_legacy_naming or name is None:
         device_name: str | None = None
+        parent_device_name: str | None = None
         if device_id is not None:
             device_registry = dr.async_get(hass)
             if (device := device_registry.async_get(device_id)) is not None:
                 device_name = device.name_by_user or device.name
+
+                if (
+                    EntityNamePart.PARENT_DEVICE in parts
+                    and isinstance(device, dr.ChildDeviceEntry)
+                    and (
+                        parent_device := device_registry.async_get(
+                            device.parent_device_id, include_child_devices=False
+                        )
+                    )
+                    is not None
+                ):
+                    parent_device_name = (
+                        parent_device.name_by_user or parent_device.name
+                    )
 
                 if area_id is None:
                     area_id = dr.async_get_effective_area_id(hass, device)
@@ -569,6 +585,7 @@ def _async_get_full_entity_name(
             EntityNamePart.DEVICE: device_name,
             EntityNamePart.ENTITY: entity_name,
             EntityNamePart.FLOOR: floor_name,
+            EntityNamePart.PARENT_DEVICE: parent_device_name,
         }
         full_name = " ".join(
             part_name for part in parts if (part_name := part_names[part])
@@ -1370,7 +1387,12 @@ class EntityRegistry(BaseRegistry):
         """
         parts = self.settings.entity_id_parts
         if parts is None:
-            parts = (EntityNamePart.AREA, EntityNamePart.DEVICE, EntityNamePart.ENTITY)
+            parts = (
+                EntityNamePart.AREA,
+                EntityNamePart.PARENT_DEVICE,
+                EntityNamePart.DEVICE,
+                EntityNamePart.ENTITY,
+            )
         object_id = _async_get_full_entity_name(
             self.hass,
             area_id=area_id,
@@ -2746,13 +2768,13 @@ async def async_migrate_entries(
 def async_validate_entity_id(registry: EntityRegistry, entity_id_or_uuid: str) -> str:
     """Validate and resolve an entity id or UUID to an entity id.
 
-    Raises vol.Invalid if the entity or UUID is invalid, or if the UUID is not
+    Raises probatio.Invalid if the entity or UUID is invalid, or if the UUID is not
     associated with an entity registry item.
     """
     if valid_entity_id(entity_id_or_uuid):
         return entity_id_or_uuid
     if (entry := registry.entities.get_entry(entity_id_or_uuid)) is None:
-        raise vol.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
+        raise probatio.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
     return entry.entity_id
 
 
@@ -2779,7 +2801,7 @@ def async_validate_entity_ids(
     """Validate and resolve a list of entity ids or UUIDs to a list of entity ids.
 
     Returns a list with UUID resolved to entity_ids.
-    Raises vol.Invalid if any item is invalid, or if any a UUID is not associated with
+    Raises probatio.Invalid if any item is invalid, or if any a UUID is not associated with
     an entity registry item.
     """
 

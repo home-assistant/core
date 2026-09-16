@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import create_rfx_test_cfg
+from .conftest import create_rfx_test_entry
 
 from tests.common import MockConfigEntry, async_get_device_automations
 
@@ -22,18 +22,14 @@ class DeviceTestData(NamedTuple):
     """Test data linked to a device."""
 
     code: str
-    device_identifier: tuple[str, str, str, str]
+    device_identifier: tuple[str, str]
 
 
-DEVICE_LIGHTING_1 = DeviceTestData("0710002a45050170", ("rfxtrx", "10", "0", "E5"))
+DEVICE_LIGHTING_1 = DeviceTestData("0710002a45050170", ("rfxtrx", "10_0_E5"))
 
-DEVICE_BLINDS_1 = DeviceTestData(
-    "09190000009ba8010100", ("rfxtrx", "19", "0", "009ba8:1")
-)
+DEVICE_BLINDS_1 = DeviceTestData("09190000009ba8010100", ("rfxtrx", "19_0_009ba8:1"))
 
-DEVICE_TEMPHUM_1 = DeviceTestData(
-    "0a52080705020095220269", ("rfxtrx", "52", "8", "05:02")
-)
+DEVICE_TEMPHUM_1 = DeviceTestData("0a52080705020095220269", ("rfxtrx", "52_8_05:02"))
 
 
 @pytest.mark.parametrize("device", [DEVICE_LIGHTING_1, DEVICE_TEMPHUM_1])
@@ -42,17 +38,13 @@ async def test_device_test_data(rfxtrx, device: DeviceTestData) -> None:
     pkt: RFXtrx.lowlevel.Packet = RFXtrx.lowlevel.parse(bytearray.fromhex(device.code))
     assert device.device_identifier == (
         "rfxtrx",
-        f"{pkt.packettype:x}",
-        f"{pkt.subtype:x}",
-        pkt.id_string,
+        f"{pkt.packettype:x}_{pkt.subtype:x}_{pkt.id_string}",
     )
 
 
 async def setup_entry(hass: HomeAssistant, devices: dict[str, Any]) -> MockConfigEntry:
     """Construct a config setup."""
-    entry_data = create_rfx_test_cfg(devices=devices)
-    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
-
+    mock_entry = create_rfx_test_entry(devices=devices)
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -90,18 +82,6 @@ async def test_get_actions(
     """Test we get the expected actions from a rfxtrx."""
     mock_entry = await setup_entry(hass, {device.code: {}})
 
-    device_entry = device_registry.async_get_device_by_identifier(
-        device.device_identifier, mock_entry.entry_id
-    )
-    assert device_entry
-
-    # Add alternate identifiers, to make sure we can handle future formats
-    identifiers: list[str] = list(*device_entry.identifiers)
-    device_registry.async_update_device(
-        device_entry.id,
-        new_identifiers=device_entry.identifiers
-        | {(identifiers[0], "_".join(identifiers[1:]))},
-    )
     device_entry = device_registry.async_get_device_by_identifier(
         device.device_identifier, mock_entry.entry_id
     )

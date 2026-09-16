@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import fan, switch
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
@@ -25,18 +25,18 @@ from . import (
 )
 
 OPTIONS_SCHEMA = {
-    vol.Required(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+    probatio.Required(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
         selector.DeviceClassSelectorConfig(domain=Platform.HUMIDIFIER)
     ),
-    vol.Required(CONF_SENSOR): selector.EntitySelector(
+    probatio.Required(CONF_SENSOR): selector.EntitySelector(
         selector.EntitySelectorConfig(
             domain=SENSOR_DOMAIN, device_class=SensorDeviceClass.HUMIDITY
         )
     ),
-    vol.Required(CONF_HUMIDIFIER): selector.EntitySelector(
+    probatio.Required(CONF_HUMIDIFIER): selector.EntitySelector(
         selector.EntitySelectorConfig(domain=[switch.DOMAIN, fan.DOMAIN])
     ),
-    vol.Required(
+    probatio.Required(
         CONF_DRY_TOLERANCE, default=DEFAULT_TOLERANCE
     ): selector.NumberSelector(
         selector.NumberSelectorConfig(
@@ -47,7 +47,7 @@ OPTIONS_SCHEMA = {
             mode=selector.NumberSelectorMode.BOX,
         )
     ),
-    vol.Required(
+    probatio.Required(
         CONF_WET_TOLERANCE, default=DEFAULT_TOLERANCE
     ): selector.NumberSelector(
         selector.NumberSelectorConfig(
@@ -58,23 +58,23 @@ OPTIONS_SCHEMA = {
             mode=selector.NumberSelectorMode.BOX,
         )
     ),
-    vol.Optional(CONF_MIN_DUR): selector.DurationSelector(
+    probatio.Optional(CONF_MIN_DUR): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)
     ),
 }
 
 CONFIG_SCHEMA = {
-    vol.Required(CONF_NAME): selector.TextSelector(),
+    probatio.Required(CONF_NAME): selector.TextSelector(),
     **OPTIONS_SCHEMA,
 }
 
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(vol.Schema(CONFIG_SCHEMA)),
+    "user": SchemaFlowFormStep(probatio.Schema(CONFIG_SCHEMA)),
 }
 
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(vol.Schema(OPTIONS_SCHEMA)),
+    "init": SchemaFlowFormStep(probatio.Schema(OPTIONS_SCHEMA)),
 }
 
 
